@@ -24,7 +24,7 @@ use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::{writer_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology,
@@ -104,18 +104,18 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
     WriterChapterPayload { id: document.id.clone(), title: document.id.clone(), text: writer_text(document), language_id: document.language_id.clone() }
 }
 
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
 /// the sanctioned non-mutation path for a whole-document replace (open file, load example, dev JSON
 /// setters). Per the SMO-agreed mutation taxonomy, whole-document replace has NO mutation-enum
 /// representative (`SetSnapshot` is banned outright); every former "replace the whole document"
 /// gesture builds this effect instead of an `Emit::mutations([...])` — mirrors `📐️cad`'s identical
 /// `reset_document_effect` (`📓️wave3-reports/cad-report.md`). The spr is a fresh, edit-free op-log
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &WriterSnapshot) -> HostEffect {
+pub fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
     let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&scene.schema, &scene.id, scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("writer document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Io
 
@@ -273,7 +273,7 @@ impl ArtifactEditor for WriterPlayApp {
     // representative — `SetSnapshot` is banned outright — so this falls back to the trait's own
     // default (`None`), matching `📐️cad`/`💠️lowpoly`'s identical ruling. Every former "replace the
     // whole document" gesture (`setSnapshot`/`openDocument`/JSON setters/`setActiveExample`) now
-    // builds `reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history) instead.
+    // builds `reset_document_effect` (a `Effect::LoadDocument`, outside undo history) instead.
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
@@ -498,7 +498,7 @@ pub(crate) mod testkit {
     /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
     /// see `reset_document_effect`'s doc comment), so `setActiveExample` no longer lands via
     /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
-    /// command's `HostEffect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
+    /// command's `Effect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
     pub fn app_with_jack() -> WriterApp {
         let mut app = new_app();

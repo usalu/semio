@@ -23,7 +23,7 @@ use crate::artifacts::procedural2d::{artifact_kind, Procedural2dSnapshot, PROCED
 use flow::{with_process_flow_eval_session, FlowEvalSession};
 use semio_framework_plugin::{
     app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, Dialect, ArtifactView,
-    DomainTopology, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
+    DomainTopology, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     MediaClass, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
 use store::EngineHandles;
@@ -254,11 +254,11 @@ impl ArtifactEditor for Procedural2dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking.
-    fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, Procedural2dSnapshot>, _cfg: &ConfigView<'_, Procedural2dConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| {
             let host = crate::artifacts::procedural2d::schema::host_from_fixture_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
-                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+                vec![Effect::DispatchAction {req: semio_framework_plugin::RequestId(101),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
                 Vec::new()
             }

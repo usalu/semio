@@ -66,6 +66,8 @@ export interface Ecosystem {
   readonly entryFilenames: readonly string[];
   readonly leafFilename: string;
   readonly sourceExtension: string;
+  /** 📁 Subdirs allowed inside `📦️packages/<lang>/` besides packaging files (e.g. `benches`, importable package tree). */
+  readonly packagingDirNames?: readonly string[];
 }
 
 /** 🎯️ One render/build target of a lang (`📦️packages/<lang>/🎯️targets/<target>/`), with the leaf/entry filenames that target uses. */
@@ -124,6 +126,8 @@ export interface Taxonomy {
   readonly packagingFileNames: readonly string[];
   /** 📦️ Suffix allowlist complementing `packagingFileNames` (tool configs: `*.config.ts`, …). */
   readonly packagingFileSuffixes: readonly string[];
+  /** 📁 Global subdirs legal directly under `📦️packages/<lang>/` (always includes `targetsDirName`). */
+  readonly packagingDirNames?: readonly string[];
   readonly artifactsDirName: string;
   readonly modesDirName: string;
   readonly windowsDirName: string;
@@ -203,6 +207,8 @@ export interface Taxonomy {
    * is the canonical casing a field name takes in that format, which the parity scanners normalise through.
    */
   readonly schemaFormats: Readonly<Record<string, { readonly leafFilename: string; readonly extension: string; readonly fieldCasing: string }>>;
+  /** 🧬️ Per-facet-kind schema format subsets — normative leaf on disk selects the kind. */
+  readonly schemaFacetKinds?: Readonly<Record<string, { readonly normativeFormat: string; readonly formats: readonly string[] }>>;
   /** 🔣️ Normative JSON Schema leaf per `🧬️schema` facet path — the twin of `artifactSpecFilenames` for schema facets, which carry no `.semio` spec. */
   readonly artifactSchemaSpecFilenames: Readonly<Record<string, string>>;
   /** 🎛 Required children of each `🎚️config/` facet: its schema. */
@@ -279,6 +285,36 @@ export function loadTaxonomy(): Taxonomy {
   const path = join(__dirname, "../🔣️taxonomy.json");
   cachedTaxonomy.current = JSON.parse(readFileSync(path, "utf8")) as Taxonomy;
   return cachedTaxonomy.current;
+}
+
+type SchemaFormatSpec = { readonly leafFilename: string; readonly extension: string; readonly fieldCasing: string };
+
+/** 🧬️ Resolves a schema facet's kind from its normative leaf on disk (`schemaFacetKinds`). */
+export function resolveSchemaFacetKind(repoRoot: string, facetRel: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
+  const facetAbs = join(repoRoot, facetRel);
+  if (!existsSync(facetAbs)) return null;
+  for (const [kindId, kind] of Object.entries(taxonomy.schemaFacetKinds ?? {})) {
+    const normative = taxonomy.schemaFormats[kind.normativeFormat];
+    if (normative && existsSync(join(facetAbs, normative.leafFilename))) return kindId;
+  }
+  return null;
+}
+
+/** 📜️ Returns the schemaFormats entries required for one facet path (kind-selected subset). */
+export function schemaFacetFormatEntries(repoRoot: string, facetRel: string, taxonomy: Taxonomy = loadTaxonomy()): [string, SchemaFormatSpec][] {
+  const kindId = resolveSchemaFacetKind(repoRoot, facetRel, taxonomy);
+  const kind = kindId ? taxonomy.schemaFacetKinds?.[kindId] : taxonomy.schemaFacetKinds?.["🧬️data"];
+  if (!kind) return Object.entries(taxonomy.schemaFormats ?? {}) as [string, SchemaFormatSpec][];
+  return kind.formats
+    .map((formatId) => [formatId, taxonomy.schemaFormats[formatId]] as [string, SchemaFormatSpec | undefined])
+    .filter((entry): entry is [string, SchemaFormatSpec] => entry[1] !== undefined);
+}
+
+/** 📦️ Allowed subdir names inside `📦️packages/<lang>/` for one ecosystem. */
+export function packagingDirNamesForLang(lang: string, taxonomy: Taxonomy = loadTaxonomy()): readonly string[] {
+  const global = taxonomy.packagingDirNames ?? [];
+  const ecosystem = taxonomy.ecosystems[lang]?.packagingDirNames ?? [];
+  return [...new Set([taxonomy.targetsDirName, ...global, ...ecosystem])];
 }
 
 /** 🌳️ Level descriptor: fixed allowlist or wildcard (`*` = any emoji-prefixed slug dir). */
@@ -679,10 +715,42 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     if (!format.leafFilename.endsWith(format.extension)) {
       problems.push(`schemaFormats["${formatId}"] leafFilename must end with its extension (${JSON.stringify(format.leafFilename)} vs ${JSON.stringify(format.extension)}).`);
     }
-    if (format.fieldCasing !== "snake" && format.fieldCasing !== "camel") {
-      problems.push(`schemaFormats["${formatId}"].fieldCasing must be "snake" or "camel", got ${JSON.stringify(format.fieldCasing)}.`);
+    if (format.fieldCasing !== "snake" && format.fieldCasing !== "camel" && format.fieldCasing !== "kebab") {
+      problems.push(`schemaFormats["${formatId}"].fieldCasing must be "snake", "camel", or "kebab", got ${JSON.stringify(format.fieldCasing)}.`);
     }
   }
+  //#region SchemaFacetKindContract
+  const facetKinds = taxonomy.schemaFacetKinds ?? {};
+  if (Object.keys(facetKinds).length === 0) {
+    problems.push(`schemaFacetKinds must be a non-empty registry.`);
+  } else {
+    const normativeFormats = new Set<string>();
+    const claimedFormats = new Set<string>();
+    for (const [kindId, kind] of Object.entries(facetKinds)) {
+      if (!kind.normativeFormat || !Array.isArray(kind.formats) || kind.formats.length === 0) {
+        problems.push(`schemaFacetKinds["${kindId}"] must declare normativeFormat and a non-empty formats array.`);
+        continue;
+      }
+      if (!kind.formats.includes(kind.normativeFormat)) {
+        problems.push(`schemaFacetKinds["${kindId}"].formats must include its normativeFormat "${kind.normativeFormat}".`);
+      }
+      if (!schemaFormats[kind.normativeFormat]) {
+        problems.push(`schemaFacetKinds["${kindId}"].normativeFormat "${kind.normativeFormat}" is missing from schemaFormats.`);
+      }
+      if (normativeFormats.has(kind.normativeFormat)) {
+        problems.push(`schemaFacetKinds normativeFormat "${kind.normativeFormat}" is claimed by more than one kind.`);
+      }
+      normativeFormats.add(kind.normativeFormat);
+      for (const formatId of kind.formats) {
+        if (!schemaFormats[formatId]) problems.push(`schemaFacetKinds["${kindId}"].formats references missing schemaFormats key "${formatId}".`);
+        claimedFormats.add(formatId);
+      }
+    }
+    for (const formatId of Object.keys(schemaFormats)) {
+      if (!claimedFormats.has(formatId)) problems.push(`schemaFormats["${formatId}"] is not claimed by any schemaFacetKinds entry.`);
+    }
+  }
+  //#endregion SchemaFacetKindContract
   const normativeSchemaLeaf = schemaFormats["🔣️jsonschema"]?.leafFilename;
   for (const [facet, specName] of Object.entries(taxonomy.artifactSchemaSpecFilenames ?? {})) {
     if (!(facet === "🧬️schema" || artifactFacetPathIsDeclared(facet, taxonomy))) {
@@ -1169,6 +1237,14 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
     }
   };
 
+  const collectPackagingDirViolations = (manifestDirAbs: string, owner: OwnerAccumulator, allowedDirs: readonly string[]): void => {
+    const allowed = new Set(allowedDirs);
+    for (const entry of readdirSafe(manifestDirAbs)) {
+      if (!entry.isDirectory() || entry.name.startsWith(".") || allowed.has(entry.name)) continue;
+      packagingViolations.push({ path: rel(join(manifestDirAbs, entry.name)), ownerRel: owner.ownerRel });
+    }
+  };
+
   const resolveOne = (manifestAbs: string, lang: PackageLang, owner: OwnerAccumulator, target: PackageTarget | undefined): void => {
     const manifestPath = rel(manifestAbs);
     const marker = readSemioMarker(manifestAbs, lang, taxonomy);
@@ -1220,6 +1296,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
       if (hasDirect) {
         resolveOne(directManifestAbs, lang, owner, undefined);
         collectPackagingViolations(langAbs, owner, ecosystem.entryFilenames);
+        collectPackagingDirViolations(langAbs, owner, packagingDirNamesForLang(lang, taxonomy));
         continue;
       }
       if (!hasTargets) continue;
@@ -1233,6 +1310,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
         }
         resolveOne(targetManifestAbs, lang, owner, targetEntry.name);
         collectPackagingViolations(targetAbs, owner, taxonomy.targets[targetEntry.name]?.entryFilenames ?? ecosystem.entryFilenames);
+        collectPackagingDirViolations(targetAbs, owner, packagingDirNamesForLang(lang, taxonomy));
       }
     }
   };
@@ -1287,6 +1365,14 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
     .sort((a, b) => a.ownerRel.localeCompare(b.ownerRel));
 
   const packages = discoveredOwners.flatMap((owner) => owner.packages).sort((a, b) => a.ownerRel.localeCompare(b.ownerRel) || (a.target ?? "").localeCompare(b.target ?? ""));
+
+  for (const violation of packagingViolations) {
+    problems.push({
+      kind: "packaging-violation",
+      path: violation.path,
+      message: `"${violation.path}" is not packaging code under owner "${violation.ownerRel}" — language-neutral assets belong at the owner root.`,
+    });
+  }
 
   return {
     packages,
@@ -1906,6 +1992,14 @@ function semanticPathInRoots(path: string, roots: readonly string[]): boolean {
 export function buildSemanticCensus(repoRoot: string, options: { readonly scope?: string } = {}, taxonomy: Taxonomy = loadTaxonomy()): SemanticCensus {
   repoRoot = realpathSync(repoRoot);
   const problems: SemanticProblem[] = validateTaxonomy(taxonomy).map((message) => ({ code: "taxonomy-schema", severity: "error", path: semanticRel(repoRoot, join(__dirname, "../🔣️taxonomy.json")), message }));
+  for (const pkgProblem of discoverPackageProblems(repoRoot, taxonomy)) {
+    problems.push({
+      code: pkgProblem.kind,
+      severity: "error",
+      path: pkgProblem.path,
+      message: pkgProblem.message,
+    });
+  }
   const extensions = semanticSourceExtensions(taxonomy);
   const allFiles = semanticActiveRoots(repoRoot, taxonomy).flatMap((active) => semanticWalk(realpathSync(join(repoRoot, active))));
   const sourceFiles: SemanticSource[] = allFiles

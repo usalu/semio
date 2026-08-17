@@ -189,9 +189,18 @@ export interface InviteView {
 //#region 🔖️Stream
 export type DirectoryConnectionPhase = "opened" | "closed";
 
+/** 👥️ One live presence actor in a document's roster (Amendment 3 to C1) — the hub knows all four
+ * fields without ever decoding the actor's opaque `PresencePeer` bytes. */
+export interface DirectoryPresenceActor {
+  actor: string;
+  userId?: string;
+  surface: string;
+  color: number;
+}
+
 export type DirectoryStreamMessage =
   | { kind: "event"; event: DirectoryEvent }
   | { kind: "connection"; phase: DirectoryConnectionPhase; connection: ConnectionView }
-  | { kind: "presence"; spaceId: string; documentId: string; surface: string; actors: string[] }
+  | { kind: "presence"; spaceId: string; documentId: string; actors: DirectoryPresenceActor[] }
   | { kind: "heartbeat"; headSeq: number };
 //#endregion 🔖️Stream

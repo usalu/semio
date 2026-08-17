@@ -107,10 +107,15 @@ pub use interaction::*;
 pub use manifest::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
-    ActionRequest, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseMutation,
+    ActionRequest, InvocationId, InvocationResult, Effect, HybridLogicalTimestamp, IconRenderExportItem, InverseMutation,
     KernelMutation, ArtifactDiff, ArtifactHandle, ArtifactId, ArtifactKind,
     ArtifactVersion, MutationId, PhysicalSize, PluginInstanceId, PresencePeer,
     PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer,
     Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
+    // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet A3-kernel-types: `RequestId`
+    // is the completion-correlation id every `req`-carrying `Effect` variant now needs at its call
+    // site — re-exported here so plugin call sites can name it as `semio_framework::RequestId` /
+    // `semio_framework_plugin::RequestId` without a separate import.
+    RequestId,
 };

@@ -7,7 +7,7 @@ use crate::editor::layout::engine::scene::{export_document_pdf, export_document_
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use base64::Engine;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub struct ExportPdf {
 pub fn handle(payload: &ExportPdf, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
     match export_document_pdf(doc.snapshot, &page_id) {
-        Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
+        Ok(bytes) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{page_id}.pdf"), mime_type: "application/pdf".into(), data: base64::engine::general_purpose::STANDARD.encode(bytes), encoding: Some("base64".into()) })),
         Err(_) => Ok(Emit::default()),
     }
 }

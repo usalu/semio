@@ -33,8 +33,30 @@
 - Linked extension mode is feature-gated to avoid the `semio-framework-os-flow` ↔ extension crate cycle.
 - Descriptor `extends` gates extension-actor activation on parent activity — a linked extension must not also run as an actor.
 
+## ⚠️ Live peer ticket contending for our core files (2026-08-17 21:05)
+
+`26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` slice **W1-D** is running RIGHT NOW (its `📓️w1-d-report.md` was written 21:02) and holds large **uncommitted** work in files this ticket must rewrite:
+
+| file | peer's uncommitted delta | our packet |
+|---|---|---|
+| `🔌️plugin/📦️packages/🦀️rust/📜️wit/📜️world.wit` | +37 (guest `list-io-entries`/`io-run`/`io-sniff`; host `io-routes`/`io-run`/`io-identify`) | `A2` |
+| `🔌️plugin/🖥️host/🦀️component.rs` | +459 (`IoRouter` route resolution) | `B1` |
+| `🔌️plugin/🦀️component.rs` | +1259 / −96 (io mechanism in the guest SDK) | `A2` |
+| `🎠️kernel/🟦️component.ts` | +341 (`//#region 🔖️IoRouter`, `IoEntryGraph`, `ioRun`) | `A3` |
+
+Rules that follow:
+
+- **User decision 21:10: proceed now, absorbing the current working tree.** The hold on `A2-abi-sdk` / `B1-host-native` is lifted. The peer's uncommitted work **is the baseline** — treat the working tree, never `HEAD`, as the state to build on. Any agent in those files re-reads from disk immediately before every edit, edits surgically by region, and must be able to show the peer's io mechanism still present (as absorbed job kinds / effects) at the end.
+- When A2/B1 do run, they **absorb** rather than delete the io mechanism: guest `io-run`/`io-sniff` become the cold job kinds `semio.io-run`/`semio.io-sniff`; host `io-routes`/`io-identify`/`io-run` become the `RegistryQuery` and `IoCompose`/`IoRun` effect variants with completions. The route-resolution algorithm, the ≤3-hop cycle-free rule, the ranking order (highest minimum fidelity → fewest hops → lexicographic) and the self-owned-hop reentrancy guard are all preserved semantics — they map onto host-side routing after a turn, which is exactly where the new design already puts cross-plugin routing.
+- Any agent editing a file in that table makes **surgical region-scoped edits only**, never a full-file rewrite, and re-reads from disk immediately before each edit.
+
 ## Environment
 
 - Disk was at 100% on 2026-08-17; freed by removing the `🎯️target` dirs of the two CLOSED tickets `☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` and `☀️12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES` (user-approved). sol checks `df -h` at every wave start and asks the user before deleting anything further.
 - Ports: bench/parity use the 7300+ pool via `findFreeParityPortPair`, never the catalog ports 6012–6205.
 - ≤6 concurrent building agents (cargo lock + disk).
+- **One ticket target dir serializes our own builds.** Observed 2026-08-17: two of this ticket's own commands sat on `Blocking waiting for file lock on build directory` against our shared `🎯️target`, while a third peer ticket saturated the global `~/.cargo` package-cache lock — 54 cargo processes, a wasm check that compiles in seconds taking 23 minutes. Consequences, binding from W2 on:
+  - **Only ONE packet at a time may hold a cargo build.** Parallel *editing* is free; parallel *building* is not. Stagger acceptance runs, or give each concurrently-building packet its own `🎯️target-<packet>` dir (prior tickets did exactly this — e.g. `🎯️target-w3-cad`, `🎯️target-verify`) and accept the disk cost.
+  - Prefer one `-p <crate> --all-targets` check per packet over a suite of narrower ones; never `--workspace` from an executor.
+- **Executors must run cargo in the FOREGROUND, in a single turn.** All four W1 executors independently stalled in wake/idle loops on backgrounded builds that cannot survive a subagent turn boundary (~1.4M tokens spent collecting nothing). Acceptance runs belong to the coordinator session; executors report what they actually observed.
+- **After any atomic rename, the coordinator re-greps the tree.** A3's 132-file sweep missed a live `type HostEffect` import in the React renderer entry — an executor's own file count is not proof of completeness.

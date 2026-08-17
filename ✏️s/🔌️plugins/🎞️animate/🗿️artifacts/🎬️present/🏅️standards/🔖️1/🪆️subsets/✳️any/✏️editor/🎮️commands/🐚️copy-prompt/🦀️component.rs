@@ -6,7 +6,7 @@ use crate::editor::animate::engine::export_video_from_scene;
 use crate::editor::animate::engine::PresentScene;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 
 fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<crate::editor::animate::engine::SceneAssetBundle>, crate::editor::animate::engine::PresentVideoExportError> {
@@ -42,7 +42,7 @@ mod tests {
         app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).expect("seed grid");
         let result = app.dispatch_typed(PresentCommand::CopyPrompt(CopyPrompt {}), &meta("local")).expect("copy prompt");
         assert!(result.mutations.is_empty(), "copyPrompt is a host effect, not a document operation");
-        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt");
+        assert!(matches!(result.requested_effects.as_slice(), [Effect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt");
     }
 
     #[test]
@@ -50,7 +50,7 @@ mod tests {
         let mut app = present_app();
         let result = app.dispatch_typed(PresentCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/animate-video".into(), scene_json: "{}".into() }), &meta("local")).expect("export");
         match result.requested_effects.as_slice() {
-            [HostEffect::DownloadMediaExport { filename, mime_type, data, .. }] => {
+            [Effect::DownloadMediaExport { filename, mime_type, data, .. }] => {
                 assert_eq!(filename, "animate-video-export-error.txt");
                 assert_eq!(mime_type, "text/plain");
                 assert!(!data.is_empty());

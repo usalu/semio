@@ -22,7 +22,7 @@ use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_label
 use crate::editor::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
-use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactPresentation, ConfigView, ArtifactEditor, Editor, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -1506,14 +1506,14 @@ impl Puzzle5dPlayApp {
             _ => None,
         };
         // 🧰️ B1: a DIRECT `SetActiveUtility` command already told the host what it needs to know — never
-        // re-emit the same switch as a `HostEffect` (the pre-B1 code only had to guard this for the
+        // re-emit the same switch as a `Effect` (the pre-B1 code only had to guard this for the
         // INDIRECT paths below, since the host itself pushed the direct switch before dispatching; now
         // the command IS the direct switch, so this arm must self-exclude). Programmatic utility
         // switches (engagement submit/abort, fill) still push the active utility back into the host
         // session for both windows.
         let is_direct_utility_switch = action == SET_ACTIVE_UTILITY_ACTION_ID;
         let effects = if !is_direct_utility_switch && next_active_utility != active_utility_initial {
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
+            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| Effect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
         } else {
             Vec::new()
         };
@@ -2295,7 +2295,7 @@ mod tests {
         let result = app.handle_action("copy", None, &meta("local")).expect("copy");
         assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
-        let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+        let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         assert_eq!(fragment.source_app, PUZZLE5D_PLAY_APP_ID);
         let fragment_value: Value = serde_json::from_str(&fragment.dsl_text).expect("fragment dsl_text is JSON");
         assert_eq!(fragment_value["parts"].as_array().expect("parts").len(), 1);
@@ -2333,7 +2333,7 @@ mod tests {
         let first_part_id = first_part_id(&app);
         select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
         let copy_result = app.handle_action("copy", None, &meta("local")).expect("copy");
-        let HostEffect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+        let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
         let before_count = part_count(&app);
         let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
         let paste_args = json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
@@ -2561,7 +2561,7 @@ mod tests {
             .requested_effects
             .iter()
             .filter_map(|effect| match effect {
-                HostEffect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
+                Effect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
                 _ => None,
             })
             .collect();

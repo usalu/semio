@@ -682,7 +682,7 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store": {
       "name": "@semio-tech/plugin-extension-store",
       "version": "0.1.0",
       "dependencies": {
@@ -690,7 +690,7 @@
         "fflate": "^0.8.2",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry": {
       "name": "@semio-tech/plugin-registry",
       "version": "0.1.0",
     },
@@ -1921,9 +1921,9 @@
 
     "@semio-tech/mit-bestand-praesentation-projektetage": ["@semio-tech/mit-bestand-praesentation-projektetage@workspace:♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript"],
 
-    "@semio-tech/plugin-extension-store": ["@semio-tech/plugin-extension-store@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store"],
+    "@semio-tech/plugin-extension-store": ["@semio-tech/plugin-extension-store@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store"],
 
-    "@semio-tech/plugin-registry": ["@semio-tech/plugin-registry@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry"],
+    "@semio-tech/plugin-registry": ["@semio-tech/plugin-registry@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry"],
 
     "@semio-tech/print": ["@semio-tech/print@workspace:🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript"],
 

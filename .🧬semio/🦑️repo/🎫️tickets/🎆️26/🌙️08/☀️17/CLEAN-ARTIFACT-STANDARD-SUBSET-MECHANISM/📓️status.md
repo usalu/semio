@@ -146,27 +146,139 @@ law is proven by code inspection, not by a test run — that distinction is deli
 | W6 | F2 deletion + policy ratchet | Sonnet ×2 | ⏸️ |
 | W7 | verify + close | coordinator | ⏸️ |
 
+
+## ✅️ W1-D WIT & host io routing — DONE
+
+`📓️w1-d-report.md`. Guest exports `list-io-entries` / `io-run` / `io-sniff`; host imports `io-routes` / `io-run` /
+`io-identify`; `resolve-artifact-link` untouched; every old WIT name kept (D3, W6 deletes).
+
+- **`from` is a reserved WIT keyword** — wire params are `source`/`target`. Rust/TS internals keep `from`/`into`.
+  Recorded as D10 so nobody "fixes" it back.
+- Payload wire encoding: **JSON**, matching this interface's own existing precedent (`WireComposeSource` /
+  `artifact-compose` already carry `IoPayload` as JSON). The pack-wire alternative was evaluated and rejected because
+  `dsl::DslValue` has no `Bytes` variant, so `Vec<u8>` would serialize as one number per byte anyway. The resulting
+  JSON-array blowup for large binaries is real and recorded as **D9**.
+- **Reentrancy guard**: `IoRouter::run_io` resolves the whole route, then scans it for any hop owned by the calling
+  plugin *before executing anything* — refuses the whole call, never partially executes. Stronger than the old
+  one-hop self-refusal it generalizes.
+- **Determinism across plugin load order**: `BTreeMap` graph + full-candidate-set sort that is never short-circuited.
+  Proved by a 2-plugin fixture registered in both orders. `nextest` could not execute it (pre-existing compile
+  blocker in `🎚️config/**`), so the algorithm was additionally run standalone via `rustc`: **13/13 checks pass**;
+  the TS parity script over the same fixture: **11/11 pass**.
+- Guest wasm target checked with `--features component-guest` — **the bare wasm command silently skips the guest
+  code**, which is worth knowing for every later wave.
+
+## ⚠️ W1b OS host — PARTIAL (Tasks 1-2 landed, Task 3 not)
+
+`📓️w1b-report.md`. `registry_export_media`/`registry_import_media` now run through `io_identify` + `io_route` +
+`io_run` to/from the carriers, and the host catalog is keyed on `ArtifactDialect` instead of the legacy
+`"2d.shooting"`-style `ArtifactKindSpec` ids, so W6 can delete that type.
+
+**Task 3 (shell wiring) was NOT completed** and the agent was right not to fake it: a real "Export as…" menu needs a
+host-WIT→TS bridge and a plugin `shell_action` declaration, both outside its boundary. **No en/de strings were
+invented for a menu that does not exist.** Consequence: `os_reachable_export_dialects`/`os_reachable_import_dialects`
+exist with **no caller** → **D8: wire them in the shell wave or delete them.**
+
+> The precedent from W1-C stands: dead API does not ship. The distinction here is that `IoDeclaration.conformance`
+> was a *second copy of a live mechanism* (harmful, deleted immediately), whereas these two are the query surface of
+> an explicitly unfinished task, recorded with an owner. If the shell wave does not land, they must be deleted.
+
 ## Final state of this session
 
-Framework mechanism is **built and green**; no plugin has been cut over yet (by design — the cutover is atomic
-per plugin, and stdio's is blocked on D6).
+The **framework mechanism is built end to end and green**. **No plugin is cut over.** That is not a scheduling
+slip — it is a gate, described below.
 
-| crate | result |
+### Confirmed green (measured, this session)
+
+| gate | result |
 |---|---|
-| `semio-framework-os-kernel --lib` | **996 / 996 pass** |
+| `semio-framework-os-kernel --lib` | **1003 / 1003 pass** (was 996; peers added 7, all pass) |
 | `semio-framework --lib` | **148 / 148 pass** |
-| `semio-framework-plugin --lib` | **230 run / 226 pass / 4 fail** — the 4 are the pre-existing baseline, unchanged; +5 net new tests, all passing |
-| `semio-framework-plugin --target wasm32-wasip2` | clean |
-| `semio-s-plugin-stdio` lib / wasm | 0 errors |
+| `semio-framework-plugin --lib` | **246 run / 242 pass / 4 fail** — the 4 are byte-identical to the W0 baseline list; the suite grew 225→246 |
+| `semio-framework-plugin --target wasm32-wasip2 --features component-guest` | 0 errors |
+| `semio-framework-os --features os-host-full` | **110 run / 103 pass / 7 fail** — first ever recorded; all 7 pre-existing |
+| **export-bug proof** | ✅️ **1/1 PASS** — exported bytes are raw, not a pack container |
+| `semio-s-plugin-stdio --lib` + wasm | 0 errors |
 | repo-lib `🧪️index.test.ts` | 20 fail = baseline (2 taxonomy failures verified pre-existing) |
-| new policies | 0 blocking breaches added; 2825 report-mode breaches = the measured migration backlog |
+| new policies | **0 blocking breaches added**; 2825 report-mode breaches = the measured backlog |
+| io laws | 8/8 pass · io-router algorithm 13/13 · TS parity 11/11 |
 
-### The next agent should start here
-1. **W1-D** — WIT + plugin host `IoRouter` + TS kernel mirror (disjoint from everything else; unblocks runtime io
-   across the wasm boundary).
-2. **Re-cut** `🔧️patches/w1b-discovery-io-native-codec-vocabulary.txt` against the corrected native-codec shape
-   (`📓️design.md` §1 CORRECTION) before any subset moves codec files.
-3. **W2** — stdio, all 36 artifacts in ONE cutover, deleting `📇️registry` (D6). Not per-artifact; the registry map
-   makes per-artifact impossible without a forbidden dual-registration layer.
-4. Re-run `carrier_native_is_raw` once the `26/08/16/FULL-STDIO-…` peer lands their 192-file stdio test-surface
-   rewrite; until then the carrier law is proven by inspection only.
+### ✅️ THE EXPORT-BUG PROOF PASSES — executed, not inferred
+
+```
+cargo nextest run -p semio-framework-os --features os-host-full \
+  -E 'test(export_via_io_mechanism_writes_raw_bytes_not_a_pack_container)'
+PASS (1/1) host_core::workflow::tests::export_via_io_mechanism_writes_raw_bytes_not_a_pack_container
+Summary  1 test run: 1 passed, 109 skipped
+```
+It calls the real production entry point `registry_export_media` and asserts the exported bytes are byte-identical to
+the raw content and do **not** start with the pack magic `[0x89,'S','E','M',0x0D,0x0A,0x1A,0x0A]`. Evidence:
+`🧪️w1b-export-proof.txt`. **The ticket's central claim is now verified by an executed test.**
+
+Two things had to be fixed to get there, both worth keeping:
+- `--lib` alone reports **"0 tests run"** for this crate — the `workflow` module sits behind
+  `#[cfg(feature = "os-host-full")]`. Anyone measuring this crate without that feature is measuring nothing.
+- The lib-test target would not compile: a peer commit (`5ac47258a6`, 21:07, after our start) dropped the import
+  that brought `ConfigFieldShape` into scope in this file's own test helper. Fixed by qualifying it
+  `semio_framework::ConfigFieldShape::`, exactly as its sibling on the same lines already was (4 lines).
+
+### 📋️ First-ever recorded baseline for `semio-framework-os`
+
+`cargo nextest run -p semio-framework-os --features os-host-full --no-fail-fast` → **110 run / 103 pass / 7 fail**
+(`🧪️w1b-os-host-suite.txt`). **All 7 are pre-existing**, not this ticket's: the suite had never executed (feature flag
++ the compile error above), so nobody had seen them. Spot-checked the most suspicious one,
+`mesh_exporter_registrar_round_trips_a_box_through_glb` ("unknown mesh export format kind `glb`") — it fails in
+isolation too, and `git log -S` dates its failing line to `dbcc4fa462`, **2026-08-16 03:32, a day before this ticket
+opened**. The other six are `space::`/`workflow::` fixture tests untouched by this work.
+
+### ❗️ One test is WRITTEN BUT NOT EXECUTED — do not report it as verified
+
+1. **`carrier_native_is_raw`** (stdio binary/txt). Blocked: the stdio *test* target has 267 errors in
+   `🧿️semio`/`dwg`/`gltf`/`docx`/`xlsx`/`ifc` — **zero in binary/txt** — with **192 stdio files staged mid-flight**
+   by the live `26/08/16/FULL-STDIO-…` session. The carrier fix itself is confirmed by reading the code
+   (`💾️binary/…/📸️snapshot/🦀️component.rs:73-82`: `encode_pack_with` is now identity; it previously emitted a
+   `SemioEnvelope` + `BINARY_MAGIC` header).
+### 🩹️ Two peer collisions repaired (both in files this ticket owns)
+
+Peer commit `5ac47258a6` (2026-08-17 21:07, after our start) changed `semio_framework`'s re-export surface and
+renamed `HostEffect`→`Effect`. It left two of our files uncompilable, each of which silently hid a whole test suite:
+
+1. **`semio-framework-os` lib-test** — `ConfigFieldShape` lost its import in that file's own test helper.
+   Qualified to `semio_framework::ConfigFieldShape::` (its sibling on the same lines already was). Without this the
+   crate's suite could not build at all, which is why the export-bug proof appeared unrunnable.
+2. **`semio-framework-plugin` lib-test** — our `schema_stamping_tests` imported `LocalizedLabel`/`SurfaceKind` from
+   `semio_framework` (no longer re-exported) and `Fault` from `crate::app` (now private). Repointed to
+   `ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind}` and `semio_framework::Fault`, matching how the SDK's own code
+   imports them.
+
+**Lesson for later waves**: a green `cargo check -p <crate>` says nothing about the *test* target, and this repo's
+test targets are where the peer collisions land. Always run `--lib --no-fail-fast` (and for `semio-framework-os`,
+`--features os-host-full`) before believing a crate is healthy.
+
+### 🚧️ THE GATE — why no plugin was cut over
+
+The cutover is **atomic per plugin** (a second parallel registration channel is the compatibility layer CLAUDE.md
+forbids — see the Rejected approaches table in `📌️important.md`). Three independent conditions block it today:
+
+1. **stdio is mid-rewrite by a peer.** 192 staged files, 268 test-target errors. Its 36 artifacts must cut over in
+   one pass (D6), which cannot be verified against a moving target. This ticket's own rule forbids chasing it.
+2. **Plugins are already red before we touch them.** `semio-s-plugin-sequence` has 17 errors whose file last changed
+   at `1d71198c19` (14:44), *before* this ticket started — i.e. pre-existing, not peer-in-flight. That is exactly what
+   the concurrent `26/08/17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS` ticket exists to fix.
+   A full crate-health survey was started and abandoned: it was itself adding to the contention.
+3. **The native-codec relocation shape changed mid-flight** (the ⚠️ CORRECTION in `📓️design.md` §1). The taxonomy
+   patch `🔧️patches/w1b-discovery-io-native-codec-vocabulary.txt` must be **re-cut** against the corrected shape
+   before any subset moves codec files, or `verify taxonomy enforce` breaks repo-wide.
+
+Migrating 29 plugins + 36 stdio artifacts into that would produce thousands of unverifiable edits across files two
+other sessions are actively rewriting. That is the opposite of what this ticket is for.
+
+### Resume order for the next session
+
+1. Finish `carrier_native_is_raw` once the stdio peer lands (the only unexecuted test left).
+2. **Re-cut** `🔧️patches/w1b-discovery-io-native-codec-vocabulary.txt` for the corrected native-codec shape.
+3. Resolve **D8** — wire `os_reachable_export_dialects`/`os_reachable_import_dialects` into a real "Export as…"
+   shell action (with en+de strings), or delete them. They must not ship unread.
+4. Wait for `ZERO-WARNINGS-…` to land a green plugin baseline and for `FULL-STDIO-…` to land its 192 files.
+5. Then **W2 stdio** (all 36 artifacts + delete `📇️registry`, D6), then **W3/W4** plugin fan-out using
+   `📓️recipe-subset.md`, then **W5** serializer, **W6** deletion + policy ratchet (debts D1-D7), **W7** verify + close.

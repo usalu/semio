@@ -1278,6 +1278,12 @@ export type ArtifactEvent =
   | { readonly kind: "snapshotReplaced"; readonly pack: readonly number[]; readonly spr: readonly number[] }
   | ({ readonly kind: "status" } & ArtifactSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly ArtifactPresencePeer[] }
+  /** 🎨️ The hub's one-time session color assignment (`ServerFrame::Session`) — mirrors Rust
+   * `ArtifactEvent::Session`. Flows through the SAME generic `{kind:"event",documentId,event}`
+   * wrapping every other `ArtifactEvent` variant gets (both the real wasm `👷️worker/🦀️component.rs`
+   * host, which wraps every `ArtifactEvent` uniformly with zero per-variant special-casing, and this
+   * file's TS fallback via `emitEvent`), never a separate top-level `BackboneWorkerResponse` member. */
+  | { readonly kind: "session"; readonly actor: string; readonly color: number }
   | { readonly kind: "preview"; readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
@@ -1355,11 +1361,7 @@ export type BackboneWorkerResponse =
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
-  | { readonly kind: "directory-status"; readonly pendingCommands: number }
-  /** 🎨️ The hub's one-time session color assignment for a document (`ServerFrame::Session`) — a
-   * flat top-level member (not nested under `event`/`ArtifactEvent`, contract-freeze §C7.4) since
-   * this is worker-actor state, not a document event the store timeline folds. */
-  | { readonly kind: "session"; readonly documentId: string; readonly actor: string; readonly color: number };
+  | { readonly kind: "directory-status"; readonly pendingCommands: number };
 //#endregion 🔖️SyncProtocol
 
 //#region 🔖️WorkflowPlanner

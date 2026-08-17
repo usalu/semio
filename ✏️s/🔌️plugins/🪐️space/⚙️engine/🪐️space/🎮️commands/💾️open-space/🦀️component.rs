@@ -3,7 +3,7 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 
 use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot, S_SPACE_SCHEMA};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -57,7 +57,7 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
     match crate::workflow_artifact_envelope_pack(&workflow_snapshot) {
         Some(files) => {
             eprintln!("[DEBUG] openSpace id={} workflow_id={} nodes={} collections={}", space_id, workflow_snapshot.id, workflow_snapshot.vcs.initial_snapshot.graph.nodes.len(), document.vcs.initial_snapshot.collections.len());
-            Ok(Emit { config_mutations, effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
+            Ok(Emit { config_mutations, effects: vec![Effect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() })
         }
         None => {
             eprintln!("[DEBUG] openSpace workflow pack export failed id={space_id}");

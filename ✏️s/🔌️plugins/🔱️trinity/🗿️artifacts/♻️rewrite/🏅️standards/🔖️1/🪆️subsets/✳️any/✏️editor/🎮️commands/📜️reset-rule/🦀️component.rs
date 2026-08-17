@@ -6,7 +6,7 @@ use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 
 /// 🧬️ `resetRule` is a genuine whole-document reset (back to the blank default rule) — not
-/// expressible as a granular mutation, so it routes through `HostEffect::LoadDocument` (outside
+/// expressible as a granular mutation, so it routes through `Effect::LoadDocument` (outside
 /// undo history) via `editor::rewrite::reset_document_effect`, mirroring `set_active_example`/
 /// `set_fixture_json` conventions elsewhere in this ticket.
 pub(crate) fn reset_rule(state: &RewriteSnapshot) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {

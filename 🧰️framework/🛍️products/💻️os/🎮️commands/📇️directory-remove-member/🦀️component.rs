@@ -1,6 +1,6 @@
 //! 📇️ OS command `os.directory.remove-member` — removes a member from a hub space (the owner's own
 //! membership can never be removed, contract §C1's decider laws), dispatched through the shell's
-//! directory command funnel (`HostEffect::ReplayShellCommand` → `DirectoryClient.command` →
+//! directory command funnel (`Effect::ReplayShellCommand` → `DirectoryClient.command` →
 //! `POST /directory/commands`; the resulting `DirectoryEvent`s arrive back over `/directory/ws`,
 //! never an optimistic local mutation). See contract-freeze.md §C6 of
 //! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS/`.

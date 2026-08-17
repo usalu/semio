@@ -272,10 +272,16 @@ impl PluginBuilder<Ready> {
     /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
     /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
     /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
-    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, def: crate::app::AppDefinition) -> Self {
+    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, mut def: crate::app::AppDefinition) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
+        }
+        // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
+        // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
+        // empty, so an app that already set a different `io.document_schema` keeps its own choice.
+        if def.io.document_schema.is_empty() {
+            def.io.document_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def, examples: Vec::new() };
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
@@ -309,10 +315,16 @@ impl PluginBuilder<Ready> {
     /// ✏️ Declares a typed editor app factory (mutation-capable surface) — the `ArtifactEditor` twin
     /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`. No
     /// `SemanticMutation` bound — see `viewer` above and `editor_mutation_roster` below.
-    pub fn editor<E: crate::app::ArtifactEditor>(mut self, def: crate::app::AppDefinition) -> Self {
+    pub fn editor<E: crate::app::ArtifactEditor>(mut self, mut def: crate::app::AppDefinition) -> Self {
         use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             E::app_schema()
+        }
+        // 🎯️ C8.2 — schema-first: `io.document_schema` names the schema this surface opens without
+        // relying on the `artifact_kinds[0].schema` convention. Stamped only when the app left it
+        // empty, so an app that already set a different `io.document_schema` keeps its own choice.
+        if def.io.document_schema.is_empty() {
+            def.io.document_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def, examples: Vec::new() };
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
@@ -661,5 +673,134 @@ mod plugin_builder_dependency_tests {
             .err()
             .expect("one flow extension id may have exactly one contribution owner");
         assert_eq!(error.code, "plugin-assembly.flow-extension-target");
+    }
+}
+
+/// 🧪️ Ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION contract §C8.2 —
+/// `PluginBuilder::editor::<E>`/`viewer::<V>` stamp `def.io.document_schema` from `E::DOCUMENT_SCHEMA`/
+/// `V::DOCUMENT_SCHEMA` when the app left it empty, so "which document schema does this surface open"
+/// is schema-first instead of the `artifact_kinds[0].schema` convention.
+#[cfg(test)]
+mod schema_stamping_tests {
+    use super::*;
+    use crate::app::{
+        ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit,
+        Viewer,
+    };
+    use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
+    use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
+    use store::EngineHandles;
+
+    const EDITOR_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-editor", standard: StandardId("1"), subset: SubsetId::ANY };
+    const VIEWER_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-viewer", standard: StandardId("1"), subset: SubsetId::ANY };
+
+    #[derive(Default)]
+    struct SchemaStampEditorFixture;
+
+    impl ArtifactEditor for SchemaStampEditorFixture {
+        const DIALECT: Dialect = EDITOR_STAMP_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "builder-test.schema-stamp-editor.document";
+        type Snapshot = NoConfig;
+        type Mutation = NoConfigMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Draft = NoDraft;
+        type DraftMutation = NoDraftMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = NoTransient;
+        type TransientMutation = NoTransientMutation;
+        type Command = NoConfigMutation;
+
+        fn initial_snapshot() -> NoConfig {
+            NoConfig::default()
+        }
+
+        fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
+            Ok(Emit::default())
+        }
+
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
+            crate::ui_text(crate::Label::data("schema-stamp-editor"))
+        }
+    }
+
+    #[derive(Default)]
+    struct SchemaStampViewerFixture;
+
+    impl ArtifactViewer for SchemaStampViewerFixture {
+        const DIALECT: Dialect = VIEWER_STAMP_DIALECT;
+        const DOCUMENT_SCHEMA: &'static str = "builder-test.schema-stamp-viewer.document";
+        type Snapshot = NoConfig;
+        type Mutation = NoConfigMutation;
+        type Config = NoConfig;
+        type ConfigMutation = NoConfigMutation;
+        type Presence = NoPresence;
+        type PresenceMutation = NoPresenceMutation;
+        type Transient = NoTransient;
+        type TransientMutation = NoTransientMutation;
+        type Command = NoConfigMutation;
+
+        fn initial_snapshot() -> NoConfig {
+            NoConfig::default()
+        }
+
+        fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+            Ok(ViewEmit::default())
+        }
+
+        fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> crate::UiNode {
+            crate::ui_text(crate::Label::data("schema-stamp-viewer"))
+        }
+    }
+
+    fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
+        let label = LocalizedLabel::data("Surface");
+        match role {
+            AppRole::Editor => Editor::builder(dialect).document(["semio", "schema-stamp-editor"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition(),
+            AppRole::Viewer => Viewer::builder(dialect).document(["semio", "schema-stamp-viewer"]).mode("edit", label.clone(), "pencil").window_kind("main", label, "main", SurfaceKind::Canvas2d, IconName::AppWindow).build_definition(),
+        }
+    }
+
+    #[test]
+    fn editor_stamps_document_schema_from_the_type_when_left_empty() {
+        let def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
+        assert!(def.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
+        let plugin = Plugin::builder("builder-test-schema-stamp-editor")
+            .label("Builder Test Schema Stamp Editor")
+            .version("0.1.0")
+            .editor::<SchemaStampEditorFixture>(def)
+            .try_build()
+            .expect("a minimal editor surface must assemble");
+        let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Editor).expect("the registered editor app definition");
+        assert_eq!(app.io.document_schema, SchemaStampEditorFixture::DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn editor_does_not_overwrite_an_explicitly_set_document_schema() {
+        let mut def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
+        def.io.document_schema = "already-set.document".into();
+        let plugin = Plugin::builder("builder-test-schema-stamp-editor-explicit")
+            .label("Builder Test Schema Stamp Editor Explicit")
+            .version("0.1.0")
+            .editor::<SchemaStampEditorFixture>(def)
+            .try_build()
+            .expect("a minimal editor surface must assemble");
+        let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Editor).expect("the registered editor app definition");
+        assert_eq!(app.io.document_schema, "already-set.document", "an explicitly set schema must survive untouched");
+    }
+
+    #[test]
+    fn viewer_stamps_document_schema_from_the_type_when_left_empty() {
+        let def = minimal_surface_def(VIEWER_STAMP_DIALECT, AppRole::Viewer);
+        assert!(def.io.document_schema.is_empty(), "fixture precondition: builder leaves io.document_schema empty");
+        let plugin = Plugin::builder("builder-test-schema-stamp-viewer")
+            .label("Builder Test Schema Stamp Viewer")
+            .version("0.1.0")
+            .viewer::<SchemaStampViewerFixture>(def)
+            .try_build()
+            .expect("a minimal viewer surface must assemble");
+        let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Viewer).expect("the registered viewer app definition");
+        assert_eq!(app.io.document_schema, SchemaStampViewerFixture::DOCUMENT_SCHEMA);
     }
 }

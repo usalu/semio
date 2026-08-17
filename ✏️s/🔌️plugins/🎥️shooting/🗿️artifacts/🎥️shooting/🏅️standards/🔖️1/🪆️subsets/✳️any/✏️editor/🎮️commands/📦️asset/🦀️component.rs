@@ -9,7 +9,7 @@ use crate::artifacts::shooting::mutations::change_asset_url::mutation::ChangeAss
 use crate::artifacts::shooting::mutations::create_asset::mutation::CreateAsset;
 use crate::artifacts::shooting::mutations::rename_asset::mutation::RenameAsset;
 use crate::artifacts::shooting::mutations::set_active_asset::mutation::SetActiveAsset as SetActiveAssetMutation;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -125,7 +125,7 @@ pub mod import_asset_request {
     pub struct ImportAssetRequest {}
 
     pub fn handle(_payload: &ImportAssetRequest, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
+        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(108),  accept: ".glb,model/gltf-binary".into(), read_as: Some("dataUrl".into()), import_action: "importAsset".into(), multiple: false }))
     }
 }
 //#endregion 🔖️ImportAssetRequest
@@ -159,11 +159,11 @@ mod tests {
 
     #[test]
     fn import_asset_request_declares_the_glb_accept_filter() {
-        use semio_framework_plugin::HostEffect;
+        use semio_framework_plugin::Effect;
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {}));
         match &result.requested_effects[0] {
-            HostEffect::RequestFileOpen { read_as, import_action, .. } => {
+            Effect::RequestFileOpen { read_as, import_action, .. } => {
                 assert_eq!(read_as.as_deref(), Some("dataUrl"));
                 assert_eq!(import_action, "importAsset");
             }

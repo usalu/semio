@@ -2,7 +2,7 @@
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -11,5 +11,5 @@ use serde::{Deserialize, Serialize};
 pub struct GoHome {}
 
 pub fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
+    Ok(Emit::effect(Effect::Navigate { uri: "/".into() }))
 }

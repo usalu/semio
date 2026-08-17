@@ -5,7 +5,7 @@ use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::maphost::map_host_from;
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub mod open_source {
     pub fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> Result<Emit<GisMapMutation, Gis2dConfigMutation>, Fault> {
         let host = map_host_from(doc.snapshot, cfg.snapshot);
         match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
-            Some(url) => Ok(Emit::effect(HostEffect::OpenExternalUrl { url })),
+            Some(url) => Ok(Emit::effect(Effect::OpenExternalUrl { url })),
             None => Ok(Emit::default()),
         }
     }
@@ -41,7 +41,7 @@ mod tests {
         let mut app = app();
         let result = dispatch(&mut app, Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "nope".into() }));
         assert!(result.mutations.is_empty());
-        assert!(!result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::OpenExternalUrl { .. })));
+        assert!(!result.requested_effects.iter().any(|effect| matches!(effect, Effect::OpenExternalUrl { .. })));
     }
 
     /// 🌐️ A Shell action never emits document operations — the registry's kind-discipline guard

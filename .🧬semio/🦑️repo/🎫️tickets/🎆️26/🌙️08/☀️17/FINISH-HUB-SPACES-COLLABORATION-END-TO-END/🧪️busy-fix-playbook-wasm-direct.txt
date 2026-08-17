@@ -1,0 +1,424 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+   Compiling semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+warning: associated function `new` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:875:8
+    |
+874 | impl WorldGlobalsRing {
+    | --------------------- associated function in this implementation
+875 |     fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, initial_slots: u32) -> Self {
+    |        ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `bind_group_layout` is never read
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1075:5
+     |
+1053 | pub(crate) struct UiPipelines {
+     |                   ----------- field in this struct
+...
+1075 |     bind_group_layout: wgpu::BindGroupLayout,
+     |     ^^^^^^^^^^^^^^^^^
+
+warning: function `content_stencil_state` is never used
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1169:4
+     |
+1169 | fn content_stencil_state() -> wgpu::StencilState {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `mask_stencil_state` is never used
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1174:4
+     |
+1174 | fn mask_stencil_state() -> wgpu::StencilState {
+     |    ^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new` and `bind_group_layout` are never used
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1236:12
+     |
+1235 | impl UiPipelines {
+     | ---------------- associated items in this implementation
+1236 |     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
+     |            ^^^
+...
+1701 |     pub fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+     |            ^^^^^^^^^^^^^^^^^
+
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+warning: `semio-framework-ui` (lib) generated 5 warnings
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+   Compiling semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+error: failed to resolve directory while parsing WIT for path [/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit]
+       
+       Caused by:
+         failed to parse package: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit
+       
+       Caused by:
+         expected an identifier or string, found keyword `result`
+            --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️wit/📜️effects.wit:241:5
+             |
+         241 |     result: respond-result,
+             |     ^-----
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18:5
+   |
+18 | /     generate!({
+19 | |         world: "actor",
+20 | |         path: "📜️wit",
+21 | |     });
+   | |______^
+   |
+   = note: this error originates in the macro `generate` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: cannot find `exports` in `component`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:93:27
+   |
+93 |     use crate::component::exports::semio::framework::reactor as wit;
+   |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:241:27
+    |
+241 |     use crate::component::exports::semio::framework::reactor::Event as W;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:275:27
+    |
+275 |     use crate::component::exports::semio::framework::reactor::ActivationEvent as W;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:287:27
+    |
+287 |     use crate::component::exports::semio::framework::reactor::CompletionResult as W;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:295:27
+    |
+295 |     use crate::component::exports::semio::framework::reactor::MessageEndpoint as W;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:309:27
+    |
+309 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:325:27
+    |
+325 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:337:27
+    |
+337 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:360:27
+    |
+360 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:417:27
+    |
+417 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:428:27
+    |
+428 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:437:27
+    |
+437 |     use crate::component::exports::semio::framework::reactor as wit;
+    |                           ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:24:9
+   |
+24 |     use exports::semio::framework::checkpoint::Guest as CheckpointGuest;
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:25:9
+   |
+25 |     use exports::semio::framework::describe::Guest as DescribeGuest;
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:26:9
+   |
+26 |     use exports::semio::framework::jobs::{Guest as JobsGuest, JobBudget, JobStep};
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `exports` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:27:9
+   |
+27 |     use exports::semio::framework::reactor::{Budget as WitBudget, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnRes...
+   |         ^^^^^^^ use of unresolved module or unlinked crate `exports`
+   |
+   = help: if you wanted to use a crate named `exports`, use `cargo add exports` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:28:9
+   |
+28 |     use semio::framework::types::PluginError;
+   |         ^^^^^ use of unresolved module or unlinked crate `semio`
+   |
+   = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error: cannot find macro `export` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:78:5
+   |
+78 |     export!(ComponentGuest);
+   |     ^^^^^^
+
+error[E0433]: cannot find `exports` in `component`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:92:113
+   |
+92 | ...actor::Event>, budget: crate::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::exports::semio::...
+   |                                             ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:92:185
+   |
+92 | ...tor::Budget) -> Result<crate::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+   |                                             ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:274:55
+    |
+274 | fn wit_activation_to_kernel(reason: crate::component::exports::semio::framework::reactor::ActivationEvent) -> semio_framework::kern...
+    |                                                       ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:286:55
+    |
+286 | fn wit_completion_to_kernel(result: crate::component::exports::semio::framework::reactor::CompletionResult) -> RequestOutcome {
+    |                                                       ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:308:102
+    |
+308 | ...:TurnResult, _budget: crate::component::exports::semio::framework::reactor::Budget) -> crate::component::exports::semio::framewo...
+    |                                            ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:308:167
+    |
+308 | ...::reactor::Budget) -> crate::component::exports::semio::framework::reactor::TurnResult {
+    |                                            ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:427:99
+    |
+427 | ...nel::JobPlacement) -> crate::component::exports::semio::framework::reactor::JobPlacement {
+    |                                            ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:436:79
+    |
+436 | fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> crate::component::exports::semio::framework::reactor::RespondResult {
+    |                                                                               ^^^^^^^ could not find `exports` in `component`
+
+error[E0433]: cannot find `exports` in `component`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:92:43
+   |
+92 | pub fn poll(events: Vec<crate::component::exports::semio::framework::reactor::Event>, budget: crate::component::exports::semio::fram...
+   |                                           ^^^^^^^ could not find `exports` in `component`
+   |
+help: consider importing this module through its public re-export
+   |
+87 +     use crate::reactor;
+   |
+help: if you import `reactor`, refer to it directly
+   |
+92 - pub fn poll(events: Vec<crate::component::exports::semio::framework::reactor::Event>, budget: crate::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+92 + pub fn poll(events: Vec<reactor::Event>, budget: crate::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+   |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:240:49
+    |
+240 | fn wit_event_to_kernel(event: crate::component::exports::semio::framework::reactor::Event) -> Event {
+    |                                                 ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+240 - fn wit_event_to_kernel(event: crate::component::exports::semio::framework::reactor::Event) -> Event {
+240 + fn wit_event_to_kernel(event: reactor::Event) -> Event {
+    |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:294:55
+    |
+294 | fn wit_endpoint_to_kernel(endpoint: crate::component::exports::semio::framework::reactor::MessageEndpoint) -> MessageEndpoint {
+    |                                                       ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+294 - fn wit_endpoint_to_kernel(endpoint: crate::component::exports::semio::framework::reactor::MessageEndpoint) -> MessageEndpoint {
+294 + fn wit_endpoint_to_kernel(endpoint: reactor::MessageEndpoint) -> MessageEndpoint {
+    |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:324:64
+    |
+324 | fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::exports::semio::framework::reactor::UiPatch {
+    |                                                                ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+324 - fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::exports::semio::framework::reactor::UiPatch {
+324 + fn kernel_ui_patch_to_wit(patch: UiPatch) -> reactor::UiPatch {
+    |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:336:61
+    |
+336 | fn kernel_patch_op_to_wit(op: PatchOp) -> crate::component::exports::semio::framework::reactor::PatchOp {
+    |                                                             ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+336 - fn kernel_patch_op_to_wit(op: PatchOp) -> crate::component::exports::semio::framework::reactor::PatchOp {
+336 + fn kernel_patch_op_to_wit(op: PatchOp) -> reactor::PatchOp {
+    |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:359:62
+    |
+359 | fn kernel_effect_to_wit(effect: Effect) -> crate::component::exports::semio::framework::reactor::Effect {
+    |                                                              ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+359 - fn kernel_effect_to_wit(effect: Effect) -> crate::component::exports::semio::framework::reactor::Effect {
+359 + fn kernel_effect_to_wit(effect: Effect) -> reactor::Effect {
+    |
+
+error[E0433]: cannot find `exports` in `component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:416:75
+    |
+416 | fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> crate::component::exports::semio::framework::reactor::MessageEndpoint {
+    |                                                                           ^^^^^^^ could not find `exports` in `component`
+    |
+help: consider importing this module through its public re-export
+    |
+ 87 +     use crate::reactor;
+    |
+help: if you import `reactor`, refer to it directly
+    |
+416 - fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> crate::component::exports::semio::framework::reactor::MessageEndpoint {
+416 + fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> reactor::MessageEndpoint {
+    |
+
+error[E0425]: cannot find function `log` in module `crate::component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:327:27
+    |
+327 |         crate::component::log(level, message);
+    |                           ^^^ not found in `crate::component`
+    |
+help: consider importing this function
+    |
+ 12 + use crate::component::component::log;
+    |
+help: if you import `log`, refer to it directly
+    |
+327 -         crate::component::log(level, message);
+327 +         log(level, message);
+    |
+
+error[E0425]: cannot find function `now_ms` in module `crate::component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:338:34
+    |
+338 |         return crate::component::now_ms();
+    |                                  ^^^^^^ not found in `crate::component`
+    |
+help: consider importing this function
+    |
+ 12 + use crate::component::component::now_ms;
+    |
+help: if you import `now_ms`, refer to it directly
+    |
+338 -         return crate::component::now_ms();
+338 +         return now_ms();
+    |
+
+error[E0425]: cannot find function `trace_span` in module `crate::component`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:348:27
+    |
+348 |         crate::component::trace_span(name);
+    |                           ^^^^^^^^^^ not found in `crate::component`
+    |
+help: consider importing this function
+    |
+ 12 + use crate::component::component::trace_span;
+    |
+help: if you import `trace_span`, refer to it directly
+    |
+348 -         crate::component::trace_span(name);
+348 +         trace_span(name);
+    |
+
+error[E0562]: `impl Trait` is not allowed in closure parameters
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:361:25
+    |
+361 |     let pack = |value: &impl serde::Serialize| store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue:...
+    |                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `impl Trait` is only allowed in arguments and return types of functions and methods
+
+Some errors have detailed explanations: E0425, E0433, E0562.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `semio-framework-plugin` (lib) due to 38 previous errors
+warning: build failed, waiting for other jobs to finish...

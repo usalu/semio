@@ -173,7 +173,7 @@ pub mod catalog {
     //#region 🔖️GenerateCheck
     /// 📁️ Resolves the canonical generated plugin-registry output directory.
     pub(crate) fn generated_dir(root: &Path) -> PathBuf {
-        root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated")
+        root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")
     }
 
     /// 📄️ Raw text of the generated playgrounds catalog (`"[]\n"` if it has never been generated) —
@@ -905,7 +905,7 @@ mod tests {
     }
 
     fn generated_dir_under(root: &std::path::Path) -> std::path::PathBuf {
-        root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated")
+        root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")
     }
 
     #[test]

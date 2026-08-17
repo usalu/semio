@@ -3,7 +3,7 @@
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::{apply_brush_place_payload, Puzzle2dActionCtx};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use serde_json::Value;
 
 fn apply_fill_placements(ctx: &mut Puzzle2dActionCtx<'_>, step_json: &str) {
@@ -27,7 +27,7 @@ pub fn set_fill_count(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         .map_or(0, |value| value.round().max(0.0) as u32)
         .min(fill::PUZZLE2D_FILL_COUNT_MAX);
     ctx.scene.runtime.fill_count = count;
-    ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
+    ctx.effects.push(Effect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
     ctx.host.borrow_mut().set_active_utility(overview::utilities::brush::UTILITY_ID);
     ctx.host.borrow_mut().brush_fill_session_begin(count, 1);
     let step = ctx.host.borrow_mut().brush_fill_session_step(count.max(1));

@@ -32,7 +32,7 @@ use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     tree_item, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactView,
     Emit, Fault, IconName, Label, WorldSunConfig, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement, WindowMeasure,
@@ -387,17 +387,17 @@ pub fn export_solid_modelspace(envelope: &CadPlayView, format: &str) -> Option<C
 
 /// @emoji ⬇️ Converts a staged native-geometry export into a download host effect emitted directly
 /// to the shell (no document mutation, no pending-export runtime slot).
-pub fn cad_solid_export_effect(export: CadSolidExport) -> HostEffect {
+pub fn cad_solid_export_effect(export: CadSolidExport) -> Effect {
     let data = match export.data {
         Value::String(text) => text,
         other => serde_json::to_string(&other).unwrap_or_default(),
     };
-    HostEffect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
+    Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data, encoding: export.encoding }
 }
 
 /// @emoji ⬇️ Wraps a spatial-JSON export document into a download host effect.
-pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> HostEffect {
-    HostEffect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
+pub fn cad_spatial_export_effect(value: &Value, filename: &str) -> Effect {
+    Effect::DownloadMediaExport { filename: filename.into(), mime_type: "text/plain".into(), data: serde_json::to_string(value).unwrap_or_default(), encoding: None }
 }
 
 /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: exporting per-pane objects as
@@ -459,17 +459,17 @@ pub fn export_spatial_json(envelope: &CadPlayView, mode: &str) -> Value {
     }
 }
 
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE history —
 /// the sanctioned non-mutation path for a whole-document replace (file import, load-example). Per
 /// `📓️taxonomy.md`, whole-document replace has NO mutation-enum representative (`SetSnapshot` is
 /// banned outright); every former "replace the whole document" gesture builds this effect instead
 /// of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log for `scene`'s own
 /// `schema`/`id` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &CadSnapshot) -> HostEffect {
+pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(&scene.schema, &scene.id, scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("cad document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 
 /// 🎯️ Builds the whole-value-field semantic mutation for one object addressed by `pane`/`object_id`
@@ -2074,7 +2074,7 @@ mod tests {
         assert!(emit.artifact_mutations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
-            HostEffect::DownloadMediaExport { filename, data, .. } => {
+            Effect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "cad.selected.spatial.dsl");
                 assert!(data.contains("activeModelDefinitionId"));
             }
@@ -2087,7 +2087,7 @@ mod tests {
         let app = CadPlayApp::default();
         let emit = drive(&app, &default_document(), "loadRawRequest", None);
         match &emit.effects[0] {
-            HostEffect::RequestFileOpen { import_action, read_as, .. } => {
+            Effect::RequestFileOpen { import_action, read_as, .. } => {
                 assert_eq!(import_action, "importCadFile");
                 assert_eq!(read_as.as_deref(), Some("dataUrl"));
             }
@@ -2267,8 +2267,8 @@ mod tests {
         let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": file_text, "name": "cad.spatial.json" })));
         // 🌱️ Whole-document replace is not an in-history mutation (SEMANTIC-MUTATIONS-OVERHAUL
         // retired `SetSnapshot`) — a spatial JSON string payload now surfaces as a
-        // `HostEffect::LoadDocument` carrying the replacement document's pack bytes.
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
+        // `Effect::LoadDocument` carrying the replacement document's pack bytes.
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
             panic!("expected a LoadDocument effect");
         };
         let next = <CadSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

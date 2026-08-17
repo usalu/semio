@@ -4,7 +4,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::mutations::change_catalog_generation;
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::VcsError;
@@ -36,7 +36,7 @@ fn create_folder_studio(name: &str, folder_path: &str, owner_id: &str, owner_nam
 /// @emoji 🧭️ Builds the typed emit for a freshly-created studio: bump the catalog counter (operation)
 /// and navigate the shell to the new studio route (host effect).
 fn created_studio_emit(catalog_generation: u64, space_id: &str) -> Emit<SHomeMutation, HomeConfigMutation> {
-    Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![HostEffect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
+    Emit { artifact_mutations: vec![change_catalog_generation(catalog_generation + 1)], effects: vec![Effect::Navigate { uri: format!("/spaces/{space_id}") }], ..Default::default() }
 }
 
 pub fn handle(payload: &CreateStudio, doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
@@ -104,8 +104,8 @@ mod tests {
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg).expect("handle");
-        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
-        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "ephemeral create must not download");
+        assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "ephemeral create must not download");
         let persistent = list_os_space_catalog_entries(crate::catalog_port()).expect("list");
         assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
         let ephemeral_catalog = list_os_space_catalog_entries(crate::temp_catalog_port()).unwrap_or_default();
@@ -114,7 +114,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::Navigate { uri } => Some(uri.as_str()),
+                Effect::Navigate { uri } => Some(uri.as_str()),
                 _ => None,
             })
             .expect("navigate");

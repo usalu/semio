@@ -64,9 +64,9 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     /// 🩹️ Pre-existing bug fixed here (confirmed via `git log --date=iso`: `SetActiveExample`'s
-    /// `reset_document_effect`/`HostEffect::LoadDocument` conversion — and this very test — both
+    /// `reset_document_effect`/`Effect::LoadDocument` conversion — and this very test — both
     /// predate this ticket's dispatch to note, unrelated to composition). Dispatching a command only
-    /// ever RETURNS a `HostEffect::LoadDocument` as data for a real host to re-apply; `dispatch_typed`
+    /// ever RETURNS a `Effect::LoadDocument` as data for a real host to re-apply; `dispatch_typed`
     /// never loops it back into the same app instance, so `app.snapshot()`/subsequent `render()` never
     /// reflected it — this assertion could never have passed as originally written, on ANY content.
     /// Fixed the same way writer's own `app_with_jack()` and cad's `two_instances_converge_…` tests

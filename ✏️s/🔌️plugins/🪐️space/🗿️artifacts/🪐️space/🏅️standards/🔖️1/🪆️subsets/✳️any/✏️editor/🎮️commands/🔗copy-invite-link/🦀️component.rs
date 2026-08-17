@@ -7,7 +7,7 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -20,7 +20,7 @@ pub struct CopyInviteLink {
 }
 
 pub fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "role": payload.role, "ttlSecs": payload.ttl_secs }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "role": payload.role, "ttlSecs": payload.ttl_secs }))) }))
 }
 
 //#region 🧪️Tests
@@ -36,7 +36,7 @@ mod tests {
         let result = app.dispatch_typed(SpaceIndexCommand::CopyInviteLink(CopyInviteLink { role: "spectator".into(), ttl_secs: 3600 }), &semio_framework_plugin::testkit::meta("local")).expect("copy link");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::ReplayShellCommand { action_id, args } => {
+            Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.directory.share-link");
                 let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
                 assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("spectator"));

@@ -146,7 +146,21 @@ pub enum ActionArgControl {
     Vec3,
     IconSelect {
         classifier_kind: String,
-    }
+    },
+    /// 🗂️ Host-resolved: the plugin declares intent (which `AppRole`s qualify), the host resolves it
+    /// into a plain `Select { options }` from its live plugin catalogue right before the dialog
+    /// renders — see `artifact_kind_choices` and region `🔖️HostResolvedArgs` below. Mirrors the
+    /// `IconSelect { classifier_kind }` precedent above (host-resolved, plugin declares only intent).
+    ArtifactKind {
+        roles: Vec<AppRole>,
+    },
+    /// 🎭️ Host-resolved: lists `(pluginId, appId, role)` for the dialect coordinate found in the
+    /// dialog's seed argument named `dialect_arg` — see `artifact_kind_choices`'s sibling resolver
+    /// and region `🔖️HostResolvedArgs` below.
+    SurfaceApp {
+        roles: Vec<AppRole>,
+        dialect_arg: String,
+    },
 }
 
 /// @emoji 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
@@ -204,6 +218,16 @@ impl ActionArgDef {
     /// @emoji 🧭️ A three-component vector argument.
     pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_control(id, label, ActionArgControl::Vec3)
+    }
+
+    /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
+    pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
+        Self::with_control(id, label, ActionArgControl::ArtifactKind { roles })
+    }
+
+    /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
+    pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
+        Self::with_control(id, label, ActionArgControl::SurfaceApp { roles, dialect_arg: dialect_arg.into() })
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
@@ -2297,7 +2321,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
 /// identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
 /// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
-/// `HostEffect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
+/// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2738,7 +2762,7 @@ pub struct AppDefinition {
     /// `tutorials` (if any) are shown alongside these, never replacing them (unlike `introduction`).
     #[serde(default)]
     pub tutorials: Vec<TutorialDefinition>,
-    /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
+    /// 🗨️ The modal form dialogs this app can open via `Effect::OpenDialog`.
     #[serde(default)]
     pub dialogs: Vec<DialogDefinition>,
     /// 🔌️ This app's workflow input ports — see `crate::MediaPortSpec`.
@@ -2784,7 +2808,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// never re-implement default-filling.
 ///
 /// 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
-/// declared, editable form field, per `HostEffect::OpenDialog { args }`) through untouched: any `seed`
+/// declared, editable form field, per `Effect::OpenDialog { args }`) through untouched: any `seed`
 /// key that is not a declared arg id survives into the result unmodified, and a `seed` value for a
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
@@ -2826,8 +2850,9 @@ pub fn effective_action_args(
 }
 
 /// @emoji ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
-/// `Null`, or an empty string (covers a blank Text/Select/IconSelect); `false`, `0`, and `[]` are
-/// valid values for Toggle/Number/Slider/Vec3 and never count as unset.
+/// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
+/// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
+/// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
 pub fn missing_required_args(
     defs: &[ActionArgDef],
     effective: &DslValue,
@@ -3236,6 +3261,102 @@ pub struct PluginManifest {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<ArtifactContributionDescriptor>,
 }
+
+//#region 🔖️HostResolvedArgs
+/// @emoji 🗂️ One artifact-kind choice offered by an `ActionArgControl::ArtifactKind` dialog field —
+/// resolved by the host from its live plugin catalogue (`artifact_kind_choices`) into a plain
+/// `Select { options }` right before the dialog renders. Round-trips through `ActionArgOption.value`
+/// as JSON via `encode_artifact_kind_choice`/`decode_artifact_kind_choice` — the frozen wire shape
+/// (contract §C8.1): `{"kindId":"s.draw.draw","schema":"draw.document","dialect":{"artifactKind":
+/// "s.draw.draw","standard":"1","subset":"*"},"label":{"en":"Draw","de":"Zeichnung"}}`. TS twin:
+/// `ArtifactKindChoice` (`🟦️component.ts`) — both codecs must agree byte-for-byte over the pinned
+/// fixtures.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ArtifactKindChoice {
+    pub kind_id: String,
+    pub schema: String,
+    pub dialect: ArtifactDialect,
+    pub label: LocalizedLabel,
+}
+
+/// @emoji 🎭️ One `(pluginId, appId, role)` choice offered by an `ActionArgControl::SurfaceApp` dialog
+/// field — resolved by the host against the dialect coordinate found in the dialog's seed argument
+/// named `dialect_arg`. Round-trips through `ActionArgOption.value` as JSON via
+/// `encode_surface_app_choice`/`decode_surface_app_choice`: `{"pluginId":"draw","appId":"s.draw.draw
+/// @1/*#editor","role":"editor"}`. TS twin: `SurfaceAppChoice` (`🟦️component.ts`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct SurfaceAppChoice {
+    pub app: AppRef,
+    pub role: AppRole,
+}
+
+/// 🧵️ Encodes an `ArtifactKindChoice` into the frozen `ActionArgOption.value` JSON shape — `label`
+/// resolves under `Terminology::Native`, the only terminology this wire shape carries (a dialog
+/// re-resolves display strings client-side under the active terminology from `kind_id`/`schema`
+/// alone if it ever needs to, but the frozen shape itself is native-only, matching `IconSelect`'s own
+/// `classifier_kind`-not-label precedent for host-resolved controls).
+pub fn encode_artifact_kind_choice(choice: &ArtifactKindChoice) -> String {
+    serde_json::json!({
+        "kindId": choice.kind_id,
+        "schema": choice.schema,
+        "dialect": choice.dialect,
+        "label": {
+            "en": choice.label.resolve(Terminology::Native, Locale::En),
+            "de": choice.label.resolve(Terminology::Native, Locale::De),
+        },
+    })
+    .to_string()
+}
+
+/// 🧵️ Inverse of `encode_artifact_kind_choice`.
+pub fn decode_artifact_kind_choice(value: &str) -> Result<ArtifactKindChoice, String> {
+    let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed artifact kind choice JSON: {error}"))?;
+    let kind_id = json.get("kindId").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field kindId".to_string())?.to_string();
+    let schema = json.get("schema").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field schema".to_string())?.to_string();
+    let dialect: ArtifactDialect = json.get("dialect").cloned().ok_or_else(|| "artifact kind choice missing field dialect".to_string()).and_then(|value| serde_json::from_value(value).map_err(|error| format!("artifact kind choice has a malformed dialect: {error}")))?;
+    let en = json.pointer("/label/en").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.en".to_string())?;
+    let de = json.pointer("/label/de").and_then(serde_json::Value::as_str).ok_or_else(|| "artifact kind choice missing string field label.de".to_string())?;
+    Ok(ArtifactKindChoice { kind_id, schema, dialect, label: LocalizedLabel::native(en, de) })
+}
+
+/// 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape.
+pub fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
+    serde_json::json!({
+        "pluginId": choice.app.plugin_id,
+        "appId": choice.app.app_id,
+        "role": choice.role.as_str(),
+    })
+    .to_string()
+}
+
+/// 🧵️ Inverse of `encode_surface_app_choice`.
+pub fn decode_surface_app_choice(value: &str) -> Result<SurfaceAppChoice, String> {
+    let json: serde_json::Value = serde_json::from_str(value).map_err(|error| format!("malformed surface app choice JSON: {error}"))?;
+    let plugin_id = json.get("pluginId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field pluginId".to_string())?.to_string();
+    let app_id = json.get("appId").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field appId".to_string())?.to_string();
+    let role_str = json.get("role").and_then(serde_json::Value::as_str).ok_or_else(|| "surface app choice missing string field role".to_string())?;
+    let role: AppRole = role_str.parse()?;
+    Ok(SurfaceAppChoice { app: AppRef { plugin_id, app_id }, role })
+}
+
+/// 🗂️ Every artifact-kind choice for the given `roles`: every app across `manifests` whose `role` is
+/// in `roles` and whose `io.document_schema` is non-empty contributes one choice per dialect
+/// coordinate. Deduped by dialect coordinate (first manifest/app wins — callers pass owner manifests
+/// first so the owner's label wins over a later contributor's), sorted by coordinate for determinism
+/// — the pure resolver behind `ActionArgControl::ArtifactKind`.
+pub fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRole]) -> Vec<ArtifactKindChoice> {
+    let mut by_coordinate: BTreeMap<String, ArtifactKindChoice> = BTreeMap::new();
+    for manifest in manifests {
+        for app in &manifest.apps {
+            if !roles.contains(&app.role) || app.io.document_schema.is_empty() {
+                continue;
+            }
+            by_coordinate.entry(app.dialect.to_coordinate()).or_insert_with(|| ArtifactKindChoice { kind_id: app.dialect.artifact_kind.clone(), schema: app.io.document_schema.clone(), dialect: app.dialect.clone(), label: app.label.clone() });
+        }
+    }
+    by_coordinate.into_values().collect()
+}
+//#endregion 🔖️HostResolvedArgs
 
 //#region 🔖️DependencyGraph
 /// 🚧️ Typed dependency-graph validation failures — contract freeze §4/§5: missing dependency,
@@ -3706,6 +3827,151 @@ pub struct ViewWindowInstance {
 #[path = "../🎠️kernel/🦀️component.rs"]
 pub mod kernel;
 //#endregion 🔖️Kernel
+
+//#region 🔖️PackageDescriptor
+/// 🎭️ Which actor-world role a package fills — `📓️design-abi.md` §3.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum PackageRole {
+    Plugin,
+    Extension,
+}
+
+/// 🚦 How an extension actor runs relative to its host plugin — `📓️design-abi.md` §5. Default
+/// `Isolated`: a same-process sandboxed actor, no publisher trust assumed. `Linked` additionally
+/// requires the same publisher as the host plugin (enforced at link time, feature-gated to avoid
+/// the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
+/// (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum ExecutionMode {
+    Declarative,
+    Linked,
+    #[default]
+    Isolated,
+    Exclusive,
+    Cold,
+}
+
+/// 🧩️ One extension point a host plugin publishes — replaces the Cargo `consumes` tag
+/// (`📓️design-abi.md` §5). `allowed_modes` gates `Linked` (same publisher required);
+/// `capability_allowance`/`quota_ceiling` bound what any extension attaching here can ever hold,
+/// regardless of what it requests — "a host can never delegate more than it holds".
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ExtensionPointDeclaration {
+    pub id: String,
+    pub publisher_scope: String,
+    pub allowed_modes: Vec<ExecutionMode>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capability_allowance: Vec<kernel::CapabilityId>,
+    #[serde(default)]
+    pub quota_ceiling: kernel::QuotaSchema,
+    #[cfg_attr(feature = "typegen", ts(type = "string"))]
+    pub payload_schema: kernel::SchemaId,
+    pub activation: kernel::ActivationEvent,
+}
+
+/// 📦️ One asset bundled with a package and preloaded into `kernel::Event::InstanceOpen.assets` —
+/// `📓️design-abi.md` §2's `read-asset` replacement.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AssetDeclaration {
+    pub name: String,
+    pub media_type: MediaType,
+    pub size_bytes: u64,
+    pub sha256: String,
+}
+
+/// #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
+/// `📓️design-abi.md` §3.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PackageHashes {
+    pub wasm_sha256: String,
+    pub core_wasm_sha256: String,
+    pub descriptor_sha256: String,
+}
+
+/// 🗂️ One free-form descriptor-only contribution row, keyed by `id` with an opaque JSON
+/// `payload` — the placeholder shape for `ContributionSet` categories (`menus`, `file_types`,
+/// `panels`, `themes`, `inference_services`, `mutation_services`, `io_entries`,
+/// `composer_entries`) that don't have a typed manifest model of their own yet. Additive: nothing
+/// constructs one yet, and a future typed model can replace any one category without a wire break.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DescriptorEntry {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub payload: Option<serde_json::Value>,
+}
+
+/// 🗂️ Everything a package contributes, gathered for static (`describe()`-time) emission —
+/// `📓️design-abi.md` §3. `commands`/`topic_contributions`/`artifact_contributions` reuse this
+/// crate's existing typed models; the remaining categories are `DescriptorEntry` for now — see
+/// its doc.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContributionSet {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub menus: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub file_types: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub panels: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub themes: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub topic_contributions: Vec<TopicContribution>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub artifact_contributions: Vec<ArtifactContributionDescriptor>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inference_services: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mutation_services: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub io_entries: Vec<DescriptorEntry>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub composer_entries: Vec<DescriptorEntry>,
+}
+
+/// 📦️ The static, build-time-emitted description of a plugin or extension package —
+/// `📓️design-abi.md` §3's `describe()` output (`🛂️descriptor.semio`/`🔣️descriptor.json`).
+/// Nothing constructs or reads one yet in this packet: additive contract only (packet
+/// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PackageDescriptor {
+    pub descriptor_version: u32,
+    pub role: PackageRole,
+    pub manifest: PluginManifest,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub activation_events: Vec<kernel::ActivationEvent>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capability_requests: Vec<kernel::CapabilityRequest>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extension_points: Vec<ExtensionPointDeclaration>,
+    pub execution: ExecutionMode,
+    #[serde(default)]
+    pub quotas: kernel::QuotaSchema,
+    #[serde(default)]
+    pub contributions: ContributionSet,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub assets: Vec<AssetDeclaration>,
+    pub hashes: PackageHashes,
+}
+//#endregion 🔖️PackageDescriptor
 
 //#region 🔖️MediaVocabulary
 // 🔀️ Relocated verbatim from 🔺️mesh/🦀️component.rs (ticket 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT
@@ -4281,7 +4547,7 @@ mod app_label_tests {
         interaction_action_definitions, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
         SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
     };
-    use crate::ui::kernel::HostEffect;
+    use crate::ui::kernel::{Effect, RequestId};
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
     // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
     // at this file's top.
@@ -5502,34 +5768,36 @@ mod app_label_tests {
 
     #[test]
     fn open_dialog_effect_round_trips_camel_case() {
-        let effect = HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None };
+        let effect = Effect::OpenDialog { req: RequestId(1), dialog_id: "addObject".into(), args: None };
         let json = serde_json::to_string(&effect).unwrap();
-        assert_eq!(json, r#"{"openDialog":{"dialogId":"addObject"}}"#);
-        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(json, r#"{"openDialog":{"req":1,"dialogId":"addObject"}}"#);
+        let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
     }
 
     #[test]
     fn dispatch_action_effect_round_trips_camel_case() {
-        let effect = HostEffect::DispatchAction {
+        let effect = Effect::DispatchAction {
+            req: RequestId(2),
             action: "advanceReconstruction".into(),
             args: Some(dsl::to_dsl_value(&json!({"jobId": "job-1"})).expect("dispatch action args")),
             delay_ms: 250,
         };
         let json = serde_json::to_string(&effect).unwrap();
-        assert_eq!(json, r#"{"dispatchAction":{"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
-        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(json, r#"{"dispatchAction":{"req":2,"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
+        let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
         // `args` omitted entirely when unset, not serialized as `null`.
-        let bare = HostEffect::DispatchAction { action: "tick".into(), args: None, delay_ms: 0 };
+        let bare = Effect::DispatchAction { req: RequestId(3), action: "tick".into(), args: None, delay_ms: 0 };
         let bare_json = serde_json::to_string(&bare).unwrap();
         assert!(!bare_json.contains("\"args\""), "omitted when unset: {bare_json}");
-        assert_eq!(serde_json::from_str::<HostEffect>(&bare_json).unwrap(), bare);
+        assert_eq!(serde_json::from_str::<Effect>(&bare_json).unwrap(), bare);
     }
 
     #[test]
     fn request_file_open_effect_round_trips_multiple() {
-        let effect = HostEffect::RequestFileOpen {
+        let effect = Effect::RequestFileOpen {
+            req: RequestId(4),
             accept: ".png,.jpg".into(),
             read_as: Some("dataUrl".into()),
             import_action: "importFramePayload".into(),
@@ -5537,16 +5805,18 @@ mod app_label_tests {
         };
         let json = serde_json::to_string(&effect).unwrap();
         assert!(json.contains("\"multiple\":true"), "{json}");
-        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
-        // `multiple` defaults to false when absent from the wire (older callers/plugins).
-        let defaulted: HostEffect = serde_json::from_str(
-            r#"{"requestFileOpen":{"accept":".png","importAction":"importFramePayload"}}"#,
+        // `multiple` defaults to false when absent from the wire (older callers/plugins); `req` is
+        // not defaulted (mandatory on every completing effect).
+        let defaulted: Effect = serde_json::from_str(
+            r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#,
         )
         .unwrap();
         assert_eq!(
             defaulted,
-            HostEffect::RequestFileOpen {
+            Effect::RequestFileOpen {
+                req: RequestId(5),
                 accept: ".png".into(),
                 read_as: None,
                 import_action: "importFramePayload".into(),
@@ -5557,7 +5827,8 @@ mod app_label_tests {
 
     #[test]
     fn request_media_frames_effect_round_trips_camel_case() {
-        let effect = HostEffect::RequestMediaFrames {
+        let effect = Effect::RequestMediaFrames {
+            req: RequestId(6),
             accept: "video/mp4,video/quicktime".into(),
             frame_action: "importVideoFramePayload".into(),
             done_action: "importVideoDone".into(),
@@ -5574,16 +5845,17 @@ mod app_label_tests {
         assert!(json.contains("\"sampleStride\":5"), "{json}");
         assert!(json.contains("\"maxLongEdgePx\":1600"), "{json}");
         assert!(!json.contains("\"payload\""), "omitted when unset: {json}");
-        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        let round: Effect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
         // Numeric hints default to 0 (host-default) and `payload`/`args` may be entirely absent.
-        let defaulted: HostEffect = serde_json::from_str(
-            r#"{"requestMediaFrames":{"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#,
+        let defaulted: Effect = serde_json::from_str(
+            r#"{"requestMediaFrames":{"req":7,"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#,
         )
         .unwrap();
         assert_eq!(
             defaulted,
-            HostEffect::RequestMediaFrames {
+            Effect::RequestMediaFrames {
+                req: RequestId(7),
                 accept: "video/mp4".into(),
                 frame_action: "f".into(),
                 done_action: "d".into(),
@@ -5597,7 +5869,8 @@ mod app_label_tests {
             }
         );
         // `payload`-carrying variant (drop-zone bytes already in memory, no picker needed).
-        let with_payload = HostEffect::RequestMediaFrames {
+        let with_payload = Effect::RequestMediaFrames {
+            req: RequestId(8),
             accept: "video/*".into(),
             frame_action: "f".into(),
             done_action: "d".into(),
@@ -5611,7 +5884,7 @@ mod app_label_tests {
         };
         let payload_json = serde_json::to_string(&with_payload).unwrap();
         assert!(payload_json.contains("\"payload\":\"data:video/mp4;base64,AAAA\""), "{payload_json}");
-        assert_eq!(serde_json::from_str::<HostEffect>(&payload_json).unwrap(), with_payload);
+        assert_eq!(serde_json::from_str::<Effect>(&payload_json).unwrap(), with_payload);
     }
 
     //#endregion 🔖️ActionArgsAndUtilitiesTests
@@ -5827,6 +6100,20 @@ mod app_label_tests {
         crate::ui::kernel::Rights::export().unwrap();
         crate::ui::kernel::ArtifactKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
+        // 🔖️Broker/🔖️PackageDescriptor (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+        // packet A3-kernel-types) — additive, nothing constructs these yet.
+        crate::ui::kernel::CapabilityId::export().unwrap();
+        crate::ui::kernel::CapabilityRequest::export().unwrap();
+        crate::ui::kernel::QuotaSchema::export().unwrap();
+        crate::ui::kernel::ActivationEvent::export().unwrap();
+        crate::ui::PackageRole::export().unwrap();
+        crate::ui::ExecutionMode::export().unwrap();
+        crate::ui::ExtensionPointDeclaration::export().unwrap();
+        crate::ui::AssetDeclaration::export().unwrap();
+        crate::ui::PackageHashes::export().unwrap();
+        crate::ui::DescriptorEntry::export().unwrap();
+        crate::ui::ContributionSet::export().unwrap();
+        crate::ui::PackageDescriptor::export().unwrap();
         crate::ui::OsMediaCapability::export().unwrap();
         crate::ui::ArtifactKindSpec::export().unwrap();
         crate::ui::MediaClass::export().unwrap();

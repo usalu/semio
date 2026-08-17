@@ -1,0 +1,30 @@
+[package]
+name = "semio-framework-os-mcp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over stdio, the LLM-first entry point into the OS (packet P1a-protocol-core: protocol + errors + schema + transport only, zero dependency on the plugin host/channel/actor crates)"
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[[bin]]
+name = "semio-os-mcp"
+path = "../../📦️bin.rs"
+
+[dependencies]
+# 🚧️ Default features enable resolve-http/resolve-file, which fail to compile on wasm32 (same
+# rationale as 🧰️framework/🔨️modules/🧬️schema's own Cargo.toml).
+jsonschema = { version = "0.29.1", default-features = false }
+schemars = "0.8.22"
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+blake3 = "1.8.2"

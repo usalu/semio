@@ -7,7 +7,7 @@ use crate::editor::layout::engine::scene::{export_document_pdf, export_document_
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use base64::Engine;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub struct ExportSvg {
 pub fn handle(payload: &ExportSvg, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let page_id = payload.page_id.clone().unwrap_or_else(|| cfg.snapshot.active_page_id.clone());
     match export_document_svg(doc.snapshot, &page_id) {
-        Ok(svg) => Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None })),
+        Ok(svg) => Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{page_id}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None })),
         Err(_) => Ok(Emit::default()),
     }
 }

@@ -201,7 +201,7 @@ pub fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .shell_action("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"))
         .view_action("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"))
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
-        // row-scoped actions. Every one of these is a pure `HostEffect` relay (contract §C6) — never a
+        // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
         // document mutation — so each is `.shell_action`, matching `openSpace`/`goHome` above, not
         // `.mutation`. `createSpace`/`deleteSpace`/`renameSpace`/`shareSpace` are each their own dialog's
         // submit action too (`DialogDefinition::new(id, …, ActionRef::new(id))`, the same self-

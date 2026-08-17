@@ -1,13 +1,13 @@
 //! 📋️ S Home launcher app command — `copy-invite-link`, the `share-space` window's companion action
 //! (contract §C6: `os.directory.share-link`, sugar for `create-invite`). The actual "copy to
 //! clipboard" UI feedback for the minted invite token is shell-owned once the round trip completes —
-//! the token does not exist until the hub mints it, so no `HostEffect` here can construct it
+//! the token does not exist until the hub mints it, so no `Effect` here can construct it
 //! synchronously.
 
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -27,7 +27,7 @@ pub fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, 
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let ttl_secs = if payload.ttl_secs == 0 { 3600 } else { payload.ttl_secs };
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "role": role, "ttlSecs": ttl_secs })).ok();
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args }))
 }
 //#endregion 🔖️Handle
 
@@ -48,7 +48,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
+                Effect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
                 _ => None,
             })
             .expect("a ReplayShellCommand effect");
@@ -70,7 +70,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { args, .. } => args.clone(),
+                Effect::ReplayShellCommand { args, .. } => args.clone(),
                 _ => None,
             })
             .expect("args");

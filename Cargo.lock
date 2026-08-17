@@ -6621,6 +6621,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-actor"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+ "ts-rs",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "semio-framework-compiler"
 version = "0.1.0"
 dependencies = [
@@ -6944,6 +6954,7 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "semio-framework",
+ "semio-framework-actor",
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "serde",

@@ -4,12 +4,12 @@
 
 import "./🎨️globals.css";
 
-export type { PluginBuildTarget } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
-export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
+export type { PluginBuildTarget } from "../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
+export { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PROGRAM_TARGETS, pluginModuleUrl, extensionModuleUrl } from "../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 export { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
+import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️catalog.ts";
 import { PLAYGROUND_SESSION } from "./🤖️generated/🟦️session.ts";
 import { resolveShellBrandById } from "./🏷️brand/📦️index.ts";
 

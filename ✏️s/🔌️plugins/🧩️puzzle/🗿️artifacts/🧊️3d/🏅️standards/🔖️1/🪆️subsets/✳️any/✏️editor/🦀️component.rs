@@ -27,7 +27,7 @@ use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOu
 use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
     mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ConfigView, DialogDefinition,
     ArtifactEditor, Dialect, Editor, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec,
@@ -2102,7 +2102,7 @@ impl Puzzle3dPlayApp {
         // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
-            return Emit::effect(HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None });
+            return Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(120),  dialog_id: "addObject".into(), args: None });
         }
         if action == "transformBegin" {
             self.begin_transform_session(&doc.snapshot.0);
@@ -2180,10 +2180,10 @@ impl Puzzle3dPlayApp {
         let initial_is_fill_tool = active_utility_initial == fill_tool::TOOL_ID;
         let next_is_fill_tool = next_active_utility == fill_tool::TOOL_ID;
         if !is_direct_utility_switch && next_is_fill_tool != initial_is_fill_tool {
-            effects.push(HostEffect::SetActiveTool { tool_id: if next_is_fill_tool { fill_tool::TOOL_ID.into() } else { String::new() } });
+            effects.push(Effect::SetActiveTool { tool_id: if next_is_fill_tool { fill_tool::TOOL_ID.into() } else { String::new() } });
         }
         if !is_direct_utility_switch && !next_is_fill_tool && !initial_is_fill_tool && next_active_utility != active_utility_initial {
-            effects.push(HostEffect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
+            effects.push(Effect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
         }
         // 🧮️ B1: only a REAL config change becomes a `Puzzle3dConfigMutation` — `PartialEq` (derived)
         // makes this cheap, and keeps a pure read-only action (e.g. a re-materialize/re-save of an
@@ -3015,7 +3015,7 @@ mod tests {
         let before = object_count(&app);
         let result = dispatch(&mut app, "openAddObjectDialog", None, None).expect("openAddObjectDialog");
         assert!(
-            matches!(result.requested_effects.as_slice(), [HostEffect::OpenDialog { dialog_id, args }] if dialog_id == "addObject" && args.is_none()),
+            matches!(result.requested_effects.as_slice(), [Effect::OpenDialog { dialog_id, args, .. }] if dialog_id == "addObject" && args.is_none()),
             "expected a single OpenDialog effect for the addObject dialog, got {:?}",
             result.requested_effects,
         );
@@ -3357,7 +3357,7 @@ mod tests {
         let vortex = first_vortex_full_id(&app);
         let result = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), None).expect("openVortexSuggestions");
         assert!(
-            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+            result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })),
             "opening a one-shot suggestion must not switch the host-owned utility or tool: {:?}",
             result.requested_effects,
         );
@@ -3391,7 +3391,7 @@ mod tests {
         // 🧹️ Simulate the split-pane outside-dismiss race clearing vortex selection before accept.
         dispatch(&mut app, "clearSelection", None, None).expect("clearSelection");
         let result = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex })), None).expect("acceptSuggestion");
-        assert!(result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
+        assert!(result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
         assert!(object_count(&app) > before_count, "accept with fullId must place even after selection clear");
         let interaction = interaction_of(&render_composite(&mut app));
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
@@ -3447,7 +3447,7 @@ mod tests {
         let result = dispatch(&mut app, "acceptSuggestion", None, None).expect("acceptSuggestion");
         assert_eq!(object_count(&app), object_count_before + 1);
         assert!(
-            result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+            result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })),
             "accepting a one-shot suggestion must leave the host-owned utility/tool unchanged: {:?}",
             result.requested_effects,
         );
@@ -3499,14 +3499,14 @@ mod tests {
         dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("activate transform");
         let vortex = first_vortex_full_id(&app);
         let open = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), Some(main::WINDOW_KIND_ID)).expect("openVortexSuggestions");
-        assert!(open.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
+        assert!(open.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
         let open_node = render_window(&mut app, main::WINDOW_KIND_ID);
         let open_interaction = interaction_of(&open_node);
         assert_eq!(open_interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "transform remains non-brush scene mode during suggestions");
         assert_eq!(open_interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
         assert!(brush_preview_of(&open_node).get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "one-shot suggestions still emit a placement preview without entering brush mode");
         let accept = dispatch(&mut app, "acceptSuggestion", None, Some(main::WINDOW_KIND_ID)).expect("acceptSuggestion");
-        assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
+        assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
         let accept_interaction = interaction_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
         assert_eq!(accept_interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
@@ -3757,7 +3757,7 @@ mod tests {
         assert_eq!(clamped as usize, object_count(&app) - object_count_before, "the clamped measure value must match what the document actually materialized");
         let tick = dispatch(&mut app, "fillBuildTick", None, None).expect("fillBuildTick after an above-ready request");
         assert!(
-            !tick.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "setFillCount")),
+            !tick.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "setFillCount")),
             "fillBuildTick must never self-dispatch setFillCount — the clamp at commit time means fill_count can never run ahead of what's planned"
         );
     }
@@ -4130,7 +4130,7 @@ mod tests {
 
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `set_hover_is_a_view_action_with_no_ops_after_document_mutation`
     // and `world_pick_declares_selection_ui_scope` deleted — both dispatched the now-deleted
-    // `setHover`/`worldPick` actions and asserted on the deleted `HostEffect::PatchWorld3dChrome`
+    // `setHover`/`worldPick` actions and asserted on the deleted `Effect::PatchWorld3dChrome`
     // push-setter effect (selection/hover are framework-owned actions now, dispatched exclusively
     // through the six reserved `interactionSelect`-family verbs; see `select_id`/`hover_id`).
     //#endregion 🔖️UiScope

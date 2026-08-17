@@ -13,7 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌️Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -2054,7 +2054,7 @@ export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Re
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️playgrounds.json");
+  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️playgrounds.json");
   if (!existsSync(catalogPath)) return [];
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
@@ -2589,7 +2589,7 @@ export async function runExtensionComponentPackage(opts: {
   const wasmArtifact = join(repoRoot, "target", EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
   if (!existsSync(wasmArtifact)) throw new Error(`missing wasm artifact ${wasmArtifact}`);
   const componentWasm = new Uint8Array(readFileSync(wasmArtifact));
-  const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts");
+  const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts");
   const manifest = {
     extensionId: parsed.componentPackageId,
     label: parsed.description,

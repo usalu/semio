@@ -28,7 +28,7 @@ use flow::{dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, wit
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
-    DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation,
+    DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation,
     SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
 };
 use serde_json::{json, Value};
@@ -321,7 +321,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes — covers
     /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
     /// recomputes the probe fresh from the fixture and the driver's persisted baseline each call.
-    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| evaluate::evaluate_result(doc.snapshot, cfg.snapshot, session).effects)
     }
 

@@ -1,223 +1,77 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
-/// 🚧️ A wasm32-wasip2 component exports either `plugin-world` or `extension-world`, never both —
-/// `component-guest` and `component-extension-guest` are mutually exclusive for that target.
-#[cfg(all(feature = "component-guest", feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
-compile_error!("`component-guest` and `component-extension-guest` are mutually exclusive for wasm32-wasip2 targets");
-
-#[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §4): a wasm32-wasip2
+/// component exports `world actor` — one WIT world for both plugins and extensions now (no more
+/// `plugin-world`/`extension-world` split, no more `component-guest`/`component-extension-guest`
+/// mutual exclusion). `describe()`'s `PackageDescriptor.role` is what tells the host which one it
+/// loaded. `component-extension-guest` stays declared in `Cargo.toml` (26 extension crates
+/// currently enable it) but now gates the SAME unified `component` module as `component-guest` —
+/// see the `#[cfg]` on `pub mod component` below.
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 pub mod component {
-    //! 🧩️ WASI P2 component exports for the plugin world contract.
+    //! 🧩️ WASI P2 component exports for `world actor` — the reactor/jobs/checkpoint/describe
+    //! turn-loop contract shared by every plugin and extension.
     #![allow(unsafe_op_in_unsafe_fn)]
 
-    use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest, plugin_wire_artifact_infer, plugin_wire_artifact_mutation_plan, plugin_wire_list_artifact_inference_services,
-        plugin_wire_list_artifact_mutations,
-    };
     use wit_bindgen::generate;
 
     generate!({
-        world: "plugin-world",
-        path: "📜️wit",
+        world: "actor",
+        path: "../../🧬️schema",
     });
 
-    use exports::semio::framework::contributor::Guest as ContributorGuest;
-    use exports::semio::framework::plugin::Guest;
-    use semio::framework::types::{
-        ArtifactInferenceRequest as ComponentInferenceRequest, ArtifactInferenceResult as ComponentInferenceResult, InferenceBudget as ComponentInferenceBudget, InferenceCacheMode as ComponentInferenceCacheMode,
-        InferenceDiagnostic as ComponentInferenceDiagnostic, InferenceProvenance as ComponentInferenceProvenance, MigrateArtifactInput as MigrateDocumentInput, MigrateArtifactOutput as MigrateDocumentOutput, PluginError,
-    };
-    use semio_framework::{Fault, FaultCode, FaultOrigin};
+    use crate::plugin_runtime::ensure_plugin_initialized;
+    use exports::semio::framework::checkpoint::Guest as CheckpointGuest;
+    use exports::semio::framework::describe::Guest as DescribeGuest;
+    use exports::semio::framework::jobs::{Guest as JobsGuest, JobBudget, JobStep};
+    use exports::semio::framework::reactor::{Budget as WitBudget, Event as WitEvent, Guest as ReactorGuest, TurnResult as WitTurnResult};
+    use semio::framework::types::PluginError;
 
     pub struct ComponentGuest;
 
-    impl Guest for ComponentGuest {
-        fn manifest() -> Vec<u8> {
+    impl ReactorGuest for ComponentGuest {
+        fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
             ensure_plugin_initialized();
-            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&plugin_manifest()).unwrap_or(dsl::DslValue::Null))
-        }
-
-        fn instantiate_app(app_id: String, _instance_id: String) -> Result<u32, PluginError> {
-            ensure_plugin_initialized();
-            plugin_create_app(&app_id).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
-        }
-
-        fn exchange(instance_id: u32, commands: Vec<Vec<u8>>) -> Result<Vec<Vec<u8>>, PluginError> {
-            ensure_plugin_initialized();
-            plugin_exchange(instance_id, &commands).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
-        }
-
-        fn migrate_artifact(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
-            Err(PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.migrate-document"), "migrate-document not implemented"))))
-        }
-
-        fn clear_instance_guard() {
-            plugin_clear_instance_guard();
-        }
-
-        fn list_artifact_dialects() -> Result<Vec<u8>, PluginError> {
-            ensure_plugin_initialized();
-            crate::wire_list_composer_entries().map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-dialects"), error.to_string()))))
-        }
-
-        fn artifact_compose(key: Vec<u8>, sources: Vec<u8>) -> Result<Vec<u8>, PluginError> {
-            ensure_plugin_initialized();
-            crate::wire_artifact_compose(&key, &sources).map_err(|message| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-compose"), message.to_string()))))
-        }
-
-        /// 📇️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): this plugin's own registered NEW
-        /// io mechanism roster, JSON-encoded `Vec<io_schema::IoEntryDescriptor>` — additive
-        /// alongside `list_artifact_dialects` (D3), read once per plugin by the host `IoRouter`.
-        fn list_io_entries() -> Result<Vec<u8>, PluginError> {
-            ensure_plugin_initialized();
-            serde_json::to_vec(&semio_framework::io::io_mechanism::io_entries())
-                .map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.list-io-entries"), error.to_string()))))
-        }
-
-        /// 🌉️ Runs exactly ONE hop of this plugin's own local `io_mechanism` registry — never
-        /// chains into the host, multi-hop routing across plugins is `host.io-run`'s job.
-        fn io_run(from: String, into: String, payload: Vec<u8>) -> Result<Vec<u8>, PluginError> {
-            ensure_plugin_initialized();
-            let fault = |message: String| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.io-run"), message)));
-            let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&from).map_err(fault)?;
-            let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&into).map_err(fault)?;
-            let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload).map_err(|error| fault(error.to_string()))?;
-            let descriptor = semio_framework::io::io_mechanism::io_entries()
-                .into_iter()
-                .find(|entry| entry.from == from && entry.into == into)
-                .ok_or_else(|| fault(format!("no local io entry for hop {} -> {}", from.to_coordinate(), into.to_coordinate())))?;
-            let fidelity = descriptor.fidelity;
-            let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-            let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).map_err(|error| fault(error.message))?;
-            serde_json::to_vec(&outcome.value).map_err(|error| fault(error.to_string()))
-        }
-
-        /// 🔍️ Confidence (as `io_schema::Confidence::rank()`) that `payload` is dialect `into`,
-        /// sniffed as though it arrived `from` a carrier dialect. Implemented via `io_identify`
-        /// (carrier-scoped by construction, matching the payload law) filtered to `into` — a
-        /// non-carrier `from` naturally yields `Confidence::None`/`0`.
-        fn io_sniff(from: String, into: String, payload: Vec<u8>) -> Result<u8, PluginError> {
-            ensure_plugin_initialized();
-            let fault = |message: String| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.io-sniff"), message)));
-            let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&from).map_err(fault)?;
-            let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&into).map_err(fault)?;
-            let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload).map_err(|error| fault(error.to_string()))?;
-            let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
-                semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
-                semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
-            });
-            if from != carrier {
-                return Ok(semio_framework::io_schema::Confidence::None.rank());
-            }
-            let confidence = semio_framework::io::io_mechanism::io_identify(&payload)
-                .into_iter()
-                .find(|(dialect, _)| *dialect == into)
-                .map(|(_, confidence)| confidence)
-                .unwrap_or(semio_framework::io_schema::Confidence::None);
-            Ok(confidence.rank())
+            crate::reactor::poll(events, budget).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
         }
     }
 
-    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): `contributor` moved
-    /// out of `plugin` — `list-artifact-inferences`/`artifact-infer` (unchanged behavior, relocated)
-    /// plus the new `list-artifact-mutations`/`artifact-mutation-plan` stubs (W1-A fills in real logic;
-    /// see the `plugin_runtime::wire_list_artifact_mutations`/`wire_artifact_mutation_plan` doc comments).
-    impl ContributorGuest for ComponentGuest {
-        fn list_artifact_inferences() -> Result<Vec<u8>, PluginError> {
+    impl JobsGuest for ComponentGuest {
+        fn start_job(job: u64, kind: String, input: Vec<u8>) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            plugin_wire_list_artifact_inference_services().map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))
+            crate::reactor::jobs::start_job(job, &kind, &input);
+            Ok(())
         }
 
-        fn artifact_infer(request: ComponentInferenceRequest) -> Result<ComponentInferenceResult, PluginError> {
+        fn step_job(job: u64, _budget: JobBudget) -> Result<JobStep, PluginError> {
             ensure_plugin_initialized();
-            let request = crate::app::WireArtifactInferenceRequest {
-                wire_version: request.wire_version,
-                owner: request.owner,
-                artifact_kind: request.artifact_kind,
-                artifact_schema: request.artifact_schema,
-                artifact_schema_version: request.artifact_schema_version,
-                document_schema: request.document_schema,
-                document_schema_version: request.document_schema_version,
-                inference_schema: request.inference_schema,
-                inference_schema_version: request.inference_schema_version,
-                algorithm_version: request.algorithm_version,
-                policy_version: request.policy_version,
-                revision: request.revision,
-                generation: request.generation,
-                source_dialect: request.source_dialect,
-                policy: request.policy,
-                budgets: crate::app::WireArtifactInferenceBudget { allocation_bytes: request.budgets.allocation_bytes, work_units: request.budgets.work_units, recursion_depth: request.budgets.recursion_depth },
-                cancellation_id: request.cancellation_id,
-                previous_state: request.previous_state,
-                requested_cache_mode: match request.requested_cache_mode {
-                    ComponentInferenceCacheMode::Cold => crate::app::WireArtifactInferenceCacheMode::Cold,
-                    ComponentInferenceCacheMode::Incremental => crate::app::WireArtifactInferenceCacheMode::Incremental,
-                    ComponentInferenceCacheMode::Bypass => crate::app::WireArtifactInferenceCacheMode::Bypass,
-                },
-                canonical_payload: request.canonical_payload,
-                dependencies: request.dependencies,
-            };
-            let bytes = serde_json::to_vec(&request).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-request"), error.to_string()))))?;
-            let result: crate::app::WireArtifactInferenceResult =
-                serde_json::from_slice(&plugin_wire_artifact_infer(&bytes).map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message))))?)
-                    .map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-infer-result"), error.to_string()))))?;
-            Ok(ComponentInferenceResult {
-                wire_version: result.wire_version,
-                owner: result.owner,
-                artifact_kind: result.artifact_kind,
-                artifact_schema: result.artifact_schema,
-                artifact_schema_version: result.artifact_schema_version,
-                document_schema: result.document_schema,
-                document_schema_version: result.document_schema_version,
-                inference_schema: result.inference_schema,
-                inference_schema_version: result.inference_schema_version,
-                algorithm_version: result.algorithm_version,
-                policy_version: result.policy_version,
-                revision: result.revision,
-                generation: result.generation,
-                source_dialect: result.source_dialect,
-                policy: result.policy,
-                budgets: ComponentInferenceBudget { allocation_bytes: result.budgets.allocation_bytes, work_units: result.budgets.work_units, recursion_depth: result.budgets.recursion_depth },
-                previous_state: result.previous_state,
-                requested_cache_mode: match result.requested_cache_mode {
-                    crate::app::WireArtifactInferenceCacheMode::Cold => ComponentInferenceCacheMode::Cold,
-                    crate::app::WireArtifactInferenceCacheMode::Incremental => ComponentInferenceCacheMode::Incremental,
-                    crate::app::WireArtifactInferenceCacheMode::Bypass => ComponentInferenceCacheMode::Bypass,
-                },
-                canonical_payload: result.canonical_payload,
-                dependencies: result.dependencies,
-                diagnostics: result
-                    .diagnostics
-                    .into_iter()
-                    .map(|diagnostic| ComponentInferenceDiagnostic { code: diagnostic.code, message: diagnostic.message, severity: diagnostic.severity, parameters: diagnostic.parameters.into_iter().collect() })
-                    .collect(),
-                provenance: ComponentInferenceProvenance {
-                    owner: result.provenance.owner,
-                    inference_schema: result.provenance.inference_schema,
-                    algorithm_version: result.provenance.algorithm_version,
-                    policy_version: result.provenance.policy_version,
-                    source_dialect: result.provenance.source_dialect,
-                },
-                validity: result.validity,
-                quality: result.quality,
-                complete: result.complete,
-                actual_cache_mode: match result.actual_cache_mode {
-                    crate::app::WireArtifactInferenceCacheMode::Cold => ComponentInferenceCacheMode::Cold,
-                    crate::app::WireArtifactInferenceCacheMode::Incremental => ComponentInferenceCacheMode::Incremental,
-                    crate::app::WireArtifactInferenceCacheMode::Bypass => ComponentInferenceCacheMode::Bypass,
-                },
-                cancellation_id: result.cancellation_id,
+            Ok(match crate::reactor::jobs::step_job(job) {
+                crate::reactor::jobs::JobOutcome::Done(bytes) => JobStep::Done(bytes),
+                crate::reactor::jobs::JobOutcome::Failed(bytes) => JobStep::Failed(bytes),
             })
         }
 
-        fn list_artifact_mutations() -> Result<Vec<u8>, PluginError> {
+        fn cancel_job(job: u64) {
+            crate::reactor::jobs::cancel_job(job);
+        }
+    }
+
+    impl CheckpointGuest for ComponentGuest {
+        fn checkpoint() -> Result<Vec<u8>, PluginError> {
             ensure_plugin_initialized();
-            Ok(plugin_wire_list_artifact_mutations())
+            crate::reactor::checkpoint_now().map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
         }
 
-        fn artifact_mutation_plan(request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+        fn restore(state: Vec<u8>) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            plugin_wire_artifact_mutation_plan(&request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
+            crate::reactor::restore_now(&state).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
+        }
+    }
+
+    impl DescribeGuest for ComponentGuest {
+        fn describe() -> Vec<u8> {
+            ensure_plugin_initialized();
+            crate::describe::describe_plugin()
         }
     }
 
@@ -225,84 +79,16 @@ pub mod component {
 
     pub fn component_export_anchor() {}
 
-    pub fn host_backbone_send(uri: &str, message: &[u8]) -> Result<(), String> {
-        semio::framework::host::backbone_send(uri, message).map_err(|fault| dsl::decode_fault_bytes(&fault).message)
+    pub fn log(level: &str, message: &str) {
+        semio::framework::pure::log(level, message);
     }
 
-    pub fn host_backbone_poll(uri: &str) -> Result<Vec<Vec<u8>>, String> {
-        semio::framework::host::backbone_poll(uri).map_err(|fault| dsl::decode_fault_bytes(&fault).message)
+    pub fn now_ms() -> i64 {
+        semio::framework::pure::now_ms()
     }
 
-    pub fn host_backbone_status(uri: &str) -> Result<String, String> {
-        semio::framework::host::backbone_status(uri).map_err(|fault| dsl::decode_fault_bytes(&fault).message)
-    }
-
-    pub fn host_now_ms() -> i64 {
-        semio::framework::host::now_ms()
-    }
-
-    pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
-        semio::framework::host::read_asset(handle).map_err(|fault| dsl::decode_fault_bytes(&fault).message)
-    }
-
-    /// 📦️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): `kind`/
-    /// `direction` ("import"|"export") in, JSON `Vec<io::ArtifactDialect>` bytes out.
-    pub fn host_io_dialects(kind: &str, direction: &str) -> Result<Vec<u8>, String> {
-        semio::framework::host::io_dialects(kind, direction).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
-    }
-
-    /// 📦️ Routes a compose request to whichever OTHER plugin the host's `IoRouter` says owns `key`
-    /// — the guest-side half of cross-plugin reuse. `key`/`sources`/result are the same JSON shapes
-    /// `wire_artifact_compose`/`wire_list_composer_entries` use.
-    pub fn host_io_compose(key: &[u8], sources: &[u8]) -> Result<Vec<u8>, String> {
-        semio::framework::host::io_compose(key, sources).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
-    }
-
-    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): resolves an `io::ArtifactLink`'s encoded bytes
-    /// into the linked artifact's current pack via the host `resolve-artifact-link` import — the
-    /// ONE seam a WASI guest ever touches for link resolution; it must never resolve a link itself
-    /// (no guest has host-store access). The WIT error is already a plain `string` (unlike every
-    /// other `host::` import here), so no `decode_fault_bytes` step is needed.
-    pub fn host_resolve_artifact_link(link: &[u8]) -> Result<Vec<u8>, String> {
-        semio::framework::host::resolve_artifact_link(link)
-    }
-
-    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the host's merged, deterministic
-    /// cross-plugin route `from -> into`, JSON `io_schema::IoRoute` bytes. `from`/`into` are
-    /// `ArtifactDialect::to_coordinate()` strings.
-    pub fn host_io_routes(from: &str, into: &str) -> Result<Vec<u8>, String> {
-        semio::framework::host::io_routes(from, into).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
-    }
-
-    /// 🌉️ Executes the WHOLE cross-plugin route `from -> into` — the seam viewers/editors/commands
-    /// convert artifact payloads through (design.md §3: "`host_io_run` in Rust, `ioRun` in TS").
-    /// `payload`/the ok result are JSON-encoded `io_schema::IoPayload`.
-    pub fn host_io_run(from: &str, into: &str, payload: &[u8]) -> Result<Vec<u8>, String> {
-        semio::framework::host::io_run(from, into, payload).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
-    }
-
-    /// 🔍️ Fans `io-sniff` out across every OTHER loaded plugin's carrier-`from` entries, JSON
-    /// `Vec<(io_schema::ArtifactDialect, io_schema::Confidence)>` bytes, confidence-then-coordinate
-    /// sorted. `payload` is a JSON-encoded `io_schema::IoPayload`.
-    pub fn host_io_identify(payload: &[u8]) -> Result<Vec<u8>, String> {
-        semio::framework::host::io_identify(payload).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
-    }
-
-    /// 🌉️ Installs the guest-side `io_dispatch` fallback hook: a local registry miss is retried via
-    /// the host's `io-compose` import, which routes to whichever OTHER loaded plugin owns the key.
-    /// Called once from `ensure_plugin_initialized` — see that function's own doc comment for why
-    /// this can't live in the (non-wasm-gated) `plugin_runtime` module directly.
-    pub fn install_io_fallback_dispatcher() {
-        let dispatch: std::sync::Arc<crate::IoFallback> = std::sync::Arc::new(|key: &crate::IoKey, sources: &[crate::ErasedComposeSource]| {
-            let key_bytes = serde_json::to_vec(key).ok()?;
-            let wire_sources: Vec<crate::WireComposeSource> = sources.iter().map(|source| crate::WireComposeSource { dialect: crate::ArtifactDialect::from(source.dialect), payload: source.payload.clone() }).collect();
-            let sources_bytes = serde_json::to_vec(&wire_sources).ok()?;
-            match host_io_compose(&key_bytes, &sources_bytes) {
-                Ok(result_bytes) => Some(crate::wire_decode_composed_artifact(&result_bytes).map_err(|message| crate::ComposeError { message: message.to_string(), diagnostics: Vec::new() })),
-                Err(message) => Some(Err(crate::ComposeError { message, diagnostics: Vec::new() })),
-            }
-        });
-        let _ = crate::set_io_fallback_dispatcher(crate::IoFallbackDispatcher { identity: "plugin-guest-host-io-compose".to_string(), dispatch });
+    pub fn trace_span(name: &str) {
+        semio::framework::pure::trace_span(name);
     }
 }
 
@@ -312,81 +98,17 @@ pub use component::component_export_anchor;
 #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
 pub fn component_export_anchor() {}
 
-#[cfg(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
-pub mod extension_component {
-    //! 🧩️ WASI P2 component exports for the `extension-world` contract — a standalone wasm
-    //! component surface for runtime-installable extensions, instantiated on their own instead of
-    //! only ever piggybacking on a `plugin-world` component (the previous workaround).
-    #![allow(unsafe_op_in_unsafe_fn)]
-
-    use crate::plugin_runtime::{extension_activate, extension_deactivate, extension_invoke, extension_manifest, extension_wire_artifact_infer, extension_wire_list_artifact_inferences, wire_artifact_mutation_plan, wire_list_artifact_mutations};
-    use wit_bindgen::generate;
-
-    generate!({
-        world: "extension-world",
-        path: "📜️wit",
-    });
-
-    use exports::semio::framework::contributor::Guest as ContributorGuest;
-    use exports::semio::framework::extension::Guest;
-    use semio::framework::types::{ArtifactInferenceRequest as ExtensionInferenceRequest, ArtifactInferenceResult as ExtensionInferenceResult, PluginError};
-
-    pub struct ExtensionComponentGuest;
-
-    impl Guest for ExtensionComponentGuest {
-        fn manifest() -> Vec<u8> {
-            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&extension_manifest()).unwrap_or(dsl::DslValue::Null))
-        }
-
-        fn activate() -> Result<(), PluginError> {
-            extension_activate().map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
-        }
-
-        fn deactivate() {
-            extension_deactivate();
-        }
-
-        fn invoke(capability: String, request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
-            extension_invoke(&capability, &request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
-        }
-    }
-
-    /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): `extension-world`
-    /// now exports `contributor` alongside `extension` (an extension MAY be a dependency contributor,
-    /// per the contract freeze's `extends == dependencies[0]` rule). No extension previously wired
-    /// inference/mutation services — every method here is a W1-A placeholder (see the delegated
-    /// `plugin_runtime::extension_wire_*`/`wire_*` free-function doc comments).
-    impl ContributorGuest for ExtensionComponentGuest {
-        fn list_artifact_inferences() -> Result<Vec<u8>, PluginError> {
-            Ok(extension_wire_list_artifact_inferences())
-        }
-
-        fn artifact_infer(_request: ExtensionInferenceRequest) -> Result<ExtensionInferenceResult, PluginError> {
-            Err(PluginError::Fault(dsl::encode_fault_bytes(&extension_wire_artifact_infer())))
-        }
-
-        fn list_artifact_mutations() -> Result<Vec<u8>, PluginError> {
-            Ok(wire_list_artifact_mutations())
-        }
-
-        fn artifact_mutation_plan(request: Vec<u8>) -> Result<Vec<u8>, PluginError> {
-            wire_artifact_mutation_plan(&request).map_err(|fault| PluginError::Fault(dsl::encode_fault_bytes(&fault)))
-        }
-    }
-
-    export!(ExtensionComponentGuest);
-
-    pub fn extension_component_export_anchor() {}
-}
-
-#[cfg(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2"))]
-pub use extension_component::extension_component_export_anchor;
-
-#[cfg(not(all(feature = "component-extension-guest", target_arch = "wasm32", target_env = "p2")))]
-pub fn extension_component_export_anchor() {}
-
 #[path = "🏗️builder/🦀️component.rs"]
 mod builder;
+
+#[path = "⚛️reactor/🦀️component.rs"]
+pub mod reactor;
+
+#[path = "🌐host/🦀️component.rs"]
+pub mod host;
+
+#[path = "🛂️describe/🦀️component.rs"]
+pub mod describe;
 
 pub mod app {
     // #region app
@@ -400,7 +122,7 @@ pub mod app {
     use semio_framework::{
         clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id,
         kernel::{
-            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, HostEffect, HybridLogicalTimestamp, InverseMutation,
+            ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactKind, ArtifactVersion, CapabilityRequirement, ClipboardError, ClipboardFragment, EditRef, HistoryEntry, HistoryPatch, Effect, HybridLogicalTimestamp, InverseMutation,
             InvocationId, InvocationResult, KernelMutation, MutationId, PastePlacement, Rights, SchemaId, Scope, UndoGroup, UndoPolicy,
         },
         note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition,
@@ -4645,7 +4367,7 @@ pub mod app {
         }
 
         /// @emoji 🗨️ Declares a modal form dialog (repeatable). `submit_action`/`cancel_action` and its
-        /// `args` are validated in `build_definition`; opened only via `HostEffect::OpenDialog`.
+        /// `args` are validated in `build_definition`; opened only via `Effect::OpenDialog`.
         pub fn dialog(mut self, dialog: DialogDefinition) -> Self {
             self.dialogs.push(dialog);
             self
@@ -8547,7 +8269,7 @@ pub mod app {
     /// @emoji ⏪️ A stored, replayable inverse for a `View`/`Shell`-kind command — the memory-only
     /// counterpart to a VCS edit's `Mutation::inverse`. `action_id` is a plugin action id (`View` rows —
     /// replayed locally via `dispatch_action`) or a shell command id (`Shell` rows — bubbled out as
-    /// `HostEffect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
+    /// `Effect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
     /// persisted: it lives only on the in-memory `CommandLogEntry`/`CommandView`.
     #[derive(Clone, Debug, PartialEq)]
     pub struct InverseAction {
@@ -8785,7 +8507,7 @@ pub mod app {
         pub draft_mutations: Vec<DraftMutation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
-        pub effects: Vec<HostEffect>,
+        pub effects: Vec<Effect>,
         pub events: Vec<AppEvent>,
         /// 🐢️ Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
         /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
@@ -8951,7 +8673,7 @@ pub mod app {
         }
 
         /// @emoji 🐚️ A single host effect and no operations (a shell action).
-        pub fn effect(effect: HostEffect) -> Self {
+        pub fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
 
@@ -9571,7 +9293,7 @@ pub mod app {
         fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
         fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
@@ -9884,7 +9606,7 @@ pub mod app {
             HashMap::new()
         }
         /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
-        fn pending_effects(&mut self) -> Vec<HostEffect> {
+        fn pending_effects(&mut self) -> Vec<Effect> {
             Vec::new()
         }
         /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
@@ -10901,7 +10623,7 @@ pub mod app {
 
         /// @emoji 📇️ An empty `InvocationResult` carrying only host effects/events (view/shell actions,
         /// no-operation commands, and history notifications produce no `KernelMutation`s).
-        fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
+        fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope) -> InvocationResult {
             let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
             InvocationResult {
                 output: DslValue::Null,
@@ -10921,7 +10643,7 @@ pub mod app {
         /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
         /// serialize every `KernelMutation` since the gesture started (O(edit-size) per dispatch, O(edit-
         /// size²) over the whole gesture) purely to report operations the caller already knows about.
-        fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
+        fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<Effect>, events: Vec<AppEvent>, ui_scope: semio_framework::kernel::UiDirtyScope, tail_offset: (usize, usize)) -> InvocationResult {
             let schema = A::DOCUMENT_SCHEMA.to_string();
             let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
             let document = ArtifactHandle(meta.instance_id as u128);
@@ -11189,7 +10911,7 @@ pub mod app {
             artifact_mutations: Vec<A::Mutation>,
             child_emits: Vec<ChildEmit>,
             description: Option<String>,
-            effects: Vec<HostEffect>,
+            effects: Vec<Effect>,
             events: Vec<AppEvent>,
             ui_scope: semio_framework::kernel::UiDirtyScope,
             config_edit_id: Option<String>,
@@ -11780,11 +11502,11 @@ pub mod app {
                     }
                     // ⏪️ `Shell`-kind memory-only: the plugin has no access to shell-owned state (theme/dock/
                     // panel layout live client-side), so it can't replay this itself — bubble the inverse out
-                    // as a `HostEffect` for the shell to redispatch through its own command funnel.
+                    // as a `Effect` for the shell to redispatch through its own command funnel.
                     Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
                         action,
                         meta,
-                        vec![HostEffect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args.as_ref().map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)) }],
+                        vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args.as_ref().map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)) }],
                         Vec::new(),
                         semio_framework::kernel::UiDirtyScope::None,
                     )),
@@ -11823,7 +11545,7 @@ pub mod app {
                 };
                 // ⏪️ Optional real inverse: the shell already knows the pre-change value at its call site
                 // (e.g. the previous theme id) and can supply the command that restores it, giving this row
-                // a working Backwards button too — see `HostEffect::ReplayShellCommand`.
+                // a working Backwards button too — see `Effect::ReplayShellCommand`.
                 let inverse =
                     args.and_then(|value| value.get("inverseCommandId")).and_then(Value::as_str).map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned() });
                 self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
@@ -11844,7 +11566,7 @@ pub mod app {
                     let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover };
                     match action {
                         "copy" => match A::copy_fragment(&doc, &cfg, &interaction) {
-                            Ok(fragment) => Emit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..Default::default() },
+                            Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
                             Err(_) => Emit::default(),
                         },
                         "cut" => {
@@ -11853,7 +11575,7 @@ pub mod app {
                             let mut emit = Emit::mutations(operations);
                             emit.description = Some("Cut".into());
                             if let Some(fragment) = fragment {
-                                emit.effects.push(HostEffect::ClipboardWrite { fragment });
+                                emit.effects.push(Effect::ClipboardWrite { fragment });
                             }
                             emit
                         }
@@ -12453,7 +12175,7 @@ pub mod app {
             A::tool_measures(&doc, &cfg)
         }
 
-        fn pending_effects(&mut self) -> Vec<HostEffect> {
+        fn pending_effects(&mut self) -> Vec<Effect> {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
@@ -13371,7 +13093,7 @@ pub mod app {
         fn paste_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             Ok(Vec::new())
         }
-        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+        fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
         fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode;
@@ -13530,7 +13252,7 @@ pub mod app {
     /// §2.2): the read-only guarantee is a type property, not a runtime check.
     pub struct ViewEmit<ConfigMutation> {
         pub config_mutations: Vec<ConfigMutation>,
-        pub effects: Vec<HostEffect>,
+        pub effects: Vec<Effect>,
         pub ui_dirty: semio_framework::kernel::UiDirtyScope,
     }
 
@@ -13549,7 +13271,7 @@ pub mod app {
             Self { config_mutations, ..Default::default() }
         }
         /// 🐚️ A single host effect and no config operations.
-        pub fn effect(effect: HostEffect) -> Self {
+        pub fn effect(effect: Effect) -> Self {
             Self { effects: vec![effect], ..Default::default() }
         }
         /// 🐢️ Narrows which rendered UI sections this emission invalidates.
@@ -13662,7 +13384,7 @@ pub mod app {
         fn paste_operations(doc: &ArtifactView<'_, Self::Snapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Self::Mutation>, ClipboardError> {
             E::paste_operations(doc, fragment, placement)
         }
-        fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<HostEffect> {
+        fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             E::pending_effects(doc, cfg)
         }
         fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiNode {
@@ -14796,7 +14518,7 @@ pub mod plugin_runtime {
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use semio_framework::{
-        kernel::{CapabilityRequirement, HostEffect, InvocationResult},
+        kernel::{CapabilityRequirement, Effect, InvocationResult},
         Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
     };
     use serde::de::DeserializeOwned;
@@ -14810,11 +14532,13 @@ pub mod plugin_runtime {
     thread_local! {
         static PLUGIN: RefCell<Option<Plugin>> = const { RefCell::new(None) };
         static PLUGIN_ASSEMBLY_ERROR: RefCell<Option<Fault>> = const { RefCell::new(None) };
-        // 🔓️ `UnsafeCell` (not `RefCell`): a wasm trap skips `RefMut::drop` and permanently poisons
-        // `RefCell`'s borrow flag. Exclusive access is enforced by `InstanceGuard` + the host's
-        // serialized plugin bridge instead.
-        static INSTANCES: std::cell::UnsafeCell<Vec<AppInstance>> = const { std::cell::UnsafeCell::new(Vec::new()) };
-        static INSTANCE_GUARD: Cell<u32> = const { Cell::new(0) };
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4): plain `RefCell`, no
+        // `InstanceGuard` — a wasm trap now aborts the whole instance (`panic = "abort"`) and the
+        // host restores it from the last checkpoint, so there is no next call in THIS instance for
+        // a poisoned borrow flag to survive into (a restore is a brand-new wasm instantiation with
+        // fresh statics). `INSTANCE_GUARD`/`InstanceGuard`/`clear-instance-guard` are deleted, not
+        // wrapped — see `important.md`'s "Replace, never wrap" list.
+        static INSTANCES: RefCell<Vec<AppInstance>> = RefCell::new(Vec::new());
         /// 🪪️ Per-instance local actor id, set by `AppCommand::Hello` and read back by every `Command`
         /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
         /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
@@ -14897,40 +14621,12 @@ pub mod plugin_runtime {
         }
     }
 
-    struct InstanceGuard;
-
-    impl InstanceGuard {
-        fn enter() -> Result<Self, Fault> {
-            if INSTANCE_GUARD.get() > 0 {
-                return Err(plugin_internal_fault("plugin instance busy"));
-            }
-            INSTANCE_GUARD.set(1);
-            Ok(Self)
-        }
-
-        /// 🩹️ Clears a guard left set when a prior call trapped without running `Drop` — safe between
-        /// host-serialized top-level calls; must not be invoked mid-call.
-        fn clear_poison() {
-            INSTANCE_GUARD.set(0);
-        }
-    }
-
-    impl Drop for InstanceGuard {
-        fn drop(&mut self) {
-            INSTANCE_GUARD.set(0);
-        }
-    }
-
+    /// 🧬️ A2 (design-abi.md §4): no more `InstanceGuard` — single-threaded reentrancy is enforced
+    /// by `RefCell::borrow_mut` itself (a real re-entrant call panics loudly instead of silently
+    /// reusing a stale "busy" flag), and cross-call recovery after a trap is the checkpoint/restore
+    /// cycle's job now, not a manually-cleared guard.
     fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>>(f: F) -> Result<R, Fault> {
-        let _guard = InstanceGuard::enter()?;
-        // SAFETY: `InstanceGuard` + the JS/host serialized plugin bridge ensure exclusive access.
-        INSTANCES.with(|instances| f(unsafe { &mut *instances.get() }))
-    }
-
-    /// 🩹️ Heals `InstanceGuard` after a wasm trap so the next host-serialized call is not stuck on
-    /// `plugin instance busy`. No-operation when the guard is already clear.
-    pub fn plugin_clear_instance_guard() {
-        InstanceGuard::clear_poison();
+        INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
     }
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
@@ -14993,8 +14689,14 @@ pub mod plugin_runtime {
             // reporting to this hook's target anyway.
             #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
             console_error_panic_hook::set_once();
-            #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-            crate::host_port::register_host_backbone_channel();
+            // 🧬️ A2 (design-abi.md §4): `host_port`/`HostBackboneChannel`/`set_host_backbone_channel`
+            // are deleted per `important.md`'s "Replace, never wrap" list — a process-global backbone
+            // channel cannot survive a pooled multi-instance actor. The per-instance `EffectBackbone`
+            // that replaces it is NOT implemented in this wave (the VCS `BackboneChannelPort` trait's
+            // `send`/`poll` methods are synchronous; bridging them onto the async `Effect`/`Event`
+            // request-response model needs its own design decision — see the report's `lease-request`/
+            // deferred-work section). No backbone channel is registered here; VCS backbone-dependent
+            // paths surface a real "no host backbone linked" error instead of silently no-op'ing.
             #[cfg(feature = "component-guest")]
             {
                 semio_plugin_bundle_installer_link_shim();
@@ -15228,6 +14930,16 @@ pub mod plugin_runtime {
     }
 
     pub fn plugin_create_app(app_id: &str) -> Result<u32, Fault> {
+        plugin_create_app_with_id(NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst), app_id)
+    }
+
+    /// 🧬️ A2 (design-abi.md §2): `Event::InstanceOpen` carries a host-assigned `PluginInstanceId`
+    /// (WIT `instance-id`) — the actor no longer allocates its own; it must open the app under
+    /// EXACTLY the id the host names. `⚛️reactor::poll`'s `InstanceOpen` routing calls this instead
+    /// of `plugin_create_app`. `plugin_create_app` (unchanged signature, still used by every
+    /// pre-existing caller) now delegates here with a locally-allocated id, so nothing observing
+    /// its old auto-increment behavior breaks.
+    pub fn plugin_create_app_with_id(id: u32, app_id: &str) -> Result<u32, Fault> {
         if let Some(fault) = PLUGIN_ASSEMBLY_ERROR.with(|slot| slot.borrow().clone()) {
             return Err(fault);
         }
@@ -15235,7 +14947,6 @@ pub mod plugin_runtime {
             let program = slot.borrow();
             let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
             let app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault(format!("unknown app: {app_id}")))?;
-            let id = NEXT_INSTANCE_ID.fetch_add(1, Ordering::SeqCst);
             with_instances_mut(|list| {
                 list.push(AppInstance { id, app });
                 Ok(())
@@ -15561,7 +15272,7 @@ pub mod plugin_runtime {
             labels: Option<SectionResponse>,
             /// ⏱️ See `ArtifactApp::pending_effects` — e.g. a `flowEvalTick` chain resuming after this refresh.
             #[serde(skip_serializing_if = "Vec::is_empty")]
-            requested_effects: Vec<HostEffect>,
+            requested_effects: Vec<Effect>,
         }
 
         let request: RefreshRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
@@ -15714,11 +15425,11 @@ pub mod plugin_runtime {
         Ok(dialect)
     }
 
-    fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<HostEffect, Fault> {
-        Ok(HostEffect::ReplayShellCommand { action_id: action_id.into(), args: Some(to_dsl_value(&arguments).map_err(plugin_internal_fault)?) })
+    fn relay_opening_command(action_id: &'static str, arguments: Value) -> Result<Effect, Fault> {
+        Ok(Effect::ReplayShellCommand { action_id: action_id.into(), args: Some(to_dsl_value(&arguments).map_err(plugin_internal_fault)?) })
     }
 
-    fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<HostEffect, Fault> {
+    fn relay_open_artifact(artifact_ref: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
         let role = opening_role(role_wire)?;
         let (dialect, artifact_role) = semio_framework::parse_surface_app_id(&artifact_ref).map_err(|error| Fault::new(FaultOrigin::Os, FaultCode::new("opening.invalid-artifact-ref"), error))?;
         if role != artifact_role {
@@ -15737,7 +15448,7 @@ pub mod plugin_runtime {
         relay_opening_command("os.open-artifact", serde_json::json!({ "artifactRef": artifact_ref, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
     }
 
-    fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<HostEffect, Fault> {
+    fn relay_set_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8, plugin_id: String, app_id: String) -> Result<Effect, Fault> {
         let dialect = opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
         let role = opening_role(role_wire)?;
         if plugin_id.trim().is_empty() {
@@ -15750,7 +15461,7 @@ pub mod plugin_runtime {
         relay_opening_command("os.set-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire, "pluginId": plugin_id, "appId": app_id }))
     }
 
-    fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<HostEffect, Fault> {
+    fn relay_clear_default_app(artifact_kind: String, standard: String, subset: String, role_wire: u8) -> Result<Effect, Fault> {
         opening_dialect(artifact_kind.clone(), standard.clone(), subset.clone())?;
         opening_role(role_wire)?;
         relay_opening_command("os.clear-default-app", serde_json::json!({ "artifactKind": artifact_kind, "standard": standard, "subset": subset, "role": role_wire }))
@@ -15762,8 +15473,8 @@ pub mod plugin_runtime {
     mod opening_command_relay_tests {
         use super::*;
 
-        fn replay(effect: HostEffect) -> (String, Value) {
-            let HostEffect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
+        fn replay(effect: Effect) -> (String, Value) {
+            let Effect::ReplayShellCommand { action_id, args: Some(args) } = effect else { panic!("expected a shell command relay") };
             (action_id, from_dsl_value(args).expect("relay arguments decode"))
         }
 
@@ -16682,9 +16393,12 @@ pub mod plugin_runtime {
                 __semio_install_extension_bundle();
             }
 
+            // 🧬️ A2 (design-abi.md §1): one `world actor` for both roles now — extensions link the
+            // SAME `component_export_anchor` a plugin does (the old separate `extension-world`
+            // component/anchor is deleted, see `important.md`'s "Replace, never wrap" list).
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             #[used]
-            static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::extension_component_export_anchor;
+            static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::component_export_anchor;
         };
     }
     //#endregion 🧩️Extension
@@ -16712,7 +16426,7 @@ pub mod plugin_runtime {
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::ArtifactHandle;
-        use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
+        use semio_framework::kernel::{AppEvent, ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope};
         use semio_framework::Fault;
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use serde::{Deserialize, Serialize};
@@ -17204,7 +16918,7 @@ pub mod plugin_runtime {
                     TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount { value: 99 }])),
                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) })),
                     TestCommand::Select { id } => Ok(Emit::config(vec![TestConfigMutation::SetSelected { value: id.clone() }])),
-                    TestCommand::Navigate => Ok(Emit::effect(HostEffect::Navigate { uri: "semio://home".into() })),
+                    TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() })),
                     TestCommand::NoopMutation => Ok(Emit::default()),
                     TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
                     TestCommand::ViewPartialScope => {
@@ -17737,7 +17451,7 @@ pub mod plugin_runtime {
 
             // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
             // instead of replaying anything locally, and does NOT append a new log entry on its own.
-            assert_eq!(result.requested_effects, vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+            assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
             assert_eq!(app.test_history().commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         }
 
@@ -17746,7 +17460,7 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::new(TestApp::default());
             let result = app.dispatch_typed(TestCommand::Navigate, &meta()).expect("navigate");
             assert!(result.mutations.is_empty());
-            assert_eq!(result.requested_effects, vec![HostEffect::Navigate { uri: "semio://home".into() }]);
+            assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }]);
         }
 
         #[test]
@@ -17756,7 +17470,7 @@ pub mod plugin_runtime {
             let result = app.handle_action("copy", None, &meta()).expect("copy");
             assert!(result.mutations.is_empty(), "copy must not record an undo entry");
             assert_eq!(result.requested_effects.len(), 1);
-            let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+            let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
             assert_eq!(fragment.dsl_text, "hello");
             assert_eq!(fragment.source_app, TestApp::APP_ID);
         }
@@ -17776,7 +17490,7 @@ pub mod plugin_runtime {
             let result = app.handle_action("cut", None, &meta()).expect("cut");
             assert_eq!(app.test_snapshot().label, "");
             assert_eq!(result.requested_effects.len(), 1);
-            assert!(matches!(&result.requested_effects[0], HostEffect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
+            assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
             // One undo restores the cut label — cut is a single coalesced edit, not two.
             app.handle_action("undo", None, &meta()).expect("undo");
             assert_eq!(app.test_snapshot().label, "hello");
@@ -19393,84 +19107,10 @@ pub mod world3d_host {
     // #endregion world3d_host
 }
 
-pub mod host_port {
-    // #region host_port
-    //! 🗄️ Host-capability access for WASI component builds — the backbone duplex channel and wall-clock time.
-
-    /** @emoji 📤️ Sends a backbone message through the component host; errs when no host is linked. */
-    pub fn host_backbone_send(uri: &str, message: &[u8]) -> Result<(), String> {
-        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-        {
-            return crate::component::host_backbone_send(uri, message);
-        }
-        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-        {
-            let _ = message;
-            Err(format!("host backbone unavailable: {uri}"))
-        }
-    }
-
-    /** @emoji 📥️ Polls queued backbone messages through the component host; errs when no host is linked. */
-    pub fn host_backbone_poll(uri: &str) -> Result<Vec<Vec<u8>>, String> {
-        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-        {
-            return crate::component::host_backbone_poll(uri);
-        }
-        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-        Err(format!("host backbone unavailable: {uri}"))
-    }
-
-    /** @emoji 🩺️ Queries the host for the sync status of a backbone uri; errs when no host is linked. */
-    pub fn host_backbone_status(uri: &str) -> Result<String, String> {
-        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-        {
-            return crate::component::host_backbone_status(uri);
-        }
-        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-        Err(format!("host backbone unavailable: {uri}"))
-    }
-
-    /** @emoji ⏱️ Wall-clock milliseconds from the component host, falling back to system time. */
-    pub fn host_now_ms() -> f64 {
-        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-        {
-            return crate::component::host_now_ms() as f64;
-        }
-        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as f64).unwrap_or(0.0)
-    }
-
-    /** @emoji 📦️ Fetches a host-registered static asset by handle (e.g. `infinite_canvas`'s GuestSlim
-    typst font blob); errs when no host is linked or the handle is unknown. */
-    pub fn host_read_asset(handle: u64) -> Result<Vec<u8>, String> {
-        #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
-        {
-            return crate::component::host_read_asset(handle);
-        }
-        #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
-        Err(format!("host asset unavailable: {handle}"))
-    }
-
-    /** @emoji 🔌️ vcs backbone channel backed by the component host's duplex capability. */
-    pub struct HostBackboneChannel;
-
-    impl store::BackboneChannelPort for HostBackboneChannel {
-        fn send(&self, uri: &str, message: &[u8]) -> Result<(), vcs::VcsError> {
-            host_backbone_send(uri, message).map_err(vcs::VcsError::Backbone)
-        }
-
-        fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, vcs::VcsError> {
-            host_backbone_poll(uri).map_err(vcs::VcsError::Backbone)
-        }
-    }
-
-    /** @emoji 🧷️ Installs the component host as the vcs backbone channel so the plugin's document store
-    can synchronize across the wasm sandbox boundary. */
-    pub fn register_host_backbone_channel() {
-        store::set_host_backbone_channel(std::sync::Arc::new(HostBackboneChannel));
-    }
-    // #endregion host_port
-}
+// 🧬️ A2 (design-abi.md §4): `host_port` is deleted — see `important.md`'s "Replace, never wrap"
+// list (`host_port` · `component::host_*` · `set_host_backbone_channel` are all named explicitly).
+// Replaced by `🌐host/🦀️component.rs`'s async `Host`/`log`/`now_ms`/`trace_span` — see that
+// module and the report's "peer-coexistence"/deferred-work sections for the backbone channel gap.
 
 pub mod engagement {
     // #region engagement
@@ -19696,7 +19336,11 @@ pub use app::{
 };
 pub use app::{locale_from_str, resolve_labels, resolve_labels_for_locale, selection_ids, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use engagement::{engagement_token_matches, strip_engagement_prefix};
-pub use host_port::{host_backbone_poll, host_backbone_send, host_backbone_status, host_now_ms, host_read_asset, register_host_backbone_channel, HostBackboneChannel};
+// 🧬️ A2 (design-abi.md §4): `host_port`'s re-export is deleted along with the module (see the
+// "Replace, never wrap" note above `pub mod engagement`). `host::now_ms` replaces `host_now_ms` —
+// `✏️s/🔌️plugins/🪐️space` is the one measured external caller (design-abi.md §0) and will be
+// repointed during its own W3 migration wave, not here (SDK crate stays frozen during W3 per
+// `important.md`'s sequencing constraints).
 pub use plugin_runtime::{
     extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack,
     plugin_ingest_operations, plugin_load_document_pack, ExtensionBundle, ExtensionManifest,

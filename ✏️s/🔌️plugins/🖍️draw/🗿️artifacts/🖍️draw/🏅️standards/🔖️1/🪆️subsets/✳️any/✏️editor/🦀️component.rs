@@ -159,7 +159,7 @@ impl ArtifactEditor for DrawPlayApp {
     // vocabulary — see `🧬️mutations/🦀️component.rs`'s module doc). The default `None` disables the
     // generic `import_media("document:in")` port for draw; explicit whole-document load/replace
     // stays reachable through the `set_snapshot`/`commit_document`/`set_fixture_json`/
-    // `set_active_example` commands, which now emit `HostEffect::LoadDocument` (the sanctioned
+    // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
     // non-history reset path) instead.
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.
@@ -473,7 +473,7 @@ mod tests {
     use super::*;
     use crate::artifacts::draw::schema::{default_draw_document, layer_id, semio_draw_example_json};
     use crate::artifacts::draw::DrawLayerNode;
-    use semio_framework_plugin::kernel::HostEffect;
+    use semio_framework_plugin::kernel::Effect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
     use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
 
@@ -610,7 +610,7 @@ mod tests {
         assert!(
             matches!(
                 result.requested_effects.as_slice(),
-                [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
+                [Effect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
             ),
             "the canvas returns to select-direct via a host effect, not a document operation"
         );
@@ -626,7 +626,7 @@ mod tests {
         assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
         let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Path(path) if !path.segments.is_empty())));
-        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
+        assert!(matches!(result.requested_effects.as_slice(), [Effect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
     }
 
     #[test]
@@ -669,7 +669,7 @@ mod tests {
         let result = app.dispatch_typed(DrawCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
         // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
         // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
-        // `HostEffect::ReplayShellCommand`, instead of writing a `DrawConfigMutation::SetSelection`.
+        // `Effect::ReplayShellCommand`, instead of writing a `DrawConfigMutation::SetSelection`.
         assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
         assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_a_id.clone()], "replace")], "only the contained rect is requested, not the outside ellipse");
     }

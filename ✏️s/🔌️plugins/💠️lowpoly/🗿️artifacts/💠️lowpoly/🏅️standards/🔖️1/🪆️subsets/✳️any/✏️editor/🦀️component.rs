@@ -325,7 +325,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     /// 🧬️ No `whole_document_operation` override — per `📓️taxonomy.md`, whole-document replace
     /// (the retired whole-document-replace variant) is banned outright with NO replacement mutation, so this falls back to the
     /// trait's own default (`None`); `import_media`'s `"mesh:in"`/`"document:in"` arms below build
-    /// `reset_document_effect` (a `HostEffect::LoadDocument`, outside undo history) instead.
+    /// `reset_document_effect` (a `Effect::LoadDocument`, outside undo history) instead.
     ///
     /// 🎞️ `mesh:out` plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated
     /// inline — overriding `export_media` shadows the trait's provided body for every port on this app,
@@ -444,7 +444,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 //#endregion 🔖️LowpolyPlayApp
 
 //#region 🔖️ResetDocument
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (mesh import, file
 /// open, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
@@ -452,11 +452,11 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// `"mesh:in"`/`"document:in"` above, `commands::fixture::{set_snapshot_json,set_fixture_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::HostEffect {
+pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
     let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
 
@@ -832,7 +832,7 @@ mod tests {
     }
 
     /// 🧬️ `"mesh:in"` replaces the whole document via `reset_document_effect` (a
-    /// `HostEffect::LoadDocument`, outside undo history) — whole-document replace has no replacement
+    /// `Effect::LoadDocument`, outside undo history) — whole-document replace has no replacement
     /// mutation per `📓️taxonomy.md`, so this is an effect, not an `artifact_mutations` entry.
     #[test]
     fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
@@ -845,7 +845,7 @@ mod tests {
         let doc = ArtifactView::new(&projection, &history);
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace is an effect, not a mutation");
-        let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
+        let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("mesh:in must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <LowpolySnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

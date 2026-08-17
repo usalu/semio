@@ -328,7 +328,7 @@ import {
   type UiTreeNode,
   type UiTreeSectionNode,
   type InvocationResponse,
-  type HostEffect,
+  type Effect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,

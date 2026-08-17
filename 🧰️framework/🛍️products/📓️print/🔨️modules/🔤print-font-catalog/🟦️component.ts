@@ -15,8 +15,8 @@ export type PrintFontProvisioning = {
   readonly total: number;
 };
 
-const printPackageRoot = join(getWorkspaceRoot(), "🧰️framework", "🛍️products", "📓️print", "📦️packages", "🟦️typescript");
-const fontRoot = join(printPackageRoot, "asset", "font");
+const printProductRoot = join(getWorkspaceRoot(), "🧰️framework", "🛍️products", "📓️print");
+const fontRoot = join(printProductRoot, "🖼️assets", "font");
 const PRINT_FONT_DESCRIPTORS: readonly PrintFontDescriptor[] = [
   { family: "Anta", directory: "anta", filename: "Anta-Regular.ttf", sourceUrl: "https://raw.githubusercontent.com/google/fonts/main/ofl/anta/Anta-Regular.ttf" },
   { family: "Share Tech Mono", directory: "share-tech-mono", filename: "ShareTechMono-Regular.ttf", sourceUrl: "https://raw.githubusercontent.com/google/fonts/main/ofl/sharetechmono/ShareTechMono-Regular.ttf" },

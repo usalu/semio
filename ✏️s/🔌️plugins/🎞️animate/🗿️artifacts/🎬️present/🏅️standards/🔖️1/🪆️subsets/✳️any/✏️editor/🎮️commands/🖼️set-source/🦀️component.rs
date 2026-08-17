@@ -75,13 +75,13 @@ mod tests {
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
-    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+    /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the default document's
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
     fn set_active_example_demo_emits_a_reset_effect() {
-        use semio_framework_plugin::HostEffect;
+        use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
         let deck = app.snapshot().expect("projection");
@@ -91,7 +91,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
         let emit = set_active_example::handle(&set_active_example::SetActiveExample { example_id: "demo".into() }, &doc, &cfg, &mut ctx).expect("handle");
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

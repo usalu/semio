@@ -27,17 +27,17 @@ mod tests {
     use crate::editor::writer::WriterCommand;
     use crate::artifacts::writer::schema::jack_variable_occurrences;
     use crate::artifacts::writer::{writer_text, WriterSnapshot};
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
     use semio_framework_plugin::PluginApp;
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 
-    /// 🌱️ Decodes the `HostEffect::LoadDocument` pack every whole-document-replace command now
+    /// 🌱️ Decodes the `Effect::LoadDocument` pack every whole-document-replace command now
     /// emits (`SetSnapshot` is banned — see `reset_document_effect`'s doc comment) — the standard
     /// way this file's tests observe a replaced document, mirroring `📐️cad`'s own
     /// `import_cad_file_action_imports_...` tests.
     fn loaded_document(result: &semio_framework_plugin::InvocationResult) -> WriterSnapshot {
-        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("expected a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         <WriterSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
@@ -113,7 +113,7 @@ mod tests {
     }
 
     /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright) —
-    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the replacement
+    /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the replacement
     /// document's pack bytes, exactly like `📐️cad`'s `importCadFile` (`reset_document_effect`).
     #[test]
     fn set_active_example_loads_jack_fixture() {

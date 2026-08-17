@@ -3,7 +3,7 @@
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::{Puzzle2dActionCtx, PUZZLE2D_PANES};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use serde_json::Value;
 
 pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
@@ -13,15 +13,15 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
         "select" | "brush" => {
             // 🧰️ Reconcile the engagement text-command utility switch through the host-owned active
             // utility: point the local engine now and let the framework persist the new active utility
-            // for the pane via `HostEffect::SetActiveUtility`.
+            // for the pane via `Effect::SetActiveUtility`.
             ctx.host.borrow_mut().set_active_utility(value.as_str());
-            ctx.effects.push(HostEffect::SetActiveUtility { window_id: pane.clone(), utility_id: value.clone() });
+            ctx.effects.push(Effect::SetActiveUtility { window_id: pane.clone(), utility_id: value.clone() });
             true
         }
         "fill" => {
             // 🛠️ Fill is a mode-level tool, not a window utility — activate it through
-            // `HostEffect::SetActiveTool`, leaving this window's active utility untouched.
-            ctx.effects.push(HostEffect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
+            // `Effect::SetActiveTool`, leaving this window's active utility untouched.
+            ctx.effects.push(Effect::SetActiveTool { tool_id: fill::TOOL_ID.into() });
             true
         }
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: "clear"/"rectangle"/"lasso"

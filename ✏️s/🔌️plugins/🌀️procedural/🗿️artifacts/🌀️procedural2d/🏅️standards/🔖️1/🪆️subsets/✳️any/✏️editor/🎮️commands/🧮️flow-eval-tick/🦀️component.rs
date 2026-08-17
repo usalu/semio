@@ -16,18 +16,18 @@ pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural2dSnapsh
     let fixture = &doc.snapshot.fixture;
     let mut host = host_from_fixture_with_session(fixture, session);
     let more = session.tick(&mut host);
-    let mut effects = if more { vec![semio_framework::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+    let mut effects = if more { vec![semio_framework::kernel::Effect::DispatchAction {req: semio_framework_plugin::RequestId(100),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
     if let Some(pending) = host.take_pending_extension_eval() {
         let request_json = serde_json::json!({
             "operatorId": pending.operator_id,
             "inputJson": pending.input_json,
             "nodeHash": pending.node_hash})
         .to_string();
-        effects.push(semio_framework::kernel::HostEffect::InvokeExtension {
+        effects.push(semio_framework::kernel::Effect::InvokeExtension {
+            req: semio_framework::kernel::RequestId(101),
             extension_id: pending.extension_id,
             capability: "evaluate".into(),
-            request_json,
-            response_action: "flowEvalResolve".into()});
+            request_json});
     }
     Ok(Emit { effects, ..Default::default() })
 }

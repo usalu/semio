@@ -3,7 +3,7 @@
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
@@ -30,7 +30,7 @@ pub struct ImportVideo {}
 /// `fallback_action` hands the raw container back when the host cannot decode it.
 pub fn handle(_payload: &ImportVideo, doc: &ArtifactView<'_, RemodelSnapshot>, _cfg: &ConfigView<'_, RemodelConfig>) -> Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault> {
     let ingest = &doc.snapshot.params.ingest;
-    Ok(Emit::effect(HostEffect::RequestMediaFrames {
+    Ok(Emit::effect(Effect::RequestMediaFrames {req: semio_framework_plugin::RequestId(118), 
         accept: REMODEL_VIDEO_ACCEPT.into(),
         frame_action: "importVideoFramePayload".into(),
         done_action: "importVideoDone".into(),

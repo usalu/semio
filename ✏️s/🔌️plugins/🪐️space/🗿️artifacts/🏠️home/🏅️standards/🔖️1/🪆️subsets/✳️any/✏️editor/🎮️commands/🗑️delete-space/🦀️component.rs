@@ -3,12 +3,12 @@
 //! confirm dialog and NEVER touches the network; only a SECOND dispatch with `confirmed: true` (the
 //! dialog's own submit, re-carrying `spaceId`/`confirmed` from `OpenDialog`'s pre-seeded args — an
 //! empty-`.args()` dialog degenerates to a plain confirm/cancel per `DialogDefinition`'s own doc)
-//! emits the real `HostEffect::ReplayShellCommand` (contract §C6).
+//! emits the real `Effect::ReplayShellCommand` (contract §C6).
 
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -26,10 +26,10 @@ pub struct DeleteSpace {
 pub fn handle(payload: &DeleteSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if !payload.confirmed {
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "confirmed": true })).ok();
-        return Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "deleteSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(127),  dialog_id: "deleteSpace".into(), args }));
     }
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id })).ok();
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.delete-space".into(), args }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.delete-space".into(), args }))
 }
 //#endregion 🔖️Handle
 
@@ -52,14 +52,14 @@ mod tests {
         let emit = dispatch(DeleteSpace { space_id: "sp-1".into(), confirmed: false });
         assert_eq!(emit.effects.len(), 1);
         let (dialog_id, args) = match &emit.effects[0] {
-            HostEffect::OpenDialog { dialog_id, args } => (dialog_id.clone(), args.clone()),
+            Effect::OpenDialog { dialog_id, args, .. } => (dialog_id.clone(), args.clone()),
             other => panic!("expected OpenDialog, got {other:?}"),
         };
         assert_eq!(dialog_id, "deleteSpace");
         let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("pre-seeded args")).expect("json");
         assert_eq!(args_value["spaceId"], "sp-1");
         assert_eq!(args_value["confirmed"], true);
-        assert!(!emit.effects.iter().any(|e| matches!(e, HostEffect::ReplayShellCommand { .. })), "the confirm dialog must be emitted BEFORE any command");
+        assert!(!emit.effects.iter().any(|e| matches!(e, Effect::ReplayShellCommand { .. })), "the confirm dialog must be emitted BEFORE any command");
     }
 
     #[test]
@@ -69,14 +69,14 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
+                Effect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
                 _ => None,
             })
             .expect("a ReplayShellCommand effect");
         assert_eq!(action_id, "os.directory.delete-space");
         let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args")).expect("json");
         assert_eq!(args_value["spaceId"], "sp-1");
-        assert!(!emit.effects.iter().any(|e| matches!(e, HostEffect::OpenDialog { .. })), "a confirmed dispatch never re-opens the dialog");
+        assert!(!emit.effects.iter().any(|e| matches!(e, Effect::OpenDialog { .. })), "a confirmed dispatch never re-opens the dialog");
     }
 }
 //#endregion 🧪️Tests

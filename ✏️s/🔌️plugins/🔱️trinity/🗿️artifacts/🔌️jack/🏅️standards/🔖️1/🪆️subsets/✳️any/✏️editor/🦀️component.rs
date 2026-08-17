@@ -12,7 +12,7 @@ use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
 use crate::artifacts::jack::op::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, HostEffect, Label, LocalizedLabel, Media, MediaClass,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactKindSpec, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Effect, Label, LocalizedLabel, Media, MediaClass,
     MediaError, MediaForm, MediaPayload, MediaType, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphViewport, PanelGroup, SurfaceKind, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, DomainTopology, TopologyNode, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
@@ -61,12 +61,12 @@ fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
 
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
-/// `HostEffect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
-pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> HostEffect {
+/// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry.
+pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> Effect {
     let pack = <JackSnapshot as ArtifactPack>::encode_pack(fixture);
     let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", fixture.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 
 pub(crate) fn jack_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
@@ -304,7 +304,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
     // default (`None`) rather than overriding — the `"document:in"` media port therefore reports
     // `MediaError::NotImplemented`; a real whole-fixture load goes through `reset_document_effect`
-    // (`HostEffect::LoadDocument`, outside undo history), see `editor::jack::commands::set_active_example`
+    // (`Effect::LoadDocument`, outside undo history), see `editor::jack::commands::set_active_example`
     // and `editor::jack::commands::set_fixture_json`.
 
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
@@ -705,7 +705,7 @@ mod tests {
         let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
         // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
         // 15:50:51 +0200 — predates this migration, not introduced by it): `set_active_example`
-        // routes the fixture swap through `HostEffect::LoadDocument` (whole-document replace is
+        // routes the fixture swap through `Effect::LoadDocument` (whole-document replace is
         // banned from the `Mutation` enum outright), never through `artifact_mutations`, so
         // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
         // the field that actually carries the swap.

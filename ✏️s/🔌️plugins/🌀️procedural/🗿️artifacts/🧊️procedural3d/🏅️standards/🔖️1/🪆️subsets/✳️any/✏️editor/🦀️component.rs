@@ -26,7 +26,7 @@ use flow::{with_process_flow_eval_session, FlowEvalSession};
 // separate, still-uncurated gap (unrelated to this ticket) — kept qualified.
 use semio_framework_plugin::{
     app::InteractionView, NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, ArtifactView, Dialect, Editor,
-    DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
+    DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     MediaClass, MediaError, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
 };
 use store::EngineHandles;
@@ -337,11 +337,11 @@ impl ArtifactEditor for Procedural3dPlayApp {
     }
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
-    fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<HostEffect> {
+    fn pending_effects(doc: &ArtifactView<'_, Procedural3dSnapshot>, _cfg: &ConfigView<'_, Procedural3dConfig>) -> Vec<Effect> {
         with_process_flow_eval_session(|session| {
             let host = flow::flow_host_with_session(&doc.snapshot.fixture, session);
             if session.sync(&host) {
-                vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+                vec![Effect::DispatchAction {req: semio_framework_plugin::RequestId(104),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
                 Vec::new()
             }
@@ -770,7 +770,7 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
 }
 
 /// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
-pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<HostEffect> {
+pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<Effect> {
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
@@ -786,11 +786,12 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
         let node_hash = flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
-            effects.push(HostEffect::InvokeExtension {
+            effects.push(Effect::InvokeExtension {
+                req: semio_framework_plugin::RequestId(105),
                 extension_id: "brep".into(),
                 capability: "tessellate".into(),
                 request_json: json!({ "handle": handle, "tolerance": tolerance, "nodeHash": node_hash }).to_string(),
-                response_action: "flowTessellateResolve".into()});
+            });
         }
     }
     effects
@@ -963,7 +964,7 @@ pub(crate) mod testkit {
         app.pending_effects();
         for _ in 0..1000 {
             let result = app.dispatch_typed(Procedural3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}), &meta("local")).expect("flowEvalTick");
-            if !result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+            if !result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")) {
                 return;
             }
         }
@@ -1133,7 +1134,7 @@ mod tests {
         app.dispatch_typed(Procedural3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::procedural3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("set example");
         let effects = app.pending_effects();
-        assert!(effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")));
+        assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "flowEvalTick")));
         drain_flow_eval_ticks(&mut app);
     }
 

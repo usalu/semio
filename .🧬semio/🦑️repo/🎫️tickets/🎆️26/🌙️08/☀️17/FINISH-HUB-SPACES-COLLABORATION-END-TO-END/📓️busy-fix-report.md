@@ -1,4 +1,16 @@
-# Busy-fix repair lane report (draft — being finalized, see bottom for status)
+# Busy-fix repair lane report
+
+## Changed files
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` — split
+  `AppBuilder::build_definition` into fallible `try_build_definition` + panicking wrapper; added
+  `App::try_from_builder`.
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs` — canonicalized `MODULE_APP_ID`;
+  migrated `create_module_app`/`module_plugin_bundle` onto the fallible path; updated the two tests
+  that called `create_module_app()` directly.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts`
+  — `pluginComponentBridgeSource`'s generated bridge now reloads a trapped plugin's wasm module
+  instead of retrying against the same dead instance forever.
 
 ## Root cause (verified)
 
@@ -78,31 +90,70 @@ own code comment already documented this poisoning mode.
   transport-level retry wrapper for both the worker-backed and main-thread bridge paths) needed no
   change: it just re-calls the bridge, which now self-heals underneath it.
 
-## Status at time of writing
+## Verification performed
 
-Cargo checks green (native target):
-- `semio-framework-plugin`: compiles, only 2 pre-existing dead-code warnings.
-- `semio-s-plugin-playbook`: compiles clean.
-- `semio-s-plugin-cad` + `semio-s-plugin-imperative`: compile clean (`🧪️busy-fix-cad-imperative-check.txt`).
-- `cargo test -p semio-s-plugin-space --lib`: **205 passed, 0 failed** (`🧪️busy-fix-space-test.txt`).
+Cargo checks/tests green (native target — all commands run to completion, real output captured):
+- `cargo check -p semio-framework-plugin --lib`: compiles, only 2 pre-existing dead-code warnings.
+- `cargo check -p semio-s-plugin-playbook --lib`: compiles clean.
+- `cargo check -p semio-s-plugin-cad -p semio-s-plugin-imperative --lib`: both compile clean
+  (`🧪️busy-fix-cad-imperative-check.txt`).
+- `cargo test -p semio-s-plugin-space --lib`: **205 passed, 0 failed** (`🧪️busy-fix-space-test.txt`),
+  matching the ticket's required baseline exactly.
 
-**Blocked on an unrelated concurrent session**, not on this lane's changes: the full-catalogue wasm
-rebuild (`bun 🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts plugin s`, `🧪️busy-fix-plugin-build.txt`) is
-resilient (continues past a single crate's failure) but *every* plugin crate it has reached so far —
-`animate`, `block`, `cad`, `cad-extension-aec-building*`, `dag`, `energy`, … — fails at the same root
-cause: the shared `semio-framework-os-kernel` crate
-(`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust`, **not in this lane's lease**) currently fails to
-compile — `error[E0432]: unresolved imports crate::os_spr::wire::PresencePoint, PresenceViewport` /
-`error[E0422]: cannot find struct ... PresencePoint/PresenceViewport in this scope`, sourced from
-`🧰️framework/🔨️modules/📡️spr/🦀️component.rs`. `git status` shows
-`🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs` staged-modified (`M`) right now — a live,
-in-progress edit by another session on shared presence/SPR wire types (consistent with this ticket's
-own "Context you must not break" note about concurrent `encodePresencePeer`/presence work). Per this
-project's standing guidance ("Concurrent Cargo Workspace Churn": repo-wide failures traced to another
-session's in-progress refactor can run 30–90+ minutes; poll rather than chase), this is not this lane's
-bug to fix and is out of lease regardless. Waiting/retrying for it to clear, then rebuilding just the
-`playbook`/`cad`/`imperative` wasm targets and completing the Playwright browser verification
-(`#s-space-create-artifact` → an `[data-row-id^="artifact:"]` row, no canonical-id panic, no
-`plugin instance busy` fault). **This paragraph and the Verify section below will be replaced with
-real results once the shared-kernel breakage clears — do not treat this report as final while it's
-still here.**
+## Blocker: could not complete the browser/Playwright verification
+
+The wasm rebuild this ticket's Verify step requires
+(`bun 🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts plugin s`, and later a scoped
+`SEMIO_PLUGIN_ONLY=playbook`/direct `cargo build -p semio-s-plugin-playbook --target wasm32-wasip2`
+retry) never produced a `.wasm` for playbook (or any other plugin) across 5 attempts spanning roughly
+50 minutes. This is **not caused by this lane's changes** — it is a large, unrelated,
+currently-in-progress refactor of the plugin runtime itself, by another concurrent session, evidenced
+concretely by:
+
+- `git status --short -- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/` shows a brand-new `⚛️reactor/`
+  subsystem (`💼️jobs`, `📮️requests`, `📸️checkpoint`, `🧵️executor`, `🩹️patches`, plus the reactor's own
+  `🦀️component.rs`) and a brand-new `🌐host/🦀️component.rs`, all `A` (staged, uncommitted, never
+  existed before), alongside a *modified* `world.wit` — the one file this lane's brief explicitly
+  forbids editing, and it is a `M` right now for reasons that have nothing to do with this fix.
+- The last two of five build attempts reproduced the **exact same 38/39-error signature** twice in a
+  row (not different each time, ruling out a mid-save race): `error[E0433]: cannot find exports in
+  component` / `cannot find function log/now_ms/trace_span in module crate::component` at
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/🦀️component.rs:327,338,348`, and
+  `error[E0562]: impl Trait is not allowed in closure parameters` at
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs:361` (full text:
+  `🧪️busy-fix-playbook-wasm-direct.txt`, captured 2026-08-17 22:27:52 +0200). None of these files or
+  lines were touched by this lane — they are new files this lane never created.
+- Earlier attempts (before that reactor/host work reached a stable-but-broken state) hit a *different*
+  unrelated failure first: every plugin crate failing on the shared `semio-framework-os-kernel` crate
+  with `error[E0432]: unresolved imports crate::os_spr::wire::PresencePoint, PresenceViewport`
+  (`🧪️busy-fix-plugin-build.txt`), traced to a live edit of
+  `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs` (also out of this lane's lease). That one
+  cleared on its own mid-session (confirmed: `flow-extension-primitive`, `flow-extension-text`,
+  `forms`, `gis` all built to real `.wasm` successfully afterward) — the reactor/host breakage above is
+  the *second*, still-unresolved wave.
+- The build tool's own budget guard independently flagged the same thing on one attempt:
+  `[budget] cargo build -p semio-s-plugin-playbook --target wasm32-wasip2 --profile dev exceeded
+  1200000ms — killed. Likely shared cargo target-dir lock contention from another concurrent
+  session — investigate before retrying.`
+
+Per this project's own standing guidance on concurrent cargo-workspace churn (repo-wide build failures
+traced to another session's in-progress refactor, not this session's diff), and given `world.wit` and
+everything under `⚛️reactor/`/`🌐host/` are out of this lane's lease regardless, this is not something
+this lane can or should fix. **The Playwright browser check
+(`#s-space-create-artifact` → `[data-row-id^="artifact:"]`, no canonical-id panic, no `plugin instance
+busy` fault) was not performed and is not claimed here** — it requires a working plugin wasm build,
+which is currently unavailable repo-wide for reasons outside this lane's control.
+
+## What is NOT done
+
+- Live browser/Playwright verification of the fix (blocked, see above — retry once the
+  `⚛️reactor`/`🌐host` work in `🔌️plugin/` stabilizes or is committed).
+- The other ~423 `AppBuilder::build_definition()` call sites across every other plugin still use the
+  panicking wrapper (deliberately, to stay in-lease — see `📓️busy-fix-report.md` §1); only playbook's
+  one real call site was migrated onto `try_build_definition`/`try_from_builder` as the concrete,
+  testable instance of the new fallible path.
+
+## sharedFileRequest
+
+None — everything needed for this fix was in-lease. The blocker above is a report, not a request: it
+needs the *other* session's `⚛️reactor`/`🌐host`/`world.wit` work to finish, not an edit from this lane.

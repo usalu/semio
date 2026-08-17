@@ -535,8 +535,12 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
     return;
   }
   if ("Session" in frame) {
+    // 🎨️ Flows through the SAME generic `{kind:"event",...}` wrapping every other `ArtifactEvent`
+    // gets — the real wasm host (`👷️worker/🦀️component.rs`) wraps every `ArtifactEvent` uniformly
+    // with zero per-variant special-casing, so this fallback must match rather than post a
+    // one-off top-level `BackboneWorkerResponse` shape the wasm path would never produce.
     state.sessionColor = frame.Session.color;
-    post({ kind: "session", documentId: state.config.documentId, actor: frame.Session.actor, color: frame.Session.color });
+    emitEvent(state.config.documentId, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
     return;
   }
   if ("Error" in frame) {
@@ -1009,7 +1013,7 @@ if (import.meta.vitest) {
       // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
       // pre-restructure location that no longer exists, so this cross-language byte-identity check had
       // been silently ENOENT-ing instead of comparing anything.
-      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "📦️packages/fixtures/wire");
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/wire");
 
       function loadClient(name: string) {
         const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));

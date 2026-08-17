@@ -53,6 +53,9 @@ Ticket path (use this exact path for `ticket_reopen`/`ticket_close`):
 | D5 | builder method is `.declare_artifact()` because the old `ArtifactDeclaration` still owns the name `.artifact()` | W1-C | W6 (rename) | ☐ |
 | D6 | stdio `📇️registry`'s rigid 36-artifact factory map is the only path `plugin()` reaches artifacts by — blocks per-artifact cutover | W2-P | W2 (delete `📇️registry`, cut all 36 at once) | ☐ |
 | D7 | `NativeCodecs.{snapshot,diff,mutations}` land as `LanguagePair{None,None}` for binary/txt — the 5 `dsl::LanguageSpec` roles the old `register_pilot_languages()` registered are not yet wired | W2-P | W2 | ☐ |
+| D8 | `os_reachable_export_dialects` / `os_reachable_import_dialects` exist with **no caller** — W1b Task 3 (shell wiring) could not complete inside its boundary. Either wire them in the shell wave or delete them; they must not ship unread. | W1b | shell wave | ☐ |
+| D9 | `IoPayload` crosses the WIT as JSON, so `Binary(Vec<u8>)` serializes as a JSON array of numbers — fine for small payloads, a real blowup for large binary artifacts. Needs a `DslValue::Bytes` variant or a binary framing. | W1-D | post-W6 | ☐ |
+| D10 | WIT wire params are `source`/`target`, not `from`/`into` — `from` is a reserved WIT keyword. Rust/TS internals still say `from`/`into`. Not a defect; recorded so nobody "fixes" it back. | W1-D | — | n/a |
 
 ## ⚠️ Rejected approaches (do not re-propose)
 

@@ -490,7 +490,7 @@ type OverlayState = {
   readonly introductionAutoStartedKeys: readonly string[];
   /** ✅️ Indices into the active step's `interactions` that are done — reset whenever the step changes. */
   readonly introductionCompletedInteractions: readonly number[];
-  /** 🗨️ The open declared dialog (id + `HostEffect`-seeded args), or `null` when none is open. */
+  /** 🗨️ The open declared dialog (id + `Effect`-seeded args), or `null` when none is open. */
   readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
   /** 🧯️ A non-blocking, auto-dismissing notice — e.g. a `"viewer.read-only"` fault arriving from the
    * host (contract freeze §2.3/§5: surfaces as a notice, never a crash). `null` when nothing to show. */

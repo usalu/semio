@@ -28,7 +28,7 @@ use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, CLEAR_SELECTION_ACTION_ID,
 };
 use semio_framework_plugin::app::InteractionView;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework::Dialect;
 use store::EngineHandles;
 use serde_json::{json, Value};
@@ -61,7 +61,7 @@ pub const LAYOUT_INTERACTION_ELEMENTS: &str = "elements";
 pub const LAYOUT_GRANULARITY_ELEMENT: &str = "element";
 
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
-/// shared by the canvas pointer commands (wrapped into a `HostEffect::DispatchAction`) and any
+/// shared by the canvas pointer commands (wrapped into a `Effect::DispatchAction`) and any
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
 pub fn layout_select_action_args(ids: &[String], merge: &str) -> Value {
     let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
@@ -79,18 +79,18 @@ pub fn layout_hover_action_args(id: Option<&str>) -> Value {
 /// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the
 /// app asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
-pub fn layout_select_effect(ids: &[String], merge: &str) -> HostEffect {
-    HostEffect::DispatchAction { action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
+pub fn layout_select_effect(ids: &[String], merge: &str) -> Effect {
+    Effect::DispatchAction {req: semio_framework_plugin::RequestId(115),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_select_action_args(ids, merge))), delay_ms: 0 }
 }
 
 /// 🐁️ Wraps [`layout_hover_action_args`] the same way, for `interactionHover`.
-pub fn layout_hover_effect(id: Option<&str>) -> HostEffect {
-    HostEffect::DispatchAction { action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
+pub fn layout_hover_effect(id: Option<&str>) -> Effect {
+    Effect::DispatchAction {req: semio_framework_plugin::RequestId(114),  action: INTERACTION_HOVER_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(layout_hover_action_args(id))), delay_ms: 0 }
 }
 
 /// 🕹️ Clicking empty canvas clears every domain's selection — `clearSelection` takes no `domainId`.
-pub fn layout_clear_selection_effect() -> HostEffect {
-    HostEffect::DispatchAction { action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
+pub fn layout_clear_selection_effect() -> Effect {
+    Effect::DispatchAction {req: semio_framework_plugin::RequestId(113),  action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 

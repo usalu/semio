@@ -43,13 +43,13 @@ mod tests {
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
-    /// `setActiveExample` now surfaces as a `HostEffect::LoadDocument` carrying the default document's
+    /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the default document's
     /// pack bytes rather than an `artifact_mutations` entry — `dispatch`'s in-process `VcsArtifactApp`
     /// never applies `effects` to its own store (that's the real host's job), so this asserts directly
     /// on the emitted effect rather than through `app.snapshot()`.
     #[test]
     fn set_active_example_demo_emits_a_reset_effect_after_seed() {
-        use semio_framework_plugin::HostEffect;
+        use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
         let deck = app.snapshot().expect("projection");
@@ -65,7 +65,7 @@ mod tests {
             &mut ctx,
         )
         .expect("handle");
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -78,12 +78,12 @@ mod tests {
     /// in-process test harness never applies `effects` to itself).
     #[test]
     fn clear_tiles_action_empties_tiles_and_requests_a_selection_clear() {
-        use semio_framework_plugin::HostEffect;
+        use semio_framework_plugin::Effect;
         let mut app = present_app();
         dispatch(&mut app, PresentCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 }));
         let result = dispatch(&mut app, PresentCommand::ClearTiles(clear_tiles::ClearTiles {}));
         assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
-        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
+        assert!(matches!(result.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
     }
 }
 //#endregion 🧪️Tests

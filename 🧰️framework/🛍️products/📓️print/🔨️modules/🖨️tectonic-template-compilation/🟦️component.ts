@@ -25,8 +25,8 @@ const workspaceRoot = getWorkspaceRoot();
 const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
 const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexDirectory = join(productRoot, "🖋️latex");
-const templateDirectory = join(packageRoot, "📄️template");
-const assetDirectory = join(packageRoot, "asset");
+const templateDirectory = join(productRoot, "📄️template");
+const assetDirectory = join(productRoot, "🖼️assets");
 const outputDirectory = join(packageRoot, "dist");
 const panelGlassDirectoryName = ".semio-panel-glass";
 const darkTexDirectoryName = ".semio-dark";
@@ -251,7 +251,7 @@ async function ensureTectonic(): Promise<string> {
 }
 
 function compileTemplate(tectonic: string, template: PrintTemplate): Promise<void> {
-  return compileLightAndDark(tectonic, join(packageRoot, template.texPath), outputDirectory);
+  return compileLightAndDark(tectonic, join(productRoot, template.texPath), outputDirectory);
 }
 
 async function compileLightAndDark(tectonic: string, lightTexPath: string, outDirectory: string): Promise<void> {

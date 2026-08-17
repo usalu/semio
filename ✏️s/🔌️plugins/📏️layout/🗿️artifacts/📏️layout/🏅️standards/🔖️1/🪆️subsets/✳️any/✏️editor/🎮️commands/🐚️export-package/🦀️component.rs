@@ -7,7 +7,7 @@ use crate::editor::layout::engine::scene::{export_document_pdf, export_document_
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutSnapshot;
 use base64::Engine;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::{engagement_token_matches, ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ pub fn handle(_payload: &ExportPackage, doc: &ArtifactView<'_, LayoutSnapshot>, 
     let preflight_json = serde_json::to_string(&run_layout_preflight(document, layout_labels(cfg.snapshot))).unwrap_or_else(|_| "[]".into());
     let doc_json = serde_json::to_string(document).unwrap_or_default();
     match export_package_zip(&doc_json, &preflight_json) {
-        Ok(bytes) => Ok(Emit::effect(HostEffect::DownloadMediaExport {
+        Ok(bytes) => Ok(Emit::effect(Effect::DownloadMediaExport {
             filename: format!("{}.layout-package.zip", document.name),
             mime_type: "application/zip".into(),
             data: base64::engine::general_purpose::STANDARD.encode(bytes),

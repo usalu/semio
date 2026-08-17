@@ -3,7 +3,7 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -17,7 +17,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WorkflowSnapsh
     if payload.example_id.is_empty() {
         Ok(Emit::default())
     } else {
-        Ok(Emit::effect(HostEffect::Navigate { uri: format!("/spaces/{}", payload.example_id) }))
+        Ok(Emit::effect(Effect::Navigate { uri: format!("/spaces/{}", payload.example_id) }))
     }
 }
 
@@ -52,8 +52,8 @@ mod tests {
         let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).expect("handle");
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId { space_id: Some(entry.id) }));
         assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode { node_id: None }));
-        assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })));
-        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+        assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })));
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     }
 
     #[test]
@@ -69,7 +69,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::LoadDocument { pack, spr } => Some((pack.as_slice(), spr.as_slice())),
+                Effect::LoadDocument { pack, spr } => Some((pack.as_slice(), spr.as_slice())),
                 _ => None,
             })
             .expect("load document");
@@ -103,7 +103,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::Navigate { uri } => Some(uri.trim_start_matches("/spaces/").to_string()),
+                Effect::Navigate { uri } => Some(uri.trim_start_matches("/spaces/").to_string()),
                 _ => None,
             })
             .expect("navigate");
@@ -127,12 +127,12 @@ mod tests {
         let home_config = crate::editor::home::config::HomeConfig::default();
         let home_cfg = ConfigView { snapshot: &home_config };
         let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
-        assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })), "create must not download a file");
+        assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
         let uri = emit
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::Navigate { uri } => Some(uri.as_str()),
+                Effect::Navigate { uri } => Some(uri.as_str()),
                 _ => None,
             })
             .expect("navigate");
@@ -154,9 +154,9 @@ mod tests {
         // `SpaceApp::handle`, which now needs a real `InteractionView` only a full `VcsArtifactApp`
         // dispatch can provide.
         let open = SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
-        assert!(open.effects.iter().any(|effect| matches!(effect, HostEffect::LoadDocument { .. })), "openSpace must load the created studio");
-        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
-        assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
+        assert!(open.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "openSpace must load the created studio");
+        assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
+        assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })));
     }
 }
 //#endregion 🧪️Tests

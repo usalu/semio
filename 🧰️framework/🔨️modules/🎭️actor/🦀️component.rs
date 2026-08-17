@@ -1,0 +1,2643 @@
+//! 🎭️ Pooled actor/plugin runtime kernel — domain-neutral, pure: no I/O, no clock (callers pass
+//! `now_ms`), no `wasm_bindgen`/`web_sys`/`winit`/`tokio`/`std::thread` in this file. Transports are
+//! injected via the [`ShardTransport`] trait; the one exception, [`ThreadTransport`], lives behind
+//! `#[cfg(not(target_arch = "wasm32"))]` because it is built on `std::sync::mpsc`.
+//!
+//! 🪡 **Opaque seam**: `Effect`, `Event` and `UiPatch` are owned by a parallel packet in
+//! `🎠️kernel` and are NOT defined here. This crate carries them as pack-encoded `Vec<u8>` inside
+//! [`TurnResult`] (`ui_patches`, `effects`) and [`Payload::Event`] — the kernel crate encodes/decodes
+//! the concrete typed collections; this crate only ever moves already-encoded bytes. The same seam
+//! applies to `CapabilityGrant`: `kernel::CapabilityGrant` (`🛂️manifest/🦀️component.rs`) is an
+//! application-layer type this framework-tier crate must not depend on (would invert the
+//! framework → os-product layering), so [`CapabilityGrant`] here is a minimal, local, pack-codeable
+//! stand-in reconciled by the `B1-host-native` packet at integration time.
+//!
+//! See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-runtime.md` §1.
+
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::sync::Arc;
+
+use serde::{Deserialize, Serialize};
+
+//#region 🧵️Pack
+/// 🧵️ Hand-rolled binary codec primitives shared by every type's `pack_encode`/`pack_decode` pair
+/// below — LEB128 varints, length-prefixed bytes/strings, fixed 32-byte hashes, option/vec
+/// combinators. Self-contained (no dependency on `🎒️pack`, which lives in the os-product layer).
+pub mod pack {
+    /// 🚨️ The one error type every `pack_decode` returns.
+    #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
+    pub enum PackError {
+        #[error("pack: truncated at offset {0} reading {1}")]
+        Truncated(usize, &'static str),
+        #[error("pack: invalid tag {tag} for {what} at offset {offset}")]
+        InvalidTag { what: &'static str, tag: u8, offset: usize },
+        #[error("pack: invalid utf8 in {0} at offset {1}")]
+        InvalidUtf8(&'static str, usize),
+        #[error("pack: overlong varint at offset {0}")]
+        OverlongVarint(usize),
+    }
+
+    pub fn write_u8(out: &mut Vec<u8>, v: u8) {
+        out.push(v);
+    }
+    pub fn read_u8(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<u8, PackError> {
+        let byte = *bytes.get(*pos).ok_or(PackError::Truncated(*pos, what))?;
+        *pos += 1;
+        Ok(byte)
+    }
+
+    pub fn write_bool(out: &mut Vec<u8>, v: bool) {
+        out.push(v as u8);
+    }
+    pub fn read_bool(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<bool, PackError> {
+        Ok(read_u8(bytes, pos, what)? != 0)
+    }
+
+    pub fn write_u16(out: &mut Vec<u8>, v: u16) {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    pub fn read_u16(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<u16, PackError> {
+        let end = *pos + 2;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(u16::from_le_bytes(slice.try_into().expect("2 bytes")))
+    }
+
+    pub fn write_u32(out: &mut Vec<u8>, v: u32) {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    pub fn read_u32(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<u32, PackError> {
+        let end = *pos + 4;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(u32::from_le_bytes(slice.try_into().expect("4 bytes")))
+    }
+
+    pub fn write_u64(out: &mut Vec<u8>, v: u64) {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    pub fn read_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<u64, PackError> {
+        let end = *pos + 8;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(u64::from_le_bytes(slice.try_into().expect("8 bytes")))
+    }
+
+    pub fn write_f32(out: &mut Vec<u8>, v: f32) {
+        out.extend_from_slice(&v.to_le_bytes());
+    }
+    pub fn read_f32(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<f32, PackError> {
+        let end = *pos + 4;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(f32::from_le_bytes(slice.try_into().expect("4 bytes")))
+    }
+
+    pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
+        let mut remaining = value;
+        loop {
+            let byte = (remaining & 0x7F) as u8;
+            remaining >>= 7;
+            if remaining == 0 {
+                out.push(byte);
+                break;
+            }
+            out.push(byte | 0x80);
+        }
+    }
+    pub fn read_varint_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<u64, PackError> {
+        let start = *pos;
+        let mut result: u64 = 0;
+        for i in 0..10usize {
+            let byte = *bytes.get(*pos).ok_or(PackError::Truncated(*pos, what))?;
+            *pos += 1;
+            let more = byte & 0x80 != 0;
+            let payload = (byte & 0x7F) as u64;
+            if i == 9 && (more || payload > 1) {
+                return Err(PackError::OverlongVarint(start));
+            }
+            result |= payload << (i as u32 * 7);
+            if !more {
+                return Ok(result);
+            }
+        }
+        Err(PackError::OverlongVarint(start))
+    }
+
+    pub fn write_bytes(out: &mut Vec<u8>, v: &[u8]) {
+        write_varint_u64(out, v.len() as u64);
+        out.extend_from_slice(v);
+    }
+    pub fn read_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Vec<u8>, PackError> {
+        let len = read_varint_u64(bytes, pos, what)? as usize;
+        let end = *pos + len;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(slice.to_vec())
+    }
+
+    pub fn write_str(out: &mut Vec<u8>, v: &str) {
+        write_bytes(out, v.as_bytes());
+    }
+    pub fn read_str(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<String, PackError> {
+        let start = *pos;
+        let raw = read_bytes(bytes, pos, what)?;
+        String::from_utf8(raw).map_err(|_| PackError::InvalidUtf8(what, start))
+    }
+
+    pub fn write_hash32(out: &mut Vec<u8>, v: &[u8; 32]) {
+        out.extend_from_slice(v);
+    }
+    pub fn read_hash32(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<[u8; 32], PackError> {
+        let end = *pos + 32;
+        let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
+        *pos = end;
+        Ok(slice.try_into().expect("32 bytes"))
+    }
+
+    pub fn write_opt<T>(out: &mut Vec<u8>, v: &Option<T>, f: impl FnOnce(&mut Vec<u8>, &T)) {
+        write_bool(out, v.is_some());
+        if let Some(x) = v {
+            f(out, x);
+        }
+    }
+    pub fn read_opt<T>(bytes: &[u8], pos: &mut usize, what: &'static str, f: impl FnOnce(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Option<T>, PackError> {
+        if read_bool(bytes, pos, what)? {
+            Ok(Some(f(bytes, pos)?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn write_vec<T>(out: &mut Vec<u8>, v: &[T], mut f: impl FnMut(&mut Vec<u8>, &T)) {
+        write_varint_u64(out, v.len() as u64);
+        for item in v {
+            f(out, item);
+        }
+    }
+    pub fn read_vec<T>(bytes: &[u8], pos: &mut usize, what: &'static str, mut f: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+        let len = read_varint_u64(bytes, pos, what)? as usize;
+        let mut out = Vec::with_capacity(len.min(1 << 20));
+        for _ in 0..len {
+            out.push(f(bytes, pos)?);
+        }
+        Ok(out)
+    }
+}
+//#endregion 🧵️Pack
+
+//#region 📦️PackageId
+/// 📦️ Stable identity of an installed plugin or plugin+extension pair: `<plugin>` or `<plugin>/<extension>`.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct PackageId(pub String);
+
+impl PackageId {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_str(out, &self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_str(bytes, pos, "PackageId")?))
+    }
+}
+
+/// 🧬️ Blake3 hash of a compiled component's bytes — the compiled-cache key (`~/.semio/cache/wasmtime/...`).
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct PackageHash(#[cfg_attr(feature = "typegen", ts(type = "number[]"))] pub [u8; 32]);
+
+impl std::fmt::Debug for PackageHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "PackageHash(")?;
+        for byte in &self.0[..4] {
+            write!(f, "{byte:02x}")?;
+        }
+        write!(f, "…)")
+    }
+}
+
+impl PackageHash {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_hash32(out, &self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_hash32(bytes, pos, "PackageHash")?))
+    }
+}
+//#endregion 📦️PackageId
+
+//#region 🆔️ActorId
+/// 🆔️ Bit-packed actor identifier: `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14`.
+/// Generation makes restart-after-trap addressable without id reuse. The kernel re-exports this
+/// type as `RuntimeActorId` (`kernel::ActorId` already names the presence/collab actor — never shadow).
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ActorId(pub u64);
+
+const ACTOR_ID_GENERATION_BITS: u32 = 14;
+const ACTOR_ID_ORDINAL_BITS: u32 = 32;
+const ACTOR_ID_KIND_BITS: u32 = 2;
+const ACTOR_ID_GENERATION_MASK: u64 = (1 << ACTOR_ID_GENERATION_BITS) - 1;
+const ACTOR_ID_ORDINAL_MASK: u64 = (1 << ACTOR_ID_ORDINAL_BITS) - 1;
+const ACTOR_ID_KIND_MASK: u64 = (1 << ACTOR_ID_KIND_BITS) - 1;
+const ACTOR_ID_ORDINAL_SHIFT: u32 = ACTOR_ID_GENERATION_BITS;
+const ACTOR_ID_KIND_SHIFT: u32 = ACTOR_ID_ORDINAL_SHIFT + ACTOR_ID_ORDINAL_BITS;
+const ACTOR_ID_PLUGIN_SHIFT: u32 = ACTOR_ID_KIND_SHIFT + ACTOR_ID_KIND_BITS;
+
+impl ActorId {
+    pub fn new(plugin_ordinal: u16, kind_tag: u8, ordinal: u32, generation: u16) -> Self {
+        let bits = ((plugin_ordinal as u64) << ACTOR_ID_PLUGIN_SHIFT)
+            | (((kind_tag as u64) & ACTOR_ID_KIND_MASK) << ACTOR_ID_KIND_SHIFT)
+            | ((ordinal as u64) << ACTOR_ID_ORDINAL_SHIFT)
+            | ((generation as u64) & ACTOR_ID_GENERATION_MASK);
+        Self(bits)
+    }
+
+    pub fn plugin_ordinal(self) -> u16 {
+        (self.0 >> ACTOR_ID_PLUGIN_SHIFT) as u16
+    }
+
+    pub fn kind_tag(self) -> u8 {
+        ((self.0 >> ACTOR_ID_KIND_SHIFT) & ACTOR_ID_KIND_MASK) as u8
+    }
+
+    pub fn ordinal(self) -> u32 {
+        ((self.0 >> ACTOR_ID_ORDINAL_SHIFT) & ACTOR_ID_ORDINAL_MASK) as u32
+    }
+
+    pub fn generation(self) -> u16 {
+        (self.0 & ACTOR_ID_GENERATION_MASK) as u16
+    }
+
+    /// 🔁️ Restart-after-trap: same plugin/kind/ordinal, generation bumped (wraps at 14 bits — a
+    /// restart storm beyond 16384 generations is itself a `Disabled`-worthy condition upstream).
+    pub fn next_generation(self) -> Self {
+        Self::new(self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation().wrapping_add(1) & (ACTOR_ID_GENERATION_MASK as u16))
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_u64(bytes, pos, "ActorId")?))
+    }
+}
+
+impl std::fmt::Debug for ActorId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ActorId(plugin={}, kind={}, ordinal={}, gen={})", self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation())
+    }
+}
+//#endregion 🆔️ActorId
+
+//#region 🎭️ActorKind
+/// 🎭️ What an actor slot represents: a running app instance, an activated extension, or a
+/// background job spawned by another actor. Discriminant order matches `ActorId`'s `kind:u2` tag.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ActorKind {
+    PluginApp { plugin: PackageId, app_id: String, instance_id: u32 },
+    Extension { plugin: PackageId, extension_id: String },
+    Job { owner: ActorId, job_id: u64 },
+}
+
+impl ActorKind {
+    pub fn tag(&self) -> u8 {
+        match self {
+            ActorKind::PluginApp { .. } => 0,
+            ActorKind::Extension { .. } => 1,
+            ActorKind::Job { .. } => 2,
+        }
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            ActorKind::PluginApp { plugin, app_id, instance_id } => {
+                pack::write_u8(out, 0);
+                plugin.pack_encode(out);
+                pack::write_str(out, app_id);
+                pack::write_u32(out, *instance_id);
+            }
+            ActorKind::Extension { plugin, extension_id } => {
+                pack::write_u8(out, 1);
+                plugin.pack_encode(out);
+                pack::write_str(out, extension_id);
+            }
+            ActorKind::Job { owner, job_id } => {
+                pack::write_u8(out, 2);
+                owner.pack_encode(out);
+                pack::write_u64(out, *job_id);
+            }
+        }
+    }
+
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "ActorKind")?;
+        match tag {
+            0 => Ok(ActorKind::PluginApp { plugin: PackageId::pack_decode(bytes, pos)?, app_id: pack::read_str(bytes, pos, "ActorKind::app_id")?, instance_id: pack::read_u32(bytes, pos, "ActorKind::instance_id")? }),
+            1 => Ok(ActorKind::Extension { plugin: PackageId::pack_decode(bytes, pos)?, extension_id: pack::read_str(bytes, pos, "ActorKind::extension_id")? }),
+            2 => Ok(ActorKind::Job { owner: ActorId::pack_decode(bytes, pos)?, job_id: pack::read_u64(bytes, pos, "ActorKind::job_id")? }),
+            other => Err(pack::PackError::InvalidTag { what: "ActorKind", tag: other, offset: *pos }),
+        }
+    }
+}
+//#endregion 🎭️ActorKind
+
+//#region 🛣️Lane
+/// 🛣️ Scheduling priority class. Ordered highest-to-lowest priority by declaration order — see
+/// [`Lane::priority_rank`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub enum Lane {
+    Interactive,
+    UserVisible,
+    Background,
+    Maintenance,
+}
+
+impl Lane {
+    pub const ALL: [Lane; 4] = [Lane::Interactive, Lane::UserVisible, Lane::Background, Lane::Maintenance];
+
+    /// 0 = highest priority (Interactive) .. 3 = lowest (Maintenance).
+    pub fn priority_rank(self) -> usize {
+        match self {
+            Lane::Interactive => 0,
+            Lane::UserVisible => 1,
+            Lane::Background => 2,
+            Lane::Maintenance => 3,
+        }
+    }
+
+    /// ⚖️ Level-2 DRR quantum weight — biases actor selection within a plugin toward interactive work.
+    pub fn weight(self) -> u32 {
+        match self {
+            Lane::Interactive => 8,
+            Lane::UserVisible => 4,
+            Lane::Background => 2,
+            Lane::Maintenance => 1,
+        }
+    }
+
+    fn tag(self) -> u8 {
+        self.priority_rank() as u8
+    }
+
+    fn from_tag(tag: u8) -> Result<Self, pack::PackError> {
+        match tag {
+            0 => Ok(Lane::Interactive),
+            1 => Ok(Lane::UserVisible),
+            2 => Ok(Lane::Background),
+            3 => Ok(Lane::Maintenance),
+            other => Err(pack::PackError::InvalidTag { what: "Lane", tag: other, offset: 0 }),
+        }
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u8(out, self.tag());
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "Lane")?;
+        Self::from_tag(tag)
+    }
+}
+//#endregion 🛣️Lane
+
+//#region ⚖️Budget
+/// ⚖️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Budget {
+    pub fuel: u64,
+    pub wall_ms: u32,
+    pub memory_bytes: u64,
+    pub ui_nodes: u32,
+    pub mailbox_len: u16,
+    pub max_effects: u32,
+    pub max_patch_bytes: u32,
+}
+
+impl Budget {
+    /// ⚖️ Scales a `Throttled { factor }` failure stage onto this budget — fuel/wall/effects/patch
+    /// bytes shrink; `mailbox_len`/`ui_nodes` ceilings are left alone (they bound queued/committed
+    /// state, not this turn's spend).
+    pub fn scaled(self, factor: f32) -> Budget {
+        let factor = factor.clamp(0.05, 1.0);
+        Budget {
+            fuel: ((self.fuel as f64) * factor as f64) as u64,
+            wall_ms: ((self.wall_ms as f64) * factor as f64).max(1.0) as u32,
+            memory_bytes: self.memory_bytes,
+            ui_nodes: self.ui_nodes,
+            mailbox_len: self.mailbox_len,
+            max_effects: ((self.max_effects as f64) * factor as f64) as u32,
+            max_patch_bytes: self.max_patch_bytes,
+        }
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.fuel);
+        pack::write_u32(out, self.wall_ms);
+        pack::write_u64(out, self.memory_bytes);
+        pack::write_u32(out, self.ui_nodes);
+        pack::write_u16(out, self.mailbox_len);
+        pack::write_u32(out, self.max_effects);
+        pack::write_u32(out, self.max_patch_bytes);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            fuel: pack::read_u64(bytes, pos, "Budget::fuel")?,
+            wall_ms: pack::read_u32(bytes, pos, "Budget::wall_ms")?,
+            memory_bytes: pack::read_u64(bytes, pos, "Budget::memory_bytes")?,
+            ui_nodes: pack::read_u32(bytes, pos, "Budget::ui_nodes")?,
+            mailbox_len: pack::read_u16(bytes, pos, "Budget::mailbox_len")?,
+            max_effects: pack::read_u32(bytes, pos, "Budget::max_effects")?,
+            max_patch_bytes: pack::read_u32(bytes, pos, "Budget::max_patch_bytes")?,
+        })
+    }
+}
+
+//#region ⚖️LaneDefaults
+/// ⚖️ Default [`Budget`] per [`Lane`] — Interactive 4ms/2M fuel, UserVisible 16ms, Background 50ms,
+/// Maintenance 200ms (the ladder the design spec fixes explicitly); the remaining ceilings scale
+/// down the same tiers so background/maintenance work can never out-spend memory/UI/mailbox room
+/// an interactive turn would need.
+pub mod lane_defaults {
+    use super::{Budget, Lane};
+
+    pub fn budget_for(lane: Lane) -> Budget {
+        match lane {
+            Lane::Interactive => Budget { fuel: 2_000_000, wall_ms: 4, memory_bytes: 64 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 64, max_patch_bytes: 262_144 },
+            Lane::UserVisible => Budget { fuel: 6_000_000, wall_ms: 16, memory_bytes: 96 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 128, max_patch_bytes: 524_288 },
+            Lane::Background => Budget { fuel: 20_000_000, wall_ms: 50, memory_bytes: 192 * 1024 * 1024, ui_nodes: 8_000, mailbox_len: 512, max_effects: 256, max_patch_bytes: 1_048_576 },
+            Lane::Maintenance => Budget { fuel: 80_000_000, wall_ms: 200, memory_bytes: 256 * 1024 * 1024, ui_nodes: 4_000, mailbox_len: 1024, max_effects: 512, max_patch_bytes: 2_097_152 },
+        }
+    }
+}
+//#endregion ⚖️LaneDefaults
+//#endregion ⚖️Budget
+
+//#region ✉️Envelope
+/// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
+/// lives in the kernel crate; this crate only ever routes by this bare numeric id.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct WindowId(pub u32);
+
+impl WindowId {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u32(out, self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_u32(bytes, pos, "WindowId")?))
+    }
+}
+
+/// ✉️ Who sent an [`Envelope`].
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum Origin {
+    Ui { window: WindowId },
+    Actor(ActorId),
+    Kernel,
+    Bus { topic: String },
+}
+
+impl Origin {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Origin::Ui { window } => {
+                pack::write_u8(out, 0);
+                window.pack_encode(out);
+            }
+            Origin::Actor(id) => {
+                pack::write_u8(out, 1);
+                id.pack_encode(out);
+            }
+            Origin::Kernel => pack::write_u8(out, 2),
+            Origin::Bus { topic } => {
+                pack::write_u8(out, 3);
+                pack::write_str(out, topic);
+            }
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "Origin")?;
+        match tag {
+            0 => Ok(Origin::Ui { window: WindowId::pack_decode(bytes, pos)? }),
+            1 => Ok(Origin::Actor(ActorId::pack_decode(bytes, pos)?)),
+            2 => Ok(Origin::Kernel),
+            3 => Ok(Origin::Bus { topic: pack::read_str(bytes, pos, "Origin::topic")? }),
+            other => Err(pack::PackError::InvalidTag { what: "Origin", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// ✉️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
+/// kernel crate's concrete `Event` type — see the module-level seam docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum Payload {
+    Event(Vec<u8>),
+    Suspend { checkpoint: bool },
+    Resume { checkpoint: Option<Vec<u8>> },
+    Cancel(u64),
+    JobStep { job: u64 },
+}
+
+impl Payload {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Payload::Event(bytes) => {
+                pack::write_u8(out, 0);
+                pack::write_bytes(out, bytes);
+            }
+            Payload::Suspend { checkpoint } => {
+                pack::write_u8(out, 1);
+                pack::write_bool(out, *checkpoint);
+            }
+            Payload::Resume { checkpoint } => {
+                pack::write_u8(out, 2);
+                pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+            }
+            Payload::Cancel(seq) => {
+                pack::write_u8(out, 3);
+                pack::write_u64(out, *seq);
+            }
+            Payload::JobStep { job } => {
+                pack::write_u8(out, 4);
+                pack::write_u64(out, *job);
+            }
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "Payload")?;
+        match tag {
+            0 => Ok(Payload::Event(pack::read_bytes(bytes, pos, "Payload::Event")?)),
+            1 => Ok(Payload::Suspend { checkpoint: pack::read_bool(bytes, pos, "Payload::Suspend")? }),
+            2 => Ok(Payload::Resume { checkpoint: pack::read_opt(bytes, pos, "Payload::Resume", |b, p| pack::read_bytes(b, p, "Payload::Resume::checkpoint"))? }),
+            3 => Ok(Payload::Cancel(pack::read_u64(bytes, pos, "Payload::Cancel")?)),
+            4 => Ok(Payload::JobStep { job: pack::read_u64(bytes, pos, "Payload::JobStep")? }),
+            other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
+        }
+    }
+}
+
+//#region 🔑️CoalesceKey
+/// 🔑️ Latest-wins-per-`(actor, key)` coalescing key. Pointer-move, resize, presence, refresh all
+/// coalesce under this — 200 stale mouse-moves must never queue.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct CoalesceKey(pub String);
+
+impl CoalesceKey {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_str(out, &self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_str(bytes, pos, "CoalesceKey")?))
+    }
+}
+//#endregion 🔑️CoalesceKey
+
+/// ✉️ One routed message: destination, sender, scheduling lane, an optional deadline that
+/// short-circuits DRR ordering, an optional coalescing key, an optional envelope-seq this cancels,
+/// and its payload.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Envelope {
+    pub to: ActorId,
+    pub from: Origin,
+    pub lane: Lane,
+    pub seq: u64,
+    pub deadline_ms: Option<u64>,
+    pub coalesce: Option<CoalesceKey>,
+    pub cancel_of: Option<u64>,
+    pub payload: Payload,
+}
+
+impl Envelope {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.to.pack_encode(out);
+        self.from.pack_encode(out);
+        self.lane.pack_encode(out);
+        pack::write_u64(out, self.seq);
+        pack::write_opt(out, &self.deadline_ms, |o, v| pack::write_u64(o, *v));
+        pack::write_opt(out, &self.coalesce, |o, v| v.pack_encode(o));
+        pack::write_opt(out, &self.cancel_of, |o, v| pack::write_u64(o, *v));
+        self.payload.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            to: ActorId::pack_decode(bytes, pos)?,
+            from: Origin::pack_decode(bytes, pos)?,
+            lane: Lane::pack_decode(bytes, pos)?,
+            seq: pack::read_u64(bytes, pos, "Envelope::seq")?,
+            deadline_ms: pack::read_opt(bytes, pos, "Envelope::deadline_ms", |b, p| pack::read_u64(b, p, "deadline_ms"))?,
+            coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode)?,
+            cancel_of: pack::read_opt(bytes, pos, "Envelope::cancel_of", |b, p| pack::read_u64(b, p, "cancel_of"))?,
+            payload: Payload::pack_decode(bytes, pos)?,
+        })
+    }
+}
+//#endregion ✉️Envelope
+
+//#region 🔁️TurnResult
+/// 🔁️ How a turn left the actor.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum TurnStatus {
+    Idle,
+    MoreWork,
+    CheckpointReady,
+    Faulted(Vec<u8>),
+}
+
+impl TurnStatus {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            TurnStatus::Idle => pack::write_u8(out, 0),
+            TurnStatus::MoreWork => pack::write_u8(out, 1),
+            TurnStatus::CheckpointReady => pack::write_u8(out, 2),
+            TurnStatus::Faulted(detail) => {
+                pack::write_u8(out, 3);
+                pack::write_bytes(out, detail);
+            }
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "TurnStatus")?;
+        match tag {
+            0 => Ok(TurnStatus::Idle),
+            1 => Ok(TurnStatus::MoreWork),
+            2 => Ok(TurnStatus::CheckpointReady),
+            3 => Ok(TurnStatus::Faulted(pack::read_bytes(bytes, pos, "TurnStatus::Faulted")?)),
+            other => Err(pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// 📊️ What one turn actually spent.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Usage {
+    pub fuel: u64,
+    pub wall_us: u64,
+    pub memory_bytes: u64,
+}
+
+impl Usage {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.fuel);
+        pack::write_u64(out, self.wall_us);
+        pack::write_u64(out, self.memory_bytes);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { fuel: pack::read_u64(bytes, pos, "Usage::fuel")?, wall_us: pack::read_u64(bytes, pos, "Usage::wall_us")?, memory_bytes: pack::read_u64(bytes, pos, "Usage::memory_bytes")? })
+    }
+}
+
+/// 🔁️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
+/// `effects` are opaque pack-encoded `Vec<UiPatch>`/`Vec<Effect>` blobs — see the module seam docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct TurnResult {
+    pub ui_patches: Vec<u8>,
+    pub effects: Vec<u8>,
+    pub next_wake: Option<u64>,
+    pub status: TurnStatus,
+    pub usage: Usage,
+}
+
+impl TurnResult {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_bytes(out, &self.ui_patches);
+        pack::write_bytes(out, &self.effects);
+        pack::write_opt(out, &self.next_wake, |o, v| pack::write_u64(o, *v));
+        self.status.pack_encode(out);
+        self.usage.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches")?,
+            effects: pack::read_bytes(bytes, pos, "TurnResult::effects")?,
+            next_wake: pack::read_opt(bytes, pos, "TurnResult::next_wake", |b, p| pack::read_u64(b, p, "next_wake"))?,
+            status: TurnStatus::pack_decode(bytes, pos)?,
+            usage: Usage::pack_decode(bytes, pos)?,
+        })
+    }
+}
+//#endregion 🔁️TurnResult
+
+//#region 📬️Mailbox
+/// 🚦 What `Mailbox::enqueue` reports back — `Rejected` must always surface as a busy badge, never
+/// a silent drop of a user action.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum Backpressure {
+    Accept,
+    Coalesced,
+    Dropped(Lane),
+    Rejected,
+}
+
+impl Backpressure {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Backpressure::Accept => pack::write_u8(out, 0),
+            Backpressure::Coalesced => pack::write_u8(out, 1),
+            Backpressure::Dropped(lane) => {
+                pack::write_u8(out, 2);
+                lane.pack_encode(out);
+            }
+            Backpressure::Rejected => pack::write_u8(out, 3),
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "Backpressure")?;
+        match tag {
+            0 => Ok(Backpressure::Accept),
+            1 => Ok(Backpressure::Coalesced),
+            2 => Ok(Backpressure::Dropped(Lane::pack_decode(bytes, pos)?)),
+            3 => Ok(Backpressure::Rejected),
+            other => Err(pack::PackError::InvalidTag { what: "Backpressure", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// 📬️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
+/// coalescing scan on enqueue, and eviction of the lowest-priority nonempty lane before a hard reject.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Mailbox {
+    pub capacity: u16,
+    lanes: [VecDeque<Envelope>; 4],
+    len: u16,
+}
+
+impl Mailbox {
+    pub fn new(capacity: u16) -> Self {
+        Self { capacity, lanes: Default::default(), len: 0 }
+    }
+
+    pub fn len(&self) -> u16 {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn pressure(&self) -> f32 {
+        if self.capacity == 0 {
+            return 1.0;
+        }
+        self.len as f32 / self.capacity as f32
+    }
+
+    /// 📬️ `latest-wins` coalescing (replaces in place, preserving queue position — coalescing must
+    /// not let a hot key jump the line), then bounded-ring enqueue with lowest-priority eviction.
+    pub fn enqueue(&mut self, envelope: Envelope) -> Backpressure {
+        if let Some(key) = envelope.coalesce.clone() {
+            let lane_idx = envelope.lane.priority_rank();
+            if let Some(existing) = self.lanes[lane_idx].iter_mut().find(|e| e.coalesce.as_ref() == Some(&key)) {
+                *existing = envelope;
+                return Backpressure::Coalesced;
+            }
+        }
+        if self.len >= self.capacity {
+            let incoming_rank = envelope.lane.priority_rank();
+            let victim_rank = (incoming_rank + 1..4).rev().find(|&rank| !self.lanes[rank].is_empty());
+            match victim_rank {
+                Some(rank) => {
+                    self.lanes[rank].pop_front();
+                    self.len -= 1;
+                    let dropped_lane = Lane::ALL[rank];
+                    self.lanes[incoming_rank].push_back(envelope);
+                    self.len += 1;
+                    Backpressure::Dropped(dropped_lane)
+                }
+                None => Backpressure::Rejected,
+            }
+        } else {
+            self.lanes[envelope.lane.priority_rank()].push_back(envelope);
+            self.len += 1;
+            Backpressure::Accept
+        }
+    }
+
+    /// ⏭️ Highest lane-priority envelope first, FIFO within a lane.
+    pub fn pop_next(&mut self) -> Option<Envelope> {
+        for lane in self.lanes.iter_mut() {
+            if let Some(envelope) = lane.pop_front() {
+                self.len -= 1;
+                return Some(envelope);
+            }
+        }
+        None
+    }
+
+    /// 👀️ Earliest `deadline_ms` among all queued envelopes, for scheduler preemption checks.
+    pub fn earliest_deadline(&self) -> Option<u64> {
+        self.lanes.iter().flatten().filter_map(|e| e.deadline_ms).min()
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u16(out, self.capacity);
+        pack::write_u16(out, self.len);
+        for lane in &self.lanes {
+            pack::write_varint_u64(out, lane.len() as u64);
+            for envelope in lane.iter() {
+                envelope.pack_encode(out);
+            }
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let capacity = pack::read_u16(bytes, pos, "Mailbox::capacity")?;
+        let len = pack::read_u16(bytes, pos, "Mailbox::len")?;
+        let mut lanes: [VecDeque<Envelope>; 4] = Default::default();
+        for lane in lanes.iter_mut() {
+            *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode)?.into();
+        }
+        Ok(Self { capacity, lanes, len })
+    }
+}
+//#endregion 📬️Mailbox
+
+//#region 🔐️CapabilityGrant
+/// 🔐️ Minimal local stand-in for `kernel::CapabilityGrant` — see the module-level seam docstring.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct CapabilityGrant {
+    pub capability: String,
+    pub scope: Option<Vec<u8>>,
+}
+
+impl CapabilityGrant {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_str(out, &self.capability);
+        pack::write_opt(out, &self.scope, |o, v| pack::write_bytes(o, v));
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability")?, scope: pack::read_opt(bytes, pos, "CapabilityGrant::scope", |b, p| pack::read_bytes(b, p, "scope"))? })
+    }
+}
+//#endregion 🔐️CapabilityGrant
+
+//#region 🚑️FailurePolicy
+/// 🚑️ What triggered a failure-ladder transition.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum FailureSignal {
+    DeadlineOverrun { ratio: f32 },
+    FuelExhausted,
+    MemoryLimit,
+    MailboxOverflow,
+    UiQuota,
+    Trap(String),
+    HeartbeatMissed { count: u32 },
+    ManualReset,
+}
+
+impl FailureSignal {
+    /// 🚨️ Whether this signal is severe enough to skip the warn/throttle rungs and trap outright.
+    fn is_fatal(&self) -> bool {
+        matches!(self, FailureSignal::Trap(_))
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            FailureSignal::DeadlineOverrun { ratio } => {
+                pack::write_u8(out, 0);
+                pack::write_f32(out, *ratio);
+            }
+            FailureSignal::FuelExhausted => pack::write_u8(out, 1),
+            FailureSignal::MemoryLimit => pack::write_u8(out, 2),
+            FailureSignal::MailboxOverflow => pack::write_u8(out, 3),
+            FailureSignal::UiQuota => pack::write_u8(out, 4),
+            FailureSignal::Trap(detail) => {
+                pack::write_u8(out, 5);
+                pack::write_str(out, detail);
+            }
+            FailureSignal::HeartbeatMissed { count } => {
+                pack::write_u8(out, 6);
+                pack::write_u32(out, *count);
+            }
+            FailureSignal::ManualReset => pack::write_u8(out, 7),
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "FailureSignal")?;
+        match tag {
+            0 => Ok(FailureSignal::DeadlineOverrun { ratio: pack::read_f32(bytes, pos, "FailureSignal::ratio")? }),
+            1 => Ok(FailureSignal::FuelExhausted),
+            2 => Ok(FailureSignal::MemoryLimit),
+            3 => Ok(FailureSignal::MailboxOverflow),
+            4 => Ok(FailureSignal::UiQuota),
+            5 => Ok(FailureSignal::Trap(pack::read_str(bytes, pos, "FailureSignal::Trap")?)),
+            6 => Ok(FailureSignal::HeartbeatMissed { count: pack::read_u32(bytes, pos, "FailureSignal::count")? }),
+            7 => Ok(FailureSignal::ManualReset),
+            other => Err(pack::PackError::InvalidTag { what: "FailureSignal", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// 🪜️ Rungs of the failure ladder, worst-consequence order.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum FailureStage {
+    Healthy,
+    Warned,
+    Throttled { factor: f32 },
+    Suspended { until: u64 },
+    Cancelled,
+    Trapped { restarts: u32 },
+    Quarantined { until: u64 },
+    Disabled,
+}
+
+impl FailureStage {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            FailureStage::Healthy => pack::write_u8(out, 0),
+            FailureStage::Warned => pack::write_u8(out, 1),
+            FailureStage::Throttled { factor } => {
+                pack::write_u8(out, 2);
+                pack::write_f32(out, *factor);
+            }
+            FailureStage::Suspended { until } => {
+                pack::write_u8(out, 3);
+                pack::write_u64(out, *until);
+            }
+            FailureStage::Cancelled => pack::write_u8(out, 4),
+            FailureStage::Trapped { restarts } => {
+                pack::write_u8(out, 5);
+                pack::write_u32(out, *restarts);
+            }
+            FailureStage::Quarantined { until } => {
+                pack::write_u8(out, 6);
+                pack::write_u64(out, *until);
+            }
+            FailureStage::Disabled => pack::write_u8(out, 7),
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "FailureStage")?;
+        match tag {
+            0 => Ok(FailureStage::Healthy),
+            1 => Ok(FailureStage::Warned),
+            2 => Ok(FailureStage::Throttled { factor: pack::read_f32(bytes, pos, "FailureStage::factor")? }),
+            3 => Ok(FailureStage::Suspended { until: pack::read_u64(bytes, pos, "FailureStage::until")? }),
+            4 => Ok(FailureStage::Cancelled),
+            5 => Ok(FailureStage::Trapped { restarts: pack::read_u32(bytes, pos, "FailureStage::restarts")? }),
+            6 => Ok(FailureStage::Quarantined { until: pack::read_u64(bytes, pos, "FailureStage::until")? }),
+            7 => Ok(FailureStage::Disabled),
+            other => Err(pack::PackError::InvalidTag { what: "FailureStage", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// ⏳️ Number of consecutive clean turns before `FailureState::on_clean_turn` decays one rung.
+pub const FAILURE_DECAY_CLEAN_TURNS: u32 = 10;
+/// 🔁️ Consecutive traps before an actor's package is quarantined.
+pub const FAILURE_QUARANTINE_RESTART_THRESHOLD: u32 = 3;
+/// 💓️ Consecutive missed heartbeats before a shard is treated as dead (see design §Watchdog).
+pub const FAILURE_HEARTBEAT_TRAP_THRESHOLD: u32 = 3;
+
+/// ⚖️ Exponential per-lane warn-count thresholds `[warned→throttled, throttled→suspended]` —
+/// interactive actors escalate fastest (they are the most visible), maintenance actors get the
+/// most slack.
+fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
+    match lane {
+        Lane::Interactive => [2, 3],
+        Lane::UserVisible => [3, 5],
+        Lane::Background => [5, 9],
+        Lane::Maintenance => [9, 17],
+    }
+}
+
+/// 🚑️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
+/// clean-turn counter that drives decay.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct FailureState {
+    pub stage: FailureStage,
+    pub clean_turns: u32,
+    pub warn_count: u32,
+    pub restart_count: u32,
+    pub last_signal_ms: u64,
+}
+
+impl Default for FailureState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// 🪜️ Outcome of `FailureState::on_signal` the kernel must act on beyond updating this actor's own state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FailureEscalation {
+    /// No cross-actor action required.
+    None,
+    /// This actor trapped — kernel must drop + re-instantiate with `ActorId::next_generation` and restore its last checkpoint.
+    Restart,
+    /// Restart count crossed the threshold — kernel must quarantine every actor sharing this actor's `PackageId`.
+    QuarantinePackage,
+}
+
+impl FailureState {
+    pub fn new() -> Self {
+        Self { stage: FailureStage::Healthy, clean_turns: 0, warn_count: 0, restart_count: 0, last_signal_ms: 0 }
+    }
+
+    /// 🚑️ Applies one failure signal, returning what the kernel must do beyond this actor's own bookkeeping.
+    pub fn on_signal(&mut self, signal: FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
+        self.clean_turns = 0;
+        self.last_signal_ms = now_ms;
+        if let FailureSignal::ManualReset = signal {
+            *self = Self::new();
+            return FailureEscalation::None;
+        }
+        if signal.is_fatal() {
+            self.restart_count += 1;
+            self.stage = FailureStage::Trapped { restarts: self.restart_count };
+            if self.restart_count >= FAILURE_QUARANTINE_RESTART_THRESHOLD {
+                self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+                return FailureEscalation::QuarantinePackage;
+            }
+            return FailureEscalation::Restart;
+        }
+        if let FailureSignal::HeartbeatMissed { count } = &signal {
+            if *count >= FAILURE_HEARTBEAT_TRAP_THRESHOLD {
+                self.restart_count += 1;
+                self.stage = FailureStage::Trapped { restarts: self.restart_count };
+                if self.restart_count >= FAILURE_QUARANTINE_RESTART_THRESHOLD {
+                    self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+                    return FailureEscalation::QuarantinePackage;
+                }
+                return FailureEscalation::Restart;
+            }
+        }
+        self.warn_count += 1;
+        let [throttle_at, suspend_at] = lane_escalation_thresholds(lane);
+        self.stage = if self.warn_count >= suspend_at {
+            FailureStage::Suspended { until: now_ms + suspend_backoff_ms(self.warn_count) }
+        } else if self.warn_count >= throttle_at {
+            FailureStage::Throttled { factor: throttle_factor(self.warn_count, throttle_at) }
+        } else {
+            FailureStage::Warned
+        };
+        FailureEscalation::None
+    }
+
+    /// ⏳️ One clean (no-signal) turn elapsed — decays one rung after `FAILURE_DECAY_CLEAN_TURNS`
+    /// consecutive clean turns, or immediately promotes an expired `Suspended`/`Quarantined` timer
+    /// into the next rung down.
+    pub fn on_clean_turn(&mut self, now_ms: u64) {
+        self.clean_turns += 1;
+        match self.stage {
+            FailureStage::Warned if self.clean_turns >= FAILURE_DECAY_CLEAN_TURNS => {
+                self.stage = FailureStage::Healthy;
+                self.warn_count = 0;
+                self.clean_turns = 0;
+            }
+            FailureStage::Throttled { .. } if self.clean_turns >= FAILURE_DECAY_CLEAN_TURNS => {
+                self.stage = FailureStage::Warned;
+                self.clean_turns = 0;
+            }
+            FailureStage::Suspended { until } if now_ms >= until => {
+                self.stage = FailureStage::Throttled { factor: 0.5 };
+                self.clean_turns = 0;
+            }
+            FailureStage::Quarantined { until } if now_ms >= until => {
+                self.stage = FailureStage::Warned;
+                self.clean_turns = 0;
+                self.restart_count = 0;
+            }
+            _ => {}
+        }
+    }
+
+    /// ▶️ Whether the scheduler may currently grant this actor a turn.
+    pub fn runnable(&self, now_ms: u64) -> bool {
+        match self.stage {
+            FailureStage::Healthy | FailureStage::Warned | FailureStage::Throttled { .. } => true,
+            FailureStage::Suspended { until } => now_ms >= until,
+            FailureStage::Cancelled | FailureStage::Trapped { .. } | FailureStage::Disabled => false,
+            FailureStage::Quarantined { until } => now_ms >= until,
+        }
+    }
+
+    /// ⚖️ The DRR weight/budget scale factor for the current stage — `1.0` unless `Throttled`.
+    pub fn throttle_factor(&self) -> f32 {
+        match self.stage {
+            FailureStage::Throttled { factor } => factor,
+            _ => 1.0,
+        }
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.stage.pack_encode(out);
+        pack::write_u32(out, self.clean_turns);
+        pack::write_u32(out, self.warn_count);
+        pack::write_u32(out, self.restart_count);
+        pack::write_u64(out, self.last_signal_ms);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            stage: FailureStage::pack_decode(bytes, pos)?,
+            clean_turns: pack::read_u32(bytes, pos, "FailureState::clean_turns")?,
+            warn_count: pack::read_u32(bytes, pos, "FailureState::warn_count")?,
+            restart_count: pack::read_u32(bytes, pos, "FailureState::restart_count")?,
+            last_signal_ms: pack::read_u64(bytes, pos, "FailureState::last_signal_ms")?,
+        })
+    }
+}
+
+fn throttle_factor(warn_count: u32, throttle_at: u32) -> f32 {
+    let steps_in = warn_count.saturating_sub(throttle_at);
+    (0.5f32).powi(1 + steps_in as i32).max(0.05)
+}
+
+fn suspend_backoff_ms(warn_count: u32) -> u64 {
+    1_000u64.saturating_mul(1u64 << warn_count.min(10))
+}
+
+fn quarantine_duration_ms(restart_count: u32) -> u64 {
+    5_000u64.saturating_mul(1u64 << restart_count.min(10))
+}
+//#endregion 🚑️FailurePolicy
+
+//#region 🗂️ActorRecord
+/// 🗂️ Actor lifecycle state, driven by [`Kernel::activate`]/`suspend`/`resume` and the failure ladder.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ActorStatus {
+    Cold,
+    Activating,
+    Active,
+    Suspended { checkpoint: Option<Vec<u8>> },
+    Draining,
+    Trapped,
+    Quarantined,
+    Disabled,
+}
+
+impl ActorStatus {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        match self {
+            ActorStatus::Cold => pack::write_u8(out, 0),
+            ActorStatus::Activating => pack::write_u8(out, 1),
+            ActorStatus::Active => pack::write_u8(out, 2),
+            ActorStatus::Suspended { checkpoint } => {
+                pack::write_u8(out, 3);
+                pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+            }
+            ActorStatus::Draining => pack::write_u8(out, 4),
+            ActorStatus::Trapped => pack::write_u8(out, 5),
+            ActorStatus::Quarantined => pack::write_u8(out, 6),
+            ActorStatus::Disabled => pack::write_u8(out, 7),
+        }
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let tag = pack::read_u8(bytes, pos, "ActorStatus")?;
+        match tag {
+            0 => Ok(ActorStatus::Cold),
+            1 => Ok(ActorStatus::Activating),
+            2 => Ok(ActorStatus::Active),
+            3 => Ok(ActorStatus::Suspended { checkpoint: pack::read_opt(bytes, pos, "ActorStatus::Suspended", |b, p| pack::read_bytes(b, p, "checkpoint"))? }),
+            4 => Ok(ActorStatus::Draining),
+            5 => Ok(ActorStatus::Trapped),
+            6 => Ok(ActorStatus::Quarantined),
+            7 => Ok(ActorStatus::Disabled),
+            other => Err(pack::PackError::InvalidTag { what: "ActorStatus", tag: other, offset: *pos }),
+        }
+    }
+}
+
+/// 🗂️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
+/// scheduler's live entry plus this actor's kind/capabilities/status/failure/metrics bookkeeping.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ActorRecord {
+    pub id: ActorId,
+    pub kind: ActorKind,
+    pub package: PackageId,
+    pub shard: ShardId,
+    pub capabilities: Vec<CapabilityGrant>,
+    pub budget: Budget,
+    pub mailbox: Mailbox,
+    pub status: ActorStatus,
+    pub failure: FailureState,
+    pub metrics: ActorMetrics,
+}
+
+impl ActorRecord {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.id.pack_encode(out);
+        self.kind.pack_encode(out);
+        self.package.pack_encode(out);
+        self.shard.pack_encode(out);
+        pack::write_vec(out, &self.capabilities, |o, c| c.pack_encode(o));
+        self.budget.pack_encode(out);
+        self.mailbox.pack_encode(out);
+        self.status.pack_encode(out);
+        self.failure.pack_encode(out);
+        self.metrics.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            id: ActorId::pack_decode(bytes, pos)?,
+            kind: ActorKind::pack_decode(bytes, pos)?,
+            package: PackageId::pack_decode(bytes, pos)?,
+            shard: ShardId::pack_decode(bytes, pos)?,
+            capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode)?,
+            budget: Budget::pack_decode(bytes, pos)?,
+            mailbox: Mailbox::pack_decode(bytes, pos)?,
+            status: ActorStatus::pack_decode(bytes, pos)?,
+            failure: FailureState::pack_decode(bytes, pos)?,
+            metrics: ActorMetrics::pack_decode(bytes, pos)?,
+        })
+    }
+}
+//#endregion 🗂️ActorRecord
+
+//#region 🧩️ShardTable
+/// 🧩️ Which host mechanism backs a shard.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub enum ShardKind {
+    Thread,
+    WebWorker,
+    Process,
+}
+
+impl ShardKind {
+    fn tag(self) -> u8 {
+        match self {
+            ShardKind::Thread => 0,
+            ShardKind::WebWorker => 1,
+            ShardKind::Process => 2,
+        }
+    }
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u8(out, self.tag());
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        match pack::read_u8(bytes, pos, "ShardKind")? {
+            0 => Ok(ShardKind::Thread),
+            1 => Ok(ShardKind::WebWorker),
+            2 => Ok(ShardKind::Process),
+            other => Err(pack::PackError::InvalidTag { what: "ShardKind", tag: other, offset: *pos }),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ShardId(pub u16);
+
+impl ShardId {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u16(out, self.0);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self(pack::read_u16(bytes, pos, "ShardId")?))
+    }
+}
+
+/// 🧮️ Host-side sizing policy: native `available_parallelism()-1` clamped `[2,8]` — pure arithmetic,
+/// the actual OS query happens in the (non-pure) host binary.
+pub fn clamp_native_shard_count(available_parallelism: u16) -> u16 {
+    available_parallelism.saturating_sub(1).clamp(2, 8)
+}
+
+/// 🧮️ Host-side sizing policy: web `min(hardwareConcurrency-1, 4)`.
+pub fn clamp_web_shard_count(hardware_concurrency: u16) -> u16 {
+    hardware_concurrency.saturating_sub(1).min(4).max(1)
+}
+
+/// 🧩️ Fixed shard pool. An actor is pinned to a shard; migration only happens at a quiescent point
+/// via application-level checkpoint (never a raw linear-memory snapshot). The last `exclusive_reserve`
+/// shards are reserved for [`ShardTable::request_exclusive`] leases.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ShardTable {
+    pub kind: ShardKind,
+    shard_count: u16,
+    exclusive_reserve: u16,
+    assignment: BTreeMap<ActorId, ShardId>,
+    exclusive_leases: BTreeMap<ShardId, ActorId>,
+}
+
+impl ShardTable {
+    pub fn new(kind: ShardKind, shard_count: u16, exclusive_reserve: u16) -> Self {
+        let exclusive_reserve = exclusive_reserve.min(2).min(shard_count.saturating_sub(1)).max(0);
+        Self { kind, shard_count: shard_count.max(1), exclusive_reserve, assignment: BTreeMap::new(), exclusive_leases: BTreeMap::new() }
+    }
+
+    pub fn shard_count(&self) -> u16 {
+        self.shard_count
+    }
+
+    /// 📌️ Pins an actor to a shard chosen by round-robin over the non-exclusive pool.
+    pub fn pin(&mut self, actor: ActorId) -> ShardId {
+        let pool = self.shard_count.saturating_sub(self.exclusive_reserve).max(1);
+        let shard = ShardId((actor.0 % pool as u64) as u16);
+        self.assignment.insert(actor, shard);
+        shard
+    }
+
+    pub fn unpin(&mut self, actor: ActorId) {
+        self.assignment.remove(&actor);
+        self.exclusive_leases.retain(|_, held_by| *held_by != actor);
+    }
+
+    pub fn shard_of(&self, actor: ActorId) -> Option<ShardId> {
+        self.assignment.get(&actor).copied()
+    }
+
+    /// 🔒️ Leases one of the reserved exclusive shards to `actor` for the duration of foreground
+    /// work — a lease, not a permanent per-plugin worker. `None` when none are free.
+    pub fn request_exclusive(&mut self, actor: ActorId) -> Option<ShardId> {
+        if self.exclusive_reserve == 0 {
+            return None;
+        }
+        let base = self.shard_count - self.exclusive_reserve;
+        for offset in 0..self.exclusive_reserve {
+            let candidate = ShardId(base + offset);
+            if !self.exclusive_leases.contains_key(&candidate) {
+                self.exclusive_leases.insert(candidate, actor);
+                self.assignment.insert(actor, candidate);
+                return Some(candidate);
+            }
+        }
+        None
+    }
+
+    pub fn release_exclusive(&mut self, actor: ActorId) {
+        self.exclusive_leases.retain(|_, held_by| *held_by != actor);
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.kind.pack_encode(out);
+        pack::write_u16(out, self.shard_count);
+        pack::write_u16(out, self.exclusive_reserve);
+        pack::write_vec(out, &self.assignment.iter().collect::<Vec<_>>(), |o, (actor, shard)| {
+            actor.pack_encode(o);
+            shard.pack_encode(o);
+        });
+        pack::write_vec(out, &self.exclusive_leases.iter().collect::<Vec<_>>(), |o, (shard, actor)| {
+            shard.pack_encode(o);
+            actor.pack_encode(o);
+        });
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let kind = ShardKind::pack_decode(bytes, pos)?;
+        let shard_count = pack::read_u16(bytes, pos, "ShardTable::shard_count")?;
+        let exclusive_reserve = pack::read_u16(bytes, pos, "ShardTable::exclusive_reserve")?;
+        let assignment_pairs = pack::read_vec(bytes, pos, "ShardTable::assignment", |b, p| Ok((ActorId::pack_decode(b, p)?, ShardId::pack_decode(b, p)?)))?;
+        let lease_pairs = pack::read_vec(bytes, pos, "ShardTable::exclusive_leases", |b, p| Ok((ShardId::pack_decode(b, p)?, ActorId::pack_decode(b, p)?)))?;
+        Ok(Self { kind, shard_count, exclusive_reserve, assignment: assignment_pairs.into_iter().collect(), exclusive_leases: lease_pairs.into_iter().collect() })
+    }
+}
+//#endregion 🧩️ShardTable
+
+//#region ⏱️Scheduler
+/// ⏱️ One actor's scheduling entry inside [`Scheduler`]: everything the DRR algorithm needs that
+/// isn't shared plugin-level bookkeeping.
+#[derive(Clone, Debug)]
+struct ScheduledActor {
+    package: PackageId,
+    lane: Lane,
+    budget: Budget,
+    shard: ShardId,
+    mailbox: Mailbox,
+    active: bool,
+    throttle: f32,
+    deficit: i64,
+}
+
+/// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
+/// earliest future timestamp worth ticking again for.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct Decision {
+    pub run: Vec<TurnGrant>,
+    pub wake_at: Option<u64>,
+}
+
+impl Decision {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_vec(out, &self.run, |o, g| g.pack_encode(o));
+        pack::write_opt(out, &self.wake_at, |o, v| pack::write_u64(o, *v));
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode)?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b, p, "wake_at"))? })
+    }
+}
+
+/// ⏱️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
+/// and the envelopes drained from its mailbox for this turn.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct TurnGrant {
+    pub actor: ActorId,
+    pub shard: ShardId,
+    pub budget: Budget,
+    pub envelopes: Vec<Envelope>,
+}
+
+impl TurnGrant {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.actor.pack_encode(out);
+        self.shard.pack_encode(out);
+        self.budget.pack_encode(out);
+        pack::write_vec(out, &self.envelopes, |o, e| e.pack_encode(o));
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { actor: ActorId::pack_decode(bytes, pos)?, shard: ShardId::pack_decode(bytes, pos)?, budget: Budget::pack_decode(bytes, pos)?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode)? })
+    }
+}
+
+/// ⏱️ How many envelopes a single granted turn drains from its actor's mailbox in one go.
+const TURN_ENVELOPE_BATCH: usize = 8;
+
+/// ⏱️ Hierarchical deficit round-robin: level 1 fairness across plugins (packages), level 2 across
+/// each plugin's own actors. Without level 1, a plugin with 50 actors would take 50x the share of a
+/// plugin with one. Owns every actor's mailbox — `submit`/`tick`/`complete` are its only entry points.
+#[derive(Clone, Debug, Default)]
+pub struct Scheduler {
+    actors: BTreeMap<ActorId, ScheduledActor>,
+    plugin_deficit: HashMap<PackageId, i64>,
+    plugin_order: Vec<PackageId>,
+    plugin_cursor: usize,
+    grants_per_tick: u32,
+}
+
+impl Scheduler {
+    pub fn new(grants_per_tick: u32) -> Self {
+        Self { actors: BTreeMap::new(), plugin_deficit: HashMap::new(), plugin_order: Vec::new(), plugin_cursor: 0, grants_per_tick: grants_per_tick.max(1) }
+    }
+
+    pub fn register_actor(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId) {
+        if !self.plugin_order.contains(&package) {
+            self.plugin_order.push(package.clone());
+        }
+        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len), active: true, throttle: 1.0, deficit: 0 });
+    }
+
+    pub fn unregister_actor(&mut self, actor: ActorId) {
+        self.actors.remove(&actor);
+    }
+
+    pub fn set_active(&mut self, actor: ActorId, active: bool) {
+        if let Some(entry) = self.actors.get_mut(&actor) {
+            entry.active = active;
+        }
+    }
+
+    pub fn set_shard(&mut self, actor: ActorId, shard: ShardId) {
+        if let Some(entry) = self.actors.get_mut(&actor) {
+            entry.shard = shard;
+        }
+    }
+
+    pub fn set_throttle(&mut self, actor: ActorId, factor: f32) {
+        if let Some(entry) = self.actors.get_mut(&actor) {
+            entry.throttle = factor;
+        }
+    }
+
+    pub fn mailbox_pressure(&self, actor: ActorId) -> Option<f32> {
+        self.actors.get(&actor).map(|e| e.mailbox.pressure())
+    }
+
+    pub fn submit(&mut self, envelope: Envelope) -> Backpressure {
+        match self.actors.get_mut(&envelope.to) {
+            Some(entry) => entry.mailbox.enqueue(envelope),
+            None => Backpressure::Rejected,
+        }
+    }
+
+    fn actor_weight(entry: &ScheduledActor) -> i64 {
+        ((entry.lane.weight() as f32) * entry.throttle.max(0.05)).round().max(1.0) as i64
+    }
+
+    /// ⏱️ Pure DRR tick. `now_ms` gates deadline preemption and actor runnability (suspend/quarantine
+    /// timers); all other state is internal and persists across calls.
+    pub fn tick(&mut self, now_ms: u64) -> Decision {
+        let mut run = Vec::new();
+        let mut granted_this_tick: std::collections::BTreeSet<ActorId> = std::collections::BTreeSet::new();
+        let mut budget_left = self.grants_per_tick;
+
+        //#region 🔖️DeadlinePreemption
+        // 🚨️ Interactive envelopes past (or nearest) their deadline short-circuit ahead of DRR order.
+        let mut overdue: Vec<(u64, ActorId)> = self
+            .actors
+            .iter()
+            .filter(|(_, e)| e.active && !e.mailbox.is_empty())
+            .filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id)))
+            .collect();
+        overdue.sort();
+        for (_, actor_id) in overdue {
+            if budget_left == 0 {
+                break;
+            }
+            if granted_this_tick.contains(&actor_id) {
+                continue;
+            }
+            if let Some(grant) = self.drain_turn(actor_id) {
+                run.push(grant);
+                granted_this_tick.insert(actor_id);
+                budget_left -= 1;
+            }
+        }
+        //#endregion 🔖️DeadlinePreemption
+
+        //#region 🔖️DrrRounds
+        if budget_left > 0 && !self.plugin_order.is_empty() {
+            let plugin_count = self.plugin_order.len();
+            let mut idle_streak = 0usize;
+            while budget_left > 0 && idle_streak < plugin_count {
+                let package = self.plugin_order[self.plugin_cursor % plugin_count].clone();
+                self.plugin_cursor = (self.plugin_cursor + 1) % plugin_count;
+                let pending_actor_ids: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+                if pending_actor_ids.is_empty() {
+                    self.plugin_deficit.insert(package, 0);
+                    idle_streak += 1;
+                    continue;
+                }
+                idle_streak = 0;
+                let quantum = pending_actor_ids.iter().filter_map(|id| self.actors.get(id)).map(Self::actor_weight).max().unwrap_or(1);
+                let mut deficit = *self.plugin_deficit.entry(package.clone()).or_insert(0);
+                deficit += quantum;
+                while deficit > 0 && budget_left > 0 {
+                    let mut candidates: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+                    candidates.sort();
+                    let Some(actor_id) = self.pick_level2(&candidates) else { break };
+                    let weight = self.actors.get(&actor_id).map(Self::actor_weight).unwrap_or(1);
+                    if let Some(grant) = self.drain_turn(actor_id) {
+                        run.push(grant);
+                        granted_this_tick.insert(actor_id);
+                        budget_left -= 1;
+                        deficit -= weight;
+                    } else {
+                        break;
+                    }
+                }
+                self.plugin_deficit.insert(package.clone(), deficit);
+            }
+        }
+        //#endregion 🔖️DrrRounds
+
+        // ⏰️ Earliest deadline still sitting in any active actor's mailbox after this tick's grants
+        // were drained — a hint for "check again by this time," not a guarantee of a grant then.
+        let wake_at = self.actors.values().filter(|e| e.active && !e.mailbox.is_empty()).filter_map(|e| e.mailbox.earliest_deadline()).min();
+        Decision { run, wake_at }
+    }
+
+    /// ⏱️ Level-2 DRR: rotate a per-actor deficit within the candidate set, weighted by lane (and
+    /// throttle). Returns the next actor to grant, if any candidate has enough accrued deficit —
+    /// otherwise grants everyone one quantum so the first call in a burst always makes progress.
+    fn pick_level2(&mut self, candidates: &[ActorId]) -> Option<ActorId> {
+        if candidates.is_empty() {
+            return None;
+        }
+        for &id in candidates {
+            let weight = self.actors.get(&id).map(Self::actor_weight).unwrap_or(1);
+            let entry = self.actors.get_mut(&id).unwrap();
+            entry.deficit += weight;
+        }
+        candidates.iter().copied().max_by_key(|id| self.actors.get(id).map(|e| e.deficit).unwrap_or(0))
+    }
+
+    fn drain_turn(&mut self, actor_id: ActorId) -> Option<TurnGrant> {
+        let entry = self.actors.get_mut(&actor_id)?;
+        let mut envelopes = Vec::new();
+        for _ in 0..TURN_ENVELOPE_BATCH {
+            match entry.mailbox.pop_next() {
+                Some(e) => envelopes.push(e),
+                None => break,
+            }
+        }
+        if envelopes.is_empty() {
+            return None;
+        }
+        entry.deficit -= Self::actor_weight(entry);
+        Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle), envelopes })
+    }
+}
+//#endregion ⏱️Scheduler
+
+//#region 🖼️Scene
+/// 🖼️ One committed, immutable frame of a window's UI. `patches` is an opaque pack-encoded
+/// `Vec<UiPatch>` blob — see the module seam docstring; `node_count` is the host-tracked total used
+/// only for [`Budget::ui_nodes`] quota accounting.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct SceneSnapshot {
+    pub revision: u64,
+    pub committed_ms: u64,
+    pub patches: Vec<u8>,
+    pub node_count: u32,
+}
+
+impl SceneSnapshot {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.revision);
+        pack::write_u64(out, self.committed_ms);
+        pack::write_bytes(out, &self.patches);
+        pack::write_u32(out, self.node_count);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { revision: pack::read_u64(bytes, pos, "SceneSnapshot::revision")?, committed_ms: pack::read_u64(bytes, pos, "SceneSnapshot::committed_ms")?, patches: pack::read_bytes(bytes, pos, "SceneSnapshot::patches")?, node_count: pack::read_u32(bytes, pos, "SceneSnapshot::node_count")? })
+    }
+}
+
+/// 🖼️ Per-window scene store: a builder accumulates patches between frame boundaries;
+/// [`SceneStore::commit_frame`] publishes a new immutable snapshot once per boundary. If nothing
+/// was pending, the previous snapshot is reused verbatim (same `Arc`, same revision) — the UI
+/// thread never waits on a plugin that missed the deadline.
+#[derive(Clone, Debug)]
+pub struct SceneStore {
+    current: Arc<SceneSnapshot>,
+    pending: Vec<(ActorId, Vec<u8>, u32)>,
+    pending_node_delta: u32,
+}
+
+impl Default for SceneStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SceneStore {
+    pub fn new() -> Self {
+        Self { current: Arc::new(SceneSnapshot::default()), pending: Vec::new(), pending_node_delta: 0 }
+    }
+
+    pub fn current(&self) -> Arc<SceneSnapshot> {
+        self.current.clone()
+    }
+
+    /// 🖼️ Stages one actor's patch for the next commit, enforcing `budget.max_patch_bytes` and
+    /// `budget.ui_nodes` host-side (no guest trust). Over quota: the node-count contribution is
+    /// truncated to the remaining headroom (never counted past the ceiling) and `UiQuota` is
+    /// returned so the caller can warn/truncate the typed patch itself.
+    pub fn apply_patch(&mut self, actor: ActorId, patch_bytes: Vec<u8>, node_delta: u32, budget: &Budget) -> Result<(), FailureSignal> {
+        if patch_bytes.len() as u32 > budget.max_patch_bytes {
+            return Err(FailureSignal::UiQuota);
+        }
+        let committed = self.current.node_count;
+        let allowed = budget.ui_nodes.saturating_sub(committed + self.pending_node_delta);
+        if node_delta > allowed {
+            self.pending.push((actor, patch_bytes, allowed));
+            self.pending_node_delta += allowed;
+            return Err(FailureSignal::UiQuota);
+        }
+        self.pending.push((actor, patch_bytes, node_delta));
+        self.pending_node_delta += node_delta;
+        Ok(())
+    }
+
+    /// 🖼️ Publishes a new snapshot once per frame boundary. Empty pending set: returns the current
+    /// snapshot unchanged (same revision) — reused because the frame had nothing new to show.
+    pub fn commit_frame(&mut self, now_ms: u64) -> Arc<SceneSnapshot> {
+        if self.pending.is_empty() {
+            return self.current.clone();
+        }
+        let mut merged = Vec::new();
+        for (_, bytes, _) in &self.pending {
+            merged.extend_from_slice(bytes);
+        }
+        let node_count = self.current.node_count + self.pending_node_delta;
+        let snapshot = Arc::new(SceneSnapshot { revision: self.current.revision + 1, committed_ms: now_ms, patches: merged, node_count });
+        self.pending.clear();
+        self.pending_node_delta = 0;
+        self.current = snapshot.clone();
+        snapshot
+    }
+}
+//#endregion 🖼️Scene
+
+//#region 📈️Metrics
+/// 📈️ Fixed-size ring of the last 64 per-turn wall-clock samples, for a p95 estimate cheap enough
+/// to keep on every actor.
+/// 📈️ Ring capacity for [`ActorMetrics`]'s wall-clock sample window — chosen as a plain `usize`
+/// (not a const generic array) because serde's built-in array support tops out at 32 elements.
+const WALL_US_RING_CAPACITY: usize = 64;
+
+#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ActorMetrics {
+    pub turns: u64,
+    pub fuel_total: u64,
+    pub wall_us_total: u64,
+    wall_us_ring: Vec<u32>,
+    wall_us_ring_len: u8,
+    wall_us_ring_pos: u8,
+    pub memory_bytes: u64,
+    pub mailbox_len: u16,
+    pub mailbox_lag_ms: u32,
+    pub coalesced: u64,
+    pub dropped: u64,
+    pub traps: u32,
+    pub restarts: u32,
+    pub stage: FailureStage,
+    pub shard: ShardId,
+}
+
+impl std::fmt::Debug for ActorMetrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ActorMetrics").field("turns", &self.turns).field("wall_us_p95", &self.wall_us_p95()).field("stage", &self.stage).finish()
+    }
+}
+
+impl PartialEq for ActorMetrics {
+    fn eq(&self, other: &Self) -> bool {
+        self.turns == other.turns && self.fuel_total == other.fuel_total && self.wall_us_total == other.wall_us_total && self.wall_us_ring == other.wall_us_ring && self.memory_bytes == other.memory_bytes && self.stage == other.stage && self.shard == other.shard
+    }
+}
+
+impl Default for ActorMetrics {
+    fn default() -> Self {
+        Self { turns: 0, fuel_total: 0, wall_us_total: 0, wall_us_ring: vec![0; WALL_US_RING_CAPACITY], wall_us_ring_len: 0, wall_us_ring_pos: 0, memory_bytes: 0, mailbox_len: 0, mailbox_lag_ms: 0, coalesced: 0, dropped: 0, traps: 0, restarts: 0, stage: FailureStage::Healthy, shard: ShardId(0) }
+    }
+}
+
+impl ActorMetrics {
+    pub fn record_turn(&mut self, usage: &Usage) {
+        self.turns += 1;
+        self.fuel_total += usage.fuel;
+        self.wall_us_total += usage.wall_us;
+        self.wall_us_ring[self.wall_us_ring_pos as usize] = usage.wall_us.min(u32::MAX as u64) as u32;
+        self.wall_us_ring_pos = (self.wall_us_ring_pos + 1) % WALL_US_RING_CAPACITY as u8;
+        self.wall_us_ring_len = (self.wall_us_ring_len + 1).min(WALL_US_RING_CAPACITY as u8);
+        self.memory_bytes = usage.memory_bytes;
+    }
+
+    pub fn wall_us_p95(&self) -> u32 {
+        if self.wall_us_ring_len == 0 {
+            return 0;
+        }
+        let mut samples: Vec<u32> = self.wall_us_ring[..self.wall_us_ring_len as usize].to_vec();
+        samples.sort_unstable();
+        let idx = ((samples.len() as f32) * 0.95).floor() as usize;
+        samples[idx.min(samples.len() - 1)]
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u64(out, self.turns);
+        pack::write_u64(out, self.fuel_total);
+        pack::write_u64(out, self.wall_us_total);
+        for sample in &self.wall_us_ring {
+            pack::write_u32(out, *sample);
+        }
+        pack::write_u8(out, self.wall_us_ring_len);
+        pack::write_u8(out, self.wall_us_ring_pos);
+        pack::write_u64(out, self.memory_bytes);
+        pack::write_u16(out, self.mailbox_len);
+        pack::write_u32(out, self.mailbox_lag_ms);
+        pack::write_u64(out, self.coalesced);
+        pack::write_u64(out, self.dropped);
+        pack::write_u32(out, self.traps);
+        pack::write_u32(out, self.restarts);
+        self.stage.pack_encode(out);
+        self.shard.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        let turns = pack::read_u64(bytes, pos, "ActorMetrics::turns")?;
+        let fuel_total = pack::read_u64(bytes, pos, "ActorMetrics::fuel_total")?;
+        let wall_us_total = pack::read_u64(bytes, pos, "ActorMetrics::wall_us_total")?;
+        let mut wall_us_ring = Vec::with_capacity(WALL_US_RING_CAPACITY);
+        for _ in 0..WALL_US_RING_CAPACITY {
+            wall_us_ring.push(pack::read_u32(bytes, pos, "ActorMetrics::wall_us_ring")?);
+        }
+        let wall_us_ring_len = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_len")?;
+        let wall_us_ring_pos = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_pos")?;
+        Ok(Self {
+            turns,
+            fuel_total,
+            wall_us_total,
+            wall_us_ring,
+            wall_us_ring_len,
+            wall_us_ring_pos,
+            memory_bytes: pack::read_u64(bytes, pos, "ActorMetrics::memory_bytes")?,
+            mailbox_len: pack::read_u16(bytes, pos, "ActorMetrics::mailbox_len")?,
+            mailbox_lag_ms: pack::read_u32(bytes, pos, "ActorMetrics::mailbox_lag_ms")?,
+            coalesced: pack::read_u64(bytes, pos, "ActorMetrics::coalesced")?,
+            dropped: pack::read_u64(bytes, pos, "ActorMetrics::dropped")?,
+            traps: pack::read_u32(bytes, pos, "ActorMetrics::traps")?,
+            restarts: pack::read_u32(bytes, pos, "ActorMetrics::restarts")?,
+            stage: FailureStage::pack_decode(bytes, pos)?,
+            shard: ShardId::pack_decode(bytes, pos)?,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ShardMetrics {
+    pub actors: u32,
+    pub busy_ratio: f32,
+    pub heartbeat_age_ms: u32,
+}
+
+impl ShardMetrics {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u32(out, self.actors);
+        pack::write_f32(out, self.busy_ratio);
+        pack::write_u32(out, self.heartbeat_age_ms);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { actors: pack::read_u32(bytes, pos, "ShardMetrics::actors")?, busy_ratio: pack::read_f32(bytes, pos, "ShardMetrics::busy_ratio")?, heartbeat_age_ms: pack::read_u32(bytes, pos, "ShardMetrics::heartbeat_age_ms")? })
+    }
+}
+
+/// 📈️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct KernelMetrics {
+    pub actors: u32,
+    pub shards: u32,
+    pub packages: u32,
+}
+
+impl KernelMetrics {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        pack::write_u32(out, self.actors);
+        pack::write_u32(out, self.shards);
+        pack::write_u32(out, self.packages);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { actors: pack::read_u32(bytes, pos, "KernelMetrics::actors")?, shards: pack::read_u32(bytes, pos, "KernelMetrics::shards")?, packages: pack::read_u32(bytes, pos, "KernelMetrics::packages")? })
+    }
+}
+//#endregion 📈️Metrics
+
+//#region 🚚️ShardTransport
+/// 🚚️ Injected duplex byte transport to one shard. `ThreadTransport` is the only impl living in
+/// this crate (native, `std::sync::mpsc`); `WorkerTransport` (postMessage) and `ProcessTransport`
+/// (stdio) are host-supplied — all three carry the same `Envelope`/`TurnResult` pack encoding.
+pub trait ShardTransport: Send {
+    fn send(&self, bytes: &[u8]);
+    fn recv(&self) -> Option<Vec<u8>>;
+    fn heartbeat(&self) -> u64;
+    fn kill(&self);
+}
+
+//#region 🔖️ThreadTransport
+#[cfg(not(target_arch = "wasm32"))]
+mod thread_transport {
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+    use std::sync::mpsc::{Receiver, Sender};
+    use std::sync::{Arc, Mutex};
+
+    use super::ShardTransport;
+
+    /// 🚚️ Native duplex transport over `std::sync::mpsc` — one end held by the kernel, the mirror
+    /// end by the shard loop. Gated to non-wasm32 only; the pure crate core never spawns threads
+    /// itself (the shard loop that reads/writes the mirror end lives in `plugin/host`, packet B1).
+    pub struct ThreadTransport {
+        outbound: Sender<Vec<u8>>,
+        inbound: Mutex<Receiver<Vec<u8>>>,
+        heartbeat_ms: Arc<AtomicU64>,
+        killed: Arc<AtomicBool>,
+    }
+
+    impl ThreadTransport {
+        /// 🔗️ Builds both ends of one duplex link, sharing the heartbeat/kill flags.
+        pub fn new_pair() -> (ThreadTransport, ThreadTransport) {
+            let (tx_a, rx_a) = std::sync::mpsc::channel();
+            let (tx_b, rx_b) = std::sync::mpsc::channel();
+            let heartbeat_ms = Arc::new(AtomicU64::new(0));
+            let killed = Arc::new(AtomicBool::new(false));
+            let side_a = ThreadTransport { outbound: tx_a, inbound: Mutex::new(rx_b), heartbeat_ms: heartbeat_ms.clone(), killed: killed.clone() };
+            let side_b = ThreadTransport { outbound: tx_b, inbound: Mutex::new(rx_a), heartbeat_ms, killed };
+            (side_a, side_b)
+        }
+
+        /// 💓️ Records a heartbeat timestamp — called by whichever side is standing in for the
+        /// shard loop's `Atomics.store` in the real web transport.
+        pub fn beat(&self, now_ms: u64) {
+            self.heartbeat_ms.store(now_ms, Ordering::SeqCst);
+        }
+    }
+
+    impl ShardTransport for ThreadTransport {
+        fn send(&self, bytes: &[u8]) {
+            if self.killed.load(Ordering::SeqCst) {
+                return;
+            }
+            let _ = self.outbound.send(bytes.to_vec());
+        }
+
+        fn recv(&self) -> Option<Vec<u8>> {
+            if self.killed.load(Ordering::SeqCst) {
+                return None;
+            }
+            self.inbound.lock().ok().and_then(|rx| rx.try_recv().ok())
+        }
+
+        fn heartbeat(&self) -> u64 {
+            self.heartbeat_ms.load(Ordering::SeqCst)
+        }
+
+        fn kill(&self) {
+            self.killed.store(true, Ordering::SeqCst);
+        }
+    }
+}
+#[cfg(not(target_arch = "wasm32"))]
+pub use thread_transport::ThreadTransport;
+//#endregion 🔖️ThreadTransport
+//#endregion 🚚️ShardTransport
+
+//#region 🏛️Kernel
+/// 🏛️ What activated an actor.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ActivationEvent {
+    Manual,
+    WindowOpen { window: WindowId },
+    Restart,
+}
+
+/// 🚨️ Errors the [`Kernel`] façade's fallible operations return.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum KernelError {
+    #[error("unknown actor")]
+    UnknownActor,
+    #[error("no exclusive shard available")]
+    NoExclusiveShard,
+    #[error("invalid status transition")]
+    InvalidTransition,
+}
+
+/// 🏛️ Per-actor bookkeeping the [`Scheduler`] doesn't need to see: kind, capabilities, status,
+/// failure ladder, metrics, and which window (if any) its scene patches target.
+#[derive(Clone, Debug)]
+struct ActorMeta {
+    kind: ActorKind,
+    package: PackageId,
+    capabilities: Vec<CapabilityGrant>,
+    budget: Budget,
+    status: ActorStatus,
+    failure: FailureState,
+    metrics: ActorMetrics,
+    window: Option<WindowId>,
+}
+
+/// 🏛️ The one-implementation, three-host runtime façade: `submit`/`tick`/`complete`/`activate`/
+/// `suspend`/`resume`/`request_exclusive`/`commit_frame`/`metrics`. Composes [`Scheduler`],
+/// [`ShardTable`], per-window [`SceneStore`]s and the failure ladder over one actor registry.
+#[derive(Clone, Debug)]
+pub struct Kernel {
+    scheduler: Scheduler,
+    shards: ShardTable,
+    scenes: HashMap<WindowId, SceneStore>,
+    actors: HashMap<ActorId, ActorMeta>,
+    next_ordinal: HashMap<PackageId, u32>,
+}
+
+impl Kernel {
+    pub fn new(shard_kind: ShardKind, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
+        Self { scheduler: Scheduler::new(grants_per_tick), shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve), scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new() }
+    }
+
+    /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and
+    /// returns its freshly minted [`ActorId`] (generation 0).
+    pub fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent) -> ActorId {
+        let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
+        let id = ActorId::new(plugin_ordinal, kind.tag(), *ordinal, 0);
+        *ordinal += 1;
+        let budget = lane_defaults::budget_for(lane);
+        let shard = self.shards.pin(id);
+        self.scheduler.register_actor(id, package.clone(), lane, budget, shard);
+        self.actors.insert(id, ActorMeta { kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
+        id
+    }
+
+    pub fn submit(&mut self, envelope: Envelope) -> Backpressure {
+        let backpressure = self.scheduler.submit(envelope.clone());
+        if let Some(meta) = self.actors.get_mut(&envelope.to) {
+            match backpressure {
+                Backpressure::Coalesced => meta.metrics.coalesced += 1,
+                Backpressure::Dropped(_) => meta.metrics.dropped += 1,
+                _ => {}
+            }
+            if let Some(pressure) = self.scheduler.mailbox_pressure(envelope.to) {
+                meta.metrics.mailbox_len = (pressure * meta.budget.mailbox_len as f32) as u16;
+            }
+        }
+        backpressure
+    }
+
+    pub fn tick(&mut self, now_ms: u64) -> Decision {
+        self.scheduler.tick(now_ms)
+    }
+
+    /// ✅️ Records a turn's result against its actor: usage metrics, failure-ladder update (clean
+    /// turn vs. `Faulted`), and status transition. Returns the escalation the caller (host) must
+    /// act on for `Trapped`/`Quarantined` outcomes.
+    pub fn complete(&mut self, actor: ActorId, result: TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+        let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        meta.metrics.record_turn(&result.usage);
+        let escalation = match &result.status {
+            TurnStatus::Faulted(detail) => {
+                let detail_string = String::from_utf8_lossy(detail).into_owned();
+                meta.failure.on_signal(FailureSignal::Trap(detail_string), Lane::Interactive, now_ms)
+            }
+            _ => {
+                meta.failure.on_clean_turn(now_ms);
+                FailureEscalation::None
+            }
+        };
+        meta.status = match &meta.failure.stage {
+            FailureStage::Trapped { restarts } => {
+                meta.metrics.traps += 1;
+                meta.metrics.restarts = *restarts;
+                ActorStatus::Trapped
+            }
+            FailureStage::Quarantined { .. } => ActorStatus::Quarantined,
+            FailureStage::Disabled => ActorStatus::Disabled,
+            FailureStage::Cancelled => ActorStatus::Draining,
+            _ => ActorStatus::Active,
+        };
+        meta.metrics.stage = meta.failure.stage.clone();
+        let throttle = meta.failure.throttle_factor();
+        let package = meta.package.clone();
+        self.scheduler.set_throttle(actor, throttle);
+        if let FailureEscalation::QuarantinePackage = escalation {
+            self.quarantine_package(&package, now_ms);
+        }
+        Ok(escalation)
+    }
+
+    /// 🚑️ Package-wide quarantine: every actor sharing `package` is stopped, regardless of its own
+    /// individual failure history.
+    fn quarantine_package(&mut self, package: &PackageId, now_ms: u64) {
+        let affected: Vec<ActorId> = self.actors.iter().filter(|(_, m)| &m.package == package).map(|(id, _)| *id).collect();
+        for actor in affected {
+            if let Some(meta) = self.actors.get_mut(&actor) {
+                meta.failure.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(meta.failure.restart_count.max(1)) };
+                meta.status = ActorStatus::Quarantined;
+                meta.metrics.stage = meta.failure.stage.clone();
+            }
+            self.scheduler.set_active(actor, false);
+        }
+    }
+
+    pub fn suspend(&mut self, actor: ActorId, checkpoint: Option<Vec<u8>>) -> Result<(), KernelError> {
+        let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        meta.status = ActorStatus::Suspended { checkpoint };
+        self.scheduler.set_active(actor, false);
+        Ok(())
+    }
+
+    pub fn resume(&mut self, actor: ActorId) -> Result<(), KernelError> {
+        let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
+        match meta.status {
+            ActorStatus::Suspended { .. } => {
+                meta.status = ActorStatus::Active;
+                self.scheduler.set_active(actor, true);
+                Ok(())
+            }
+            _ => Err(KernelError::InvalidTransition),
+        }
+    }
+
+    pub fn request_exclusive(&mut self, actor: ActorId) -> Result<ShardId, KernelError> {
+        if !self.actors.contains_key(&actor) {
+            return Err(KernelError::UnknownActor);
+        }
+        let shard = self.shards.request_exclusive(actor).ok_or(KernelError::NoExclusiveShard)?;
+        self.scheduler.set_shard(actor, shard);
+        Ok(shard)
+    }
+
+    pub fn release_exclusive(&mut self, actor: ActorId) {
+        self.shards.release_exclusive(actor);
+        if let Some(shard) = self.shards.shard_of(actor) {
+            self.scheduler.set_shard(actor, shard);
+        }
+    }
+
+    /// 🖼️ Routes an actor's `TurnResult.ui_patches`/estimated node-delta into its window's
+    /// [`SceneStore`], enforcing quota. No-op (Ok) when the actor has no associated window.
+    pub fn apply_scene_patch(&mut self, actor: ActorId, patch_bytes: Vec<u8>, node_delta: u32) -> Result<(), FailureSignal> {
+        let Some(meta) = self.actors.get(&actor) else { return Ok(()) };
+        let Some(window) = meta.window else { return Ok(()) };
+        let budget = meta.budget;
+        self.scenes.entry(window).or_default().apply_patch(actor, patch_bytes, node_delta, &budget)
+    }
+
+    /// 🖼️ Commits every window's pending patches at a frame boundary.
+    pub fn commit_frame(&mut self, now_ms: u64) -> HashMap<WindowId, Arc<SceneSnapshot>> {
+        self.scenes.iter_mut().map(|(window, store)| (*window, store.commit_frame(now_ms))).collect()
+    }
+
+    pub fn scene_of(&self, window: WindowId) -> Option<Arc<SceneSnapshot>> {
+        self.scenes.get(&window).map(|s| s.current())
+    }
+
+    pub fn metrics(&self) -> KernelMetrics {
+        let packages: std::collections::BTreeSet<&PackageId> = self.actors.values().map(|m| &m.package).collect();
+        KernelMetrics { actors: self.actors.len() as u32, shards: self.shards.shard_count() as u32, packages: packages.len() as u32 }
+    }
+
+    /// 🗂️ Assembles a full [`ActorRecord`] snapshot from the scheduler's live entry and this
+    /// actor's own bookkeeping — a convenience for hosts/tests, not itself part of the required façade.
+    pub fn actor_record(&self, actor: ActorId) -> Option<ActorRecord> {
+        let meta = self.actors.get(&actor)?;
+        let shard = self.shards.shard_of(actor).unwrap_or(ShardId(0));
+        let mailbox = Mailbox::new(meta.budget.mailbox_len);
+        Some(ActorRecord { id: actor, kind: meta.kind.clone(), package: meta.package.clone(), shard, capabilities: meta.capabilities.clone(), budget: meta.budget, mailbox, status: meta.status.clone(), failure: meta.failure.clone(), metrics: meta.metrics.clone() })
+    }
+
+    pub fn actor_status(&self, actor: ActorId) -> Option<&ActorStatus> {
+        self.actors.get(&actor).map(|m| &m.status)
+    }
+
+    pub fn actor_failure(&self, actor: ActorId) -> Option<&FailureState> {
+        self.actors.get(&actor).map(|m| &m.failure)
+    }
+}
+//#endregion 🏛️Kernel
+
+#[cfg(test)]
+mod tests {
+    mod quick {
+        use crate::*;
+        use std::sync::Arc;
+
+        //#region 🔖️Helpers
+        fn env(to: ActorId, lane: Lane, seq: u64) -> Envelope {
+            Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![1, 2, 3]) }
+        }
+
+        fn ok_turn() -> TurnResult {
+            TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
+        }
+        //#endregion 🔖️Helpers
+
+        //#region 🔖️PackRoundTrips
+        macro_rules! round_trip {
+            ($name:ident, $ty:ty, $value:expr) => {
+                #[test]
+                fn $name() {
+                    let value: $ty = $value;
+                    let mut bytes = Vec::new();
+                    value.pack_encode(&mut bytes);
+                    let mut pos = 0usize;
+                    let decoded = <$ty>::pack_decode(&bytes, &mut pos).unwrap();
+                    assert_eq!(pos, bytes.len());
+                    assert_eq!(decoded, value);
+                }
+            };
+        }
+
+        round_trip!(pack_round_trip_package_id, PackageId, PackageId("s.cad/extrude".into()));
+        round_trip!(pack_round_trip_package_hash, PackageHash, PackageHash([7u8; 32]));
+        round_trip!(pack_round_trip_actor_id, ActorId, ActorId::new(42, 1, 99, 3));
+        round_trip!(pack_round_trip_actor_kind, ActorKind, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "s.cad.editor".into(), instance_id: 7 });
+        round_trip!(pack_round_trip_lane, Lane, Lane::UserVisible);
+        round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
+        round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
+        round_trip!(pack_round_trip_origin, Origin, Origin::Bus { topic: "os.runtime.metrics".into() });
+        round_trip!(pack_round_trip_payload, Payload, Payload::Resume { checkpoint: Some(vec![9, 9, 9]) });
+        round_trip!(pack_round_trip_coalesce_key, CoalesceKey, CoalesceKey("pointer-move".into()));
+        round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0), Lane::Interactive, 7));
+        round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted(vec![1, 2]));
+        round_trip!(pack_round_trip_usage, Usage, Usage { fuel: 1, wall_us: 2, memory_bytes: 3 });
+        round_trip!(pack_round_trip_turn_result, TurnResult, ok_turn());
+        round_trip!(pack_round_trip_backpressure, Backpressure, Backpressure::Dropped(Lane::Background));
+        round_trip!(pack_round_trip_capability_grant, CapabilityGrant, CapabilityGrant { capability: "fs.read".into(), scope: Some(vec![1]) });
+        round_trip!(pack_round_trip_failure_signal, FailureSignal, FailureSignal::HeartbeatMissed { count: 2 });
+        round_trip!(pack_round_trip_failure_stage, FailureStage, FailureStage::Throttled { factor: 0.25 });
+        round_trip!(pack_round_trip_failure_state, FailureState, FailureState { stage: FailureStage::Warned, clean_turns: 1, warn_count: 2, restart_count: 0, last_signal_ms: 500 });
+        round_trip!(pack_round_trip_actor_status, ActorStatus, ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) });
+        round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
+        round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
+        round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0), shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
+        round_trip!(pack_round_trip_turn_grant, TurnGrant, TurnGrant { actor: ActorId::new(2, 1, 3, 0), shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0), Lane::Maintenance, 1)] });
+        round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
+        round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
+        round_trip!(pack_round_trip_kernel_metrics, KernelMetrics, KernelMetrics { actors: 3, shards: 4, packages: 2 });
+
+        #[test]
+        fn pack_round_trip_mailbox() {
+            let mut mailbox = Mailbox::new(4);
+            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0), Lane::Interactive, 1));
+            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0), Lane::Background, 2));
+            let mut bytes = Vec::new();
+            mailbox.pack_encode(&mut bytes);
+            let mut pos = 0usize;
+            let decoded = Mailbox::pack_decode(&bytes, &mut pos).unwrap();
+            assert_eq!(pos, bytes.len());
+            assert_eq!(decoded.len(), mailbox.len());
+            assert_eq!(decoded.capacity, mailbox.capacity);
+        }
+
+        #[test]
+        fn pack_round_trip_actor_record() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
+            let record = kernel.actor_record(id).unwrap();
+            let mut bytes = Vec::new();
+            record.pack_encode(&mut bytes);
+            let mut pos = 0usize;
+            let decoded = ActorRecord::pack_decode(&bytes, &mut pos).unwrap();
+            assert_eq!(pos, bytes.len());
+            assert_eq!(decoded, record);
+        }
+
+        #[test]
+        fn pack_round_trip_shard_table() {
+            let mut table = ShardTable::new(ShardKind::Thread, 4, 1);
+            let actor = ActorId::new(1, 0, 0, 0);
+            table.pin(actor);
+            table.request_exclusive(ActorId::new(2, 0, 0, 0));
+            let mut bytes = Vec::new();
+            table.pack_encode(&mut bytes);
+            let mut pos = 0usize;
+            let decoded = ShardTable::pack_decode(&bytes, &mut pos).unwrap();
+            assert_eq!(pos, bytes.len());
+            assert_eq!(decoded.shard_of(actor), table.shard_of(actor));
+        }
+
+        #[test]
+        fn pack_round_trip_actor_metrics() {
+            let mut metrics = ActorMetrics::default();
+            for i in 0..70u64 {
+                metrics.record_turn(&Usage { fuel: i, wall_us: i * 3, memory_bytes: 10 });
+            }
+            let mut bytes = Vec::new();
+            metrics.pack_encode(&mut bytes);
+            let mut pos = 0usize;
+            let decoded = ActorMetrics::pack_decode(&bytes, &mut pos).unwrap();
+            assert_eq!(pos, bytes.len());
+            assert_eq!(decoded, metrics);
+            assert_eq!(decoded.wall_us_p95(), metrics.wall_us_p95());
+        }
+        //#endregion 🔖️PackRoundTrips
+
+        //#region 🔖️ActorIdBitPacking
+        #[test]
+        fn actor_id_bit_packing_round_trips_all_fields() {
+            let id = ActorId::new(0xBEEF, 2, 0xC0FFEE, 0x1234 & 0x3FFF);
+            assert_eq!(id.plugin_ordinal(), 0xBEEF);
+            assert_eq!(id.kind_tag(), 2);
+            assert_eq!(id.ordinal(), 0xC0FFEE);
+            assert_eq!(id.generation(), 0x1234 & 0x3FFF);
+        }
+
+        #[test]
+        fn actor_id_next_generation_bumps_only_generation() {
+            let id = ActorId::new(3, 1, 9, 5);
+            let restarted = id.next_generation();
+            assert_eq!(restarted.plugin_ordinal(), id.plugin_ordinal());
+            assert_eq!(restarted.kind_tag(), id.kind_tag());
+            assert_eq!(restarted.ordinal(), id.ordinal());
+            assert_eq!(restarted.generation(), id.generation() + 1);
+        }
+        //#endregion 🔖️ActorIdBitPacking
+
+        //#region 🔖️MailboxTests
+        #[test]
+        fn mailbox_coalesces_latest_wins_older_dropped() {
+            let mut mailbox = Mailbox::new(10);
+            let actor = ActorId::new(1, 0, 0, 0);
+            for i in 0..200u64 {
+                let mut e = env(actor, Lane::Interactive, i);
+                e.coalesce = Some(CoalesceKey("pointer-move".into()));
+                e.payload = Payload::Event(vec![i as u8]);
+                let bp = mailbox.enqueue(e);
+                assert!(matches!(bp, Backpressure::Accept | Backpressure::Coalesced));
+            }
+            assert_eq!(mailbox.len(), 1, "200 coalesced moves must never queue more than the latest");
+            let popped = mailbox.pop_next().unwrap();
+            assert_eq!(popped.payload, Payload::Event(vec![199]));
+        }
+
+        #[test]
+        fn mailbox_backpressure_rejected_when_full_and_nothing_lower_priority() {
+            let mut mailbox = Mailbox::new(2);
+            let actor = ActorId::new(1, 0, 0, 0);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1)), Backpressure::Accept);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 2)), Backpressure::Accept);
+            let bp = mailbox.enqueue(env(actor, Lane::Maintenance, 3));
+            assert_eq!(bp, Backpressure::Rejected, "no lower-priority lane to evict — must reject, never silently drop");
+        }
+
+        #[test]
+        fn mailbox_backpressure_drops_lower_priority_lane_to_admit_interactive() {
+            let mut mailbox = Mailbox::new(2);
+            let actor = ActorId::new(1, 0, 0, 0);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1)), Backpressure::Accept);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Background, 2)), Backpressure::Accept);
+            let bp = mailbox.enqueue(env(actor, Lane::Interactive, 3));
+            assert_eq!(bp, Backpressure::Dropped(Lane::Maintenance));
+            assert_eq!(mailbox.len(), 2);
+        }
+
+        #[test]
+        fn mailbox_pop_next_honors_lane_priority_over_fifo() {
+            let mut mailbox = Mailbox::new(10);
+            let actor = ActorId::new(1, 0, 0, 0);
+            mailbox.enqueue(env(actor, Lane::Maintenance, 1));
+            mailbox.enqueue(env(actor, Lane::Background, 2));
+            mailbox.enqueue(env(actor, Lane::Interactive, 3));
+            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Interactive);
+            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Background);
+            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Maintenance);
+        }
+        //#endregion 🔖️MailboxTests
+
+        //#region 🔖️SchedulerFairness
+        #[test]
+        fn drr_fairness_plugin_with_50_actors_does_not_starve_plugin_with_1() {
+            // 🧪️ Both plugins are given abundant backlog up front (nobody runs dry mid-test), so the
+            // measured split reflects level-1 DRR's PLUGIN-level fairness, not which plugin happened
+            // to have offered work left when the other ran out. Without level 1, `s.busy` (50 actors)
+            // would swamp `s.quiet` (1 actor) roughly 50:1 — see design §Scheduler.
+            let mut scheduler = Scheduler::new(4);
+            let busy_package = PackageId("s.busy".into());
+            let quiet_package = PackageId("s.quiet".into());
+            let budget = lane_defaults::budget_for(Lane::Background);
+            let mut busy_actors = Vec::new();
+            for i in 0..50u32 {
+                let id = ActorId::new(1, 0, i, 0);
+                scheduler.register_actor(id, busy_package.clone(), Lane::Background, budget, ShardId(0));
+                busy_actors.push(id);
+            }
+            let quiet_actor = ActorId::new(2, 0, 0, 0);
+            scheduler.register_actor(quiet_actor, quiet_package.clone(), Lane::Background, budget, ShardId(1));
+
+            for &id in &busy_actors {
+                for seq in 0..30u64 {
+                    scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+                }
+            }
+            for seq in 0..500u64 {
+                scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+            }
+
+            let mut busy_grants = 0u32;
+            let mut quiet_grants = 0u32;
+            for now in 0..100u64 {
+                let decision = scheduler.tick(now);
+                for grant in &decision.run {
+                    if grant.actor == quiet_actor {
+                        quiet_grants += 1;
+                    } else {
+                        busy_grants += 1;
+                    }
+                }
+            }
+            assert!(quiet_grants > 0, "the 1-actor plugin must never starve");
+            assert!(busy_grants > 0);
+            let ratio = busy_grants as f64 / quiet_grants as f64;
+            assert!(ratio < 10.0, "level-1 DRR must keep PLUGIN-level share roughly comparable regardless of actor count (busy={busy_grants} quiet={quiet_grants} ratio={ratio}, naive per-actor scheduling would give ~50x)");
+        }
+
+        #[test]
+        fn deadline_preemption_runs_before_background_drr_deficit() {
+            let mut scheduler = Scheduler::new(1);
+            let package = PackageId("s.mixed".into());
+            let budget = lane_defaults::budget_for(Lane::Background);
+            let bg_actor = ActorId::new(1, 0, 0, 0);
+            let interactive_actor = ActorId::new(1, 0, 1, 0);
+            scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0));
+            scheduler.register_actor(interactive_actor, package.clone(), Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0));
+            scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+            scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+            let decision = scheduler.tick(10);
+            assert_eq!(decision.run.len(), 1);
+            assert_eq!(decision.run[0].actor, interactive_actor, "an overdue interactive deadline must preempt DRR ordering");
+        }
+        //#endregion 🔖️SchedulerFairness
+
+        //#region 🔖️FailureLadder
+        #[test]
+        fn failure_ladder_escalates_and_decays_back_to_healthy() {
+            let mut state = FailureState::new();
+            assert_eq!(state.stage, FailureStage::Healthy);
+
+            let esc = state.on_signal(FailureSignal::DeadlineOverrun { ratio: 1.2 }, Lane::Interactive, 0);
+            assert_eq!(esc, FailureEscalation::None);
+            assert_eq!(state.stage, FailureStage::Warned);
+
+            let esc = state.on_signal(FailureSignal::DeadlineOverrun { ratio: 1.4 }, Lane::Interactive, 10);
+            assert_eq!(esc, FailureEscalation::None);
+            assert!(matches!(state.stage, FailureStage::Throttled { .. }), "second interactive warn must throttle (threshold=2)");
+
+            let esc = state.on_signal(FailureSignal::MailboxOverflow, Lane::Interactive, 20);
+            assert_eq!(esc, FailureEscalation::None);
+            assert!(matches!(state.stage, FailureStage::Suspended { .. }), "third interactive warn must suspend (threshold=2 -> suspend_at)");
+
+            for i in 0..200u64 {
+                state.on_clean_turn(1_000_000 + i);
+            }
+            assert_eq!(state.stage, FailureStage::Healthy, "sustained clean turns must decay all the way back to Healthy, got {:?}", state.stage);
+        }
+
+        #[test]
+        fn failure_ladder_trap_then_quarantine_is_package_wide() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let package = PackageId("s.flaky".into());
+            let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual);
+            let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
+
+            for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted(b"boom".to_vec()), usage: Usage::default() };
+                kernel.complete(a, faulted, (i as u64) * 100).unwrap();
+            }
+            assert_eq!(kernel.actor_status(a), Some(&ActorStatus::Quarantined));
+            assert_eq!(kernel.actor_status(b), Some(&ActorStatus::Quarantined), "quarantine must be package-wide, not just the trapping actor");
+        }
+
+        #[test]
+        fn failure_ladder_manual_reset_returns_to_healthy_immediately() {
+            let mut state = FailureState::new();
+            state.on_signal(FailureSignal::FuelExhausted, Lane::Background, 0);
+            assert_ne!(state.stage, FailureStage::Healthy);
+            state.on_signal(FailureSignal::ManualReset, Lane::Background, 1);
+            assert_eq!(state.stage, FailureStage::Healthy);
+            assert_eq!(state.warn_count, 0);
+        }
+        //#endregion 🔖️FailureLadder
+
+        //#region 🔖️Scene
+        #[test]
+        fn scene_revision_is_monotonic_and_reuses_snapshot_on_empty_commit() {
+            let mut store = SceneStore::new();
+            let budget = lane_defaults::budget_for(Lane::Interactive);
+            let actor = ActorId::new(1, 0, 0, 0);
+            let first = store.commit_frame(0);
+            assert_eq!(first.revision, 0, "no pending patches yet -> initial empty snapshot, revision 0");
+
+            store.apply_patch(actor, vec![1, 2, 3], 10, &budget).unwrap();
+            let second = store.commit_frame(16);
+            assert_eq!(second.revision, 1);
+            assert!(second.committed_ms >= first.committed_ms);
+
+            let third = store.commit_frame(32);
+            assert_eq!(third.revision, second.revision, "nothing pending -> previous snapshot reused, same revision");
+            assert!(Arc::ptr_eq(&second, &third));
+        }
+
+        #[test]
+        fn scene_ui_node_quota_truncates_and_signals() {
+            let mut store = SceneStore::new();
+            let mut budget = lane_defaults::budget_for(Lane::Interactive);
+            budget.ui_nodes = 100;
+            let actor = ActorId::new(1, 0, 0, 0);
+            let err = store.apply_patch(actor, vec![1], 150, &budget).unwrap_err();
+            assert_eq!(err, FailureSignal::UiQuota);
+            let snapshot = store.commit_frame(0);
+            assert_eq!(snapshot.node_count, 100, "node count must be truncated to the budget ceiling, never exceed it");
+        }
+
+        #[test]
+        fn scene_max_patch_bytes_rejects_oversized_patch() {
+            let mut store = SceneStore::new();
+            let mut budget = lane_defaults::budget_for(Lane::Interactive);
+            budget.max_patch_bytes = 4;
+            let actor = ActorId::new(1, 0, 0, 0);
+            let err = store.apply_patch(actor, vec![0; 100], 1, &budget).unwrap_err();
+            assert_eq!(err, FailureSignal::UiQuota);
+        }
+        //#endregion 🔖️Scene
+
+        //#region 🔖️ThreadTransport
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn thread_transport_duplex_send_recv_and_heartbeat() {
+            let (kernel_side, shard_side) = ThreadTransport::new_pair();
+            kernel_side.send(b"to-shard");
+            assert_eq!(shard_side.recv(), Some(b"to-shard".to_vec()));
+            shard_side.send(b"to-kernel");
+            assert_eq!(kernel_side.recv(), Some(b"to-kernel".to_vec()));
+            shard_side.beat(42);
+            assert_eq!(kernel_side.heartbeat(), 42);
+        }
+
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn thread_transport_kill_stops_recv() {
+            let (kernel_side, shard_side) = ThreadTransport::new_pair();
+            kernel_side.send(b"queued-before-kill");
+            kernel_side.kill();
+            assert_eq!(shard_side.recv(), None, "a killed transport must never yield a stale message");
+        }
+        //#endregion 🔖️ThreadTransport
+
+        //#region 🔖️KernelFacade
+        #[test]
+        fn kernel_activate_submit_tick_complete_round_trip() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let window = WindowId(1);
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window });
+            let bp = kernel.submit(env(actor, Lane::Interactive, 1));
+            assert_eq!(bp, Backpressure::Accept);
+            let decision = kernel.tick(0);
+            assert_eq!(decision.run.len(), 1);
+            assert_eq!(decision.run[0].actor, actor);
+            let escalation = kernel.complete(actor, ok_turn(), 1).unwrap();
+            assert_eq!(escalation, FailureEscalation::None);
+            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Active));
+        }
+
+        #[test]
+        fn kernel_suspend_resume_round_trip() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual);
+            kernel.suspend(actor, Some(vec![1, 2, 3])).unwrap();
+            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
+            kernel.resume(actor).unwrap();
+            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Active));
+        }
+
+        #[test]
+        fn kernel_request_exclusive_then_release() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0), job_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
+            let shard = kernel.request_exclusive(actor).unwrap();
+            assert!(shard.0 >= 3, "exclusive shards must come from the reserved tail of the pool");
+            kernel.release_exclusive(actor);
+        }
+
+        #[test]
+        fn kernel_metrics_counts_actors_shards_packages() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4);
+            kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
+            kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
+            let metrics = kernel.metrics();
+            assert_eq!(metrics.actors, 2);
+            assert_eq!(metrics.packages, 2);
+            assert_eq!(metrics.shards, 4);
+        }
+        //#endregion 🔖️KernelFacade
+
+        //#region 🔖️ShardTable
+        #[test]
+        fn shard_sizing_policy_clamps_native_and_web() {
+            assert_eq!(clamp_native_shard_count(1), 2);
+            assert_eq!(clamp_native_shard_count(9), 8);
+            assert_eq!(clamp_native_shard_count(5), 4);
+            assert_eq!(clamp_web_shard_count(1), 1);
+            assert_eq!(clamp_web_shard_count(9), 4);
+        }
+        //#endregion 🔖️ShardTable
+    }
+
+    //#region 🔖️Typegen
+    #[cfg(feature = "typegen")]
+    #[test]
+    fn exports_typescript_bindings() {
+        use ts_rs::TS;
+        use crate::*;
+        PackageId::export().unwrap();
+        PackageHash::export().unwrap();
+        ActorId::export().unwrap();
+        ActorKind::export().unwrap();
+        Lane::export().unwrap();
+        Budget::export().unwrap();
+        WindowId::export().unwrap();
+        Origin::export().unwrap();
+        Payload::export().unwrap();
+        CoalesceKey::export().unwrap();
+        Envelope::export().unwrap();
+        TurnStatus::export().unwrap();
+        Usage::export().unwrap();
+        TurnResult::export().unwrap();
+        Backpressure::export().unwrap();
+        Mailbox::export().unwrap();
+        CapabilityGrant::export().unwrap();
+        FailureSignal::export().unwrap();
+        FailureStage::export().unwrap();
+        FailureState::export().unwrap();
+        ActorStatus::export().unwrap();
+        ActorRecord::export().unwrap();
+        ShardKind::export().unwrap();
+        ShardId::export().unwrap();
+        ShardTable::export().unwrap();
+        Decision::export().unwrap();
+        TurnGrant::export().unwrap();
+        SceneSnapshot::export().unwrap();
+        ActorMetrics::export().unwrap();
+        ShardMetrics::export().unwrap();
+        KernelMetrics::export().unwrap();
+        ActivationEvent::export().unwrap();
+    }
+    //#endregion 🔖️Typegen
+}

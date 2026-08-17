@@ -1,0 +1,81 @@
+    Checking fastrand v2.4.1
+   Compiling serde_json v1.0.149
+   Compiling getrandom v0.4.2
+   Compiling rustix v1.1.4
+    Checking errno v0.3.14
+    Checking once_cell v1.21.4
+    Checking futures-lite v2.6.1
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking tempfile v3.27.0
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+warning: constant `EXAMPLES_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:398:15
+    |
+398 |     pub const EXAMPLES_DIR_NAME: &str = "📚️examples";
+    |               ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `ASSETS_DIR_NAME` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:399:15
+    |
+399 |     pub const ASSETS_DIR_NAME: &str = "🖼️assets";
+    |               ^^^^^^^^^^^^^^^
+
+warning: function `repo_root` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:402:12
+    |
+402 |     pub fn repo_root() -> PathBuf {
+    |            ^^^^^^^^^
+
+warning: function `collect_files` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:414:8
+    |
+414 |     fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    |        ^^^^^^^^^^^^^
+
+warning: function `find_example_asset` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:431:12
+    |
+431 |     pub fn find_example_asset(artifact_dir: &Path, suffix: &str) -> Option<PathBuf> {
+    |            ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_text` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:468:12
+    |
+468 |     pub fn read_example_asset_text(artifact_dir: &Path, suffix: &str) -> Option<String> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `read_example_asset_bytes` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:474:12
+    |
+474 |     pub fn read_example_asset_bytes(artifact_dir: &Path, suffix: &str) -> Option<Vec<u8>> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `artifact_dir` is never used
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:480:12
+    |
+480 |     pub fn artifact_dir(plugin: &str, artifact: &str) -> PathBuf {
+    |            ^^^^^^^^^^^^
+
+warning: field `plugin` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:645:13
+    |
+644 |     pub struct DiscoveredGrammarFacet {
+    |                ---------------------- field in this struct
+645 |         pub plugin: String,
+    |             ^^^^^^
+    |
+    = note: `DiscoveredGrammarFacet` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-framework-os-kernel` (lib test) generated 10 warnings (1 duplicate)
+    Finished `dev` profile [unoptimized] target(s) in 3m 15s

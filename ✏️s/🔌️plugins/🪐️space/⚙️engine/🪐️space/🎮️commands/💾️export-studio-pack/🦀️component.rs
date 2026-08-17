@@ -3,7 +3,7 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::host::{export_os_space_pack};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -19,8 +19,8 @@ pub fn handle(_payload: &ExportStudioPack, _doc: &ArtifactView<'_, WorkflowSnaps
                 use base64::Engine;
                 Ok(Emit {
                     effects: vec![
-                        HostEffect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
-                        HostEffect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
+                        Effect::DownloadMediaExport { filename: format!("{space_id}.pack"), mime_type: "application/octet-stream".into(), data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack), encoding: Some("base64".into()) },
+                        Effect::DownloadMediaExport { filename: format!("{space_id}.ops"), mime_type: "text/plain".into(), data: pack_files.ops, encoding: None },
                     ],
                     ..Default::default()
                 })

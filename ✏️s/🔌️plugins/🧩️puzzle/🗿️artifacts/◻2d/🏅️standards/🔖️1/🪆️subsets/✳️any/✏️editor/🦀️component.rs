@@ -25,7 +25,7 @@ use crate::editor::puzzle2d::engine::{BoardHost, Puzzle2dExtension};
 use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactPresentation, ConfigView, ArtifactEditor, ArtifactView, Dialect, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -774,7 +774,7 @@ pub struct Puzzle2dActionCtx<'a> {
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — retained selection-acting verbs read
     /// `.selected_ids()` here instead of the deleted `Puzzle2dConfig::selected_ids` field.
     pub interaction: &'a InteractionView<'a>,
-    pub effects: &'a mut Vec<HostEffect>,
+    pub effects: &'a mut Vec<Effect>,
     pub ui_scope: &'a mut UiDirtyScope,
 }
 
@@ -932,7 +932,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             let _ = host_mut.drain_events_json();
             sync_host_runtime_state(&mut host_mut, &scene, &interaction.selection(PUZZLE2D_INTERACTION_DOMAIN).ids);
         }
-        let mut effects: Vec<HostEffect> = Vec::new();
+        let mut effects: Vec<Effect> = Vec::new();
         // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
         // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
         let mut ui_scope = UiDirtyScope::Full;

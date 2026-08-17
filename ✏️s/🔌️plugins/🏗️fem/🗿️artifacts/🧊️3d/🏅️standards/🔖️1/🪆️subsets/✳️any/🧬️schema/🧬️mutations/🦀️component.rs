@@ -23,7 +23,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
-/// `HostEffect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
+/// `Effect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
 /// `editor::fem3d::reset_document_effect`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]

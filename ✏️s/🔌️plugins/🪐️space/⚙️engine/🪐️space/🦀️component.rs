@@ -32,7 +32,7 @@ use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::{
     app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
-    DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
+    DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
 use store::EngineHandles;
@@ -77,8 +77,8 @@ pub(crate) fn space_interaction_select(granularity: &str, id: &str) -> ActionDes
 /// @emoji 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
 /// via `engine::negotiate_media_connect`, converting a rejection into a `Notify` effect — shared by
 /// `connections::connect_media_ports` and the `graph_edit::node_graph_edit`/`"connect"` fixture edit.
-pub(crate) fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, HostEffect> {
-    crate::engine::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| HostEffect::Notify { message: reason })
+pub(crate) fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, Effect> {
+    crate::engine::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).map_err(|reason| Effect::Notify { message: reason })
 }
 
 pub(crate) fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowMutation {

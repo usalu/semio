@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, reset_document_effect, runtime_of, snapshot_of, CadPlayView};
 use crate::artifacts::cad::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
 use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use serde_json::Value;
 
 
@@ -124,7 +124,7 @@ pub mod load_raw_request {
     pub struct LoadRawRequest {}
 
     pub fn handle(_payload: &LoadRawRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx<'_>) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        Ok(Emit::effect(HostEffect::RequestFileOpen {
+        Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(116), 
             accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
             read_as: Some("dataUrl".into()),
             import_action: "importCadFile".into(),

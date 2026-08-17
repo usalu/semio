@@ -36,8 +36,8 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts";
-import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import { generatePluginRegistry, isHostPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts";
+import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
@@ -51,7 +51,7 @@ import {
   defaultExtensionInstallRoot,
   EXTENSION_INSTALL_META,
   EXTENSION_WATCH_MARKER,
-} from "../../../🔌️plugin/📦️packages/🟦️typescript/🏪️store/📜️store.ts";
+} from "../../../🔌️plugin/🏪️store/📜️store.ts";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 
@@ -807,7 +807,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 }
 
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
-  const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts");
+  const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
   writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
@@ -2581,7 +2581,7 @@ async function collabRunScenario(
       artifactId = await collabWaitForNewRow(user1, "artifact", beforeUser1, 30_000);
       await collabWaitForRow(user2, "artifact", artifactId, 30_000);
       const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
-      spaceE2eAssert(editorOpened, "no editable text surface appeared for user1 after createArtifact — HostEffect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)");
+      spaceE2eAssert(editorOpened, "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)");
       record(3, true, `artifact ${artifactId} created, row replicated to user2, editor surface present for user1`);
     } catch (error) {
       await collabScreenshot(user1, "step3-user1");

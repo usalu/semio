@@ -1,0 +1,38 @@
+[package]
+name = "semio-framework-actor"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pooled actor/plugin runtime kernel: PackageId/ActorId/Lane/Budget vocabulary, the hierarchical deficit-round-robin scheduler, mailbox backpressure, the failure ladder, scene-commit + metrics, and the Kernel facade — pure, no I/O, no clock, no wasm_bindgen/web_sys/winit/tokio/std::thread in the core (transports and time are injected)."
+
+[package.metadata.semio]
+role = "framework"
+id = "actor"
+
+[lints]
+workspace = true
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "📦️glue.rs"
+
+[features]
+# 🧬️ Generates the TypeScript mirror for boundary types (see `../../🤖️generated/🟦️actor.ts`); never
+# enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
+typegen = ["dep:ts-rs"]
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.18"
+ts-rs = { version = "10", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"
+
+[dev-dependencies]

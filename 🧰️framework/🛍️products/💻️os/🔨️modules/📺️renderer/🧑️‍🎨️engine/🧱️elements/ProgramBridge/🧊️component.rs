@@ -7,7 +7,7 @@
 //! zero other changes.
 //! 🔌️ Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -32,7 +32,7 @@ mod wasm_program_exchange {
     use super::*;
     use dsl::{from_dsl_value, to_dsl_value, DslValue};
     use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame, SectionProbe};
-    use semio_framework::kernel::{AppEvent, HostEffect, InvocationId, InvocationResult, UndoGroup};
+    use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
     use semio_framework_plugin_host::WasmPluginRuntime;
     use serde::de::DeserializeOwned;
     use serde::Serialize;
@@ -114,11 +114,11 @@ mod wasm_program_exchange {
         Err(format!("plugin sent no Done for seq {seq}"))
     }
 
-    fn decode_effects_frame(effects: &[Vec<u8>]) -> Result<Vec<HostEffect>, String> {
-        effects.iter().map(|bytes| decode_wire::<HostEffect>(bytes)).collect()
+    fn decode_effects_frame(effects: &[Vec<u8>]) -> Result<Vec<Effect>, String> {
+        effects.iter().map(|bytes| decode_wire::<Effect>(bytes)).collect()
     }
 
-    fn collect_refresh_effects(frames: &[AppFrame], seq: u64) -> Result<Vec<HostEffect>, String> {
+    fn collect_refresh_effects(frames: &[AppFrame], seq: u64) -> Result<Vec<Effect>, String> {
         let mut requested_effects = Vec::new();
         for frame in frames {
             match frame {
@@ -257,7 +257,7 @@ mod wasm_program_exchange {
             .ok_or_else(|| "plugin sent no Ephemeral frame".to_string())
     }
 
-    pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
+    pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
         let _ = _document_dsl;
         let seq = next_seq();
         let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind: SECTION_KIND_WINDOW, key: body_key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
@@ -438,7 +438,7 @@ impl ProgramBridgeEntry {
         self.render_with_document(instance_id, body_key, view_state, None, None).await
     }
 
-    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<HostEffect>>) -> Result<UiNode, String> {
+    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,

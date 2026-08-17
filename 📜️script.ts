@@ -12,10 +12,12 @@ import {
   devToolingEnv,
   discoverOwners,
   discoverPackages,
+  discoverPackageProblems,
   dispatchPolicyArgv,
   dispatchSubcommand,
   defineLint,
   loadTaxonomy,
+  schemaFacetFormatEntries,
   enforceCoverageThreshold,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
@@ -2110,7 +2112,7 @@ function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
   if (!existsSync(registryPath)) return [];
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
   return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry.wasmOut)).map((entry) => entry.pluginId);
@@ -6813,7 +6815,7 @@ const POLICY_HOST_EFFECT_CAPABILITY: Readonly<Record<string, string>> = {
   InvokeExtension: "Engine", // Rights::Invoke, Scope::Plugin
 };
 
-const POLICY_HOST_EFFECT_CONSTRUCT_RE = /\bHostEffect::(\w+)\b/g;
+const POLICY_HOST_EFFECT_CONSTRUCT_RE = /\bEffect::(\w+)\b/g;
 const POLICY_CAPABILITY_CALL_RE = /\.capability\s*\(\s*ArtifactKind::(\w+)/g;
 const POLICY_BACKBONE_STORAGE_RE = /\.local_backbone_storage\s*\(/;
 
@@ -7419,7 +7421,7 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
     });
     return breaches;
   }
-  for (const format of Object.values(taxonomy.schemaFormats)) {
+  for (const format of schemaFacetFormatEntries(repoRoot, schemaRel, taxonomy).map(([, f]) => f)) {
     if (existsSync(join(repoRoot, schemaRel, format.leafFilename))) continue;
     breaches.push({
       id: `os-config-shape-schema-leaf-${format.leafFilename}`,
@@ -7427,7 +7429,7 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
       kind: "taxonomy/os-config-shape",
       scope: "os/config",
       priority: "high",
-      reason: `Every schemaFormats leaf is frozen for ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
+      reason: `Every schemaFormats leaf for facet kind 🧬️data is frozen for ${POLICY_OS_CONFIG_SCHEMA_ID}.`,
       solution: `Add ${schemaRel}/${format.leafFilename}.`,
     });
   }
@@ -9395,10 +9397,10 @@ function policyArtifactRootOfInferencesDir(inferencesRel: string): string {
  */
 function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const rootLeaves = Object.values(taxonomy.schemaFormats ?? {}).map((f) => f.leafFilename);
   const breaches: BreachRecord[] = [];
   for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
     const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
+    const rootLeaves = schemaFacetFormatEntries(repoRoot, inferencesRel, taxonomy).map(([, f]) => f.leafFilename);
     for (const leaf of rootLeaves) {
       const rel = `${inferencesRel}/${leaf}`;
       if (existsSync(join(repoRoot, rel))) continue;
@@ -10162,10 +10164,9 @@ function policyLoadSchemaFacetLeaves(
   facetRel: string,
 ): { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] {
   const taxonomy = loadTaxonomy();
-  const formats = taxonomy.schemaFormats ?? {};
   const expected = policyExpectedSchemaTypeNameForFacetPath(facetRel);
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
-  for (const [formatId, format] of Object.entries(formats)) {
+  for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetRel, taxonomy)) {
     const leafFilename = format.leafFilename;
     const relPath = `${facetRel}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
@@ -10191,6 +10192,9 @@ function policyLoadSchemaFacetLeaves(
       case "🛰️protobuf":
         extract = policyExtractProtobufSchemaFields(text, expected);
         break;
+      case "📜️wit":
+        extract = { typeName: "", fields: [] };
+        break;
       default:
         extract = { typeName: "", fields: [] };
         break;
@@ -10206,7 +10210,6 @@ function policyLoadSchemaFacetLeaves(
  */
 function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const formats = Object.entries(taxonomy.schemaFormats ?? {});
   const normativeByFacet = taxonomy.artifactSchemaSpecFilenames ?? {};
   const breaches: BreachRecord[] = [];
   for (const artRel of policyListPluginArtifactDirs(repoRoot)) {
@@ -10224,7 +10227,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
         });
         continue;
       }
-      for (const [formatId, format] of formats) {
+      for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
         const leafRel = `${facetAbs}/${format.leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
@@ -10233,7 +10236,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
           kind: "artifact-schema/facet-completeness",
           scope: artRel,
           priority: "high",
-          reason: "Each schema facet must carry every schemaFormats leaf filename from 🔣️taxonomy.json.",
+          reason: "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
           solution: `Add handcrafted ${leafRel}.`,
         });
       }
@@ -10658,7 +10661,6 @@ function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
  */
 function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
-  const formats = Object.entries(taxonomy.schemaFormats ?? {});
   const normativeByFacet = taxonomy.surfaceSchemaSpecFilenames ?? {};
   const breaches: BreachRecord[] = [];
   for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
@@ -10679,7 +10681,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
         });
         continue;
       }
-      for (const [formatId, format] of formats) {
+      for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
         const leafRel = `${facetAbs}/${format.leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
@@ -10688,7 +10690,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
           kind: "app-schema/facet-completeness",
           scope: owner.ownerRel,
           priority: "high",
-          reason: "Each schema facet must carry every schemaFormats leaf filename from 🔣️taxonomy.json.",
+          reason: "Each schema facet must carry every schemaFormats leaf for its facet kind from 🔣️taxonomy.json.",
           solution: `Add handcrafted ${leafRel}.`,
         });
       }
@@ -11725,8 +11727,7 @@ function policySchemaFormatLeafBreaches(
   taxonomy: ReturnType<typeof loadTaxonomy>,
 ): BreachRecord[] {
   const breaches: BreachRecord[] = [];
-  const formats = taxonomy.schemaFormats ?? {};
-  for (const [formatId, format] of Object.entries(formats)) {
+  for (const [formatId, format] of schemaFacetFormatEntries(repoRoot, facetAbs, taxonomy)) {
     const leafRel = `${facetAbs}/${format.leafFilename}`;
     if (existsSync(join(repoRoot, leafRel))) continue;
     breaches.push({
@@ -11735,7 +11736,7 @@ function policySchemaFormatLeafBreaches(
       kind: "stdio-artifacts/schema-representation",
       scope: artRel,
       priority: "high",
-      reason: "Each schema node carries all five schemaFormats leaves from 🔣️taxonomy.json.",
+      reason: "Each schema node carries all schemaFormats leaves for its facet kind from 🔣️taxonomy.json.",
       solution: `Add ${leafRel}.`,
     });
   }
@@ -15167,6 +15168,24 @@ export function policyCleanArtifactStandardSubsetMechanismBreaches(repoRoot: str
 }
 //#endregion 🔧️PolicyRuleCleanMechanism
 
+/** 📦️ Shape V2 package-folder purity — language-neutral assets must not live inside `📦️packages/<lang>/`. */
+const POLICY_PACKAGE_PURITY_PRIORITY = "medium" as const;
+
+export function policyPackageLanguagePurityBreaches(repoRoot: string): BreachRecord[] {
+  const problems = discoverPackageProblems(repoRoot, loadTaxonomy());
+  return problems
+    .filter((problem) => problem.kind === "packaging-violation" || problem.kind === "unknown-lang")
+    .map((problem) => ({
+      id: `package-purity-${problem.path.replaceAll("/", "-")}`,
+      summary: problem.message,
+      kind: "taxonomy/package-purity",
+      scope: problem.path,
+      priority: POLICY_PACKAGE_PURITY_PRIORITY,
+      reason: "Shape V2: 📦️packages/<lang>/ holds ONLY packaging code; 📦️packages/ children must be declared langs.",
+      solution: "Hoist language-neutral assets to the owner root beside 📦️packages/.",
+    }));
+}
+
 //#region 🔖️PolicyExport
 /**
  * ⚖️Runs every Wave 4 app-plugin rule over every discovered crate that belongs to a plugin, plus the
@@ -15252,6 +15271,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyContributedSurfaceTargetBreaches(repoRoot));
   breaches.push(...policyOsConfigShapeBreaches(repoRoot));
   breaches.push(...policyCleanArtifactStandardSubsetMechanismBreaches(repoRoot));
+  breaches.push(...policyPackageLanguagePurityBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖️PolicyExport

@@ -11,7 +11,7 @@ use crate::editor::shooting::ShootingDispatchCtx;
 use crate::artifacts::shooting::schema::shooting_icon_render_request_json;
 use crate::artifacts::shooting::op::ShootingMutation;
 use crate::artifacts::shooting::{ShootingSnapshot, ShootingShot};
-use semio_framework_plugin::{ConfigView, ArtifactView, DslValue, Emit, Fault, HostEffect, IconRenderExportItem};
+use semio_framework_plugin::{ConfigView, ArtifactView, DslValue, Emit, Fault, Effect, IconRenderExportItem};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -38,7 +38,7 @@ pub mod export_shots {
                 })
                 .collect();
             if !items.is_empty() {
-                return Ok(Emit::effect(HostEffect::IconRenderExport { items }));
+                return Ok(Emit::effect(Effect::IconRenderExport { items }));
             }
         }
         Ok(Emit::default())
@@ -59,7 +59,7 @@ mod tests {
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: false }));
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::IconRenderExport { items } => {
+            Effect::IconRenderExport { items } => {
                 assert_eq!(items.len(), 1);
                 assert_eq!(items[0].filename, "overview-svg.svg");
             }
@@ -72,7 +72,7 @@ mod tests {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::ExportShots(export_shots::ExportShots { all: true }));
         match &result.requested_effects[0] {
-            HostEffect::IconRenderExport { items } => assert_eq!(items.len(), 2),
+            Effect::IconRenderExport { items } => assert_eq!(items.len(), 2),
             other => panic!("expected IconRenderExport, got {other:?}"),
         }
     }

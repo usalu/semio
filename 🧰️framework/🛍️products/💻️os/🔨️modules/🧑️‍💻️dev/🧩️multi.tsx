@@ -7,7 +7,7 @@
 import "./🎨️globals.css";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
+import { PLUGIN_CATALOG } from "../🔌️plugin/📇️registry/🟦️catalog.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
 import * as React from "react";
 import { createRoot } from "react-dom/client";

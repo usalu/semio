@@ -4,7 +4,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::artifacts::home::mutations::change_catalog_generation;
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use semio_framework_os::import_os_space_from_dsl;
 use serde::{Deserialize, Serialize};
@@ -25,6 +25,6 @@ pub fn handle(payload: &ImportSpace, doc: &ArtifactView<'_, SHomeSnapshot>, _cfg
                 Ok(Emit::default())
             }
         }
-        None => Ok(Emit::effect(HostEffect::RequestFileOpen { accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false })),
+        None => Ok(Emit::effect(Effect::RequestFileOpen {req: semio_framework_plugin::RequestId(124),  accept: ".os".into(), read_as: None, import_action: "importSpace".into(), multiple: false })),
     }
 }

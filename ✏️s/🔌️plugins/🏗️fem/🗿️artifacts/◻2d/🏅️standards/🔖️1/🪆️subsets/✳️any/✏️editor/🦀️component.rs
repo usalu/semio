@@ -247,7 +247,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// the trait's own default (`None`).
     ///
     /// 🎞️ `"document:in"` swaps the whole live document via `reset_document_effect` (a
-    /// `HostEffect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
+    /// `Effect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
     /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...]}`
     /// polygon-with-holes contract into a new `FemRegion` via `create-region`, defaulted to the
@@ -311,18 +311,18 @@ impl ArtifactEditor for Fem2dPlayApp {
 //#endregion 🔖️Fem2dPlayApp
 
 //#region 🔖️ResetDocument
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (file import,
 /// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
 /// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
 /// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::HostEffect {
+pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("fem2d document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
 
@@ -693,7 +693,7 @@ mod tests {
     //#region 🔖️ExportImportMedia
     /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
     /// see `📓️taxonomy.md`'s forbidden vocabulary), so `import_media("document:in")` now surfaces as a
-    /// `HostEffect::LoadDocument` carrying the replacement document's pack bytes, not an
+    /// `Effect::LoadDocument` carrying the replacement document's pack bytes, not an
     /// `artifact_mutations` entry — asserted directly on `Emit` rather than through `app.snapshot()`.
     #[test]
     fn export_media_document_out_round_trips_via_import_media_document_in() {
@@ -709,7 +709,7 @@ mod tests {
         let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
         let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace must not be an artifact_mutations entry");
-        let semio_framework::kernel::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
+        let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

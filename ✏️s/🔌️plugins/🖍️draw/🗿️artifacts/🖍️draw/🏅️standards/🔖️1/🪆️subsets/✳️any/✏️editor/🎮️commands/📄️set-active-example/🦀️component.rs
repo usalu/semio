@@ -5,7 +5,7 @@ use crate::editor::draw::DRAW_PLAY_EXAMPLE_DEFAULT_ID;
 use crate::artifacts::draw::schema::{default_draw_document, semio_draw_example_document};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// see `.🦑️repo/🎫️tickets/26/08/12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`'s "Forbidden
 /// vocabulary": `SetSnapshot` has no replacement mutation). File-open/paste-over/load-example
 /// commands go through the sanctioned non-history `ArtifactStore::reset` path instead, which from
-/// an `ArtifactApp::handle` this reaches via `HostEffect::LoadDocument` (pack+spr bytes) — the same
+/// an `ArtifactApp::handle` this reaches via `Effect::LoadDocument` (pack+spr bytes) — the same
 /// host-owned whole-store-swap primitive `engine::space`'s `open_space` command uses.
 fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
     let envelope = store::ArtifactEnvelope::<DrawSnapshot, DrawMutation> {
@@ -32,7 +32,7 @@ fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfig
         conflicts: Vec::new(),
     };
     match store::print_document_pack(&envelope) {
-        Ok(files) => Emit { effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },
+        Ok(files) => Emit { effects: vec![Effect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },
         Err(_) => Emit::default(),
     }
 }

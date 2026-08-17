@@ -336,7 +336,7 @@ impl ArtifactEditor for ShootingPlayApp {
 //#endregion 🔖️ShootingPlayApp
 
 //#region 🔖️ResetDocument
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (file import,
 /// load-example, dev fixture load). Per `📓️taxonomy.md`, whole-document replace is banned outright with NO
 /// replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
@@ -344,11 +344,11 @@ impl ArtifactEditor for ShootingPlayApp {
 /// `"document:in"` above, `commands::fixture::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::HostEffect {
+pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(SHOOTING_DOCUMENT_SCHEMA, "shooting", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
 
@@ -543,7 +543,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::testkit;
-    use semio_framework_plugin::{ActionKind, HostEffect, PluginApp, ViewModel};
+    use semio_framework_plugin::{ActionKind, Effect, PluginApp, ViewModel};
     use serde_json::{json, Value};
 
     fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
@@ -812,12 +812,12 @@ mod tests {
         let mut app = shooting_app();
         let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
         match &result.requested_effects[0] {
-            HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
+            Effect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
         let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {}));
         match &result.requested_effects[0] {
-            HostEffect::DownloadMediaExport { filename, data, .. } => {
+            Effect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "shooting.shooting.ops");
                 let round_trip: ShootingSnapshot = serde_json::from_str(data).unwrap();
                 assert_eq!(round_trip.schema, SHOOTING_DOCUMENT_SCHEMA);

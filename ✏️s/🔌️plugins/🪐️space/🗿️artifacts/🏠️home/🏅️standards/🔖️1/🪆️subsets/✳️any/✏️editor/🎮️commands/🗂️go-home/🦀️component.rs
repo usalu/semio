@@ -4,7 +4,7 @@ use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -13,5 +13,5 @@ use serde::{Deserialize, Serialize};
 pub struct GoHome {}
 
 pub fn handle(_payload: &GoHome, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
-    Ok(Emit::effect(HostEffect::Navigate { uri: "/".into() }))
+    Ok(Emit::effect(Effect::Navigate { uri: "/".into() }))
 }

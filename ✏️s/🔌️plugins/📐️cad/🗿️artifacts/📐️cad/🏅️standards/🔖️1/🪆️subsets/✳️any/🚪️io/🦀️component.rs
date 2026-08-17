@@ -292,7 +292,7 @@ use semio_s_plugin_stdio::artifacts::step::StepSnapshot;
 use semio_s_plugin_stdio::artifacts::stl::standards::v_ascii::engine::encode_stl_binary;
 use serde_json::Value;
 
-/// @emoji 📤️ A native-geometry export ready to be wrapped into a `HostEffect::DownloadMediaExport`.
+/// @emoji 📤️ A native-geometry export ready to be wrapped into a `Effect::DownloadMediaExport`.
 pub struct CadSolidExport {
     pub filename: String,
     pub data: Value,

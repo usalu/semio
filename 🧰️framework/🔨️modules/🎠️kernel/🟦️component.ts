@@ -1073,24 +1073,27 @@ export class SemioFaultError extends Error {
 }
 
 /**
- * @emoji 🐚️ A typed side effect the shell performs on the app's behalf. Mirrors the Rust
- * `HostEffect` enum (externally tagged: unit variants are the plain tag string, struct variants are
- * a single-key object keyed by the camelCase variant name).
+ * @emoji 🐚️ A typed side effect the guest emits toward the host. Mirrors the Rust `Effect` enum
+ * (`🎠️kernel/🦀️component.rs` `🔖️Effect` region — replaces `HostEffect` now that plugins and
+ * extensions share one `actor` world; externally tagged: unit variants are the plain tag string,
+ * struct variants are a single-key object keyed by the camelCase variant name). `openWindow`/
+ * `requestFileOpen`/`requestMediaFrames`/`spawnPluginInstance`/`openDialog`/`dispatchAction` gained
+ * `req` now that they complete; `invokeExtension` lost `responseAction` and gained `req`.
  */
-export type HostEffect =
+export type Effect =
   | "requestSync"
-  | { readonly openWindow: { readonly kind: string; readonly params: unknown } }
+  | { readonly openWindow: { readonly req: number; readonly kind: string; readonly params: unknown } }
   | { readonly closeWindow: { readonly window: number } }
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
-  /** @emoji 📂️ Replaces the active app instance's document with a VCS envelope JSON — host-owned
-   * counterpart of `loadAppArtifact` for catalog/example studio opens. */
-  | { readonly loadArtifact: { readonly pack?: readonly number[]; readonly spr?: readonly number[]; readonly artifactJson?: string } }
+  /** @emoji 📂️ Replaces the active app instance's document with pack+spr bytes — host-owned
+   * counterpart of `loadAppArtifactPack` for catalog/example studio opens. */
+  | { readonly loadDocument: { readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly openExternalUrl: { readonly url: string } }
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
-  | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
+  | { readonly requestFileOpen: { readonly req: number; readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
   /** @emoji 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
    * and re-dispatch `frameAction` once per sampled frame with `{payload: dataUrl(image/jpeg), name,
    * frameIndex, timestampMs, index, total, width, height, ...args}`, then `doneAction` once with
@@ -1100,6 +1103,7 @@ export type HostEffect =
    * the host default. */
   | {
       readonly requestMediaFrames: {
+        readonly req: number;
         readonly accept: string;
         readonly frameAction: string;
         readonly doneAction: string;
@@ -1112,17 +1116,17 @@ export type HostEffect =
         readonly args?: unknown;
       };
     }
-  | { readonly spawnPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly artifactJson?: string } }
+  | { readonly spawnPluginInstance: { readonly req: number; readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
   /** 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect form of
    * `setActiveTool`. Empty `toolId` deactivates the current tool. */
   | { readonly setActiveTool: { readonly toolId: string } }
-  | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } }
+  | { readonly openDialog: { readonly req: number; readonly dialogId: string; readonly args?: Record<string, unknown> } }
   /** @emoji 🔁️ Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a program
    * advance staged/progressive work over several ticks without blocking the host; the response's own
    * `requestedEffects` are fed back through `applyHostEffects` recursively. */
-  | { readonly dispatchAction: { readonly action: string; readonly args?: unknown; readonly delayMs: number } }
+  | { readonly dispatchAction: { readonly req: number; readonly action: string; readonly args?: unknown; readonly delayMs: number } }
   /** @emoji 🎯️ Patches world-3d selection chrome and document-tree `selectedIds` without a composite re-render. */
   | {
       readonly patchWorld3dChrome: {
@@ -1134,14 +1138,40 @@ export type HostEffect =
     }
   | { readonly clipboardWrite: { readonly fragment: unknown } }
   | { readonly replayShellCommand: { readonly actionId: string; readonly args?: unknown } }
+  /** @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
+   * future on a `completed` event carrying the same `req` instead of a `responseAction` redispatch. */
   | {
       readonly invokeExtension: {
+        readonly req: number;
         readonly extensionId: string;
         readonly capability: string;
         readonly requestJson: string;
-        readonly responseAction: string;
       };
-    };
+    }
+  // --- new variants (📓️design-abi.md §2's table; nothing constructs these yet) ---
+  | { readonly sendMessage: { readonly target: unknown; readonly payload: readonly number[] } }
+  | { readonly publishEvent: { readonly topic: string; readonly payload: readonly number[] } }
+  | { readonly blobWrite: { readonly req: number; readonly mediaType: unknown; readonly bytes: readonly number[] } }
+  | { readonly blobLoad: { readonly req: number; readonly hash: string } }
+  | { readonly httpRequest: { readonly req: number; readonly method: string; readonly url: string; readonly headers?: readonly (readonly [string, string])[]; readonly body?: readonly number[]; readonly stream?: boolean } }
+  | { readonly documentRead: { readonly req: number; readonly doc: string; readonly lane: string } }
+  | { readonly documentWrite: { readonly req: number; readonly doc: string; readonly lane: string; readonly ops: readonly number[] } }
+  | { readonly linkResolve: { readonly req: number; readonly link: string } }
+  | { readonly registryQuery: { readonly req: number; readonly kind: string; readonly filter?: unknown } }
+  | { readonly ioCompose: { readonly req: number; readonly key: string; readonly sources: readonly string[] } }
+  | { readonly cacheDerive: { readonly req: number; readonly engineId: string; readonly input: readonly number[] } }
+  | { readonly cacheRead: { readonly req: number; readonly engineId: string; readonly key: string } }
+  | { readonly setTimer: { readonly id: number; readonly afterMs: number; readonly repeat?: boolean } }
+  | { readonly spawnJob: { readonly job: number; readonly kind: string; readonly input: readonly number[]; readonly placement: "inline" | "isolated" | "exclusive" } }
+  | { readonly cancelJob: { readonly job: number } }
+  | { readonly respond: { readonly req: number; readonly result: unknown } }
+  | { readonly storageRead: { readonly req: number; readonly key: string } }
+  | { readonly storageWrite: { readonly req: number; readonly key: string; readonly bytes: readonly number[] } }
+  | { readonly storageDelete: { readonly req: number; readonly key: string } }
+  | { readonly requestCapability: { readonly req: number; readonly capability: unknown } }
+  | { readonly releaseCapability: { readonly id: unknown } }
+  | { readonly subscribe: { readonly topic: string } }
+  | { readonly unsubscribe: { readonly topic: string } };
 
 /**
  * @emoji 🐢️ Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually
@@ -1203,7 +1233,7 @@ export type InvocationResponse = {
   readonly mutations: readonly KernelMutation[];
   readonly inverseGroup: UndoGroup;
   readonly diagnostics?: readonly Diagnostic[];
-  readonly requestedEffects?: readonly HostEffect[];
+  readonly requestedEffects?: readonly Effect[];
   readonly events?: readonly AppEvent[];
   readonly uiScope?: UiDirtyScope;
   readonly historyPatch?: HistoryPatch;

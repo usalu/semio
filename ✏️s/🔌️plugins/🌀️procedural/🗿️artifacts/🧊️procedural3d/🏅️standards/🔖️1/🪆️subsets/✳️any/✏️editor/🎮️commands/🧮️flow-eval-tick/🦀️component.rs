@@ -4,7 +4,7 @@ use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfig
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::{flow_host_with_session, FlowEvalSession};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -15,18 +15,18 @@ pub fn handle(_payload: &FlowEvalTick, doc: &ArtifactView<'_, Procedural3dSnapsh
     let fixture = &doc.snapshot.fixture;
     let mut host = flow_host_with_session(fixture, session);
     let more = session.tick(&mut host);
-    let mut effects = if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
+    let mut effects = if more { vec![Effect::DispatchAction {req: semio_framework_plugin::RequestId(103),  action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() };
     if let Some(pending) = host.take_pending_extension_eval() {
         let request_json = serde_json::json!({
             "operatorId": pending.operator_id,
             "inputJson": pending.input_json,
             "nodeHash": pending.node_hash})
         .to_string();
-        effects.push(HostEffect::InvokeExtension {
+        effects.push(Effect::InvokeExtension {
+            req: semio_framework_plugin::RequestId(104),
             extension_id: pending.extension_id,
             capability: "evaluate".into(),
-            request_json,
-            response_action: "flowEvalResolve".into()});
+            request_json});
     } else if !more {
         let eval_json = session.eval_json().to_string();
         effects.extend(crate::editor::procedural3d::preview_tessellate_effects(

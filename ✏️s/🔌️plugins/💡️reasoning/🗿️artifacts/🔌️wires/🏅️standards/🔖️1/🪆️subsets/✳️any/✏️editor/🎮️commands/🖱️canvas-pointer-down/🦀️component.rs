@@ -41,7 +41,7 @@ mod tests {
     use crate::editor::wires::WiresCommand;
     use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use semio_framework_plugin::{testkit, PluginApp, INTERACTION_SELECT_ACTION_ID};
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
 
     #[test]
     fn pointer_drag_translates_node_by_screen_delta() {
@@ -66,8 +66,8 @@ mod tests {
         let mut app = new_app();
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
         let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }));
-        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
-        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
         let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
         assert_eq!(args["domainId"], "graph");
         assert_eq!(args["merge"], "replace");

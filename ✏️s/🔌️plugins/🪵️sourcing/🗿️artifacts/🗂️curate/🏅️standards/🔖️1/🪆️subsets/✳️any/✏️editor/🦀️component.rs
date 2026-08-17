@@ -214,7 +214,7 @@ impl ArtifactEditor for SourcingCurateApp {
     /// snapshot-replace variant — see `📓️taxonomy.md`'s forbidden vocabulary), so this app does NOT
     /// override `whole_document_operation`
     /// (stays at the trait's own `None` default) and instead overrides `import_media` below to build a
-    /// `HostEffect::LoadDocument` via `reset_document_effect`, outside undo history.
+    /// `Effect::LoadDocument` via `reset_document_effect`, outside undo history.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CurateSnapshot>) -> Result<Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "document:in" {
             return Err(MediaError::NotImplemented);
@@ -266,7 +266,7 @@ impl ArtifactEditor for SourcingCurateApp {
 //#endregion 🔖️SourcingCurateApp
 
 //#region 🔖️ResetDocument
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `document` OUTSIDE undo
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `document` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (JSON import, load-
 /// example, bulk catalogue restock). Per `📓️taxonomy.md`, the former whole-snapshot-replace variant
 /// is banned outright with NO replacement mutation: whole-document replace is not expressible as an in-history `Mutation` at
@@ -274,11 +274,11 @@ impl ArtifactEditor for SourcingCurateApp {
 /// `"document:in"` above, `commands::document::{set_active_example, set_artifact_json,
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::HostEffect {
+pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurateSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
 

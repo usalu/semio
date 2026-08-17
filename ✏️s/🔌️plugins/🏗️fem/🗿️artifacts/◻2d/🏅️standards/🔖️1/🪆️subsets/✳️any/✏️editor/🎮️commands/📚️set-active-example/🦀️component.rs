@@ -22,7 +22,7 @@ pub struct SetActiveExample {
 ///
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
-/// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
+/// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let document = if payload.example_id == "default" {
         Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
@@ -36,7 +36,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
 
     /// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
     /// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
@@ -50,7 +50,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
         assert!(emit.artifact_mutations.is_empty());
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -65,14 +65,14 @@ mod tests {
         let cfg_snapshot = Fem2dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert_eq!(loaded, crate::artifacts::fem2d::schema::empty_fem2d_snapshot());
     }
 
-    /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be
+    /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]

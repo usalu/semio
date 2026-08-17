@@ -85,7 +85,7 @@ mod tests {
         )
         .expect("handle");
         assert!(emit.artifact_mutations.is_empty(), "an incompatible connect must not push WorkflowMutation::ConnectPorts");
-        assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
+        assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
     }
 
     #[test]

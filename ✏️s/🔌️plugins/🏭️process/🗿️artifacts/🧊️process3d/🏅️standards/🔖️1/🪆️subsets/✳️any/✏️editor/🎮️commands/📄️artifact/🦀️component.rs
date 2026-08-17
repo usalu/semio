@@ -12,7 +12,7 @@ pub mod set_snapshot {
 
     /// 📄️ Whole-document replace has no in-history mutation (a whole-snapshot variant is banned outright — see
     /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds
-    /// `editor::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`, outside undo
+    /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`, outside undo
     /// history) instead of an `artifact_mutations` entry.
     ///
     /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `Process3dSnapshot` dropped
@@ -38,7 +38,7 @@ pub mod set_active_example {
     use super::*;
 
     /// 📄️ Loading a bundled example replaces the whole document, so it routes through
-    /// `editor::process3d::reset_process3d_document_effect` (a `HostEffect::LoadDocument`) rather than
+    /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`) rather than
     /// the banned whole-snapshot mutation — see `set_snapshot::SetDocument`'s doc comment.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]

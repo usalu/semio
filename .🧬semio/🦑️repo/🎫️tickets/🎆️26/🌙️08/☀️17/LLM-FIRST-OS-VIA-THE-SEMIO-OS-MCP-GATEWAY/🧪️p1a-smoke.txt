@@ -1,0 +1,15 @@
+=== modern era: server/discover (exit $?) ===
+{"jsonrpc":"2.0","id":1,"result":{"capabilities":{"prompts":{"listChanged":true},"resources":{"listChanged":true,"subscribe":true},"tools":{"listChanged":true}},"protocolVersion":"2026-07-28","resultType":"complete","serverInfo":{"name":"semio-os-mcp","version":"0.1.0"}}}
+exit:0
+=== legacy era: initialize ===
+{"jsonrpc":"2.0","id":1,"result":{"capabilities":{"prompts":{"listChanged":true},"resources":{"listChanged":true,"subscribe":true},"tools":{"listChanged":true}},"protocolVersion":"2025-11-25","serverInfo":{"name":"semio-os-mcp","version":"0.1.0"}}}
+exit:0
+=== unsupported version -> -32022 ===
+{"jsonrpc":"2.0","id":1,"error":{"code":-32022,"message":"unsupported protocol version: 1999-01-01","data":{"requested":"1999-01-01","supported":["2026-07-28","2025-11-25","2025-06-18"]}}}
+exit:0
+=== unknown mode exits 1 with clear message ===
+[semio-os-mcp] unknown mode `http` — only `stdio` is implemented by this packet (P1a); HTTP arrives with P1b
+exit:1
+=== no args exits 1 with usage ===
+[semio-os-mcp] usage: semio-os-mcp <stdio> [--folder <dir>] [--principal <id>] [--scopes a,b]
+exit:1

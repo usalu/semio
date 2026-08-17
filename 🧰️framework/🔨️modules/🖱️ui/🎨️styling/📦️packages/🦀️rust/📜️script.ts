@@ -9,16 +9,17 @@ import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRe
 /** @emoji 🧭️ `import.meta.dir` is a Bun-only extension; fall back to `import.meta.url` so this module loads
  * under Vitest (which transforms it outside the Bun runtime) for the inline 🌓️Levels generator tests. */
 const stylingRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-const tokensPath = join(stylingRoot, "🔣️tokens.json");
-const generatedCssDir = join(stylingRoot, "🤖️generated");
+const stylingOwnerRoot = join(stylingRoot, "..", "..");
+const tokensPath = join(stylingOwnerRoot, "🔣️tokens.json");
+const generatedCssDir = join(stylingOwnerRoot, "🤖️generated");
 const tsStylingDir = join(stylingRoot, "..", "..", "🟦️typescript", "🎨️styling");
-const netPaletteDir = join(stylingRoot, "net", "Elements.Styling", "Generated");
+const netPaletteDir = join(stylingOwnerRoot, "net", "Elements.Styling", "Generated");
 const pyGeneratedPath = join(stylingRoot, "..", "..", "🐍️python", "🎨️styling", "🎨️styling", "🤖️generated.py");
-const rustGeneratedPath = join(stylingRoot, "🤖️generated.rs");
+const rustGeneratedPath = join(stylingOwnerRoot, "🤖️generated.rs");
 const repoRoot = getWorkspaceRoot();
 
 /** @emoji 📁️ Canonical `framework/ui/asset` directory (fonts, cursors, …). */
-export const ELEMENTS_ASSETS_ROOT = join(stylingRoot, "..", "asset");
+export const ELEMENTS_ASSETS_ROOT = join(stylingOwnerRoot, "..", "..", "🖼️assets");
 const elementsAssetsRoot = ELEMENTS_ASSETS_ROOT;
 const GOOGLE_FONTS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 

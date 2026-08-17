@@ -610,3 +610,5 @@ nul
 !elements/server/bin
 # Shape V2 standalone verification — never commit nested workspace locks
 **/📦️packages/**/Cargo.lock
+
+**/partial_movie_files/

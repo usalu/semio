@@ -1,0 +1,30 @@
+plugin registry catalog refreshed (59 plugin crates, 58 playgrounds, 23 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+[DEBUG] program build scope: all (1 plugin crates)
+    Blocking waiting for file lock on build directory
+[budget] cargo build -p semio-s-plugin-playbook --target wasm32-wasip2 --profile dev exceeded 1200000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.
+[DEBUG] plugin build failed, continuing with remaining targets: playbook 1410 |       if (resolved) {
+1411 |         formattedArgs[0] = resolved;
+1412 |       }
+1413 |     }
+1414 |   }
+1415 |   const result = spawnSync(cmd, formattedArgs, {
+                        ^
+error: spawnSync cargo ETIMEDOUT
+      path: "cargo",
+   syscall: "spawnSync cargo",
+     errno: -60,
+ spawnargs: [
+  "build", "-p", "semio-s-plugin-playbook", "--target", "wasm32-wasip2",
+  "--profile", "dev"
+],
+      code: "ETIMEDOUT"
+
+      at spawnSync (node:child_process:254:20)
+      at runCmdInternal (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1415:18)
+      at buildPlugin (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:782:7)
+      at async buildPlugins (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:877:13)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:912:11)
+
+[DEBUG] plugin catalog build summary: 0/1 crate(s) produced .wasm
+[DEBUG] plugin catalog build failures (1): playbook

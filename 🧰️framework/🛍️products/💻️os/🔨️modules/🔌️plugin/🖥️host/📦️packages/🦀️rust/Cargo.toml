@@ -18,6 +18,10 @@ path = "📦️glue.rs"
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
+# `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
+# actor crate, already a `[workspace.dependencies]` entry.
+semio-framework-actor = { workspace = true }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }

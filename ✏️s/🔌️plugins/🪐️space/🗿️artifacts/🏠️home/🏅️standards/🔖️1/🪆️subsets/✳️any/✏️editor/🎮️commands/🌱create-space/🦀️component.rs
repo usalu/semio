@@ -1,5 +1,5 @@
 //! 🌱️ S Home launcher app command — `create-space`. Contract §C6: the plugin never touches the
-//! network — a validated create request is relayed to the shell as `HostEffect::ReplayShellCommand`;
+//! network — a validated create request is relayed to the shell as `Effect::ReplayShellCommand`;
 //! the resulting `space.created` event returns over `/directory/ws` and is folded back in by
 //! `fold-directory-events`. No optimistic mutation of the read model. An empty (raw toolbar click, not
 //! yet a dialog submit) `name` opens the declared `createSpace` dialog instead of relaying — the local-
@@ -8,7 +8,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -25,12 +25,12 @@ pub struct CreateSpace {
 //#region 🔖️Handle
 pub fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
-        return Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "createSpace".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(123),  dialog_id: "createSpace".into(), args: None }));
     }
     let kind = if payload.kind.trim().is_empty() { "atelier".to_string() } else { payload.kind.clone() };
     let visibility = if payload.visibility.trim().is_empty() { "private".to_string() } else { payload.visibility.clone() };
     let args = dsl::to_dsl_value(&json!({ "name": payload.name, "spaceKind": kind, "visibility": visibility })).ok();
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
 }
 //#endregion 🔖️Handle
 
@@ -51,7 +51,7 @@ mod tests {
         let config = HomeConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let emit = handle(&CreateSpace { name: String::new(), kind: "atelier".into(), visibility: "private".into() }, &doc, &cfg).expect("handle");
-        assert!(matches!(emit.effects.as_slice(), [HostEffect::OpenDialog { dialog_id, args: None }] if dialog_id == "createSpace"), "empty name must open the dialog, not relay: {:?}", emit.effects);
+        assert!(matches!(emit.effects.as_slice(), [Effect::OpenDialog { dialog_id, args: None, .. }] if dialog_id == "createSpace"), "empty name must open the dialog, not relay: {:?}", emit.effects);
     }
 
     #[test]
@@ -66,7 +66,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
+                Effect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
                 _ => None,
             })
             .expect("a ReplayShellCommand effect");
@@ -89,7 +89,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { args, .. } => args.clone(),
+                Effect::ReplayShellCommand { args, .. } => args.clone(),
                 _ => None,
             })
             .expect("args present");

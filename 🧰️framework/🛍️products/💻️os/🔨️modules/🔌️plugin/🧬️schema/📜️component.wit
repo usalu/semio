@@ -1,0 +1,821 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1): shared primitives used by
+/// every other interface in this package. `pure` is the only interface any world ever *imports* —
+/// everything below is plain data, carried across the `poll`/`start-job`/`checkpoint` exports.
+interface types {
+  /// 📦️ The container-less dynamic-value wire grammar (`store::pack_rt::encode_wire_value` /
+  /// `pack::encode_record_body`) — no JSON string, no `resource`, anywhere on this ABI's data path.
+  type pack = list<u8>;
+  /// 🔢️ Correlates an `effect` that expects an answer with the `event.completed`/`http-chunk`/
+  /// `job-progress` that answers it. Allocated by the guest's `RequestRegistry`, never reused
+  /// within one instance's lifetime.
+  type request-id = u64;
+  /// 🪪️ Host-assigned identity of one app instance living inside this actor.
+  type instance-id = u32;
+  /// 🔁️ Monotonic per-surface UI patch counter, and the document/transaction revision counter.
+  type revision = u64;
+
+  variant plugin-error {
+    fault(pack),
+  }
+
+  /// 🎯️ Where a `send-message` effect or `event.message`/`event.request` addresses. Replaces
+  /// `backbone-poll`, the `DocumentChanged` push, `InvokeExtension` replies and topic subscriptions
+  /// with one variant (design-abi.md §2).
+  variant message-endpoint {
+    shell(instance-id),
+    backbone(string),
+    plugin-instance(instance-id),
+    extension(string),
+    topic(string),
+  }
+
+  enum inference-cache-mode {
+    cold,
+    incremental,
+    bypass,
+  }
+
+  record inference-budget {
+    allocation-bytes: u64,
+    work-units: u64,
+    recursion-depth: u32,
+  }
+
+  record inference-diagnostic {
+    code: string,
+    message: string,
+    severity: string,
+    parameters: list<tuple<string, string>>,
+  }
+
+  record inference-provenance {
+    owner: string,
+    inference-schema: string,
+    algorithm-version: u32,
+    policy-version: u32,
+    source-dialect: string,
+  }
+
+  /// 🧬️ Kept verbatim (design-abi.md §1) even though `artifact-infer` is no longer a WIT export —
+  /// the cold job kind `semio.infer` (jobs.wit `start-job`) carries this shape JSON-encoded inside
+  /// its opaque `input`/output `pack`, so the typed record stays documentation-of-record for that
+  /// job's wire contract.
+  record artifact-inference-request {
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    policy: list<u8>,
+    budgets: inference-budget,
+    cancellation-id: string,
+    previous-state: option<list<u8>>,
+    requested-cache-mode: inference-cache-mode,
+    canonical-payload: list<u8>,
+    dependencies: list<tuple<string, list<u8>>>,
+  }
+
+  record artifact-inference-result {
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    policy: list<u8>,
+    budgets: inference-budget,
+    previous-state: option<list<u8>>,
+    requested-cache-mode: inference-cache-mode,
+    canonical-payload: list<u8>,
+    dependencies: list<tuple<string, list<u8>>>,
+    diagnostics: list<inference-diagnostic>,
+    provenance: inference-provenance,
+    validity: string,
+    quality: string,
+    complete: bool,
+    actual-cache-mode: inference-cache-mode,
+    cancellation-id: string,
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §5). The broker's
+/// `CapabilityId`/`CapabilityRequest`/`CapabilityGrant`/`CapabilityChange` Rust SSOT
+/// (`semio_framework::kernel`, packet A3) mirrors this shape field-for-field.
+///
+/// ⚠️ Deviation from the design table's literal `resource capability-token`: a WIT `resource`
+/// only gets cross-boundary methods when its owning interface is imported or exported by the
+/// world, and `pure` (log/now-ms/trace-span) is this world's ONLY import — there is no seam left
+/// for a host-owned resource's methods to be called through. `capability-token` is therefore a
+/// plain record (an opaque numeric handle + the id it was minted for); revocation works the same
+/// way every other capability check does here — the guest's next `host::*` await on a revoked
+/// token gets `Fault(capability-revoked)` back on the `event.completed` it's parked on, not a
+/// trapped method call.
+interface capabilities {
+  type capability-id = string;
+
+  record capability-token {
+    id: capability-id,
+    token: u64,
+  }
+
+  record capability-grant {
+    token: capability-token,
+    scope: string,
+    expires-ms: option<s64>,
+  }
+
+  variant capability-change {
+    granted(capability-grant),
+    revoked(capability-id),
+    narrowed(capability-grant),
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2). Document/transaction/
+/// blob identity carried on `effects::document-read`/`document-write`/`blob-load`/`blob-write` and
+/// their `event.completed` answers.
+///
+/// ⚠️ Same `resource` deviation as `capabilities.wit`/`ui.wit`: `document`/`transaction`/`blob` are
+/// plain id-carrying records, not WIT `resource`s — reads/writes happen through effects+events
+/// (async request/response over `poll`), never through a resource method call, because `pure` is
+/// the only import interface this world has.
+interface documents {
+  use types.{revision};
+
+  record document-ref {
+    document: u64,
+    lane: string,
+    revision: revision,
+  }
+
+  record transaction-ref {
+    transaction: u64,
+    document: u64,
+  }
+
+  record blob-ref {
+    blob: u64,
+    size: u64,
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §2). Everything a guest asks the
+/// host to do, returned in `reactor::turn-result.effects` — this interface has NO functions, only
+/// the data `poll` carries out. Rust SSOT: `semio_framework::kernel::Effect` (packet A3); the WIT
+/// variants mirror it field-for-field and the guest SDK glue converts between them (the same
+/// pattern the old `ArtifactInferenceRequest` conversion already used).
+///
+/// 🗺️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM absorption (packet A2, per `important.md`): the old
+/// host imports `io-routes`/`io-identify` become `registry-query` (kind = "io-routes" |
+/// "io-identify"); `io-run` (host, multi-hop) becomes its own `io-run` effect, distinct from the
+/// existing single-plugin `io-compose` effect. The guest EXPORTS `io-run`/`io-sniff` (single hop,
+/// local registry) do not appear here at all — they are absorbed into the cold job kinds
+/// `semio.io-run`/`semio.io-sniff` (jobs.wit), not effects.
+interface effects {
+  use types.{pack, request-id, message-endpoint};
+  use capabilities.{capability-id};
+
+  record send-message-effect {
+    target: message-endpoint,
+    payload: pack,
+  }
+  record publish-event-effect {
+    topic: string,
+    payload: pack,
+  }
+
+  record blob-load-effect {
+    req: request-id,
+    hash: string,
+  }
+  record blob-write-effect {
+    req: request-id,
+    media-type: pack,
+    bytes: pack,
+  }
+
+  record http-request-effect {
+    req: request-id,
+    method: string,
+    url: string,
+    headers: list<tuple<string, string>>,
+    body: option<pack>,
+    /// ⚠️ Named `streaming`, not `stream` — `stream` is a WIT-reserved keyword (`wit-parser`
+    /// rejects it, discovered by packet B1's `cargo check -p semio-framework-plugin-host` failing
+    /// to parse this whole WIT package at this exact line; same reserved-word class as the peer
+    /// W1-D report's own `from`/`into` finding). `semio_framework::kernel::Effect::HttpRequest`'s
+    /// Rust-side field stays named `stream` — only the WIT record field is renamed.
+    streaming: bool,
+  }
+
+  record document-read-effect {
+    req: request-id,
+    doc: u64,
+    lane: string,
+  }
+  record document-write-effect {
+    req: request-id,
+    doc: u64,
+    lane: string,
+    ops: pack,
+  }
+  record link-resolve-effect {
+    req: request-id,
+    link: pack,
+  }
+
+  /// 🌉️ Absorbs the old `io-dialects`/`io-routes`/`io-identify` host imports: `kind` selects the
+  /// query ("io-routes" | "io-identify" | "io-dialects"), `filter` is that query's JSON-encoded
+  /// request (e.g. `{source, target}` for "io-routes"); the `event.completed` answer carries the
+  /// JSON-encoded result the old synchronous import used to return directly.
+  record registry-query-effect {
+    req: request-id,
+    kind: string,
+    filter: pack,
+  }
+  /// 🌉️ One-hop compose, unchanged semantics from the old `io-compose` host import: routes to
+  /// whichever OTHER loaded plugin owns `key`, refusing (via `event.completed` fault) a route back
+  /// into the calling plugin.
+  record io-compose-effect {
+    req: request-id,
+    key: pack,
+    sources: pack,
+  }
+  /// 🌉️ Absorbs the old `io-run` host import: executes the WHOLE resolved `source -> target` route
+  /// (however many plugins own its hops) — the guest never chains hops itself. Refuses the entire
+  /// route (no partial execution) if the calling plugin owns any hop, per the preserved
+  /// ≤3-hop/cycle-free/reentrancy-guard semantics `important.md` names.
+  record io-run-effect {
+    req: request-id,
+    source: string,
+    target: string,
+    payload: pack,
+  }
+
+  record cache-derive-effect {
+    req: request-id,
+    engine-id: string,
+    input: pack,
+  }
+  record cache-read-effect {
+    req: request-id,
+    engine-id: string,
+    key: pack,
+  }
+
+  record open-window-effect {
+    req: request-id,
+    kind: string,
+    params: pack,
+  }
+  record close-window-effect {
+    window: u64,
+  }
+  record dispatch-action-effect {
+    req: request-id,
+    action: string,
+    args: option<pack>,
+    delay-ms: u64,
+  }
+  /// 🔁️ Replaces `HostEffect::InvokeExtension` — `response_action` disappears; the SDK resumes the
+  /// awaiting future on `event.completed` instead of re-dispatching a named action.
+  record invoke-extension-effect {
+    req: request-id,
+    extension-id: string,
+    capability: string,
+    payload: pack,
+  }
+
+  record notify-effect {
+    message: string,
+  }
+  record clipboard-write-effect {
+    fragment: pack,
+  }
+  record navigate-effect {
+    uri: string,
+  }
+  record open-external-url-effect {
+    url: string,
+  }
+  record set-panel-effect {
+    panel-json: string,
+  }
+  record set-active-utility-effect {
+    window-id: string,
+    utility-id: string,
+  }
+  record set-active-tool-effect {
+    tool-id: string,
+  }
+  record patch-world3d-chrome-effect {
+    selection-json: string,
+    vortices-json: option<string>,
+    document-selected-ids: list<string>,
+    document-highlighted-ids: option<list<string>>,
+  }
+  record replay-shell-command-effect {
+    action-id: string,
+    args: option<pack>,
+  }
+
+  record spawn-plugin-instance-effect {
+    req: request-id,
+    plugin-id: string,
+    app-id: string,
+    os-instance-id: option<string>,
+    label: option<string>,
+    document-json: option<string>,
+  }
+  record open-plugin-instance-effect {
+    plugin-id: string,
+    app-id: string,
+    os-instance-id: option<string>,
+  }
+  record open-dialog-effect {
+    req: request-id,
+    dialog-id: string,
+    args: option<pack>,
+  }
+  record icon-render-export-effect {
+    items: pack,
+  }
+  record download-media-export-effect {
+    filename: string,
+    mime-type: string,
+    data: string,
+    encoding: option<string>,
+  }
+  record request-file-open-effect {
+    req: request-id,
+    accept: string,
+    read-as: option<string>,
+    multiple: bool,
+  }
+  record request-media-frames-effect {
+    req: request-id,
+    accept: string,
+    frame-action: string,
+    done-action: string,
+    fallback-action: string,
+    sample-stride: u32,
+    max-frames: u32,
+    max-long-edge-px: u32,
+    fps-hint: f64,
+    payload: option<pack>,
+    args: option<pack>,
+  }
+  record load-document-effect {
+    doc-pack: pack,
+    spr: pack,
+  }
+
+  record set-timer-effect {
+    id: u64,
+    after-ms: u32,
+    repeat: bool,
+  }
+
+  enum job-placement {
+    inline,
+    isolated,
+    exclusive,
+  }
+  record spawn-job-effect {
+    job: u64,
+    kind: string,
+    input: pack,
+    placement: job-placement,
+  }
+  record cancel-job-effect {
+    job: u64,
+  }
+
+  variant respond-result {
+    ok(pack),
+    fault(pack),
+  }
+  record respond-effect {
+    req: request-id,
+    outcome: respond-result,
+  }
+
+  record storage-read-effect {
+    req: request-id,
+    key: string,
+  }
+  record storage-write-effect {
+    req: request-id,
+    key: string,
+    value: pack,
+  }
+  record storage-delete-effect {
+    req: request-id,
+    key: string,
+  }
+
+  record request-capability-effect {
+    req: request-id,
+    id: capability-id,
+    scope: string,
+    reason: string,
+    optional: bool,
+  }
+  record release-capability-effect {
+    id: capability-id,
+  }
+
+  record subscribe-effect {
+    topic: string,
+  }
+
+  variant effect {
+    send-message(send-message-effect),
+    publish-event(publish-event-effect),
+    blob-load(blob-load-effect),
+    blob-write(blob-write-effect),
+    http-request(http-request-effect),
+    document-read(document-read-effect),
+    document-write(document-write-effect),
+    link-resolve(link-resolve-effect),
+    registry-query(registry-query-effect),
+    io-compose(io-compose-effect),
+    io-run(io-run-effect),
+    cache-derive(cache-derive-effect),
+    cache-read(cache-read-effect),
+    open-window(open-window-effect),
+    close-window(close-window-effect),
+    dispatch-action(dispatch-action-effect),
+    invoke-extension(invoke-extension-effect),
+    notify(notify-effect),
+    clipboard-write(clipboard-write-effect),
+    navigate(navigate-effect),
+    open-external-url(open-external-url-effect),
+    set-panel(set-panel-effect),
+    set-active-utility(set-active-utility-effect),
+    set-active-tool(set-active-tool-effect),
+    patch-world3d-chrome(patch-world3d-chrome-effect),
+    replay-shell-command(replay-shell-command-effect),
+    spawn-plugin-instance(spawn-plugin-instance-effect),
+    open-plugin-instance(open-plugin-instance-effect),
+    open-dialog(open-dialog-effect),
+    icon-render-export(icon-render-export-effect),
+    download-media-export(download-media-export-effect),
+    request-file-open(request-file-open-effect),
+    request-media-frames(request-media-frames-effect),
+    load-document(load-document-effect),
+    request-sync,
+    set-timer(set-timer-effect),
+    spawn-job(spawn-job-effect),
+    cancel-job(cancel-job-effect),
+    respond(respond-effect),
+    storage-read(storage-read-effect),
+    storage-write(storage-write-effect),
+    storage-delete(storage-delete-effect),
+    request-capability(request-capability-effect),
+    release-capability(release-capability-effect),
+    subscribe(subscribe-effect),
+    unsubscribe(subscribe-effect),
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §2). Everything the host feeds
+/// into a `poll` call — lifecycle, channel, UI acks, effect completions, messaging, timers, and
+/// inbound requests. Rust SSOT: `semio_framework::kernel::Event` (packet A3); mirrors field-for-
+/// field, same conversion pattern as `effects.wit`.
+interface events {
+  use types.{pack, request-id, instance-id, message-endpoint, revision};
+  use capabilities.{capability-grant, capability-change};
+  use ui.{surface-ref};
+
+  record instance-open-event {
+    instance: instance-id,
+    app-id: string,
+    actor: string,
+    config: pack,
+    assets: list<tuple<string, pack>>,
+    capabilities: list<capability-grant>,
+    quotas: pack,
+  }
+  record instance-close-event {
+    instance: instance-id,
+  }
+
+  variant activation-event {
+    on-command(string),
+    on-view-visible(string),
+    on-file-type(string),
+    on-artifact-kind(string),
+    on-extension-request(string),
+    on-startup-finished,
+  }
+  record activate-event {
+    instance: instance-id,
+    reason: activation-event,
+  }
+  record suspend-request-event {
+    instance: instance-id,
+  }
+  record capability-changed-event {
+    instance: instance-id,
+    change: capability-change,
+  }
+  record quota-changed-event {
+    instance: instance-id,
+    quotas: pack,
+  }
+
+  /// 🔀️ The old `exchange(id, cmds)` collapses into this: one `app-command` event per queued
+  /// `protocol_channel::AppCommand`, folded into the same `poll` call as everything else — the
+  /// `exchange(id, [])` drain has no replacement, guests are woken by events/timers/`next-wake`
+  /// instead.
+  record app-command-event {
+    instance: instance-id,
+    seq: u64,
+    command: pack,
+  }
+
+  record surface-visible-event {
+    surface: surface-ref,
+  }
+  record surface-hidden-event {
+    surface: surface-ref,
+  }
+  record surface-resized-event {
+    surface: surface-ref,
+    width: u32,
+    height: u32,
+  }
+  record patch-ack-event {
+    surface: surface-ref,
+    revision: revision,
+  }
+  /// 🩹️ The guest resends a full body (no incremental re-diff) on rejection — see
+  /// `⚛️reactor/🩹️patches`'s `base-revision` mismatch fallback.
+  record patch-rejected-event {
+    surface: surface-ref,
+    revision: revision,
+    reason: string,
+  }
+
+  variant completion-result {
+    ok(pack),
+    fault(pack),
+  }
+  /// 🎯️ ONE generic completion for every `effect` that carries a `req` — the SDK's
+  /// `RequestRegistry` decodes `result` by the originating request's own kind; the host never
+  /// interprets it.
+  record completed-event {
+    req: request-id,
+    outcome: completion-result,
+  }
+  record http-chunk-event {
+    req: request-id,
+    bytes: pack,
+    done: bool,
+  }
+  record job-progress-event {
+    job: u64,
+    progress: pack,
+  }
+  record job-completed-event {
+    job: u64,
+    outcome: completion-result,
+  }
+
+  /// 📨️ Replaces `backbone-poll`, the `DocumentChanged` push, `InvokeExtension` replies, and topic
+  /// subscription deliveries — all one variant, addressed by `message-endpoint`.
+  record message-event {
+    source: message-endpoint,
+    payload: pack,
+  }
+
+  record timer-event {
+    id: u64,
+  }
+
+  /// 📥️ Replaces `extension.invoke`, `artifact-compose`, the guest `io-run`/`io-sniff` exports,
+  /// `artifact-infer`, `artifact-mutation-plan`, `migrate-artifact` — every "someone else calls
+  /// INTO this actor" seam is now one inbound `request`, answered with the `respond` effect within
+  /// a bounded number of turns, or by spawning a job.
+  record request-event {
+    req: request-id,
+    from: message-endpoint,
+    capability: string,
+    payload: pack,
+  }
+
+  variant event {
+    instance-open(instance-open-event),
+    instance-close(instance-close-event),
+    activate(activate-event),
+    suspend-request(suspend-request-event),
+    capability-changed(capability-changed-event),
+    quota-changed(quota-changed-event),
+    app-command(app-command-event),
+    surface-visible(surface-visible-event),
+    surface-hidden(surface-hidden-event),
+    surface-resized(surface-resized-event),
+    patch-ack(patch-ack-event),
+    patch-rejected(patch-rejected-event),
+    completed(completed-event),
+    http-chunk(http-chunk-event),
+    job-progress(job-progress-event),
+    job-completed(job-completed-event),
+    message(message-event),
+    timer(timer-event),
+    wake,
+    request(request-event),
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2 channel v12). Revisioned
+/// UI patches: `⚛️reactor/🩹️patches` diffs by node identity path, falling back to a full-body
+/// `replace` at the root path when the diff exceeds ~60% of the body or the host reports a
+/// `base-revision` mismatch via `event.patch-rejected`.
+///
+/// ⚠️ Deviation from the design table's literal `resource surface`: same reasoning as
+/// `capabilities.wit`'s `capability-token` — `pure` is the only import, so a `resource` here would
+/// have no host-callable methods. `surface-ref` (an `(instance, surface)` id pair) is the real
+/// handle carried on every UI-facing effect/event; `surface` is declared as an empty marker
+/// resource purely so the design table's vocabulary has a nominal type, and is not referenced by
+/// any function signature in this wave.
+interface ui {
+  use types.{pack, instance-id, revision};
+
+  record surface-ref {
+    instance: instance-id,
+    surface: u32,
+  }
+
+  resource surface;
+
+  record patch-replace {
+    path: list<u32>,
+    node: pack,
+  }
+  record patch-insert-child {
+    path: list<u32>,
+    index: u32,
+    node: pack,
+  }
+  record patch-remove-child {
+    path: list<u32>,
+    index: u32,
+  }
+  record patch-set-props {
+    path: list<u32>,
+    props: pack,
+  }
+
+  variant patch-op {
+    replace(patch-replace),
+    insert-child(patch-insert-child),
+    remove-child(patch-remove-child),
+    set-props(patch-set-props),
+  }
+
+  record ui-patch {
+    surface: surface-ref,
+    kind: string,
+    revision: revision,
+    base-revision: revision,
+    ops: list<patch-op>,
+  }
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1): the ONLY interface `world
+/// actor` ever imports. Everything else the guest needs from the host — reads, writes, network,
+/// dialogs, jobs — is an `effect` returned from `poll`, answered by an `event` on a later `poll`
+/// call. Keeping the import surface to these three side-effect-free/idempotent calls is what lets
+/// a pooled multi-instance actor stay `Send`-free and reentrancy-safe.
+interface pure {
+  log: func(level: string, message: string);
+  now-ms: func() -> s64;
+  trace-span: func(name: string);
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). The one turn-loop entry
+/// point every actor exports — replaces `exchange`, the poll-backbone + refresh-ui heartbeat, and
+/// every per-verb surface (`handle-action`, `handle-command`, `update-window`, `refresh-ui`,
+/// `context-menu`, `apply-mutations[-text]`, `read/load-app-document-{text,pack}`,
+/// `attach/detach-backbone`, `consume/produce-media`). Deliberately not dependent on stackful-
+/// async component-model features (still incomplete in wasmtime) — the reactor/effect shape gets
+/// the same async ergonomics without needing them. Rust SSOT for `budget`/`turn-status`/
+/// `turn-result`: `semio_framework::kernel::{Budget, TurnResult}` (packet A3).
+interface reactor {
+  use types.{plugin-error};
+  use effects.{effect};
+  use events.{event};
+  use ui.{ui-patch};
+
+  record budget {
+    fuel: u64,
+    deadline-ms: u32,
+    max-effects: u32,
+    max-patch-bytes: u32,
+    max-frames: u32,
+  }
+  variant turn-status {
+    idle,
+    more-work,
+    checkpoint-ready,
+    faulted(list<u8>),
+  }
+  record turn-result {
+    ui-patches: list<ui-patch>,
+    effects: list<effect>,
+    next-wake: option<u64>,
+    status: turn-status,
+    fuel-used: u64,
+  }
+  poll: func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). Drives a job-hosting
+/// instance directly (host calls these WIT exports on the instance the job was placed on) —
+/// distinct from the `effects::spawn-job`/`cancel-job` a normal actor emits from `poll` to ASK the
+/// host to create one elsewhere.
+///
+/// 🗺️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM absorption: the guest exports `io-run`/`io-sniff`
+/// (single-hop, this plugin's own `io_mechanism` registry) become the well-known cold job kinds
+/// `semio.io-run`/`semio.io-sniff` here — `kind = "semio.io-run"`, `input` is the JSON-encoded
+/// `(source, target, io_schema::IoPayload)` tuple the old guest export took as three params,
+/// `job-step::done` carries the JSON-encoded `io_schema::IoPayload` result (`io-run`) or a
+/// single-byte confidence rank (`io-sniff`). `list-io-entries` becomes static descriptor data in
+/// `describe.wit`'s `describe()` payload instead of a callable export.
+interface jobs {
+  use types.{plugin-error};
+
+  record job-budget {
+    fuel: u64,
+    deadline-ms: u32,
+  }
+  variant job-step {
+    running(option<list<u8>>),
+    done(list<u8>),
+    failed(list<u8>),
+  }
+  start-job: func(job: u64, kind: string, input: list<u8>) -> result<_, plugin-error>;
+  step-job: func(job: u64, budget: job-budget) -> result<job-step, plugin-error>;
+  cancel-job: func(job: u64);
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4). No more
+/// `INSTANCE_GUARD`/`clear-instance-guard` — a wasm trap now kills the whole actor and the host
+/// restores it from the last checkpoint, which is why checkpoint cadence is correctness-critical.
+/// Pack shape: `{instances: [{id, app_id, actor, document/config/draft packs, view_state,
+/// ephemeral}], timers, pending_requests}`; in-flight async tasks are never serialised — they're
+/// host reads, so they're simply marked re-run-on-restore instead.
+interface checkpoint {
+  use types.{plugin-error};
+
+  checkpoint: func() -> result<list<u8>, plugin-error>;
+  restore: func(state: list<u8>) -> result<_, plugin-error>;
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §3). Build-time only, never
+/// called at runtime by the OS — the `semio-framework-plugin-describe` bin crate (packet E1) runs
+/// this once per built component (fuel-limited, `pure` imports only) and writes
+/// `🛂️descriptor.semio` + `🔣️descriptor.json`. Result bytes are a packed `PackageDescriptor`
+/// (`🛂️manifest` crate, packet E1) — this interface has no other function because everything a
+/// plugin or extension used to expose as separate `list-*` WIT exports (`list-artifact-dialects`,
+/// `list-artifact-inferences`, `list-artifact-mutations`, `list-io-entries`) is now static data
+/// inside this one descriptor instead.
+interface describe {
+  describe: func() -> list<u8>;
+}
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). One world for both roles —
+/// a plugin and an extension are the same wasm component contract now; `describe()`'s
+/// `PackageDescriptor.role` (packet E1) is what tells the host which one it loaded, not a
+/// different WIT world. Deleted from the old split-role design: `plugin-world`, `extension-world`,
+/// the `contributor`/`host` interfaces, and the `manifest`/`instantiate-app`/`exchange`/
+/// `clear-instance-guard`/`activate`/`deactivate`/`invoke` exports — see `types.wit`/`effects.wit`/
+/// `events.wit`/`jobs.wit`/`describe.wit` for where each one's job went.
+world actor {
+  import pure;
+  export reactor;
+  export jobs;
+  export checkpoint;
+  export describe;
+}

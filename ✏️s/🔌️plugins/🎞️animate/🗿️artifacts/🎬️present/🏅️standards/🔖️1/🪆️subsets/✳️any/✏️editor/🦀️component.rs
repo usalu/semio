@@ -34,7 +34,7 @@ use semio_framework_plugin::app::InteractionView;
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef,
     Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use serde_json::Value;
@@ -80,8 +80,8 @@ fn interaction_targets_json(ids: &[String]) -> String {
 /// normal action funnel — the only way `canvas-pointer-down`'s hit test can drive selection now that
 /// it is framework-owned state, never a `PresentConfigMutation` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> HostEffect {
-    HostEffect::ReplayShellCommand {
+pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
+    Effect::ReplayShellCommand {
         action_id: semio_framework::INTERACTION_SELECT_ACTION_ID.into(),
         args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }))),
     }
@@ -166,23 +166,23 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 
 /// 📋️ Host effect delivering the generated tile-morph prompt to the user as a downloadable markdown
 /// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
-/// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
+/// landed `Effect` contract carries no clipboard variant, so the prompt is exported as media).
 /// Shared by `🎮️commands/🐚️copy-prompt::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
-pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> HostEffect {
+pub(crate) fn tile_morph_prompt_effect(deck: &PresentSnapshot) -> Effect {
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
-    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
+    Effect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
 }
 
-/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "reset the
+/// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "reset the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🖼️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub fn reset_present_document_effect(document: &PresentSnapshot) -> HostEffect {
+pub fn reset_present_document_effect(document: &PresentSnapshot) -> Effect {
     let pack = <PresentSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<PresentSnapshot, PresentMutation>(PRESENT_DOCUMENT_SCHEMA, "present", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("present document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
 
@@ -256,7 +256,7 @@ impl ArtifactEditor for AnimatePresentPlayApp {
 
     /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
     /// document replace has no in-history mutation at all (there is no import mutation by locked
-    /// decision — see `🎮️commands/🖼️set-source::set_active_example`'s `HostEffect::LoadDocument` instead).
+    /// decision — see `🎮️commands/🖼️set-source::set_active_example`'s `Effect::LoadDocument` instead).
 
     /// 🎞️ `frames:in` (Wave-2 port recipe): inserts an incoming raster frame as a new tile in a
     /// deterministic contact-sheet grid (see `next_frame_tile_crop`'s doc comment below for why this

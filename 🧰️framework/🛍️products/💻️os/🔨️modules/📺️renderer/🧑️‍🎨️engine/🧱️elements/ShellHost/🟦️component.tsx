@@ -58,7 +58,7 @@ import {
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
   FRAMEWORK_PANEL_TAB_HISTORY_ID,
-  type HostEffect,
+  type Effect,
   type HistoryEntry,
   type HistoryPatch,
   type IntroductionInteraction,
@@ -474,8 +474,8 @@ import {
   useNamedLayoutHost,
 } from "../ChromePanels/🟦️component.tsx";
 import { type PluginWasmHandle, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
-import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
-import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
+import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️catalog.ts";
 
 
 import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
@@ -2622,13 +2622,13 @@ function FrameworkOsShellInner({
   );
 
   /**
-   * 🐚️ Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
+   * 🐚️ Consumes a plugin action's typed `requestedEffects: Effect[]` (WS-D's `InvocationResponse`) —
    * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror
    * backbone-write block is gone entirely: document content sync now flows through
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
    */
   const applyHostEffects = useCallback(
-    async (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
+    async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
       let nextViewState = baseSession.viewState;
       for (const effect of effects) {
         if (effect === "requestSync") continue;
@@ -2852,7 +2852,7 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("invokeExtension" in effect) {
-          const { extensionId, capability, requestJson, responseAction } = effect.invokeExtension;
+          const { extensionId, capability, requestJson, req } = effect.invokeExtension;
           const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
           const requestingPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           const extensionEntry = loadedPlugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((c) => "extensionId" in c && (c as { extensionId?: string }).extensionId === extensionId));
@@ -2867,10 +2867,13 @@ function FrameworkOsShellInner({
               } else {
                 console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
               }
-              await makeEffectDispatchOne(requestingPlugin, baseSession, applyHostEffects)(responseAction, {
-                nodeHash: request.nodeHash,
-                outputJson,
-              });
+              // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `invoke-extension` no longer carries a
+              // `responseAction` to redispatch — the result is correlated back to the guest by `req`
+              // and delivered as an `Event::Completed`, which resumes the future the guest SDK parked
+              // (📓️design-abi.md §2). The React host's completion queue lands with packet H1-react;
+              // until then the invoke still runs but its output cannot reach the guest, so the gap is
+              // reported loudly rather than silently swallowed.
+              console.error("[DEBUG] invokeExtension completion not yet deliverable — pending H1-react request registry", { extensionId, capability, req, nodeHash: request.nodeHash, outputBytes: outputJson.length });
             } catch (error) {
               console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
             }

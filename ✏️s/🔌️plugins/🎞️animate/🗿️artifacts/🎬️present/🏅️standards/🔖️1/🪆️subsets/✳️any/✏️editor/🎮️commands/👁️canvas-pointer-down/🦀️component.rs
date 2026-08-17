@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     use crate::editor::animate::testkit::{dispatch, present_app_with_registry};
     use crate::editor::animate::{commands::add_tile, PresentCommand};
-    use semio_framework_plugin::HostEffect;
+    use semio_framework_plugin::Effect;
 
     #[test]
     fn canvas_pointer_down_emits_interaction_select_for_a_hit_and_clears_on_miss() {
@@ -42,10 +42,10 @@ mod tests {
         let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
 
         let hit = dispatch(&mut app, PresentCommand::CanvasPointerDown(CanvasPointerDown { layer_id: Some(tile_id) }));
-        assert!(matches!(hit.requested_effects.as_slice(), [HostEffect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
+        assert!(matches!(hit.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
 
         let miss = dispatch(&mut app, PresentCommand::CanvasPointerDown(CanvasPointerDown { layer_id: Some("source-frame".into()) }));
-        assert!(matches!(miss.requested_effects.as_slice(), [HostEffect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
+        assert!(matches!(miss.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
     }
 }
 //#endregion 🧪️Tests

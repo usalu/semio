@@ -1,6 +1,6 @@
 //! 📇️ OS command `os.directory.upsert-member` — adds a member to a hub space by email or updates
 //! their role, dispatched through the shell's directory command funnel
-//! (`HostEffect::ReplayShellCommand` → `DirectoryClient.command` → `POST /directory/commands`; the
+//! (`Effect::ReplayShellCommand` → `DirectoryClient.command` → `POST /directory/commands`; the
 //! resulting `DirectoryEvent`s arrive back over `/directory/ws`, never an optimistic local
 //! mutation). See contract-freeze.md §C6 of
 //! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS/`.

@@ -4,17 +4,17 @@ use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::host_from_snapshot;
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Constants
 /// 🧵️ The self-chaining action id of the off-main-thread evaluation loop — dispatched as a
-/// `HostEffect` by `evaluate_result`/`flow_eval_tick::handle` and by `FlowPlayApp::pending_effects`.
+/// `Effect` by `evaluate_result`/`flow_eval_tick::handle` and by `FlowPlayApp::pending_effects`.
 pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
 
-/// 🧵️ The `HostEffect` that arms/continues the off-main-thread `flowEvalTick` chain.
-pub fn eval_tick_effect() -> HostEffect {
-    HostEffect::DispatchAction { action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
+/// 🧵️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain.
+pub fn eval_tick_effect() -> Effect {
+    Effect::DispatchAction {req: semio_framework_plugin::RequestId(106),  action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Constants
 

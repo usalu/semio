@@ -210,7 +210,7 @@ pub fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> {
     None
 }
 
-/// @emoji 📦️ Pack+spr bytes for `HostEffect::LoadDocument` / host `loadAppArtifactPack`.
+/// @emoji 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
 pub fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::ArtifactPackFiles> {
     export_os_space_pack(document).ok()
 }
@@ -325,7 +325,7 @@ pub fn empty_workflow_artifact_document(space_id: &str, space_name: &str) -> OsW
 }
 
 /// @emoji 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
-/// `HostEffect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
+/// `Effect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
 /// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
 pub fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::ArtifactPackFiles> {
     export_backbone_pack(document).ok()

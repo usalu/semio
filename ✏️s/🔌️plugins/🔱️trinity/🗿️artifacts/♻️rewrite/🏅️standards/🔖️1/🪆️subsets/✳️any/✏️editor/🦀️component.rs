@@ -105,13 +105,13 @@ pub(crate) fn seed_before_pane_camera(state: &RewriteSnapshot) -> Camera {
 }
 
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
-/// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `HostEffect::LoadDocument`
+/// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `Effect::LoadDocument`
 /// (outside undo history) instead of an `artifact_mutations` entry.
-pub(crate) fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_plugin::HostEffect {
+pub(crate) fn reset_document_effect(state: &RewriteSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewriteSnapshot as ArtifactPack>::encode_pack(state);
     let envelope = store::create_document_envelope::<RewriteSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA, "rewrite", state.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("rewrite document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework_plugin::HostEffect::LoadDocument { pack, spr }
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
 pub(crate) fn rewrite_action(action: &str, args: Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor {

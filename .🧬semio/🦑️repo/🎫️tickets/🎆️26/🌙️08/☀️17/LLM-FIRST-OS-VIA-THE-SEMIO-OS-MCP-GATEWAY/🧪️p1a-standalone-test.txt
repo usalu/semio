@@ -1,0 +1,53 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/2afa74de-3237-4651-bd3a-8e33a69515db/scratchpad/mcp-standalone-target/debug/deps/semio_framework_os_mcp-44e177046325da59)
+
+running 34 tests
+test errors::quick::retryable_flag_round_trips ... ok
+test protocol::quick::absent_id_field_parses_as_a_notification ... ok
+test errors::quick::json_rpc_parts_map_input_invalid_to_invalid_params ... ok
+test errors::quick::code_serializes_screaming_snake ... ok
+test errors::quick::implements_std_error_via_thiserror ... ok
+test errors::quick::every_code_round_trips_through_json ... ok
+test errors::quick::tool_error_payload_carries_all_fields ... ok
+test protocol::quick::legacy_initialize_handshake_echoes_a_supported_client_version ... ok
+test protocol::quick::era_is_decided_by_the_opening_request_of_the_connection ... ok
+test protocol::long::batch_of_all_notifications_yields_no_responses ... ok
+test protocol::quick::legacy_initialize_with_unknown_version_falls_back_to_latest_rather_than_erroring ... ok
+test protocol::quick::calling_an_unregistered_tool_is_a_protocol_error ... ok
+test protocol::quick::explicit_null_id_is_not_a_notification ... ok
+test protocol::quick::batch_round_trips_through_json ... ok
+test protocol::quick::modern_request_is_routed_via_meta_version_and_recorded_as_modern_era ... ok
+test protocol::quick::registry_rejects_registration_of_an_invalid_tool_name ... ok
+test protocol::quick::server_discover_shape_carries_protocol_version_capabilities_and_server_info ... ok
+test protocol::quick::server_discover_without_meta_defaults_to_the_newest_supported_version ... ok
+test protocol::quick::a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true ... ok
+test protocol::quick::single_request_round_trips_through_json ... ok
+test protocol::quick::tool_name_charset_accepts_and_rejects_correctly ... ok
+test root::quick::every_facet_re_export_is_reachable_from_the_crate_root ... ok
+test protocol::quick::catalog_hash_is_stable_under_reordering_and_changes_when_the_name_set_changes ... ok
+test root::quick::stdio_options_default_to_empty ... ok
+test protocol::quick::unknown_method_is_method_not_found ... ok
+test transport::quick::eof_ends_the_loop_cleanly ... ok
+test protocol::quick::unsupported_meta_version_returns_dash_32022_with_supported_list ... ok
+test transport::quick::a_notification_line_produces_no_output_line_at_all ... ok
+test protocol::long::a_full_modern_session_lists_reads_and_subscribes_resources_end_to_end ... ok
+test transport::quick::one_request_line_produces_exactly_one_response_line_on_stdout ... ok
+test transport::quick::blank_lines_are_skipped_without_producing_output ... ok
+test transport::quick::malformed_json_logs_to_the_log_writer_and_never_pollutes_stdout_with_non_json_text ... ok
+test schema::quick::schemas_cover_exactly_the_seven_gateway_wire_types ... ok
+test schema::quick::every_schema_compiles_and_validates_its_own_example ... ok
+
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../📦️bin.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/2afa74de-3237-4651-bd3a-8e33a69515db/scratchpad/mcp-standalone-target/debug/deps/semio_os_mcp-17e8acdcfbd7cd72)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_os_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

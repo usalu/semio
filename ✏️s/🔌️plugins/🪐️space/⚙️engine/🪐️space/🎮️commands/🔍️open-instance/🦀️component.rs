@@ -2,7 +2,7 @@
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault, Effect};
 
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSn
         Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
             Some(node) => Emit {
                 config_mutations: vec![SpaceConfigMutation::SetFocusedNode { node_id: Some(node_id.clone()) }, SpaceConfigMutation::SetActiveNode { node_id: Some(node_id.clone()) }],
-                effects: vec![HostEffect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
+                effects: vec![Effect::OpenPluginInstance { plugin_id: node.plugin_id.clone(), app_id: node.app_id.clone(), os_instance_id: Some(node.id.clone()) }],
                 ..Default::default()
             },
             None => Emit::default(),
@@ -68,7 +68,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
+                Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => Some((plugin_id.clone(), app_id.clone(), os_instance_id.clone())),
                 _ => None,
             })
             .expect("OpenPluginInstance effect");

@@ -5,7 +5,7 @@ use crate::editor::draw::{DRAW_INTERACTION_DOMAIN, DRAW_INTERACTION_GRANULARITY}
 use crate::artifacts::draw::schema::{create_draw_path_layer, create_draw_trace_layer, draw_layer_world_bounds, draw_transform_to_matrix, find_draw_layer, flatten_draw_layers, layer_base, layer_id, layer_to_path_segments};
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawCamera, DrawSnapshot, DrawLayerNode, PathSegment};
-use semio_framework_plugin::{kernel::HostEffect, ConfigView, ArtifactView, Emit, Fault};
+use semio_framework_plugin::{kernel::Effect, ConfigView, ArtifactView, Emit, Fault};
 
 //#region 🔖️GestureContext
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
@@ -78,18 +78,18 @@ fn interaction_targets_json(ids: &[String]) -> String {
 /// `interactionHover`) through its normal action funnel — the only way an `ArtifactApp::handle`
 /// (or its gesture machine) can drive selection/hover now that both are framework-owned state,
 /// never a `DrawConfigMutation` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn request_interaction_action(action_id: &str, args: serde_json::Value) -> HostEffect {
-    HostEffect::ReplayShellCommand { action_id: action_id.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+pub(crate) fn request_interaction_action(action_id: &str, args: serde_json::Value) -> Effect {
+    Effect::ReplayShellCommand { action_id: action_id.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
-pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> HostEffect {
+pub(crate) fn interaction_select_effect(ids: &[String], merge: &str) -> Effect {
     request_interaction_action(
         semio_framework::INTERACTION_SELECT_ACTION_ID,
         serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "targets": interaction_targets_json(ids), "merge": merge, "method": "pick" }),
     )
 }
 
-pub(crate) fn interaction_hover_effect(ids: &[String]) -> HostEffect {
+pub(crate) fn interaction_hover_effect(ids: &[String]) -> Effect {
     request_interaction_action(semio_framework::INTERACTION_HOVER_ACTION_ID, serde_json::json!({ "domainId": DRAW_INTERACTION_DOMAIN, "channel": "pointer", "targets": interaction_targets_json(ids) }))
 }
 
@@ -334,7 +334,7 @@ fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -
         return Emit::default();
     }
     let mut emit = Emit::commit(operations, description);
-    emit.effects.push(HostEffect::SetActiveUtility { window_id: crate::editor::draw::DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: crate::editor::draw::DRAW_DEFAULT_UTILITY.into() });
+    emit.effects.push(Effect::SetActiveUtility { window_id: crate::editor::draw::DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: crate::editor::draw::DRAW_DEFAULT_UTILITY.into() });
     emit
 }
 
@@ -555,7 +555,7 @@ impl DrawSession {
     /// requested `GestureEffect`s against the live document — the only place gesture control-flow
     /// (owned by `fsm`) meets document-mutating logic (owned by `draw`). `config` is read-only (camera
     /// zoom for hit-test tolerance); a pick/marquee hit becomes an `interactionSelect` request riding
-    /// as a `HostEffect` on the returned `Emit` — selection itself is framework-owned now, never
+    /// as a `Effect` on the returned `Emit` — selection itself is framework-owned now, never
     /// written back into `config`.
     pub(crate) fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawSnapshot, config: &DrawConfig) -> Emit<DrawMutation, DrawConfigMutation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();

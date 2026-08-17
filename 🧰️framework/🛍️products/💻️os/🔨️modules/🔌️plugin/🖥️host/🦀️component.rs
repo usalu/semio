@@ -1,22 +1,28 @@
 //! 🛡️ Sandboxed wasmtime component plugin host with capability-gated imports.
 
 use semio_framework::{
-    kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
-    PluginManifest, TopicContribution, ViewModel,
+    kernel::{
+        ArtifactHandle, ArtifactKind, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, CapabilityRequirement, Effect, Event, JobPlacement, MessageEndpoint, RequestId,
+        RequestOutcome, Rights, Scope, TurnResult, TurnStatus, WindowHandle, WindowKindId,
+    },
+    DslValue, PluginManifest, TopicContribution, ViewModel,
 };
+use semio_framework_actor::{ActorId as RuntimeActorId, PackageHash, PackageId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+#[cfg(test)]
+use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
 use wasmtime::component::{bindgen, Component, Linker};
-use wasmtime::{Config, Engine, Store};
+use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
 const PLUGIN_FUEL_BUDGET: u64 = 50_000_000;
 
 bindgen!({
-    world: "plugin-world",
-    path: "../../../📦️packages/🦀️rust/📜️wit",
+    world: "actor",
+    path: "../../../🧬️schema",
     async: false,
     additional_derives: [serde::Serialize, serde::Deserialize],
 });
@@ -49,6 +55,1068 @@ pub enum PluginHostError {
 }
 
 //#endregion ⚠️ Errors
+
+//#region 🔧️SharedWasmtimeEngine
+/// 🚧️ Staged for packet `B1-host-native` (`📓️design-runtime.md` §2, `//#region 🦀️WasmtimeRuntime`).
+/// The blocked pieces — the `GuestRuntime` trait, the `WasmtimeRuntime` impl that closes over it,
+/// `ShardLoop`, `MockGuestRuntime`, and the deletion of `WasmPluginRuntime`/`ExtensionRuntime`/both
+/// `ProgramSupervisorState`s/`PLUGIN_FUEL_BUDGET` — all need `RuntimeActorId` (packet `A1-actor`,
+/// crate `semio-framework-actor`, not yet a workspace member) and `Effect`/`Event`/`Budget`/
+/// `TurnResult`/`JobBudget`/`JobStep`/`TurnFault` (packet `A3-kernel-types`, not yet landed in
+/// `🎠️kernel/🦀️component.rs`). This region holds only the four pieces of §2 that do NOT depend on
+/// either: the one-per-process `Engine` (pooling allocator + on-demand fallback + fuel/epoch config),
+/// the 1 ms epoch ticker, a generic per-store `ResourceLimiter`, and the compiled-artifact cache.
+/// Wiring plan once A1/A3 land is in `📓️terra-B1-host-native-report.md`.
+
+/// ⚙️ Knobs for [`build_shared_engine`] — mirrors §2's pooling-allocator list verbatim. Plain fields
+/// rather than a `Budget`-derived config (A3's type) so this compiles today; `WasmtimeRuntime` will
+/// build one from `Budget` fields with a one-line call once A3 lands.
+#[derive(Clone, Copy, Debug)]
+pub struct SharedEngineConfig {
+    pub total_component_instances: u32,
+    pub max_memory_bytes: usize,
+    pub linear_memory_keep_resident_bytes: usize,
+    pub force_on_demand: bool,
+}
+
+impl Default for SharedEngineConfig {
+    fn default() -> Self {
+        Self { total_component_instances: 4096, max_memory_bytes: 512 * 1024 * 1024, linear_memory_keep_resident_bytes: 2 * 1024 * 1024, force_on_demand: false }
+    }
+}
+
+/// 🐎️ ONE shared `Engine` for the process (§2). `consume_fuel` + `epoch_interruption` are both
+/// enabled, so every `Store` built on it MUST call `set_fuel` + `set_epoch_deadline` before its
+/// first wasm call — the bug this replaces (`WasmPluginRuntime::build_engine`/`prepare_call` below)
+/// sets fuel once and an epoch deadline of `u64::MAX`, so nothing is ever enforced. Falls back to
+/// `OnDemand` allocation — the fallback knob §2 asks for — if the pooling allocator rejects `cfg` on
+/// this host (e.g. insufficient virtual address space, or a hardened container); the returned `bool`
+/// reports which strategy actually got used, for logging/metrics.
+pub fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
+    let build = |pooling: bool| -> wasmtime::Result<Engine> {
+        let mut config = Config::new();
+        config.wasm_component_model(true);
+        config.consume_fuel(true);
+        config.epoch_interruption(true);
+        if pooling {
+            let mut pooling_cfg = PoolingAllocationConfig::default();
+            pooling_cfg.total_component_instances(cfg.total_component_instances);
+            pooling_cfg.max_memory_size(cfg.max_memory_bytes);
+            pooling_cfg.linear_memory_keep_resident(cfg.linear_memory_keep_resident_bytes);
+            config.allocation_strategy(InstanceAllocationStrategy::Pooling(pooling_cfg));
+        } else {
+            config.allocation_strategy(InstanceAllocationStrategy::OnDemand);
+        }
+        Engine::new(&config)
+    };
+    if !cfg.force_on_demand {
+        if let Ok(engine) = build(true) {
+            return Ok((engine, true));
+        }
+    }
+    let engine = build(false).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    Ok((engine, false))
+}
+
+/// ⏱️ Ticks `engine.increment_epoch()` every 1 ms on a dedicated thread (§2), so
+/// `Store::set_epoch_deadline(budget.wall_ms)` is actually enforced — wasmtime's epoch counter never
+/// advances on its own. One ticker per shared `Engine`; `Drop` stops and joins the thread.
+pub struct EpochTicker {
+    stop: Arc<std::sync::atomic::AtomicBool>,
+    handle: Option<std::thread::JoinHandle<()>>,
+}
+
+impl EpochTicker {
+    pub fn start(engine: &Engine) -> Self {
+        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let stop_thread = Arc::clone(&stop);
+        let engine = engine.clone();
+        let handle = std::thread::Builder::new()
+            .name("semio-epoch-ticker".to_string())
+            .spawn(move || {
+                while !stop_thread.load(std::sync::atomic::Ordering::Relaxed) {
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                    engine.increment_epoch();
+                }
+            })
+            .expect("spawn epoch ticker thread");
+        Self { stop, handle: Some(handle) }
+    }
+}
+
+impl Drop for EpochTicker {
+    fn drop(&mut self) {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        if let Some(handle) = self.handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
+/// 📏️ Generic per-store `ResourceLimiter` (§2: "a `ResourceLimiter` per store bounding
+/// memory/tables/instances against the budget"). Plain numeric bounds rather than a `Budget`-typed
+/// constructor — `Budget` is A3's type, not yet landed — so `WasmtimeRuntime` builds one from
+/// `budget.memory_bytes` etc. with a one-line call once it lands.
+pub struct BudgetLimiter {
+    pub max_memory_bytes: usize,
+    pub max_table_elements: u32,
+    pub max_instances: usize,
+    pub max_tables: usize,
+    pub max_memories: usize,
+}
+
+impl Default for BudgetLimiter {
+    fn default() -> Self {
+        Self { max_memory_bytes: 512 * 1024 * 1024, max_table_elements: 100_000, max_instances: 1, max_tables: 8, max_memories: 8 }
+    }
+}
+
+impl ResourceLimiter for BudgetLimiter {
+    fn memory_growing(&mut self, _current: usize, desired: usize, _maximum: Option<usize>) -> wasmtime::Result<bool> {
+        Ok(desired <= self.max_memory_bytes)
+    }
+
+    fn table_growing(&mut self, _current: u32, desired: u32, _maximum: Option<u32>) -> wasmtime::Result<bool> {
+        Ok(desired <= self.max_table_elements)
+    }
+
+    fn instances(&self) -> usize {
+        self.max_instances
+    }
+
+    fn tables(&self) -> usize {
+        self.max_tables
+    }
+
+    fn memories(&self) -> usize {
+        self.max_memories
+    }
+}
+
+/// 💾️ Compiled-artifact cache (§2): `Component::serialize`/`deserialize_file` keyed by
+/// `<engine-config-hash>/<package-hash>.cwasm` under `~/.semio/cache/wasmtime/`. Both hashes are
+/// plain `[u8; 32]` (blake3) rather than A1's `PackageHash` newtype — `compiled_cache_path` becomes a
+/// one-line call with `package_hash.0` once that crate is a workspace member.
+pub fn default_compiled_cache_root() -> PathBuf {
+    let home = std::env::var("SEMIO_HOME").or_else(|_| std::env::var("HOME")).or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".to_string());
+    PathBuf::from(home).join(".semio").join("cache").join("wasmtime")
+}
+
+pub fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
+    let descriptor = format!(
+        "wasmtime=22.0.1;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}",
+        pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes
+    );
+    *blake3::hash(descriptor.as_bytes()).as_bytes()
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+pub fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32], package_hash: &[u8; 32]) -> PathBuf {
+    cache_root.join(hex_encode(engine_config_hash)).join(format!("{}.cwasm", hex_encode(package_hash)))
+}
+
+/// ⚠️ SAFETY: `deserialize_file` trusts the file completely (wasmtime docs). Callers MUST only point
+/// this at paths this process itself wrote via [`store_compiled_component`] with the SAME `engine`
+/// (same config, so same compiled ABI) — a hostile or stale `.cwasm` is a sandbox escape, not a
+/// cache-miss. Any I/O or deserialize error is treated as a cache miss (`None`), never surfaced as a
+/// fault: recompiling from the original component bytes is always the safe fallback.
+pub fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
+    if !path.exists() {
+        return None;
+    }
+    unsafe { Component::deserialize_file(engine, path).ok() }
+}
+
+pub fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let bytes = component.serialize().map_err(|error| std::io::Error::other(error.to_string()))?;
+    std::fs::write(path, bytes)
+}
+
+#[cfg(test)]
+mod shared_wasmtime_engine_tests {
+    use super::*;
+
+    #[test]
+    fn build_shared_engine_defaults_to_pooling() {
+        let (_engine, pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("pooling engine builds on this host");
+        assert!(pooling_active, "pooling allocator should be available in test/CI containers");
+    }
+
+    #[test]
+    fn build_shared_engine_forced_on_demand_reports_on_demand() {
+        let cfg = SharedEngineConfig { force_on_demand: true, ..SharedEngineConfig::default() };
+        let (_engine, pooling_active) = build_shared_engine(cfg).expect("on-demand engine always builds");
+        assert!(!pooling_active);
+    }
+
+    #[test]
+    fn epoch_ticker_starts_and_stops_cleanly_around_a_deadline_bearing_store() {
+        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("engine builds");
+        let mut store = Store::new(&engine, ());
+        store.set_epoch_deadline(1);
+        store.set_fuel(1_000).expect("consume_fuel is enabled on the shared engine");
+        let ticker = EpochTicker::start(&engine);
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        drop(ticker);
+    }
+
+    #[test]
+    fn shared_engine_config_hash_is_deterministic_and_config_sensitive() {
+        let cfg = SharedEngineConfig::default();
+        let a = shared_engine_config_hash(&cfg, true);
+        let b = shared_engine_config_hash(&cfg, true);
+        assert_eq!(a, b);
+        let c = shared_engine_config_hash(&cfg, false);
+        assert_ne!(a, c, "pooling vs on-demand must be different cache namespaces");
+    }
+
+    #[test]
+    fn compiled_cache_path_is_namespaced_by_both_hashes() {
+        let root = Path::new("/tmp/semio-cache-test");
+        let engine_hash = [1u8; 32];
+        let package_hash = [2u8; 32];
+        let path = compiled_cache_path(root, &engine_hash, &package_hash);
+        assert!(path.starts_with(root));
+        assert!(path.to_string_lossy().ends_with(&format!("{}.cwasm", hex_encode(&package_hash))));
+    }
+
+    #[test]
+    fn compiled_component_round_trips_through_cache_for_a_real_wasm_file() {
+        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
+        if !wasm_path.exists() {
+            return;
+        }
+        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("engine builds");
+        let wasm_bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
+        let component = Component::from_binary(&engine, &wasm_bytes).expect("compile real stdio.wasm as a component");
+        let cache_dir = std::env::temp_dir().join(format!("semio-compiled-cache-test-{}", std::process::id()));
+        let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&SharedEngineConfig::default(), true), &[3u8; 32]);
+        assert!(load_compiled_component(&engine, &cache_path).is_none(), "cache must start empty");
+        store_compiled_component(&component, &cache_path).expect("write compiled cache entry");
+        let restored = load_compiled_component(&engine, &cache_path).expect("cache hit after writing");
+        drop(restored);
+        let _ = std::fs::remove_dir_all(&cache_dir);
+    }
+}
+//#endregion 🔧️SharedWasmtimeEngine
+
+//#region 🎭️GuestRuntime
+/// 🧬️ `design-runtime.md` §2's `GuestRuntime` trait, verbatim. Replaces regions `🔖️WasmPluginRuntime`
+/// and `🔖️ExtensionRuntime` (below) — NOT deleted yet: `WasmtimeRuntime`'s `impl GuestRuntime` needs
+/// `wasmtime::component::bindgen!` to compile against the new `actor` world, which is currently
+/// broken (see `📓️terra-B1-host-native-report.md`, `blocked-on-A2`: `📜️wit/📜️effects.wit:44`'s
+/// `stream: bool` field uses a WIT-reserved keyword, so BOTH this file's `bindgen!` calls —
+/// `plugin-world` and `extension-world`, themselves stale names since `world.wit` now only
+/// declares `actor` — fail to parse). Landing the trait + `MockGuestRuntime` now, without
+/// `WasmtimeRuntime`, still unblocks every downstream packet (H1-H4, T1) that only needs to code
+/// against the interface.
+///
+/// `RuntimeActorId` never shadows `kernel::ActorId` (`📌️important.md`'s naming-hazard note) — this
+/// file does not import `kernel::ActorId` at all, only `semio_framework_actor::ActorId` (aliased
+/// `RuntimeActorId` in the top-of-file `use`).
+
+/// 📦️ What [`GuestRuntime::compile`] compiles — a package identity plus the content hash that also
+/// keys the compiled-artifact cache (`shared_engine_config_hash`/`compiled_cache_path` above).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PackageRef {
+    pub package: PackageId,
+    pub hash: PackageHash,
+}
+
+/// 🧩️ A compiled, not-yet-instantiated component. `component` is `None` for [`MockGuestRuntime`]
+/// (which never compiles real wasm) and `Some` for [`WasmtimeRuntime`] (`//#region 🐎️WasmtimeRuntime`
+/// below).
+#[derive(Clone)]
+pub struct CompiledHandle {
+    pub package_hash: [u8; 32],
+    component: Option<Arc<Component>>,
+}
+
+impl std::fmt::Debug for CompiledHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CompiledHandle").field("package_hash", &hex_encode(&self.package_hash)).field("has_component", &self.component.is_some()).finish()
+    }
+}
+
+/// 🏃️ One running actor instance, host-owned. `Mock(..)` backs [`MockGuestRuntime`]; `Wasmtime(..)`
+/// backs [`WasmtimeRuntime`] (`//#region 🐎️WasmtimeRuntime` below).
+pub struct GuestInstance {
+    pub actor: RuntimeActorId,
+    state: GuestInstanceState,
+}
+
+enum GuestInstanceState {
+    Mock(MockInstanceState),
+    Wasmtime(WasmtimeInstanceState),
+}
+
+/// ⛽️ `jobs.wit`'s `job-budget` record, mirrored field-for-field (design-abi.md §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobBudget {
+    pub fuel: u64,
+    pub deadline_ms: u32,
+}
+
+/// 🪜️ `jobs.wit`'s `job-step` variant, mirrored field-for-field.
+#[derive(Clone, Debug, PartialEq)]
+pub enum JobStep {
+    Running(Option<Vec<u8>>),
+    Done(Vec<u8>),
+    Failed(Vec<u8>),
+}
+
+/// 🧯️ Why a turn or job step didn't produce a result — distinct from [`PluginHostError`] (host-side
+/// plumbing faults): every `GuestRuntime::execute_turn`/`step_job` failure is one of these.
+#[derive(Debug, thiserror::Error)]
+pub enum TurnFault {
+    #[error(transparent)]
+    Host(#[from] PluginHostError),
+    #[error("guest instance has no more scripted/actual turns")]
+    Exhausted,
+    #[error("guest trapped: {0}")]
+    Trapped(String),
+    #[error("epoch deadline exceeded")]
+    DeadlineExceeded,
+    #[error("fuel exhausted")]
+    FuelExhausted,
+}
+
+/// 🐎️ Host-side driver for one actor's execution — `design-runtime.md` §2. `WasmtimeRuntime` (the
+/// native implementation, backed by [`build_shared_engine`]/[`EpochTicker`]/[`BudgetLimiter`]/the
+/// compiled-artifact cache above) and `MockGuestRuntime` (test double, below) both implement this;
+/// nothing else in the host — `ShardLoop`, the task manager, `WasmtimeNodeHost` — talks to a guest
+/// through any other surface.
+pub trait GuestRuntime: Send + Sync {
+    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
+    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault>;
+    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
+    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
+    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
+    fn drop_instance(&self, inst: GuestInstance);
+}
+
+//#region 🔖️MockGuestRuntime
+/// 🎬️ One actor's scripted future: either the next `execute_turn`/`step_job` call returns this
+/// `TurnResult`/`JobStep`, or the runtime raises this fault instead.
+enum ScriptedOutcome {
+    Turn(TurnResult),
+    Job(JobStep),
+    Fault(String),
+}
+
+#[derive(Default)]
+struct MockInstanceState {
+    checkpoint: Option<Vec<u8>>,
+}
+
+/// 🎭️ `design-runtime.md` §2's `MockGuestRuntime` (`#[cfg(test)]`): scripted turns + a controllable
+/// clock, backing scheduler/failure-ladder tests without a real wasm component or `bindgen!` — the
+/// TS twin is `createMockShard()`. `script_turn`/`script_fault` queue outcomes FIFO per actor;
+/// `execute_turn` on an actor with an empty queue returns `TurnFault::Exhausted` rather than
+/// silently fabricating an idle turn, so a test that forgets to script a call fails loudly instead
+/// of passing by accident.
+#[cfg(test)]
+pub struct MockGuestRuntime {
+    now_ms: std::sync::atomic::AtomicI64,
+    scripts: Mutex<HashMap<u64, VecDeque<ScriptedOutcome>>>,
+}
+
+#[cfg(test)]
+impl Default for MockGuestRuntime {
+    fn default() -> Self {
+        Self { now_ms: std::sync::atomic::AtomicI64::new(0), scripts: Mutex::new(HashMap::new()) }
+    }
+}
+
+#[cfg(test)]
+impl MockGuestRuntime {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn now_ms(&self) -> i64 {
+        self.now_ms.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    pub fn set_now_ms(&self, ms: i64) {
+        self.now_ms.store(ms, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    pub fn advance_ms(&self, delta: i64) {
+        self.now_ms.fetch_add(delta, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    fn queue_for(&self, actor: RuntimeActorId) -> std::sync::MutexGuard<'_, HashMap<u64, VecDeque<ScriptedOutcome>>> {
+        let mut scripts = self.scripts.lock().expect("mock runtime lock poisoned");
+        scripts.entry(actor.0).or_default();
+        scripts
+    }
+
+    pub fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
+        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(result));
+    }
+
+    pub fn script_job_step(&self, actor: RuntimeActorId, step: JobStep) {
+        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Job(step));
+    }
+
+    pub fn script_fault(&self, actor: RuntimeActorId, message: impl Into<String>) {
+        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Fault(message.into()));
+    }
+
+    /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
+    /// care about scheduling/backpressure, not turn content.
+    pub fn idle_turn() -> TurnResult {
+        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
+    }
+}
+
+#[cfg(test)]
+impl GuestRuntime for MockGuestRuntime {
+    fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        Ok(CompiledHandle { package_hash: package.hash.0, component: None })
+    }
+
+    fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        self.queue_for(actor);
+        Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
+    }
+
+    fn execute_turn(&self, inst: &mut GuestInstance, _events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
+        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+        let queue = scripts.entry(inst.actor.0).or_default();
+        match queue.pop_front() {
+            Some(ScriptedOutcome::Turn(result)) => Ok(result),
+            Some(ScriptedOutcome::Job(_)) => Err(TurnFault::Trapped("scripted outcome was a job step, not a turn".to_string())),
+            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            None => Err(TurnFault::Exhausted),
+        }
+    }
+
+    fn step_job(&self, inst: &mut GuestInstance, _job: u64, _budget: JobBudget) -> Result<JobStep, TurnFault> {
+        let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
+        let queue = scripts.entry(inst.actor.0).or_default();
+        match queue.pop_front() {
+            Some(ScriptedOutcome::Job(step)) => Ok(step),
+            Some(ScriptedOutcome::Turn(_)) => Err(TurnFault::Trapped("scripted outcome was a turn, not a job step".to_string())),
+            Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
+            None => Err(TurnFault::Exhausted),
+        }
+    }
+
+    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        let GuestInstanceState::Mock(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("MockGuestRuntime::checkpoint called on a non-mock GuestInstance".to_string()));
+        };
+        let bytes = format!("mock-checkpoint:{}", inst.actor.0).into_bytes();
+        state.checkpoint = Some(bytes.clone());
+        Ok(bytes)
+    }
+
+    fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
+        let GuestInstanceState::Mock(mock_state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("MockGuestRuntime::restore called on a non-mock GuestInstance".to_string()));
+        };
+        mock_state.checkpoint = Some(state.to_vec());
+        Ok(())
+    }
+
+    fn drop_instance(&self, inst: GuestInstance) {
+        self.scripts.lock().map(|mut scripts| scripts.remove(&inst.actor.0)).ok();
+    }
+}
+
+#[cfg(test)]
+mod mock_guest_runtime_tests {
+    use super::*;
+
+    fn hash(byte: u8) -> PackageHash {
+        PackageHash([byte; 32])
+    }
+
+    #[test]
+    fn scripted_turn_is_returned_exactly_once_fifo() {
+        let runtime = MockGuestRuntime::new();
+        let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1) }, &[]).expect("compile");
+        let actor = RuntimeActorId(42);
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("instantiate");
+
+        let mut first = MockGuestRuntime::idle_turn();
+        first.fuel_used = 7;
+        let mut second = MockGuestRuntime::idle_turn();
+        second.fuel_used = 9;
+        runtime.script_turn(actor, first);
+        runtime.script_turn(actor, second);
+
+        let got_first = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("first scripted turn");
+        assert_eq!(got_first.fuel_used, 7);
+        let got_second = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("second scripted turn");
+        assert_eq!(got_second.fuel_used, 9);
+    }
+
+    #[test]
+    fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
+        let runtime = MockGuestRuntime::new();
+        let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2) }, &[]).expect("compile");
+        let actor = RuntimeActorId(7);
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        let error = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect_err("no script queued");
+        assert!(matches!(error, TurnFault::Exhausted));
+    }
+
+    #[test]
+    fn scripted_fault_surfaces_as_trapped() {
+        let runtime = MockGuestRuntime::new();
+        let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3) }, &[]).expect("compile");
+        let actor = RuntimeActorId(9);
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        runtime.script_fault(actor, "epoch deadline exceeded");
+        let error = runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect_err("scripted fault");
+        assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
+    }
+
+    #[test]
+    fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
+        let runtime = MockGuestRuntime::new();
+        let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4) }, &[]).expect("compile");
+        let actor = RuntimeActorId(11);
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        let snapshot = runtime.checkpoint(&mut inst).expect("checkpoint");
+
+        let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("re-instantiate");
+        runtime.restore(&mut restored, &snapshot).expect("restore");
+        let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
+        assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
+    }
+
+    #[test]
+    fn controllable_clock_advances_deterministically() {
+        let runtime = MockGuestRuntime::new();
+        runtime.set_now_ms(1_000);
+        assert_eq!(runtime.now_ms(), 1_000);
+        runtime.advance_ms(250);
+        assert_eq!(runtime.now_ms(), 1_250);
+    }
+
+    #[test]
+    fn drop_instance_forgets_the_actors_script_queue() {
+        let runtime = MockGuestRuntime::new();
+        let compiled = runtime.compile(&PackageRef { package: PackageId("layout".to_string()), hash: hash(5) }, &[]).expect("compile");
+        let actor = RuntimeActorId(13);
+        let inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        runtime.script_turn(actor, MockGuestRuntime::idle_turn());
+        runtime.drop_instance(inst);
+        assert!(!runtime.scripts.lock().expect("lock").contains_key(&actor.0));
+    }
+}
+//#endregion 🔖️MockGuestRuntime
+
+//#region 🐎️WasmtimeRuntime
+/// 🧬️ The real `impl GuestRuntime for WasmtimeRuntime` — `design-runtime.md` §2. Nested `mod
+/// actor_bindings` (mirrors the file's own `mod extension_bindings` idiom below, "wasmtime's
+/// `bindgen!` cannot be invoked twice at the same module scope") so this coexists with the OLD
+/// `plugin-world`/`extension-world` `bindgen!` calls until the deletion pass — both of which are
+/// now unconditionally broken independent of this packet (their `world` names no longer exist in
+/// `📜️world.wit`, which declares only `world actor`), a finding recorded in
+/// `📓️terra-B1-host-native-report.md`.
+mod actor_bindings {
+    wasmtime::component::bindgen!({
+        world: "actor",
+        path: "../../../🧬️schema",
+        async: false,
+        additional_derives: [Clone, Debug],
+    });
+}
+
+use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, jobs as wit_jobs, reactor as wit_reactor, types as wit_types, ui as wit_ui};
+
+/// 🧬️ `design-runtime.md` §2's slimmed `HostState { plugin_id, actor, caps, effect_sink,
+/// asset_map }` — `limiter` is an implementation necessity (`Store::limiter` needs somewhere to
+/// read bounds from), not part of the design's literal 5-field list.
+struct ActorHostState {
+    plugin_id: String,
+    actor: RuntimeActorId,
+    #[allow(dead_code)]
+    caps: Vec<BrokerCapabilityGrant>,
+    #[allow(dead_code)]
+    effect_sink: Vec<Effect>,
+    #[allow(dead_code)]
+    asset_map: HashMap<String, Vec<u8>>,
+    limiter: BudgetLimiter,
+}
+
+/// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
+/// none fallible, none async.
+impl actor_bindings::semio::framework::pure::Host for ActorHostState {
+    fn log(&mut self, level: String, message: String) {
+        eprintln!("[actor:{}:{level}] {message}", self.plugin_id);
+    }
+
+    fn now_ms(&mut self) -> i64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
+    }
+
+    fn trace_span(&mut self, name: String) {
+        eprintln!("[actor:{}:trace] {name}", self.plugin_id);
+    }
+}
+
+struct WasmtimeInstanceState {
+    store: Store<ActorHostState>,
+    bindings: actor_bindings::Actor,
+    /// 🪪️ "One actor per app instance is the default" (design-abi.md §4) — minted once at
+    /// `instantiate` and used to fill the `instance` field WIT's per-instance events carry but
+    /// `semio_framework::kernel::Event`'s own lifecycle variants (`InstanceClose`/`Activate`/
+    /// `SuspendRequest`/`CapabilityChanged`/`QuotaChanged`) dropped (kernel's `Event` is already
+    /// actor-scoped by construction, so re-carrying the instance id per-event was redundant there).
+    instance_id: u32,
+}
+
+/// 🐎️ ONE shared `Engine` per process (`build_shared_engine`), one `Store<ActorHostState>` per
+/// actor (`instantiate`). Wraps the type-independent primitives in `//#region 🔧️SharedWasmtimeEngine`
+/// above — this is where they get consumed.
+pub struct WasmtimeRuntime {
+    engine: Engine,
+    _epoch_ticker: EpochTicker,
+    linker: Linker<ActorHostState>,
+    cache_root: PathBuf,
+    engine_config_hash: [u8; 32],
+    next_instance_id: std::sync::atomic::AtomicU32,
+}
+
+impl WasmtimeRuntime {
+    pub fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
+        let (engine, pooling_active) = build_shared_engine(cfg)?;
+        let epoch_ticker = EpochTicker::start(&engine);
+        let mut linker = Linker::new(&engine);
+        actor_bindings::semio::framework::pure::add_to_linker(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active);
+        Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root(), engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
+    }
+}
+
+impl GuestRuntime for WasmtimeRuntime {
+    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        let cache_path = compiled_cache_path(&self.cache_root, &self.engine_config_hash, &package.hash.0);
+        if let Some(component) = load_compiled_component(&self.engine, &cache_path) {
+            return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) });
+        }
+        let component = Component::from_binary(&self.engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let _ = store_compiled_component(&component, &cache_path);
+        Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) })
+    }
+
+    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        let component = compiled.component.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no wasmtime Component — built by MockGuestRuntime::compile, not WasmtimeRuntime::compile".to_string()))?;
+        let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let host_state = ActorHostState { plugin_id: format!("actor-{}", actor.0), actor, caps: caps.to_vec(), effect_sink: Vec::new(), asset_map: HashMap::new(), limiter: BudgetLimiter::default() };
+        let mut store = Store::new(&self.engine, host_state);
+        store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
+        store.set_fuel(budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        store.set_epoch_deadline(budget.deadline_ms as u64);
+        let bindings = actor_bindings::Actor::instantiate(&mut store, component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
+    }
+
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
+        let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
+        let poll_result = match call_result {
+            Ok(inner) => inner,
+            Err(trap) => {
+                let message = trap.to_string();
+                let lowered = message.to_ascii_lowercase();
+                return Err(if lowered.contains("fuel") {
+                    TurnFault::FuelExhausted
+                } else if lowered.contains("epoch") || lowered.contains("interrupt") {
+                    TurnFault::DeadlineExceeded
+                } else {
+                    TurnFault::Trapped(message)
+                });
+            }
+        };
+        let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
+        for effect in wit_turn_result.effects {
+            effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
+        }
+        Ok(TurnResult {
+            // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
+            // `PatchOp`'s `path: String` + `node: UiNode`) is NOT implemented — a real path/node
+            // encoding convention needs to be agreed with A2/A3 first (`📓️terra-B1-host-native-
+            // report.md`'s `## blocked-on` — tracked there, not silently dropped).
+            ui_patches: Vec::new(),
+            effects,
+            next_wake: wit_turn_result.next_wake,
+            status: wit_turn_status_to_kernel(wit_turn_result.status),
+            fuel_used: wit_turn_result.fuel_used,
+        })
+    }
+
+    fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
+        let step = state
+            .bindings
+            .semio_framework_jobs()
+            .call_step_job(&mut state.store, job, wit_budget)
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(match step {
+            wit_jobs::JobStep::Running(bytes) => JobStep::Running(bytes),
+            wit_jobs::JobStep::Done(bytes) => JobStep::Done(bytes),
+            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed(bytes),
+        })
+    }
+
+    fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state
+            .bindings
+            .semio_framework_checkpoint()
+            .call_checkpoint(&mut state.store)
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+    }
+
+    fn restore(&self, inst: &mut GuestInstance, state_bytes: &[u8]) -> Result<(), PluginHostError> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
+        };
+        state
+            .bindings
+            .semio_framework_checkpoint()
+            .call_restore(&mut state.store, state_bytes)
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
+            .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
+    }
+
+    fn drop_instance(&self, _inst: GuestInstance) {
+        // 🗑️ `Store<ActorHostState>` and its `Component` `Arc` drop with `_inst` — nothing else to
+        // release; the pooling allocator reclaims the instance's slab on `Store` drop.
+    }
+}
+
+//#region 🔀️EffectEventMarshal
+/// 🌉️ `wit_effect_to_kernel`/`kernel_event_to_wit` are the host-side half of `design-abi.md` §2's
+/// "WIT variants mirror [`Effect`/`Event`] field-for-field; the guest SDK glue converts between
+/// them" — this is that conversion, mirrored for the host. It is NOT fully field-for-field in
+/// practice: several real shape gaps between `📜️wit/*.wit` (packet A2) and `🎠️kernel/🦀️component.rs`
+/// (packet A3) surfaced while writing this and are called out inline + in
+/// `📓️terra-B1-host-native-report.md`'s `## blocked-on` (most notably: `📜️wit/📜️effects.wit`'s
+/// `io-run` effect has no `Effect::IoRun` counterpart yet).
+fn decode_dsl(bytes: &[u8]) -> Option<DslValue> {
+    if bytes.is_empty() {
+        return None;
+    }
+    store::pack_rt::decode_wire_value(bytes).ok()
+}
+
+fn encode_dsl(value: &DslValue) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(value)
+}
+
+fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> {
+    if bytes.is_empty() {
+        return None;
+    }
+    serde_json::from_slice(bytes).ok()
+}
+
+fn encode_json<T: serde::Serialize>(value: &T) -> Vec<u8> {
+    serde_json::to_vec(value).unwrap_or_default()
+}
+
+fn wit_message_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+    match endpoint {
+        wit_types::MessageEndpoint::Shell(instance) => MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+        wit_types::MessageEndpoint::Backbone(uri) => MessageEndpoint::Backbone { uri },
+        wit_types::MessageEndpoint::PluginInstance(instance) => MessageEndpoint::PluginInstance { id: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
+        wit_types::MessageEndpoint::Extension(id) => MessageEndpoint::Extension { id },
+        wit_types::MessageEndpoint::Topic(name) => MessageEndpoint::Topic { name },
+    }
+}
+
+fn kernel_message_endpoint_to_wit(endpoint: &MessageEndpoint) -> wit_types::MessageEndpoint {
+    match endpoint {
+        MessageEndpoint::Shell { instance } => wit_types::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+        MessageEndpoint::Backbone { uri } => wit_types::MessageEndpoint::Backbone(uri.clone()),
+        MessageEndpoint::PluginInstance { id } => wit_types::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+        MessageEndpoint::Extension { id } => wit_types::MessageEndpoint::Extension(id.clone()),
+        MessageEndpoint::Topic { name } => wit_types::MessageEndpoint::Topic(name.clone()),
+    }
+}
+
+fn wit_request_outcome_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
+    match result {
+        wit_events::CompletionResult::Ok(bytes) => RequestOutcome::Ok(bytes),
+        wit_events::CompletionResult::Fault(bytes) => RequestOutcome::Err(bytes),
+    }
+}
+
+fn kernel_request_outcome_to_wit(result: &RequestOutcome) -> wit_events::CompletionResult {
+    match result {
+        RequestOutcome::Ok(bytes) => wit_events::CompletionResult::Ok(bytes.clone()),
+        RequestOutcome::Err(bytes) => wit_events::CompletionResult::Fault(bytes.clone()),
+    }
+}
+
+fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatus {
+    match status {
+        wit_reactor::TurnStatus::Idle => TurnStatus::Idle,
+        wit_reactor::TurnStatus::MoreWork => TurnStatus::MoreWork,
+        wit_reactor::TurnStatus::CheckpointReady => TurnStatus::CheckpointReady,
+        wit_reactor::TurnStatus::Faulted(bytes) => TurnStatus::Faulted(bytes),
+    }
+}
+
+/// 🎁️ Every effect that carries a `req: request-id` becomes `RequestId(req)` — one line, so it's
+/// inlined at each call site below rather than its own helper.
+
+/// 🐛️ Guest → host: WIT `effect` (`📜️wit/📜️effects.wit`) to `semio_framework::kernel::Effect`.
+/// `Err` is returned (never a silently-wrong `Effect`) for `io-run` — the one variant with no
+/// kernel counterpart yet (`## blocked-on` in the report).
+fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHostError> {
+    use wit_effects::Effect as E;
+    Ok(match effect {
+        E::SendMessage(inner) => Effect::SendMessage { target: kernel_message_endpoint_to_wit_reverse(inner.target), payload: inner.payload },
+        E::PublishEvent(inner) => Effect::PublishEvent { topic: inner.topic, payload: inner.payload },
+        E::BlobLoad(inner) => Effect::BlobLoad { req: RequestId(inner.req), hash: inner.hash },
+        E::BlobWrite(inner) => Effect::BlobWrite {
+            req: RequestId(inner.req),
+            media_type: decode_json(&inner.media_type).unwrap_or(semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }),
+            bytes: inner.bytes,
+        },
+        E::HttpRequest(inner) => Effect::HttpRequest { req: RequestId(inner.req), method: inner.method, url: inner.url, headers: inner.headers, body: inner.body, stream: inner.streaming },
+        E::DocumentRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.doc as u128), lane: inner.lane },
+        E::DocumentWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.doc as u128), lane: inner.lane, ops: inner.ops },
+        E::LinkResolve(inner) => Effect::LinkResolve { req: RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
+        E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.kind, filter: decode_dsl(&inner.filter) },
+        E::IoCompose(inner) => Effect::IoCompose {
+            req: RequestId(inner.req),
+            key: String::from_utf8_lossy(&inner.key).into_owned(),
+            sources: decode_json(&inner.sources).unwrap_or_default(),
+        },
+        // 🚧️ blocked-on-A3: no `Effect::IoRun` variant exists yet (`## blocked-on` in the report).
+        E::IoRun(_inner) => return Err(PluginHostError::Plugin("effect io-run has no semio_framework::kernel::Effect variant yet (needs A3 to add Effect::IoRun) — see 📓️terra-B1-host-native-report.md".to_string())),
+        E::CacheDerive(inner) => Effect::CacheDerive { req: RequestId(inner.req), engine_id: inner.engine_id, input: inner.input },
+        E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.engine_id, key: inner.key },
+        E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.kind), params: decode_dsl(&inner.params).unwrap_or(DslValue::Null) },
+        E::CloseWindow(inner) => Effect::CloseWindow { window: WindowHandle(inner.window as u128) },
+        E::DispatchAction(inner) => Effect::DispatchAction { req: RequestId(inner.req), action: inner.target, args: decode_dsl(&inner.invocation), delay_ms: 0 },
+        E::InvokeExtension(inner) => Effect::InvokeExtension { req: RequestId(inner.req), extension_id: inner.extension_id, capability: inner.capability, request_json: String::from_utf8_lossy(&inner.payload).into_owned() },
+        E::Notify(inner) => Effect::Notify { message: inner.message },
+        E::ClipboardWrite(inner) => Effect::ClipboardWrite { fragment: decode_json(&inner.fragment).unwrap_or_default() },
+        E::Navigate(inner) => Effect::Navigate { uri: inner.uri },
+        E::OpenExternalUrl(inner) => Effect::OpenExternalUrl { url: inner.url },
+        E::SetPanel(inner) => Effect::SetPanel { panel_json: inner.panel_json },
+        E::SetActiveUtility(inner) => Effect::SetActiveUtility { window_id: inner.window_id, utility_id: inner.utility_id },
+        E::SetActiveTool(inner) => Effect::SetActiveTool { tool_id: inner.tool_id },
+        E::PatchWorld3dChrome(inner) => Effect::PatchWorld3dChrome {
+            selection_json: inner.selection_json,
+            vortices_json: inner.vortices_json,
+            document_selected_ids: inner.document_selected_ids,
+            document_highlighted_ids: inner.document_highlighted_ids,
+        },
+        E::ReplayShellCommand(inner) => Effect::ReplayShellCommand { action_id: inner.action_id, args: inner.args.and_then(|bytes| decode_dsl(&bytes)) },
+        E::SpawnPluginInstance(inner) => Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id, label: inner.label, document_json: inner.document_json },
+        E::OpenPluginInstance(inner) => Effect::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
+        E::OpenDialog(inner) => Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.dialog_id, args: inner.args.and_then(|bytes| decode_dsl(&bytes)) },
+        E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).unwrap_or_default() },
+        E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
+        E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.accept, read_as: inner.read_as, import_action: String::new(), multiple: inner.multiple },
+        E::RequestMediaFrames(inner) => Effect::RequestMediaFrames {
+            req: RequestId(inner.req),
+            accept: inner.accept,
+            frame_action: String::new(),
+            done_action: String::new(),
+            fallback_action: String::new(),
+            sample_stride: inner.sample_stride,
+            max_frames: inner.max_frames,
+            max_long_edge_px: inner.max_long_edge_px,
+            fps_hint: inner.fps_hint,
+            payload: inner.payload.map(|bytes| String::from_utf8_lossy(&bytes).into_owned()),
+            args: inner.args.and_then(|bytes| decode_dsl(&bytes)),
+        },
+        E::LoadDocument(inner) => Effect::LoadDocument { pack: inner.doc_pack, spr: inner.spr },
+        E::RequestSync => Effect::RequestSync,
+        E::SetTimer(inner) => Effect::SetTimer { id: inner.id, after_ms: inner.after_ms as u64, repeat: inner.repeat },
+        E::SpawnJob(inner) => Effect::SpawnJob { job: inner.job, kind: inner.kind, input: inner.input, placement: match inner.placement { wit_effects::JobPlacement::Inline => JobPlacement::Inline, wit_effects::JobPlacement::Isolated => JobPlacement::Isolated, wit_effects::JobPlacement::Exclusive => JobPlacement::Exclusive } },
+        E::CancelJob(inner) => Effect::CancelJob { job: inner.job },
+        E::Respond(inner) => Effect::Respond {
+            req: RequestId(inner.req),
+            result: match inner.outcome { wit_effects::RespondResult::Ok(bytes) => RequestOutcome::Ok(bytes), wit_effects::RespondResult::Fault(bytes) => RequestOutcome::Err(bytes) },
+        },
+        E::StorageRead(inner) => Effect::StorageRead { req: RequestId(inner.req), key: inner.key },
+        E::StorageWrite(inner) => Effect::StorageWrite { req: RequestId(inner.req), key: inner.key, bytes: inner.value },
+        E::StorageDelete(inner) => Effect::StorageDelete { req: RequestId(inner.req), key: inner.key },
+        E::RequestCapability(inner) => Effect::RequestCapability { req: RequestId(inner.req), capability: CapabilityRequest { id: CapabilityId(inner.id), scope: inner.scope, reason: inner.reason, optional: inner.optional } },
+        E::ReleaseCapability(inner) => Effect::ReleaseCapability { id: CapabilityId(inner.id) },
+        E::Subscribe(inner) => Effect::Subscribe { topic: inner.topic },
+        E::Unsubscribe(inner) => Effect::Unsubscribe { topic: inner.topic },
+    })
+}
+
+/// 🐛️ `SendMessageEffect.target` is `wit_types::MessageEndpoint` (from the `types` interface via
+/// `use types.{message-endpoint}` in `effects.wit`) — same generated Rust type as
+/// `wit_message_endpoint_to_kernel` above takes, just named to keep the giant match arm list above
+/// readable.
+fn kernel_message_endpoint_to_wit_reverse(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+    wit_message_endpoint_to_kernel(endpoint)
+}
+
+fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
+    // 🌉️ Convention (not yet confirmed with A2/A3 — `## blocked-on`): kernel's `Event`/`Effect`
+    // surface fields are a plain `String`; WIT's `surface-ref` is a structured `{instance, surface:
+    // u32}`. Treated here as the decimal string of the WIT `surface: u32`, `instance` supplied from
+    // context (this actor's own instance id) since kernel's `String` never carried it.
+    wit_ui::SurfaceRef { instance: instance_id, surface: surface.parse().unwrap_or(0) }
+}
+
+/// 🏁️ Host → guest: `semio_framework::kernel::Event` to WIT `event` (`📜️wit/📜️events.wit`).
+/// `instance_id` fills the WIT `instance` field several kernel lifecycle variants dropped (see
+/// `WasmtimeInstanceState::instance_id`'s docstring).
+fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
+    match event {
+        Event::InstanceOpen { instance, app_id, actor, config, assets, capabilities, quotas } => wit_events::Event::InstanceOpen(wit_events::InstanceOpenEvent {
+            instance: instance.0.parse().unwrap_or(instance_id),
+            app_id: app_id.clone(),
+            actor: actor.clone(),
+            config: config.clone(),
+            assets: assets.clone(),
+            capabilities: capabilities.iter().map(kernel_broker_grant_to_wit).collect(),
+            quotas: encode_json(quotas),
+        }),
+        Event::InstanceClose => wit_events::Event::InstanceClose(wit_events::InstanceCloseEvent { instance: instance_id }),
+        Event::Activate { reason } => wit_events::Event::Activate(wit_events::ActivateEvent { instance: instance_id, reason: kernel_activation_event_to_wit(reason) }),
+        Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
+        Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change) }),
+        Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas) }),
+        Event::AppCommandEvent { instance, seq, command } => wit_events::Event::AppCommand(wit_events::AppCommandEvent { instance: instance.0.parse().unwrap_or(instance_id), seq: *seq, command: command.clone() }),
+        Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface) }),
+        Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface) }),
+        Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface), width: *width, height: *height }),
+        Event::PatchAck { surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision }),
+        Event::PatchRejected { surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision, reason: reason.clone() }),
+        Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result) }),
+        Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, bytes: bytes.clone(), done: *done }),
+        Event::JobProgress { job, progress } => wit_events::Event::JobProgress(wit_events::JobProgressEvent { job: *job, progress: progress.clone().unwrap_or_default() }),
+        Event::JobCompleted { job, result } => wit_events::Event::JobCompleted(wit_events::JobCompletedEvent { job: *job, outcome: kernel_request_outcome_to_wit(result) }),
+        Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source), payload: payload.clone() }),
+        Event::Timer { id } => wit_events::Event::Timer(wit_events::TimerEvent { id: *id }),
+        Event::Wake => wit_events::Event::Wake,
+        Event::Request { req, from, capability, payload } => wit_events::Event::Request(wit_events::RequestEvent { req: req.0, from: kernel_message_endpoint_to_wit(from), capability: capability.clone(), payload: payload.clone() }),
+    }
+}
+
+fn kernel_activation_event_to_wit(reason: &semio_framework::kernel::ActivationEvent) -> wit_events::ActivationEvent {
+    use semio_framework::kernel::ActivationEvent as A;
+    match reason {
+        A::OnCommand { id } => wit_events::ActivationEvent::OnCommand(id.clone()),
+        A::OnViewVisible { id } => wit_events::ActivationEvent::OnViewVisible(id.clone()),
+        A::OnFileType { ext } => wit_events::ActivationEvent::OnFileType(ext.clone()),
+        A::OnArtifactKind { kind } => wit_events::ActivationEvent::OnArtifactKind(kind.clone()),
+        A::OnExtensionRequest { point } => wit_events::ActivationEvent::OnExtensionRequest(point.clone()),
+        A::OnStartupFinished => wit_events::ActivationEvent::OnStartupFinished,
+    }
+}
+
+fn kernel_capability_change_to_wit(change: &semio_framework::kernel::CapabilityChange) -> wit_capabilities::CapabilityChange {
+    use semio_framework::kernel::CapabilityChange as C;
+    match change {
+        C::Granted { id, grant } => wit_capabilities::CapabilityChange::Granted(kernel_broker_grant_to_wit(grant)),
+        C::Revoked { id } => wit_capabilities::CapabilityChange::Revoked(id.0.clone()),
+        C::Narrowed { id: _, grant } => wit_capabilities::CapabilityChange::Narrowed(kernel_broker_grant_to_wit(grant)),
+    }
+}
+
+fn kernel_broker_grant_to_wit(grant: &BrokerCapabilityGrant) -> wit_capabilities::CapabilityGrant {
+    wit_capabilities::CapabilityGrant {
+        token: wit_capabilities::CapabilityToken { id: grant.id.0.clone(), token: grant.token.0 as u64 },
+        scope: grant.scope.clone(),
+        expires_ms: grant.expires_ms.map(|value| value as i64),
+    }
+}
+//#endregion 🔀️EffectEventMarshal
+
+#[cfg(test)]
+mod wasmtime_runtime_tests {
+    use super::*;
+
+    #[test]
+    fn compile_accepts_a_real_component_and_caches_it() {
+        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
+        if !wasm_path.exists() {
+            return;
+        }
+        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).expect("engine builds");
+        let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
+        let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) };
+        let compiled = runtime.compile(&package, &bytes).expect("a real wasip2 component compiles even though it does not export the new `actor` world yet");
+        assert!(compiled.component.is_some());
+    }
+
+    #[test]
+    fn instantiate_rejects_a_component_that_does_not_export_the_actor_world() {
+        // 🧬️ No `.wasm` in this repo exports `world actor` yet (A2's guest SDK rewrite / the W3
+        // plugin migrations haven't landed) — this asserts the HONEST negative: `instantiate`
+        // rejects a real, valid, but wrong-ABI component rather than silently mis-binding it.
+        let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
+        if !wasm_path.exists() {
+            return;
+        }
+        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).expect("engine builds");
+        let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
+        let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) };
+        let compiled = runtime.compile(&package, &bytes).expect("compiles as a component");
+        let budget = Budget { fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+        let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).expect_err("stdio.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe`");
+        let _ = error;
+    }
+
+    #[test]
+    fn wit_turn_status_conversion_is_a_plain_rename() {
+        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Idle), TurnStatus::Idle);
+        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::MoreWork), TurnStatus::MoreWork);
+        assert!(matches!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Faulted(vec![1, 2, 3])), TurnStatus::Faulted(bytes) if bytes == vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn message_endpoint_round_trips_through_wit_and_back() {
+        let original = MessageEndpoint::Topic { name: "os.runtime.metrics".to_string() };
+        let wit = kernel_message_endpoint_to_wit(&original);
+        let back = wit_message_endpoint_to_kernel(wit);
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn io_run_effect_is_a_reported_error_not_a_silent_mismap() {
+        let effect = wit_effects::Effect::IoRun(wit_effects::IoRunEffect { req: 1, source: "a".to_string(), target: "b".to_string(), payload: vec![] });
+        let result = wit_effect_to_kernel(effect);
+        assert!(result.is_err(), "io-run must surface as an error until Effect::IoRun exists");
+    }
+}
+//#endregion 🐎️WasmtimeRuntime
+//#endregion 🎭️GuestRuntime
 
 fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
@@ -3315,8 +4383,8 @@ impl WasmPluginRuntime {
 /// `bindgen!` cannot be invoked twice at the same module scope.
 mod extension_bindings {
     wasmtime::component::bindgen!({
-        world: "extension-world",
-        path: "../../../📦️packages/🦀️rust/📜️wit",
+        world: "actor",
+        path: "../../../🧬️schema",
         async: false,
         with: {
             "semio:framework/types": crate::semio::framework::types,

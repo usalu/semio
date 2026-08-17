@@ -37,7 +37,7 @@ pub mod program_bridge;
 // 🐛️ Lives at the crate root, not inside `program_bridge` above (see that module's own `PluginHostConfig`
 // region for why) — this is the file's real directory, so the 3-`..` climb to
 // `framework/plugin/registry/generated/🦀️hosts.rs` actually resolves.
-#[path = "../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🦀️hosts.rs"]
+#[path = "../../../../../../🔌️plugin/📇️registry/🤖️generated/🦀️hosts.rs"]
 mod generated_plugin_hosts;
 //#endregion 🏠️🧳️PluginHostConfig
 

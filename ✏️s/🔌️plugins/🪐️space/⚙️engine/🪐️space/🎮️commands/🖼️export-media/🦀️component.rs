@@ -3,7 +3,7 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::engine::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowMutation, WorkflowSnapshot};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, Effect};
 use serde_json::{json, Value};
 
 use serde::{Deserialize, Serialize};
@@ -29,7 +29,7 @@ pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;
             let result = semio_framework_os::export_os_app_instance_media_kind(node, &document_value, &format_kind)
                 .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.export"), error))?;
-            Ok(Emit::effect(HostEffect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }))
+            Ok(Emit::effect(Effect::DownloadMediaExport { filename: result.file_name, mime_type: result.mime_type, data: result.data, encoding: result.encoding }))
         }
         None => Ok(Emit::default()),
     }
@@ -94,7 +94,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::DownloadMediaExport { data, encoding, .. } => Some((data.clone(), encoding.clone())),
+                Effect::DownloadMediaExport { data, encoding, .. } => Some((data.clone(), encoding.clone())),
                 _ => None,
             })
             .expect("DownloadMediaExport effect");
@@ -102,7 +102,7 @@ mod tests {
         assert_eq!(encoding.as_deref(), Some("base64"));
 
         let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into() })).expect("handle");
-        assert!(import.effects.iter().any(|effect| matches!(effect, HostEffect::RequestFileOpen { import_action, accept, .. } if import_action == "importMediaPayload" && accept.contains(".dwg"))));
+        assert!(import.effects.iter().any(|effect| matches!(effect, Effect::RequestFileOpen { import_action, accept, .. } if import_action == "importMediaPayload" && accept.contains(".dwg"))));
         assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport { node_id: Some(node.id), format: Some(DWG_FORMAT_ID.into()) }]);
 
         let pending_config = apply_config(&config, &import.config_mutations);

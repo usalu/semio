@@ -1,0 +1,2 @@
+   Compiling semio-framework-os-mcp v0.1.0 (/private/tmp/claude-501/-Users-ueli-Documents-semio/2afa74de-3237-4651-bd3a-8e33a69515db/scratchpad/mcp-standalone/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.68s

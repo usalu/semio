@@ -4,7 +4,7 @@
 
 import { parseInvocationResponse, pluginGraphErrorMessage, type PluginRegistryEntry, type ShellLocale } from "@semio-tech/framework";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../../../../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
+import { PLUGIN_CATALOG } from "../../../../../../../🔌️plugin/📇️registry/🟦️catalog.ts";
 
 await new Promise<void>((resolve) => {
   if (document.readyState === "loading") {

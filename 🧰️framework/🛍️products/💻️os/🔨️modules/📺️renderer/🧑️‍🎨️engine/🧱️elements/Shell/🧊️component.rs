@@ -409,7 +409,7 @@ fn can_check_in(role: semio_framework::manifest::AppRole) -> bool {
 }
 
 /// 📌️ ticket §C5 item 2 — pure decision for the per-frame auto check-in poll. This shell has no timer
-/// wheel (see `render_sync_status_and_checkin`'s doc note on `HostEffect::DispatchAction`'s `delay_ms`
+/// wheel (see `render_sync_status_and_checkin`'s doc note on `Effect::DispatchAction`'s `delay_ms`
 /// collapsing to "next tick"), so `AutoCheckinScheduler`'s `setTimeout`-based debounce
 /// (`ShellHelpers/🟦️component.tsx`) is reproduced as a poll instead: fires once uncommitted edits
 /// reach `threshold` (never waiting out the idle window once crossed), or once `idle_ms` have elapsed
@@ -1677,16 +1677,16 @@ impl ShellState {
         Ok(())
     }
 
-    fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::HostEffect>) {
+    fn queue_host_effects(&mut self, controller_id: &str, effects: Vec<semio_framework::kernel::Effect>) {
         for effect in effects {
             match effect {
-                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
+                semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
                     self.apply_set_active_utility(&window_id, &utility_id);
                 }
-                semio_framework::kernel::HostEffect::Navigate { uri } => {
+                semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri);
                 }
-                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
+                semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, &pack, &spr) {
@@ -1695,10 +1695,10 @@ impl ShellState {
                         }
                     }
                 }
-                semio_framework::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                semio_framework::kernel::Effect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: dispatch_action_id, args });
                 }
-                semio_framework::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
+                semio_framework::kernel::Effect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args, .. } => {
                     for descriptor in request_media_frames(controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args)) {
                         self.deferred_actions.push(descriptor);
                     }
@@ -2546,7 +2546,7 @@ impl ShellState {
         // Calls `program.handle_command` DIRECTLY rather than `self.dispatch_command` (which would
         // recurse back into `observe_invocation_history` → `touch_space_index_artifact` — `rustc`
         // rightly refuses that as unbounded async recursion without `Box::pin`; a direct low-level
-        // call is also the more honest shape here, since `touchArtifact` requests no `HostEffect`s for
+        // call is also the more honest shape here, since `touchArtifact` requests no `Effect`s for
         // `dispatch_command`'s own effect loop to process).
         if self.sync_channel.as_ref().map(|channel| channel.document_id.as_str()) == Some(S_SPACE_INDEX_DOCUMENT_ID) && self.open_space_id.as_deref() == Some(space_id) {
             let Some(session) = self.session.clone() else { return };
@@ -2940,22 +2940,22 @@ impl ShellState {
         // 🎓️ Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
         self.chrome_tour_note_action_performed(&action.action);
-        // 🧰️ A program may programmatically switch the active utility via `HostEffect::SetActiveUtility`
+        // 🧰️ A program may programmatically switch the active utility via `Effect::SetActiveUtility`
         // (Architecture Decision 4/9) — routed through `apply_set_active_utility` (rather than writing
         // `active_utility_by_window` directly) so the tour's advance-by-doing funnel sees this activation
         // too, exactly like a user click would.
         for effect in &result.requested_effects {
             match effect {
-                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
+                semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
                     self.apply_set_active_utility(window_id, utility_id);
                 }
-                semio_framework::kernel::HostEffect::Navigate { uri } => {
+                semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri.clone());
                     if let Err(error) = self.apply_shell_uri(uri).await {
                         eprintln!("[DEBUG] wgpu shell navigate effect failed: {error}");
                     }
                 }
-                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
+                semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr) {
@@ -2970,7 +2970,7 @@ impl ShellState {
                 // exists in this shell yet; the real wall-clock delay is honored by the React shell's own
                 // `setTimeout` handling of the same effect). The dispatched action reuses the originating
                 // `action.controller_id`, i.e. re-invokes the same plugin instance that emitted the effect.
-                semio_framework::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                semio_framework::kernel::Effect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: action.controller_id.clone(), action: dispatch_action_id.clone(), args: args.clone() });
                 }
                 // 🎞️ D5: native counterpart of `request_file_open`, beside it below — builds one
@@ -2979,7 +2979,7 @@ impl ShellState {
                 // same `deferred_actions` mechanism `DispatchAction` above uses so `flush_deferred_actions`
                 // dispatches them through the normal `dispatch_action` path (including its own nested
                 // `requested_effects`) in order, one per tick's drain.
-                semio_framework::kernel::HostEffect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
+                semio_framework::kernel::Effect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args, .. } => {
                     for descriptor in
                         request_media_frames(&action.controller_id, accept, frame_action, done_action, fallback_action, *sample_stride, *max_frames, *max_long_edge_px, *fps_hint, payload.as_deref(), optional_dsl_value_as_json(args.clone()))
                     {
@@ -2992,7 +2992,7 @@ impl ShellState {
                 // (e.g. `os.setThemeId`'s undo replay) has no handler in this lease, same pre-existing
                 // gap the React shell's own report documents.
                 #[cfg(not(target_arch = "wasm32"))]
-                semio_framework::kernel::HostEffect::ReplayShellCommand { action_id, args } => {
+                semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
                     self.handle_replay_shell_command(action_id, args.as_ref()).await;
                 }
                 _ => {}
@@ -3029,24 +3029,24 @@ impl ShellState {
         self.observe_invocation_history(result.history_patch.as_ref()).await;
         for effect in &result.requested_effects {
             match effect {
-                semio_framework::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => self.apply_set_active_utility(window_id, utility_id),
-                semio_framework::kernel::HostEffect::Navigate { uri } => {
+                semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => self.apply_set_active_utility(window_id, utility_id),
+                semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri.clone());
                     self.apply_shell_uri(uri).await?;
                 }
-                semio_framework::kernel::HostEffect::LoadDocument { pack, spr } => {
+                semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                         plugin.load_app_document_pack(session.instance_id, pack, spr)?;
                     }
                 }
-                semio_framework::kernel::HostEffect::DispatchAction { action, args, .. } => {
+                semio_framework::kernel::Effect::DispatchAction { action, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.clone(), args: args.clone() });
                 }
                 // 📇️ ticket §C6/§3/§4 — same funnel as `dispatch_action`'s own arm above; a "surface
                 // command" per contract §C6's own wording is exactly a command-boundary emission, so
                 // both dispatch paths need the handler.
                 #[cfg(not(target_arch = "wasm32"))]
-                semio_framework::kernel::HostEffect::ReplayShellCommand { action_id, args } => {
+                semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
                     self.handle_replay_shell_command(action_id, args.as_ref()).await;
                 }
                 _ => {}
@@ -3549,7 +3549,7 @@ impl ShellState {
         let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
         for effect in &result.requested_effects {
-            if let semio_framework::kernel::HostEffect::LoadDocument { pack, spr } = effect {
+            if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
                 program.load_app_document_pack(session.instance_id, pack, spr)?;
             }
         }
@@ -7249,7 +7249,7 @@ fn chrome_tooltip_ready(hover: &ChromeTooltipHover, now_ms: f64) -> bool {
 }
 
 /// 🗨️ A generic modal confirmation/message dialog request — the minimal generic mechanism
-/// `os-shell.tsx`'s `DialogDefinition`/`HostEffect::OpenDialog` calls for (title + body +
+/// `os-shell.tsx`'s `DialogDefinition`/`Effect::OpenDialog` calls for (title + body +
 /// submit/cancel), enough to gate a destructive chrome action behind a real confirmation. Staged-form
 /// `args` are out of scope for this pass (see the report's honest scope-down).
 #[derive(Clone, Debug)]

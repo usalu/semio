@@ -21,7 +21,7 @@ use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMut
 use crate::editor::process3d::terminology::process3d_labels;
 use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, ArtifactEditor, ArtifactKindSpec, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect,
     DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode,
@@ -96,8 +96,8 @@ fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind)
 /// utility is also mirrored into `Process3dConfig::active_utility_id` (via `SetActiveUtility`) for
 /// rendering, but the window chrome itself is still driven by this host effect. Shared by
 /// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
-pub fn set_active_utility_effect(utility: &str) -> HostEffect {
-    HostEffect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
+pub fn set_active_utility_effect(utility: &str) -> Effect {
+    Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
 
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-wide wrapper layers `icon_id` on
@@ -106,16 +106,16 @@ pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Labe
     UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None, ..semio_framework_plugin::tree_item_with_action(id, label, None, action) }
 }
 
-/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+/// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) every wholesale document-swap
 /// command (`🎮️commands/📄️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
 /// op-log — a genesis envelope with no history to encode.
-pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> HostEffect {
+pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 
 /// 🚨 Typed host-action decoding fault with one stable app-specific code.
@@ -253,10 +253,10 @@ impl ArtifactEditor for Process3dPlayApp {
     /// 🌱️ `whole_document_operation` stays the trait default (`None`): per `📓️taxonomy.md`, whole-
     /// document replace has no in-history mutation at all (there is no import mutation by locked
     /// decision — every whole-document gesture below routes through `reset_process3d_document_effect`
-    /// instead, a `HostEffect::LoadDocument`).
+    /// instead, a `Effect::LoadDocument`).
 
     /// 📥️ `geometry:in` (best-effort STEP-text import) replaces the whole document via a
-    /// `HostEffect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
+    /// `Effect::LoadDocument` (whole-document replace has no in-history mutation); the inherited
     /// `document:in` default (which would decode a base64 pack via `whole_document_operation`) is
     /// unreachable now that `whole_document_operation` is `None`, so `document:in` is simply
     /// unimplemented here — overriding `import_media` shadows the trait's provided body for every port.
@@ -1030,7 +1030,7 @@ mod tests {
     fn registry_backed_example_action_emits_the_requested_document() {
         let mut app = app_with_registry();
         let result = action(&mut app, "setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })));
-        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
+        let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode example document");
@@ -1166,14 +1166,14 @@ mod tests {
 
     /// 🧬️ Swapping the stock kind resets the whole document (stock + cleared timeline), which has no
     /// in-history mutation (a whole-snapshot variant is banned outright), so `setStock` now surfaces as a
-    /// `HostEffect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
+    /// `Effect::LoadDocument` rather than an `artifact_mutations` entry — `dispatch`'s in-process
     /// harness never applies `effects` to its own store, so this asserts on the emitted effect.
     #[test]
     fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = app();
         let result = dispatch(&mut app, Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }));
         assert!(result.mutations.is_empty(), "setStock replaces the whole document via an effect, not in-history mutations");
-        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setStock must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setStock must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let document = <Process3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -1207,7 +1207,7 @@ mod tests {
         set_utility(&mut app, "cut");
         let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
         assert!(
-            result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
+            result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
             "placing a step must hand the host a SetActiveUtility(select) effect so the click-to-place utility disengages",
         );
     }

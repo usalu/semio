@@ -236,16 +236,34 @@ pub enum ClipboardError {
 }
 //#endregion 🔖️Clipboard
 
+//#region 🔖️Effect
+/// 🎫️ Correlates an `Effect` that expects a completion with the `Event::Completed` (or
+/// `Event::HttpChunk`/`JobProgress`/`JobCompleted`) that answers it — `request-id = u64` in
+/// `📜️wit/📜️types.wit`. Minted host-side per pending request; the guest SDK's request registry
+/// (`📓️design-abi.md` §4) parks a future on it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct RequestId(pub u64);
+
 // 🪪️ `rename_all` on an enum only renames variant tags ("setActiveUtility"), not the fields *inside* each
 // struct-variant — those need `rename_all_fields` (serde 1.0.126+) or every multi-word field here
 // (window_kind_id, mime_type, plugin_id, ...) silently serializes as snake_case, breaking any TS side
 // that destructures camelCase (confirmed live: `SetActiveUtility` was shipping `window_kind_id`/`utility_id`,
 // so the host-owned utility switch after `openVortexSuggestions` never applied and the brush preview never
 // rendered).
+/// 🐚️ A typed side effect the guest emits toward the host — `📓️design-abi.md` §2, replacing
+/// `HostEffect` now that plugins and extensions share one `actor` world. Every variant that
+/// existed as `HostEffect` keeps its exact name and fields (mechanical `HostEffect` → `Effect`
+/// rename at every call site); six of them (`OpenWindow`, `RequestFileOpen`, `RequestMediaFrames`,
+/// `SpawnPluginInstance`, `OpenDialog`, `DispatchAction`) additionally gain a `req: RequestId` now
+/// that they complete; `InvokeExtension` loses `response_action` and gains `req` (the SDK resumes
+/// the awaiting future instead of a redispatch). The rest are new: messaging, blobs, documents,
+/// links, registry lookups, io composition, engine caches, jobs, storage, capability admin, and
+/// pub/sub — see `📓️design-abi.md` §2's table.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum HostEffect {
-    OpenWindow { kind: WindowKindId, params: DslValue },
+pub enum Effect {
+    OpenWindow { req: RequestId, kind: WindowKindId, params: DslValue },
     CloseWindow { window: WindowHandle },
     Notify { message: String },
     /// 📋️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
@@ -279,6 +297,7 @@ pub enum HostEffect {
     /// selecting several files and `import_action` is re-dispatched once per file, sequentially, each
     /// call extending the args with `{ index, total }`.
     RequestFileOpen {
+        req: RequestId,
         accept: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         read_as: Option<String>,
@@ -295,6 +314,7 @@ pub enum HostEffect {
     /// once instead, with `{payload: dataUrl(raw container bytes), name, ...args}` — mirrors
     /// `RequestFileOpen`'s per-file re-dispatch shape but fans out video frames instead of files.
     RequestMediaFrames {
+        req: RequestId,
         accept: String,
         frame_action: String,
         done_action: String,
@@ -314,6 +334,7 @@ pub enum HostEffect {
     },
     /// @emoji ✨️ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
     SpawnPluginInstance {
+        req: RequestId,
         plugin_id: String,
         app_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -340,6 +361,7 @@ pub enum HostEffect {
     /// @emoji 🗨️ Opens a declared `AppDefinition.dialogs` entry; `args` (an object keyed by arg id)
     /// pre-seeds the staged form. Kernel-altitude — plain `String`/`Value`, no manifest types.
     OpenDialog {
+        req: RequestId,
         dialog_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
@@ -350,6 +372,7 @@ pub enum HostEffect {
     /// `requestedEffects` back through the same effect-application pass, so a `DispatchAction` can
     /// itself emit another one, chaining as many ticks as the plugin needs.
     DispatchAction {
+        req: RequestId,
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<DslValue>,
@@ -377,13 +400,79 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         document_highlighted_ids: Option<Vec<String>>,
     },
-    /// @emoji 🔁️ Asks the shell to invoke an extension capability and redispatch `response_action` on the requesting instance with the result.
+    /// @emoji 🔁️ Asks the shell to invoke an extension capability — the SDK resumes the awaiting
+    /// future on `Event::Completed { req, .. }` instead of a `response_action` redispatch.
     InvokeExtension {
+        req: RequestId,
         extension_id: String,
         capability: String,
         request_json: String,
-        response_action: String,
     },
+
+    // --- new variants (📓️design-abi.md §2's table; nothing constructs these yet) ---
+    /// @emoji 📨️ Replaces every non-UI/non-event `AppFrame::*` plus `backbone-send` — `target`
+    /// picks shell vs. backbone vs. a specific plugin/extension/topic.
+    SendMessage { target: MessageEndpoint, payload: Vec<u8> },
+    /// @emoji 📣️ Replaces `AppFrame::Events` — a pub/sub broadcast, not a directed message.
+    PublishEvent { topic: String, payload: Vec<u8> },
+    BlobWrite { req: RequestId, media_type: MediaType, bytes: Vec<u8> },
+    /// @emoji 📥️ Also answers a lazy `read-asset` miss (assets are preloaded in
+    /// `Event::InstanceOpen.assets`; this is the fallback for one that wasn't).
+    BlobLoad { req: RequestId, hash: String },
+    HttpRequest {
+        req: RequestId,
+        method: String,
+        url: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        headers: Vec<(String, String)>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        body: Option<Vec<u8>>,
+        #[serde(default)]
+        stream: bool,
+    },
+    DocumentRead { req: RequestId, doc: ArtifactHandle, lane: String },
+    DocumentWrite { req: RequestId, doc: ArtifactHandle, lane: String, ops: Vec<u8> },
+    LinkResolve { req: RequestId, link: String },
+    /// @emoji 🔍️ On-demand io-dialect lookup — the routing table itself is preloaded in
+    /// `Event::InstanceOpen`; this is only for entries that weren't.
+    RegistryQuery {
+        req: RequestId,
+        kind: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        filter: Option<DslValue>,
+    },
+    /// @emoji 🧵️ Routed by the host `IoRouter` to the owning plugin as an `Event::Request` — one
+    /// hop, no re-entrancy.
+    IoCompose { req: RequestId, key: String, sources: Vec<String> },
+    CacheDerive { req: RequestId, engine_id: String, input: Vec<u8> },
+    CacheRead { req: RequestId, engine_id: String, key: String },
+    /// @emoji ⏱️ Replaces self-tick loops and `pending_effects()` polling — the host wakes the
+    /// instance with `Event::Timer { id }` after `after_ms`, repeating if `repeat` is set.
+    SetTimer { id: u64, after_ms: u64, #[serde(default)] repeat: bool },
+    SpawnJob { job: u64, kind: String, input: Vec<u8>, placement: JobPlacement },
+    CancelJob { job: u64 },
+    /// @emoji ↩️ Answers an inbound `Event::Request { req, .. }` within a bounded number of turns.
+    Respond { req: RequestId, result: RequestOutcome },
+    StorageRead { req: RequestId, key: String },
+    StorageWrite { req: RequestId, key: String, bytes: Vec<u8> },
+    StorageDelete { req: RequestId, key: String },
+    RequestCapability { req: RequestId, capability: CapabilityRequest },
+    ReleaseCapability { id: CapabilityId },
+    /// @emoji 📡️ Replaces `backbone-poll`/`backbone-status` — inbound traffic on `topic` arrives
+    /// as `Event::Message`.
+    Subscribe { topic: String },
+    Unsubscribe { topic: String },
+}
+
+/// 🚦 Where a spawned job runs — `📓️design-abi.md` §2's `spawn-job.placement`: `Inline` shares
+/// the instance's own turn budget, `Isolated` gets its own pooled actor, `Exclusive` gets a
+/// dedicated one (e.g. flow/brep tessellation, per `📓️design-abi.md` §5).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum JobPlacement {
+    Inline,
+    Isolated,
+    Exclusive,
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
@@ -394,6 +483,7 @@ pub struct IconRenderExportItem {
     pub filename: String,
     pub request: DslValue,
 }
+//#endregion 🔖️Effect
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -552,7 +642,7 @@ pub struct InvocationResult {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<Diagnostic>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub requested_effects: Vec<HostEffect>,
+    pub requested_effects: Vec<Effect>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<AppEvent>,
     #[serde(default)]
@@ -664,3 +754,339 @@ pub enum ArtifactMergeKind {
     ContentAddressedBlob,
 }
 //#endregion 🔖️MergeStrategy
+
+//#region 🔖️Event
+/// 📨️ Who a `Event::Message` came from / an `Effect::SendMessage` targets — `📓️design-abi.md`
+/// §2. This single shape replaces `backbone-poll`, the `DocumentChanged` push, `InvokeExtension`
+/// replies, and topic subscriptions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum MessageEndpoint {
+    Shell { instance: PluginInstanceId },
+    Backbone { uri: String },
+    PluginInstance { id: PluginInstanceId },
+    Extension { id: String },
+    Topic { name: String },
+}
+
+/// ✅️ The shared `result<pack, fault-bytes>` shape from `📜️wit/📜️types.wit`, carried by
+/// `Event::Completed`/`Event::JobCompleted` and `Effect::Respond`. `Err` bytes are an encoded
+/// fault the SDK decodes by originating request kind — the host never interprets it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RequestOutcome {
+    Ok(Vec<u8>),
+    Err(Vec<u8>),
+}
+
+/// 📨️ Everything the host delivers into a guest's `reactor::poll` — the full inbound contract
+/// from `📓️design-abi.md` §2. Lifecycle events open/close/activate/suspend an instance and push
+/// capability/quota changes; channel/surface/completion/messaging/timer/request events drive a
+/// turn. Nothing constructs one yet — additive, packet A2-abi-sdk's executor is the first reader.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum Event {
+    /// 🐣️ First event an instance receives — config/assets/capabilities/quotas are preloaded so
+    /// the first `poll` never blocks. `actor` is a placeholder `String` until the concurrently
+    /// landing `🎭️actor` crate's `RuntimeActorId` exists (this packet must not depend on it —
+    /// see the report's `🎭️actor` naming-hazard note).
+    InstanceOpen {
+        instance: PluginInstanceId,
+        app_id: AppInstanceId,
+        actor: String,
+        config: Vec<u8>,
+        assets: Vec<(String, Vec<u8>)>,
+        capabilities: Vec<BrokerCapabilityGrant>,
+        quotas: QuotaSchema,
+    },
+    InstanceClose,
+    Activate { reason: ActivationEvent },
+    SuspendRequest,
+    CapabilityChanged { change: CapabilityChange },
+    QuotaChanged { quotas: QuotaSchema },
+
+    /// 📡️ The `exchange(id, cmds)` → `poll([app-command{id,seq,cmd}…], budget)` collapse
+    /// (`📓️design-abi.md` §2 "`exchange` collapse") — routes to the existing `PluginApp` dispatch
+    /// unchanged.
+    AppCommandEvent { instance: PluginInstanceId, seq: u64, command: Vec<u8> },
+
+    SurfaceVisible { surface: String },
+    SurfaceHidden { surface: String },
+    SurfaceResized { surface: String, width: u32, height: u32 },
+    PatchAck { surface: String, revision: u64 },
+    /// 🩹️ Guest resends a full patch body (not a diff) on rejection — `revision`/`reason` name
+    /// what the host couldn't apply.
+    PatchRejected { surface: String, revision: u64, reason: String },
+
+    Completed { req: RequestId, result: RequestOutcome },
+    HttpChunk { req: RequestId, bytes: Vec<u8>, done: bool },
+    JobProgress {
+        job: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        progress: Option<Vec<u8>>,
+    },
+    JobCompleted { job: u64, result: RequestOutcome },
+
+    Message { source: MessageEndpoint, payload: Vec<u8> },
+
+    Timer { id: u64 },
+    Wake,
+
+    /// ↩️ The former `extension.invoke`/`artifact-compose`/`io-run`/`io-sniff`/`artifact-infer`/
+    /// `artifact-mutation-plan`/`migrate-artifact` — answered with `Effect::Respond` within a
+    /// bounded number of turns, or by spawning a job.
+    Request { req: RequestId, from: MessageEndpoint, capability: String, payload: Vec<u8> },
+}
+//#endregion 🔖️Event
+
+//#region 🔖️ActivationEvent
+/// 🚀️ Why an instance was activated — `📓️design-abi.md` §2's activation-event list, matched
+/// against a `manifest::PackageDescriptor.activation_events` declaration at install time.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ActivationEvent {
+    OnCommand { id: String },
+    OnViewVisible { id: String },
+    OnFileType { ext: String },
+    OnArtifactKind { kind: String },
+    OnExtensionRequest { point: String },
+    OnStartupFinished,
+}
+//#endregion 🔖️ActivationEvent
+
+//#region 🔖️UiPatch
+/// 🩹️ One revisioned UI patch batch for a surface — channel v12's `ui-patch` frame
+/// (`📓️design-abi.md` §2 "`exchange` collapse"). `base_revision` lets the guest detect a stale
+/// diff and fall back to a full body instead of the host reconciling a diff it can't trust.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiPatch {
+    pub surface: String,
+    pub kind: String,
+    pub revision: u64,
+    pub base_revision: u64,
+    pub ops: Vec<PatchOp>,
+}
+
+/// 🩹️ `📓️design-abi.md` §2's `PatchOp::{Replace, InsertChild, RemoveChild, SetProps}`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum PatchOp {
+    Replace { path: String, node: UiNode },
+    InsertChild { path: String, index: u32, node: UiNode },
+    RemoveChild { path: String, index: u32 },
+    /// 🎛️ `props` is `store::pack_rt::encode_wire_value` bytes, not a `UiNode` — a props-only
+    /// patch never touches the node's children.
+    SetProps { path: String, props: Vec<u8> },
+}
+//#endregion 🔖️UiPatch
+
+//#region 🔖️Budget
+/// ⛽️ Per-turn resource ceiling handed to `reactor::poll` — `📜️wit/📜️reactor.wit`'s `budget`
+/// record.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Budget {
+    pub fuel: u64,
+    pub deadline_ms: u32,
+    pub max_effects: u32,
+    pub max_patch_bytes: u32,
+    pub max_frames: u32,
+}
+//#endregion 🔖️Budget
+
+//#region 🔖️TurnResult
+/// 🏁️ Outcome of one `reactor::poll` — `📜️wit/📜️reactor.wit`'s `turn-status` variant.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum TurnStatus {
+    Idle,
+    MoreWork,
+    CheckpointReady,
+    Faulted(Vec<u8>),
+}
+
+/// 📈️ What a turn actually cost — fed to `BrokerHooks::on_turn_finished` for quota accounting
+/// against `QuotaSchema`'s per-turn fields.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Usage {
+    pub fuel_used: u64,
+    pub effects_emitted: u32,
+    pub patch_bytes: u32,
+    pub turn_ms: u32,
+}
+
+/// 🏁️ Result of one `reactor::poll` call — `📜️wit/📜️reactor.wit`'s `turn-result` record.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TurnResult {
+    pub ui_patches: Vec<UiPatch>,
+    pub effects: Vec<Effect>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_wake: Option<u64>,
+    pub status: TurnStatus,
+    pub fuel_used: u64,
+}
+//#endregion 🔖️TurnResult
+
+//#region 🔖️Broker
+/// 🔑️ A capability's identity — dotted/colon-scoped strings (`storage.read`, `http:<origin>`,
+/// `messaging.plugin:<id>`, `extension.invoke:<id>`, ...) per `📓️design-abi.md` §5's catalogue.
+/// A `String` newtype rather than a closed enum: several members carry a caller-chosen parameter
+/// (`<origin>`/`<uri>`/`<id>`/`<point>`) the broker matches by prefix, and the catalogue is
+/// expected to grow as new capability surfaces land — an exhaustive enum would need a matching
+/// wildcard arm anyway.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(transparent)]
+pub struct CapabilityId(pub String);
+
+/// 🙏️ A guest's ask for a capability — `📓️design-abi.md` §5. Replaces `CapabilityRequirement`
+/// for the plugin/extension actor runtime. The kernel-level `CapabilityRequirement`/`Rights`/
+/// `Scope` action-dispatch model (above, `🔖️Capability` region) stays as-is: it has live
+/// consumers outside this packet's owned paths (`🔌️plugin/🏗️builder`, `🔌️plugin/🖥️host`,
+/// `🔌️plugin/🦀️component.rs`) — see this packet's report for the full consumer list.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityRequest {
+    pub id: CapabilityId,
+    pub scope: String,
+    pub reason: String,
+    #[serde(default)]
+    pub optional: bool,
+}
+
+/// 🎟️ A broker-issued grant answering a `CapabilityRequest` — `📓️design-abi.md` §5.
+/// Named `BrokerCapabilityGrant`, not the design prose's bare `CapabilityGrant`: this file
+/// already has a `CapabilityGrant` (above, `🔖️Capability` region) for the unrelated kernel-level
+/// action/window capability model (`ActionContext.granted_capabilities`), with live consumers
+/// outside this packet's owned paths (`📦️packages/🦀️rust/📦️glue.rs`'s re-export list) — see the
+/// report's naming-collision note.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BrokerCapabilityGrant {
+    pub token: CapabilityToken,
+    pub id: CapabilityId,
+    pub scope: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub expires_ms: Option<u64>,
+}
+
+/// 🔔️ A grant's lifecycle change, delivered as `Event::CapabilityChanged` — revocation
+/// invalidates the guest's handle table so its next await on that capability returns
+/// `Fault(capability-revoked)`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum CapabilityChange {
+    Granted { id: CapabilityId, grant: BrokerCapabilityGrant },
+    Revoked { id: CapabilityId },
+    Narrowed { id: CapabilityId, grant: BrokerCapabilityGrant },
+}
+
+/// 📏️ One scope's resource ceiling — `📓️design-abi.md` §5. Every field is `Option`: `None`
+/// inherits from the next scope up in a `QuotaTree` (os → plugin → extension → instance,
+/// min-down). A plugin can sit inside its `memory_bytes` limit and still exhaust the host through
+/// timers/UI nodes/requests/GPU allocations, which is why the schema is this wide.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct QuotaSchema {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub memory_bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub fuel_per_turn: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub turn_deadline_ms: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub tables: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub mailbox_len: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub message_bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub outstanding_requests: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub timers: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub storage_bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub network_bytes_per_min: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub ui_nodes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub patch_bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub patch_hz: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub blob_resident_bytes: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub gpu_ms_per_frame: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub background_ms_per_min: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub log_bytes_per_min: Option<u64>,
+}
+
+/// 🌳️ Resolves a `QuotaSchema` for an instance by walking os → plugin → extension → instance,
+/// min-down (`None` at any level defers to the next).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuotaTree {
+    pub os: QuotaSchema,
+    pub plugin: QuotaSchema,
+    pub extension: QuotaSchema,
+    pub instance: QuotaSchema,
+}
+
+/// 💥️ One quota exceeded, fed to `BrokerHooks::on_breach`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuotaBreach {
+    pub quota: String,
+    pub limit: u64,
+    pub actual: u64,
+}
+
+/// ⚖️ What the scheduler does about a `QuotaBreach` — `BrokerHooks::on_breach`'s return.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum FailureAction {
+    Ignore,
+    Throttle { after_ms: u64 },
+    Suspend,
+    Kill,
+}
+
+/// 🪝️ What the scheduler calls into around a turn — admission, accounting, breach policy, and
+/// capability-change fan-out. `📓️design-abi.md` §5: "effective permissions = extension requests
+/// ∩ the host plugin's extension-point allowance ∩ user approvals ∩ the host plugin's own
+/// effective set" — `admit_effect` is where that intersection is enforced.
+pub trait BrokerHooks {
+    fn admit_effect(&self, instance: &PluginInstanceId, effect: &Effect) -> Result<(), Fault>;
+    fn on_turn_finished(&self, instance: &PluginInstanceId, usage: &Usage);
+    fn on_breach(&self, instance: &PluginInstanceId, breach: &QuotaBreach) -> FailureAction;
+    fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange);
+}
+//#endregion 🔖️Broker

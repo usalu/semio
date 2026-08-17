@@ -8,7 +8,7 @@ use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, VideoSource};
 use base64::Engine as _;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
@@ -152,7 +152,7 @@ pub fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelS
     let Some((_mime, bytes)) = payload_from_data_url(&payload.payload) else { return Ok(Emit::default()) };
     let probe = match remodel_video::probe(&bytes) {
         Ok(probe) => probe,
-        Err(error) => return Ok(Emit::effect(HostEffect::Notify { message: format!("Could not probe video: {error}") })),
+        Err(error) => return Ok(Emit::effect(Effect::Notify { message: format!("Could not probe video: {error}") })),
     };
     let (codec, width, height, duration_ms, container) = describe_video_probe(&probe);
     let scene = doc.snapshot;
@@ -160,7 +160,7 @@ pub fn handle(payload: &ImportVideoBytesPayload, doc: &ArtifactView<'_, RemodelS
     let opts = remodel_video::VideoIngestOptions { stride: ingest.frame_sample_stride.max(1), max_frames: ingest.max_frames, max_long_edge_px: ingest.downscale_long_edge_px };
     let iter = match remodel_video::extract_frames(&bytes, &opts) {
         Ok(iter) => iter,
-        Err(error) => return Ok(Emit::effect(HostEffect::Notify { message: format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}") })),
+        Err(error) => return Ok(Emit::effect(Effect::Notify { message: format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}") })),
     };
 
     let stream_id = next_remodel_id("stream");

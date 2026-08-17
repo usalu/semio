@@ -100,7 +100,7 @@ mod tests {
     use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
     use crate::editor::layout::testkit::{dispatch, layout_app, render, test_screen_point};
     use crate::editor::layout::{LayoutCommand, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
     use semio_framework_plugin::{CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
     #[test]
@@ -132,8 +132,8 @@ mod tests {
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
         assert!(result.mutations.is_empty(), "pointer down never mutates the document directly");
-        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
-        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
         let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
         assert_eq!(args["domainId"], "elements");
         assert_eq!(args["merge"], "replace");
@@ -145,8 +145,8 @@ mod tests {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 }));
-        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
-        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
+        let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
         let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
         assert_eq!(args["merge"], "invertive");
     }
@@ -156,7 +156,7 @@ mod tests {
         let mut app = layout_app();
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
-        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
     }
 
     #[test]
@@ -165,8 +165,8 @@ mod tests {
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
         assert!(result.mutations.is_empty(), "hover never mutates the document directly");
-        let effect = result.requested_effects.iter().find(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_HOVER_ACTION_ID)).expect("interactionHover effect");
-        let HostEffect::DispatchAction { args, .. } = effect else { unreachable!() };
+        let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_HOVER_ACTION_ID)).expect("interactionHover effect");
+        let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
         let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("hover args");
         assert!(args["targets"].as_str().expect("targets json").contains("frame-text-1"));
     }

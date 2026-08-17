@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     use crate::editor::layout::testkit::{dispatch, layout_app};
     use crate::editor::layout::LayoutCommand;
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
     use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 
     #[test]
@@ -41,7 +41,7 @@ mod tests {
         let mut app = layout_app();
         let result = dispatch(&mut app, LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-2".into()) }));
         assert!(result.mutations.is_empty(), "preflight focus is config/effect-only, never a document operation");
-        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)), "must ask the host to redispatch interactionSelect");
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)), "must ask the host to redispatch interactionSelect");
     }
 
     #[test]

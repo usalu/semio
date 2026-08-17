@@ -258,6 +258,17 @@
         "presenceKnown": { "type": "boolean" }
       }
     },
+    "DirectoryPresenceActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor", "surface", "color"],
+      "properties": {
+        "actor": { "type": "string" },
+        "userId": { "type": "string" },
+        "surface": { "type": "string" },
+        "color": { "type": "integer", "minimum": 0, "maximum": 255 }
+      }
+    },
     "DirectoryStreamMessage": {
       "type": "object",
       "required": ["kind"],
@@ -285,13 +296,12 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "spaceId", "documentId", "surface", "actors"],
+          "required": ["kind", "spaceId", "documentId", "actors"],
           "properties": {
             "kind": { "const": "presence" },
             "spaceId": { "type": "string" },
             "documentId": { "type": "string" },
-            "surface": { "type": "string" },
-            "actors": { "type": "array", "items": { "type": "string" } }
+            "actors": { "type": "array", "items": { "$ref": "#/$defs/DirectoryPresenceActor" } }
           }
         },
         {

@@ -1,0 +1,33 @@
+[package]
+name = "semio-framework-os-shell"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Shell UI state single source of truth: ShellState/ShellCommand/ShellEvent vocabulary and the pure reduce() function every host (React, wgpu, MCP gateway) becomes a client of — pure, no I/O, no clock (now_ms is caller-supplied), no wasm_bindgen/web_sys/winit/tokio/std::thread."
+
+[package.metadata.semio]
+role = "framework"
+id = "os-shell"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_shell"
+crate-type = ["rlib", "cdylib"]
+path = "📦️glue.rs"
+
+[features]
+default = []
+# 🧬️ Generates the TypeScript mirror for boundary types (see `../../🤖️generated/🟦️shell.ts`); never
+# enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
+typegen = ["dep:ts-rs"]
+
+[dependencies]
+schemars = "0.8.22"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+thiserror = "2.0.18"
+ts-rs = { version = "10", optional = true }
+
+[dev-dependencies]

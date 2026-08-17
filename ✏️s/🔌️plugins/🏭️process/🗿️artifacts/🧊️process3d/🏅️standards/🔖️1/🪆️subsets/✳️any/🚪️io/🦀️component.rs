@@ -140,7 +140,7 @@ use semio_framework_plugin::{MeshExporter, MeshImporter};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use serde_json::Value;
 
-/// 📤️ A pending native-geometry export ready to become a `HostEffect::DownloadMediaExport`.
+/// 📤️ A pending native-geometry export ready to become a `Effect::DownloadMediaExport`.
 pub struct Process3dModelExport {
     pub filename: String,
     pub data: Value,

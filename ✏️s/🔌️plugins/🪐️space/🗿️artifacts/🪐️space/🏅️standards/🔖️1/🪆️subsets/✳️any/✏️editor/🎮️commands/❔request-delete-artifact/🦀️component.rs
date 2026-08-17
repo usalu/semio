@@ -6,7 +6,7 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -19,7 +19,7 @@ pub struct RequestDeleteArtifact {
 
 pub fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
-    Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
+    Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(128),  dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
 }
 
 //#region 🧪️Tests
@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(app.snapshot().unwrap().artifacts.len(), 1, "the row survives until the dialog is confirmed");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::OpenDialog { dialog_id, args } => {
+            Effect::OpenDialog { dialog_id, args, .. } => {
                 assert_eq!(dialog_id, "deleteArtifact");
                 let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
                 assert_eq!(args.get("id").and_then(|v| v.as_str()), Some(id.as_str()));

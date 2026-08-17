@@ -59,7 +59,7 @@ mod tests {
     use crate::editor::animate::commands::engagement_input;
     use crate::editor::animate::testkit::{dispatch, present_app};
     use crate::editor::animate::PresentCommand;
-    use semio_framework_plugin::HostEffect;
+    use semio_framework_plugin::Effect;
 
     #[test]
     fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
@@ -81,7 +81,7 @@ mod tests {
 
         app.dispatch_typed(PresentCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).expect("seed for copy");
         let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).expect("copy keyword");
-        assert!(matches!(copy_result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { .. }]));
+        assert!(matches!(copy_result.requested_effects.as_slice(), [Effect::DownloadMediaExport { .. }]));
     }
 
     #[test]

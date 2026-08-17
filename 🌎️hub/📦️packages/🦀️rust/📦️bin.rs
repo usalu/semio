@@ -22,7 +22,7 @@ use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
 use protocol::os_directory::{
-    self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView,
+    self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView,
 };
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, ArtifactId as ProtocolArtifactId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 #[cfg(feature = "sqlite")]
@@ -75,6 +75,33 @@ fn db_core_document_id(id: &ProtocolArtifactId) -> db::ArtifactId {
     db::ArtifactId(id.0.clone())
 }
 
+/// @emoji 👤️ One connected actor's presence in a document (contract §C7.3) — inserted with `peer:
+/// None` right after the hub sends `ServerFrame::Session`, updated to `peer: Some(bytes)` on
+/// `ClientFrame::Presence`, removed at handler exit. `surface`/`color` are fixed for the life of the
+/// connection (stamped at handshake time); the hub never decodes `peer` — it stores and forwards it
+/// opaquely.
+struct PresenceSession {
+    surface: String,
+    user_id: Option<String>,
+    color: u8,
+    peer: Option<Vec<u8>>,
+}
+
+/// @emoji 🎨️ One actor's held palette index within a space, ref-counted across that actor's
+/// concurrently open document sockets in the same space (contract §C7.3: "A's second document socket
+/// keeps 0").
+struct ColorLease {
+    index: u8,
+    refs: u32,
+}
+
+/// @emoji 🌈️ One space's live session-color leases (contract §C7.3) — never persisted, rebuilt from
+/// nothing on hub restart, mirroring `presence`'s own ephemeral law.
+#[derive(Default)]
+struct SpaceColors {
+    by_actor: std::collections::BTreeMap<String, ColorLease>,
+}
+
 #[derive(Clone)]
 struct HubState {
     db: Arc<db::Database>,
@@ -100,20 +127,15 @@ struct HubState {
     /// never itself decides ordering or durability, only re-broadcasts what `db` already committed
     /// or what a preview/presence frame carries verbatim.
     fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
-    /// @emoji 🎯️ Wave 1.B ("presence per surface", contract §C0's `?surface=` out-of-band decision):
-    /// `(scope_key, surface)` -> a broadcast channel carrying ONLY `ServerFrame::Presence` for that
-    /// exact surface. Kept deliberately separate from `fanout` (document-wide, carries
-    /// `Commands`/`Preview`/`Presence` alike) rather than folding presence into one shared channel
-    /// with a routing tag: `fanout`'s `ClientFrame::Commands` publish site is a live peer lease this
-    /// lane may not touch, so a second, surface-scoped channel lets every session subscribe to BOTH
-    /// (document-wide for commands, surface-scoped for presence) without changing `fanout`'s payload
-    /// type or its existing publish sites at all.
-    surface_fanout: Arc<DashMap<(String, String), broadcast::Sender<ServerFrame>>>,
-    /// @emoji 👥️ `(scope_key, surface, actor)` -> that actor's last-published presence peer JSON —
-    /// ephemeral, never durable (mirrors the preview lane's own law), rebuilt from nothing on hub
-    /// restart. `surface` travels out-of-band as `?surface=` on the document WS URL (contract §C0);
-    /// a peer on a different surface of the SAME document never appears in another surface's roster.
-    presence: Arc<DashMap<(String, String, String), Vec<u8>>>,
+    /// @emoji 👥️ `(scope_key, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
+    /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
+    /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
+    /// a surface-scoped channel; a peer's `surface` travels INSIDE its `PresencePeer` bytes, stamped
+    /// by the client actor, never decoded by this hub.
+    presence: Arc<DashMap<(String, String), PresenceSession>>,
+    /// @emoji 🎨️ Contract §C7.3 session colors: `space_id` -> that space's live `(actor -> palette
+    /// index)` leases. `acquire_color`/`release_color` below are the only mutators. Never persisted.
+    session_colors: Arc<DashMap<String, SpaceColors>>,
     /// @emoji 🦵️ Wave 1.B admin kick: `syncSessionId` (the `SyncSessionRecord.id`/`ConnectionView.
     /// syncSessionId` the directory hands out on connect) -> a `Notify` the WS loop `select!`s on
     /// alongside its socket/broadcast reads. `POST /admin/api/connections/{syncSessionId}/close`
@@ -148,20 +170,51 @@ impl HubState {
         self.fanout.entry(key.to_string()).or_insert(tx).clone()
     }
 
-    /// @emoji 🎯️ Get-or-create the surface-scoped presence broadcast channel for `(key, surface)` —
-    /// see `surface_fanout`'s own doc for why this is a second channel rather than a routing tag on
-    /// `fanout`.
-    fn surface_fanout_for(&self, key: &str, surface: &str) -> broadcast::Sender<ServerFrame> {
-        let composite = (key.to_string(), surface.to_string());
-        if let Some(existing) = self.surface_fanout.get(&composite) {
-            return existing.clone();
-        }
-        let (tx, _rx) = broadcast::channel(256);
-        self.surface_fanout.entry(composite).or_insert(tx).clone()
+    /// @emoji 👥️ The document-wide roster's raw peer bytes (contract §C7.3) — entries whose `peer` is
+    /// still `None` (handshake-only, no `ClientFrame::Presence` published yet) are excluded.
+    fn presence_peers(&self, key: &str) -> Vec<Vec<u8>> {
+        self.presence.iter().filter(|entry| entry.key().0 == key).filter_map(|entry| entry.value().peer.clone()).collect()
     }
 
-    fn presence_peers(&self, key: &str, surface: &str) -> Vec<Vec<u8>> {
-        self.presence.iter().filter(|entry| entry.key().0 == key && entry.key().1 == surface).map(|entry| entry.value().clone()).collect()
+    /// @emoji 📡️ Amendment 3 to C1: the SAME roster as `presence_peers`, shaped as
+    /// `DirectoryPresenceActor`s the hub already knows without ever decoding a peer's bytes.
+    fn directory_presence_actors(&self, key: &str) -> Vec<DirectoryPresenceActor> {
+        self.presence
+            .iter()
+            .filter(|entry| entry.key().0 == key && entry.value().peer.is_some())
+            .map(|entry| DirectoryPresenceActor { actor: entry.key().1.clone(), user_id: entry.value().user_id.clone(), surface: entry.value().surface.clone(), color: entry.value().color })
+            .collect()
+    }
+
+    /// @emoji 🎨️ Contract §C7.3: an existing lease for `actor` in `space` is ref-counted and its
+    /// index reused; otherwise the lowest index in `0..=255` not currently held by any live actor of
+    /// `space`, wrapping `n % 256` once all 256 are taken.
+    fn acquire_color(&self, space: &str, actor: &str) -> u8 {
+        let mut colors = self.session_colors.entry(space.to_string()).or_default();
+        if let Some(lease) = colors.by_actor.get_mut(actor) {
+            lease.refs += 1;
+            return lease.index;
+        }
+        let used: std::collections::BTreeSet<u8> = colors.by_actor.values().map(|lease| lease.index).collect();
+        let index = (0..=255u8).find(|candidate| !used.contains(candidate)).unwrap_or((colors.by_actor.len() as u32 % 256) as u8);
+        colors.by_actor.insert(actor.to_string(), ColorLease { index, refs: 1 });
+        index
+    }
+
+    /// @emoji 🎨️ `refs -= 1`, dropping the lease at 0 — freed on the last disconnect of that actor's
+    /// shell session across all of its document sockets in `space`.
+    fn release_color(&self, space: &str, actor: &str) {
+        let Some(mut colors) = self.session_colors.get_mut(space) else { return };
+        let drop_lease = match colors.by_actor.get_mut(actor) {
+            Some(lease) => {
+                lease.refs = lease.refs.saturating_sub(1);
+                lease.refs == 0
+            }
+            None => false,
+        };
+        if drop_lease {
+            colors.by_actor.remove(actor);
+        }
     }
 
     /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
@@ -529,7 +582,8 @@ async fn handle_client_frame(
     handle: &db::ArtifactHandle,
     db_id: &ProtocolArtifactId,
     key: &str,
-    surface: &str,
+    space_id: &str,
+    document_id: &str,
     fanout: &broadcast::Sender<ServerFrame>,
     actor: &ActorId,
     gate: &db::security::SecurityGate,
@@ -564,8 +618,11 @@ async fn handle_client_frame(
             true
         }
         ClientFrame::Presence { peer } => {
-            state.presence.insert((key.to_string(), surface.to_string(), actor.0.clone()), peer);
-            let _ = state.surface_fanout_for(key, surface).send(ServerFrame::Presence { peers: state.presence_peers(key, surface) });
+            if let Some(mut entry) = state.presence.get_mut(&(key.to_string(), actor.0.clone())) {
+                entry.peer = Some(peer);
+            }
+            let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(key) });
+            state.directory_service.publish(DirectoryStreamMessage::Presence { space_id: space_id.to_string(), document_id: document_id.to_string(), actors: state.directory_presence_actors(key) });
             true
         }
         // 🪙️ Command-lane credit-based flow control: no server-side congestion control implemented
@@ -611,6 +668,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             return;
         }
     };
+    // 🎨️ Contract §C7.3: acquired after successful Hello/auth and before `Welcome`, released at
+    // handler exit (every early-return path below releases it explicitly; the loop-exit cleanup
+    // releases it on a clean disconnect).
+    let color = state.acquire_color(&space_id, &actor.0);
 
     // 🔒️ Per-connection `SecurityGate`: `space_grants` compiles this space's `kind` into
     // author=rw/spectator=ro grants (archive additionally deny-overrides author writes), a fresh
@@ -642,6 +703,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         Ok(handle) => handle,
         Err(error) => {
             let _ = sender.send(error_frame("storage", error.to_string())).await;
+            state.release_color(&space_id, &actor.0);
             return;
         }
     };
@@ -655,22 +717,30 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         Ok(response) => response,
         Err(error) => {
             let _ = sender.send(error_frame("storage", error.to_string())).await;
+            state.release_color(&space_id, &actor.0);
             return;
         }
     };
     if sender.send(encode(&welcome_response.welcome)).await.is_err() {
+        state.release_color(&space_id, &actor.0);
         return;
     }
     for frame in &welcome_response.follow_up {
         if sender.send(encode(frame)).await.is_err() {
+            state.release_color(&space_id, &actor.0);
             return;
         }
     }
+    // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
+    // bootstrap frames) and before any `Presence` frame.
+    if sender.send(encode(&ServerFrame::Session { actor: actor.0.clone(), color })).await.is_err() {
+        state.release_color(&space_id, &actor.0);
+        return;
+    }
+    state.presence.insert((key.clone(), actor.0.clone()), PresenceSession { surface: surface.clone(), user_id: user_id.clone(), color, peer: None });
 
     let fanout = state.fanout_for(&key);
     let mut broadcast_rx = fanout.subscribe();
-    let surface_fanout = state.surface_fanout_for(&key, &surface);
-    let mut surface_rx = surface_fanout.subscribe();
 
     let sync_session = state.directory.record_sync_session_open(&space_id, &document_id, &surface, user_id.as_deref(), role, &actor.0).await.ok();
     if let Some(session) = &sync_session {
@@ -697,7 +767,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                 match incoming {
                     Some(Ok(Message::Binary(bytes))) => {
                         if let Ok((_lane, frame)) = decode_client_frame(&bytes) {
-                            if !handle_client_frame(&state, &handle, &db_id, &key, &surface, &fanout, &actor, &gate, &principal, &tenant, frame, &mut sender).await {
+                            if !handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &gate, &principal, &tenant, frame, &mut sender).await {
                                 break;
                             }
                         }
@@ -723,17 +793,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                     Err(broadcast::error::RecvError::Closed) => break,
                 }
             }
-            event = surface_rx.recv() => {
-                match event {
-                    Ok(frame) => {
-                        if sender.send(encode(&frame)).await.is_err() {
-                            break;
-                        }
-                    }
-                    Err(broadcast::error::RecvError::Lagged(_)) => {}
-                    Err(broadcast::error::RecvError::Closed) => break,
-                }
-            }
             _ = kick.notified() => break,
         }
     }
@@ -744,8 +803,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         state.session_kicks.remove(&session.id);
         state.directory_service.publish(DirectoryStreamMessage::Connection { phase: DirectoryConnectionPhase::Closed, connection: view });
     }
-    state.presence.remove(&(key.clone(), surface.clone(), actor.0.clone()));
-    let _ = surface_fanout.send(ServerFrame::Presence { peers: state.presence_peers(&key, &surface) });
+    state.presence.remove(&(key.clone(), actor.0.clone()));
+    let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(&key) });
+    state.release_color(&space_id, &actor.0);
+    state.directory_service.publish(DirectoryStreamMessage::Presence { space_id: space_id.clone(), document_id: document_id.clone(), actors: state.directory_presence_actors(&key) });
 }
 //#endregion 🔖️WebSocket
 
@@ -806,7 +867,7 @@ async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> Conne
         None => None,
     };
     let scope = scope_key(&session.space_id, &session.document_id);
-    let presence_known = state.presence.contains_key(&(scope, session.surface.clone(), session.client_label.clone()));
+    let presence_known = state.presence.get(&(scope, session.client_label.clone())).is_some_and(|entry| entry.peer.is_some());
     ConnectionView {
         sync_session_id: session.id.clone(),
         space_id: session.space_id.clone(),
@@ -1573,8 +1634,8 @@ async fn main() -> Result<(), HubError> {
         admin_token,
         admin_dir,
         fanout: Arc::new(DashMap::new()),
-        surface_fanout: Arc::new(DashMap::new()),
         presence: Arc::new(DashMap::new()),
+        session_colors: Arc::new(DashMap::new()),
         session_kicks: Arc::new(DashMap::new()),
         schema_hashes: Arc::new(DashMap::new()),
         extensions_root,
@@ -1629,8 +1690,8 @@ mod tests {
             admin_token: None,
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(DashMap::new()),
-            surface_fanout: Arc::new(DashMap::new()),
             presence: Arc::new(DashMap::new()),
+            session_colors: Arc::new(DashMap::new()),
             session_kicks: Arc::new(DashMap::new()),
             schema_hashes: Arc::new(DashMap::new()),
             extensions_root: dir.join("extension-modules"),
@@ -1728,10 +1789,12 @@ mod tests {
         let (mut a, _) = connect_async(&url).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut b, _) = connect_async(&url).await.unwrap();
         b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Session { .. }));
 
         let document = WireArtifactId(format!("{STUDIO}:default"));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
@@ -1763,11 +1826,13 @@ mod tests {
         let (mut a, _) = connect_async(&url).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
         // A fresh connection with no prior frontier must see the already-committed op-1 in its
-        // Welcome bootstrap follow-up.
+        // Welcome bootstrap follow-up, sent BEFORE the connection's own `Session` frame (contract
+        // §C7.3: Session is sent after Welcome AND its follow-up bootstrap frames).
         let (mut c, _) = connect_async(&url).await.unwrap();
         c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { bootstrap: Bootstrap::Tail, .. }));
@@ -1775,6 +1840,7 @@ mod tests {
             ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].mutation_id.0, "op-1"),
             other => panic!("expected the Tail bootstrap's Commands follow-up, got {other:?}"),
         }
+        assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Session { .. }));
     }
 
     // 🔬️ Space-scoped documents: the same document id in two different studios lands in two
@@ -1789,6 +1855,7 @@ mod tests {
         let (mut a, _) = connect_async(&url_a).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
         let document = WireArtifactId("space-a:shared-doc".to_string());
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document)] }, Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
@@ -1850,6 +1917,7 @@ mod tests {
         let (mut spectator, _) = connect_async(&url).await.unwrap();
         spectator.send(client_binary(&hello_with_token("spectator", spectator_session.0.token), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Session { .. }));
         spectator.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-spectator", &document)] }, Lane::Command)).await.unwrap();
         match next_server_frame(&mut spectator).await {
             ServerFrame::Ack { stages, .. } => {
@@ -1865,6 +1933,7 @@ mod tests {
         let (mut author, _) = connect_async(&url).await.unwrap();
         author.send(client_binary(&hello_with_token("author", author_session.0.token), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Session { .. }));
         author.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-author", &document)] }, Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Ack { batch_id: 1, .. }));
     }
@@ -2058,12 +2127,13 @@ mod tests {
         }
     }
 
-    // 🔬️ Presence per surface (contract §C0's `?surface=`): A and B on the SAME `(document, surface)`
-    // see each other's presence; C on a DIFFERENT surface of the same document sees neither peer's
-    // presence, yet still receives command frames — proving `surface_fanout` is additive to, not a
-    // replacement for, the document-wide `fanout`.
+    // 🔬️ Contract §C7.0/§C7.3: the roster is document-wide now — A (`surface=editor`) and C
+    // (`surface=viewer`) on the SAME document see each other's presence bytes; `surface` no longer
+    // scopes any broadcast channel (`surface_fanout` is deleted, `ServerFrame::Presence` fans out on
+    // the document-wide `fanout` alongside `Commands`) — it travels only INSIDE each peer's opaque
+    // `PresencePeer` bytes, which this hub stores and forwards without ever decoding.
     #[tokio::test]
-    async fn presence_roster_is_scoped_per_surface() {
+    async fn presence_roster_is_document_wide_and_frames_carry_surface_only_inside_peer() {
         let addr = spawn_server(test_state().await).await;
         let url_editor = format!("ws://{addr}/spaces/{STUDIO}/documents/shared/ws?surface=editor");
         let url_viewer = format!("ws://{addr}/spaces/{STUDIO}/documents/shared/ws?surface=viewer");
@@ -2071,46 +2141,120 @@ mod tests {
         let (mut a, _) = connect_async(&url_editor).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
-
-        let (mut b, _) = connect_async(&url_editor).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
-        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut c, _) = connect_async(&url_viewer).await.unwrap();
         c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Session { .. }));
 
         a.send(client_binary(&ClientFrame::Presence { peer: b"A-presence".to_vec() }, Lane::Command)).await.unwrap();
         loop {
-            match next_server_frame(&mut b).await {
+            match next_server_frame(&mut c).await {
                 ServerFrame::Presence { peers } => {
-                    assert!(peers.contains(&b"A-presence".to_vec()), "B (same surface) must see A's presence");
+                    assert!(peers.contains(&b"A-presence".to_vec()), "C (different surface, SAME document) must see A's presence — the roster is document-wide, not surface-scoped");
                     break;
                 }
-                ServerFrame::Commands { .. } => continue,
-                other => panic!("unexpected frame on B: {other:?}"),
+                other => panic!("unexpected frame on C: {other:?}"),
             }
         }
 
-        let document = WireArtifactId(format!("{STUDIO}:shared"));
-        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-cross-surface", &document)] }, Lane::Command)).await.unwrap();
-        // A also subscribes to its own surface's presence channel, so its own earlier `Presence`
-        // publish may still be queued ahead of the direct `Ack` reply — skip it, same as B does above.
-        loop {
-            match next_server_frame(&mut a).await {
-                ServerFrame::Ack { batch_id: 1, .. } => break,
-                ServerFrame::Presence { .. } => continue,
-                other => panic!("unexpected frame on A: {other:?}"),
+        // A also subscribes to the SAME document-wide `fanout` it just published on, so its own
+        // presence publish loops back to it too — proving there is only one channel now, not a
+        // second surface-scoped one A alone would be on.
+        match next_server_frame(&mut a).await {
+            ServerFrame::Presence { peers } => assert!(peers.contains(&b"A-presence".to_vec()), "A observes its own publish via the document-wide fanout"),
+            other => panic!("unexpected frame on A: {other:?}"),
+        }
+    }
+
+    // 🔬️ Contract §C7.3 session colors: the lowest free index in `0..=255` per SPACE (not per
+    // document) — A gets 0, B gets 1; A's second document socket in the SAME space reuses A's
+    // existing lease (still 0, ref-counted) rather than minting a new one; once BOTH of A's sockets
+    // close, color 0 is freed and a brand-new actor C is assigned it (B, still connected, keeps 1).
+    #[tokio::test]
+    async fn session_frame_assigns_lowest_free_color_per_space_and_releases_on_last_disconnect() {
+        let addr = spawn_server(test_state().await).await;
+        let url = |document: &str| format!("ws://{addr}/spaces/{STUDIO}/documents/{document}/ws");
+
+        async fn welcome_and_session<S>(ws: &mut S) -> (String, u8)
+        where
+            S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+        {
+            assert!(matches!(next_server_frame(ws).await, ServerFrame::Welcome { .. }));
+            match next_server_frame(ws).await {
+                ServerFrame::Session { actor, color } => (actor, color),
+                other => panic!("expected Session, got {other:?}"),
             }
         }
+
+        let (mut a1, _) = connect_async(&url("doc1")).await.unwrap();
+        a1.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        assert_eq!(welcome_and_session(&mut a1).await, ("A".to_string(), 0));
+
+        let (mut b, _) = connect_async(&url("doc1")).await.unwrap();
+        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        assert_eq!(welcome_and_session(&mut b).await, ("B".to_string(), 1));
+
+        // A's second document socket, same space: the existing lease is reused (still 0), not a new
+        // lowest-free index (which would otherwise be 2).
+        let (mut a2, _) = connect_async(&url("doc2")).await.unwrap();
+        a2.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        assert_eq!(welcome_and_session(&mut a2).await, ("A".to_string(), 0));
+
+        drop(a1);
+        drop(a2);
+        // Let both of A's handler tasks observe the socket close and release their color lease's ref.
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+        let (mut c, _) = connect_async(&url("doc1")).await.unwrap();
+        c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
+        assert_eq!(welcome_and_session(&mut c).await, ("C".to_string(), 0), "color 0 is freed once BOTH of A's document sockets disconnect, and is the lowest free index (B still holds 1)");
+    }
+
+    // 🔬️ Amendment 3 to C1: `DirectoryStreamMessage::Presence` is actually published (it used to be
+    // defined but never sent) — `spaceId`/`documentId` name the roster, and each
+    // `DirectoryPresenceActor` carries the `surface`/`color` this hub knows without ever decoding the
+    // actor's opaque `PresencePeer` bytes.
+    #[tokio::test]
+    async fn directory_ws_publishes_presence_roster_with_surface_and_color() {
+        let state = test_state().await;
+        let addr = spawn_server(state.clone()).await;
+
+        let observer_session = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "presence-observer@example.com".into() })).await.expect("mint observer session");
+        let dir_url = format!("ws://{addr}/directory/ws?token={}&since=0", observer_session.0.token);
+        let (mut observer, _) = connect_async(&dir_url).await.unwrap();
+        // `since=0` replays only the seeded `default` studio's own space-less `user.created` (see
+        // `connection_events_reach_admin_stream`'s doc) — draining it also proves the observer's live
+        // loop is already running before the document connection below publishes anything.
+        match next_directory_message(&mut observer).await {
+            DirectoryStreamMessage::Event { .. } => {}
+            other => panic!("expected the seeded replay, got {other:?}"),
+        }
+
+        let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/watched-presence/ws?surface=editor");
+        let (mut doc, _) = connect_async(&doc_url).await.unwrap();
+        doc.send(client_binary(&hello("presence-actor"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
+        let color = match next_server_frame(&mut doc).await {
+            ServerFrame::Session { color, .. } => color,
+            other => panic!("expected Session, got {other:?}"),
+        };
+
+        doc.send(client_binary(&ClientFrame::Presence { peer: b"presence-actor-bytes".to_vec() }, Lane::Command)).await.unwrap();
+
         loop {
-            match next_server_frame(&mut c).await {
-                ServerFrame::Commands { envelopes, .. } => {
-                    assert_eq!(envelopes[0].mutation_id.0, "op-cross-surface", "C must still receive document-wide command frames");
+            match next_directory_message(&mut observer).await {
+                DirectoryStreamMessage::Connection { .. } => continue,
+                DirectoryStreamMessage::Presence { space_id, document_id, actors } => {
+                    assert_eq!(space_id, STUDIO);
+                    assert_eq!(document_id, "watched-presence");
+                    let actor = actors.iter().find(|actor| actor.actor == "presence-actor").expect("presence-actor in the published roster");
+                    assert_eq!(actor.surface, "editor");
+                    assert_eq!(actor.color, color);
                     break;
                 }
-                ServerFrame::Presence { .. } => panic!("C (different surface) must never observe A/B's presence"),
-                other => panic!("unexpected frame on C: {other:?}"),
+                other => panic!("expected Presence, got {other:?}"),
             }
         }
     }
@@ -2155,7 +2299,8 @@ mod tests {
         }
     }
 
-    // 🔬️ Admin API round trip: spaces/users/connections list what setup created, and closing a
+    // 🔬️ Admin API round trip: spaces/users/connections list what setup created, `presenceKnown`
+    // tracks whether that connection has published a `ClientFrame::Presence` yet, and closing a
     // listed connection's `syncSessionId` actually kicks the live document WS session.
     #[tokio::test]
     async fn admin_api_lists_spaces_users_connections_and_kicks() {
@@ -2168,6 +2313,7 @@ mod tests {
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
         doc.send(client_binary(&hello("kick-me"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Session { .. }));
         // Let the server side finish recording the sync session before the admin reads it back.
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
@@ -2179,6 +2325,13 @@ mod tests {
 
         let connections = admin_connections(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin connections");
         let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection listed");
+        assert!(!connection.presence_known, "no ClientFrame::Presence published yet");
+
+        doc.send(client_binary(&ClientFrame::Presence { peer: b"kick-me-presence".to_vec() }, Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Presence { .. }));
+        let connections = admin_connections(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin connections after presence");
+        let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection still listed");
+        assert!(connection.presence_known, "presenceKnown flips true once the actor's PresenceSession carries a peer");
 
         assert_eq!(admin_close_connection(Path(connection.sync_session_id.clone()), HeaderMap::new(), loopback_peer(), State(state.clone())).await, StatusCode::NO_CONTENT);
         let closed = tokio::time::timeout(std::time::Duration::from_secs(5), doc.next()).await.expect("connection closes before the 5s deadline");

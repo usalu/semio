@@ -19,7 +19,7 @@ pub struct SetActiveExample {
 ///
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem3d::reset_document_effect`
-/// (a `HostEffect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
+/// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let document = if payload.example_id == "default" {
         <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default()
@@ -32,7 +32,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
     use semio_framework_plugin::ActionKind;
 
     fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
@@ -40,7 +40,7 @@ mod tests {
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
-    /// see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `HostEffect::LoadDocument`
+    /// see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `Effect::LoadDocument`
     /// carrying the replacement document's pack bytes, not an `artifact_mutations` entry — `dispatch`'s
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts directly on the `Emit` `import_media`-style rather than through
@@ -52,14 +52,14 @@ mod tests {
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <Fem3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
     }
 
-    /// 🧬️ `setActiveExample` replaces document content via a `HostEffect::LoadDocument`, so it MUST be
+    /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
     #[test]
@@ -77,7 +77,7 @@ mod tests {
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <Fem3dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

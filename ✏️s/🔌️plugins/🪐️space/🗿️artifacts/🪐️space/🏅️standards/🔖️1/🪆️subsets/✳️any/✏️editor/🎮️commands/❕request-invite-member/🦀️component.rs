@@ -5,7 +5,7 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct RequestInviteMember {}
 
 pub fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "inviteMember".into(), args: None }))
+    Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(129),  dialog_id: "inviteMember".into(), args: None }))
 }
 
 //#region 🧪️Tests
@@ -31,7 +31,7 @@ mod tests {
         assert!(result.mutations.is_empty());
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::OpenDialog { dialog_id, .. } => assert_eq!(dialog_id, "inviteMember"),
+            Effect::OpenDialog { dialog_id, .. } => assert_eq!(dialog_id, "inviteMember"),
             other => panic!("expected OpenDialog, got {other:?}"),
         }
     }

@@ -212,10 +212,27 @@ All commands from `/Users/ueli/Documents/semio`, `CARGO_TARGET_DIR="$PWD/.🧬se
   any line I added. Patch prepared: `🔧️patches/w1d-opening-config-mutations-missing-default-app-import.txt`.
 - `cargo check -p semio-framework-plugin --lib --tests` (native) → clean, only the SAME
   `derive_artifact_facets!`/`subset!` warnings W1-A's baseline already named — zero new warnings.
-- `cargo check -p semio-framework-plugin --target wasm32-wasip2` → **clean**, only the 2 pre-existing
-  warnings W1-C's report already documented (`child_slots`/`link_slots`, `PluginRuntimeRegistry`
-  unread fields) — this is the REAL guest target, confirming `list_io_entries`/`io_run`/`io_sniff`
-  compile for wasm32-wasip2, not just natively.
+- `cargo check -p semio-framework-plugin --target wasm32-wasip2` (bare, no `--features`) → clean, 2
+  warnings — but this is a **FALSE POSITIVE for verifying my own guest export bodies**: the SDK
+  crate's `Cargo.toml` has `default = []`, `component-guest = []` — the guest `pub mod component {
+  ... impl Guest for ComponentGuest { fn list_io_entries()/io_run()/io_sniff() ... } }` block I added
+  to is gated `#[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]`,
+  so this bare command silently SKIPS the entire block (feature off by default) — it never actually
+  compiled my new guest functions. I caught this by re-running WITH the feature explicitly:
+  `cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest` →
+  **still 0 errors**, now 12 warnings (10 more than the bare run, because the guest module is now
+  genuinely compiled). Checked every new warning's line number against my edits: all 12 are
+  PRE-EXISTING — 2 are W1-C's already-documented `child_slots`/`link_slots`/`PluginRuntimeRegistry`
+  dead-code warnings; the other 10 (`unnecessary qualification` ×5, `function cannot return without
+  recursing` ×5, at lines ~19401-19448, `host_port::host_backbone_send`/`host_backbone_poll`/
+  `host_backbone_status`/`host_now_ms`/`host_read_asset`) are a DIFFERENT, previously-undiscovered
+  pre-existing issue — confirmed via `git show HEAD:…/🔌️plugin/🦀️component.rs | grep -n "pub fn
+  host_backbone_send"` showing the identical duplicate-name pattern already present before I touched
+  anything (this crate has apparently never been checked with `--features component-guest` explicitly
+  before, so this `unconditional_recursion` lint was simply never triggered). Zero of the 12 warnings'
+  line numbers fall anywhere near my additions (guest exports ~lines 58-120, `host_io_*` wrappers
+  ~lines 270-290). **This is the REAL, load-bearing verification** — the earlier bare-command result
+  is misleading and should not be quoted as proof my guest code compiles for wasm32-wasip2.
 - `cargo nextest run -p semio-framework-plugin --lib --no-fail-fast` → **230 tests run: 226 passed, 4
   failed, 0 skipped** — IDENTICAL to the ticket's own stated baseline (230/226/4, W1-C's number), same
   4 named failures (`artifact_definition_contract_tests` ×3, `plugin_builder_contract_tests::
@@ -272,3 +289,15 @@ step. No generated files were hand-edited.
    built the subsets but did not register through `declare_artifact`/`io_register` — see
    `📓️recipe-subset.md`). This is expected: W1-D is framework plumbing, the first REAL cross-plugin
    `io-run` only becomes possible once W2 cuts a real plugin over.
+5. **A previously-undetected pre-existing warning family**, discovered only because I re-verified with
+   `--features component-guest` explicitly (see `## verification`): `host_port::host_backbone_send`/
+   `host_backbone_poll`/`host_backbone_status`/`host_now_ms`/`host_read_asset`
+   (`…/🔌️plugin/🦀️component.rs`, lines ~19396-19452) trigger `unconditional_recursion` +
+   `unnecessary_qualifications` lints under that feature — 10 warnings total, confirmed pre-existing
+   via `git show HEAD:…`, zero relation to io/WIT. Likely never surfaced because nothing in this
+   crate's own CI/verification history checks `--features component-guest` explicitly (the bare
+   `--target wasm32-wasip2` command silently skips the whole guest module, feature off by default —
+   also flagged above). Relevant to `26/08/17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-
+   TARGETS` (a live peer ticket per `📓️status.md`'s "Known live peer sessions" table) — not fixed
+   here, out of scope for W1-D, but worth that ticket's attention since it is EXACTLY their mandate
+   and this combination of flags may not be in their sweep yet.

@@ -6,7 +6,7 @@
 use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, Effect};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -24,10 +24,10 @@ pub fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg
     if payload.name.trim().is_empty() {
         let current_name = cfg.snapshot.directory().spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
         let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": current_name })).ok();
-        return Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "renameSpace".into(), args }));
+        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(125),  dialog_id: "renameSpace".into(), args }));
     }
     let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": payload.name })).ok();
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.rename-space".into(), args }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.rename-space".into(), args }))
 }
 //#endregion 🔖️Handle
 
@@ -54,7 +54,7 @@ mod tests {
         let config = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &HomeConfig::default()).diff().clone();
         let emit = dispatch(RenameSpace { space_id: "sp-1".into(), name: String::new() }, &config);
         let (dialog_id, args) = match &emit.effects[0] {
-            HostEffect::OpenDialog { dialog_id, args } => (dialog_id.clone(), args.clone()),
+            Effect::OpenDialog { dialog_id, args, .. } => (dialog_id.clone(), args.clone()),
             other => panic!("expected OpenDialog, got {other:?}"),
         };
         assert_eq!(dialog_id, "renameSpace");
@@ -69,7 +69,7 @@ mod tests {
             .effects
             .iter()
             .find_map(|effect| match effect {
-                HostEffect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
+                Effect::ReplayShellCommand { action_id, args } => Some((action_id.clone(), args.clone())),
                 _ => None,
             })
             .expect("a ReplayShellCommand effect");

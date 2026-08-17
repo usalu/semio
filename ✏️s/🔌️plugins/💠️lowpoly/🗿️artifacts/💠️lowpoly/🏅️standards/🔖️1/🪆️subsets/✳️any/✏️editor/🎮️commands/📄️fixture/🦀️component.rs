@@ -1,6 +1,6 @@
 //! 📄️ Lowpoly play app commands — whole-projection JSON replacement (`importSnapshotJson`/
 //! `setFixtureJson`, two wire-distinct aliases over the identical body), both outside undo history
-//! via `reset_document_effect` (a `HostEffect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
+//! via `reset_document_effect` (a `Effect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
 //! replace has no `Mutation`-enum representative.
 
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
@@ -58,7 +58,7 @@ mod tests {
     use crate::editor::lowpoly::LowpolyCommand;
     use crate::artifacts::lowpoly::schema::default_snapshot;
 
-    /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `HostEffect::LoadDocument` (outside undo
+    /// 🧬️ `importSnapshotJson`/`setFixtureJson` emit a `Effect::LoadDocument` (outside undo
     /// history), not an `artifact_mutations` entry — driven directly through `handle` (not
     /// `dispatch`, which routes through `VcsArtifactApp` and never applies `effects` to its own
     /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
@@ -74,7 +74,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut scratch = LowpolyScratch::default();
         let emit = set_snapshot_json::handle(&set_snapshot_json::ImportSnapshotJson { json }, &doc, &cfg, &mut scratch).expect("handle");
-        let semio_framework_plugin::HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
+        let semio_framework_plugin::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importSnapshotJson must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <LowpolySnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

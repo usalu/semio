@@ -433,7 +433,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// the trait's own default (`None`).
     ///
     /// 🎞️ `"document:in"` swaps the whole live document via `reset_document_effect` (a
-    /// `HostEffect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
+    /// `Effect::LoadDocument`, the sanctioned non-history whole-doc-replace path — see
     /// `reset_document_effect`'s own doc comment) instead of routing through `whole_document_operation`.
     /// `"geometry:in"` decodes a minimal, app-owned `{"outline": [[f64;2]...], "holes": [[[f64;2]...]...],
     /// "baseZ"?: f64, "height"?: f64, "layers"?: usize}` extruded-footprint contract into a new
@@ -498,18 +498,18 @@ impl ArtifactEditor for Fem3dPlayApp {
 //#endregion 🔖️Fem3dPlayApp
 
 //#region 🔖️ResetDocument
-/// 🌱️ Builds a `HostEffect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
+/// 🌱️ Builds a `Effect::LoadDocument` that swaps the live document to `scene` OUTSIDE undo
 /// history — the sanctioned non-mutation path for a whole-document replace (file import,
 /// load-example). Per `📓️taxonomy.md`, `SetSnapshot` is banned outright with NO replacement
 /// mutation: whole-document replace is not expressible as an in-history `Mutation` at all. Every
 /// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::HostEffect {
+pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem3dSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("fem3d document spr encode is infallible for a fresh, edit-free envelope");
-    semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
+    semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
 

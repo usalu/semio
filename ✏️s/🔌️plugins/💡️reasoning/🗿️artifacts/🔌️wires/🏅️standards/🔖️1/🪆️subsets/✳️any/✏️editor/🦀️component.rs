@@ -28,7 +28,7 @@ use crate::editor::wires::modes::edit;
 use crate::editor::wires::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
-use semio_framework::kernel::HostEffect;
+use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
@@ -50,15 +50,15 @@ pub fn wires_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(WIRES_PLAY_APP_ID).action(action, args)
 }
 
-/// 🔁️ Builds a `HostEffect::LoadDocument` for `document` — the sanctioned non-history "replace the
+/// 🔁️ Builds a `Effect::LoadDocument` for `document` — the sanctioned non-history "replace the
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) that
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
-pub fn reset_wires_document_effect(document: &WiresSnapshot) -> HostEffect {
+pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
-    HostEffect::LoadDocument { pack, spr }
+    Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants
 
@@ -75,7 +75,7 @@ pub const WIRES_GRANULARITY_NODE: &str = "node";
 pub const WIRES_GRANULARITY_EDGE: &str = "edge";
 
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` at `granularity` — shared by
-/// the canvas pointer/add commands (wrapped into a `HostEffect::DispatchAction`) and any document-tree
+/// the canvas pointer/add commands (wrapped into a `Effect::DispatchAction`) and any document-tree
 /// row whose click should select a real canvas identity/relationship.
 pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
     let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect();
@@ -87,8 +87,8 @@ pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) 
 /// `ArtifactApp::handle`, so a plain config mutation can no longer express a selection change; the app
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
-pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> HostEffect {
-    HostEffect::DispatchAction { action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
+pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
+    Effect::DispatchAction {req: semio_framework_plugin::RequestId(112),  action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 

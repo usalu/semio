@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "@semio-tech/framework-renderer-react";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 import { createBrowserStoragePort } from "@semio-tech/framework-core";
 

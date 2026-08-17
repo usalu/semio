@@ -5,7 +5,7 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -18,7 +18,7 @@ pub struct InviteMember {
 }
 
 pub fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(HostEffect::ReplayShellCommand { action_id: "os.directory.upsert-member".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "email": payload.email, "role": payload.role }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.upsert-member".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "email": payload.email, "role": payload.role }))) }))
 }
 
 //#region 🧪️Tests
@@ -35,7 +35,7 @@ mod tests {
         assert!(result.mutations.is_empty());
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::ReplayShellCommand { action_id, args } => {
+            Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.directory.upsert-member");
                 let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
                 assert_eq!(args.get("email").and_then(|v| v.as_str()), Some("a@example.com"));

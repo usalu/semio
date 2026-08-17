@@ -1,0 +1,29 @@
+    Updating crates.io index
+     Locking 25 packages to latest compatible versions
+      Adding schemars v0.8.22 (available: v1.2.2)
+      Adding ts-rs v10.1.0 (available: v12.0.1)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_framework_os_shell-c43dc727b48cc510)
+
+running 11 tests
+test component::tests::set_panel_size_rejects_invalid_values ... ok
+test component::tests::reduce_rejects_leave_state_and_revision_untouched ... ok
+test component::tests::dock_reset_clears_override_and_emits_event ... ok
+test component::tests::reduce_is_pure_and_increments_revision ... ok
+test component::tests::dialog_stacking_open_and_close_top ... ok
+test component::tests::focus_after_closing_focused_window_reassigns ... ok
+test component::tests::panel_path_memory_keys_do_not_clobber_each_other ... ok
+test component::tests::mode_tool_mutual_exclusion_tool_clears_utility ... ok
+test component::tests::write_fixtures ... ignored
+test component::tests::shell_capabilities_declaration_order_matches_enum ... ok
+test component::tests::fixtures_produce_expected_output ... ok
+
+test result: ok. 10 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests semio_framework_os_shell
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+cargo test exit: 0

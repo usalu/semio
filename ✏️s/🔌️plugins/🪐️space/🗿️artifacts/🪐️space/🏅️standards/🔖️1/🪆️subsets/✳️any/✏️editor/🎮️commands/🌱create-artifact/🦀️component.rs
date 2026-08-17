@@ -1,13 +1,13 @@
 //! 🌱️ SpaceIndexEditor commands command — `create-artifact`. Mints the new artifact's document id
 //! itself (contract §C4/worker-brief task 2), then relays `os.open-artifact` so the new artifact
-//! opens immediately in its editor (`HostEffect::ReplayShellCommand`, contract §C6's opening-relay
+//! opens immediately in its editor (`Effect::ReplayShellCommand`, contract §C6's opening-relay
 //! convention — the shell's own `os.open-artifact` handler, see `📓️w2-c-report.md`).
 
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::{create_artifact, SSpaceMutation};
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{mint_artifact_id, SpaceArtifactDialect, SpaceArtifactRow, SSpaceSnapshot};
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use crate::editor::space_index::known_artifact_kind;
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -27,7 +27,7 @@ pub struct CreateArtifact {
 /// the already-declared `createArtifact` dialog instead of failing on an unknown empty `kind_id`.
 pub fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     if payload.name.trim().is_empty() || payload.kind_id.trim().is_empty() {
-        return Ok(Emit::effect(HostEffect::OpenDialog { dialog_id: "createArtifact".into(), args: None }));
+        return Ok(Emit::effect(Effect::OpenDialog {req: semio_framework_plugin::RequestId(130),  dialog_id: "createArtifact".into(), args: None }));
     }
     let known = known_artifact_kind(&payload.kind_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.unknown-kind"), format!("unknown artifact kind `{}`", payload.kind_id)))?;
     let id = mint_artifact_id(&doc.snapshot.artifacts, payload.now_ms);
@@ -43,7 +43,7 @@ pub fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, 
         updated_by: payload.actor.clone(),
     };
     let artifact_ref = format!("{}@{}/{}", known.dialect_artifact_kind, known.standard, known.subset);
-    let relay = HostEffect::ReplayShellCommand {
+    let relay = Effect::ReplayShellCommand {
         action_id: "os.open-artifact".into(),
         args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id }))),
     };
@@ -69,7 +69,7 @@ mod tests {
         assert_eq!(row.dialect.artifact_kind, "s.draw.draw");
         assert_eq!(result.requested_effects.len(), 1, "creating an artifact relays exactly one open command");
         match &result.requested_effects[0] {
-            HostEffect::ReplayShellCommand { action_id, args } => {
+            Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.open-artifact");
                 let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().expect("args"));
                 assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(row.id.as_str()));
@@ -87,7 +87,7 @@ mod tests {
             .expect("empty args must open the dialog, not fail");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
-            HostEffect::OpenDialog { dialog_id, args } => {
+            Effect::OpenDialog { dialog_id, args, .. } => {
                 assert_eq!(dialog_id, "createArtifact");
                 assert!(args.is_none());
             }

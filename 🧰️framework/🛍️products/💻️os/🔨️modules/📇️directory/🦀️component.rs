@@ -26,7 +26,7 @@ pub mod identity;
 use std::collections::BTreeMap;
 
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
-pub use schema::{ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, Hlc, InviteView};
+pub use schema::{ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryPresenceActor, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, Hlc, InviteView};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.

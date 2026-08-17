@@ -30,24 +30,24 @@ mod tests {
     use crate::editor::sourcing::SourcingCurateCommand;
     use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
     use crate::artifacts::curate::schema::empty_document;
-    use semio_framework::kernel::HostEffect;
+    use semio_framework::kernel::Effect;
     use semio_framework_plugin::{HistoryView, PluginApp};
 
     fn empty_view() -> (CurateSnapshot, HistoryView) {
         (CurateSnapshot::default(), HistoryView::empty())
     }
 
-    /// 🧬️ Decodes the `HostEffect::LoadDocument` an `Emit` carries — every command in this file
+    /// 🧬️ Decodes the `Effect::LoadDocument` an `Emit` carries — every command in this file
     /// replaces the whole document outside undo history, so this is the shared assertion helper.
     fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurateConfigMutation>) -> CurateSnapshot {
-        let HostEffect::LoadDocument { pack, .. } = emit.effects.first().expect("expected a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("expected a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         <CurateSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack")
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (the former whole-snapshot-replace
-    /// variant is banned outright — see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `HostEffect::LoadDocument`
+    /// variant is banned outright — see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `Effect::LoadDocument`
     /// carrying the replacement document's pack bytes, not an `artifact_mutations` entry — `dispatch`'s
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts on `requested_effects` rather than through `app.snapshot()`.
@@ -57,7 +57,7 @@ mod tests {
         let result = app
             .dispatch_typed(SourcingCurateCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::testkit::meta("local"))
             .expect("set example");
-        let HostEffect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
+        let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <CurateSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

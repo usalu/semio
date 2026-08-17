@@ -227,13 +227,27 @@ pub enum DirectoryConnectionPhase {
     Closed,
 }
 
+/// 👥️ One live presence actor in a document's roster (Amendment 3 to C1) — the hub knows all four
+/// fields without ever decoding the actor's opaque `PresencePeer` bytes: `surface`/`color` are
+/// stamped at hub-handshake time (`?surface=`, `HubState.session_colors`), `user_id` from auth.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryPresenceActor {
+    pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<String>,
+    pub surface: String,
+    pub color: u8,
+}
+
 /// 📡️ One `/directory/ws` text frame (contract C1/C2) — subscribe, then gap-free replay.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
 pub enum DirectoryStreamMessage {
     Event { event: DirectoryEvent },
     Connection { phase: DirectoryConnectionPhase, connection: ConnectionView },
-    Presence { space_id: String, document_id: String, surface: String, actors: Vec<String> },
+    /// 👥️ Amendment 3 to C1: the document-wide roster, published on every roster change.
+    Presence { space_id: String, document_id: String, actors: Vec<DirectoryPresenceActor> },
     Heartbeat { head_seq: u64 },
 }
 //#endregion 🔖️Stream

@@ -4,7 +4,7 @@
 //! `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<JackSnapshot>` and
 //! `impl protocol::SemanticMutation<JackSnapshot>` from those payloads — no hand-written
 //! diff/inverse dispatch here. Whole-fixture replace (the old `SetFixture`) is banned; loading a
-//! preset/import routes through `HostEffect::LoadDocument` (see `editor::jack::reset_document_effect`),
+//! preset/import routes through `Effect::LoadDocument` (see `editor::jack::reset_document_effect`),
 //! never through this enum.
 
 use crate::artifacts::jack::diff::JackDiff;

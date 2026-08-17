@@ -32,7 +32,7 @@ Use the main chat with Fable 5 High for creating the plan, then use the main cha
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for a workforce of parallel agents.
 Everything end to end.
-Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.6 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
+Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
 
 ---
 

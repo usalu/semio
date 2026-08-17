@@ -1,0 +1,87 @@
+{
+  "name": "error-select-unknown-conflict",
+  "state": {
+    "revision": 0,
+    "loadedPlugins": [],
+    "pluginStatusById": {},
+    "pluginSupervisorById": {},
+    "activeSession": null,
+    "sessionError": null,
+    "appLabelsOverlay": {},
+    "actionPaneFoldedByWindow": {},
+    "actionPaneExpandedByWindow": {},
+    "stagedActionArgs": {},
+    "activeUtilityByWindow": {},
+    "activeToolId": null,
+    "commandPanelExpanded": null,
+    "stagedCommandArgs": {},
+    "panelsVisible": {
+      "left": false,
+      "right": false,
+      "top": false,
+      "bottom": false
+    },
+    "panelsSize": {
+      "left": 280.0,
+      "right": 280.0,
+      "top": 280.0,
+      "bottom": 280.0
+    },
+    "panelsPath": {
+      "left": [],
+      "right": [],
+      "top": [],
+      "bottom": []
+    },
+    "dockOverride": null,
+    "panelPathMemory": {},
+    "treeOpenStates": {},
+    "activeWindowId": null,
+    "shellLayout": null,
+    "activeExampleId": "",
+    "mobilePanelPath": [],
+    "mobilePanelVisible": false,
+    "extraWindows": [],
+    "windowTitlesById": {},
+    "windowIconsById": {},
+    "searchOpen": false,
+    "findOpen": false,
+    "introductionStepIndex": null,
+    "introductionAutoStartedKeys": [],
+    "introductionCompletedInteractions": [],
+    "dialogStack": [],
+    "transientNotice": null,
+    "openWithFocusRole": null,
+    "activeTutorialId": null,
+    "uiAppearance": "system",
+    "uiLayout": "default",
+    "uiDriverId": "",
+    "uiCustomDrivers": {},
+    "uiDriverDraft": null,
+    "uiLocale": "en",
+    "uiTerminology": "",
+    "uiThemeId": "",
+    "uiCustomThemes": {},
+    "uiThemeDraft": null,
+    "uiKeybindingOverrides": {},
+    "syncBackboneUri": null,
+    "syncCardKind": null,
+    "syncDraftPath": "",
+    "syncStatusByDocument": {},
+    "mergePolicy": "manual",
+    "conflicts": [],
+    "selectedConflictId": null,
+    "storageScope": "memory",
+    "openingPreferences": {}
+  },
+  "command": {
+    "type": "selectConflict",
+    "conflictId": "missing"
+  },
+  "expected": {
+    "error": {
+      "kind": "unknownConflict",
+      "conflictId": "missing"
+    }
+  }
+}

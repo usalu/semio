@@ -1,0 +1,13 @@
+{
+  "title": "LLM-First OS via the semio-os MCP Gateway",
+  "emoji": "🌉️",
+  "status": "open",
+  "description": "Make the OS LLM-first: one public `semio-os` MCP server (stdio + Streamable HTTP) as a policy-enforcing facade over the existing semantic action/artifact/plugin system. Canonical CapabilityDefinition projected to both MCP tools and UI controls (schema canonical, controls derived); deterministic capability catalog + search; context broker and semio:// resources; Observe/Prepare/Preview/Approve/Commit/Verify mutation protocol over the existing transaction+VCS frames with expectedRevision, idempotency keys, undo tokens, typed errors and sagas; kernel-owned semantic ShellState + typed ShellCommands driven identically by React shell, wgpu shell and the gateway, with a localhost shell bridge; ui.raw.* only as a privileged fallback; the LLM as an authenticated OS principal whose scopes are kernel Broker CapabilityIds, with approvals, quotas and an event-sourced audit lane; plugin/extension agent-contribution SPI; MCP conformance, per-capability contract tests, headless and live-shell e2e demos, and a capability-selection eval harness. Coordinator model is Claude Opus 5 (registry llm enum has no opus-5). Plan of record: /Users/ueli/.claude/plans/we-want-our-os-iterative-tower.md. Runs concurrently with ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME and builds on its landing state (actor Kernel, reactor ABI, Broker, PackageDescriptor).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2568"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪cf846f1122e2402494b4e14dbebf6d7a"
+  ]
+}

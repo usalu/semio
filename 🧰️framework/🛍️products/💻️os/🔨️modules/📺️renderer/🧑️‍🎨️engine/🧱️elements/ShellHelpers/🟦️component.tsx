@@ -55,7 +55,7 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
-  type HostEffect,
+  type Effect,
   type IntroductionDefinition,
   type IntroductionStepDefinition,
   type LocalizedLabel,
@@ -472,7 +472,7 @@ export function encodeEffectCommandInvocation(baseSession: ActiveSession, comman
 export function makeEffectDispatchOne(
   pluginEntry: LoadedProgramState,
   baseSession: ActiveSession,
-  applyEffects: (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
+  applyEffects: (effects: readonly Effect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
 ): EffectDispatchOne {
   return async (action, args) => {
     const isAppCommand = (baseSession.app.commands ?? []).some((command) => command.id === action);
@@ -892,7 +892,7 @@ export async function runTier2VideoFrames(video: HTMLVideoElement, effect: Reque
 }
 //#endregion Tier2
 
-/** 🎞️ D5 `RequestMediaFrames` fields the two decode tiers need, decoupled from the raw `HostEffect`
+/** 🎞️ D5 `RequestMediaFrames` fields the two decode tiers need, decoupled from the raw `Effect`
  * union member shape so orchestration functions above take a plain, easily-constructed-in-tests object. */
 export type RequestMediaFramesArgs = {
   readonly frameAction: string;
@@ -1041,7 +1041,7 @@ export function parsePanelState(viewState: ViewModel): SpacePanelState | null {
  * Host-effect application must fold this into the in-flight `nextViewState` before the final
  * `SET_SESSION` write — a separate panel dispatch is overwritten by that write and leaves the shell
  * stuck on the studio surface.
- * @see HostEffect.openPluginInstance
+ * @see Effect.openPluginInstance
  */
 export function studioPanelFocusingSpawned(panel: SpacePanelState, spawned: SpawnedAppEntry): SpacePanelState {
   const spawnedApps = panel.spawnedApps.some((entry) => entry.id === spawned.id)

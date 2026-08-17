@@ -1008,7 +1008,7 @@ export type PluginUiRefreshResponse = {
   /** ⏱️ See `DocumentApp::pending_effects` — background work (e.g. a `flowEvalTick` chain) the host
    * should dispatch right after this refresh, fed through the same `applyHostEffects` pass as an
    * action's own `requestedEffects`. */
-  readonly requestedEffects?: readonly HostEffect[];
+  readonly requestedEffects?: readonly Effect[];
 };
 //#endregion UiRefresh
 

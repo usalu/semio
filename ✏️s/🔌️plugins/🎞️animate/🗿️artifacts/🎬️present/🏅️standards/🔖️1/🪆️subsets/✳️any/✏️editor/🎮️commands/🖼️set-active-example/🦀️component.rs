@@ -15,7 +15,7 @@ pub struct SetActiveExample {
 
 /// 🧬️ Whole-document replace has no in-history mutation (a whole-snapshot variant is banned outright — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so "reset to demo" builds
-/// `editor::animate::reset_present_document_effect` (a `HostEffect::LoadDocument`, outside undo
+/// `editor::animate::reset_present_document_effect` (a `Effect::LoadDocument`, outside undo
 /// history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     if payload.example_id == "demo" || payload.example_id.is_empty() {

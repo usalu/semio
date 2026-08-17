@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 /// duplicate(s)/reparent/drag/rename/visible/locked/move/resize, plus per-kind content edits for
 /// text/math/ink, plus table row/column insert/remove). Whole-document replace has NO replacement
 /// here — see `crate::editor::note::reset_document_effect`, which goes through
-/// `HostEffect::LoadDocument` outside undo history.
+/// `Effect::LoadDocument` outside undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note")]

@@ -5,7 +5,7 @@
 //! from those payloads — no hand-written diff/inverse dispatch here. Whole-document replace (the
 //! old `SetState`, a whole-snapshot LWW register wearing a mutation costume) is banned outright;
 //! there is no import mutation (locked decision) — `resetRule`/`"document:in"` route through
-//! `HostEffect::LoadDocument` (see `editor::rewrite::reset_document_effect`), never through this enum.
+//! `Effect::LoadDocument` (see `editor::rewrite::reset_document_effect`), never through this enum.
 
 use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::{RewriteSnapshot, TrinityRewriteError, REWRITE_RULE_SCHEMA};
