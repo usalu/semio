@@ -152,6 +152,7 @@ fn u16_le(n: u16) -> [u8; 2] {
 fn u32_le(n: u32) -> [u8; 4] {
     n.to_le_bytes()
 }
+#[cfg(test)]
 fn u64_le(n: u64) -> [u8; 8] {
     n.to_le_bytes()
 }

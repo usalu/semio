@@ -744,7 +744,7 @@ ${pluginRows}
 `;
 }
 
-function emitRustHosts(entries: PluginRegistryEntry[], playgrounds: PlaygroundEntry[], defaultHostVariant: string): string {
+function emitRustHosts(entries: PluginRegistryEntry[], playgrounds: PlaygroundEntry[]): string {
   const hostRows = entries
     .filter((entry) => entry.host)
     .map((entry) => `    PluginHostConfig { plugin_id: ${JSON.stringify(entry.pluginId)}, landing_app_id: ${JSON.stringify(entry.host!.landingAppId)}, host_app_id: ${JSON.stringify(entry.host!.hostAppId)} },`)
@@ -760,10 +760,6 @@ pub struct PluginHostConfig {
     pub landing_app_id: &'static str,
     pub host_app_id: &'static str,
 }
-
-/// 🏠️ The playground variant that boots as the host/shell session — see \`resolveDefaultHostVariant\`
-/// in \`framework/plugin/registry/script.ts\`. Replaces every hardcoded \`"s"\` default-variant literal.
-pub const DEFAULT_HOST_VARIANT: &str = ${JSON.stringify(defaultHostVariant)};
 
 pub const PLUGIN_HOST_CONFIGS: &[PluginHostConfig] = &[
 ${hostRows}
@@ -1708,7 +1704,7 @@ function renderCatalogFiles(repoRoot: string): { files: Record<string, string>; 
       "🟦️playgrounds.ts": emitPlaygroundsTypeScript(playgrounds, defaultHostVariant),
       "🔣️framework.json": `${JSON.stringify(frameworkPackages, null, 2)}\n`,
       "🟦️framework.ts": emitFrameworkPackagesTypeScript(frameworkPackages),
-      "🦀️hosts.rs": emitRustHosts(entries, playgrounds, defaultHostVariant),
+      "🦀️hosts.rs": emitRustHosts(entries, playgrounds),
       "🦀️artifacts.rs": emitRustArtifacts(entries),
     },
   };

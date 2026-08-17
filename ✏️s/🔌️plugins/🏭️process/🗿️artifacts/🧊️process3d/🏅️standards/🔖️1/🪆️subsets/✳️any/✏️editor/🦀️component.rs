@@ -112,7 +112,7 @@ pub fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<Labe
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
 /// op-log — a genesis envelope with no history to encode.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> HostEffect {
-    let pack = <Process3dSnapshot as store::ArtifactPack>::encode_pack(document);
+    let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
     HostEffect::LoadDocument { pack, spr }

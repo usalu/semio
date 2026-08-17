@@ -336,12 +336,6 @@ fn apply_cell(cell: &mut XlsxCell, diff: &XlsxCellDiff) -> MutationApplyResult<(
     Ok(())
 }
 
-fn cell_with_diff_applied(cell: &XlsxCell, diff: &XlsxCellDiff) -> XlsxCell {
-    let mut out = cell.clone();
-    apply_cell_for_absorb(&mut out, diff);
-    out
-}
-
 fn apply_cell_for_absorb(cell: &mut XlsxCell, diff: &XlsxCellDiff) {
     if let Some(value) = &diff.value {
         cell.value = value.clone();
@@ -373,12 +367,6 @@ fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) -> MutationApplyResu
         apply_named(&mut sheet.cells, cd, cell_key, apply_cell).map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
-}
-
-fn sheet_with_diff_applied(sheet: &XlsxSheet, diff: &XlsxSheetDiff) -> XlsxSheet {
-    let mut out = sheet.clone();
-    apply_sheet_for_absorb(&mut out, diff);
-    out
 }
 
 fn apply_sheet_for_absorb(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) {

@@ -8,7 +8,7 @@ use semio_framework_plugin::{app::InteractionView, ConfigView, ArtifactView, Emi
 use serde::{Deserialize, Serialize};
 
 use crate::artifacts::procedural3d::schema::{
-    commit_fixture, ensure_gumball_node, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json, gumball_widget_number_param, gumball_widget_offset, host_from_fixture};
+    commit_fixture, ensure_gumball_node, gumball_scale_params_json, gumball_widget_number_param, host_from_fixture};
 
 //#region 🔖️Shared
 /// 🎯️ The typed-command counterpart of the pre-migration JSON-args `mesh_selection_ids` — falls back

@@ -1,0 +1,110 @@
+Target file (OUT OF W1-B boundary — repo-lib TS, not root script.ts/taxonomy.json/launch.json):
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts
+
+Companion edit (IN boundary, NOT yet applied — see below):
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json
+
+## Why this is a patch, not a direct W1-B edit
+
+Design.md §1/§5 moves the native DSL text grammar + pack binary protocol leaves out of
+🧬️schema/{📸️snapshot,🔺️diff}/{📝️text,💾️binary} and 🚪️io/{💡️inferences,🧬️mutations}/{📝️text,💾️binary} into the
+uniform 🚪️io/{📥️import/🧩️deserializers,📤️export/🧵️serializers}/{📸️snapshot,🔺️diff,🧬️mutations,💡️inferences}/
+{📝️text,💾️binary} shape (task 1). Task 1 asks W1-B to "read the existing artifactSpecFilenames /
+artifactSchemaSpecFilenames / representationDirs / ioDirectionChildDirs keys and extend them".
+
+Verified (bun -e loadTaxonomy/validateTaxonomy/artifactFacetPathIsDeclared probe) that
+`artifactFacetChildLevel` in 🔍️discovery/🟦️component.ts's `🚪️io` branch hard-codes the ONLY legal child of
+`io/<direction>/<codec>` as `taxonomy.artifactsDirName` (🗿️artifacts) — the stdio foreign-dialect shape.
+It has NO branch recognizing `schemaChildDirs` names (📸️snapshot/🔺️diff/🧬️mutations/💡️inferences) as an
+alternative child there. Adding the new paths as `artifactSpecFilenames`/`artifactSchemaSpecFilenames`
+keys WITHOUT this walker extension makes `artifactFacetPathIsDeclared` return false for every one of
+them, which `validateTaxonomy` turns into new problems ("... is not a declared artifact/schema facet
+path"), which flow into `buildSemanticCensus`'s `taxonomy-schema` problems (`verify taxonomy enforce`)
+and are exercised by repo-lib's own test suite. Landing the taxonomy.json map keys alone — today, in
+W1-B, ahead of this walker patch — would be a real regression. Both pieces must land atomically.
+🧰️framework/🔍️discovery/🟦️component.ts is outside the W1-B boundary (root script.ts / taxonomy.json /
+launch.json only), so the walker half is a patch; W1-B's taxonomy.json half is deferred to the SAME
+apply so they never land split.
+
+## Patch 1 — discovery component.ts, `artifactFacetChildLevel`'s `🚪️io` branch
+
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts
+@@ artifactFacetChildLevel, root === "🚪️io" branch
+   if (root === "🚪️io") {
+     const directions = taxonomy.ioDirectionDirs ?? [];
+     const childMap = taxonomy.ioDirectionChildDirs ?? {};
++    const nativeCodecDirs = taxonomy.schemaChildDirs ?? [];
+     if (parents.length === 2 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!)) return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
+     if (parents.length === 3 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!) && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
+     if (parents.length === 2 && directions.includes(a!)) {
+       const child = childMap[a!];
+       return child ? { kind: "fixed", dirs: [child] } : { kind: "none" };
+     }
+     if (parents.length === 3 && directions.includes(a!) && childMap[a!] === b) {
+-      return { kind: "fixed", dirs: [taxonomy.artifactsDirName] };
++      // 🧹 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: io/<direction>/<codec> now legally
++      // holds EITHER the stdio foreign-dialect wildcard (🗿️artifacts/<kind>/...) OR one of the
++      // native-codec dirs (schemaChildDirs: 📸️snapshot/🔺️diff/🧬️mutations/💡️inferences), each
++      // carrying representationDirs children — both shapes legal during the migration.
++      return { kind: "fixed", dirs: [taxonomy.artifactsDirName, ...nativeCodecDirs] };
+     }
++    if (parents.length === 4 && directions.includes(a!) && childMap[a!] === b && nativeCodecDirs.includes(c!)) {
++      if (c === "🧬️mutations" || c === "💡️inferences") return { kind: "fixed", dirs: ["*"] };
++      return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
++    }
+     if (parents.length === 4 && b === childMap[a!] && c === taxonomy.artifactsDirName) return { kind: "wildcard" };
+-    if (parents.length === 5) return { kind: "none" };
++    if (parents.length === 5 && c !== undefined && nativeCodecDirs.includes(parents[3] ?? "") && (taxonomy.representationDirs ?? []).includes(parents[4] ?? "")) return { kind: "none" };
++    if (parents.length === 5) return { kind: "none" };
+     return { kind: "none" };
+   }
+
+NOTE: `parents[3]`/`parents[4]` indices above assume 0-based `parents` array where parents[0]="🚪️io".
+Re-derive against the function's actual `a`/`b`/`c` naming (parents[1..3]) before applying — this patch
+is a specification of the intended behavior, not a byte-exact diff; verify against the live file (it
+may have moved since this was written) and re-run the `bun -e` probe below after applying.
+
+## Patch 2 — taxonomy.json (apply in the SAME change as patch 1)
+
+Add to `artifactSpecFilenames` (mirroring the existing 🧬️schema/* rows onto both io directions):
+  "🚪️io/📥️import/🧩️deserializers/📸️snapshot/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📥️import/🧩️deserializers/📸️snapshot/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📥️import/🧩️deserializers/🔺️diff/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📥️import/🧩️deserializers/🔺️diff/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📥️import/🧩️deserializers/🧬️mutations/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📥️import/🧩️deserializers/🧬️mutations/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📥️import/🧩️deserializers/💡️inferences/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📤️export/🧵️serializers/📸️snapshot/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📤️export/🧵️serializers/📸️snapshot/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📤️export/🧵️serializers/🔺️diff/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📤️export/🧵️serializers/🔺️diff/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📤️export/🧵️serializers/🧬️mutations/📝️text": "📖️component.grammar.semio",
+  "🚪️io/📤️export/🧵️serializers/🧬️mutations/💾️binary": "📡️component.protocol.semio",
+  "🚪️io/📤️export/🧵️serializers/💡️inferences/💾️binary": "📡️component.protocol.semio",
+
+Add to `artifactSchemaSpecFilenames`:
+  "🚪️io/📥️import/🧩️deserializers/📸️snapshot": "🔣️component.json",
+  "🚪️io/📥️import/🧩️deserializers/🔺️diff": "🔣️component.json",
+  "🚪️io/📥️import/🧩️deserializers/💡️inferences": "🔣️component.json",
+  "🚪️io/📥️import/🧩️deserializers/💡️inferences/📝️text": "🔣️component.json",
+  "🚪️io/📥️import/🧩️deserializers/🧬️mutations/📝️text": "🔣️component.json",
+  "🚪️io/📤️export/🧵️serializers/📸️snapshot": "🔣️component.json",
+  "🚪️io/📤️export/🧵️serializers/🔺️diff": "🔣️component.json",
+  "🚪️io/📤️export/🧵️serializers/💡️inferences": "🔣️component.json",
+  "🚪️io/📤️export/🧵️serializers/💡️inferences/📝️text": "🔣️component.json",
+  "🚪️io/📤️export/🧵️serializers/🧬️mutations/📝️text": "🔣️component.json",
+
+representationDirs / ioDirectionChildDirs need NO change — they already hold the right vocabulary
+(📝️text/💾️binary and import->deserializers/export->serializers) and are reused as-is by the new shape.
+
+## Verification once applied
+
+  bun -e '
+  import { loadTaxonomy, validateTaxonomy, artifactFacetPathIsDeclared } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
+  const t = loadTaxonomy();
+  console.log("problems:", validateTaxonomy(t).length);
+  console.log(artifactFacetPathIsDeclared("🚪️io/📥️import/🧩️deserializers/📸️snapshot/📝️text", t));
+  console.log(artifactFacetPathIsDeclared("🚪️io/📤️export/🧵️serializers/🧬️mutations/📝️text", t));
+  '
+Expect `problems: 0` and both `artifactFacetPathIsDeclared` calls `true`.

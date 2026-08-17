@@ -343,20 +343,53 @@ export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope): Mutati
   };
 }
 
-/** 📡️ Wire-protocol presence identity — distinct from the UI-rendering {@link PresencePeer} scene prop. */
+/** 📡️ Wire-protocol presence identity v3 — distinct from the UI-rendering {@link PresencePeer} scene
+ * prop. `cursor`/`viewport` are DELETED (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-
+ * UNIVERSAL-ARTIFACT-CREATION C7.1) — replaced by `views` (artifact scope, one entry per open
+ * window/surface) and `ui` (app scope, `data-ui-path` hover/focus/press). `color`/`surface` are
+ * stamped by the client actor (`🟦️backbone-worker.ts`'s `stampSession`) — shells never fill them. */
 export type ArtifactPresencePeer = {
   readonly actor: string;
+  readonly connectedAtMs: number;
   readonly label?: string;
   readonly presencePack?: readonly number[];
-  readonly connectedAtMs: number;
   readonly userId?: string;
   readonly role?: string;
-  readonly cursor?: { readonly x: number; readonly y: number };
-  readonly viewport?: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly dragGhostJson?: string;
-  /** 🕹️ Twin of Rust `PresenceInteraction` (presence bit 7) — the peer's live hover/selection per
-   * interaction domain. Optional because a peer that has never interacted encodes no bit-7 section. */
+  /** 🕹️ Twin of Rust `PresenceInteraction` (presence bit 5) — the peer's live hover/selection per
+   * interaction domain. Optional because a peer that has never interacted encodes no bit-5 section. */
   readonly interaction?: ArtifactPresenceInteraction;
+  /** 🎨️ Hub-assigned palette index (bit 6), stamped by the client actor. */
+  readonly color?: number;
+  /** 🪟️ Canonical surface id (bit 7), stamped by the client actor. */
+  readonly surface?: string;
+  /** 🪟️ Every open window/surface's live camera + in-view pointer (bit 8, ARTIFACT scope), matched
+   * by `space`. Empty when the peer has no open windows for this document. */
+  readonly views: readonly ArtifactPresenceWindowView[];
+  /** 🖱️ Live `data-ui-path` hover/focus/press state (bit 9, APP scope). */
+  readonly ui?: ArtifactPresenceUi;
+};
+
+/** 🪟️ Twin of Rust `PresenceWindowView`. */
+export type ArtifactPresenceWindowView = {
+  readonly windowId: string;
+  readonly space: string;
+  readonly kind: ArtifactPresenceViewKind;
+  readonly size: readonly [number, number];
+  readonly pointer?: readonly [number, number, number];
+};
+
+/** 🎥️ Twin of Rust `PresenceViewKind` — internally tagged `kind`, camelCase (`{"kind":"orbit",…}`). */
+export type ArtifactPresenceViewKind =
+  | { readonly kind: "canvas"; readonly x: number; readonly y: number; readonly zoom: number }
+  | { readonly kind: "orbit"; readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly up: readonly [number, number, number]; readonly fov: number }
+  | { readonly kind: "geo"; readonly lng: number; readonly lat: number; readonly zoom: number; readonly bearing: number; readonly pitch: number };
+
+/** 🖱️ Twin of Rust `PresenceUi`. */
+export type ArtifactPresenceUi = {
+  readonly hoveredPath?: string;
+  readonly focusedPath?: string;
+  readonly pressedPath?: string;
 };
 
 /** 🕹️ Twin of Rust `PresenceInteraction`. */
@@ -450,7 +483,10 @@ export type ServerFrame =
   | { readonly Preview: { readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
   | { readonly Presence: { readonly peers: readonly (readonly number[])[] } }
   | { readonly CreditGrant: { readonly n: number } }
-  | { readonly Error: { readonly code: string; readonly message: string } };
+  | { readonly Error: { readonly code: string; readonly message: string } }
+  /** 🎨️ The hub's one-time session assignment for this connection — see Rust `ServerFrame::Session`'s
+   * doc comment. Sent exactly once per connection, after `Welcome` and before any `Presence` frame. */
+  | { readonly Session: { readonly actor: string; readonly color: number } };
 
 /** 🎞️ Writes an unsigned LEB128 varint (minimal length) — a byte-for-byte TS twin of
  * `protocol_core`'s `write_varint_u64` (`protocol/core/rs/lib.rs` `🔖️WireCodec`). */
@@ -570,69 +606,102 @@ function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
   return result;
 }
 
-/** 🎯️ `actor str | presence bitmask u8 | connected_at_ms varint | fields present per bitmask
- * (label str? | presence_pack bytes? | user_id str? | role str? | cursor f64,f64? | viewport
- * f64,f64,f64? | drag_ghost_json str?)` — the TS twin of `semio_framework_core::encode_presence_peer`
- * (`framework/core/rs/lib.rs`). This is what `ClientFrame::Presence.peer`/`ServerFrame::Presence.
- * peers[]` actually carry — real binary, not JSON bytes. */
+/** 🎯️ `actor str | flags varint_u64 | connected_at_ms varint | fields present per bitmask, strictly
+ * in bit order (label str? | presence_pack bytes? | user_id str? | role str? | drag_ghost_json str? |
+ * interaction? | color u8? | surface str? | views? | ui?)` — the TS twin of Rust
+ * `encode_presence_peer` (`📡️wire/🦀️component.rs`). This is what `ClientFrame::Presence.peer`/
+ * `ServerFrame::Presence.peers[]` actually carry — real binary, not JSON bytes. `flags` is a varint
+ * (not a single byte) now that bit 9 exceeds a byte's range. */
+/** @emoji 🕳️ Presence-flag guard. A field is "present" only when it is neither `undefined` **nor
+ * `null`**: these peers are reconstructed from JSON view state, where an absent optional arrives as
+ * `null`, and `null !== undefined` is true — so a bare `!== undefined` check set the flag and then
+ * handed `null` to `writeStr`/`writeBytes`, throwing `Cannot read properties of null (reading
+ * 'length')` on every heartbeat and wedging the plugin instance. */
+function presencePresent<T>(value: T | null | undefined): value is T {
+  return value !== undefined && value !== null;
+}
+
 export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   const out: number[] = [];
   writeStr(out, peer.actor);
-  let presence = 0;
-  if (peer.label !== undefined) presence |= 1 << 0;
-  if (peer.presencePack !== undefined) presence |= 1 << 1;
-  if (peer.userId !== undefined) presence |= 1 << 2;
-  if (peer.role !== undefined) presence |= 1 << 3;
-  if (peer.cursor !== undefined) presence |= 1 << 4;
-  if (peer.viewport !== undefined) presence |= 1 << 5;
-  if (peer.dragGhostJson !== undefined) presence |= 1 << 6;
-  if (peer.interaction !== undefined) presence |= 1 << 7;
-  out.push(presence);
-  writeVarintU64(out, peer.connectedAtMs);
-  if (peer.label !== undefined) writeStr(out, peer.label);
-  if (peer.presencePack !== undefined) writeBytes(out, peer.presencePack);
-  if (peer.userId !== undefined) writeStr(out, peer.userId);
-  if (peer.role !== undefined) writeStr(out, peer.role);
-  if (peer.cursor !== undefined) {
-    writeF64(out, peer.cursor.x);
-    writeF64(out, peer.cursor.y);
-  }
-  if (peer.viewport !== undefined) {
-    writeF64(out, peer.viewport.x);
-    writeF64(out, peer.viewport.y);
-    writeF64(out, peer.viewport.zoom);
-  }
-  if (peer.dragGhostJson !== undefined) writeStr(out, peer.dragGhostJson);
-  if (peer.interaction !== undefined) {
-    writeStr(out, peer.interaction.app_id);
-    writeVarintU64(out, peer.interaction.domains.length);
-    for (const domain of peer.interaction.domains) {
-      writeStr(out, domain.domain);
-      writeStr(out, domain.granularity);
-      writeVecStr(out, domain.selected);
-      writeVecStr(out, domain.hovered);
-    }
-  }
+  let flags = 0;
+  if (presencePresent(peer.label)) flags |= 1 << 0;
+  if (presencePresent(peer.presencePack)) flags |= 1 << 1;
+  if (presencePresent(peer.userId)) flags |= 1 << 2;
+  if (presencePresent(peer.role)) flags |= 1 << 3;
+  if (presencePresent(peer.dragGhostJson)) flags |= 1 << 4;
+  if (presencePresent(peer.interaction)) flags |= 1 << 5;
+  if (presencePresent(peer.color)) flags |= 1 << 6;
+  if (presencePresent(peer.surface)) flags |= 1 << 7;
+  if (peer.views.length > 0) flags |= 1 << 8;
+  if (presencePresent(peer.ui)) flags |= 1 << 9;
+  writeVarintU64(out, flags);
+  writeVarintU64(out, peer.connectedAtMs ?? 0);
+  if (presencePresent(peer.label)) writeStr(out, peer.label);
+  if (presencePresent(peer.presencePack)) writeBytes(out, peer.presencePack);
+  if (presencePresent(peer.userId)) writeStr(out, peer.userId);
+  if (presencePresent(peer.role)) writeStr(out, peer.role);
+  if (presencePresent(peer.dragGhostJson)) writeStr(out, peer.dragGhostJson);
+  if (presencePresent(peer.interaction)) writePresenceInteraction(out, peer.interaction);
+  if (presencePresent(peer.color)) out.push(peer.color);
+  if (presencePresent(peer.surface)) writeStr(out, peer.surface);
+  if (peer.views.length > 0) writeVecPresenceWindowView(out, peer.views);
+  if (presencePresent(peer.ui)) writePresenceUi(out, peer.ui);
   return out;
 }
 
-/** 🎯️ The inverse of {@link encodePresencePeer} — the TS twin of
- * `semio_framework_core::decode_presence_peer`. */
+/** 🎯️ The inverse of {@link encodePresencePeer} — the TS twin of Rust `decode_presence_peer`. Any
+ * flag bit ≥ 10 set throws — no silent forward compatibility, matching the Rust decoder's
+ * `ProtocolError::Malformed { what: "presence peer flags", .. }`. */
 export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPresencePeer {
   const actor = readStr(bytes, pos);
-  const presence = bytes[pos[0]];
-  if (presence === undefined) throw new Error("presence peer: truncated");
-  pos[0] += 1;
+  const flags = readVarintU64(bytes, pos);
+  if (flags >> 10 !== 0) throw new Error(`presence peer flags: unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = readVarintU64(bytes, pos);
-  const label = presence & (1 << 0) ? readStr(bytes, pos) : undefined;
-  const presencePack = presence & (1 << 1) ? readBytes(bytes, pos) : undefined;
-  const userId = presence & (1 << 2) ? readStr(bytes, pos) : undefined;
-  const role = presence & (1 << 3) ? readStr(bytes, pos) : undefined;
-  const cursor = presence & (1 << 4) ? { x: readF64(bytes, pos), y: readF64(bytes, pos) } : undefined;
-  const viewport = presence & (1 << 5) ? { x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) } : undefined;
-  const dragGhostJson = presence & (1 << 6) ? readStr(bytes, pos) : undefined;
-  const interaction = presence & (1 << 7) ? readPresenceInteraction(bytes, pos) : undefined;
-  return { actor, label, presencePack, connectedAtMs, userId, role, cursor, viewport, dragGhostJson, interaction };
+  const label = flags & (1 << 0) ? readStr(bytes, pos) : undefined;
+  const presencePack = flags & (1 << 1) ? readBytes(bytes, pos) : undefined;
+  const userId = flags & (1 << 2) ? readStr(bytes, pos) : undefined;
+  const role = flags & (1 << 3) ? readStr(bytes, pos) : undefined;
+  const dragGhostJson = flags & (1 << 4) ? readStr(bytes, pos) : undefined;
+  const interaction = flags & (1 << 5) ? readPresenceInteraction(bytes, pos) : undefined;
+  const color = flags & (1 << 6) ? readU8(bytes, pos) : undefined;
+  const surface = flags & (1 << 7) ? readStr(bytes, pos) : undefined;
+  const views = flags & (1 << 8) ? readVecPresenceWindowView(bytes, pos) : [];
+  const ui = flags & (1 << 9) ? readPresenceUi(bytes, pos) : undefined;
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui };
+}
+
+/** 🎞️ One raw byte — the TS twin of `protocol_core::read_u8`-shaped inline reads. */
+function readU8(bytes: Uint8Array, pos: [number]): number {
+  const byte = bytes[pos[0]];
+  if (byte === undefined) throw new Error("presence peer color: truncated");
+  pos[0] += 1;
+  return byte;
+}
+
+/** 🕹️ Twin of Rust `encode_presence_interaction` — `pub` (C7.4) so a guest that never enables the
+ * kernel's `sync` feature can still call it directly. */
+export function encodePresenceInteraction(interaction: ArtifactPresenceInteraction): number[] {
+  const out: number[] = [];
+  writePresenceInteraction(out, interaction);
+  return out;
+}
+
+function writePresenceInteraction(out: number[], interaction: ArtifactPresenceInteraction): void {
+  writeStr(out, interaction.app_id);
+  writeVarintU64(out, interaction.domains.length);
+  for (const domain of interaction.domains) {
+    writeStr(out, domain.domain);
+    writeStr(out, domain.granularity);
+    writeVecStr(out, domain.selected);
+    writeVecStr(out, domain.hovered);
+  }
+}
+
+/** 🕹️ Twin of Rust `decode_presence_interaction` — `pub` for the same reason as
+ * {@link encodePresenceInteraction}. */
+export function decodePresenceInteraction(bytes: Uint8Array, pos: [number]): ArtifactPresenceInteraction {
+  return readPresenceInteraction(bytes, pos);
 }
 
 /** 🕹️ Twin of Rust `decode_presence_interaction` — app id, then a varint-counted run of domains. */
@@ -645,6 +714,90 @@ function readPresenceInteraction(bytes: Uint8Array, pos: [number]): ArtifactPres
   }
   return { app_id, domains };
 }
+
+//#region 🔖️PresenceView
+/** 🎥️ Twin of Rust `encode_presence_view_kind` — discriminant `u8` (0 Canvas, 1 Orbit, 2 Geo) then
+ * that variant's `f64` fields in declared order. */
+function writePresenceViewKind(out: number[], kind: ArtifactPresenceViewKind): void {
+  if (kind.kind === "canvas") {
+    out.push(0);
+    writeF64(out, kind.x);
+    writeF64(out, kind.y);
+    writeF64(out, kind.zoom);
+  } else if (kind.kind === "orbit") {
+    out.push(1);
+    for (const value of [...kind.position, ...kind.target, ...kind.up]) writeF64(out, value);
+    writeF64(out, kind.fov);
+  } else {
+    out.push(2);
+    writeF64(out, kind.lng);
+    writeF64(out, kind.lat);
+    writeF64(out, kind.zoom);
+    writeF64(out, kind.bearing);
+    writeF64(out, kind.pitch);
+  }
+}
+
+function readPresenceViewKind(bytes: Uint8Array, pos: [number]): ArtifactPresenceViewKind {
+  const tag = bytes[pos[0]];
+  if (tag === undefined) throw new Error("presence view kind tag: truncated");
+  pos[0] += 1;
+  if (tag === 0) return { kind: "canvas", x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) };
+  if (tag === 1) {
+    const read3 = (): readonly [number, number, number] => [readF64(bytes, pos), readF64(bytes, pos), readF64(bytes, pos)];
+    const position = read3();
+    const target = read3();
+    const up = read3();
+    return { kind: "orbit", position, target, up, fov: readF64(bytes, pos) };
+  }
+  if (tag === 2) return { kind: "geo", lng: readF64(bytes, pos), lat: readF64(bytes, pos), zoom: readF64(bytes, pos), bearing: readF64(bytes, pos), pitch: readF64(bytes, pos) };
+  throw new Error(`presence view kind tag: unknown tag ${tag}`);
+}
+
+function writePresenceWindowView(out: number[], view: ArtifactPresenceWindowView): void {
+  writeStr(out, view.windowId);
+  writeStr(out, view.space);
+  writePresenceViewKind(out, view.kind);
+  writeF64(out, view.size[0]);
+  writeF64(out, view.size[1]);
+  writeBool(out, presencePresent(view.pointer));
+  if (presencePresent(view.pointer)) for (const value of view.pointer) writeF64(out, value);
+}
+
+function readPresenceWindowView(bytes: Uint8Array, pos: [number]): ArtifactPresenceWindowView {
+  const windowId = readStr(bytes, pos);
+  const space = readStr(bytes, pos);
+  const kind = readPresenceViewKind(bytes, pos);
+  const size: readonly [number, number] = [readF64(bytes, pos), readF64(bytes, pos)];
+  const pointer: readonly [number, number, number] | undefined = readBool(bytes, pos) ? [readF64(bytes, pos), readF64(bytes, pos), readF64(bytes, pos)] : undefined;
+  return { windowId, space, kind, size, pointer };
+}
+
+function writeVecPresenceWindowView(out: number[], values: readonly ArtifactPresenceWindowView[]): void {
+  writeVarintU64(out, values.length);
+  for (const value of values) writePresenceWindowView(out, value);
+}
+
+function readVecPresenceWindowView(bytes: Uint8Array, pos: [number]): ArtifactPresenceWindowView[] {
+  const count = readVarintU64(bytes, pos);
+  const result: ArtifactPresenceWindowView[] = [];
+  for (let i = 0; i < count; i++) result.push(readPresenceWindowView(bytes, pos));
+  return result;
+}
+
+function writePresenceUi(out: number[], ui: ArtifactPresenceUi): void {
+  writeOptStr(out, ui.hoveredPath ?? null);
+  writeOptStr(out, ui.focusedPath ?? null);
+  writeOptStr(out, ui.pressedPath ?? null);
+}
+
+function readPresenceUi(bytes: Uint8Array, pos: [number]): ArtifactPresenceUi {
+  const hoveredPath = readOptStr(bytes, pos) ?? undefined;
+  const focusedPath = readOptStr(bytes, pos) ?? undefined;
+  const pressedPath = readOptStr(bytes, pos) ?? undefined;
+  return { hoveredPath, focusedPath, pressedPath };
+}
+//#endregion 🔖️PresenceView
 
 //#region 🔖️Combinators
 function writeOptStr(out: number[], value: string | null): void {
@@ -1011,6 +1164,10 @@ export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Arra
     out.push(8);
     writeStr(out, frame.Error.code);
     writeStr(out, frame.Error.message);
+  } else if ("Session" in frame) {
+    out.push(9);
+    writeStr(out, frame.Session.actor);
+    out.push(frame.Session.color);
   } else {
     throw new Error("encodeServerFrame: unrecognized frame variant");
   }
@@ -1054,6 +1211,9 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
       break;
     case 8:
       frame = { Error: { code: readStr(bytes, pos), message: readStr(bytes, pos) } };
+      break;
+    case 9:
+      frame = { Session: { actor: readStr(bytes, pos), color: readU8(bytes, pos) } };
       break;
     default:
       throw new Error(`wire server-frame tag: unknown tag ${tag}`);
@@ -1195,7 +1355,11 @@ export type BackboneWorkerResponse =
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
   | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
-  | { readonly kind: "directory-status"; readonly pendingCommands: number };
+  | { readonly kind: "directory-status"; readonly pendingCommands: number }
+  /** 🎨️ The hub's one-time session color assignment for a document (`ServerFrame::Session`) — a
+   * flat top-level member (not nested under `event`/`ArtifactEvent`, contract-freeze §C7.4) since
+   * this is worker-actor state, not a document event the store timeline folds. */
+  | { readonly kind: "session"; readonly documentId: string; readonly actor: string; readonly color: number };
 //#endregion 🔖️SyncProtocol
 
 //#region 🔖️WorkflowPlanner
@@ -2966,7 +3130,16 @@ if (import.meta.vitest) {
 
   describe("@semio-tech/framework-os AppChannelCodec", () => {
     it("round-trips the app-typed presence pack through the document-presence wire", () => {
-      const peer: ArtifactPresencePeer = { actor: "actor-1", label: "One", presencePack: [1, 2, 3], connectedAtMs: 42, cursor: { x: 4, y: 5 }, viewport: { x: 6, y: 7, zoom: 2 } };
+      const peer: ArtifactPresencePeer = {
+        actor: "actor-1",
+        connectedAtMs: 42,
+        label: "One",
+        presencePack: [1, 2, 3],
+        color: 4,
+        surface: "s.space.home@1/*#editor",
+        views: [{ windowId: "w1", space: "canvas", kind: { kind: "canvas", x: 1, y: 2, zoom: 1.5 }, size: [800, 600], pointer: [10, 20, 0] }],
+        ui: { hoveredPath: "row[0]#a" },
+      };
       expect(decodePresencePeer(new Uint8Array(encodePresencePeer(peer)), [0])).toEqual(peer);
     });
 

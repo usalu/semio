@@ -96,6 +96,7 @@ import {
   type WindowLayoutAxisNode,
   type WindowLayoutStackNode,
   type WindowLayoutWindowNode,
+  type WindowStackCorner,
   type WindowMeasure,
 } from "@semio-tech/framework";
 import {
@@ -1070,6 +1071,7 @@ type FrameworkLayoutWindowSeed = {
   readonly title?: string;
   readonly templateId?: string;
   readonly size: number;
+  readonly corner?: WindowStackCorner;
 };
 
 /** @emoji 🪟️ Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
@@ -1082,6 +1084,7 @@ function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLa
         title: node.title,
         templateId: node.templateId,
         size: parentSize,
+        corner: node.corner,
       },
     ];
   }
@@ -1093,6 +1096,7 @@ function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLa
       title: child.title,
       templateId: child.templateId,
       size,
+      corner: child.corner,
     }));
   }
   const childSizes = node.children.map((child) => ("size" in child ? child.size : undefined));
@@ -1137,7 +1141,7 @@ function convertFrameworkLayoutNodeToModeLayout(
   if (node.kind === "window") {
     const id = node.instanceId ?? node.windowKindId;
     const title = resolveFrameworkWindowTitle(node.windowKindId, node.instanceId, node.title, windowKinds, terminology, locale);
-    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)) };
+    return { kind: "window", id, title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)), corner: node.corner };
   }
   if (node.kind === "stack") {
     return {
@@ -1150,6 +1154,7 @@ function convertFrameworkLayoutNodeToModeLayout(
           kind: "window" as const,
           id,
           title: wireLabel(resolveAppLabel(appLabelsOverlay, "windowKind", id, title)),
+          corner: child.corner,
         };
       }),
     };
@@ -1295,9 +1300,9 @@ export const LAYOUT_CHANGE_SETTLE_MS = 350;
 
 /** 🪟️ Recursive skeleton of a {@link WindowLayoutNode} — kind/id/nesting only, stripping `size` (resize) and
  * a stack's `activeId` (mere focus echo) — so two trees compare equal here iff neither differs. */
-type WindowLayoutSkeletonNode = { readonly kind: string; readonly id?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
+type WindowLayoutSkeletonNode = { readonly kind: string; readonly id?: string; readonly corner?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
 function windowLayoutSkeleton(node: WindowLayoutNode): WindowLayoutSkeletonNode {
-  if (node.kind === "window") return { kind: node.kind, id: node.id };
+  if (node.kind === "window") return { kind: node.kind, id: node.id, corner: node.corner };
   return { kind: node.kind, children: node.children.map((child) => windowLayoutSkeleton(child as WindowLayoutNode)) };
 }
 

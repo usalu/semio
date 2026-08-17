@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed | 521 skipped (532)
+   Start at  19:53:34
+   Duration  9.86s (transform 2.78s, setup 299ms, import 8.26s, tests 101ms, environment 925ms)
+

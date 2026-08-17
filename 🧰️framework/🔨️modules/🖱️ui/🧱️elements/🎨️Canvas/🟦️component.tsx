@@ -30,9 +30,11 @@ import { modeDockTabClassName } from "../../🔨️modules/🎛️chrome-control
 import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️component.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️component.tsx";
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
-import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChrome, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass, windowCapFrameClass, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { CloseIcon, Maximize2Icon, Minimize2Icon, Icon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
+import { createEvenWindowLayout, focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace, setSurfaceActiveRoot, WindowChrome, dropZoneReadyClass, modeDockTabLabelClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockInactiveTabClass, windowBodyFrameClass, windowCapFrameClass, ChromeControlHint, type WindowLayoutAxisNode, type WindowLayoutNode, type WindowLayoutStackNode, type WindowLayoutWindowNode, type WindowStackCorner, type UiStatus, type PanelGhostValue } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { CloseIcon, Maximize2Icon, Minimize2Icon, ExternalLinkIcon, Icon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
+import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️component.tsx";
+import { useControlKeybinding } from "../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
@@ -164,7 +166,7 @@ export function windowTemplatePaletteTreeDragController(): TreeDragAndDropContro
   };
 }
 
-export type ModeCanvasDropTarget = { kind: "tab"; stackPath: string; index: number } | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" } | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
+export type ModeCanvasDropTarget = { kind: "tab"; stackPath: string; index: number; corner?: WindowStackCorner } | { kind: "split"; stackPath: string; side: "left" | "right" | "top" | "bottom" } | { kind: "root-split"; side: "left" | "right" | "top" | "bottom" };
 
 export interface WindowTemplateDropPayload {
   readonly windowKindId: string;
@@ -176,6 +178,7 @@ export interface ModeProps {
   activeWindowId: string | null;
   onActiveWindowChange?: (windowId: string | null) => void;
   onWindowClose?: (windowId: string) => void;
+  onWindowOpenInNewWindow?: (windowId: string) => void;
   layout?: WindowLayoutNode;
   onLayoutChange?: (layout: WindowLayoutNode) => void;
   onTemplateDrop?: (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => void;
@@ -269,7 +272,8 @@ function mapLayoutStacks(layout: WindowLayoutNode, mapper: (stack: WindowLayoutS
   };
 }
 
-function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string): ModeLayoutPath | null {
+/** @emoji 🧭️ Finds the stack path that currently holds `windowId`, or null if absent. */
+export function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string): ModeLayoutPath | null {
   let found: ModeLayoutPath | null = null;
   mapLayoutStacks(layout, (stack, path) => {
     if (stack.children.some((child) => child.id === windowId)) found = path;
@@ -313,22 +317,73 @@ function removeWindowFromLayout(layout: WindowLayoutNode, windowId: string): Win
   return collapseLayout({ ...layout, children });
 }
 
-function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, index?: number): WindowLayoutNode {
+export const WINDOW_STACK_CORNERS: readonly WindowStackCorner[] = ["topLeft", "topRight", "bottomLeft", "bottomRight"];
+
+/** @emoji 🧭️ Resolves a window node's stack corner, defaulting to top-left. */
+export function resolveWindowCorner(node: { corner?: WindowStackCorner }): WindowStackCorner {
+  return node.corner ?? "topLeft";
+}
+
+/** @emoji 🧭️ Groups stack window children by chrome corner while preserving relative order. */
+export function modeStackTabsByCorner(children: readonly WindowLayoutWindowNode[]): Record<WindowStackCorner, WindowLayoutWindowNode[]> {
+  const groups = { topLeft: [], topRight: [], bottomLeft: [], bottomRight: [] } as Record<WindowStackCorner, WindowLayoutWindowNode[]>;
+  for (const child of children) groups[resolveWindowCorner(child)].push(child);
+  return groups;
+}
+
+function flatIndexForCornerInsert(children: readonly WindowLayoutWindowNode[], corner: WindowStackCorner, cornerIndex?: number): number {
+  const indices: number[] = [];
+  for (let i = 0; i < children.length; i++) {
+    if (resolveWindowCorner(children[i]!) === corner) indices.push(i);
+  }
+  if (indices.length === 0) return children.length;
+  if (cornerIndex === undefined || cornerIndex < 0 || cornerIndex >= indices.length) return indices[indices.length - 1]! + 1;
+  return indices[cornerIndex]!;
+}
+
+function insertWindowAsTab(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, index?: number, corner?: WindowStackCorner): WindowLayoutNode {
   return updateLayoutAtPath(layout, stackPath, (node) => {
     if (node.kind !== "stack") return node;
     const children = [...node.children];
     const insertAt = index === undefined || index < 0 ? children.length : index;
-    children.splice(insertAt, 0, { kind: "window", id: windowId });
+    const windowNode: WindowLayoutWindowNode = corner ? { kind: "window", id: windowId, corner } : { kind: "window", id: windowId };
+    children.splice(insertAt, 0, windowNode);
     return { ...node, children, activeId: windowId };
   });
 }
 
-/** @emoji 📑️ Merges every tab from a dragged stack into another stack at the given index. */
-function mergeStackTabsIntoStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, index: number): WindowLayoutNode {
+/** @emoji 🧭️ Inserts a window as a tab in a stack corner, mapping a corner-local index onto the flat children list. */
+export function insertWindowAsTabAtCorner(layout: WindowLayoutNode, stackPath: ModeLayoutPath, windowId: string, corner: WindowStackCorner, index?: number): WindowLayoutNode {
+  return updateLayoutAtPath(layout, stackPath, (node) => {
+    if (node.kind !== "stack") return node;
+    const children = [...node.children];
+    const insertAt = flatIndexForCornerInsert(children, corner, index);
+    children.splice(insertAt, 0, { kind: "window", id: windowId, corner });
+    return { ...node, children, activeId: windowId };
+  });
+}
+
+/** @emoji 🧭️ Sets the chrome corner for a window node anywhere in the layout tree. */
+export function setWindowCornerInLayout(layout: WindowLayoutNode, windowId: string, corner: WindowStackCorner): WindowLayoutNode {
+  if (layout.kind === "window") return layout.id === windowId ? { ...layout, corner } : layout;
+  if (layout.kind === "stack") {
+    return {
+      ...layout,
+      children: layout.children.map((child) => (child.id === windowId ? { ...child, corner } : child)),
+    };
+  }
+  return {
+    ...layout,
+    children: layout.children.map((child) => setWindowCornerInLayout(child as WindowLayoutNode, windowId, corner) as WindowLayoutAxisNode | WindowLayoutStackNode),
+  };
+}
+
+/** @emoji 📑️ Merges every tab from a dragged stack into another stack corner at the given corner-local index. */
+function mergeStackTabsIntoStack(layout: WindowLayoutNode, targetStackPath: ModeLayoutPath, stack: WindowLayoutStackNode, index: number, corner: WindowStackCorner = "topLeft"): WindowLayoutNode {
   const insertAt = index < 0 ? undefined : index;
   let result = layout;
   stack.children.forEach((child, offset) => {
-    result = insertWindowAsTab(result, targetStackPath, child.id, insertAt === undefined ? undefined : insertAt + offset);
+    result = insertWindowAsTabAtCorner(result, targetStackPath, child.id, corner, insertAt === undefined ? undefined : insertAt + offset);
   });
   const activeId = stack.activeId ?? stack.children[0]?.id;
   return activeId ? setActiveWindowInLayout(result, activeId) : result;
@@ -640,14 +695,14 @@ function resolveModeLayout(windows: readonly ModeWindowDescriptor[], layout?: Wi
 export function insertWindowAtDropZone(layout: WindowLayoutNode, windowId: string, target: ModeCanvasDropTarget): WindowLayoutNode {
   if (target.kind === "root-split") return splitRootWithWindow(layout, windowId, target.side as ModeDockSide);
   if (target.kind === "split") return splitWithWindow(layout, target.stackPath, windowId, target.side as ModeDockSide);
-  return insertWindowAsTab(layout, target.stackPath, windowId, target.index < 0 ? undefined : target.index);
+  return insertWindowAsTabAtCorner(layout, target.stackPath, windowId, target.corner ?? "topLeft", target.index < 0 ? undefined : target.index);
 }
 
 //#endregion 🧭️ModeLayoutUtils
 
 //#region 🧭️ModeDockDrag
 
-type ModeDropZone = { kind: "tab"; stackPath: ModeLayoutPath; index: number } | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide } | { kind: "root-split"; side: ModeDockSide };
+type ModeDropZone = { kind: "tab"; stackPath: ModeLayoutPath; corner: WindowStackCorner; index: number } | { kind: "split"; stackPath: ModeLayoutPath; side: ModeDockSide } | { kind: "root-split"; side: ModeDockSide };
 
 type ModeDragKind = "tab" | "stack";
 
@@ -674,9 +729,8 @@ interface ModePendingDrag {
 }
 
 interface ModeStackDropTargets {
-  tabBar: DOMRect | null;
+  corners: Partial<Record<WindowStackCorner, { rect: DOMRect; element: HTMLElement }>>;
   body: DOMRect | null;
-  tabBarElement: HTMLElement | null;
 }
 
 function listModeDockTabElements(tabBarElement: HTMLElement | null): HTMLElement[] {
@@ -745,8 +799,10 @@ function computeModeSplitPreviewInBody(bodyWidth: number, bodyHeight: number, si
 
 function computeModeDropZone(pointerX: number, pointerY: number, stackTargets: ReadonlyMap<ModeLayoutPath, ModeStackDropTargets>, modeRect: DOMRect | null): ModeDropZone | null {
   for (const [stackPath, targets] of stackTargets) {
-    if (targets.tabBar && pointerInRect(pointerX, pointerY, targets.tabBar)) {
-      return { kind: "tab", stackPath, index: computeTabInsertIndex(pointerX, targets.tabBarElement) };
+    for (const corner of WINDOW_STACK_CORNERS) {
+      const hit = targets.corners[corner];
+      if (!hit || !pointerInRect(pointerX, pointerY, hit.rect)) continue;
+      return { kind: "tab", stackPath, corner, index: computeTabInsertIndex(pointerX, hit.element) };
     }
   }
   for (const [stackPath, targets] of stackTargets) {
@@ -761,7 +817,7 @@ function computeModeDropZone(pointerX: number, pointerY: number, stackTargets: R
 }
 
 function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: ModeDropZone): WindowLayoutNode {
-  const { dragKind, windowId, stackPath: sourcePath, tabIndex } = drag;
+  const { dragKind, windowId, stackPath: sourcePath } = drag;
   if (dragKind === "stack") {
     const targetStack = zone.kind === "tab" ? readLayoutAtPath(layout, zone.stackPath) : null;
     const targetAnchorId = targetStack?.kind === "stack" ? (targetStack.activeId ?? targetStack.children[0]?.id) : undefined;
@@ -775,21 +831,13 @@ function applyModeDrop(layout: WindowLayoutNode, drag: ModeDragState, zone: Mode
       return splitWithStack(base, splitTargetPath, stack, zone.side);
     }
     const mergeTargetPath = targetAnchorId !== undefined ? (resolveStackPathForWindowId(base, targetAnchorId) ?? zone.stackPath) : zone.stackPath;
-    return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index);
+    return mergeStackTabsIntoStack(base, mergeTargetPath, stack, zone.index, zone.corner);
   }
   if (zone.kind === "root-split") return splitRootWithWindow(layout, windowId, zone.side);
   if (zone.kind === "split") return splitWithWindow(layout, zone.stackPath, windowId, zone.side);
-  if (zone.stackPath === sourcePath) {
-    const stackNode = readLayoutAtPath(layout, sourcePath);
-    const childCount = stackNode?.kind === "stack" ? stackNode.children.length : 0;
-    const withoutLength = Math.max(0, childCount - 1);
-    const toIndex = zone.index < 0 ? tabIndex : Math.min(zone.index, withoutLength);
-    if (toIndex === tabIndex) return layout;
-    return reorderTabInStack(layout, sourcePath, tabIndex, toIndex);
-  }
   const without = removeWindowFromLayout(layout, windowId);
   if (!without) return layout;
-  return insertWindowAsTab(without, zone.stackPath, windowId, zone.index < 0 ? undefined : zone.index);
+  return insertWindowAsTabAtCorner(without, zone.stackPath, windowId, zone.corner, zone.index < 0 ? undefined : zone.index);
 }
 
 /** @emoji 🪓️ Removes the dragged tab or stack from the committed layout while it floats on the cursor. */
@@ -803,6 +851,7 @@ function modeDockOutLayout(committed: WindowLayoutNode, drag: Pick<ModeDragState
 
 interface ModeTabInsertPreview {
   stackPath: ModeLayoutPath;
+  corner: WindowStackCorner;
   index: number;
 }
 
@@ -813,9 +862,10 @@ function modeDockTabsWithInsertPreview(
   tabs: readonly { id: string; title: string; iconId: IconName }[],
   insertPreview: ModeTabInsertPreview | null,
   stackPath: ModeLayoutPath,
+  corner: WindowStackCorner,
   ghostTabs: readonly { id: string; title: string; iconId: IconName }[],
 ): ModeDockTabDisplayItem[] {
-  if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
+  if (!insertPreview || insertPreview.stackPath !== stackPath || insertPreview.corner !== corner || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
   row.splice(insertAt, 0, ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, iconId: tab.iconId, preview: "ghost" as const })));
@@ -833,7 +883,7 @@ function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, w
 function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZone | null): ModeTabInsertPreview | null {
   if (!drag || zone?.kind !== "tab") return null;
   if (drag.dragKind === "stack" && zone.stackPath === drag.stackPath) return null;
-  return { stackPath: zone.stackPath, index: zone.index };
+  return { stackPath: zone.stackPath, corner: zone.corner, index: zone.index };
 }
 
 const modeDockTabInsertPreviewClass = "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
@@ -893,10 +943,11 @@ interface ModeDockContextValue {
   dragState: ModeDragState | null;
   tabInsertPreview: ModeTabInsertPreview | null;
   draggedInsertTabs: readonly { id: string; title: string; iconId: IconName }[];
-  registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
+  registerStackDropTargets: (path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
+  openWindowInNewWindow?: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
   deactivateActiveWindow: () => void;
   maximizedStackPath: ModeLayoutPath | null;
@@ -909,23 +960,31 @@ const ModeDockContext = reactHostPort.createContext<ModeDockContextValue | null>
 
 interface ModeDockTabBarProps {
   stackPath: ModeLayoutPath;
+  corner: WindowStackCorner;
   tabs: readonly { id: string; title: string; iconId: IconName }[];
   activeId: string | undefined;
   activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
   /** @emoji 📱️ Windows always take the full space on mobile — the Focus/Unfocus control is meaningless there and is hidden; Close stays. */
   mobile?: boolean;
+  showMaximize?: boolean;
+  isMaximized?: boolean;
 }
 
 const modeDockTabDomId = (stackPath: ModeLayoutPath, windowId: string) => `mode-dock-tab-${encodeURIComponent(stackPath || "root")}-${encodeURIComponent(windowId)}`;
 const modeDockPanelDomId = (stackPath: ModeLayoutPath) => `mode-dock-panel-${encodeURIComponent(stackPath || "root")}`;
+const modeDockTabActionClass = "flex h-medium w-medium shrink-0 items-center justify-center border-0 bg-transparent text-muted-foreground transition-colors hover:text-foreground";
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab }, ref) => {
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, corner, tabs, activeId, activeWindowId, onSelectTab, mobile = false, showMaximize = false, isMaximized = false }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs]);
+  const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, corner, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, corner, dock?.draggedInsertTabs]);
   const tabRefs = reactHostPort.useRef(new Map<string, HTMLButtonElement>());
+  const focusLabel = useLabel("ui.window.focus");
+  const unfocusLabel = useLabel("ui.window.unfocus");
+  const newWindowLabel = useLabel("ui.window.newWindow");
+  const closeLabel = useLabel("ui.window.close");
 
   const focusTab = (index: number) => {
     const tab = tabs[(index + tabs.length) % tabs.length];
@@ -972,50 +1031,101 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
     const tabActive = activeId === tab.id && stackGloballyActive;
+    const controlPath = stackPath || "root";
     return (
-      <button
-        type="button"
+      <div
         key={tab.id}
         data-slot="mode-dock-tab"
         data-hover-scope
         data-window-id={tab.id}
         data-stack-active={activeId === tab.id ? "true" : undefined}
         data-active={activeWindowId === tab.id ? "true" : undefined}
-        id={modeDockTabDomId(stackPath, tab.id)}
-        role="tab"
-        aria-selected={activeId === tab.id}
-        aria-controls={modeDockPanelDomId(stackPath)}
-        tabIndex={activeId === tab.id ? 0 : -1}
-        ref={(element) => {
-          if (element) tabRefs.current.set(tab.id, element);
-          else tabRefs.current.delete(tab.id);
-        }}
         className={cn(
-          "pointer-events-auto",
+          "pointer-events-auto flex items-stretch",
           modeDockTabClassName,
           tabActive ? modeDockActiveTabClass : modeDockInactiveTabClass,
           activeWindowId === tab.id && modeDockActiveTabFillClass,
         )}
-        onClick={() => onSelectTab(tab.id)}
-        onKeyDown={(event) => onTabKeyDown(event, stackIndex, tab.id)}
-        onPointerUp={(event) => {
-          if (event.button !== 0) return;
-          dock?.clearPendingDrag?.(event.pointerId);
-        }}
       >
-        <div className={modeDockTabLabelClassName}>
-          <Icon icon={tab.iconId} size="small" className="shrink-0" />
-          <span data-slot="inline-label" className="truncate">
-            {tab.title}
-          </span>
-        </div>
+        <button
+          type="button"
+          id={modeDockTabDomId(stackPath, tab.id)}
+          role="tab"
+          aria-selected={activeId === tab.id}
+          aria-controls={modeDockPanelDomId(stackPath)}
+          tabIndex={activeId === tab.id ? 0 : -1}
+          ref={(element) => {
+            if (element) tabRefs.current.set(tab.id, element);
+            else tabRefs.current.delete(tab.id);
+          }}
+          className="flex min-w-0 flex-1 items-center border-0 bg-transparent px-0 text-inherit"
+          onClick={() => onSelectTab(tab.id)}
+          onKeyDown={(event) => onTabKeyDown(event, stackIndex, tab.id)}
+          onPointerUp={(event) => {
+            if (event.button !== 0) return;
+            dock?.clearPendingDrag?.(event.pointerId);
+          }}
+        >
+          <div className={modeDockTabLabelClassName}>
+            <Icon icon={tab.iconId} size="small" className="shrink-0" />
+            <span data-slot="inline-label" className="truncate">
+              {tab.title}
+            </span>
+          </div>
+        </button>
+        {!mobile && showMaximize ? (
+          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.focus`} text={isMaximized ? unfocusLabel : focusLabel}>
+            <button
+              type="button"
+              data-slot="mode-dock-tab-focus"
+              className={modeDockTabActionClass}
+              onClick={(event) => {
+                event.stopPropagation();
+                dock?.activateWindow(tab.id);
+                dock?.toggleMaximize(stackPath);
+              }}
+            >
+              {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+            </button>
+          </ChromeControlHint>
+        ) : null}
+        {!mobile && dock?.openWindowInNewWindow ? (
+          <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.newWindow`} text={newWindowLabel}>
+            <button
+              type="button"
+              data-slot="mode-dock-tab-new-window"
+              className={modeDockTabActionClass}
+              onClick={(event) => {
+                event.stopPropagation();
+                dock.openWindowInNewWindow?.(tab.id);
+              }}
+            >
+              <ExternalLinkIcon className="size-small" />
+            </button>
+          </ChromeControlHint>
+        ) : null}
+        <ChromeControlHint id={`framework.modeDock.${controlPath}.tab.${tab.id}.close`} text={closeLabel}>
+          <button
+            type="button"
+            data-slot="mode-dock-tab-close"
+            className={modeDockTabActionClass}
+            onClick={(event) => {
+              event.stopPropagation();
+              dock?.closeWindow(tab.id);
+            }}
+          >
+            <CloseIcon className="size-small" />
+          </button>
+        </ChromeControlHint>
         <DragHandle labelId="ui.tree.drag.sort" subject={tab.title} onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
-      </button>
+      </div>
     );
   };
 
+  if (tabs.length === 0 && !modeDragActive && displayTabs.length === 0) return null;
+
   return (
-    <div ref={ref} data-slot="mode-dock-tabs" role="tablist" className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
+    <div ref={ref} data-slot="mode-dock-tabs" data-corner={corner} role="tablist" className={cn("flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden", modeDragActive && dropZoneReadyClass)}>
       {displayTabs.map((tab) =>
         tab.preview === "ghost" ? (
           <div key={`ghost-${tab.id}`}>{renderGhostTab(tab)}</div>
@@ -1026,6 +1136,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           )
         ),
       )}
+      {modeDragActive && tabs.length === 0 ? <div data-slot="mode-dock-corner-drop-pad" className="min-h-medium min-w-medium shrink-0" aria-hidden /> : null}
     </div>
   );
 });
@@ -1052,29 +1163,61 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const setStackNode = reactHostPort.useCallback((element: HTMLDivElement | null) => {
     stackRef.current = element;
   }, []);
-  const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const cornerTabBarRefs = reactHostPort.useRef<Record<WindowStackCorner, HTMLDivElement | null>>({
+    topLeft: null,
+    topRight: null,
+    bottomLeft: null,
+    bottomRight: null,
+  });
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const activeId = node.activeId ?? node.children[0]?.id;
-  const tabs = node.children.map((child) => ({
-    id: child.id,
-    title: child.title ?? windowsById.get(child.id)?.title ?? child.id,
-    iconId: windowsById.get(child.id)?.iconId ?? "app-window",
-  }));
-
-  reactHostPort.useLayoutEffect(() => {
-    dock?.registerStackDropTargets(stackPath, tabBarRef.current, bodyRef.current);
-    return () => dock?.registerStackDropTargets(stackPath, null, null);
-  }, [dock, stackPath, node.children.length]);
-
-  const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
-  // 🪟️ Layout focus (command routing / tab fills) stays on `activeWindowId`. The silhouette primary
-  // stroke only follows surface selection — same click/focus lifecycle as panels and panes.
-  const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
-  const dockFocusLabel = useLabel("ui.common.focus");
-  const dockUnfocusLabel = useLabel("ui.common.unfocus");
-  const dockCloseLabel = useLabel("ui.common.close");
+  const byCorner = modeStackTabsByCorner(node.children);
+  const dragActive = Boolean(dock?.dragState);
   const isMaximized = dock?.maximizedStackPath === stackPath;
   const showMaximize = !mobile && Boolean(dock?.canMaximize);
+
+  const mapCornerTabs = (corner: WindowStackCorner) =>
+    byCorner[corner].map((child) => ({
+      id: child.id,
+      title: child.title ?? windowsById.get(child.id)?.title ?? child.id,
+      iconId: windowsById.get(child.id)?.iconId ?? "app-window",
+    }));
+
+  reactHostPort.useLayoutEffect(() => {
+    for (const corner of WINDOW_STACK_CORNERS) {
+      dock?.registerStackDropTargets(stackPath, corner, cornerTabBarRefs.current[corner], bodyRef.current);
+    }
+    return () => {
+      for (const corner of WINDOW_STACK_CORNERS) {
+        dock?.registerStackDropTargets(stackPath, corner, null, null);
+      }
+    };
+  }, [dock, stackPath, node.children.length, dragActive, byCorner.topLeft.length, byCorner.topRight.length, byCorner.bottomLeft.length, byCorner.bottomRight.length]);
+
+  const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
+  // 🪟 Layout focus (command routing / tab fills) stays on `activeWindowId`. The silhouette primary
+  // stroke only follows surface selection — same click/focus lifecycle as panels and panes.
+
+  const renderCornerBar = (corner: WindowStackCorner) => {
+    const tabs = mapCornerTabs(corner);
+    if (tabs.length === 0 && !dragActive) return undefined;
+    return (
+      <ModeDockTabBar
+        ref={(element) => {
+          cornerTabBarRefs.current[corner] = element;
+        }}
+        stackPath={stackPath}
+        corner={corner}
+        tabs={tabs}
+        activeId={activeId}
+        activeWindowId={activeWindowId}
+        onSelectTab={(windowId) => dock?.activateWindow(windowId)}
+        mobile={mobile}
+        showMaximize={showMaximize}
+        isMaximized={isMaximized}
+      />
+    );
+  };
 
   const stackBody = (
     <SurfaceScope level="base" fill="surface">
@@ -1100,7 +1243,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
     </SurfaceScope>
   );
 
-  // 🪟️ `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
+  // 🪟 `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <SurfaceScope level="window">
@@ -1114,7 +1257,6 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
         chipSlot="mode-dock-tab-cap"
         controlsSlot="mode-dock-controls-cap"
         silhouetteSlot="mode-dock-silhouette-border"
-        capRef={tabBarRef}
         bodyRef={bodyRef}
         stackBindProps={surfaceActiveProps}
         stackDataAttrs={{ "data-stack-path": stackPath }}
@@ -1123,29 +1265,10 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
         bodySurfaceClassName={windowBodyFrameClass}
         bodySurfaceLevel="base"
         gapProps={{ "data-slot": "mode-dock-tab-gap" } as React.HTMLAttributes<HTMLDivElement>}
-        titleChips={<ModeDockTabBar stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />}
-        enlarge={
-          showMaximize
-            ? {
-                id: `framework.modeDock.${stackPath || "root"}.maximize`,
-                slot: "mode-dock-maximize",
-                icon: isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />,
-                label: isMaximized ? dockUnfocusLabel : dockFocusLabel,
-                onClick: () => dock?.toggleMaximize(stackPath),
-              }
-            : undefined
-        }
-        close={
-          activeId
-            ? {
-                id: `framework.modeDock.${stackPath || "root"}.close`,
-                slot: "mode-dock-close",
-                icon: <CloseIcon className="size-small" />,
-                label: dockCloseLabel,
-                onClick: () => dock?.closeWindow(activeId),
-              }
-            : undefined
-        }
+        titleChips={renderCornerBar("topLeft")}
+        capRightChips={renderCornerBar("topRight")}
+        footerLeftChips={renderCornerBar("bottomLeft")}
+        footerRightChips={renderCornerBar("bottomRight")}
         body={stackBody}
       />
     </SurfaceScope>
@@ -1234,7 +1357,7 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
 //#endregion 🧭️ModeRender
 
 /** @emoji 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
-const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
+const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, onWindowOpenInNewWindow, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
   // 🐚️ Gates the active-window search-routing keydown listener below to this shell — absent outside a `ShellScopeProvider` (tests), where it simply stays inert.
   const shellScope = useShellScopeOptional();
   // 🐚️ Resolves via the nearest `I18nextProvider` (this shell's own instance), not the shared `uiI18n` singleton.
@@ -1255,7 +1378,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizablePrimitive.GroupImperativeHandle>());
   const axisGroupElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, HTMLDivElement>());
-  const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { tabBar: HTMLElement | null; body: HTMLElement | null }>());
+  const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { corners: Partial<Record<WindowStackCorner, HTMLElement | null>>; body: HTMLElement | null }>());
   const layoutStateRef = reactHostPort.useRef(layoutState);
   const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
   const layoutKeyRef = reactHostPort.useRef(layoutKey);
@@ -1319,14 +1442,22 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [activeWindowId, windowsById, windowsKey],
   );
 
-  const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
+  const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
     if (!tabBarElement && !bodyElement) {
-      stackDropElementsRef.current.delete(path);
+      const prev = stackDropElementsRef.current.get(path);
+      if (!prev) return;
+      const corners = { ...prev.corners, [corner]: null };
+      const hasCorner = WINDOW_STACK_CORNERS.some((entry) => corners[entry]);
+      if (!hasCorner) {
+        stackDropElementsRef.current.delete(path);
+        return;
+      }
+      stackDropElementsRef.current.set(path, { corners, body: prev.body });
       return;
     }
-    const prev = stackDropElementsRef.current.get(path) ?? { tabBar: null, body: null };
+    const prev = stackDropElementsRef.current.get(path) ?? { corners: {}, body: null };
     stackDropElementsRef.current.set(path, {
-      tabBar: tabBarElement ?? prev.tabBar,
+      corners: { ...prev.corners, [corner]: tabBarElement ?? prev.corners[corner] ?? null },
       body: bodyElement ?? prev.body,
     });
   }, []);
@@ -1380,10 +1511,15 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const refreshDropZone = reactHostPort.useCallback((clientX: number, clientY: number) => {
     const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
     stackDropElementsRef.current.forEach((elements, path) => {
+      const corners: ModeStackDropTargets["corners"] = {};
+      for (const corner of WINDOW_STACK_CORNERS) {
+        const element = elements.corners[corner];
+        if (!element) continue;
+        corners[corner] = { rect: element.getBoundingClientRect(), element };
+      }
       targets.set(path, {
-        tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
+        corners,
         body: elements.body?.getBoundingClientRect() ?? null,
-        tabBarElement: elements.tabBar,
       });
     });
     const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
@@ -1548,10 +1684,15 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const resolveTemplateDropZone = reactHostPort.useCallback((clientX: number, clientY: number): ModeDropZone | null => {
     const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
     stackDropElementsRef.current.forEach((elements, path) => {
+      const corners: ModeStackDropTargets["corners"] = {};
+      for (const corner of WINDOW_STACK_CORNERS) {
+        const element = elements.corners[corner];
+        if (!element) continue;
+        corners[corner] = { rect: element.getBoundingClientRect(), element };
+      }
       targets.set(path, {
-        tabBar: elements.tabBar?.getBoundingClientRect() ?? null,
+        corners,
         body: elements.body?.getBoundingClientRect() ?? null,
-        tabBarElement: elements.tabBar,
       });
     });
     const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
@@ -1682,6 +1823,45 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     setMaximizedStackPath(null);
   }, [canMaximize, maximizedStackPath]);
 
+  const openWindowInNewWindow = reactHostPort.useCallback(
+    (windowId: string) => {
+      onWindowOpenInNewWindow?.(windowId);
+    },
+    [onWindowOpenInNewWindow],
+  );
+
+  useControlKeybinding(
+    "ui.window.close",
+    () => {
+      if (!activeWindowId) return;
+      closeWindow(activeWindowId);
+    },
+    { enabled: Boolean(activeWindowId) },
+    [activeWindowId, closeWindow],
+  );
+
+  useControlKeybinding(
+    "ui.window.focus",
+    () => {
+      if (!activeWindowId) return;
+      const stackPath = resolveStackPathForWindowId(layoutState, activeWindowId);
+      if (stackPath === null) return;
+      toggleMaximize(stackPath);
+    },
+    { enabled: Boolean(activeWindowId) && canMaximize },
+    [activeWindowId, canMaximize, layoutState, toggleMaximize],
+  );
+
+  useControlKeybinding(
+    "ui.window.newWindow",
+    () => {
+      if (!activeWindowId) return;
+      openWindowInNewWindow(activeWindowId);
+    },
+    { enabled: Boolean(activeWindowId) && Boolean(onWindowOpenInNewWindow) },
+    [activeWindowId, onWindowOpenInNewWindow, openWindowInNewWindow],
+  );
+
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
       dragState: previewDragState,
@@ -1691,13 +1871,14 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       startTabDrag: mobile ? noopDrag : startTabDrag,
       clearPendingDrag,
       closeWindow,
+      openWindowInNewWindow: onWindowOpenInNewWindow ? openWindowInNewWindow : undefined,
       activateWindow,
       deactivateActiveWindow,
       maximizedStackPath,
       canMaximize,
       toggleMaximize,
     }),
-    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
+    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, openWindowInNewWindow, onWindowOpenInNewWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
@@ -1823,6 +2004,9 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 export {
   Mode,
   removeWindowFromLayout,
+  // 🔁️ `resolveStackPathForWindowId` is intentionally absent here: it is already `export function` at
+  // its definition above, and naming it again in this block is a duplicate export that esbuild rejects
+  // outright ("Multiple exports with the same name"), 500-ing this module and blanking the whole shell.
   splitWithWindow,
   splitWithStack,
   extractStackFromLayout,

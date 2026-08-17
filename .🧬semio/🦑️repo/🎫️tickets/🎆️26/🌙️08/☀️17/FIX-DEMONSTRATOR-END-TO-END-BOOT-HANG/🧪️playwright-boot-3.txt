@@ -1,0 +1,15 @@
+{
+  "url": "http://127.0.0.1:6029/",
+  "bootErrorCount": 0,
+  "bootFailedCount": 0,
+  "bootFailed": [],
+  "wireErrorCount": 0,
+  "workerCount": 0,
+  "workers": [],
+  "deferrals": [],
+  "pageErrorCount": 0,
+  "pageErrors": [],
+  "bodyPreview": "",
+  "canvasCount": 0,
+  "debugSample": []
+}

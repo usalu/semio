@@ -1,0 +1,15 @@
+CONSOLE debug [vite] connecting...
+CONSOLE debug [vite] connected.
+CONSOLE error Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+REQFAIL http://127.0.0.1:6029/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%96%B1%EF%B8%8Fui/%F0%9F%A7%B1%EF%B8%8Felements/%F0%9F%8E%A8%EF%B8%8FCanvas/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx net::ERR_ABORTED
+STATUS 200
+TITLE Entwerfen mit Bestand · Demonstrator
+HTML_LEN 2826
+BODY 
+    <div id="root"></div>
+    <script>(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();</script>
+    <script type="module" src="./📦️index.tsx"></script>
+  
+
+<vite-error-overlay></vite-error-overlay>
+BODY_TEXT 

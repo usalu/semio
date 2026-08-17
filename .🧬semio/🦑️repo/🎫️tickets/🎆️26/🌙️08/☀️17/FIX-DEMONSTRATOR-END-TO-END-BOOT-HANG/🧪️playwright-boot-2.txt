@@ -1,0 +1,17 @@
+{
+  "url": "http://127.0.0.1:6029/",
+  "bootErrorCount": 0,
+  "bootErrors": [],
+  "wireErrorCount": 0,
+  "wireErrors": [],
+  "pageErrorCount": 0,
+  "pageErrors": [],
+  "bodyPreview": "",
+  "likelyStillLoading": false,
+  "consoleSample": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    }
+  ]
+}

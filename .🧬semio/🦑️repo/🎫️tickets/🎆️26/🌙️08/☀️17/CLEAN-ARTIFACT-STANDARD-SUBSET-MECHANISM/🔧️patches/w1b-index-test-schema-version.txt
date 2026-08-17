@@ -1,0 +1,61 @@
+Target file (OUT OF W1-B boundary — repo-lib TS, not root script.ts/taxonomy.json/launch.json):
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+
+Reason: W1-B (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, task 1) made the REQUIRED
+taxonomy v6 allow-half edits — schemaVersion 5->6, plus "🔨️modules" added to pluginChildDirs/
+artifactChildDirs/standardChildDirs (optional additions, never *RequiredChildDirs, verified
+`validateTaxonomy()` still returns 0 problems). Four tests in this file assert the OLD literal
+values with `.toEqual`/`.toBe`, so they fail until this patch lands — confirmed via
+`bun test ./🧪️index.test.ts` (166 pass / 22 fail; baseline is ~18 pre-existing fails per the ticket
+brief, so these 4 are the entire delta — every other failure is pre-existing and untouched by W1-B,
+e.g. line 1363's `taxonomy.snapshotChildDirs` assertion, which references a key that does not exist
+in 🔣️taxonomy.json at all, and line 1438's `exampleAssetKindPrefixes` assertion, which expects
+completely different key names than what's on disk today — neither touches anything W1-B edited).
+Apply all four hunks together with the schemaVersion/childDirs bumps (already live in taxonomy.json)
+— do not defer independently, and do not "fix" the two unrelated pre-existing failures noted above
+as part of applying this patch (out of scope; flag them separately if desired).
+
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+@@ -1401,8 +1401,8 @@
+   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
+     const taxonomy = loadTaxonomy();
+     expect("pluginDirName" in taxonomy).toBe(false);
+-    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands"]);
++    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
+     expect(taxonomy.osChildDirs).toEqual(["🎮️commands"]);
+   });
+
+   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
+     const taxonomy = loadTaxonomy();
+     // 🗿️ Completeness is 🧬️schema + 🚪️io — never ⚙️engine; structural-only extra is 📚️examples.
+-    expect(taxonomy.artifactChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples"]);
+-    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
++    expect(taxonomy.artifactChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples", "🔨️modules"]);
++    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples", "🔨️modules"]);
+   });
+
+   test("derives lifecycle capabilities instead of declaring artifact facet directories", () => {
+     const taxonomy = loadTaxonomy();
+     const lifecycleDirs = ["🏗️builder", "🧐️analyzer", "🎹️composer"];
+     expect(taxonomy.newArtifactComponentDirs).toEqual(["🏅️standards"]);
+     expect(taxonomy.newArtifactChildDirs).toEqual(["🏅️standards"]);
+     expect(taxonomy.standardComponentDirs).toEqual(["🪆️subsets"]);
+-    expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets"]);
++    expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets", "🔨️modules"]);
+     expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
+     expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples", "👁️viewer", "✏️editor"]);
+@@ -1534,7 +1534,7 @@
+   test("declares the surface vocabulary ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET froze", () => {
+     const taxonomy = loadTaxonomy();
+-    expect(taxonomy.schemaVersion).toBe(5);
++    expect(taxonomy.schemaVersion).toBe(6);
+     expect(taxonomy.viewerDirName).toBe("👁️viewer");
+     expect(taxonomy.editorDirName).toBe("✏️editor");
+     expect(taxonomy.surfaceRoles).toEqual(["viewer", "editor"]);
+
+Verification once applied:
+  cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript
+  bun test ./🧪️index.test.ts
+Expect the 4 fixed assertions to pass; total fail count should drop from 22 to ~18 (the pre-existing
+baseline, unrelated to this ticket).

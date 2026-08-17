@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ChangeGenerationValue`, reconstructed from BASE.
 use super::mutation::ChangeGenerationValue;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use crate::artifacts::procedural2d::mutations::{change_generation_value, widget_index};
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use crate::artifacts::procedural2d::mutations::change_generation_value;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeGenerationValue, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

@@ -5,11 +5,11 @@ plugin registry catalog refreshed (59 plugin crates, 58 playgrounds, 22 framewor
 [framework/surface/rs] pkg/framework_surface_bg.wasm up to date → skipping wasm-pack build
 [os/flow/core] FLOW_CORE_SKIP_WASM_BUILD=1 → skipping wasm-pack build
 
-  VITE v7.3.6  ready in 1963 ms
+  VITE v7.3.6  ready in 5954 ms
 
   ➜  Local:   http://127.0.0.1:7402/
 [BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx as it exceeds the max of 500KB.
-1:19:36 PM [vite] (client) warning: 
+4:52:21 PM [vite] (client) warning: 
 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
 6  |    if (typeof WebAssembly === "undefined") return null;
 7  |    try {
@@ -22,7 +22,7 @@ See https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#l
 
   Plugin: vite:import-analysis
   File: /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
-1:19:38 PM [vite] (client) warning: 
+4:52:27 PM [vite] (client) warning: 
 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
 8  |    if (typeof WebAssembly === "undefined") return null;
 9  |    try {

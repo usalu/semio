@@ -394,9 +394,12 @@ mod tests {
         let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
         assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
         let recognizer = dsl::Recognizer::compile(&grammar);
-        let fixture = crate::artifacts::txt::examples::demo::PRIMARY_TEXT;
-        let (envelope, body) = store::semio_format::split_text_preamble(fixture).expect("real preamble");
-        let normalized = format!("{}\n{body}", envelope.envelope_id());
+        // 🧬️ CARRIER LAW: `PRIMARY_TEXT` is now the raw body itself (no preamble to split off —
+        // `parse_dsl`/`print_dsl` no longer wrap one). The grammar's own synthetic conformance
+        // input shape (`"<envelope-id>\n<body>"`) is a framework-level testing convention
+        // unrelated to the real codec, so it is built directly here.
+        let body = crate::artifacts::txt::examples::demo::PRIMARY_TEXT;
+        let normalized = format!("{}\n{body}", <TxtSnapshot as store::ArtifactDsl>::envelope_id());
         let ok = recognizer.recognize(&normalized).expect("recognize should not error");
         assert!(ok, "snapshot grammar must recognize the real demo fixture body");
     }

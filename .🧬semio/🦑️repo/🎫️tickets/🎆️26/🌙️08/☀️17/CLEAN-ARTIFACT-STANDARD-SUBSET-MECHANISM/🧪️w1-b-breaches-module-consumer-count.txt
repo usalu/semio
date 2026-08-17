@@ -1,0 +1,61 @@
+59 breach(es), kind=clean-mechanism/module-consumer-count
+
+✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation  "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation" (module path "modules::simulation") has 0 distinct consumer root(s), needs >=2
+✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack  "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack" (module path "modules::jack") has 0 distinct consumer root(s), needs >=2
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🕸️mesh-topology  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🕸️mesh-topology" is a subset-level 🔨️modules — always forbidden
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/💡️inference-measures  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/💡️inference-measures" is a subset-level 🔨️modules — always forbidden
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧾️measurement-contracts  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧾️measurement-contracts" is a subset-level 🔨️modules — always forbidden
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧭️mutation-dispatch  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧭️mutation-dispatch" is a subset-level 🔨️modules — always forbidden
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧮️vector-operations  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧮️vector-operations" is a subset-level 🔨️modules — always forbidden
+🧰️framework/🔨️modules/🖼️assets  "🧰️framework/🔨️modules/🖼️assets" (module path "modules::assets") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🚪️io  "🧰️framework/🔨️modules/🚪️io" (module path "modules::io") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🧊️3d  "🧰️framework/🔨️modules/🧊️3d" (module path "modules::_3d") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🎯️action-bus  "🧰️framework/🔨️modules/🎯️action-bus" (module path "modules::action_bus") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🧮️action-argument-resolution  "🧰️framework/🔨️modules/🧮️action-argument-resolution" (module path "modules::action_argument_resolution") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/#⃣hash  "🧰️framework/🔨️modules/#⃣hash" (module path "modules::#hash") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/📐️geometry  "🧰️framework/🔨️modules/📐️geometry" (module path "modules::geometry") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🔄️machine  "🧰️framework/🔨️modules/🔄️machine" (module path "modules::machine") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/📚️compiler  "🧰️framework/🔨️modules/📚️compiler" (module path "modules::compiler") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/◻2d  "🧰️framework/🔨️modules/◻2d" (module path "modules::_2d") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🛂️manifest  "🧰️framework/🔨️modules/🛂️manifest" (module path "modules::manifest") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🖥️platform  "🧰️framework/🔨️modules/🖥️platform" (module path "modules::platform") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🗺️surface  "🧰️framework/🔨️modules/🗺️surface" (module path "modules::surface") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🔺️mesh  "🧰️framework/🔨️modules/🔺️mesh" (module path "modules::mesh") has 1 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🎠️kernel  "🧰️framework/🔨️modules/🎠️kernel" (module path "modules::kernel") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🧮️math  "🧰️framework/🔨️modules/🧮️math" (module path "modules::math") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🕸️graph  "🧰️framework/🔨️modules/🕸️graph" (module path "modules::graph") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🕹️interaction  "🧰️framework/🔨️modules/🕹️interaction" (module path "modules::interaction") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🧬️schema  "🧰️framework/🔨️modules/🧬️schema" (module path "modules::schema") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🔢️number  "🧰️framework/🔨️modules/🔢️number" (module path "modules::number") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🖱️ui  "🧰️framework/🔨️modules/🖱️ui" (module path "modules::ui") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/🔺️mesh-engine  "🧰️framework/🔨️modules/🔺️mesh-engine" (module path "modules::mesh_engine") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🔨️modules/✍️editor  "🧰️framework/🔨️modules/✍️editor" (module path "modules::editor") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory  "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory" (module path "modules::directory") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run  "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run" (module path "modules::run") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow  "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow" (module path "modules::flow") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin" (module path "modules::plugin") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack  "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack" (module path "modules::pack") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db" (module path "modules::db") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev  "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev" (module path "modules::dev") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr  "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr" (module path "modules::spr") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension  "🧰️framework/🛍️products/💻️os/🔨️modules/🧩️extension" (module path "modules::extension") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space" (module path "modules::space") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs  "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs" (module path "modules::vcs") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store" (module path "modules::store") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference  "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference" (module path "modules::inference") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio  "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio" (module path "modules::semio") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite" (module path "modules::infinite") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl  "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl" (module path "modules::dsl") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural" (module path "modules::neural") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer" (module path "modules::renderer") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow  "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow" (module path "modules::workflow") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook  "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook" (module path "modules::playbook") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine  "🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine" (module path "modules::engine") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation  "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation" (module path "modules::tectonic_template_compilation") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog  "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog" (module path "modules::print_font_catalog") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints  "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints" (module path "modules::print_design_token_paints") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server" (module path "modules::server") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client  "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client" (module path "modules::client") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library" (module path "modules::library") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native" (module path "modules::native") has 0 distinct consumer root(s), needs >=2
+🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli  "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli" (module path "modules::cli") has 0 distinct consumer root(s), needs >=2

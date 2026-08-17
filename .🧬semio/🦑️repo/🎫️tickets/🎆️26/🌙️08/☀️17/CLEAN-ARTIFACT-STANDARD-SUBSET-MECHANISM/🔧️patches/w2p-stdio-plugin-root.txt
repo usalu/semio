@@ -1,0 +1,88 @@
+Target file (OUT OF W2-P boundary — coordinator-owned):
+  ✏️s/🔌️plugins/🗄️stdio/🦀️component.rs
+
+Also touches (OUT OF W2-P boundary, not owned by any shard yet):
+  ✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️component.rs
+
+## Why this is a patch, not a direct W2-P edit
+
+`crate::artifacts::binary::artifact()` and `crate::artifacts::txt::artifact()` (new, built this
+pass — see `🗿️artifacts/💾️binary/🦀️component.rs` / `🗿️artifacts/📄txt/🦀️component.rs`) are ready
+to call, but `pub fn plugin()` never gets a chance to call `.declare_artifact(...)` on them: BOTH
+artifacts are enumerated today through `crate::registry::artifact_assemblies()`
+(`📇️registry/🦀️component.rs`), whose `artifact_factories()` is a RIGID `BTreeMap` of exactly 36
+`fn(ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError>` entries, one per stdio
+artifact, cross-checked by `validate_catalog`/`schema_keys_and_runtime_factories_are_exact`
+against a matching 36-entry `SOURCES: [&str; 36]` of `📜️artifact-definition.json` includes. Binary
+and txt's own `assembly()` functions (unchanged, still required by this map) route through
+`crate::registry::definition_only_assembly`, which returns `ArtifactAssembly::Definition(...)` —
+`pub fn plugin()`'s own loop (`🦀️component.rs` line 8-13) only ever calls
+`builder.artifact_definition(definition)` for that variant. There is no live call path from
+`plugin()` to `.declare_artifact()` for these two artifacts without editing BOTH files above,
+neither owned by this shard's boundary (`📇️registry` is not on ANY shard's boundary list in
+`📌️important.md` — it is plugin-level shared code, coordinator's to place).
+
+**This is the wall every one of the ~40 later stdio/other-plugin fan-out agents will hit too** —
+report this prominently; it is the single most important finding of this pilot for `📓️recipe-
+subset.md`.
+
+## Two ways to unblock (coordinator's call)
+
+### Option A — minimal, additive (recommended for the pilot; keeps `assembly()`/`artifact_kind()`
+and the whole 36-artifact catalog untouched, zero risk to the other 34 artifacts)
+
+Add two lines to `pub fn plugin()` (right after the `for assembly in ... { }` loop, `🦀️component.rs`
+line 13, before the `//#region 👁️✏️SurfacesP1StdioMedia` block):
+
+```rust
+    // 🌳️ New declaration tree pilot (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
+    // W2-P). binary/txt stay ALSO registered through the old `artifact_assemblies()` loop above
+    // (📇️registry's 36-artifact catalog is a hard structural dependency — see this ticket's
+    // `🔧️patches/w2p-stdio-plugin-root.txt` for why) — this is an ADDITIVE second registration
+    // through the new tree, not a replacement. `preflight_artifact_declarations` will surface a
+    // conflict here if the two channels ever disagree on a schema/io id; they do not today
+    // (binary/txt's OLD channel is `ArtifactAssembly::Definition`, definition-only — it registers
+    // no schema/io rows at all, so there is nothing to conflict with).
+    builder = builder.declare_artifact(crate::artifacts::binary::artifact());
+    builder = builder.declare_artifact(crate::artifacts::txt::artifact());
+```
+
+Verify: `cargo nextest run -p semio-s-plugin-stdio --lib -E 'test(carrier_native_is_raw)'` plus a
+full `-p semio-s-plugin-stdio --lib` run once the crate builds clean (blocked today by unrelated
+peer breakage in mp4/gif/gltf/dwg/semio — see `📓️w2-p-report.md` `## verification`).
+
+### Option B — full cutover (deletes old machinery for binary/txt, matches the mission's literal
+step 6; bigger, riskier, needs `📇️registry` surgery)
+
+1. In `📇️registry/🦀️component.rs`: drop `"binary"`/`"txt"` from `artifact_factories()`'s map and
+   from `SOURCES`/`SOURCES.len()` (36 → 34), update `validate_catalog`'s `values.len() != 36` to
+   `!= 34`, delete `🗿️artifacts/💾️binary/🧬️schema/📜️artifact-definition.json` and the txt twin
+   (BOTH now orphaned — they are only ever read via `SOURCES`).
+2. In `🦀️component.rs`: same two `.declare_artifact(...)` lines as Option A (the loop no longer
+   emits an assembly for binary/txt at all, so there is no double-registration to reason about).
+3. In `🗿️artifacts/💾️binary/🦀️component.rs` / `📄txt/🦀️component.rs`: delete `assembly()`/
+   `artifact_kind()` (now truly dead — confirmed zero other repo-wide callers by
+   `grep -rn "artifacts::binary::assembly\|artifacts::binary::artifact_kind"` before deleting).
+4. Delete `🚪️io/🦀️component.rs`'s `derived_composition`/`io_registry`/`register()`/
+   `register_schema_specs()`/`register_pilot_languages()`/`register_artifact_schema()`/
+   `register_artifact_inferences()` clusters and the old self-referential identity
+   `📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/` + `📤️export/🧵️serializers/…` leaf
+   dirs (confirmed dead/redundant this pass — see `📓️w2-p-report.md`) — for BOTH artifacts. NOTE
+   txt's `derived_composition::TxtComposerComposition` reads `DEP_BINARY` (a real cross-artifact
+   dependency on `s.stdio.binary@raw/*`) — confirm nothing else in stdio still resolves through
+   that specific composer entry before deleting it.
+5. Delete `🧬️schema/🦀️component.rs`'s `derive_artifact_facets!` block + `derived_construction`/
+   `derived_analysis` modules for both artifacts; retarget `impl ArtifactInferrer for
+   …::BinaryBuilder`/`…::TxtBuilder` (in `💡️inferences/🦀️component.rs`) onto
+   `semio_framework_plugin::app::SnapshotBuilder<BinarySnapshot, BinaryMutation>` /
+   `SnapshotBuilder<TxtSnapshot, TxtMutation>` instead.
+
+Option B could not be safely attempted this pass: the crate does not currently build clean end to
+end (pre-existing, unrelated peer breakage — see `📓️w2-p-report.md` `## verification`), so there
+was no reliable compile signal to verify a deletion pass didn't break something. Recommend Option
+A now, Option B once the crate is green again.
+
+## sharedFileRequests
+
+This patch itself — apply Option A (or B, coordinator's call) to
+`✏️s/🔌️plugins/🗄️stdio/🦀️component.rs` (+ `📇️registry/🦀️component.rs` if Option B).

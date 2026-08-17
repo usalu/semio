@@ -1,0 +1,43 @@
+Target file (OUT OF W1-D boundary — 🎚️config/**, not any of `…/🔌️plugin/**`/`…/🎠️kernel/**`):
+  🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs
+
+Reason: PRE-EXISTING compile error under `--tests`/`cargo nextest run`, confirmed present at this
+ticket's own start commit (`git show 101a6b4ea83acc82d6fbdc0607e6ae5d876825ae:🧰️framework/🛍️products/
+💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs` already has the exact same broken `#[cfg(test)]
+mod tests` body) — NOT introduced or touched by W1-D. Discovered while trying to run
+`cargo nextest run -p semio-framework-plugin-host --lib` to execute the new `IoRouter`
+determinism/reentrancy/conflict tests this wave added (that crate mounts this file via its
+`opening_config::mutations` facet, per its own glue.rs comment "mounted here, the one crate that
+actually needs it").
+
+The file's own module doc (lines 7-12) already explains the fix needed: "this file's own module
+sits ONE level inside `🧬️mutations`, so `DefaultApp`/`OpeningPreferences` (declared at the schema
+level) need `super::super`, not `super`" — but only `OpeningPreferences` was actually imported
+(line 13); `DefaultApp` was not, despite the `#[cfg(test)] mod tests` block using it twice (lines
+75, 92 — `assert_eq!(after_set.defaults, vec![DefaultApp { ... }])` and
+`OpeningPreferences { defaults: vec![DefaultApp { ... }] }`). `mod tests`'s own `use super::*;`
+(line 64) only re-exports what `mutations/🦀️component.rs`'s own top level imports, so it never sees
+`DefaultApp` either. rustc's own suggested fix, independently confirmed correct by reading the file's
+own doc comment: import `DefaultApp` alongside `OpeningPreferences` at the SAME `super::super` depth.
+
+--- a/🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs
++++ b/🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🦀️component.rs
+@@ -10,7 +10,7 @@
+ // SAME depth `📌️set-default-app`/`🧹clear-default-app`'s `use super::super::OpeningConfigMutation;`
+ // already require two supers to reach), this file's own module sits ONE level inside `🧬️mutations`,
+ // so `DefaultApp`/`OpeningPreferences` (declared at the schema level) need `super::super`, not `super`.
+-use super::super::OpeningPreferences;
++use super::super::{DefaultApp, OpeningPreferences};
+ use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome};
+ use serde::{Deserialize, Serialize};
+
+Verification once applied:
+  cd /Users/ueli/Documents/semio
+  CARGO_TARGET_DIR="$PWD/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM/🎯️target" \
+    cargo nextest run -p semio-framework-plugin-host --lib
+Expect the 2 E0422 `cannot find struct DefaultApp in this scope` errors to disappear and the crate's
+full test suite (including this wave's `io_router_*` tests, region `🔖️IoRouterW1d` in
+`…/🔌️plugin/🖥️host/🦀️component.rs`) to compile and run. This patch does not touch any file inside
+W1-D's boundary; it only unblocks running the tests W1-D already wrote and confirmed compile clean
+via `cargo check -p semio-framework-plugin-host --lib --tests` (0 errors/warnings from W1-D's own
+region — the only 2 errors in that check are these).

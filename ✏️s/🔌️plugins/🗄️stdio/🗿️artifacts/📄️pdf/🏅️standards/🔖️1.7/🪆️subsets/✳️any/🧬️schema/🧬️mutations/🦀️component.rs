@@ -18,7 +18,7 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin, enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
     read_str_lp, write_str_lp,
 };
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -96,44 +96,6 @@ pub enum PdfMutation {
     },
 }
 //#endregion 🔖️Mutations
-
-//#region 🔖️PathNavigationMut
-/// 🔍️ Mutable walk of `path` from `root`, mirroring `diff::resolve_value`'s read-only version --
-/// kept local to this module (apply is the only place that needs mutable access).
-fn resolve_value_mut<'a>(root: &'a mut PdfObject, path: &[PdfPathSegment]) -> Option<&'a mut PdfObject> {
-    let mut current = root;
-    for seg in path {
-        current = match (seg, current) {
-            (PdfPathSegment::ArrayIndex { index }, PdfObject::Array(items)) => items.get_mut(*index)?,
-            (PdfPathSegment::DictKey { key }, PdfObject::Dict(entries)) => &mut entries.iter_mut().find(|e| &e.key == key)?.value,
-            (PdfPathSegment::DictKey { key }, PdfObject::Stream { dict, .. }) => &mut dict.iter_mut().find(|e| &e.key == key)?.value,
-            _ => return None,
-        };
-    }
-    Some(current)
-}
-
-fn dict_entries_of_mut(value: &mut PdfObject) -> Option<&mut Vec<PdfDictEntry>> {
-    match value {
-        PdfObject::Dict(d) => Some(d),
-        PdfObject::Stream { dict, .. } => Some(dict),
-        _ => None,
-    }
-}
-
-fn upsert_dict_entry(entries: &mut Vec<PdfDictEntry>, key: &str, value: PdfObject) {
-    match entries.iter_mut().find(|e| e.key == key) {
-        Some(e) => e.value = value,
-        None => entries.push(PdfDictEntry { key: key.to_string(), value }),
-    }
-}
-
-fn remove_dict_entry(entries: &mut Vec<PdfDictEntry>, key: &str) {
-    if let Some(pos) = entries.iter().position(|e| e.key == key) {
-        entries.remove(pos);
-    }
-}
-//#endregion 🔖️PathNavigationMut
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range indices / missing ids / unresolvable paths
@@ -277,14 +239,6 @@ fn enc_path(path: &[PdfPathSegment]) -> String {
 }
 fn dec_path(s: &str) -> Result<Vec<PdfPathSegment>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
-}
-fn enc_indirect_object(o: &PdfIndirectObject) -> String {
-    format!("[{},{}]", enc_objref(&o.id), enc_pdf_object(&o.value))
-}
-fn dec_indirect_object(s: &str) -> Result<PdfIndirectObject, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, value] = parts.as_slice() else { return Err(format!("indirect object: expected 2 fields, got {}", parts.len())) };
-    Ok(PdfIndirectObject { id: dec_objref(id)?, value: dec_pdf_object(value)? })
 }
 fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
     let mut bytes = Vec::new();

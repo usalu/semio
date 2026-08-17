@@ -9,7 +9,7 @@
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
-    chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
 };
 
 pub type DockPath = Vec<usize>;
@@ -19,11 +19,69 @@ fn empty_path() -> DockPath {
 }
 
 //#region DockTypes
+/// 🧭️ Per-tab chrome placement inside a dock stack.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DockStackTab {
+    pub window_id: String,
+    pub corner: WindowStackCorner,
+}
+
+impl DockStackTab {
+    /// 🧭️ Builds a tab at the default top-left corner.
+    pub fn new(window_id: impl Into<String>) -> Self {
+        Self { window_id: window_id.into(), corner: WindowStackCorner::TopLeft }
+    }
+
+    /// 🧭️ Builds a tab at an explicit chrome corner.
+    pub fn at(window_id: impl Into<String>, corner: WindowStackCorner) -> Self {
+        Self { window_id: window_id.into(), corner }
+    }
+}
+
+fn dock_tabs_from_ids(ids: impl IntoIterator<Item = impl Into<String>>) -> Vec<DockStackTab> {
+    ids.into_iter().map(|id| DockStackTab::new(id)).collect()
+}
+
+fn dock_tab_ids(windows: &[DockStackTab]) -> Vec<String> {
+    windows.iter().map(|tab| tab.window_id.clone()).collect()
+}
+
+fn flat_index_for_corner_insert(windows: &[DockStackTab], corner: WindowStackCorner, corner_index: Option<usize>) -> usize {
+    let indices: Vec<usize> = windows.iter().enumerate().filter(|(_, tab)| tab.corner == corner).map(|(i, _)| i).collect();
+    if indices.is_empty() {
+        return windows.len();
+    }
+    match corner_index {
+        None => indices[indices.len() - 1] + 1,
+        Some(i) if i >= indices.len() => indices[indices.len() - 1] + 1,
+        Some(i) => indices[i],
+    }
+}
+
+fn tabs_by_corner(windows: &[DockStackTab]) -> [(WindowStackCorner, Vec<&DockStackTab>); 4] {
+    let mut groups: [(WindowStackCorner, Vec<&DockStackTab>); 4] = [
+        (WindowStackCorner::TopLeft, Vec::new()),
+        (WindowStackCorner::TopRight, Vec::new()),
+        (WindowStackCorner::BottomLeft, Vec::new()),
+        (WindowStackCorner::BottomRight, Vec::new()),
+    ];
+    for tab in windows {
+        let slot = match tab.corner {
+            WindowStackCorner::TopLeft => 0,
+            WindowStackCorner::TopRight => 1,
+            WindowStackCorner::BottomLeft => 2,
+            WindowStackCorner::BottomRight => 3,
+        };
+        groups[slot].1.push(tab);
+    }
+    groups
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum DockNode {
     Row(Vec<(DockNode, f32)>),
     Column(Vec<(DockNode, f32)>),
-    Stack { windows: Vec<String>, active: String },
+    Stack { windows: Vec<DockStackTab>, active: String },
 }
 
 impl Default for DockState {
@@ -61,7 +119,7 @@ pub enum DockSide {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DockDropZone {
-    Tab { stack_path: DockPath, index: usize },
+    Tab { stack_path: DockPath, corner: WindowStackCorner, index: usize },
     Split { stack_path: DockPath, side: DockSide },
     RootSplit { side: DockSide },
 }
@@ -126,18 +184,34 @@ impl DockState {
         let Some(stack) = node_at_mut(&mut self.root, path) else {
             return false;
         };
+        let DockNode::Stack { active, .. } = stack else {
+            return false;
+        };
+        let window_id = active.clone();
+        self.close_window_in_stack(path, &window_id)
+    }
+
+    /// 🧭️ Closes a specific tab in a stack (refuses to close the last remaining window).
+    pub fn close_window_in_stack(&mut self, path: &DockPath, window_id: &str) -> bool {
+        let Some(stack) = node_at_mut(&mut self.root, path) else {
+            return false;
+        };
         let DockNode::Stack { windows, active } = stack else {
             return false;
         };
         if windows.len() <= 1 {
             return false;
         }
-        let idx = windows.iter().position(|id| id == active).unwrap_or(0);
+        let Some(idx) = windows.iter().position(|tab| tab.window_id == window_id) else {
+            return false;
+        };
         windows.remove(idx);
-        let next = windows.get(idx.saturating_sub(1)).or_else(|| windows.first()).cloned();
-        if let Some(id) = next {
-            *active = id.clone();
-            self.active_window_id = Some(id);
+        if active == window_id {
+            let next = windows.get(idx.saturating_sub(1)).or_else(|| windows.first()).map(|tab| tab.window_id.clone());
+            if let Some(id) = next {
+                *active = id.clone();
+                self.active_window_id = Some(id);
+            }
         }
         collapse_empty(&mut self.root);
         if self.maximized_stack.as_ref() == Some(path) && !path_exists(&self.root, path) {
@@ -196,7 +270,7 @@ impl DockState {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
-                    let layout = layout_stack_cap(windows, window_labels, atlas, theme, rect, true);
+                    let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, rect);
                     let silhouette = stack_window_silhouette(rect, theme, &layout);
                     out.push((path.clone(), silhouette.safe_body_rect(), active.clone()));
                     silhouettes.insert(active.clone(), silhouette);
@@ -210,14 +284,30 @@ impl DockState {
 
     pub fn stack_tab_bar_rects(&self, bounds: Rect, theme: &Theme) -> Vec<(DockPath, Rect)> {
         let mut out = Vec::new();
-        if self.maximized_stack.is_some() {
-            if let Some(path) = &self.maximized_stack {
-                let rect = bounds;
-                out.push((path.clone(), stack_tab_bar_rect(rect, theme)));
-            }
+        if let Some(path) = &self.maximized_stack {
+            out.push((path.clone(), stack_tab_bar_rect(bounds, theme)));
             return out;
         }
         collect_stack_tab_bars(&self.root, bounds, &empty_path(), theme, &mut out);
+        out
+    }
+
+    /// 🧭️ Per-corner tab-bar hit regions (and tab widths) for dock drop targeting.
+    pub fn stack_corner_tab_bar_rects(
+        &self,
+        bounds: Rect,
+        theme: &Theme,
+        atlas: &mut FontAtlas,
+        window_labels: &HashMap<String, String>,
+    ) -> Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)> {
+        let mut out = Vec::new();
+        if let Some(path) = &self.maximized_stack {
+            if let Some(DockNode::Stack { windows, .. }) = node_at(&self.root, path) {
+                collect_corner_tab_bars_for_stack(path, windows, bounds, theme, atlas, window_labels, &mut out);
+            }
+            return out;
+        }
+        collect_stack_corner_tab_bars(&self.root, bounds, &empty_path(), theme, atlas, window_labels, &mut out);
         out
     }
 
@@ -225,7 +315,7 @@ impl DockState {
         let DockNode::Stack { windows, .. } = node_at(&self.root, path)? else {
             return None;
         };
-        windows.iter().position(|id| id == window_id)
+        windows.iter().position(|tab| tab.window_id == window_id)
     }
 
     /// 🎯️ Commits a completed dock drag. `drag.window_id` is removed from `self.root` *eagerly* the
@@ -238,7 +328,7 @@ impl DockState {
     pub fn apply_drop(&mut self, drag: &DockDragPayload, zone: &DockDropZone) -> bool {
         match drag.kind {
             DockDragKind::Tab => match zone {
-                DockDropZone::Tab { stack_path, index } => self.insert_tab(stack_path, &drag.window_id, Some(*index)),
+                DockDropZone::Tab { stack_path, corner, index } => self.insert_tab_at_corner(stack_path, &drag.window_id, *corner, Some(*index)),
                 DockDropZone::Split { stack_path, side } => self.split_stack_with_window(stack_path, &drag.window_id, *side),
                 DockDropZone::RootSplit { side } => self.split_root_with_window(&drag.window_id, *side),
             },
@@ -272,9 +362,9 @@ impl DockState {
                     return false;
                 }
                 match zone {
-                    DockDropZone::Tab { stack_path, index } => {
+                    DockDropZone::Tab { stack_path, corner, index } => {
                         let target_path = target_anchor.as_deref().and_then(|id| find_stack_path(&self.root, id, &mut vec![])).unwrap_or_else(|| stack_path.clone());
-                        self.insert_tabs(&target_path, &group, Some(*index), &drag.window_id)
+                        self.insert_tabs_at_corner(&target_path, &group, *corner, Some(*index), &drag.window_id)
                     }
                     DockDropZone::Split { stack_path, side } => {
                         let target_path = target_anchor.as_deref().and_then(|id| find_stack_path(&self.root, id, &mut vec![])).unwrap_or_else(|| stack_path.clone());
@@ -327,13 +417,23 @@ impl DockState {
     }
 
     pub fn insert_tab(&mut self, path: &DockPath, window_id: &str, index: Option<usize>) -> bool {
-        self.insert_tabs(path, &[window_id.to_string()], index, window_id)
+        self.insert_tab_at_corner(path, window_id, WindowStackCorner::TopLeft, index)
     }
 
-    /// 🪟️ Inserts every window in `windows` (in order) starting at `index`, skipping any already
+    /// 🧭️ Inserts a tab into a specific chrome corner at a corner-local index.
+    pub fn insert_tab_at_corner(&mut self, path: &DockPath, window_id: &str, corner: WindowStackCorner, index: Option<usize>) -> bool {
+        self.insert_tabs_at_corner(path, &[window_id.to_string()], corner, index, window_id)
+    }
+
+    /// 🗄️ Inserts every window in `windows` (in order) starting at `index`, skipping any already
     /// present at the target (mirrors `insert_tab`'s dedupe guard), then focuses `active_id` — the
     /// multi-window counterpart `apply_drop` uses for whole-stack tab-join drops.
     pub fn insert_tabs(&mut self, path: &DockPath, windows: &[String], index: Option<usize>, active_id: &str) -> bool {
+        self.insert_tabs_at_corner(path, windows, WindowStackCorner::TopLeft, index, active_id)
+    }
+
+    /// 🧭️ Corner-aware multi-tab insert used by tab-join drops.
+    pub fn insert_tabs_at_corner(&mut self, path: &DockPath, windows: &[String], corner: WindowStackCorner, index: Option<usize>, active_id: &str) -> bool {
         if windows.is_empty() {
             return false;
         }
@@ -343,13 +443,13 @@ impl DockState {
         let DockNode::Stack { windows: target, active } = stack else {
             return false;
         };
-        let mut insert_at = index.unwrap_or(target.len()).min(target.len());
+        let mut insert_at = flat_index_for_corner_insert(target, corner, index);
         let mut inserted_any = false;
         for window_id in windows {
-            if target.iter().any(|id| id == window_id) {
+            if target.iter().any(|tab| tab.window_id == *window_id) {
                 continue;
             }
-            target.insert(insert_at, window_id.clone());
+            target.insert(insert_at, DockStackTab::at(window_id.clone(), corner));
             insert_at += 1;
             inserted_any = true;
         }
@@ -375,7 +475,7 @@ impl DockState {
         let DockNode::Stack { .. } = stack_node else {
             return false;
         };
-        let new_stack = DockNode::Stack { windows, active: active_id.clone() };
+        let new_stack = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
         let replacement = match side {
             DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &stack_node, side),
             DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&stack_node, &new_stack, side),
@@ -395,9 +495,9 @@ impl DockState {
     pub fn split_root_with_stack(&mut self, windows: Vec<String>, active_id: String, side: DockSide) -> bool {
         let current = std::mem::replace(&mut self.root, DockNode::Stack { windows: vec![], active: String::new() });
         if matches!(&current, DockNode::Stack { windows, .. } if windows.is_empty()) {
-            self.root = DockNode::Stack { windows, active: active_id.clone() };
+            self.root = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
         } else {
-            let new_stack = DockNode::Stack { windows, active: active_id.clone() };
+            let new_stack = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
             self.root = match side {
                 DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &current, side),
                 DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&current, &new_stack, side),
@@ -433,6 +533,14 @@ impl DockState {
     }
 
     pub fn stack_windows_at_path(&self, path: &DockPath) -> Option<Vec<String>> {
+        let DockNode::Stack { windows, .. } = node_at(&self.root, path)? else {
+            return None;
+        };
+        Some(dock_tab_ids(windows))
+    }
+
+    /// 🧭️ Returns the full tab records (ids + corners) for a stack path.
+    pub fn stack_tabs_at_path(&self, path: &DockPath) -> Option<Vec<DockStackTab>> {
         let DockNode::Stack { windows, .. } = node_at(&self.root, path)? else {
             return None;
         };
@@ -512,9 +620,30 @@ fn axis_from_children(kind: &str, children: &[WindowLayoutChild], size: Option<f
 }
 
 fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
-    let windows: Vec<String> = stack.children.iter().map(|w| w.window_kind_id.clone()).collect();
-    let active = stack.active_window_kind_id.clone().filter(|id| windows.iter().any(|w| w == id)).or_else(|| windows.first().cloned()).unwrap_or_default();
+    let windows: Vec<DockStackTab> = stack
+        .children
+        .iter()
+        .map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft)))
+        .collect();
+    let active = stack
+        .active_window_kind_id
+        .clone()
+        .filter(|id| windows.iter().any(|w| w.window_id == *id))
+        .or_else(|| windows.first().map(|w| w.window_id.clone()))
+        .unwrap_or_default();
     DockNode::Stack { windows, active }
+}
+
+
+fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
+    WindowLayoutWindowNode {
+        kind: "window".into(),
+        window_kind_id: tab.window_id.clone(),
+        title: None,
+        instance_id: None,
+        template_id: None,
+        corner: Some(tab.corner),
+    }
 }
 
 pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
@@ -523,7 +652,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
             kind: "stack".into(),
             size: None,
             active_window_kind_id: Some(active.clone()),
-            children: windows.iter().map(|id| WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.clone(), title: None, instance_id: None, template_id: None }).collect(),
+            children: windows.iter().map(layout_window_node).collect(),
         }),
         DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
         DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
@@ -536,7 +665,7 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
             kind: "stack".into(),
             size: Some(size as f64),
             active_window_kind_id: Some(active.clone()),
-            children: windows.iter().map(|id| WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.clone(), title: None, instance_id: None, template_id: None }).collect(),
+            children: windows.iter().map(layout_window_node).collect(),
         }),
         DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
         DockNode::Column(children) => {
@@ -576,10 +705,10 @@ fn replace_node_at(root: &mut DockNode, path: &[usize], replacement: DockNode) {
 fn remove_window_from_node(node: &mut DockNode, window_id: &str) -> bool {
     match node {
         DockNode::Stack { windows, active } => {
-            if let Some(index) = windows.iter().position(|id| id == window_id) {
+            if let Some(index) = windows.iter().position(|tab| tab.window_id == window_id) {
                 windows.remove(index);
                 if active == window_id {
-                    *active = windows.get(index.saturating_sub(1)).or_else(|| windows.first()).cloned().unwrap_or_default();
+                    *active = windows.get(index.saturating_sub(1)).or_else(|| windows.first()).map(|tab| tab.window_id.clone()).unwrap_or_default();
                 }
                 return true;
             }
@@ -618,11 +747,17 @@ pub fn compute_tab_insert_index(pointer_x: f32, tab_bar: Rect, tab_widths: &[f32
     tab_widths.len()
 }
 
-pub fn compute_dock_drop_zone(pointer_x: f32, pointer_y: f32, tab_bars: &[(DockPath, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect) -> Option<DockDropZone> {
-    for (path, rect, widths) in tab_bars {
+pub fn compute_dock_drop_zone(
+    pointer_x: f32,
+    pointer_y: f32,
+    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
+    bodies: &[(DockPath, Rect, String)],
+    canvas: Rect,
+) -> Option<DockDropZone> {
+    for (path, corner, rect, widths) in tab_bars {
         if rect.contains(pointer_x, pointer_y) {
             let index = compute_tab_insert_index(pointer_x, *rect, widths, 4.0);
-            return Some(DockDropZone::Tab { stack_path: path.clone(), index });
+            return Some(DockDropZone::Tab { stack_path: path.clone(), corner: *corner, index });
         }
     }
     for (path, rect, _) in bodies {
@@ -649,10 +784,16 @@ pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
 }
 
 /// @emoji 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
-pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect, gap: f32) -> Option<Rect> {
+pub fn drop_zone_indicator_rect(
+    zone: &DockDropZone,
+    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
+    bodies: &[(DockPath, Rect, String)],
+    canvas: Rect,
+    gap: f32,
+) -> Option<Rect> {
     match zone {
-        DockDropZone::Tab { stack_path, index } => {
-            let (_, tab_bar, widths) = tab_bars.iter().find(|(path, _, _)| path == stack_path)?;
+        DockDropZone::Tab { stack_path, corner, index } => {
+            let (_, _, tab_bar, widths) = tab_bars.iter().find(|(path, bar_corner, _, _)| path == stack_path && bar_corner == corner)?;
             let mut x = tab_bar.x + gap;
             for width in widths.iter().take(*index) {
                 x += width + gap;
@@ -702,6 +843,83 @@ fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: 
     }
 }
 
+fn dock_tab_chip_width(atlas: &mut FontAtlas, theme: &Theme, label: &str, action_count: usize) -> f32 {
+    dock_tab_content_width(atlas, theme, label) + dock_tab_action_width(theme) * action_count as f32
+}
+
+fn dock_tab_action_width(theme: &Theme) -> f32 {
+    14.0 + theme.padding_standard
+}
+
+fn collect_corner_tab_bars_for_stack(
+    path: &DockPath,
+    windows: &[DockStackTab],
+    bounds: Rect,
+    theme: &Theme,
+    atlas: &mut FontAtlas,
+    window_labels: &HashMap<String, String>,
+    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
+) {
+    let tab_h = theme.control_height;
+    let pad = 8.0;
+    for (corner, tabs) in tabs_by_corner(windows) {
+        let widths: Vec<f32> = tabs
+            .iter()
+            .map(|tab| {
+                let label = window_labels.get(&tab.window_id).map(String::as_str).unwrap_or(tab.window_id.as_str());
+                dock_tab_chip_width(atlas, theme, label, 3)
+            })
+            .collect();
+        let total_w = if widths.is_empty() { pad * 3.0 } else { widths.iter().sum::<f32>() };
+        let width = total_w.max(pad * 3.0);
+        let rect = match corner {
+            WindowStackCorner::TopLeft => Rect::new(bounds.x, bounds.y, width, tab_h),
+            WindowStackCorner::TopRight => Rect::new(bounds.x + bounds.w - width, bounds.y, width, tab_h),
+            WindowStackCorner::BottomLeft => Rect::new(bounds.x, bounds.y + bounds.h - tab_h, width, tab_h),
+            WindowStackCorner::BottomRight => Rect::new(bounds.x + bounds.w - width, bounds.y + bounds.h - tab_h, width, tab_h),
+        };
+        out.push((path.to_vec(), corner, rect, widths));
+    }
+}
+
+fn collect_stack_corner_tab_bars(
+    node: &DockNode,
+    bounds: Rect,
+    path: &[usize],
+    theme: &Theme,
+    atlas: &mut FontAtlas,
+    window_labels: &HashMap<String, String>,
+    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
+) {
+    match node {
+        DockNode::Row(children) => {
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+            let mut x = bounds.x;
+            for (index, (child, size)) in children.iter().enumerate() {
+                let w = bounds.w * (*size / total);
+                let mut child_path = path.to_vec();
+                child_path.push(index);
+                collect_stack_corner_tab_bars(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, theme, atlas, window_labels, out);
+                x += w;
+            }
+        }
+        DockNode::Column(children) => {
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+            let mut y = bounds.y;
+            for (index, (child, size)) in children.iter().enumerate() {
+                let h = bounds.h * (*size / total);
+                let mut child_path = path.to_vec();
+                child_path.push(index);
+                collect_stack_corner_tab_bars(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, theme, atlas, window_labels, out);
+                y += h;
+            }
+        }
+        DockNode::Stack { windows, .. } => {
+            collect_corner_tab_bars_for_stack(&path.to_vec(), windows, bounds, theme, atlas, window_labels, out);
+        }
+    }
+}
+
 /// 🪟️ Wgpu-local adapter: builds the balanced fallback layout via
 /// `ui_wgpu::wgpu::even_window_layout` and converts it to a runtime `DockNode`.
 fn even_layout(window_ids: &[String]) -> DockNode {
@@ -740,7 +958,7 @@ fn first_window_id(node: &DockNode) -> Option<String> {
 
 fn find_stack_path(node: &DockNode, window_id: &str, path: &mut DockPath) -> Option<DockPath> {
     match node {
-        DockNode::Stack { windows, .. } if windows.iter().any(|id| id == window_id) => Some(path.clone()),
+        DockNode::Stack { windows, .. } if windows.iter().any(|tab| tab.window_id == window_id) => Some(path.clone()),
         DockNode::Row(children) | DockNode::Column(children) => {
             for (index, (child, _)) in children.iter().enumerate() {
                 path.push(index);
@@ -818,8 +1036,13 @@ fn diff_dock_node(old: &DockNode, next: DockNode) -> DockNode {
             if old_windows == next_windows {
                 return old.clone();
             }
-            let same_membership = old_windows.len() == next_windows.len() && old_windows.iter().all(|id| next_windows.contains(id));
-            let active = if same_membership && old_windows.iter().any(|id| id == old_active) { old_active.clone() } else { next_active.clone() };
+            let same_membership = old_windows.len() == next_windows.len()
+                && old_windows.iter().all(|tab| next_windows.iter().any(|next| next.window_id == tab.window_id));
+            let active = if same_membership && old_windows.iter().any(|tab| tab.window_id == *old_active) {
+                old_active.clone()
+            } else {
+                next_active.clone()
+            };
             DockNode::Stack { windows: next_windows.clone(), active }
         }
         (DockNode::Row(old_children), DockNode::Row(next_children)) => DockNode::Row(diff_axis_children(old_children, next_children)),
@@ -1040,27 +1263,9 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
     } else {
         theme.border_normal
     };
-    let cap_y = bounds.y;
-    let cap_rect = Rect::new(bounds.x, cap_y, bounds.w, tab_h);
 
-    let focus_label = if maximized { "Unfocus" } else { "Focus" };
-    let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
-    let focus_w = measure_cap_button(ctx.atlas, theme, focus_icon, focus_label);
-    let close_w = measure_cap_button(ctx.atlas, theme, "x", "Close");
-    let controls_w = focus_w + close_w;
-    let mut tab_x = cap_rect.x;
-    let mut tabs = Vec::with_capacity(windows.len());
-    for window_id in windows {
-        let label = ctx.window_labels.get(window_id).map(String::as_str).unwrap_or(window_id);
-        let icon_id = ctx.window_icon_ids.get(window_id).map(String::as_str).unwrap_or("app-window");
-        let tw = dock_tab_content_width(ctx.atlas, theme, label);
-        let tab_rect = Rect::new(tab_x, cap_y, tw, tab_h);
-        tabs.push((window_id.as_str(), label, icon_id, tab_rect));
-        tab_x += tw;
-    }
-    let gap_x = tab_x;
-    let controls_x = cap_rect.x + cap_rect.w - controls_w;
-    let silhouette = WindowSilhouette::from_measured_top(bounds, gap_x - bounds.x, controls_w, tab_h);
+    let layout = layout_stack_cap(windows, ctx.window_labels, ctx.window_icon_ids, ctx.atlas, theme, bounds);
+    let silhouette = stack_window_silhouette(bounds, theme, &layout);
 
     if body_fill {
         let content_bounds = silhouette.content_bounds();
@@ -1070,37 +1275,63 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         ctx.draw.end_silhouette_clip();
     }
 
-    for (window_id, label, icon_id, tab_rect) in &tabs {
-        let tab_glass = ctx.draw.push_glass([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], 0.0, theme.glass(Level::Window));
-        ctx.draw.begin_glass_content(tab_glass);
-        let is_active = *window_id == active;
-        let stack_active_tab = is_active && globally_active;
-        let hovered = tab_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-        let tint = if stack_active_tab {
-            theme.active_foreground
-        } else if hovered {
-            theme.border_emphasized
-        } else {
-            theme.text_element
-        };
-        let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, *tab_rect, tint);
-        dock_text(ctx, label, tab_rect.x + theme.padding_standard + icon_w, tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
-        ctx.input.register_hit(HitTarget { rect: *tab_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
+    let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
+    for group in &layout.groups {
+        if group.tabs.is_empty() {
+            continue;
+        }
+        let group_w = group.tabs.iter().map(|tab| tab.rect.w).sum::<f32>();
+        let group_rect = Rect::new(group.tabs[0].rect.x, group.tabs[0].rect.y, group_w, tab_h);
+        let group_glass = ctx.draw.push_glass([group_rect.x, group_rect.y, group_rect.w, group_rect.h], 0.0, theme.glass(Level::Window));
+        ctx.draw.begin_glass_content(group_glass);
+        for tab in &group.tabs {
+            let is_active = tab.window_id == *active;
+            let stack_active_tab = is_active && globally_active;
+            let hovered = tab.rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
+            let tint = if stack_active_tab {
+                theme.active_foreground
+            } else if hovered {
+                theme.border_emphasized
+            } else {
+                theme.text_element
+            };
+            let mut content_x = tab.rect.x + theme.padding_standard;
+            let icon_w = paint_dock_tab_icon(ctx, &tab.icon_id, content_x, tab.rect, tint);
+            content_x += icon_w;
+            dock_text(ctx, &tab.label, content_x, tab.rect.y + (tab.rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
+            content_x += ctx.atlas.measure_text(&tab.label, theme.font_size_small).0 + theme.gap_standard;
+            let action_w = dock_tab_action_width(theme);
+            let actions = [("focus", focus_icon), ("new", "app-window"), ("close", "x")];
+            for (action, icon_id) in actions {
+                let action_rect = Rect::new(content_x, tab.rect.y, action_w, tab.rect.h);
+                let action_hovered = action_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
+                let action_tint = chrome_item_text(theme, false, action_hovered);
+                let _ = paint_dock_tab_icon(ctx, icon_id, action_rect.x + theme.padding_standard * 0.5, action_rect, action_tint);
+                ctx.input.register_hit(HitTarget {
+                    rect: action_rect,
+                    event: None,
+                    control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+                content_x += action_w;
+            }
+            let select_w = (tab.rect.w - action_w * 3.0).max(theme.padding_standard * 2.0);
+            let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
+            ctx.input.register_hit(HitTarget {
+                rect: select_rect,
+                event: None,
+                control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)),
+                kind: HitKind::Window,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
         ctx.draw.end_glass_content();
     }
-    let controls_rect = Rect::new(controls_x, cap_y, controls_w, tab_h);
-    let controls_glass = ctx.draw.push_glass([controls_rect.x, controls_rect.y, controls_rect.w, controls_rect.h], 0.0, theme.glass(Level::Window));
-    ctx.draw.begin_glass_content(controls_glass);
-    render_cap_action_group(ctx, controls_rect, &[("dock.focus", focus_icon, focus_label), ("dock.close", "x", "Close")], path, false);
-    ctx.draw.end_glass_content();
 
-    // 🪟️ One outline for tabs + glass cutout + controls + body (matches React ModeDockStackSilhouetteBorder).
-    push_window_silhouette_border(ctx.draw, &silhouette, stroke, border);
-}
-
-struct StackCapLayout {
-    gap_x: f32,
-    gap_w: f32,
+    // 🪟️ push_window_silhouette_border(ctx.draw, &silhouette, stroke, border);
 }
 
 //#region WindowSilhouetteGeometry
@@ -1155,14 +1386,21 @@ impl WindowSilhouette {
         }
     }
 
-    /// 🪟️ Projects the currently measured Dock tab and controls groups into the normalized v1 model.
+    /// 🪟️ Projects measured top/bottom chip spans into the normalized v1 model.
+    pub fn from_measured_edges(bounds: Rect, top_spans: Vec<WindowSilhouetteSpan>, bottom_spans: Vec<WindowSilhouetteSpan>, top_depth: f32, bottom_depth: f32) -> Self {
+        Self::new(bounds, WindowSilhouetteEdge::new(top_depth, top_spans), WindowSilhouetteEdge::new(bottom_depth, bottom_spans))
+    }
+
+    /// 🪟️ Projects the classic top-left tabs + top-right controls pair into the normalized v1 model.
     pub fn from_measured_top(bounds: Rect, tabs_w: f32, controls_w: f32, depth: f32) -> Self {
         let tabs_right = tabs_w.max(0.0).min(bounds.w);
         let controls_left = (bounds.w - controls_w.max(0.0)).max(tabs_right).min(bounds.w);
-        Self::new(
+        Self::from_measured_edges(
             bounds,
-            WindowSilhouetteEdge::new(depth, vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)]),
-            WindowSilhouetteEdge::default(),
+            vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)],
+            Vec::new(),
+            depth,
+            0.0,
         )
     }
 
@@ -1275,61 +1513,76 @@ pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSil
 
 //#endregion WindowSilhouetteGeometry
 
-fn layout_stack_cap(windows: &[String], labels: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, maximized: bool) -> StackCapLayout {
-    let focus_label = if maximized { "Unfocus" } else { "Focus" };
-    let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
-    let focus_w = measure_cap_button(atlas, theme, focus_icon, focus_label);
-    let close_w = measure_cap_button(atlas, theme, "x", "Close");
-    let controls_w = focus_w + close_w;
-    let mut tab_x = bounds.x;
-    for window_id in windows {
-        let label = labels.get(window_id).map(String::as_str).unwrap_or(window_id.as_str());
-        let tw = dock_tab_content_width(atlas, theme, label);
-        tab_x += tw;
+struct StackCapTabLayout {
+    window_id: String,
+    label: String,
+    icon_id: String,
+    rect: Rect,
+}
+
+struct StackCapGroupLayout {
+    corner: WindowStackCorner,
+    tabs: Vec<StackCapTabLayout>,
+}
+
+struct StackCapLayout {
+    groups: Vec<StackCapGroupLayout>,
+    top_spans: Vec<WindowSilhouetteSpan>,
+    bottom_spans: Vec<WindowSilhouetteSpan>,
+}
+
+fn layout_stack_cap(
+    windows: &[DockStackTab],
+    labels: &HashMap<String, String>,
+    icon_ids: &HashMap<String, String>,
+    atlas: &mut FontAtlas,
+    theme: &Theme,
+    bounds: Rect,
+) -> StackCapLayout {
+    let tab_h = theme.control_height;
+    let mut groups = Vec::new();
+    let mut top_spans = Vec::new();
+    let mut bottom_spans = Vec::new();
+    for (corner, tabs) in tabs_by_corner(windows) {
+        if tabs.is_empty() {
+            continue;
+        }
+        let mut widths = Vec::with_capacity(tabs.len());
+        let mut meta = Vec::with_capacity(tabs.len());
+        for tab in &tabs {
+            let label = labels.get(&tab.window_id).cloned().unwrap_or_else(|| tab.window_id.clone());
+            let icon_id = icon_ids.get(&tab.window_id).cloned().unwrap_or_else(|| "app-window".into());
+            let tw = dock_tab_chip_width(atlas, theme, &label, 3);
+            widths.push(tw);
+            meta.push((tab.window_id.clone(), label, icon_id));
+        }
+        let total_w = widths.iter().sum::<f32>();
+        let (origin_x, origin_y) = match corner {
+            WindowStackCorner::TopLeft => (bounds.x, bounds.y),
+            WindowStackCorner::TopRight => (bounds.x + bounds.w - total_w, bounds.y),
+            WindowStackCorner::BottomLeft => (bounds.x, bounds.y + bounds.h - tab_h),
+            WindowStackCorner::BottomRight => (bounds.x + bounds.w - total_w, bounds.y + bounds.h - tab_h),
+        };
+        let mut x = origin_x;
+        let mut painted = Vec::new();
+        for ((window_id, label, icon_id), tw) in meta.into_iter().zip(widths.into_iter()) {
+            painted.push(StackCapTabLayout { window_id, label, icon_id, rect: Rect::new(x, origin_y, tw, tab_h) });
+            x += tw;
+        }
+        let span = WindowSilhouetteSpan::new((origin_x - bounds.x).max(0.0), (origin_x - bounds.x + total_w).min(bounds.w));
+        match corner {
+            WindowStackCorner::TopLeft | WindowStackCorner::TopRight => top_spans.push(span),
+            WindowStackCorner::BottomLeft | WindowStackCorner::BottomRight => bottom_spans.push(span),
+        }
+        groups.push(StackCapGroupLayout { corner, tabs: painted });
     }
-    let gap_x = tab_x;
-    let controls_x = bounds.x + bounds.w - controls_w;
-    let gap_w = (controls_x - gap_x).max(0.0);
-    StackCapLayout { gap_x, gap_w }
+    StackCapLayout { groups, top_spans, bottom_spans }
 }
 
 fn stack_window_silhouette(bounds: Rect, theme: &Theme, layout: &StackCapLayout) -> WindowSilhouette {
-    WindowSilhouette::from_measured_top(bounds, layout.gap_x - bounds.x, bounds.x + bounds.w - (layout.gap_x + layout.gap_w), theme.control_height)
-}
-
-fn render_cap_action_group(ctx: &mut DockRenderContext<'_>, rect: Rect, buttons: &[(&str, &str, &str)], path: &[usize], draw_outer_border: bool) {
-    let theme = ctx.theme;
-    let hair = theme.stroke_hairline;
-    let inner_y = rect.y + hair;
-    let inner_h = (rect.h - hair * 2.0).max(0.0);
-    let mut x = rect.x;
-    for (index, (prefix, icon_id, label)) in buttons.iter().enumerate() {
-        let item_w = measure_cap_button(ctx.atlas, theme, icon_id, label);
-        let item_rect = Rect::new(x, inner_y, item_w, inner_h);
-        let hovered = item_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-        let icon_size = 14.0;
-        let mut content_x = item_rect.x + theme.padding_standard;
-        let icon_color = chrome_item_text(theme, false, hovered);
-        if let Some(uv) = ctx.icons.icon_uv(icon_id) {
-            ctx.draw.push_textured([content_x, item_rect.y + (item_rect.h - icon_size) * 0.5, icon_size, icon_size], uv, icon_color);
-            content_x += icon_size + theme.gap_standard;
-        }
-        dock_text(ctx, label, content_x, item_rect.y + (item_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, chrome_item_text(theme, false, hovered));
-        ctx.input.register_hit(HitTarget { rect: item_rect, event: None, control_id: Some(format!("{prefix}.{}", path_str(path))), kind: HitKind::Button, drag_axis: None, drag_data: None });
-        x += item_w;
-        if index + 1 < buttons.len() {
-            ctx.draw.push_solid([x, inner_y, hair, inner_h], theme.border_normal);
-        }
-    }
-    if draw_outer_border {
-        push_chrome_group_border(ctx.draw, rect, theme);
-    }
-}
-
-fn measure_cap_button(atlas: &mut FontAtlas, theme: &Theme, _icon_id: &str, label: &str) -> f32 {
-    let icon_w = 14.0 + theme.gap_standard;
-    let text_w = atlas.measure_text(label, theme.font_size_small).0;
-    theme.padding_standard * 2.0 + icon_w + text_w
+    let top_depth = if layout.top_spans.is_empty() { 0.0 } else { theme.control_height };
+    let bottom_depth = if layout.bottom_spans.is_empty() { 0.0 } else { theme.control_height };
+    WindowSilhouette::from_measured_edges(bounds, layout.top_spans.clone(), layout.bottom_spans.clone(), top_depth, bottom_depth)
 }
 
 pub fn path_str(path: &[usize]) -> String {
@@ -1379,7 +1632,7 @@ fn collect_stack_bodies(
         }
         DockNode::Stack { windows, active } => {
             let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
-            let layout = layout_stack_cap(windows, window_labels, atlas, theme, bounds, maximized);
+            let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, bounds);
             let silhouette = stack_window_silhouette(bounds, theme, &layout);
             out.push((path.to_vec(), silhouette.safe_body_rect(), active.clone()));
             silhouettes.insert(active.clone(), silhouette);
@@ -1401,6 +1654,19 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
+    fn tab(id: &str) -> DockStackTab {
+        DockStackTab::new(id)
+    }
+
+    fn tabs(ids: &[&str]) -> Vec<DockStackTab> {
+        ids.iter().map(|id| DockStackTab::new(*id)).collect()
+    }
+
+    fn stack_tabs(ids: &[&str], active: &str) -> DockNode {
+        DockNode::Stack { windows: tabs(ids), active: active.into() }
+    }
+
+
     use crate::shell::ShellState;
     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
@@ -1558,7 +1824,7 @@ mod tests {
     #[test]
     fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        dock.root = stack_tabs(&["a", "b"], "a");
         let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
         let theme = Theme::default();
         let mut atlas = FontAtlas::builtin();
@@ -1567,19 +1833,40 @@ mod tests {
         let mut draw = DrawList::default();
         let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
         let icon_ids = HashMap::new();
-        let layout = layout_stack_cap(&["a".into(), "b".into()], &labels, &mut atlas, &theme, bounds, false);
-        let gap_point = (layout.gap_x + layout.gap_w * 0.5, bounds.y + theme.control_height * 0.5);
+        let layout = layout_stack_cap(&tabs(&["a", "b"]), &labels, &icon_ids, &mut atlas, &theme, bounds);
+        let gap_point = (bounds.x + bounds.w * 0.5, bounds.y + theme.control_height * 0.5);
         let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
         dock.paint_chrome(&mut ctx, bounds, false);
-        assert_eq!(draw.glass_regions.len(), 3, "two tab chips plus one controls chip");
+        assert_eq!(draw.glass_regions.len(), 1, "one top-left corner group chip for both tabs");
         assert!(!draw.glass_regions.iter().any(|region| Rect::new(region.rect[0], region.rect[1], region.rect[2], region.rect[3]).contains(gap_point.0, gap_point.1)));
+        assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a")));
+        assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.close")));
+        assert!(input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("dock.tab..a.focus")));
+        assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.focus.") || id.starts_with("dock.close."))));
         assert!(!input.hit_targets.iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("dock.stack."))));
+        let _ = layout;
+    }
+
+    #[test]
+    fn apply_drop_tab_moves_window_to_target_corner() {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = DockNode::Row(vec![
+            (stack_tabs(&["a", "x"], "a"), 0.5),
+            (stack_tabs(&["b"], "b"), 0.5),
+        ]);
+        assert!(dock.remove_window("a"));
+        let payload = tab_payload("a", vec![0], 0);
+        let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::BottomRight, index: 0 };
+        assert!(dock.apply_drop(&payload, &zone));
+        let tabs = dock.stack_tabs_at_path(&vec![1]).expect("target stack");
+        assert!(tabs.iter().any(|tab| tab.window_id == "a" && tab.corner == WindowStackCorner::BottomRight));
+        assert_eq!(dock.active_window_id.as_deref(), Some("a"));
     }
 
     #[test]
     fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        dock.root = stack_tabs(&["a", "b"], "a");
         let bounds = Rect::new(10.0, 20.0, 600.0, 400.0);
         let theme = Theme::default();
         let mut atlas = FontAtlas::builtin();
@@ -1621,7 +1908,7 @@ mod tests {
     }
 
     fn stack_with(id: &str) -> DockNode {
-        DockNode::Stack { windows: vec![id.into()], active: id.into() }
+        DockNode::Stack { windows: vec![tab(id)], active: id.into() }
     }
 
     //#region DragDropAndLayoutDiffTests
@@ -1651,9 +1938,9 @@ mod tests {
         assert!(dock.remove_window("a"));
         assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("c")), "c shifted to [1] once a's slot was pruned");
         let payload = tab_payload("a", vec![0], 0);
-        let zone = DockDropZone::Tab { stack_path: vec![1], index: 0 };
+        let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::TopLeft, index: 0 };
         assert!(dock.apply_drop(&payload, &zone), "cross-stack tab drop must actually land");
-        assert_eq!(node_at(&dock.root, &vec![1]), Some(&DockNode::Stack { windows: vec!["a".into(), "c".into()], active: "a".into() }));
+        assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_tabs(&["a", "c"], "a")));
         assert!(find_stack_path(&dock.root, "b", &mut vec![]).is_some(), "b (untouched by this drop) still resolvable");
         assert_eq!(dock.active_window_id.as_deref(), Some("a"));
     }
@@ -1661,12 +1948,12 @@ mod tests {
     #[test]
     fn apply_drop_tab_reinserts_into_originating_stack_at_new_index() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Row(vec![(DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
+        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "a"), 1.0)]);
         assert!(dock.remove_window("a"));
         let payload = tab_payload("a", vec![0], 0);
-        let zone = DockDropZone::Tab { stack_path: vec![0], index: 2 };
+        let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 };
         assert!(dock.apply_drop(&payload, &zone));
-        assert_eq!(node_at(&dock.root, &vec![0]), Some(&DockNode::Stack { windows: vec!["b".into(), "c".into(), "a".into()], active: "a".into() }));
+        assert_eq!(node_at(&dock.root, &vec![0]), Some(&stack_tabs(&["b", "c", "a"], "a")));
     }
 
     #[test]
@@ -1686,28 +1973,28 @@ mod tests {
     #[test]
     fn apply_drop_tab_root_split_builds_axis_pair() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        dock.root = stack_tabs(&["a", "b"], "a");
         assert!(dock.remove_window("a"));
         let payload = tab_payload("a", vec![], 0);
         let zone = DockDropZone::RootSplit { side: DockSide::Left };
         assert!(dock.apply_drop(&payload, &zone));
-        assert_eq!(dock.root, DockNode::Row(vec![(stack_with("a"), 0.5), (DockNode::Stack { windows: vec!["b".into()], active: "b".into() }, 0.5)]));
+        assert_eq!(dock.root, DockNode::Row(vec![(stack_with("a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]));
     }
 
     #[test]
     fn apply_drop_stack_moves_whole_group_preserving_order_and_target_key() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Row(vec![(DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "b".into() }, 0.5), (stack_with("d"), 0.5)]);
+        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b", "c"], "b"), 0.5), (stack_with("d"), 0.5)]);
         // 🎬️ A stack drag pre-removes only its active window, same as a tab drag.
         assert!(dock.remove_window("b"));
         let payload = stack_payload("b", vec![0], 1);
-        let zone = DockDropZone::Tab { stack_path: vec![1], index: 0 };
+        let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::TopLeft, index: 0 };
         assert!(dock.apply_drop(&payload, &zone), "whole-stack tab-join must land");
         // 🔑️ `a`/`c` (the siblings left behind by the eager single-window removal) travel with `b`,
         // reconstructed in their original order around it, and land next to `d` by key — not by the
         // pre-extraction `stack_path`, which the extraction itself would have shifted.
         let target = find_stack_path(&dock.root, "d", &mut vec![]).expect("d still resolvable by key");
-        assert_eq!(node_at(&dock.root, &target), Some(&DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into(), "d".into()], active: "b".into() }));
+        assert_eq!(node_at(&dock.root, &target), Some(&stack_tabs(&["a", "b", "c", "d"], "b")));
         assert!(find_stack_path(&dock.root, "a", &mut vec![]).is_some());
         assert_eq!(dock.active_window_id.as_deref(), Some("b"));
     }
@@ -1720,7 +2007,7 @@ mod tests {
         // `extract_stack_group` later pulls `x` out too, which *does* empty-and-prune slot `[0]`,
         // shifting `b` from `[1]` down to `[0]`. The `stack_path: [1]` captured in `zone` (from
         // hit-testing *before* this drag even started) is therefore stale by the time the drop lands.
-        dock.root = DockNode::Row(vec![(DockNode::Stack { windows: vec!["a".into(), "x".into()], active: "a".into() }, 0.5), (stack_with("b"), 0.5)]);
+        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_with("b"), 0.5)]);
         assert!(dock.remove_window("a"));
         assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("b")), "b starts at [1], pre-shift");
         let payload = stack_payload("a", vec![0], 0);
@@ -1732,28 +2019,28 @@ mod tests {
         let b_path = find_stack_path(&dock.root, "b", &mut vec![]).expect("b still resolvable by key");
         assert_eq!(node_at(&dock.root, &b_path), Some(&stack_with("b")), "b itself must be untouched by the split");
         let a_path = find_stack_path(&dock.root, "a", &mut vec![]).expect("a resolvable by key");
-        assert_eq!(node_at(&dock.root, &a_path), Some(&DockNode::Stack { windows: vec!["a".into(), "x".into()], active: "a".into() }), "a's whole group (a + the sibling x it dragged along) landed together");
+        assert_eq!(node_at(&dock.root, &a_path), Some(&stack_tabs(&["a", "x"], "a")), "a's whole group (a + the sibling x it dragged along) landed together");
     }
 
     #[test]
     fn apply_drop_stack_same_source_is_noop() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Row(vec![(DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() }, 0.5), (stack_with("c"), 0.5)]);
+        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "b"], "a"), 0.5), (stack_with("c"), 0.5)]);
         assert!(dock.remove_window("a"));
         let before = dock.root.clone();
         let payload = stack_payload("a", vec![0], 0);
-        let zone = DockDropZone::Tab { stack_path: vec![0], index: 0 };
+        let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 0 };
         assert!(!dock.apply_drop(&payload, &zone), "dropping a stack back onto itself is a no-operation");
         assert_eq!(dock.root, before);
     }
 
     #[test]
     fn compute_dock_drop_zone_prefers_tab_bar_over_body_over_root() {
-        let tab_bars = vec![(vec![0], Rect::new(0.0, 0.0, 200.0, 24.0), vec![80.0, 80.0])];
+        let tab_bars = vec![(vec![0], WindowStackCorner::TopLeft, Rect::new(0.0, 0.0, 200.0, 24.0), vec![80.0, 80.0])];
         let bodies = vec![(vec![0], Rect::new(0.0, 24.0, 200.0, 200.0), "a".to_string())];
         let canvas = Rect::new(0.0, 0.0, 200.0, 224.0);
         // Inside the tab bar rect → `Tab` zone wins even though it's also inside the body's column span.
-        assert_eq!(compute_dock_drop_zone(10.0, 10.0, &tab_bars, &bodies, canvas), Some(DockDropZone::Tab { stack_path: vec![0], index: 0 }));
+        assert_eq!(compute_dock_drop_zone(10.0, 10.0, &tab_bars, &bodies, canvas), Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 0 }));
         // Inside the body but below the tab bar → `Split` zone.
         assert!(matches!(compute_dock_drop_zone(100.0, 100.0, &tab_bars, &bodies, canvas), Some(DockDropZone::Split { .. })));
         // Outside every registered stack but inside the canvas → `RootSplit`.
@@ -1775,7 +2062,7 @@ mod tests {
     #[test]
     fn apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "b".into() };
+        dock.root = stack_tabs(&["a", "b"], "b");
         dock.active_window_id = Some("b".into());
         // 🗄️ A persisted `WindowLayout` snapshot whose `active_window_kind_id` predates the user's
         // later in-session tab switch to `b` — a naive `self.dock.root = dock_from_window_layout(...)`
@@ -1786,13 +2073,13 @@ mod tests {
                 size: None,
                 active_window_kind_id: Some("a".into()),
                 children: vec![
-                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None },
-                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None },
+                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None },
+                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None },
                 ],
             }),
         };
         dock.apply_layout_diff(&stale_layout);
-        assert_eq!(dock.root, DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "b".into() }, "same membership, reordered-or-not — the user's current tab stays focused");
+        assert_eq!(dock.root, stack_tabs(&["a", "b"], "b"), "same membership, reordered-or-not — the user's current tab stays focused");
     }
 
     #[test]
@@ -1815,13 +2102,13 @@ mod tests {
                         kind: "stack".into(),
                         size: Some(0.5),
                         active_window_kind_id: Some("b".into()),
-                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None }],
+                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
                     }),
                     WindowLayoutChild::Stack(WindowLayoutStackNode {
                         kind: "stack".into(),
                         size: Some(0.5),
                         active_window_kind_id: Some("a".into()),
-                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None }],
+                        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None, corner: None }],
                     }),
                 ],
             }),
@@ -1844,7 +2131,7 @@ mod tests {
                 kind: "stack".into(),
                 size: None,
                 active_window_kind_id: Some("b".into()),
-                children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None }],
+                children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None, corner: None }],
             }),
         };
         dock.apply_layout_diff(&without_a);
@@ -1898,7 +2185,7 @@ mod tests {
     #[test]
     fn close_window_collapses_stack_tabs() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        dock.root = stack_tabs(&["a", "b"], "a");
         let path = vec![];
         dock.close_active_in_stack(&path);
         if let DockNode::Stack { windows, active } = &dock.root {
@@ -1912,10 +2199,10 @@ mod tests {
     #[test]
     fn reorder_tab_within_stack() {
         let mut dock = DockState::default();
-        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() };
+        dock.root = stack_tabs(&["a", "b", "c"], "a");
         assert!(dock.reorder_tab(&vec![], 0, 2));
         if let DockNode::Stack { windows, .. } = &dock.root {
-            assert_eq!(windows, &vec!["b".to_string(), "c".to_string(), "a".to_string()]);
+            assert_eq!(dock_tab_ids(windows), vec!["b".to_string(), "c".to_string(), "a".to_string()]);
         } else {
             panic!("expected stack");
         }

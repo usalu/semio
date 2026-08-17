@@ -274,7 +274,7 @@ export type UiTranslationSchema = {
       readonly setDriver: UiLabelValue;
     };
     /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
-     * activate/close/split, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
+     * activate/close/split/open-in-new-window, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
     readonly shellCommand: {
       readonly dockMove: UiLabelValue;
       readonly windowResize: UiLabelValue;
@@ -282,6 +282,7 @@ export type UiTranslationSchema = {
       readonly windowActivate: UiLabelValue;
       readonly windowClose: UiLabelValue;
       readonly windowSplit: UiLabelValue;
+      readonly windowOpenInNewWindow: UiLabelValue;
       readonly panelToggle: UiLabelValue;
       readonly panelTab: UiLabelValue;
     };
@@ -346,6 +347,12 @@ export type UiTranslationSchema = {
       readonly expand: UiLabelValue;
       readonly cancel: UiLabelValue;
       readonly error: UiLabelValue;
+    };
+    readonly window: {
+      readonly close: UiLabelValue;
+      readonly focus: UiLabelValue;
+      readonly unfocus: UiLabelValue;
+      readonly newWindow: UiLabelValue;
     };
     readonly contextMenu: {
       readonly select: UiLabelValue;

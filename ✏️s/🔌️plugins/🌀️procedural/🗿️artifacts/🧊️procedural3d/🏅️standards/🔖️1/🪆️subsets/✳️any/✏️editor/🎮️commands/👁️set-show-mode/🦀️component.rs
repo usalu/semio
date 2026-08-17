@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Procedural3d play app commands command — `set-show-mode`.
 
-use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation, Procedural3dPreviewCamera};
+use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
 use flow::FlowEvalSession;

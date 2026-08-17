@@ -9,22 +9,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Helpers
-/// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document
-/// (including nested `control.*` bodies), deterministically from pre-state — no mutable counter.
-/// Reads through the `flow` working scene (`ImperativeSnapshot` no longer carries `path` inline —
-/// ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
-fn next_step_id(document: &ImperativeSnapshot) -> String {
-    fn max_suffix(steps: &[Step]) -> u64 {
-        steps.iter().fold(0, |acc, step| {
-            let own = step.id.strip_prefix("step-").and_then(|rest| rest.parse::<u64>().ok()).unwrap_or(0);
-            let nested = step.bodies.values().map(|path| max_suffix(&path.steps)).max().unwrap_or(0);
-            acc.max(own).max(nested)
-        })
-    }
-    let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    format!("step-{}", max_suffix(&path.steps) + 1)
-}
-
 /// 📍️ Resolves `owner`/`slot` command fields into a [`PathRef`] so nested control-step bodies (e.g.
 /// `control.if` then/else) resolve correctly; falls back to the root path unless both are present and
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would

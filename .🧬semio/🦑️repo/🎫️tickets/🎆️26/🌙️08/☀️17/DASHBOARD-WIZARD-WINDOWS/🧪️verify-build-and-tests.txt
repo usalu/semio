@@ -1,0 +1,15 @@
+Dashboard Wizard Windows — build and test verification (2026-08-17)
+
+cargo build -p semio-framework-repo-cli: OK
+
+Unit tests (semio-framework-ui --features tui-terminal):
+- window_hit_resolves_tab_activation_and_new_tab_signals: ok
+- mount_window_layout_reparents_windows_and_preserves_widget_state: ok
+- wizard_keys_filter_navigate_back_and_activate: ok
+- pty_kill_terminates_child_process_group: ok (pgrep confirms children under PTY leader, gone after killpg)
+
+Unit tests (semio-framework-repo-cli):
+- command_tree_discovery::segment_key_strips_emoji_prefix: ok
+- command_tree_discovery::discover_builds_verb_first_level: ok (after walk vs taxonomy skip split)
+
+Runtime TUI smoke (interactive wizard → dev leaf → ✕) not automated in CI; process-group kill covered by pty_kill_terminates_child_process_group.

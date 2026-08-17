@@ -49,7 +49,7 @@ pub fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescripto
 pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.2d",
-        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Flow },
+        MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
         semio_framework_plugin::ArtifactPresentation { id: "2d.procedural".into(), name: "2D Procedural".into(), dimension: "2d".into(), component_kind: "procedural2d".into() },
     )
     .with_ports(vec![
@@ -57,7 +57,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             id: "params:in".into(),
             label: "Parameters".into(),
             direction: semio_framework_plugin::MediaPortDirection::In,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
             multiplicity: semio_framework::PortMultiplicity::One},
@@ -65,7 +65,7 @@ pub fn procedural2d_io() -> semio_framework_plugin::AppIo {
             id: "drawing:out".into(),
             label: "Drawing".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+            media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
             kind_id: Some("2d.drawing".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many},

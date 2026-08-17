@@ -1,6 +1,5 @@
 //! 🌿️ Flow document VCS: operations, DSL, store, and forms bridge.
 
-use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -12,7 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
 use crate::host::*;
-use crate::drawing::*;
 
 
 // #region 🔖️ArtifactVcs
@@ -22,7 +20,11 @@ use crate::drawing::*;
 use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
+#[cfg(test)]
+use crate::os_store::ArtifactCommand;
 use crate::os_store::{ArtifactEnvelope, ArtifactStore};
+#[cfg(any(target_arch = "wasm32", test))]
+use crate::os_store::create_document_envelope;
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -1165,7 +1167,7 @@ mod flow_vcs_tests {
 
     #[test]
     fn coalesced_layout_drag_produces_one_edit() {
-        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None));
+        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).expect("valid flow store fixture");
         for y in [10.0, 20.0, 30.0] {
             store
                 .dispatch(ArtifactCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })

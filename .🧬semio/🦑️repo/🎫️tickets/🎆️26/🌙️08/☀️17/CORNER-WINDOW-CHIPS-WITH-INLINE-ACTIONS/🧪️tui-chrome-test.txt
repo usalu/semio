@@ -1,0 +1,46 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5275:29
+     |
+5275 |         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5275 -         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+5275 +         assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5335:44
+     |
+5335 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5335 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+5335 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
+     |
+
+warning: `semio-framework-ui` (lib test) generated 2 warnings (run `cargo fix --lib -p semio-framework-ui --tests` to apply 2 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 1.57s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/CORNER-WINDOW-CHIPS-WITH-INLINE-ACTIONS/🎯️tui-target/debug/deps/semio_framework_ui-750d9f66b3bf643c)
+
+running 12 tests
+test tui::component::tests::mount_window_layout_reparents_windows_and_preserves_widget_state ... ok
+test tui::component::tests::tui_dispatch_emits_window_close_signal_on_click ... ok
+test tui::component::tests::window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted ... ok
+test tui::component::tests::window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title ... ok
+test tui::component::tests::window_hit_resolves_tab_activation_and_new_tab_signals ... ok
+test tui::component::tests::window_layout_stack_exposes_tabs ... ok
+test tui::component::tests::window_layout_row_of_stacks_tiles_without_gaps ... ok
+test tui::component::tests::window_layout_split_resize_move_zoom_and_tabs ... ok
+test tui::component::tests::window_control_clicks_resolve_to_close_and_maximize_signals ... ok
+test tui::component::tests::window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape ... ok
+test tui::component::tests::window_stack_tabs_paint_on_body_top ... ok
+test tui::component::tests::window_stack_tabs_respect_bottom_corners ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.01s
+

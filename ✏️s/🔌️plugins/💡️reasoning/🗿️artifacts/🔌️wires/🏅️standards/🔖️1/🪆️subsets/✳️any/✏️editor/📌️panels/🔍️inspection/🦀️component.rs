@@ -48,7 +48,7 @@ pub fn render(document: &WiresSnapshot) -> UiNode {
 /// lives here rather than in the artifact's `🧬️schema` (the single- vs multi-consumer split the former
 /// engine file's own module doc already drew: a helper with more than one consumer lives in the
 /// artifact, one with exactly one consumer lives in that consumer's own file).
-pub use infinite_board_normal_undirected as graph;
+pub use infinite_canvas as graph;
 pub use infinite_canvas as canvas;
 
 pub type TopicId = canvas::board::NodeId;

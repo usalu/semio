@@ -216,6 +216,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
 mod tests {
     use super::*;
     use crate::demo_space_projection;
+    use crate::engine::space::config::SpaceConfig;
     use semio_framework_plugin::UiControlNode;
 
     #[test]

@@ -21,6 +21,14 @@ pub mod action_bus;
 #[path = "../../🔨️modules/🚪️io/🦀️component.rs"]
 pub mod io;
 
+// 🧬️ ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1: the io vocabulary
+// (`StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`) is mounted
+// ONCE, in the os-kernel crate (`io_schema` there) — re-exported here rather than remounted, so
+// this crate never compiles a second copy of that file's source text. `io/🦀️component.rs` above
+// (still double-mounted, D2) reaches it via `crate::io_schema`, which resolves to THIS re-export
+// when compiled as part of this crate.
+pub use semio_framework_os_kernel::io_schema;
+
 #[path = "../../🔨️modules/🖥️platform/🦀️component.rs"]
 pub mod platform;
 
@@ -102,7 +110,7 @@ pub use manifest::kernel::{
     ActionRequest, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseMutation,
     KernelMutation, ArtifactDiff, ArtifactHandle, ArtifactId, ArtifactKind,
     ArtifactVersion, MutationId, PhysicalSize, PluginInstanceId, PresencePeer,
-    PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer,
+    PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer,
     Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

@@ -1,0 +1,23 @@
+    Blocking waiting for file lock on build directory
+    Checking num-traits v0.2.19
+    Checking bytemuck v1.25.0
+    Checking idna v1.1.0
+    Checking hashbrown v0.16.1
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking form_urlencoded v1.2.2
+    Checking getrandom v0.3.4
+    Checking fluent-uri v0.3.2
+    Checking uuid v1.23.4
+    Checking email_address v0.2.9
+error: The "wasm_js" backend requires the `wasm_js` feature for `getrandom`. For more information see: https://docs.rs/getrandom/0.3.4/#webassembly-support
+  --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.3.4/src/backends.rs:40:17
+   |
+40 | /                 compile_error!(concat!(
+41 | |                     "The \"wasm_js\" backend requires the `wasm_js` feature \
+42 | |                     for `getrandom`. For more information see: \
+43 | |                     https://docs.rs/getrandom/", env!("CARGO_PKG_VERSION"), "/#webassembly-support"
+44 | |                 ));
+   | |__________________^
+
+error: could not compile `getrandom` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

@@ -9,7 +9,6 @@
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
@@ -1074,38 +1073,38 @@ pub(crate) mod wfc_engine {
     #[path = "../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs"]
     pub mod weights;
 
-    pub use beam::BeamConfig;
-    pub use bitset::PatternSet;
-    pub use constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
-    pub use constraints_card::{CardinalityConstraint, Scope};
-    pub use constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
-    pub use diag::{DiagLevel, Event, EventSink, Metrics, TraceReplay};
-    pub use domain::{Domain, DomainStore, RestrictResult};
-    pub use error::{ConstraintError, ModelError, SolveError, TopologyError};
-    pub use evolve::{evolve, EvolveConfig, EvolveResult};
-    pub use extract::{extract_2d, Extract2dConfig, ExtractedModel2d, PatternDecoder2d, Sample2d};
-    pub use flow::FlowConstraint;
-    pub use grid2d::{declare_stencil_relations, declare_stencil_relations_tiled, Boundary, Grid2dTopology, Stencil2d};
-    pub use grid3d::{declare_stencil_relations_3d, declare_stencil_relations_3d_tiled, Grid3dTopology, Stencil3d};
-    pub use heuristics::ObserveHeuristic;
-    pub use ids::{ConstraintId, DecisionId, NodeId, PatternId, PortId, RegionId, RelationId, TileId};
-    pub use model::{CompiledModel, LintFinding, ModelBuilder, ModelStats, PatternInfo, RelationInfo};
-    pub use nogood::NogoodConfig;
-    pub use oracle::{check_assignment, enumerate, ArcSpec, OracleResult, Violation};
-    pub use outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
-    pub use sample::ValueSampler;
-    pub use search::{Budget, CancelToken, RestartSchedule, SearchConfig, SearchMode};
-    pub use serial::{CheckpointDoc, PairDoc, PatternDoc, RelationDoc, SourceModelDoc, CHECKPOINT_VERSION, SOURCE_MODEL_VERSION};
-    pub use soft::{best_of_n, Attempt, BestOfNKeep, ScoreFn, SoftConstraint, WeightField};
-    pub use solver_graph::{GraphSolver, GraphSolverBuilder};
-    pub use solver_grid2d::{Grid2dSolver, Grid2dSolverBuilder};
-    pub use solver_grid3d::{Grid3dSolver, Grid3dSolverBuilder};
-    pub use sparse3d::{SparseVolume, VoxelCoord};
-    pub use symmetry::{cube_rotations_24, cube_symmetries_48, SymmetryGroup2d, SymmetryGroup3d, Transform2d, Transform3d};
-    pub use tiled::TiledModelBuilder;
-    pub use topology::{from_graph_view, GraphTopology, GraphTopologyBuilder};
-    pub use trail::Checkpoint;
-    pub use weights::{WeightMode, WeightTable, ZeroWeightPolicy};
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }
 //#endregion 🧩️WfcEngine
 

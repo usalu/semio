@@ -1,0 +1,346 @@
+344 breach(es), kind=clean-mechanism/owner-mounts-children
+
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (📚️examples)
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (📚️examples)
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (📚️examples)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🧬️schema)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs" exists but does not #[path]-mount any of its 2 child dir(s) (📚️examples, 🧬️schema)
+✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🦀️component.rs" exists but does not #[path]-mount any of its 1 child dir(s) (🪆️subsets)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🦀️component.rs" exists but does not #[path]-mount any of its 5 child dir(s) (📚️examples, 🚪️io, 🧬️schema, 👁️viewer, ✏️editor)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any" has no root 🦀️component.rs yet
+✏️s/🔌️plugins/✒️writer  "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 133 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/✒️writer  "✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/📦️glue.rs" carries 16 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/➗️mathematical  "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 162 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/➗️mathematical  "✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/📦️glue.rs" carries 16 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🌀️procedural  "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 457 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🌀️procedural  "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs" carries 53 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🌊️flow  "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 154 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🌊️flow  "✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/📦️glue.rs" carries 16 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🌍️gis  "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 323 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🌍️gis  "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📦️glue.rs" carries 46 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🌿️vcs  "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 133 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🌿️vcs  "✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/📦️glue.rs" carries 16 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🎞️animate  "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 173 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🎞️animate  "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/📦️glue.rs" carries 20 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🎥️shooting  "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 292 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🎥️shooting  "✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🎪️demonstrator  "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 92 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🎬️sequence  "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 140 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🎬️sequence  "✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/📦️glue.rs" carries 11 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🏗️fem  "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 409 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🏗️fem  "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs" carries 46 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🏛️architect  "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 1183 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🏛️architect  "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/📦️glue.rs" carries 13 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🏭️process  "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 215 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🏭️process  "✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/📦️glue.rs" carries 20 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/💠️lowpoly  "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 225 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/💠️lowpoly  "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📦️glue.rs" carries 11 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/💡️reasoning  "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 158 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/💡️reasoning  "✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/📦️glue.rs" carries 20 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📋️forms  "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 143 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📋️forms  "✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📏️layout  "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 225 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📏️layout  "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/📦️glue.rs" carries 13 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📐️cad  "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 229 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📐️cad  "✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/📦️glue.rs" carries 11 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📕️norm  "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 2346 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📕️norm  "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📦️glue.rs" carries 345 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📖️playbook  "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 145 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📖️playbook  "✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📜️imperative  "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 123 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📜️imperative  "✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/📦️glue.rs" carries 11 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/📸️remodel  "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 313 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/📸️remodel  "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/📦️glue.rs" carries 11 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🔋️energy  "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 103 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🔋️energy  "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs" carries 23 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🔱️trinity  "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 344 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🔱️trinity  "✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/📦️glue.rs" carries 46 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🕸️dag  "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 174 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🕸️dag  "✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/📦️glue.rs" carries 16 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🖍️draw  "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 173 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🖍️draw  "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🖨️raster  "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 200 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🖨️raster  "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🗄️stdio  "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 4683 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🗄️stdio  "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs" carries 110 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🗒️note  "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 262 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🗒️note  "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/📦️glue.rs" carries 12 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🧩️puzzle  "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 815 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🧩️puzzle  "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs" carries 69 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🧱️block  "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 760 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🧱️block  "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/📦️glue.rs" carries 69 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🪐️space  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 183 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🪐️space  "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📦️glue.rs" carries 20 "pub use …subsets::"/"…standards::" shim re-export(s)
+✏️s/🔌️plugins/🪵️sourcing  "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📦️glue.rs" #[path]-mounts 128 item(s) beyond artifact roots/🔨️modules/🎮️commands/plugin root (still centralized)
+✏️s/🔌️plugins/🪵️sourcing  "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/📦️glue.rs" carries 20 "pub use …subsets::"/"…standards::" shim re-export(s)

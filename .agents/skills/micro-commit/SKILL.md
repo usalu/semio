@@ -7,7 +7,7 @@ description: >-
 
 # Micro Commit
 
-**Not bundle commit** — no bundle scope lines, no `🎆️YY🌙️MM☀️DD` day sections, no per-bundle or per-day `📊️uloc` on headers. One timestamp line (`🎆️…⏰️…`) plus bullets; script adds a single **`📊️uloc` footer** at the end. For squashed bundles with per-area and per-day uloc, use `.agents/skills/commit/SKILL.md`.
+**Not bundle commit** — no bundle scope lines, no `🎆️YY🌙️MM☀️DD` day sections, no per-bundle or per-day metrics on headers. One timestamp line (`🎆️…⏰️…`) plus bullets; script adds a **`📊️metric` footer** (`📃uloc` + `💾size`) at the end. For squashed bundles with per-area and per-day metrics, use `.agents/skills/commit/SKILL.md`.
 
 ## Rule (always)
 
@@ -47,7 +47,7 @@ EOF
 
 | Result           | Reply                                                                                                                                                                                                                                                    |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prepare` exit 0 | **Only** one fenced block with **stdout alone** (subject, timestamp, bullets, blank lines, **📊️uloc** block, Signed-off-by). **No** title, **no** `##` headers, **no** `[micro-commit]` lines, **no** staged path lists, **no** prose outside the fence. |
+| `prepare` exit 0 | **Only** one fenced block with **stdout alone** (subject, timestamp, bullets, blank lines, **📊️metric** block, Signed-off-by). **No** title, **no** `##` headers, **no** `[micro-commit]` lines, **no** staged path lists, **no** prose outside the fence. |
 | exit non-zero    | Re-run `prepare` **without** `2>/dev/null` if needed; reply with **only** one ` ``` ` fence around the error text. No headers or commentary.                                                                                                             |
 
 ## Message schema (script — paste verbatim)
@@ -59,7 +59,7 @@ EOF
 | **1** | **Subject** (GitKraken summary) | `{emoji}{alias}🎆️{YY}🌙️{MM}☀️{DD}🚩️{NNN}` | `🐙️ueli🎆️26🌙️06☀️04🚩️300`      |
 | **2** | **Timestamp** (wall-clock now)  | `🎆️{YY}🌙️{MM}☀️{DD}⏰️{HH}⌚️{mm}⏱️{ss}`    | `🎆️26🌙️07☀️17⏰️14⌚️20⏱️03`     |
 | 3…    | **Bullets**                     | `{emoji}{description}`                    | `🧭️Introduce semio cargo CLI…` |
-| …     | **📊️uloc** block                | script-only                               |                                |
+| …     | **📊️metric** block               | script-only                               |                                |
 | last  | **Signed-off-by**               |                                           |                                |
 
 **Line 1 rules (critical):**
@@ -69,12 +69,12 @@ EOF
 - `🚩️NNN` is a **three-digit** counter (`001`…`999`) bumped from git history. GitKraken may display only `NNN` in the panel; the prepared message still uses the **full** line 1.
 - Line 2 is always **now**; its date may differ from line 1’s epoch day.
 
-**Wrong prepare output** — re-run `prepare` (do not paste): line 1 uses **today’s** date with `🚩️001` while recent commits are already numbered (`152`…`299` or `…🚩️151`); line 1 is missing `🎆️YY🌙️MM☀️DD🚩️NNN`; or the message has no `📊️uloc` footer block. Missing uloc is a hard failure, never a valid prepare result.
+**Wrong prepare output** — re-run `prepare` (do not paste): line 1 uses **today’s** date with `🚩️001` while recent commits are already numbered (`152`…`299` or `…🚩️151`); line 1 is missing `🎆️YY🌙️MM☀️DD🚩️NNN`; or the message has no `📊️metric` footer block. Missing metrics is a hard failure, never a valid prepare result.
 
 ### Newlines (required — GitKraken / `git commit` need them)
 
 - **One stdout line = one line in the fence.** Never collapse the message into a single paragraph or one long wrapped line.
-- Paste **verbatim**: same order, same `\n`, same **blank lines** stdout prints (e.g. empty line before `📊️uloc`, empty line before `Signed-off-by:`).
+- Paste **verbatim**: same order, same `\n`, same **blank lines** stdout prints (e.g. empty line before `📊️metric`, empty line before `Signed-off-by:`).
 - **Forbidden:** joining lines with spaces; bullet lists with `-` prefixes; hard line breaks only at 80 cols; “cleaning up” spacing; omitting empty lines stdout included.
 - Opening ` ``` ` on its own line → **raw multiline body** → closing ` ``` ` on its own line.
 
@@ -84,8 +84,10 @@ Example shape (each line is its own line in the fence):
 🐙️ueli🎆️26🌙️06☀️04🚩️300
 🎆️26🌙️07☀️17⏰️14⌚️20⏱️03
 🪣️First bullet from stdout
-📊️uloc💯️803k📈️11➗️0.001➕️12✏️3➖️1🟰️16
-📊️uloc🟦️typescript💯️803k📈️11➗️0.001➕️12✏️3➖️1🟰️16
+📊️metric📃uloc💯️803k📈️11➗️0.001➕️12✏️3➖️1🟰️16
+📊️metric💾size💯️10.4GB📈️82MB➗️0.008➕️81MB🟰️81MB
+📊️metric🟦️typescript📃uloc💯️803k📈️11➗️0.001➕️12✏️3➖️1🟰️16
+📊️metric🟦️typescript💾size💯️4GB📈️5MB➗️0.001➕️5MB🟰️5MB
 
 Signed-off-by: Name <email@example.com>
 ```
@@ -108,7 +110,7 @@ Signed-off-by: Name <email@example.com>
 
 ## Script (deterministic)
 
-Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️uloc** metrics (each line is full explicit shape: `📊️uloc💯️{bloc}` total, then `📊️uloc{emoji}{slug}💯️{bloc}` per language — optional `📈️`/`📉️` net (`➕️−➖️`), `➗️` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages largest bloc first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
+Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️metric** metrics (repo totals `📊️metric📃uloc…` then `📊️metric💾size…`, then per-language pairs `📊️metric{emoji}{slug}📃uloc…` / `📊️metric{emoji}{slug}💾size…` — optional `📈️`/`📉️` net (`➕️−➖️`), `➗️` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages sorted by uloc bloc), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
 After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `bun ./📜️script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
 

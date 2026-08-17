@@ -1,0 +1,559 @@
+    Blocking waiting for file lock on build directory
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2812:9
+     |
+2794 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2812 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2813 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3822:9
+     |
+3820 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3821 |         definitions: ArtifactDefinitionRegistry,
+3822 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3823 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3824 |         inference_services: ArtifactInferenceServiceRegistry,
+3825 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3826 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 2 warnings
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 4 warnings
+warning: constant `S_RUN_SCHEMA` is never used
+  --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:28:11
+   |
+28 | pub const S_RUN_SCHEMA: &str = "os.run";
+   |           ^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `S_AUTOMATION_SCHEMA` is never used
+  --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:29:11
+   |
+29 | pub const S_AUTOMATION_SCHEMA: &str = "os.automation";
+   |           ^^^^^^^^^^^^^^^^^^^
+
+warning: struct `WorkflowParameterFieldSpec` is never constructed
+   --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:714:12
+    |
+714 | pub struct WorkflowParameterFieldSpec {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `resolve_workflow_parameter_values` is never used
+   --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:914:8
+    |
+914 | pub fn resolve_workflow_parameter_values(bindings: &[WorkflowParameterBinding], parameters: &[WorkflowParameter], node_id: &str) ->...
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunStatus` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1788:10
+     |
+1788 | pub enum RunStatus {
+     |          ^^^^^^^^^
+
+warning: function `run_status_ordinal` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1796:4
+     |
+1796 | fn run_status_ordinal(status: RunStatus) -> u32 {
+     |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `run_status_from_ordinal` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1806:4
+     |
+1806 | fn run_status_from_ordinal(ordinal: u32) -> Result<RunStatus, String> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `run_status_variants` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1817:4
+     |
+1817 | fn run_status_variants() -> Vec<(String, u32)> {
+     |    ^^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunNodeStatus` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1840:10
+     |
+1840 | pub enum RunNodeStatus {
+     |          ^^^^^^^^^^^^^
+
+warning: function `run_node_status_ordinal` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1846:4
+     |
+1846 | fn run_node_status_ordinal(status: RunNodeStatus) -> u32 {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `run_node_status_from_ordinal` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1854:4
+     |
+1854 | fn run_node_status_from_ordinal(ordinal: u32) -> Result<RunNodeStatus, String> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `run_node_status_variants` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1863:4
+     |
+1863 | fn run_node_status_variants() -> Vec<(String, u32)> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunTrigger` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1890:10
+     |
+1890 | pub enum RunTrigger {
+     |          ^^^^^^^^^^
+
+warning: function `run_trigger_spec` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1895:4
+     |
+1895 | fn run_trigger_spec() -> dsl::RecordSpec {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: function `run_trigger_to_record` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1908:4
+     |
+1908 | fn run_trigger_to_record(trigger: &RunTrigger) -> dsl::RecordValue {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `run_trigger_from_record` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1927:4
+     |
+1927 | fn run_trigger_from_record(record: &dsl::RecordValue) -> Result<RunTrigger, store::TextError> {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `RunParameterValue` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1981:12
+     |
+1981 | pub struct RunParameterValue {
+     |            ^^^^^^^^^^^^^^^^^
+
+warning: struct `PortFingerprint` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1990:12
+     |
+1990 | pub struct PortFingerprint {
+     |            ^^^^^^^^^^^^^^^
+
+warning: struct `RunOutputArtifact` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:1999:12
+     |
+1999 | pub struct RunOutputArtifact {
+     |            ^^^^^^^^^^^^^^^^^
+
+warning: struct `RunNodeRecord` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2012:12
+     |
+2012 | pub struct RunNodeRecord {
+     |            ^^^^^^^^^^^^^
+
+warning: struct `RunLogLine` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2029:12
+     |
+2029 | pub struct RunLogLine {
+     |            ^^^^^^^^^^
+
+warning: struct `RunArtifact` is never constructed
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2047:12
+     |
+2047 | pub struct RunArtifact {
+     |            ^^^^^^^^^^^
+
+warning: function `empty_run_document` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2068:8
+     |
+2068 | pub fn empty_run_document() -> RunArtifact {
+     |        ^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunMutation` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2141:10
+     |
+2141 | pub enum RunMutation {
+     |          ^^^^^^^^^^^
+
+warning: function `apply_run_operation` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2153:8
+     |
+2153 | pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> RunArtifact {
+     |        ^^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunDiff` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2188:10
+     |
+2188 | pub enum RunDiff {
+     |          ^^^^^^^
+
+warning: method `check_not_sealed` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2298:8
+     |
+2287 | impl RunMutation {
+     | ---------------- method in this implementation
+...
+2298 |     fn check_not_sealed(&self, snapshot: &RunArtifact) -> Result<(), String> {
+     |        ^^^^^^^^^^^^^^^^
+
+warning: function `apply_run_operation_checked` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2309:8
+     |
+2309 | pub fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, String> {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `RunMutationDsl` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2320:6
+     |
+2320 | enum RunMutationDsl {
+     |      ^^^^^^^^^^^^^^
+
+warning: function `run_mutation_to_dsl` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2348:4
+     |
+2348 | fn run_mutation_to_dsl(operation: &RunMutation) -> RunMutationDsl {
+     |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `run_mutation_from_dsl` is never used
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../../🔨️modules/🔁️workflow/🦀️component.rs:2366:4
+     |
+2366 | fn run_mutation_from_dsl(operation: RunMutationDsl) -> RunMutation {
+     |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os` (lib) generated 31 warnings
+warning: `testkit` is ambiguous
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:36:19
+    |
+ 36 |     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mut...
+    |                   ^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `testkit` could refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:9
+    |
+289 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `testkit` could also refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:290:9
+    |
+290 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `testkit` is ambiguous
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:49:19
+    |
+ 49 |         protocol::testkit::assert_mutation_inverse_law(&base, &change_catalog_generation(7));
+    |                   ^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `testkit` could refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:9
+    |
+289 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `testkit` could also refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:290:9
+    |
+290 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `testkit` is ambiguous
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:59:19
+    |
+ 59 |         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+    |                   ^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `testkit` could refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:9
+    |
+289 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `testkit` could also refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:290:9
+    |
+290 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: type alias `HomeEditorApp` is never used
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:289:14
+    |
+289 |     pub type HomeEditorApp = semio_framework_plugin::VcsArtifactApp<EditorApp<HomeApp>>;
+    |              ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `new_app` is never used
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:292:12
+    |
+292 |     pub fn new_app() -> HomeEditorApp {
+    |            ^^^^^^^
+
+warning: function `app` is never used
+   --> ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/././../../⚙️engine/🪐️space/🦀️component.rs:629:19
+    |
+629 |     pub(crate) fn app() -> SpaceVcsApp {
+    |                   ^^^
+
+warning: `semio-s-plugin-space` (lib test) generated 6 warnings
+    Finished `test` profile [unoptimized] target(s) in 42.02s
+    Blocking waiting for file lock on package cache
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, semio-s-plugin-space v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 25`
+     Running unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_space-99ba29df3bfde6c4)
+
+running 205 tests
+test artifacts::home::standards::v1::subsets::any::schema::component::tests::empty_snapshot_uses_home_schema ... ok
+test artifacts::home::standards::v1::subsets::any::schema::inferences::digest::component::tests::same_snapshot_yields_same_digest ... ok
+test artifacts::home::standards::v1::subsets::any::schema::inferences::digest::component::tests::changing_generation_changes_digest ... ok
+test artifacts::home::standards::v1::subsets::any::schema::inferences::component::tests::inference_determinism_law ... ok
+test artifacts::home::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law ... ok
+test artifacts::home::standards::v1::subsets::any::schema::inferences::component::tests::different_generations_yield_different_digests ... ok
+test artifacts::space::standards::v1::subsets::any::schema::component::tests::descriptor_carries_the_space_index_schema_id ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::component::tests::change_catalog_generation_diff_absorb_law ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::component::tests::change_catalog_generation_inverse_law ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::component::tests::dispatch_registers_semantic_descriptors ... ok
+test artifacts::home::standards::v1::subsets::any::schema::snapshot::text::tests::home_dsl_round_trips_bundled_default_example ... ok
+test artifacts::home::standards::v1::subsets::any::schema::snapshot::text::tests::home_dsl_round_trips_default_and_populated_documents ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::create_artifact_inverse_law ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::component::tests::home_op_text_round_trips_every_variant ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::delete_artifact_inverse_law ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::dispatch_registers_semantic_descriptors ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::home_op_text_round_trips_every_variant ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::create_artifact_diff_absorb_law ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::rename_artifact_inverse_law ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::touch_artifact_inverse_law ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::rename_artifact_same_name_is_no_op ... ok
+test artifacts::space::standards::v1::subsets::any::examples::demo::component::tests::bundled_example_parses_as_a_valid_space_index ... ok
+test artifacts::space::standards::v1::subsets::any::schema::snapshot::tests::empty_snapshot_uses_the_space_index_schema ... ok
+test artifacts::space::standards::v1::subsets::any::schema::snapshot::tests::dsl_round_trips_default_and_populated_documents ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::space::standards::v1::subsets::any::schema::snapshot::tests::mint_artifact_id_probes_past_a_collision ... ok
+test artifacts::space::standards::v1::subsets::any::schema::snapshot::tests::table_row_projects_the_seven_worker_brief_columns ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::rename_artifact_missing_target_is_error ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::touch_artifact_missing_target_is_error ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::delete_artifact_missing_target_is_error ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::rename_artifact_name_collision_is_fatal ... ok
+test artifacts::space::standards::v1::subsets::any::schema::mutations::component::tests::create_artifact_duplicate_id_is_fatal ... ok
+test editor::home::commands::create_space::tests::empty_name_opens_the_dialog_instead_of_relaying ... ok
+test editor::home::commands::create_studio::tests::home_command_op_text_round_trips_every_variant ... ok
+test editor::home::commands::fold_directory_events::tests::malformed_events_json_yields_no_mutations ... ok
+test editor::home::commands::create_space::tests::valid_name_emits_the_replay_shell_command_with_the_right_action_id_and_args ... ok
+test editor::home::commands::copy_invite_link::tests::explicit_ttl_is_respected ... ok
+test editor::home::commands::create_space::tests::blank_kind_and_visibility_default_to_atelier_and_private ... ok
+test editor::home::commands::copy_invite_link::tests::copy_invite_link_relays_share_link_with_default_ttl ... ok
+test editor::home::commands::delete_space::tests::unconfirmed_delete_emits_the_confirm_dialog_and_never_the_command ... ok
+test editor::home::commands::delete_space::tests::confirmed_delete_emits_the_replay_shell_command ... ok
+test editor::home::commands::rename_space::tests::non_empty_name_relays_the_rename ... ok
+test editor::home::commands::set_active_panel_tab::tests::set_active_panel_tab_emits_config_operation ... ok
+test editor::home::commands::set_client::tests::set_client_emits_exactly_one_config_mutation ... ok
+test editor::home::commands::navigate_virtual_file_system_node::tests::home_command_op_text_round_trips_every_variant ... ok
+test editor::home::commands::set_active_panel_tab::tests::home_command_op_text_round_trips_every_variant ... ok
+test editor::home::commands::share_space::tests::blank_role_defaults_to_spectator ... ok
+test editor::home::commands::share_space::tests::email_and_role_relay_upsert_member ... ok
+test editor::home::commands::share_space::tests::empty_email_opens_the_share_dialog ... ok
+test editor::home::commands::presence_heartbeat::tests::heartbeat_is_dispatchable_and_emits_nothing ... ok
+test editor::home::component::tests::space_document_persists_through_backbone_port ... ok
+test editor::home::commands::create_studio::tests::temporary_studio_uses_ephemeral_registry_not_catalog ... ok
+test editor::home::config::component::tests::fold_directory_event_ignores_malformed_json ... ok
+test editor::home::component::tests::home_manifest_derives_the_canonical_surface_id ... ok
+test editor::home::config::component::tests::home_config_default_directory_is_empty ... ok
+test editor::home::config::component::tests::home_config_default_locale_is_english ... ok
+test editor::home::config::component::tests::home_config_dsl_text_round_trips ... ok
+test editor::home::config::component::tests::home_config_operation_round_trips_via_apply_and_backwards ... ok
+test editor::home::config::component::tests::set_client_updates_identity_fields ... ok
+test editor::home::config::component::tests::home_config_op_text_round_trips_every_variant ... ok
+test editor::home::commands::fold_directory_events::tests::one_config_mutation_per_event ... ok
+test editor::home::component::tests::home_declares_create_space_action ... ok
+test editor::home::config::component::tests::fold_directory_event_updates_the_read_model ... ok
+test editor::home::commands::rename_space::tests::empty_name_opens_the_dialog_preseeded_with_the_current_name ... ok
+test editor::home::modes::explore::windows::main::component::tests::empty_catalog_still_renders_the_create_space_button ... ok
+test editor::home::modes::explore::windows::main::component::tests::empty_rows_render_the_empty_message_not_a_zero_row_table ... ok
+test artifacts::home::standards::v1::subsets::any::schema::mutations::binary::tests::home_document_text_round_trips_through_the_store ... ok
+test editor::home::modes::explore::windows::main::component::tests::render_wraps_the_table_with_a_real_create_space_button ... ok
+test editor::home::modes::explore::windows::main::component::tests::a_local_row_only_carries_an_open_action_button ... ok
+test editor::home::modes::explore::windows::main::component::tests::a_hub_row_renders_with_the_full_action_set ... ok
+test editor::home::modes::explore::windows::main::component::tests::a_local_row_renders_with_open_only_actions ... ok
+test editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions ... ok
+test editor::home::modes::explore::windows::main::component::tests::german_locale_labels_resolve_in_the_rendered_table ... ok
+test editor::home::component::tests::home_labels_resolve_native_german_locale ... ok
+test editor::home::component::tests::home_labels_resolve_native_english_by_default ... ok
+test editor::space_index::commands::fold_directory_events::tests::folding_events_for_a_different_space_is_a_no_op ... ok
+test editor::space_index::commands::fold_directory_events::tests::folds_visibility_and_members_for_this_space_into_config ... ok
+test editor::home::modes::explore::windows::main::component::tests::render_resolves_labels_from_config_locale ... ok
+test editor::home::modes::explore::windows::main::component::tests::seeded_local_studio_renders_a_table_row ... ok
+test editor::space_index::commands::open_artifact::tests::open_artifact_of_a_missing_row_faults ... ok
+test editor::space_index::commands::create_artifact::tests::create_artifact_rejects_an_unknown_kind ... ok
+test editor::space_index::commands::presence_heartbeat::tests::heartbeat_replaces_an_existing_artifacts_presence ... ok
+test editor::space_index::commands::presence_heartbeat::tests::heartbeat_sets_presence_for_a_new_artifact ... ok
+test editor::space_index::commands::create_artifact::tests::empty_name_and_kind_open_the_dialog_instead_of_failing ... ok
+test editor::space_index::commands::invite_member::tests::invite_member_relays_upsert_member ... ok
+test editor::space_index::commands::remove_member::tests::remove_member_relays_remove_member ... ok
+test editor::space_index::commands::copy_invite_link::tests::copy_invite_link_relays_share_link ... ok
+test editor::space_index::commands::request_delete_artifact::tests::request_delete_of_a_missing_row_faults ... ok
+test editor::space_index::commands::request_invite_member::tests::request_invite_member_opens_the_dialog ... ok
+test editor::space_index::commands::set_visibility::tests::set_visibility_relays_the_directory_command ... ok
+test editor::space_index::component::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test editor::space_index::component::tests::command_from_action_bridges_an_empty_create_artifact_click ... ok
+test editor::space_index::component::tests::command_from_action_covers_every_declared_action_and_rejects_unknown_ones ... ok
+test editor::home::commands::create_studio::tests::creates_studio_via_home_action ... ok
+test editor::space_index::commands::create_artifact::tests::create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command ... ok
+test editor::space_index::component::tests::editor_dialect_matches_the_artifact_coordinate ... ok
+test editor::space_index::component::tests::create_space_index_editor_builds_a_definition_for_this_dialect ... ok
+test editor::space_index::component::tests::known_artifact_kinds_resolve_by_id_and_reject_unknown_ids ... ok
+test editor::space_index::commands::request_delete_artifact::tests::request_delete_opens_the_confirm_dialog_without_mutating ... ok
+test editor::space_index::component::tests::the_members_panel_body_renders_through_the_editor_dispatch ... ok
+test editor::space_index::commands::open_artifact::tests::open_artifact_relays_with_document_and_space_ids ... ok
+test editor::space_index::component::tests::every_declared_mutation_action_is_registered ... ok
+test editor::space_index::config::component::tests::config_mutation_snapshot_replaces_wholesale_and_inverse_restores ... ok
+test editor::space_index::commands::delete_artifact::tests::delete_artifact_removes_the_row ... ok
+test editor::space_index::config::component::tests::default_config_is_private_with_no_members_or_presence ... ok
+test editor::space_index::config::component::tests::presence_for_splits_the_csv ... ok
+test editor::space_index::component::tests::the_three_dialogs_are_registered_with_the_right_submit_actions ... ok
+test editor::space_index::commands::open_artifact_with::tests::open_artifact_with_relays_the_explicit_choice ... ok
+test editor::space_index::commands::touch_artifact::tests::touch_artifact_stamps_the_row ... ok
+test editor::space_index::modes::edit::component::tests::the_mode_is_the_apps_default ... ok
+test editor::space_index::modes::edit::windows::main::component::tests::render_produces_a_node_for_the_default_document ... ok
+test editor::space_index::modes::edit::windows::main::component::tests::render_wraps_the_table_with_a_real_create_artifact_button ... ok
+test editor::space_index::commands::rename_artifact::tests::rename_artifact_updates_the_name ... ok
+test editor::space_index::modes::edit::windows::main::component::tests::a_row_stamps_the_artifact_row_id_and_carries_dispatchable_open_and_delete_buttons ... ok
+test editor::space_index::panels::members::component::tests::empty_config_renders_the_empty_state ... ok
+test editor::space_index::panels::members::component::tests::members_render_with_a_remove_action_each ... ok
+test editor::space_index::modes::edit::windows::main::component::tests::render_reflects_live_presence_for_a_row ... ok
+test editor::space_index::panels::members::component::tests::public_visibility_offers_make_private ... ok
+test editor::space_index::commands::create_artifact::tests::create_artifact_mints_distinct_ids_for_two_rows_created_at_the_same_instant ... ok
+test editor::space_index::config::component::tests::config_mutation_op_text_round_trips ... ok
+test editor::space_index::config::component::tests::config_dsl_round_trips ... ok
+test engine::space::commands::open_instance::tests::open_and_close_focused_instance ... ok
+test engine::space::commands::node_graph_edit::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::connect_media_ports::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::node_graph_edit::tests::node_graph_edit_set_fixture_moves_node_and_persists_camera ... ok
+test engine::space::commands::open_instance::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::export_media::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::presence_heartbeat::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::patch_parameter::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::presence_heartbeat::tests::presence_heartbeat_declares_none_ui_scope ... ok
+test engine::space::commands::connect_media_ports::tests::connect_media_ports_rejects_incompatible_types_via_notice ... ok
+test engine::space::commands::patch_parameter::tests::patch_parameter_action_updates_value ... ok
+test engine::space::commands::open_instance::tests::open_instance_emits_open_plugin_instance_effect_matching_instance ... ok
+test engine::space::commands::connect_media_ports::tests::connect_media_ports_negotiates_a_contract_for_compatible_types ... ok
+test engine::space::commands::set_active_example::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::set_active_panel_tab::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::patch_parameter::tests::unbind_parameter_field_removes_binding ... ok
+test engine::space::commands::set_active_example::tests::create_space_navigates_without_download_and_opens_empty ... ok
+test engine::space::commands::spawn_app::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::set_active_example::tests::open_studio_loads_created_empty_catalog_studio ... ok
+test engine::space::commands::spawn_app::tests::move_media_node_emits_coalesced_move_operation ... ok
+test engine::space::commands::set_active_example::tests::open_studio_unknown_id_returns_not_found ... ok
+test engine::space::commands::spawn_app::tests::patch_app_instances_updates_labels ... ok
+test engine::space::commands::workflow_engagement_submit::tests::space_command_op_text_round_trips_every_variant ... ok
+test engine::space::commands::set_active_example::tests::open_studio_loads_ephemeral_created_studio ... ok
+test engine::space::commands::spawn_app::tests::spawns_draw_app_instance ... ok
+test engine::space::commands::spawn_app::tests::spawns_draw_app_instance_at_drop_position ... ok
+test engine::space::component::tests::initial_snapshot_is_empty_not_demo ... ok
+test engine::space::commands::spawn_app::tests::spawns_puzzle5d_and_shooting_with_multi_port_registrations ... ok
+test engine::space::component::tests::demo_document_has_instances_and_edges ... ok
+test engine::space::component::tests::space_labels_resolve_native_english_by_default ... ok
+test engine::space::component::tests::space_labels_resolve_native_german_locale ... ok
+test engine::space::commands::set_active_example::tests::open_studio_demo_explicit_loads_demo_fixture ... ok
+test engine::space::component::tests::commit_checkpoint_round_trips_projection ... ok
+test engine::space::commands::spawn_app::tests::undo_redo_round_trip_on_spawn ... ok
+test engine::space::commands::delete_selection::tests::delete_selection_removes_the_live_selected_node ... ok
+test engine::space::config::component::tests::set_active_panel_tab_round_trips ... ok
+test engine::space::config::component::tests::set_camera_round_trips_and_keys_by_window_id ... ok
+test engine::space::config::component::tests::space_config_default_matches_the_expected_sticky_defaults ... ok
+test engine::space::component::tests::checkout_checkpoint_restores_projection ... ok
+test engine::space::config::component::tests::space_config_dsl_pack_equivalence ... ok
+test engine::space::config::component::tests::space_config_dsl_text_round_trips ... ok
+test engine::space::config::component::tests::space_config_op_text_round_trips_every_variant ... ok
+test engine::space::component::tests::testkit_studio_emit_smoke_test ... ok
+test engine::space::component::tests::space_declares_expected_actions_and_examples ... ok
+test engine::space::modes::main::windows::workflow::component::tests::renders_workflow_scene ... ok
+test engine::space::modes::main::windows::workflow::component::tests::workflow_scene_uses_flow_engine_with_fixture ... ok
+test engine::space::panels::catalogue::tests::catalogue_tree_nests_apps_by_canonical_document ... ok
+test engine::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone ... ok
+test examples::art_home_demo_tests::inference_default_law ... ok
+test examples::art_home_demo_tests::inference_determinism_law ... ok
+test examples::art_home_demo_tests::primary_asset_is_nonempty ... ok
+test space_shared::space_index_projection_tests::projects_every_row_into_a_root_level_collection_entry ... ok
+test space_shared::surface_tests::home_editor_and_viewer_share_dialect ... ok
+test space_shared::surface_tests::home_viewer_never_mutates ... ok
+test space_shared::surface_tests::space_index_editor_and_viewer_share_dialect ... ok
+test space_shared::surface_tests::space_index_viewer_never_mutates ... ok
+test engine::space::commands::export_media::tests::export_media_emits_download_effect_and_import_requests_file_open ... ok
+test viewer::home::component::tests::create_home_viewer_builds_a_definition_for_the_viewer_role ... ok
+test viewer::home::component::tests::editor_and_viewer_share_one_dialect ... ok
+test viewer::home::component::tests::fold_directory_events_command_never_touches_the_document_store ... ok
+test viewer::home::component::tests::viewer_dialect_matches_the_artifact_coordinate ... ok
+test viewer::home::modes::view::component::tests::the_view_layout_lists_the_main_window ... ok
+test engine::space::commands::set_active_panel_tab::tests::set_app_registrations_command_registers_app_and_surfaces_empty_document_apps_in_catalogue ... ok
+test viewer::home::modes::view::windows::main::component::tests::a_row_renders_without_the_actions_column ... ok
+test viewer::home::modes::view::windows::main::component::tests::a_row_stamps_the_space_row_id ... ok
+test viewer::home::modes::view::windows::main::component::tests::definition_declares_the_table_surface_and_body_key ... ok
+test viewer::home::modes::view::windows::main::component::tests::empty_rows_render_the_empty_message_not_a_zero_row_table ... ok
+test viewer::home::modes::view::windows::main::component::tests::german_locale_labels_resolve ... ok
+test viewer::space_index::component::tests::an_unknown_body_key_falls_back_to_a_text_node ... ok
+test viewer::space_index::component::tests::create_space_index_viewer_builds_a_definition_for_this_dialect ... ok
+test viewer::space_index::component::tests::viewer_dialect_matches_the_artifact_coordinate ... ok
+test viewer::space_index::modes::view::component::tests::the_mode_is_the_viewers_default ... ok
+test engine::space::engine::tests::compiled_dag_wire_literal_mentions_app_instances ... ok
+test viewer::space_index::modes::view::windows::main::component::tests::render_produces_a_node_for_the_default_document ... ok
+test viewer::space_index::modes::view::windows::main::component::tests::a_row_stamps_the_artifact_row_id_with_no_actions_cell ... ok
+test engine::space::engine::tests::patch_parameter_op_updates_numeric_value ... ok
+test engine::space::modes::main::windows::compiled_dag::component::tests::renders_compiled_dag_editor ... ok
+test engine::space::panels::inspection::tests::inspector_tree_exposes_label_field ... ok
+test engine::space::component::tests::space_manifest_uses_studio_app_id ... ok
+test engine::space::component::tests::space_window_kind_actions_scope_editing_to_workflow ... ok
+test viewer::home::modes::view::windows::main::component::tests::render_with_a_folded_space_renders_a_table_row ... ok
+test viewer::home::component::tests::renders_the_main_body_key_for_the_default_snapshot ... ok
+test engine::space::component::tests::space_workflow_context_menu_stays_within_budget_with_destructive_tail ... ok
+
+test result: ok. 205 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+

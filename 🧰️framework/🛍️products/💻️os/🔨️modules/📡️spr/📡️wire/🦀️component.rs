@@ -102,6 +102,12 @@ pub enum ServerFrame {
     Presence { peers: Vec<Vec<u8>> },
     CreditGrant { n: u32 },
     Error { code: String, message: String },
+    /// @emoji 🎨️ The hub's one-time session assignment for this connection: `color` is the
+    /// hub-assigned palette index (`HubState.session_colors`, §C7.3), leased per `(space, actor)` and
+    /// stamped by the client actor onto every outbound `PresencePeer` (never filled by a shell). Sent
+    /// exactly once per connection, after `Welcome` (and its follow-up bootstrap frames) and before
+    /// any `Presence` frame.
+    Session { actor: String, color: u8 },
 }
 //#endregion 🔖️ServerFrame
 
@@ -400,6 +406,11 @@ pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             crate::os_spr::write_str(&mut out, code);
             crate::os_spr::write_str(&mut out, message);
         }
+        ServerFrame::Session { actor, color } => {
+            out.push(9);
+            crate::os_spr::write_str(&mut out, actor);
+            out.push(*color);
+        }
     }
     out
 }
@@ -431,6 +442,12 @@ pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), crate::o
         6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos)? },
         7 => ServerFrame::CreditGrant { n: crate::os_spr::read_varint_u64(bytes, &mut pos)? as u32 },
         8 => ServerFrame::Error { code: crate::os_spr::read_str(bytes, &mut pos)?, message: crate::os_spr::read_str(bytes, &mut pos)? },
+        9 => {
+            let actor = crate::os_spr::read_str(bytes, &mut pos)?;
+            let color = *bytes.get(pos).ok_or_else(|| malformed("wire server-frame session color", pos as u64, "truncated"))?;
+            pos += 1;
+            ServerFrame::Session { actor, color }
+        }
         other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok((lane, frame))
@@ -589,6 +606,11 @@ mod tests {
     fn server_frame_error_round_trips() {
         assert_server_round_trips(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
     }
+
+    #[test]
+    fn server_frame_session_round_trips() {
+        assert_server_round_trips(&ServerFrame::Session { actor: "actor-1".to_string(), color: 7 }, Lane::Command);
+    }
     //#endregion 🔖️ServerFrame
 
     //#region 🔖️Codec
@@ -659,24 +681,143 @@ mod tests {
 // duplicating them here). `PresencePoint`/`PresenceViewport`/`PresencePeer` below are NOT
 // duplicates of anything in `protocol` — no equivalent exists there — so they stay, kept in their
 // own region since the `🔖️HubProtocol` name they used to share with the now-deleted frame enums no
-// longer fits.
-/// @emoji 📍️ A live cursor position in document space, broadcast as part of a peer's presence frame.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// longer fits. 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION
+// C7.1: `PresencePoint`/`PresenceViewport` and `PresencePeer.cursor`/`.viewport` are DELETED —
+// replaced by `views: Vec<PresenceWindowView>` (one entry per open window/surface, artifact-scope,
+// matched by `space`) plus `ui: Option<PresenceUi>` (app-scope `data-ui-path` hover/focus/press).
+//#region 🔖️PresenceView
+/// @emoji 🪟️ One open window/surface's live view for a document — camera/pan-zoom plus in-view
+/// pointer, broadcast so peers can render each other's viewport rectangles / camera frustums /
+/// cursor markers. `window_id` disambiguates multiple windows viewing the same space; `space` is
+/// the coordinate-space id the surface host reports (`"world"`/`"canvas"`/`"geo"`, or an app-declared
+/// finer id) — an overlay renders a peer view only in local surfaces with the same `space`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PresencePoint {
-    pub x: f64,
-    pub y: f64,
+pub struct PresenceWindowView {
+    pub window_id: String,
+    pub space: String,
+    pub kind: PresenceViewKind,
+    /// @emoji 📐️ The reporting surface's pixel size — needed to draw a peer's viewport rectangle.
+    pub size: [f64; 2],
+    /// @emoji 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
+    /// `[lng, lat, 0]` (Geo).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pointer: Option<[f64; 3]>,
 }
 
-/// @emoji 🖼️ A peer's visible canvas rectangle (pan + zoom), so remote cursors/ghosts can be rendered
-/// scaled relative to what each peer is actually looking at.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PresenceViewport {
-    pub x: f64,
-    pub y: f64,
-    pub zoom: f64,
+/// @emoji 🎥️ A peer's live camera/pan-zoom, tagged by surface family.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum PresenceViewKind {
+    Canvas { x: f64, y: f64, zoom: f64 },
+    Orbit { position: [f64; 3], target: [f64; 3], up: [f64; 3], fov: f64 },
+    Geo { lng: f64, lat: f64, zoom: f64, bearing: f64, pitch: f64 },
 }
+
+/// @emoji 🖱️ A peer's live `data-ui-path` hover/focus/press state (APP scope) — the grammar
+/// `type[idx]#id/...`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PresenceUi {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hovered_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focused_path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressed_path: Option<String>,
+}
+
+//#region 🔖️PresenceViewCodec
+fn encode_presence_view_kind(kind: &PresenceViewKind, out: &mut Vec<u8>) {
+    match kind {
+        PresenceViewKind::Canvas { x, y, zoom } => {
+            out.push(0);
+            crate::os_spr::write_f64(out, *x);
+            crate::os_spr::write_f64(out, *y);
+            crate::os_spr::write_f64(out, *zoom);
+        }
+        PresenceViewKind::Orbit { position, target, up, fov } => {
+            out.push(1);
+            for value in position.iter().chain(target.iter()).chain(up.iter()) {
+                crate::os_spr::write_f64(out, *value);
+            }
+            crate::os_spr::write_f64(out, *fov);
+        }
+        PresenceViewKind::Geo { lng, lat, zoom, bearing, pitch } => {
+            out.push(2);
+            crate::os_spr::write_f64(out, *lng);
+            crate::os_spr::write_f64(out, *lat);
+            crate::os_spr::write_f64(out, *zoom);
+            crate::os_spr::write_f64(out, *bearing);
+            crate::os_spr::write_f64(out, *pitch);
+        }
+    }
+}
+
+fn decode_presence_view_kind(bytes: &[u8], pos: &mut usize) -> Result<PresenceViewKind, crate::os_spr::ProtocolError> {
+    let tag = *bytes.get(*pos).ok_or_else(|| malformed("presence view kind tag", *pos as u64, "truncated"))?;
+    *pos += 1;
+    match tag {
+        0 => Ok(PresenceViewKind::Canvas { x: crate::os_spr::read_f64(bytes, pos)?, y: crate::os_spr::read_f64(bytes, pos)?, zoom: crate::os_spr::read_f64(bytes, pos)? }),
+        1 => {
+            let read3 = |bytes: &[u8], pos: &mut usize| -> Result<[f64; 3], crate::os_spr::ProtocolError> { Ok([crate::os_spr::read_f64(bytes, pos)?, crate::os_spr::read_f64(bytes, pos)?, crate::os_spr::read_f64(bytes, pos)?]) };
+            let position = read3(bytes, pos)?;
+            let target = read3(bytes, pos)?;
+            let up = read3(bytes, pos)?;
+            let fov = crate::os_spr::read_f64(bytes, pos)?;
+            Ok(PresenceViewKind::Orbit { position, target, up, fov })
+        }
+        2 => Ok(PresenceViewKind::Geo { lng: crate::os_spr::read_f64(bytes, pos)?, lat: crate::os_spr::read_f64(bytes, pos)?, zoom: crate::os_spr::read_f64(bytes, pos)?, bearing: crate::os_spr::read_f64(bytes, pos)?, pitch: crate::os_spr::read_f64(bytes, pos)? }),
+        other => Err(malformed("presence view kind tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+    }
+}
+
+fn encode_presence_window_view(view: &PresenceWindowView, out: &mut Vec<u8>) {
+    crate::os_spr::write_str(out, &view.window_id);
+    crate::os_spr::write_str(out, &view.space);
+    encode_presence_view_kind(&view.kind, out);
+    crate::os_spr::write_f64(out, view.size[0]);
+    crate::os_spr::write_f64(out, view.size[1]);
+    crate::os_spr::write_bool(out, view.pointer.is_some());
+    if let Some(pointer) = view.pointer {
+        for value in pointer {
+            crate::os_spr::write_f64(out, value);
+        }
+    }
+}
+
+fn decode_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<PresenceWindowView, crate::os_spr::ProtocolError> {
+    let window_id = crate::os_spr::read_str(bytes, pos)?;
+    let space = crate::os_spr::read_str(bytes, pos)?;
+    let kind = decode_presence_view_kind(bytes, pos)?;
+    let size = [crate::os_spr::read_f64(bytes, pos)?, crate::os_spr::read_f64(bytes, pos)?];
+    let pointer = if crate::os_spr::read_bool(bytes, pos)? { Some([crate::os_spr::read_f64(bytes, pos)?, crate::os_spr::read_f64(bytes, pos)?, crate::os_spr::read_f64(bytes, pos)?]) } else { None };
+    Ok(PresenceWindowView { window_id, space, kind, size, pointer })
+}
+
+fn write_vec_presence_window_view(out: &mut Vec<u8>, values: &[PresenceWindowView]) {
+    crate::os_spr::write_varint_u64(out, values.len() as u64);
+    for value in values {
+        encode_presence_window_view(value, out);
+    }
+}
+
+fn read_vec_presence_window_view(bytes: &[u8], pos: &mut usize) -> Result<Vec<PresenceWindowView>, crate::os_spr::ProtocolError> {
+    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| decode_presence_window_view(bytes, pos)).collect()
+}
+
+fn encode_presence_ui(ui: &PresenceUi, out: &mut Vec<u8>) {
+    write_opt_str(out, &ui.hovered_path);
+    write_opt_str(out, &ui.focused_path);
+    write_opt_str(out, &ui.pressed_path);
+}
+
+fn decode_presence_ui(bytes: &[u8], pos: &mut usize) -> Result<PresenceUi, crate::os_spr::ProtocolError> {
+    Ok(PresenceUi { hovered_path: read_opt_str(bytes, pos)?, focused_path: read_opt_str(bytes, pos)?, pressed_path: read_opt_str(bytes, pos)? })
+}
+//#endregion 🔖️PresenceViewCodec
+//#endregion 🔖️PresenceView
 
 //#region 🔖️PresencePackSerde
 /// 🔐️ Base64 (std) codec for `PresencePeer.presence_pack` so `presence_peers_json` emits `presencePack`
@@ -717,73 +858,87 @@ mod presence_pack_serde {
 #[serde(rename_all = "camelCase")]
 pub struct PresencePeer {
     pub actor: String,
+    pub connected_at_ms: i64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    /// @emoji 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire).
+    /// @emoji 👥️ App-typed presence encoded as `ArtifactPack` bytes (flag bit 1 on the wire, APP scope).
     #[serde(default, skip_serializing_if = "Option::is_none", with = "presence_pack_serde")]
     pub presence_pack: Option<Vec<u8>>,
-    pub connected_at_ms: i64,
-    /// @emoji 🪪️ Authenticated semio_hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    /// @emoji 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub role: Option<String>,
-    /// @emoji 🖱️ Live cursor position, when the peer's client streams pointer telemetry.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cursor: Option<PresencePoint>,
-    /// @emoji 🔭️ The peer's current pan/zoom, for scaling remote cursors/ghosts relative to their view.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub viewport: Option<PresenceViewport>,
-    /// @emoji 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app).
+    /// @emoji 👻️ Serialized preview of an in-flight drag (opaque JSON, schema owned by the dragging app, APP scope).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub drag_ghost_json: Option<String>,
-    /// @emoji 🕹️ This peer's live selection+hover roster, mirrored from local `InteractionState` —
-    /// see `assemble_presence_interaction` in `store_sync` for how it gets built (flag bit 7 on the
-    /// wire). `None` for peers on apps that declare no interaction domains.
+    /// @emoji 🕹️ This peer's live selection+hover roster (ARTIFACT scope), mirrored from local
+    /// `InteractionState` — see `assemble_presence_interaction` below. `None` for peers on apps that
+    /// declare no interaction domains.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction: Option<PresenceInteraction>,
+    /// @emoji 🎨️ Hub-assigned palette index, stamped by the client actor — never filled by a shell.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<u8>,
+    /// @emoji 🪟️ Canonical surface id, stamped by the client actor — never filled by a shell.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub surface: Option<String>,
+    /// @emoji 🪟️ Every open window/surface's live camera + in-view pointer (ARTIFACT scope), matched
+    /// by `space`. Empty when the peer has no open windows for this document.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub views: Vec<PresenceWindowView>,
+    /// @emoji 🖱️ Live `data-ui-path` hover/focus/press state (APP scope).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ui: Option<PresenceUi>,
 }
 
-/// @emoji 🎯️ Binary `PresencePeer` codec: `actor str | presence bitmask u8 | connected_at_ms
-/// varint | fields present per bitmask`. `protocol_wire::ClientFrame::Presence`/`ServerFrame::
-/// Presence` carry the resulting bytes opaquely (that crate has no dependency on this one) —
-/// this is the encode/decode pair store_sync calls on either side of the wire.
-/// `presence_pack` is length-prefixed bytes in flag bit 1 (formerly `selection_json`);
-/// `drag_ghost_json` stays opaque app-owned text (never re-parsed as JSON here,
-/// same as `ArtifactDiff.payload` staying opaque bytes). Bit 7 carries `interaction` via
-/// `encode_presence_interaction`/`decode_presence_interaction` (self-delimiting varint-counted
-/// fields — see the `🔖️PresenceInteraction` region below), the same convention every other
-/// variable-length field on this struct already follows.
+/// @emoji 🎯️ Binary `PresencePeer` codec: `actor str | flags varint_u64 | connected_at_ms varint |
+/// fields present per bitmask, strictly in bit order`. `protocol_wire::ClientFrame::Presence`/
+/// `ServerFrame::Presence` carry the resulting bytes opaquely (that crate has no dependency on this
+/// one) — this is the encode/decode pair store_sync calls on either side of the wire.
+/// `presence_pack` is length-prefixed bytes in flag bit 1; `drag_ghost_json` stays opaque app-owned
+/// text (never re-parsed as JSON here, same as `ArtifactDiff.payload` staying opaque bytes). Bit 5
+/// carries `interaction` via `encode_presence_interaction`/`decode_presence_interaction`
+/// (self-delimiting varint-counted fields — see the `🔖️PresenceInteraction` region below); bit 8
+/// (`views`) is set iff non-empty; bit 9 (`ui`) carries three `opt_str` fields unconditionally once
+/// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
+/// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range.
 pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
     crate::os_spr::write_str(&mut out, &peer.actor);
-    let mut presence = 0u8;
+    let mut flags = 0u64;
     if peer.label.is_some() {
-        presence |= 1 << 0;
+        flags |= 1 << 0;
     }
     if peer.presence_pack.is_some() {
-        presence |= 1 << 1;
+        flags |= 1 << 1;
     }
     if peer.user_id.is_some() {
-        presence |= 1 << 2;
+        flags |= 1 << 2;
     }
     if peer.role.is_some() {
-        presence |= 1 << 3;
-    }
-    if peer.cursor.is_some() {
-        presence |= 1 << 4;
-    }
-    if peer.viewport.is_some() {
-        presence |= 1 << 5;
+        flags |= 1 << 3;
     }
     if peer.drag_ghost_json.is_some() {
-        presence |= 1 << 6;
+        flags |= 1 << 4;
     }
     if peer.interaction.is_some() {
-        presence |= 1 << 7;
+        flags |= 1 << 5;
     }
-    out.push(presence);
+    if peer.color.is_some() {
+        flags |= 1 << 6;
+    }
+    if peer.surface.is_some() {
+        flags |= 1 << 7;
+    }
+    if !peer.views.is_empty() {
+        flags |= 1 << 8;
+    }
+    if peer.ui.is_some() {
+        flags |= 1 << 9;
+    }
+    crate::os_spr::write_varint_u64(&mut out, flags);
     crate::os_spr::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
         crate::os_spr::write_str(&mut out, label);
@@ -797,62 +952,63 @@ pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if let Some(role) = &peer.role {
         crate::os_spr::write_str(&mut out, role);
     }
-    if let Some(cursor) = &peer.cursor {
-        crate::os_spr::write_f64(&mut out, cursor.x);
-        crate::os_spr::write_f64(&mut out, cursor.y);
-    }
-    if let Some(viewport) = &peer.viewport {
-        crate::os_spr::write_f64(&mut out, viewport.x);
-        crate::os_spr::write_f64(&mut out, viewport.y);
-        crate::os_spr::write_f64(&mut out, viewport.zoom);
-    }
     if let Some(drag_ghost_json) = &peer.drag_ghost_json {
         crate::os_spr::write_str(&mut out, drag_ghost_json);
     }
     if let Some(interaction) = &peer.interaction {
         encode_presence_interaction(interaction, &mut out);
     }
+    if let Some(color) = peer.color {
+        out.push(color);
+    }
+    if let Some(surface) = &peer.surface {
+        crate::os_spr::write_str(&mut out, surface);
+    }
+    if !peer.views.is_empty() {
+        write_vec_presence_window_view(&mut out, &peer.views);
+    }
+    if let Some(ui) = &peer.ui {
+        encode_presence_ui(ui, &mut out);
+    }
     out
 }
 
-/// @emoji 🎯️ Inverse of [`encode_presence_peer`].
+/// @emoji 🎯️ Inverse of [`encode_presence_peer`]. Any flag bit ≥ 10 set is a drift guard failure
+/// (`ProtocolError::Malformed { what: "presence peer flags", .. }`) — no silent forward compatibility.
 pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::os_spr::ProtocolError> {
     let mut pos = 0usize;
     let actor = crate::os_spr::read_str(bytes, &mut pos)?;
-    let presence = *bytes.get(pos).ok_or(crate::os_spr::ProtocolError::Malformed { what: "presence peer", offset: pos as u64, detail: "truncated".to_string() })?;
-    pos += 1;
+    let flags = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+    if flags >> 10 != 0 {
+        return Err(crate::os_spr::ProtocolError::Malformed { what: "presence peer flags", offset: pos as u64, detail: format!("unknown flag bits set: {flags:#x}") });
+    }
     let connected_at_ms = crate::os_spr::read_varint_u64(bytes, &mut pos)? as i64;
-    let label = if presence & (1 << 0) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    let presence_pack = if presence & (1 << 1) != 0 { Some(crate::os_spr::read_bytes(bytes, &mut pos)?) } else { None };
-    let user_id = if presence & (1 << 2) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    let role = if presence & (1 << 3) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    let cursor = if presence & (1 << 4) != 0 {
-        let x = crate::os_spr::read_f64(bytes, &mut pos)?;
-        let y = crate::os_spr::read_f64(bytes, &mut pos)?;
-        Some(PresencePoint { x, y })
+    let label = if flags & (1 << 0) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let presence_pack = if flags & (1 << 1) != 0 { Some(crate::os_spr::read_bytes(bytes, &mut pos)?) } else { None };
+    let user_id = if flags & (1 << 2) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let role = if flags & (1 << 3) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let drag_ghost_json = if flags & (1 << 4) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let interaction = if flags & (1 << 5) != 0 { Some(decode_presence_interaction(bytes, &mut pos)?) } else { None };
+    let color = if flags & (1 << 6) != 0 {
+        let byte = *bytes.get(pos).ok_or(crate::os_spr::ProtocolError::Malformed { what: "presence peer color", offset: pos as u64, detail: "truncated".to_string() })?;
+        pos += 1;
+        Some(byte)
     } else {
         None
     };
-    let viewport = if presence & (1 << 5) != 0 {
-        let x = crate::os_spr::read_f64(bytes, &mut pos)?;
-        let y = crate::os_spr::read_f64(bytes, &mut pos)?;
-        let zoom = crate::os_spr::read_f64(bytes, &mut pos)?;
-        Some(PresenceViewport { x, y, zoom })
-    } else {
-        None
-    };
-    let drag_ghost_json = if presence & (1 << 6) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
-    let interaction = if presence & (1 << 7) != 0 { Some(decode_presence_interaction(bytes, &mut pos)?) } else { None };
-    Ok(PresencePeer { actor, label, presence_pack, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json, interaction })
+    let surface = if flags & (1 << 7) != 0 { Some(crate::os_spr::read_str(bytes, &mut pos)?) } else { None };
+    let views = if flags & (1 << 8) != 0 { read_vec_presence_window_view(bytes, &mut pos)? } else { Vec::new() };
+    let ui = if flags & (1 << 9) != 0 { Some(decode_presence_ui(bytes, &mut pos)?) } else { None };
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui })
 }
 
 #[cfg(test)]
 mod presence_codec_tests {
-    use super::{decode_presence_peer, encode_presence_peer, PresenceDomain, PresenceInteraction, PresencePeer, PresencePoint, PresenceViewport};
+    use super::{decode_presence_peer, encode_presence_peer, PresenceDomain, PresenceInteraction, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView};
 
     #[test]
     fn presence_peer_binary_round_trips_with_every_field_absent() {
-        let peer = PresencePeer { actor: "peer-1".into(), label: None, presence_pack: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None, interaction: None };
+        let peer = PresencePeer { actor: "peer-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None };
         let bytes = encode_presence_peer(&peer);
         assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
@@ -861,26 +1017,68 @@ mod presence_codec_tests {
     fn presence_peer_binary_round_trips_with_every_field_present() {
         let peer = PresencePeer {
             actor: "peer-2".into(),
+            connected_at_ms: 1_700_000_000_000,
             label: Some("Ada".into()),
             presence_pack: Some(b"{\"ids\":[1,2]}".to_vec()),
-            connected_at_ms: 1_700_000_000_000,
             user_id: Some("user-9".into()),
             role: Some("owner".into()),
-            cursor: Some(PresencePoint { x: 1.5, y: -2.25 }),
-            viewport: Some(PresenceViewport { x: 0.0, y: 10.0, zoom: 1.75 }),
             drag_ghost_json: Some("{\"kind\":\"move\"}".into()),
             interaction: Some(PresenceInteraction {
                 app_id: "draw".into(),
                 domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into()], hovered: vec!["n2".into()] }],
             }),
+            color: Some(3),
+            surface: Some("s.space.home@1/*#editor".into()),
+            views: vec![
+                PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.5 }, size: [800.0, 600.0], pointer: Some([10.0, 20.0, 0.0]) },
+                PresenceWindowView { window_id: "w2".into(), space: "world".into(), kind: PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 }, size: [1024.0, 768.0], pointer: None },
+            ],
+            ui: Some(PresenceUi { hovered_path: Some("row[0]#a".into()), focused_path: None, pressed_path: Some("btn[1]#save".into()) }),
         };
         let bytes = encode_presence_peer(&peer);
         assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
 
+    #[test]
+    fn presence_peer_round_trips_views_ui_color_surface() {
+        let peer = PresencePeer {
+            actor: "peer-4".into(),
+            connected_at_ms: 5000,
+            label: None,
+            presence_pack: None,
+            user_id: None,
+            role: None,
+            drag_ghost_json: None,
+            interaction: None,
+            color: Some(11),
+            surface: Some("s.space.home@1/*#viewer".into()),
+            views: vec![PresenceWindowView { window_id: "w1".into(), space: "geo".into(), kind: PresenceViewKind::Geo { lng: 8.5, lat: 47.4, zoom: 12.0, bearing: 0.0, pitch: 0.0 }, size: [500.0, 400.0], pointer: Some([8.5, 47.4, 0.0]) }],
+            ui: Some(PresenceUi { hovered_path: None, focused_path: Some("panel[0]#tools".into()), pressed_path: None }),
+        };
+        let bytes = encode_presence_peer(&peer);
+        let decoded = decode_presence_peer(&bytes).unwrap();
+        assert_eq!(decoded, peer);
+        assert_eq!(decoded.color, Some(11));
+        assert_eq!(decoded.views.len(), 1);
+        assert!(decoded.ui.is_some());
+    }
+
+    #[test]
+    fn presence_peer_rejects_unknown_flag_bits() {
+        // 🔎️ Hand-built rather than mutating an `encode_presence_peer` output: flags is a
+        // varint_u64, so flipping a bit in the encoded byte stream doesn't map 1:1 onto a logical
+        // flag bit. Bit 10 is one past the frozen 0..=9 range — no field on this struct sets it.
+        let mut bytes = Vec::new();
+        crate::os_spr::write_str(&mut bytes, "peer-5");
+        crate::os_spr::write_varint_u64(&mut bytes, 1 << 10);
+        crate::os_spr::write_varint_u64(&mut bytes, 1000);
+        let err = decode_presence_peer(&bytes).unwrap_err();
+        assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "presence peer flags", .. }));
+    }
+
     //#region 🔖️InteractionBit
     fn peer_with_interaction(interaction: Option<PresenceInteraction>) -> PresencePeer {
-        PresencePeer { actor: "peer-3".into(), label: None, presence_pack: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None, interaction }
+        PresencePeer { actor: "peer-3".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction, color: None, surface: None, views: Vec::new(), ui: None }
     }
 
     /// 🔎️ Presence byte index: `actor str`'s own varint-length prefix (1 byte for `peer_with_interaction`'s
@@ -890,18 +1088,18 @@ mod presence_codec_tests {
     }
 
     #[test]
-    fn presence_peer_bit_7_round_trips_with_interaction_present() {
+    fn presence_peer_bit_5_round_trips_with_interaction_present() {
         let peer = peer_with_interaction(Some(PresenceInteraction { app_id: "draw".into(), domains: vec![PresenceDomain { domain: "graph".into(), granularity: "node".into(), selected: vec!["n1".into(), "n2".into()], hovered: vec![] }] }));
         let bytes = encode_presence_peer(&peer);
-        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 7), 1 << 7, "bit 7 set when interaction present");
+        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 5), 1 << 5, "bit 5 set when interaction present");
         assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
 
     #[test]
-    fn presence_peer_bit_7_round_trips_with_interaction_absent() {
+    fn presence_peer_bit_5_round_trips_with_interaction_absent() {
         let peer = peer_with_interaction(None);
         let bytes = encode_presence_peer(&peer);
-        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 7), 0, "bit 7 clear when interaction absent");
+        assert_eq!(presence_flag_byte(&peer, &bytes) & (1 << 5), 0, "bit 5 clear when interaction absent");
         assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
 
@@ -1370,7 +1568,7 @@ pub fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopology, s
 
 //#region 🔖️PresenceInteraction
 /// 📡️ One peer's interaction roster for one app instance, mirrored onto `PresencePeer.interaction`
-/// (bit 7) on the heartbeat — typed (not app-opaque `presence_pack`) so the Shell renders every peer's
+/// (bit 5) on the heartbeat — typed (not app-opaque `presence_pack`) so the Shell renders every peer's
 /// selection/hover generically. Only explicit ids broadcast; receivers expand transitive closures via
 /// their own topology.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1395,7 +1593,7 @@ pub struct PresenceDomain {
 
 //#region 🔖️PresenceInteractionCodec
 // 🎯️ Binary codec for the two structs above — what `encode_presence_peer`/`decode_presence_peer`
-// (in the `🔖️Presence` region) call for bit 7. Self-delimiting throughout (varint counts, exactly
+// (in the `🔖️Presence` region) call for bit 5. Self-delimiting throughout (varint counts, exactly
 // `write_vec_bytes`/`write_vec_envelope`'s own convention in `🔖️Combinators` up top), so no outer
 // length prefix is needed around the whole payload.
 fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
@@ -1421,7 +1619,10 @@ fn decode_presence_domain(bytes: &[u8], pos: &mut usize) -> Result<PresenceDomai
     Ok(PresenceDomain { domain: crate::os_spr::read_str(bytes, pos)?, granularity: crate::os_spr::read_str(bytes, pos)?, selected: read_vec_str(bytes, pos)?, hovered: read_vec_str(bytes, pos)? })
 }
 
-fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
+/// @emoji 🎯️ Encodes one `PresenceInteraction` — `pub` (ticket 26/08/17/SHARED-PRESENCE-SESSION-
+/// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4): guests never enable the kernel's `sync` feature, and
+/// `VcsArtifactApp` (the plugin ABI's presence adoption path) must be able to call this directly.
+pub fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<u8>) {
     crate::os_spr::write_str(out, &interaction.app_id);
     crate::os_spr::write_varint_u64(out, interaction.domains.len() as u64);
     for domain in &interaction.domains {
@@ -1429,13 +1630,136 @@ fn encode_presence_interaction(interaction: &PresenceInteraction, out: &mut Vec<
     }
 }
 
-fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::os_spr::ProtocolError> {
+/// @emoji 🎯️ Inverse of [`encode_presence_interaction`] — see its doc for why this is `pub`.
+pub fn decode_presence_interaction(bytes: &[u8], pos: &mut usize) -> Result<PresenceInteraction, crate::os_spr::ProtocolError> {
     let app_id = crate::os_spr::read_str(bytes, pos)?;
     let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let domains = (0..count).map(|_| decode_presence_domain(bytes, pos)).collect::<Result<Vec<_>, _>>()?;
     Ok(PresenceInteraction { app_id, domains })
 }
 //#endregion 🔖️PresenceInteractionCodec
+
+//#region 🔖️Assemble
+/// @emoji 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
+/// declared hover/selection behavior — the ONE place this logic lives, so every app broadcasts
+/// selection+hover with ZERO app-side code (call this wherever a `PresenceHeartbeat`'s `peer` is
+/// built, right before `presence_to_bytes`/`encode_presence_peer`, at the same cadence cursor updates
+/// already get throttled at — this fn is pure/stateless, so it invents no throttle of its own).
+/// Forwards each domain's already-computed `ids` verbatim (never re-derives a closure itself) —
+/// EXPLICIT ids only cross the wire; a receiver re-expands any transitive closure via its own
+/// `DomainTopology`. Only the `"pointer"` hover channel ever broadcasts (any other channel, e.g. a
+/// drag-only one, stays local); a domain whose `HoverSpec::broadcast`/`SelectionSpec::broadcast` is
+/// `false` contributes nothing for that half. A domain that ends up with both halves empty is omitted
+/// from `domains` entirely.
+///
+/// 🎯️ Moved here (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION
+/// C7.4) from `store_sync` — guests never enable the kernel's `sync` feature, and `VcsArtifactApp`
+/// (the plugin ABI's presence-adoption path, §C7.6) must be able to call this pure fn without pulling
+/// in the whole actor layer.
+pub fn assemble_presence_interaction(app_id: &str, state: &InteractionState, hover_specs: &BTreeMap<String, HoverSpec>, selection_specs: &BTreeMap<String, SelectionSpec>) -> PresenceInteraction {
+    let mut domain_ids: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();
+    domain_ids.extend(state.selection.keys());
+    domain_ids.extend(state.hover.keys());
+
+    let mut domains = Vec::new();
+    for domain_id in domain_ids {
+        let selected = if selection_specs.get(domain_id).is_some_and(|spec| spec.broadcast) { state.selection.get(domain_id).map(|selection| selection.ids.clone()).unwrap_or_default() } else { Vec::new() };
+        let hovered = if hover_specs.get(domain_id).is_some_and(|spec| spec.broadcast) {
+            state.hover.get(domain_id).filter(|hover| hover.channel == "pointer").map(|hover| hover.ids.clone()).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        if selected.is_empty() && hovered.is_empty() {
+            continue;
+        }
+        let granularity = state.active_granularity.get(domain_id).cloned().unwrap_or_default();
+        domains.push(PresenceDomain { domain: domain_id.clone(), granularity, selected, hovered });
+    }
+
+    PresenceInteraction { app_id: app_id.to_string(), domains }
+}
+
+#[cfg(test)]
+mod assemble_presence_interaction_tests {
+    use super::*;
+
+    fn selection(ids: &[&str]) -> DomainSelection {
+        DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: None }
+    }
+
+    fn hover(channel: &str, ids: &[&str]) -> DomainHover {
+        DomainHover { channel: channel.into(), ids: ids.iter().map(|id| id.to_string()).collect() }
+    }
+
+    fn broadcasting_hover_spec() -> HoverSpec {
+        HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true }
+    }
+
+    fn broadcasting_selection_spec() -> SelectionSpec {
+        SelectionSpec { modes: vec![SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true }
+    }
+
+    #[test]
+    fn assemble_presence_interaction_includes_broadcasting_domains() {
+        let mut state = InteractionState::default();
+        state.selection.insert("graph".into(), selection(&["n1", "n2"]));
+        state.hover.insert("graph".into(), hover("pointer", &["n3"]));
+        state.active_granularity.insert("graph".into(), "node".into());
+
+        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
+        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert_eq!(interaction.app_id, "draw");
+        assert_eq!(interaction.domains.len(), 1);
+        let domain = &interaction.domains[0];
+        assert_eq!(domain.domain, "graph");
+        assert_eq!(domain.granularity, "node");
+        assert_eq!(domain.selected, vec!["n1".to_string(), "n2".to_string()]);
+        assert_eq!(domain.hovered, vec!["n3".to_string()]);
+    }
+
+    #[test]
+    fn assemble_presence_interaction_omits_domains_with_broadcast_disabled() {
+        let mut state = InteractionState::default();
+        state.selection.insert("private".into(), selection(&["secret"]));
+        state.hover.insert("private".into(), hover("pointer", &["secret"]));
+
+        let hover_specs = BTreeMap::from([("private".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
+        let selection_specs = BTreeMap::from([("private".to_string(), SelectionSpec { broadcast: false, ..broadcasting_selection_spec() })]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert!(interaction.domains.is_empty(), "broadcast:false on both halves drops the domain entirely");
+    }
+
+    #[test]
+    fn assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel() {
+        let mut state = InteractionState::default();
+        state.hover.insert("graph".into(), hover("drag-preview", &["n1"]));
+
+        let hover_specs = BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
+        let selection_specs = BTreeMap::new();
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert!(interaction.domains.is_empty(), "a non-pointer hover channel never broadcasts");
+    }
+
+    #[test]
+    fn assemble_presence_interaction_respects_each_half_independently() {
+        let mut state = InteractionState::default();
+        state.selection.insert("graph".into(), selection(&["n1"]));
+        state.hover.insert("graph".into(), hover("pointer", &["n2"]));
+
+        let hover_specs = BTreeMap::from([("graph".to_string(), HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
+        let selection_specs = BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
+
+        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
+        assert_eq!(interaction.domains.len(), 1);
+        assert_eq!(interaction.domains[0].selected, vec!["n1".to_string()], "selection still broadcasts");
+        assert!(interaction.domains[0].hovered.is_empty(), "hover suppressed by its own broadcast:false");
+    }
+}
+//#endregion 🔖️Assemble
 //#endregion 🔖️PresenceInteraction
 
 //#region 🔖️InteractionStorePack

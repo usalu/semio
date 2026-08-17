@@ -23,6 +23,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SSpaceMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::touch_artifact;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {

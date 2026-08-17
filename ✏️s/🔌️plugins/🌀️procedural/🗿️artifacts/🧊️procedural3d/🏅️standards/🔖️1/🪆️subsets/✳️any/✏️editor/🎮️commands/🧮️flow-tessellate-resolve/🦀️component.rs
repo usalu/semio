@@ -3,8 +3,8 @@
 use crate::editor::procedural3d::config::{Procedural3dConfig, Procedural3dConfigMutation};
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
-use flow::{flow_host_with_session, FlowEvalSession};
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use flow::FlowEvalSession;
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

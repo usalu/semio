@@ -17,7 +17,6 @@
 //! (`semio_framework_2d::{...}`) — genuinely generic geometry-kernel primitives also used by the
 //! framework's own `booleans`/`trace` pure-function kernels and by the unrelated `🖍️draw` plugin.
 
-use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
 use std::collections::HashSet;

@@ -1,0 +1,7 @@
+{
+  "title": "Generalize Commit Metrics",
+  "emoji": "📊️",
+  "status": "closed",
+  "goal": "AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY",
+  "description": "Replace 📊️uloc commit footers with extensible 📊️metric envelope supporting 📃uloc and 💾size, language-first per-language rows."
+}

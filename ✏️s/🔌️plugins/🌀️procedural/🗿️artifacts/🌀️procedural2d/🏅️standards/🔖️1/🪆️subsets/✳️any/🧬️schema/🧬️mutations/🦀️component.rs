@@ -18,9 +18,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use flow::{FlowFixture, Widget};
-use flow::playbook::{FormGeneration, GenerationMutation};
-use protocol::{Mutation, MutationKind, SemanticDescriptor};
+use flow::FlowFixture;
+use flow::playbook::GenerationMutation;
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 /// 🧵 Sibling triad-leaf modules wired by `📦️glue.rs` under eight pre-existing (pre-semantic)

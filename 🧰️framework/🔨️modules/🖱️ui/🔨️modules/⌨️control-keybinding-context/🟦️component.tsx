@@ -76,6 +76,9 @@ export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
   "ui.shell.panelAnchor.bottomMiddle": "ctrl+alt+m,meta+alt+m",
   "ui.shell.panelAnchor.bottomLeft": "ctrl+alt+b,meta+alt+b",
   "ui.shell.panelAnchor.leftMiddle": "ctrl+alt+shift+m,meta+alt+shift+m",
+  "ui.window.close": "mod+shift+w",
+  "ui.window.focus": "mod+shift+enter",
+  "ui.window.newWindow": "mod+shift+n",
 };
 
 /** @emoji ⌨️ Merges shell defaults, app action bindings, and user overrides. */
@@ -118,14 +121,16 @@ export function resolveControlKeybindingRaw(id: string | undefined, bindings: Re
 /** @emoji ⌨️ Resolves a platform-formatted shortcut label for a control id. */
 export function useControlHotkey(id: string | undefined): string | undefined {
   const bindings = useUiKeybindingsByControlId();
-  const raw = id ? resolveControlKeybindingRaw(id, bindings) ?? SHELL_KEYBINDINGS[id] : undefined;
+  const raw = id
+    ? resolveControlKeybindingRaw(id, bindings) ?? SHELL_KEYBINDINGS[id] ?? SHELL_KEYBINDINGS[resolveControlLabelId(id)]
+    : undefined;
   return raw ? formatKeybindingShortcut(raw) : undefined;
 }
 
 /** @emoji ⌨️ Binds the active chord for a control id. */
 export function useControlKeybinding(controlId: string, callback: ControlKeybindingCallback, options?: ControlKeybindingOptions, dependencies?: ControlKeybindingDependencies): void {
   const bindings = useUiKeybindingsByControlId();
-  const keys = reactHostPort.useMemo(() => resolveControlKeybindingRaw(controlId, bindings) ?? SHELL_KEYBINDINGS[controlId], [bindings, controlId]);
+  const keys = reactHostPort.useMemo(() => resolveControlKeybindingRaw(controlId, bindings) ?? SHELL_KEYBINDINGS[controlId] ?? SHELL_KEYBINDINGS[resolveControlLabelId(controlId)], [bindings, controlId]);
   const resolvedOptions = options ?? {};
   useHotkeys(keys ?? "", callback, { ...resolvedOptions, enabled: Boolean(keys) && (resolvedOptions.enabled ?? true) }, dependencies ?? []);
 }

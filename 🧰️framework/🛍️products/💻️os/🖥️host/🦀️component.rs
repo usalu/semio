@@ -828,9 +828,12 @@ pub mod host {
     // 🫀️ Presence used to be a `presence:` backbone-URI polling hack (`OS_PRESENCE_URI_PREFIX` /
     // `write_os_presence` / `read_os_presence_peers`) — deleted. Presence now flows through the semio_hub's
     // duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖️HubProtocol
-    // region) via `framework/sync`'s `ArtifactHost::subscribe` yielding `ArtifactEvent::Presence`; the
-    // `host_runtime` module below is where a native host translates that event into
-    // `ViewModel.presence_peers_json` — the plugin read-side contract is unchanged.
+    // region) via `framework/sync`'s `ArtifactHost::subscribe` yielding `ArtifactEvent::Presence`. 🎯️
+    // ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C8.4: the old
+    // `presence_peers_json`/`ViewModel.presence_peers_json` JSON-array bridge is DELETED — plugins
+    // now receive the roster through the object-safe app trait's `adopt_presence` (§C7.6, the ONLY
+    // plugin ingress for peers) via `AppCommand::Presence`, not a `ViewModel` field a native host
+    // pre-translates.
 
     //#region 🔖️SpaceCatalog
     pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
@@ -2021,9 +2024,9 @@ pub mod host_runtime {
     //! 4. `ArtifactHost::subscribe(&document_id)` → `broadcast::Receiver<ArtifactEvent>`; on each event:
     //!    - `RemoteMutations`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
     //!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
-    //!    - `Presence{peers}` translates into `ViewModel.presence_peers_json` via
-    //!      {@link presence_peers_json} — the ONLY place presence now flows through; the old `presence:`
-    //!      backbone-URI hack is gone entirely.
+    //!    - `Presence{peers}` is pushed to the plugin instance as `AppCommand::Presence` (contract-
+    //!      freeze §C7.6) — the ONLY plugin ingress for peers; the old `presence:` backbone-URI hack
+    //!      and the later `ViewModel.presence_peers_json` JSON-array bridge are both gone entirely.
     //!    - `Status`/`Conflict` surface on the shell's sync-status badge / conflict card.
     //! 5. Every tick/frame: `store.tick()` drains the attached backbone's inbound queue into the store.
     //! 6. On `HostEffect::SpawnPluginInstance`/`OpenPluginInstance` from an action result: mint (if
@@ -2075,19 +2078,6 @@ pub mod host_runtime {
         host.close(document_id);
     }
 
-    /// @emoji 👥️ Translates a `ArtifactEvent::Presence` into the `ViewModel.presence_peers_json` contract
-    /// plugins already read (`semio_framework::PresencePeer` → JSON array) — the new (only) source
-    /// of presence data; the deleted `presence:` backbone hack used to be it.
-    ///
-    /// Each peer's typed app presence is carried as `presencePack` (base64 of `ArtifactPack` bytes),
-    /// replacing the former untyped `selectionJson` string.
-    pub fn presence_peers_json(event: &ArtifactEvent) -> Option<String> {
-        match event {
-            ArtifactEvent::Presence { peers } => serde_json::to_string(peers).ok(),
-            _ => None,
-        }
-    }
-
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -2108,14 +2098,6 @@ pub mod host_runtime {
             assert_eq!(config.schema, "draw.document");
         }
 
-        #[test]
-        fn presence_peers_json_only_matches_presence_events() {
-            use semio_framework::PresencePeer;
-            let peers = vec![PresencePeer { actor: "a".into(), label: Some("Ada".into()), presence_pack: None, connected_at_ms: 0, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None, interaction: None }];
-            let json = presence_peers_json(&ArtifactEvent::Presence { peers: peers.clone() }).expect("json");
-            assert!(json.contains("\"actor\":\"a\""));
-            assert!(presence_peers_json(&ArtifactEvent::Status(Default::default())).is_none());
-        }
     }
     // #endregion host_runtime
 }

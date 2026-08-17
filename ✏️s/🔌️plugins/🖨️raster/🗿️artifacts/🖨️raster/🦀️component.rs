@@ -229,21 +229,21 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Ras
     mint_asset_child_handle(asset_id, hasher.finish())
 }
 
-/// 🩹️ Ephemeral working-scene cache (`EngineRep` contract): no `LinkResolver`/child-dispatch seam
-/// exists in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
-/// read-only), so the app layer cannot resolve a `RasterAssetChild` handle back to its real decoded
-/// `SemioImageSnapshot` content through the framework. This `thread_local!` bridges that gap — matches
-/// `➗️mathematical`'s `MATH_SCRATCH`/`🌊️flow`'s `FLOW_SCRATCH` pattern exactly: keyed by `child_id`
-/// (content-addressed, so identical bytes always land in the identical slot), populated at
-/// mutation-diff-build time (`mint_and_stash_asset`, called from every `assets` diff-apply site) and at
-/// fixture-construction time (`semio_fixture_snapshot`/`empty_raster_document`), read through the ONE
-/// `raster_asset` accessor every render/export/inference call site funnels through. **Staleness gap,
-/// documented honestly**: store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live
-/// session's cache can go stale relative to a snapshot's `assets` handles across an undo/redo spanning a
-/// process boundary; every read fails soft (`None`) on a cache miss, never panics — the same gap every
-/// prior exemplar in this ticket (lowpoly/cad/writer/mathematical) documents rather than silently papers
-/// over. Never a durable struct field, never derived incrementally from itself, droppable at any instant.
 thread_local! {
+    /// 🩹️ Ephemeral working-scene cache (`EngineRep` contract): no `LinkResolver`/child-dispatch seam
+    /// exists in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+    /// read-only), so the app layer cannot resolve a `RasterAssetChild` handle back to its real decoded
+    /// `SemioImageSnapshot` content through the framework. This `thread_local!` bridges that gap — matches
+    /// `➗️mathematical`'s `MATH_SCRATCH`/`🌊️flow`'s `FLOW_SCRATCH` pattern exactly: keyed by `child_id`
+    /// (content-addressed, so identical bytes always land in the identical slot), populated at
+    /// mutation-diff-build time (`mint_and_stash_asset`, called from every `assets` diff-apply site) and at
+    /// fixture-construction time (`semio_fixture_snapshot`/`empty_raster_document`), read through the ONE
+    /// `raster_asset` accessor every render/export/inference call site funnels through. **Staleness gap,
+    /// documented honestly**: store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a live
+    /// session's cache can go stale relative to a snapshot's `assets` handles across an undo/redo spanning a
+    /// process boundary; every read fails soft (`None`) on a cache miss, never panics — the same gap every
+    /// prior exemplar in this ticket (lowpoly/cad/writer/mathematical) documents rather than silently papers
+    /// over. Never a durable struct field, never derived incrementally from itself, droppable at any instant.
     static RASTER_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

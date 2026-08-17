@@ -26,7 +26,7 @@ pub fn run(root: &Path, parsed: &ParsedArgs) -> i32 {
             print!("{}", crate::daemon::status(&root));
             0
         }
-        "attach" => crate::tui_dashboard::run(&root),
+        "attach" => crate::terminal_dashboard::run(&root),
         _ => {
             eprintln!("usage: semio daemon start|stop|status|attach|serve");
             1

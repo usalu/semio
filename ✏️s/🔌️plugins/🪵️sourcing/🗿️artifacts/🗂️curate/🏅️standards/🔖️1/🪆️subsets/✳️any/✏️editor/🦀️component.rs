@@ -14,7 +14,7 @@ use crate::editor::sourcing::terminology::sourcing_curate_labels;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::{CurateSnapshot, SOURCING_CURATE_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppDefinition, ArtifactEditor, ArtifactKindSpec, CommandDefinition, ConfigView, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactKindSpec, CommandDefinition, ConfigView, ArtifactView, Dialect, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
     MergeMode, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
 };
 use semio_framework_plugin::app::InteractionView;
@@ -414,7 +414,7 @@ pub fn create_sourcing_curate_app() -> AppDefinition {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app as new_app_impl, new_app_with_registry as new_app_with_registry_impl};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurateApp>>;
 

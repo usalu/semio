@@ -15,7 +15,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ One column of the split layout: a stack holding a single window kind.
 fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutChild {
-    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(0.5), active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }] })
+    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(0.5), active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }] })
 }
 
 /// 🪟️ Structure tree left, zone table right — the artifact's two composed children rendered side by

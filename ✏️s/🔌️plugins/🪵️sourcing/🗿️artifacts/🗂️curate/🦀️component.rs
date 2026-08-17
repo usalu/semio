@@ -196,21 +196,21 @@ pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioK
 }
 
 //#region 🔖️CatalogScratch
-/// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
-/// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
-/// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
-/// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
-/// child's content back through — every render/export/inference call site funnels through `stock_of`
-/// below instead, which reads this cache. Populated wherever a `CurateSnapshot` with real stock
-/// content is built (`curate_snapshot_from_stock`, `default_document`, `empty_document`) — NEVER
-/// persisted, NEVER a snapshot field, droppable at any instant (matches the repo-wide `EngineRep`
-/// contract). Staleness gap, documented rather than fail-closed (this is a read-only catalogue display
-/// path, not a destructive edit path — `catalog` is never incrementally mutated in-history, only
-/// whole-document-replaced, same category as `stock`'s pre-migration bulk-population rule): store-
-/// level undo/redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale
-/// relative to `catalog`'s handle across an undo/redo that changes which stock was loaded; a miss
-/// falls back to an empty catalog rather than panicking.
 thread_local! {
+    /// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
+    /// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
+    /// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
+    /// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
+    /// child's content back through — every render/export/inference call site funnels through `stock_of`
+    /// below instead, which reads this cache. Populated wherever a `CurateSnapshot` with real stock
+    /// content is built (`curate_snapshot_from_stock`, `default_document`, `empty_document`) — NEVER
+    /// persisted, NEVER a snapshot field, droppable at any instant (matches the repo-wide `EngineRep`
+    /// contract). Staleness gap, documented rather than fail-closed (this is a read-only catalogue display
+    /// path, not a destructive edit path — `catalog` is never incrementally mutated in-history, only
+    /// whole-document-replaced, same category as `stock`'s pre-migration bulk-population rule): store-
+    /// level undo/redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale
+    /// relative to `catalog`'s handle across an undo/redo that changes which stock was loaded; a miss
+    /// falls back to an empty catalog rather than panicking.
     static SOURCING_CATALOG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

@@ -1,0 +1,13 @@
+[ok] resolved route identical regardless of registration order
+[ok] winning route is the 2-hop path, not the 1-hop lossy shortcut
+[ok] route fidelity is Canonical (min of Exact,Canonical)
+[ok] first hop starts at the binary carrier
+[ok] last hop ends at gif89a
+[ok] bounded to 1 hop picks the direct lossy shortcut
+[ok] a calling plugin owning neither hop runs both hops in order
+[ok] ioRun returns the final hop's payload
+[ok] ioRun refuses the WHOLE route when the caller owns the first hop (stdio)
+[ok] no hop ran before the refusal (no partial execution)
+[ok] ioRun refuses the WHOLE route when the caller owns the second hop (gif)
+
+All checks passed

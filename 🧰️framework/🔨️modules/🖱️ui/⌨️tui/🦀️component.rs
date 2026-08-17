@@ -1,22 +1,22 @@
-//! 🖥️ Handcrafted retained-mode terminal UI: semio-styled scene, cell renderer, and ANSI backend.
+//! ??? Handcrafted retained-mode terminal UI: semio-styled scene, cell renderer, and ANSI backend.
 
-// #region 🔖️Geometry
+// #region ???Geometry
 pub mod geometry {
-    /// 📍️ A cell coordinate on the terminal grid.
+    /// ??? A cell coordinate on the terminal grid.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
     pub struct Pos {
         pub x: u16,
         pub y: u16,
     }
 
-    /// 📏️ A cell-grid size.
+    /// ??? A cell-grid size.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
     pub struct Size {
         pub width: u16,
         pub height: u16,
     }
 
-    /// 🔲️ An axis-aligned cell-grid rectangle.
+    /// ??? An axis-aligned cell-grid rectangle.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
     pub struct Rect {
         pub x: u16,
@@ -30,12 +30,12 @@ pub mod geometry {
             Self { x, y, width, height }
         }
 
-        /// 🧭️ Whether `pos` lies within this rect.
+        /// ??? Whether `pos` lies within this rect.
         pub fn contains(&self, pos: Pos) -> bool {
             pos.x >= self.x && pos.x < self.x + self.width && pos.y >= self.y && pos.y < self.y + self.height
         }
 
-        /// ✂️ The overlap between two rects (an empty rect on miss).
+        /// ?? The overlap between two rects (an empty rect on miss).
         pub fn intersect(&self, other: Rect) -> Rect {
             let x0 = self.x.max(other.x);
             let y0 = self.y.max(other.y);
@@ -48,19 +48,19 @@ pub mod geometry {
             }
         }
 
-        /// 🧊️ Shrinks the rect by `margin` cells on every side.
+        /// ??? Shrinks the rect by `margin` cells on every side.
         pub fn inset(&self, margin: u16) -> Rect {
             self.inset_sides(margin, margin, margin, margin)
         }
 
-        /// 🧊️ Shrinks the rect by `top`/`right`/`bottom`/`left` cells.
+        /// ??? Shrinks the rect by `top`/`right`/`bottom`/`left` cells.
         pub fn inset_sides(&self, top: u16, right: u16, bottom: u16, left: u16) -> Rect {
             let width = self.width.saturating_sub(left + right);
             let height = self.height.saturating_sub(top + bottom);
             Rect::new(self.x + left.min(self.width), self.y + top.min(self.height), width, height)
         }
 
-        /// ✂️ Splits off `rows` rows from the top, returning `(top, rest)`.
+        /// ?? Splits off `rows` rows from the top, returning `(top, rest)`.
         pub fn split_top(&self, rows: u16) -> (Rect, Rect) {
             let rows = rows.min(self.height);
             let top = Rect::new(self.x, self.y, self.width, rows);
@@ -68,7 +68,7 @@ pub mod geometry {
             (top, rest)
         }
 
-        /// ✂️ Splits off `rows` rows from the bottom, returning `(rest, bottom)`.
+        /// ?? Splits off `rows` rows from the bottom, returning `(rest, bottom)`.
         pub fn split_bottom(&self, rows: u16) -> (Rect, Rect) {
             let rows = rows.min(self.height);
             let bottom = Rect::new(self.x, self.y + self.height - rows, self.width, rows);
@@ -77,18 +77,18 @@ pub mod geometry {
         }
     }
 }
-// #endregion 🔖️Geometry
+// #endregion ???Geometry
 
-// #region 🔖️Theme
+// #region ???Theme
 pub mod theme {
     use ui_styling::appearance::AppearanceName;
     use ui_styling::color::linear_to_rgba8;
     use ui_styling::ChromePalette;
 
-    /// 🎨️ An 8-bit truecolor triple.
+    /// ??? An 8-bit truecolor triple.
     pub type Rgb = [u8; 3];
 
-    /// 🪟️ The six nested semio chrome surfaces (base → window → pane → panel → dialog → menu).
+    /// ??? The six nested semio chrome surfaces (base ? window ? pane ? panel ? dialog ? menu).
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Surface {
         Base,
@@ -99,7 +99,7 @@ pub mod theme {
         Menu,
     }
 
-    /// 🏷️ A semantic foreground/border/state role, resolved against the active palette.
+    /// ??? A semantic foreground/border/state role, resolved against the active palette.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Role {
         Foreground,
@@ -119,7 +119,7 @@ pub mod theme {
         [r, g, b]
     }
 
-    /// 🖌️ A resolved semio theme: every chrome color precomputed once as 8-bit truecolor.
+    /// ??? A resolved semio theme: every chrome color precomputed once as 8-bit truecolor.
     pub struct Theme {
         pub appearance: AppearanceName,
         level_base: Rgb,
@@ -195,11 +195,11 @@ pub mod theme {
         }
     }
 }
-// #endregion 🔖️Theme
+// #endregion ???Theme
 
-// #region 🔖️Text
+// #region ???Text
 pub mod text {
-    /// 📐️ Terminal cell width of one `char` (0 for zero-width, 1 normal, 2 wide).
+    /// ??? Terminal cell width of one `char` (0 for zero-width, 1 normal, 2 wide).
     pub(crate) fn char_cells(c: char) -> u8 {
         match unicode_width::UnicodeWidthChar::width(c) {
             Some(w) => w.min(2) as u8,
@@ -207,12 +207,12 @@ pub mod text {
         }
     }
 
-    /// 📏️ Total display width in cells of a string.
+    /// ??? Total display width in cells of a string.
     pub fn display_width(s: &str) -> u16 {
         s.chars().map(|c| u16::from(char_cells(c))).sum()
     }
 
-    /// ✂️ Truncates `s` to at most `max_cells` display cells, returning the slice and its width.
+    /// ?? Truncates `s` to at most `max_cells` display cells, returning the slice and its width.
     pub fn truncate_to(s: &str, max_cells: u16) -> (&str, u16) {
         let mut used = 0u16;
         let mut end = 0usize;
@@ -227,15 +227,15 @@ pub mod text {
         (&s[..end], used)
     }
 }
-// #endregion 🔖️Text
+// #endregion ???Text
 
-// #region 🔖️Cell
+// #region ???Cell
 pub mod cell {
     use crate::tui::geometry::{Pos, Rect, Size};
     use crate::tui::text::char_cells;
     use crate::tui::theme::Rgb;
 
-    /// 🎛️ Bitflags for cell text attributes.
+    /// ??? Bitflags for cell text attributes.
     pub mod attr {
         pub const BOLD: u8 = 1;
         pub const DIM: u8 = 2;
@@ -244,7 +244,7 @@ pub mod cell {
         pub const REVERSE: u8 = 16;
     }
 
-    /// 🧱️ One terminal cell: a glyph, its colors, attributes, and cell width (0 = wide-char continuation).
+    /// ??? One terminal cell: a glyph, its colors, attributes, and cell width (0 = wide-char continuation).
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct Cell {
         pub ch: char,
@@ -260,7 +260,7 @@ pub mod cell {
         }
     }
 
-    /// 🗺️ A retained grid of `Cell`s.
+    /// ??? A retained grid of `Cell`s.
     #[derive(Clone)]
     pub struct CellBuffer {
         pub size: Size,
@@ -289,7 +289,7 @@ pub mod cell {
             self.index(x, y).map(|i| &self.cells[i])
         }
 
-        /// ✍️ Writes one cell, blanking an orphaned wide-char continuation on either side.
+        /// ?? Writes one cell, blanking an orphaned wide-char continuation on either side.
         pub fn put(&mut self, x: u16, y: u16, mut cell: Cell) {
             let Some(i) = self.index(x, y) else { return };
             if cell.width == 0 && x > 0 {
@@ -312,7 +312,7 @@ pub mod cell {
             }
         }
 
-        /// ✍️ Writes a string starting at `pos`, clipped to `clip`; returns cells consumed.
+        /// ?? Writes a string starting at `pos`, clipped to `clip`; returns cells consumed.
         pub fn put_str(&mut self, pos: Pos, s: &str, fg: Rgb, bg: Rgb, attrs: u8, clip: Rect) -> u16 {
             let mut x = pos.x;
             let mut written = 0u16;
@@ -358,7 +358,7 @@ pub mod cell {
         }
     }
 
-    /// 🩹️ A contiguous run of changed cells on one row.
+    /// ??? A contiguous run of changed cells on one row.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct DiffRun {
         pub y: u16,
@@ -366,7 +366,7 @@ pub mod cell {
         pub len: u16,
     }
 
-    /// 🔍️ Computes the minimal set of changed-cell runs between two same-sized buffers.
+    /// ??? Computes the minimal set of changed-cell runs between two same-sized buffers.
     pub fn diff(prev: &CellBuffer, next: &CellBuffer) -> Vec<DiffRun> {
         const MERGE_GAP: u16 = 4;
         let mut runs = Vec::new();
@@ -397,15 +397,15 @@ pub mod cell {
         runs
     }
 }
-// #endregion 🔖️Cell
+// #endregion ???Cell
 
-// #region 🔖️Ansi
+// #region ???Ansi
 pub mod ansi {
     use crate::tui::cell::{Cell, CellBuffer, DiffRun};
     use crate::tui::theme::Rgb;
 
-    //#region 🔖️Emit
-    /// 📦️ A batch of raw ANSI bytes ready to write to a terminal (or feed to xterm.js).
+    //#region ???Emit
+    /// ??? A batch of raw ANSI bytes ready to write to a terminal (or feed to xterm.js).
     #[derive(Default, Clone)]
     pub struct AnsiPatch(pub String);
 
@@ -442,7 +442,7 @@ pub mod ansi {
         *state = SgrState { fg: Some(cell.fg), bg: Some(cell.bg), attrs: cell.attrs };
     }
 
-    /// 🖨️ Emits the minimal ANSI needed to repaint `runs` of `next` onto a terminal.
+    /// ??? Emits the minimal ANSI needed to repaint `runs` of `next` onto a terminal.
     pub fn emit_runs(next: &CellBuffer, runs: &[DiffRun], out: &mut AnsiPatch) {
         let mut state = SgrState { fg: None, bg: None, attrs: u8::MAX };
         for run in runs {
@@ -461,18 +461,18 @@ pub mod ansi {
         }
     }
 
-    /// 🚪️ Enters the alternate screen, hides the cursor, and enables mouse/paste reporting.
+    /// ??? Enters the alternate screen, hides the cursor, and enables mouse/paste reporting.
     pub fn setup_sequence() -> &'static str {
         "\x1b[?1049h\x1b[?25l\x1b[?1002h\x1b[?1006h\x1b[?2004h\x1b[2J"
     }
 
-    /// 🚪️ Restores the primary screen and default modes.
+    /// ??? Restores the primary screen and default modes.
     pub fn teardown_sequence() -> &'static str {
         "\x1b[?2004l\x1b[?1006l\x1b[?1002l\x1b[?25h\x1b[?1049l\x1b[0m"
     }
-    //#endregion 🔖️Emit
+    //#endregion ???Emit
 
-    //#region 🔖️Parse
+    //#region ???Parse
     use crate::tui::event::{mods, Event, Key, KeyEvent, MouseEvent, MouseKind};
     use crate::tui::geometry::Pos;
 
@@ -486,7 +486,7 @@ pub mod ansi {
         Paste,
     }
 
-    /// ⌨️ Handcrafted incremental ANSI input decoder (keys, mouse, paste, focus, UTF-8).
+    /// ?? Handcrafted incremental ANSI input decoder (keys, mouse, paste, focus, UTF-8).
     pub struct AnsiParser {
         state: ParserState,
         params: Vec<u16>,
@@ -547,14 +547,14 @@ pub mod ansi {
             self.params.get(i).copied().unwrap_or(default)
         }
 
-        /// 📥️ Feeds raw input bytes, appending any decoded events to `out`.
+        /// ??? Feeds raw input bytes, appending any decoded events to `out`.
         pub fn feed(&mut self, bytes: &[u8], out: &mut Vec<Event>) {
             for &b in bytes {
                 self.feed_byte(b, out);
             }
         }
 
-        /// ⏱️ Resolves a lone pending ESC (no follow-up byte arrived before a poll timeout).
+        /// ?? Resolves a lone pending ESC (no follow-up byte arrived before a poll timeout).
         pub fn flush_escape(&mut self, out: &mut Vec<Event>) {
             if self.pending_esc && self.state == ParserState::Escape {
                 out.push(Event::Key(KeyEvent { key: Key::Esc, mods: 0 }));
@@ -766,11 +766,11 @@ pub mod ansi {
             }
         }
     }
-    //#endregion 🔖️Parse
+    //#endregion ???Parse
 }
-// #endregion 🔖️Ansi
+// #endregion ???Ansi
 
-// #region 🔖️Vt
+// #region ???Vt
 pub mod vt {
     use crate::tui::cell::{attr, Cell, CellBuffer};
     use crate::tui::geometry::{Pos, Rect, Size};
@@ -782,7 +782,7 @@ pub mod vt {
     const DEFAULT_BG: Rgb = [0, 0, 0];
     const DEFAULT_SCROLLBACK: usize = 10_000;
 
-    //#region 🔖️Palette
+    //#region ???Palette
     fn ansi_16(n: u8) -> Rgb {
         match n {
             0 => [0, 0, 0],
@@ -804,7 +804,7 @@ pub mod vt {
         }
     }
 
-    /// 🎨️ Maps a 256-color index onto an approximate truecolor RGB.
+    /// ??? Maps a 256-color index onto an approximate truecolor RGB.
     pub fn color_256(n: u8) -> Rgb {
         if n < 16 {
             return ansi_16(n);
@@ -821,9 +821,9 @@ pub mod vt {
             [v, v, v]
         }
     }
-    //#endregion 🔖️Palette
+    //#endregion ???Palette
 
-    //#region 🔖️Parser
+    //#region ???Parser
     #[derive(Clone, Copy, PartialEq, Eq)]
     enum ParserState {
         Ground,
@@ -834,7 +834,7 @@ pub mod vt {
         SosPmApc,
     }
 
-    /// 📟 Incremental VT output decoder (CSI/SGR/OSC/DCS) driving a `VtScreen`.
+    /// ?? Incremental VT output decoder (CSI/SGR/OSC/DCS) driving a `VtScreen`.
     #[derive(Clone)]
     pub struct VtParser {
         state: ParserState,
@@ -894,7 +894,7 @@ pub mod vt {
             }
         }
 
-        /// 📥️ Feeds raw PTY bytes into `screen`.
+        /// ??? Feeds raw PTY bytes into `screen`.
         pub fn feed(&mut self, bytes: &[u8], screen: &mut VtScreen) {
             for &b in bytes {
                 self.feed_byte(b, screen);
@@ -1095,9 +1095,9 @@ pub mod vt {
             self.osc.clear();
         }
     }
-    //#endregion 🔖️Parser
+    //#endregion ???Parser
 
-    //#region 🔖️Screen
+    //#region ???Screen
     #[derive(Clone, Copy)]
     struct SavedCursor {
         pos: Pos,
@@ -1107,7 +1107,7 @@ pub mod vt {
         origin: bool,
     }
 
-    /// 🖥️ VT screen: primary/alt buffers, scrollback, cursor, SGR, scroll region, modes.
+    /// ??? VT screen: primary/alt buffers, scrollback, cursor, SGR, scroll region, modes.
     pub struct VtScreen {
         pub size: Size,
         primary: CellBuffer,
@@ -1135,7 +1135,7 @@ pub mod vt {
     }
 
     impl VtScreen {
-        /// 🆕 Creates a blank VT screen of `size` with `scrollback_cap` (0 → default 10000).
+        /// ?? Creates a blank VT screen of `size` with `scrollback_cap` (0 ? default 10000).
         pub fn new(size: Size, scrollback_cap: usize) -> Self {
             let blank = Cell::blank(DEFAULT_FG, DEFAULT_BG);
             let height = size.height.max(1);
@@ -1196,7 +1196,7 @@ pub mod vt {
             self.wrap_pending = false;
         }
 
-        /// ↔️ Resizes both buffers; clamps cursor into the new grid.
+        /// ?? Resizes both buffers; clamps cursor into the new grid.
         pub fn resize(&mut self, size: Size) {
             let width = size.width.max(1);
             let height = size.height.max(1);
@@ -1228,29 +1228,29 @@ pub mod vt {
             self.clamp_cursor();
         }
 
-        /// 📥️ Feeds raw bytes through the owned incremental parser.
+        /// ??? Feeds raw bytes through the owned incremental parser.
         pub fn feed(&mut self, bytes: &[u8]) {
             let mut parser = std::mem::replace(&mut self.parser, VtParser::new());
             parser.feed(bytes, self);
             self.parser = parser;
         }
 
-        /// 👁 Visible viewport row count.
+        /// ?? Visible viewport row count.
         pub fn visible_line_count(&self) -> u16 {
             self.size.height
         }
 
-        /// 📜 Lines currently held in scrollback.
+        /// ?? Lines currently held in scrollback.
         pub fn scrollback_len(&self) -> usize {
             self.scrollback.len()
         }
 
-        /// 🔎 Reads one cell from the active buffer.
+        /// ?? Reads one cell from the active buffer.
         pub fn cell_at(&self, x: u16, y: u16) -> Option<&Cell> {
             self.active_buf().get(x, y)
         }
 
-        /// 🖼️ Composites the visible viewport (optionally offset into scrollback) into `dest`.
+        /// ??? Composites the visible viewport (optionally offset into scrollback) into `dest`.
         pub fn blit_to(&self, dest: &mut CellBuffer, dest_rect: Rect, scrollback_offset: usize) {
             let clip = Rect::new(0, 0, dest.size.width, dest.size.height).intersect(dest_rect);
             if clip.width == 0 || clip.height == 0 {
@@ -1688,15 +1688,15 @@ pub mod vt {
             }
         }
     }
-    //#endregion 🔖️Screen
+    //#endregion ???Screen
 }
-// #endregion 🔖️Vt
+// #endregion ???Vt
 
-// #region 🔖️Event
+// #region ???Event
 pub mod event {
     use crate::tui::geometry::{Pos, Size};
 
-    /// ⌨️ A decoded terminal key.
+    /// ?? A decoded terminal key.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Key {
         Char(char),
@@ -1718,7 +1718,7 @@ pub mod event {
         F(u8),
     }
 
-    /// 🎛️ Modifier bitflags.
+    /// ??? Modifier bitflags.
     pub mod mods {
         pub const SHIFT: u8 = 1;
         pub const ALT: u8 = 2;
@@ -1748,7 +1748,7 @@ pub mod event {
         pub mods: u8,
     }
 
-    /// 📡️ Any input the terminal can report to the retained-mode engine.
+    /// ??? Any input the terminal can report to the retained-mode engine.
     #[derive(Clone, Debug, PartialEq)]
     pub enum Event {
         Key(KeyEvent),
@@ -1759,9 +1759,9 @@ pub mod event {
         FocusLost,
     }
 }
-// #endregion 🔖️Event
+// #endregion ???Event
 
-// #region 🔖️Scene
+// #region ???Scene
 pub mod scene {
     use crate::tui::chrome::ChromeState;
     use crate::tui::geometry::{Pos, Rect};
@@ -1772,14 +1772,14 @@ pub mod scene {
     const LAYOUT_DIRTY: u8 = 1;
     const PAINT_DIRTY: u8 = 2;
 
-    /// 🪪️ A stable, generation-checked handle to a scene node.
+    /// ??? A stable, generation-checked handle to a scene node.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct NodeId {
         index: u32,
         generation: u32,
     }
 
-    /// 🧱️ The payload a node carries.
+    /// ??? The payload a node carries.
     pub enum NodeContent {
         Box,
         Text(String),
@@ -1787,7 +1787,7 @@ pub mod scene {
         Chrome(ChromeState),
     }
 
-    /// 🎨️ A node's visual role (independent of its content).
+    /// ??? A node's visual role (independent of its content).
     #[derive(Default, Clone, Copy)]
     pub struct Style {
         pub surface: Option<Surface>,
@@ -1795,7 +1795,7 @@ pub mod scene {
         pub attrs: u8,
     }
 
-    /// 🌳️ One retained scene node.
+    /// ??? One retained scene node.
     pub struct Node {
         pub content: NodeContent,
         pub style: Style,
@@ -1822,7 +1822,7 @@ pub mod scene {
         generation: u32,
     }
 
-    /// 🗂️ A generational-arena retained scene tree, renderer-agnostic.
+    /// ??? A generational-arena retained scene tree, renderer-agnostic.
     pub struct Scene {
         slots: Vec<Slot>,
         free: Vec<u32>,
@@ -1875,6 +1875,27 @@ pub mod scene {
             self.free.push(id.index);
         }
 
+        /// ?? Moves `id` under `new_parent`, preserving subtree state for layout remounts.
+        pub fn reparent(&mut self, id: NodeId, new_parent: NodeId) {
+            if !self.valid(id) || !self.valid(new_parent) || id == new_parent {
+                return;
+            }
+            if let Some(old_parent) = self.node(id).parent {
+                if let Some(p) = self.slots[old_parent.index as usize].node.as_mut() {
+                    p.children.retain(|c| *c != id);
+                }
+                self.mark_dirty(old_parent, LAYOUT_DIRTY | PAINT_DIRTY);
+            }
+            if let Some(p) = self.slots[new_parent.index as usize].node.as_mut() {
+                if !p.children.contains(&id) {
+                    p.children.push(id);
+                }
+            }
+            self.node_raw_mut(id).parent = Some(new_parent);
+            self.mark_dirty(new_parent, LAYOUT_DIRTY | PAINT_DIRTY);
+            self.mark_dirty(id, LAYOUT_DIRTY | PAINT_DIRTY);
+        }
+
         fn valid(&self, id: NodeId) -> bool {
             self.slots.get(id.index as usize).is_some_and(|s| s.generation == id.generation && s.node.is_some())
         }
@@ -1916,7 +1937,7 @@ pub mod scene {
             NodeMut { scene: self, id }
         }
 
-        /// 🎯️ The deepest visible node whose rect contains `pos`.
+        /// ??? The deepest visible node whose rect contains `pos`.
         pub fn hit(&self, pos: Pos) -> Option<NodeId> {
             fn walk(scene: &Scene, id: NodeId, pos: Pos) -> Option<NodeId> {
                 let node = scene.node(id);
@@ -1940,7 +1961,7 @@ pub mod scene {
         }
     }
 
-    /// ✍️ A scoped mutation handle: every setter marks layout/paint dirty up the parent chain.
+    /// ?? A scoped mutation handle: every setter marks layout/paint dirty up the parent chain.
     pub struct NodeMut<'a> {
         scene: &'a mut Scene,
         id: NodeId,
@@ -1988,14 +2009,14 @@ pub mod scene {
         }
     }
 }
-// #endregion 🔖️Scene
+// #endregion ???Scene
 
-// #region 🔖️Layout
+// #region ???Layout
 pub mod layout {
     use crate::tui::geometry::Rect;
     use crate::tui::scene::{NodeContent, NodeId, Scene};
 
-    /// 📐️ How one axis of a node's size is determined.
+    /// ??? How one axis of a node's size is determined.
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub enum Dimension {
         Auto,
@@ -2009,7 +2030,7 @@ pub mod layout {
         }
     }
 
-    /// ↔ How a node arranges its children.
+    /// ? How a node arranges its children.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
     pub enum Direction {
         #[default]
@@ -2018,7 +2039,7 @@ pub mod layout {
         Stack,
     }
 
-    /// 📦️ A node's layout intent.
+    /// ??? A node's layout intent.
     #[derive(Clone, Copy, Debug, Default)]
     pub struct Constraint {
         pub direction: Direction,
@@ -2086,7 +2107,7 @@ pub mod layout {
         sizes
     }
 
-    /// 🧮️ Recomputes rects for the whole tree from `viewport` down (no-operation-safe to call every frame).
+    /// ??? Recomputes rects for the whole tree from `viewport` down (no-operation-safe to call every frame).
     pub fn solve(scene: &mut Scene, viewport: Rect) {
         layout_node(scene, scene.root(), viewport);
     }
@@ -2131,15 +2152,36 @@ pub mod layout {
         }
     }
 
-    //#region 🔖️WindowLayout
-    /// 🪟️ One tiled window leaf: which content it hosts and its display title.
+    //#region ???WindowLayout
+    /// 🧭️ Corner of a window stack where a tab chip docks.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub enum WindowStackCorner {
+        #[default]
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight,
+    }
+
+    impl WindowStackCorner {
+        pub fn is_top(self) -> bool {
+            matches!(self, Self::TopLeft | Self::TopRight)
+        }
+
+        pub fn is_left(self) -> bool {
+            matches!(self, Self::TopLeft | Self::BottomLeft)
+        }
+    }
+
+    /// 🪟 One tiled window leaf: which content it hosts and its display title.
     #[derive(Clone, Debug, PartialEq)]
     pub struct WindowLayoutWindowNode {
         pub window_kind_id: String,
         pub title: Option<String>,
+        pub corner: Option<WindowStackCorner>,
     }
 
-    /// 🗂️ A stack of windows sharing one area; only `active_window_kind_id` is visible.
+    /// ??? A stack of windows sharing one area; only `active_window_kind_id` is visible.
     #[derive(Clone, Debug, PartialEq, Default)]
     pub struct WindowLayoutStackNode {
         pub size: Option<f64>,
@@ -2147,7 +2189,7 @@ pub mod layout {
         pub children: Vec<WindowLayoutWindowNode>,
     }
 
-    /// ↔ A row or column of tiled children.
+    /// ? A row or column of tiled children.
     #[derive(Clone, Debug, PartialEq)]
     pub struct WindowLayoutAxisNode {
         pub kind: String,
@@ -2167,7 +2209,7 @@ pub mod layout {
         Stack(WindowLayoutStackNode),
     }
 
-    /// 🌳️ A full tiling window arrangement (rows/columns/stacks with weights).
+    /// ??? A full tiling window arrangement (rows/columns/stacks with weights).
     #[derive(Clone, Debug, PartialEq)]
     pub struct WindowLayout {
         pub root: WindowLayoutRoot,
@@ -2175,7 +2217,7 @@ pub mod layout {
         pub zoomed: Option<String>,
     }
 
-    /// 📐️ The resolved on-screen placement of one visible window.
+    /// ??? The resolved on-screen placement of one visible window.
     #[derive(Clone, Debug, PartialEq)]
     pub struct WindowMeasure {
         pub window_kind_id: String,
@@ -2241,7 +2283,7 @@ pub mod layout {
         }
     }
 
-    /// 🧮️ Resolves a `WindowLayout` into concrete on-screen `WindowMeasure`s.
+    /// ??? Resolves a `WindowLayout` into concrete on-screen `WindowMeasure`s.
     pub fn solve_window_layout(layout: &WindowLayout, area: Rect) -> Vec<WindowMeasure> {
         if let Some(zid) = layout.zoomed.as_deref() {
             if let Some(m) = find_stack_measure_root(&layout.root, zid, area) {
@@ -2256,7 +2298,7 @@ pub mod layout {
         out
     }
 
-    /// 🏗️ Builds a row/column layout of individually-sized windows.
+    /// ??? Builds a row/column layout of individually-sized windows.
     pub fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
         let children = window_ids
             .iter()
@@ -2265,19 +2307,19 @@ pub mod layout {
                 WindowLayoutChild::Stack(WindowLayoutStackNode {
                     size: sizes.and_then(|s| s.get(i)).copied(),
                     active_window_kind_id: Some(id.clone()),
-                    children: vec![WindowLayoutWindowNode { window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned() }],
+                    children: vec![WindowLayoutWindowNode {  window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned(), corner: None }],
                 })
             })
             .collect();
         WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children }), zoomed: None }
     }
 
-    /// 🏗️ Builds an evenly-weighted row layout.
+    /// ??? Builds an evenly-weighted row layout.
     pub fn even_window_layout(window_ids: &[String]) -> WindowLayout {
         create_default_layout(window_ids, "row", None, None)
     }
 
-    //#region 🔖️WindowLayoutMutations
+    //#region ???WindowLayoutMutations
     fn stack_contains(stack: &WindowLayoutStackNode, id: &str) -> bool {
         stack.children.iter().any(|c| c.window_kind_id == id)
     }
@@ -2334,12 +2376,12 @@ pub mod layout {
         }
     }
 
-    /// 🔍 Zooms `window_kind_id` to fill the canvas; `None` restores the tiling.
+    /// ?? Zooms `window_kind_id` to fill the canvas; `None` restores the tiling.
     pub fn zoom_window(layout: &mut WindowLayout, window_kind_id: Option<&str>) {
         layout.zoomed = window_kind_id.map(str::to_string);
     }
 
-    /// 🗂️ Activates `tab_id` inside its stack.
+    /// ??? Activates `tab_id` inside its stack.
     pub fn activate_stack_tab(layout: &mut WindowLayout, tab_id: &str) -> bool {
         with_stack_mut(&mut layout.root, tab_id, &mut |s| {
             if stack_contains(s, tab_id) {
@@ -2351,7 +2393,7 @@ pub mod layout {
         })
     }
 
-    /// 🔁 Cycles the active tab in the stack containing `window_kind_id` by `delta`.
+    /// ?? Cycles the active tab in the stack containing `window_kind_id` by `delta`.
     pub fn cycle_stack_tab(layout: &mut WindowLayout, window_kind_id: &str, delta: i32) -> bool {
         with_stack_mut(&mut layout.root, window_kind_id, &mut |s| {
             if s.children.is_empty() {
@@ -2369,13 +2411,13 @@ pub mod layout {
         })
     }
 
-    /// ✂️ Splits the stack containing `window_kind_id` into an axis of two equal stacks.
+    /// ?? Splits the stack containing `window_kind_id` into an axis of two equal stacks.
     pub fn split_window(layout: &mut WindowLayout, window_kind_id: &str, direction: &str, new_id: &str, new_title: Option<String>) -> bool {
         let direction = if direction == "column" { "column" } else { "row" };
         let new_stack = WindowLayoutChild::Stack(WindowLayoutStackNode {
             size: Some(1.0),
             active_window_kind_id: Some(new_id.to_string()),
-            children: vec![WindowLayoutWindowNode { window_kind_id: new_id.to_string(), title: new_title }],
+            children: vec![WindowLayoutWindowNode {  window_kind_id: new_id.to_string(), title: new_title, corner: None }],
         });
         fn split_in_axis(axis: &mut WindowLayoutAxisNode, window_kind_id: &str, direction: &str, new_stack: &WindowLayoutChild) -> bool {
             for i in 0..axis.children.len() {
@@ -2425,7 +2467,7 @@ pub mod layout {
         }
     }
 
-    /// ↔️ Nudges the weight of the stack containing `window_kind_id` by `delta`; a sibling absorbs `-delta`.
+    /// ?? Nudges the weight of the stack containing `window_kind_id` by `delta`; a sibling absorbs `-delta`.
     pub fn resize_window(layout: &mut WindowLayout, window_kind_id: &str, delta: f64) -> bool {
         fn child_has(id: &str, child: &WindowLayoutChild) -> bool {
             match child {
@@ -2465,7 +2507,7 @@ pub mod layout {
         }
     }
 
-    /// 🚚 Moves `window_kind_id` into the stack that hosts `target_window_kind_id` as a new tab.
+    /// ?? Moves `window_kind_id` into the stack that hosts `target_window_kind_id` as a new tab.
     pub fn move_window_to_stack(layout: &mut WindowLayout, window_kind_id: &str, target_window_kind_id: &str) -> bool {
         if window_kind_id == target_window_kind_id {
             return false;
@@ -2497,13 +2539,28 @@ pub mod layout {
             }
         }
     }
-    //#endregion 🔖️WindowLayoutMutations
 
-    //#endregion 🔖️WindowLayout
+    /// ??? Removes `window_kind_id` from the layout tree.
+    pub fn remove_window(layout: &mut WindowLayout, window_kind_id: &str) -> bool {
+        take_window_node(&mut layout.root, window_kind_id).is_some()
+    }
+
+    /// ? Appends a window tab to the stack containing `host_window_kind_id`.
+    pub fn push_window_to_stack(layout: &mut WindowLayout, host_window_kind_id: &str, node: WindowLayoutWindowNode) -> bool {
+        let id = node.window_kind_id.clone();
+        with_stack_mut(&mut layout.root, host_window_kind_id, &mut |s| {
+            s.children.push(node.clone());
+            s.active_window_kind_id = Some(id.clone());
+            true
+        })
+    }
+    //#endregion ???WindowLayoutMutations
+
+    //#endregion ???WindowLayout
 }
-// #endregion 🔖️Layout
+// #endregion ???Layout
 
-// #region 🔖️Widget
+// #region ???Widget
 
 pub mod widget {
     use crate::tui::cell::CellBuffer;
@@ -2520,9 +2577,10 @@ pub mod widget {
     use crate::tui::tabs::{paint_tabs, tabs_on_key};
     use crate::tui::text::display_width;
     use crate::tui::theme::{Role, Theme};
+    use crate::tui::wizard::{paint_wizard, wizard_on_key};
     use std::collections::VecDeque;
 
-    /// 📣️ A widget- or window-chrome-level result of handling input, surfaced to the app.
+    /// ??? A widget- or window-chrome-level result of handling input, surfaced to the app.
     #[derive(Clone, Debug, PartialEq)]
     pub enum WidgetSignal {
         Activated(usize),
@@ -2532,6 +2590,9 @@ pub mod widget {
         TabChanged(usize),
         WindowClose,
         WindowMaximize,
+        WindowNewTab,
+        WindowTabActivated(usize),
+        NavigateBack,
         /// Key should be forwarded to the attached PTY / session.
         TerminalPassthrough,
     }
@@ -2543,14 +2604,14 @@ pub mod widget {
         Right,
     }
 
-    /// 🏷️ Static or dynamic single-line text.
+    /// ??? Static or dynamic single-line text.
     pub struct LabelState {
         pub text: String,
         pub align: Align,
         pub role: Role,
     }
 
-    /// 📃️ A scrollable, selectable, optionally multi-marked list.
+    /// ??? A scrollable, selectable, optionally multi-marked list.
     pub struct ListState {
         pub items: Vec<String>,
         pub selected: usize,
@@ -2565,7 +2626,7 @@ pub mod widget {
         }
     }
 
-    /// 🔁️ A cycler for an `All | Individual(value)` style option pick.
+    /// ??? A cycler for an `All | Individual(value)` style option pick.
     pub struct SelectState {
         pub label: String,
         pub options: Vec<String>,
@@ -2583,7 +2644,7 @@ pub mod widget {
         At(usize),
     }
 
-    /// 📜️ A bounded scrollback log view.
+    /// ??? A bounded scrollback log view.
     pub struct LogState {
         lines: VecDeque<String>,
         pub capacity: usize,
@@ -2628,14 +2689,29 @@ pub mod widget {
         pub on: bool,
     }
 
-    //#region 🔖️Table
+    /// ??? Filterable option list for stepped command building.
+    pub struct WizardState {
+        pub steps: Vec<(String, String)>,
+        pub options: Vec<String>,
+        pub selected: usize,
+        pub offset: usize,
+        pub filter: String,
+    }
+
+    impl WizardState {
+        pub fn new(options: Vec<String>) -> Self {
+            Self { steps: Vec::new(), options, selected: 0, offset: 0, filter: String::new() }
+        }
+    }
+
+    //#region ???Table
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum TableAlign {
         Left,
         Right,
     }
 
-    /// 📐️ One table column; `width == 0` means "flex" — split the remaining space evenly.
+    /// ??? One table column; `width == 0` means "flex" ? split the remaining space evenly.
     pub struct TableColumn {
         pub label: String,
         pub width: u16,
@@ -2648,7 +2724,7 @@ pub mod widget {
         }
     }
 
-    /// 🌳️ One row, flat in display order; `level` and `has_children` express the tree — a row is
+    /// ??? One row, flat in display order; `level` and `has_children` express the tree ? a row is
     /// hidden whenever a preceding, still-nesting ancestor has `expanded == false`.
     pub struct TableRow {
         pub id: String,
@@ -2668,9 +2744,9 @@ pub mod widget {
         }
     }
 
-    /// 🗂️ A semio-styled table: bold muted header with a hairline underline, hairline row
-    /// separators, no vertical rules, no striping — mirrors `ui/js/react`'s `Table` and
-    /// `print/tex/🖋️semio-table.sty`. Tree rows are plain indented rows in the same table.
+    /// ??? A semio-styled table: bold muted header with a hairline underline, hairline row
+    /// separators, no vertical rules, no striping ? mirrors `ui/js/react`'s `Table` and
+    /// `print/tex/???semio-table.sty`. Tree rows are plain indented rows in the same table.
     pub struct TableState {
         pub columns: Vec<TableColumn>,
         pub rows: Vec<TableRow>,
@@ -2682,7 +2758,7 @@ pub mod widget {
             Self { columns, rows, selected: 0 }
         }
 
-        /// 👁️ Row indices in display order, skipping any row nested under a collapsed ancestor.
+        /// ??? Row indices in display order, skipping any row nested under a collapsed ancestor.
         pub fn visible_indices(&self) -> Vec<usize> {
             let mut out = Vec::new();
             let mut collapsed_from: Option<u16> = None;
@@ -2701,17 +2777,17 @@ pub mod widget {
             out
         }
     }
-    //#endregion 🔖️Table
+    //#endregion ???Table
 
-    //#region 🔖️Terminal
-    /// 🖍️ Inclusive cell-range selection inside a terminal pane (viewport coordinates).
+    //#region ???Terminal
+    /// ??? Inclusive cell-range selection inside a terminal pane (viewport coordinates).
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub struct TerminalSelection {
         pub start: crate::tui::geometry::Pos,
         pub end: crate::tui::geometry::Pos,
     }
 
-    /// 🖥️ VT pane state: scrollback viewport, search, selection, follow/pin, key passthrough.
+    /// ??? VT pane state: scrollback viewport, search, selection, follow/pin, key passthrough.
     pub struct TerminalState {
         pub screen: crate::tui::vt::VtScreen,
         pub scrollback_offset: usize,
@@ -2723,7 +2799,7 @@ pub mod widget {
     }
 
     impl TerminalState {
-        /// 🆕 Blank terminal pane of `size` with `scrollback_cap` (0 → VT default).
+        /// ?? Blank terminal pane of `size` with `scrollback_cap` (0 ? VT default).
         pub fn new(size: Size, scrollback_cap: usize) -> Self {
             Self {
                 screen: crate::tui::vt::VtScreen::new(size, scrollback_cap),
@@ -2736,7 +2812,7 @@ pub mod widget {
             }
         }
 
-        /// 📥️ Feeds PTY bytes; keeps the viewport glued when following and not pinned.
+        /// ??? Feeds PTY bytes; keeps the viewport glued when following and not pinned.
         pub fn feed(&mut self, bytes: &[u8]) {
             self.screen.feed(bytes);
             if self.follow && !self.pinned {
@@ -2744,7 +2820,7 @@ pub mod widget {
             }
         }
 
-        /// ↔️ Resizes the underlying VT screen.
+        /// ?? Resizes the underlying VT screen.
         pub fn resize(&mut self, size: Size) {
             self.screen.resize(size);
         }
@@ -2760,7 +2836,7 @@ pub mod widget {
             self.follow = next == 0 && !self.pinned;
         }
 
-        /// 📋 Extracts selected text from the active buffer (simple row-major slice).
+        /// ?? Extracts selected text from the active buffer (simple row-major slice).
         pub fn selected_text(&self) -> Option<String> {
             let sel = self.selection?;
             let (a, b) = if (sel.start.y, sel.start.x) <= (sel.end.y, sel.end.x) {
@@ -2865,9 +2941,9 @@ pub mod widget {
             buf.put_str(crate::tui::geometry::Pos { x: rect.x, y }, &label, muted, bg, 0, Rect::new(rect.x, y, rect.width, 1));
         }
     }
-    //#endregion 🔖️Terminal
+    //#endregion ???Terminal
 
-    /// 🧩️ The concrete state of any core widget.
+    /// ??? The concrete state of any core widget.
     pub enum WidgetState {
         Label(LabelState),
         List(ListState),
@@ -2879,6 +2955,7 @@ pub mod widget {
         Chip(ChipState),
         Table(TableState),
         Terminal(TerminalState),
+        Wizard(WizardState),
     }
 
     impl WidgetState {
@@ -2896,7 +2973,7 @@ pub mod widget {
             }
         }
 
-        /// ⌨️ Handles one key press, returning a signal when it changes visible state.
+        /// ?? Handles one key press, returning a signal when it changes visible state.
         pub fn on_key(&mut self, ev: &KeyEvent) -> Option<WidgetSignal> {
             match self {
                 WidgetState::List(l) => list_on_key(l, ev),
@@ -2904,6 +2981,7 @@ pub mod widget {
                 WidgetState::Tabs(t) => tabs_on_key(t, ev),
                 WidgetState::Input(i) => input_on_key(i, ev),
                 WidgetState::Table(t) => table_on_key(t, ev),
+                WidgetState::Wizard(w) => wizard_on_key(w, ev),
                 WidgetState::Log(log) => {
                     log_on_key(log, ev);
                     None
@@ -2913,7 +2991,7 @@ pub mod widget {
             }
         }
 
-        /// 🖌️ Paints this widget's content into `rect` of `buf`.
+        /// ??? Paints this widget's content into `rect` of `buf`.
         pub fn paint(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
             match self {
                 WidgetState::Label(l) => paint_label(l, theme, rect, buf),
@@ -2926,13 +3004,14 @@ pub mod widget {
                 WidgetState::Chip(c) => paint_chip(c, theme, rect, buf),
                 WidgetState::Table(t) => paint_table(t, theme, rect, buf, focused),
                 WidgetState::Terminal(t) => paint_terminal(t, theme, rect, buf),
+                WidgetState::Wizard(w) => paint_wizard(w, theme, rect, buf, focused),
             }
         }
     }
 }
-// #endregion 🔖️Widget
+// #endregion ???Widget
 
-// #region 🔖️Chrome
+// #region ???Chrome
 
 pub mod chrome {
     use crate::tui::cell::{Cell, CellBuffer};
@@ -2969,13 +3048,30 @@ pub mod chrome {
         pub status: String,
     }
 
+    /// 🏷️ One stack tab: label plus the corner it docks into.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct WindowStackTabState {
+        pub label: String,
+        pub corner: crate::tui::layout::WindowStackCorner,
+    }
+
+    impl WindowStackTabState {
+        pub fn new(label: impl Into<String>, corner: crate::tui::layout::WindowStackCorner) -> Self {
+            Self { label: label.into(), corner }
+        }
+
+        pub fn top_left(label: impl Into<String>) -> Self {
+            Self::new(label, crate::tui::layout::WindowStackCorner::TopLeft)
+        }
+    }
+
     pub struct WindowState {
         pub title: String,
         pub number: Option<String>,
         pub focused: bool,
         pub closable: bool,
         pub maximizable: bool,
-        pub stack_tabs: Vec<String>,
+        pub stack_tabs: Vec<WindowStackTabState>,
         pub active_stack_tab: usize,
     }
 
@@ -2992,20 +3088,30 @@ pub mod chrome {
             }
         }
 
-        /// 🗂️ Attaches per-stack tab labels; `active` is clamped into range.
+        /// 📑 Attaches per-stack tab labels (defaulting each to top-left); `active` is clamped into range.
         pub fn with_stack_tabs(mut self, tabs: Vec<String>, active: usize) -> Self {
+            self.stack_tabs = tabs.into_iter().map(WindowStackTabState::top_left).collect();
+            self.active_stack_tab = if self.stack_tabs.is_empty() { 0 } else { active.min(self.stack_tabs.len() - 1) };
+            self
+        }
+
+        /// 🧭️ Attaches corner-aware stack tabs; `active` is clamped into range.
+        pub fn with_stack_tab_states(mut self, tabs: Vec<WindowStackTabState>, active: usize) -> Self {
             self.active_stack_tab = if tabs.is_empty() { 0 } else { active.min(tabs.len() - 1) };
             self.stack_tabs = tabs;
             self
         }
 
-        /// ↕️ Extra chrome rows consumed by a multi-tab stack strip (0 when ≤1 tab).
+        /// ↕️ Extra chrome rows consumed by raised top and/or bottom corner tab boxes.
         pub fn stack_tab_strip_height(&self) -> u16 {
-            if self.stack_tabs.len() > 1 { 1 } else { 0 }
+            let tabs = effective_stack_tabs(self);
+            let has_top = tabs.iter().any(|(_, _, c)| c.is_top());
+            let has_bottom = tabs.iter().any(|(_, _, c)| !c.is_top());
+            u16::from(has_top) + u16::from(has_bottom)
         }
     }
 
-    /// 🧩️ The concrete state of any semio chrome node.
+    /// 🪟 The concrete state of any semio chrome node.
     pub enum ChromeState {
         Navbar(NavbarState),
         Footer(FooterState),
@@ -3026,76 +3132,358 @@ pub mod chrome {
             }
         }
 
-        /// 🖱️ Resolves a click on a window's close/maximize tab, if any (tab text-row hit only).
-        pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
+        /// 🎯 Resolves window chrome hits: per-tab glyphs and label activation across corner groups.
+        pub fn window_hit(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
             let ChromeState::Window(w) = self else { return None };
             let layout = window_chip_layout(w, rect);
-            if !layout.has_tabs || pos.y != rect.y + 1 {
+            if !layout.has_tabs {
                 return None;
             }
-            let controls = layout.controls?;
-            let maximize_x = controls.x + 1 + WINDOW_CONTROLS_MAXIMIZE_OFFSET;
-            let close_x = controls.x + 1 + WINDOW_CONTROLS_CLOSE_OFFSET;
-            if pos.x == close_x && w.closable {
-                Some(crate::tui::widget::WidgetSignal::WindowClose)
-            } else if pos.x == maximize_x && w.maximizable {
-                Some(crate::tui::widget::WidgetSignal::WindowMaximize)
-            } else {
-                None
+            for group in &layout.groups {
+                let text_y = match group.corner {
+                    crate::tui::layout::WindowStackCorner::TopLeft | crate::tui::layout::WindowStackCorner::TopRight => rect.y + 1,
+                    crate::tui::layout::WindowStackCorner::BottomLeft | crate::tui::layout::WindowStackCorner::BottomRight => {
+                        rect.y + rect.height.saturating_sub(2)
+                    }
+                };
+                if pos.y != text_y {
+                    continue;
+                }
+                for tab in &group.tabs {
+                    if tab.close_x == Some(pos.x) && w.closable {
+                        return Some(crate::tui::widget::WidgetSignal::WindowClose);
+                    }
+                    if tab.maximize_x == Some(pos.x) && w.maximizable {
+                        return Some(crate::tui::widget::WidgetSignal::WindowMaximize);
+                    }
+                    if tab.new_x == Some(pos.x) {
+                        return Some(crate::tui::widget::WidgetSignal::WindowNewTab);
+                    }
+                    let tab_right = tab.x.saturating_add(tab.interior_width.saturating_add(1));
+                    if pos.x > tab.x && pos.x < tab_right {
+                        return Some(crate::tui::widget::WidgetSignal::WindowTabActivated(tab.index));
+                    }
+                }
+            }
+            None
+        }
+
+        /// 🎯 Control-only hit testing; delegates to `window_hit`.
+        pub fn window_control_at(&self, rect: Rect, pos: Pos) -> Option<crate::tui::widget::WidgetSignal> {
+            match self.window_hit(rect, pos)? {
+                s @ (crate::tui::widget::WidgetSignal::WindowClose | crate::tui::widget::WidgetSignal::WindowMaximize) => Some(s),
+                _ => None,
             }
         }
     }
 
-    /// 🔘️ The controls tab's interior content: enlarge glyph then close glyph, padded to one cell each.
-    const WINDOW_CONTROLS_INTERIOR: &str = " \u{2922} \u{2715} ";
-    const WINDOW_CONTROLS_MAXIMIZE_OFFSET: u16 = 1;
-    const WINDOW_CONTROLS_CLOSE_OFFSET: u16 = 3;
+    const WINDOW_TAB_MAXIMIZE_GLYPH: char = '\u{2922}';
+    const WINDOW_TAB_NEW_GLYPH: char = '\u{29C9}';
+    const WINDOW_TAB_CLOSE_GLYPH: char = '\u{2715}';
 
-    /// 🪟️ One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
-    /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
-    /// `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`/`paint_corner_tab`.
+    /// 🪟 One 2-row tab recessed into a corner: `x` is its left-wall column, `interior` sits between walls.
+    /// `pub(crate)`: shared with `crate::tui::window`'s `paint_window`/`paint_corner_tab`.
     pub(crate) struct WindowTab {
         pub(crate) x: u16,
         pub(crate) interior: String,
         pub(crate) interior_width: u16,
     }
 
-    /// 🪟️ `pub(crate)` (struct and fields): shared with `crate::tui::window`'s `paint_window`.
+    /// 🏷️ One corner tab chip with absolute glyph columns for hit-testing.
+    pub(crate) struct WindowCornerTab {
+        pub(crate) x: u16,
+        pub(crate) interior: String,
+        pub(crate) interior_width: u16,
+        pub(crate) index: usize,
+        pub(crate) maximize_x: Option<u16>,
+        pub(crate) new_x: Option<u16>,
+        pub(crate) close_x: Option<u16>,
+    }
+
+    impl WindowCornerTab {
+        pub(crate) fn as_window_tab(&self) -> WindowTab {
+            WindowTab { x: self.x, interior: self.interior.clone(), interior_width: self.interior_width }
+        }
+    }
+
+    /// 🧭️ Tabs docked into one stack corner.
+    pub(crate) struct WindowCornerChipGroup {
+        pub(crate) corner: crate::tui::layout::WindowStackCorner,
+        pub(crate) tabs: Vec<WindowCornerTab>,
+    }
+
+    /// 🪟 `pub(crate)`: shared with `crate::tui::window`'s `paint_window`.
     pub(crate) struct WindowChipLayout {
         pub(crate) has_tabs: bool,
-        pub(crate) title: WindowTab,
-        pub(crate) controls: Option<WindowTab>,
+        pub(crate) groups: Vec<WindowCornerChipGroup>,
+        pub(crate) top_body_y: u16,
+        pub(crate) bottom_body_y: Option<u16>,
+        pub(crate) top_left_end_x: u16,
+        pub(crate) top_right_start_x: u16,
+        pub(crate) bottom_left_end_x: u16,
+        pub(crate) bottom_right_start_x: u16,
     }
 
-    /// 📐️ Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
-    /// left wall is the window's left wall; the controls tab's own right wall is the window's right
-    /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
-    /// `pub(crate)`: called from `crate::tui::window`'s `paint_window` (extracted to its own element file;
-    /// this fn stays here because `ChromeState::window_control_at`, also in this mod, needs it too).
+    fn effective_stack_tabs(w: &WindowState) -> Vec<(usize, String, crate::tui::layout::WindowStackCorner)> {
+        if w.stack_tabs.is_empty() {
+            let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
+            return vec![(0, format!("{number_prefix}{}", w.title), crate::tui::layout::WindowStackCorner::TopLeft)];
+        }
+        w.stack_tabs
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (i, t.label.clone(), t.corner))
+            .collect()
+    }
+
+    fn build_corner_tab_interior(label: &str, w: &WindowState, room: u16) -> (String, u16, Option<u16>, Option<u16>, Option<u16>) {
+        if room < 3 {
+            return (String::new(), 0, None, None, None);
+        }
+        let mut show_max = w.maximizable;
+        let mut show_close = w.closable;
+        let mut show_new_glyph = true;
+        loop {
+            let actions = u16::from(show_max) * 2 + u16::from(show_new_glyph) * 2 + u16::from(show_close) * 2;
+            let label_room = room.saturating_sub(2 + actions).max(1);
+            let (label_trunc, _) = truncate_to(label, label_room);
+            let mut interior = format!(" {label_trunc} ");
+            let mut maximize_off = None;
+            let mut new_off = None;
+            let mut close_off = None;
+            if show_max {
+                maximize_off = Some(display_width(&interior));
+                interior.push(WINDOW_TAB_MAXIMIZE_GLYPH);
+                interior.push(' ');
+            }
+            if show_new_glyph {
+                new_off = Some(display_width(&interior));
+                interior.push(WINDOW_TAB_NEW_GLYPH);
+                interior.push(' ');
+            }
+            if show_close {
+                close_off = Some(display_width(&interior));
+                interior.push(WINDOW_TAB_CLOSE_GLYPH);
+                interior.push(' ');
+            }
+            let width = display_width(&interior);
+            if width <= room {
+                return (interior, width, maximize_off, new_off, close_off);
+            }
+            if show_new_glyph {
+                show_new_glyph = false;
+                continue;
+            }
+            if show_max {
+                show_max = false;
+                continue;
+            }
+            if show_close {
+                show_close = false;
+                continue;
+            }
+            let (label_trunc, _) = truncate_to(label, room.saturating_sub(2).max(1));
+            let interior = format!(" {label_trunc} ");
+            return (interior.clone(), display_width(&interior).min(room), None, None, None);
+        }
+    }
+
+    fn layout_corner_tabs(
+        entries: &[(usize, String)],
+        w: &WindowState,
+        start_x: u16,
+        end_x: u16,
+        from_left: bool,
+    ) -> Vec<WindowCornerTab> {
+        if entries.is_empty() || end_x <= start_x + 2 {
+            return Vec::new();
+        }
+        let span = end_x.saturating_sub(start_x);
+        let mut tabs = Vec::new();
+        if from_left {
+            let mut x = start_x;
+            for (index, label) in entries {
+                if x + 3 >= end_x {
+                    break;
+                }
+                let room = end_x.saturating_sub(x + 2);
+                let (interior, interior_width, max_off, new_off, close_off) = build_corner_tab_interior(label, w, room);
+                if interior_width < 3 {
+                    break;
+                }
+                let width = interior_width + 2;
+                if x + width > end_x {
+                    break;
+                }
+                tabs.push(WindowCornerTab {
+                    x,
+                    interior,
+                    interior_width,
+                    index: *index,
+                    maximize_x: max_off.map(|o| x + 1 + o),
+                    new_x: new_off.map(|o| x + 1 + o),
+                    close_x: close_off.map(|o| x + 1 + o),
+                });
+                x = x.saturating_add(width);
+            }
+        } else {
+            let mut right = end_x;
+            let mut rev = Vec::new();
+            for (index, label) in entries.iter().rev() {
+                if right <= start_x + 3 {
+                    break;
+                }
+                let room = right.saturating_sub(start_x + 2).min(span);
+                let (interior, interior_width, max_off, new_off, close_off) = build_corner_tab_interior(label, w, room);
+                if interior_width < 3 {
+                    break;
+                }
+                let width = interior_width + 2;
+                if right < start_x + width {
+                    break;
+                }
+                let x = right - width;
+                if x < start_x {
+                    break;
+                }
+                rev.push(WindowCornerTab {
+                    x,
+                    interior,
+                    interior_width,
+                    index: *index,
+                    maximize_x: max_off.map(|o| x + 1 + o),
+                    new_x: new_off.map(|o| x + 1 + o),
+                    close_x: close_off.map(|o| x + 1 + o),
+                });
+                right = x;
+            }
+            rev.reverse();
+            tabs = rev;
+        }
+        tabs
+    }
+
+    /// 🎯 Shared by paint and click hit-testing so the two can never drift apart.
+    /// Returns up to four corner chip groups; each tab carries inline action glyph columns.
+    /// `pub(crate)`: called from `crate::tui::window`'s `paint_window`.
     pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
-        let controls_interior_width = display_width(WINDOW_CONTROLS_INTERIOR);
-        let controls_width = controls_interior_width + 2;
-        let number_prefix = w.number.as_ref().map(|n| format!("{n} ")).unwrap_or_default();
-        let title_interior_full = format!(" {number_prefix}{} ", w.title);
-        let show_controls = w.closable || w.maximizable;
-        let title_room = rect.width.saturating_sub(2 + if show_controls { controls_width + 1 } else { 0 });
-        let (title_interior, title_interior_width) = truncate_to(&title_interior_full, title_room);
-        let title_width = title_interior_width + 2;
-        let has_tabs = rect.height >= 4 && title_width >= 3 && rect.width >= title_width + 2;
-        let controls_fits = show_controls && rect.width >= title_width + controls_width + 3;
-        let controls = controls_fits.then(|| WindowTab { x: rect.x + rect.width - controls_width, interior: WINDOW_CONTROLS_INTERIOR.to_string(), interior_width: controls_interior_width });
-        WindowChipLayout { has_tabs, title: WindowTab { x: rect.x, interior: title_interior.to_string(), interior_width: title_interior_width }, controls }
+        use crate::tui::layout::WindowStackCorner;
+
+        let flat = WindowChipLayout {
+            has_tabs: false,
+            groups: Vec::new(),
+            top_body_y: rect.y,
+            bottom_body_y: None,
+            top_left_end_x: rect.x,
+            top_right_start_x: rect.x + rect.width.saturating_sub(1),
+            bottom_left_end_x: rect.x,
+            bottom_right_start_x: rect.x + rect.width.saturating_sub(1),
+        };
+        if rect.width < 4 || rect.height < 4 {
+            return flat;
+        }
+
+        let effective = effective_stack_tabs(w);
+        let mut tl = Vec::new();
+        let mut tr = Vec::new();
+        let mut bl = Vec::new();
+        let mut br = Vec::new();
+        for (index, label, corner) in &effective {
+            match corner {
+                WindowStackCorner::TopLeft => tl.push((*index, label.clone())),
+                WindowStackCorner::TopRight => tr.push((*index, label.clone())),
+                WindowStackCorner::BottomLeft => bl.push((*index, label.clone())),
+                WindowStackCorner::BottomRight => br.push((*index, label.clone())),
+            }
+        }
+
+        let has_top = !tl.is_empty() || !tr.is_empty();
+        let has_bottom = !bl.is_empty() || !br.is_empty();
+        let min_h = match (has_top, has_bottom) {
+            (true, true) => 6,
+            (true, false) | (false, true) => 4,
+            (false, false) => 2,
+        };
+        if rect.height < min_h || (!has_top && !has_bottom) {
+            return flat;
+        }
+
+        let mid = rect.x + rect.width / 2;
+        let right = rect.x + rect.width;
+
+        let tl_tabs = layout_corner_tabs(&tl, w, rect.x, mid.saturating_add(1).max(rect.x + 3), true);
+        let tr_tabs = layout_corner_tabs(&tr, w, mid.saturating_sub(1).min(right.saturating_sub(3)), right, false);
+        let bl_tabs = layout_corner_tabs(&bl, w, rect.x, mid.saturating_add(1).max(rect.x + 3), true);
+        let br_tabs = layout_corner_tabs(&br, w, mid.saturating_sub(1).min(right.saturating_sub(3)), right, false);
+
+        // Resolve collisions on an edge: prefer left group, shrink right start.
+        let top_left_end_x = tl_tabs.last().map(|t| t.x + t.interior_width + 2).unwrap_or(rect.x);
+        let mut top_right_start_x = tr_tabs.first().map(|t| t.x).unwrap_or(right.saturating_sub(1));
+        if !tr_tabs.is_empty() && top_right_start_x < top_left_end_x.saturating_add(1) {
+            top_right_start_x = top_left_end_x.saturating_add(1).min(right.saturating_sub(1));
+        }
+        let bottom_left_end_x = bl_tabs.last().map(|t| t.x + t.interior_width + 2).unwrap_or(rect.x);
+        let mut bottom_right_start_x = br_tabs.first().map(|t| t.x).unwrap_or(right.saturating_sub(1));
+        if !br_tabs.is_empty() && bottom_right_start_x < bottom_left_end_x.saturating_add(1) {
+            bottom_right_start_x = bottom_left_end_x.saturating_add(1).min(right.saturating_sub(1));
+        }
+
+        let mut groups = Vec::new();
+        if !tl_tabs.is_empty() {
+            groups.push(WindowCornerChipGroup { corner: WindowStackCorner::TopLeft, tabs: tl_tabs });
+        }
+        if !tr_tabs.is_empty() {
+            // Drop colliding right tabs that start before left end.
+            let tabs: Vec<_> = tr_tabs.into_iter().filter(|t| t.x >= top_left_end_x.saturating_add(1)).collect();
+            if !tabs.is_empty() {
+                top_right_start_x = tabs.first().map(|t| t.x).unwrap_or(top_right_start_x);
+                groups.push(WindowCornerChipGroup { corner: WindowStackCorner::TopRight, tabs });
+            } else {
+                top_right_start_x = right.saturating_sub(1);
+            }
+        }
+        if !bl_tabs.is_empty() {
+            groups.push(WindowCornerChipGroup { corner: WindowStackCorner::BottomLeft, tabs: bl_tabs });
+        }
+        if !br_tabs.is_empty() {
+            let tabs: Vec<_> = br_tabs.into_iter().filter(|t| t.x >= bottom_left_end_x.saturating_add(1)).collect();
+            if !tabs.is_empty() {
+                bottom_right_start_x = tabs.first().map(|t| t.x).unwrap_or(bottom_right_start_x);
+                groups.push(WindowCornerChipGroup { corner: WindowStackCorner::BottomRight, tabs });
+            } else {
+                bottom_right_start_x = right.saturating_sub(1);
+            }
+        }
+
+        if groups.is_empty() {
+            return flat;
+        }
+
+        let top_body_y = if has_top { rect.y + 2 } else { rect.y };
+        let bottom_body_y = if has_bottom { Some(rect.y + rect.height.saturating_sub(3)) } else { None };
+
+        WindowChipLayout {
+            has_tabs: true,
+            groups,
+            top_body_y,
+            bottom_body_y,
+            top_left_end_x: if has_top { top_left_end_x } else { rect.x },
+            top_right_start_x: if has_top { top_right_start_x } else { right.saturating_sub(1) },
+            bottom_left_end_x: if has_bottom { bottom_left_end_x } else { rect.x },
+            bottom_right_start_x: if has_bottom { bottom_right_start_x } else { right.saturating_sub(1) },
+        }
     }
 
-    /// 🏛️ The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
+    /// ??? The three fixed shell regions plus one Window node per resolved `WindowMeasure`.
     pub struct Shell {
         pub navbar: NodeId,
         pub canvas: NodeId,
         pub footer: NodeId,
         pub windows: Vec<(String, NodeId)>,
+        pub mount_root: Option<NodeId>,
     }
 
-    /// 🏗️ Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
+    /// ??? Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
     pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout: &WindowLayout) -> Shell {
         let root = scene.root();
         let navbar_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Navbar(navbar))));
@@ -3113,25 +3501,111 @@ pub mod chrome {
             let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
             windows.push((measure.window_kind_id, id));
         }
-        Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows }
+        Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows, mount_root: None }
     }
 
-    impl Shell {
-        /// 🔁️ Re-measures `layout` against the canvas rect and repositions each window node.
-        pub fn apply_layout(&self, scene: &mut Scene, layout: &WindowLayout) {
-            let area = scene.rect(self.canvas);
-            let measures = solve_window_layout(layout, area);
-            for (kind_id, id) in &self.windows {
-                if let Some(m) = measures.iter().find(|m| &m.window_kind_id == kind_id) {
-                    scene.node_mut(*id).set_constraint(crate::tui::layout::Constraint { width: crate::tui::layout::Dimension::Cells(m.rect.width), height: crate::tui::layout::Dimension::Cells(m.rect.height), ..Default::default() });
+    /// ?? Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
+    pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
+        use crate::tui::layout::{Dimension, Direction, WindowLayoutChild, WindowLayoutRoot};
+
+        if let Some(old) = *mount_root {
+            scene.remove(old);
+            *mount_root = None;
+        }
+        let mount = scene.add(canvas, Node::new(NodeContent::Box));
+        scene.node_mut(mount).set_constraint(crate::tui::layout::Constraint {
+            direction: Direction::Stack,
+            width: Dimension::Weight(1),
+            height: Dimension::Weight(1),
+            ..Default::default()
+        });
+        *mount_root = Some(mount);
+
+        fn weight(size: Option<f64>) -> u16 {
+            ((size.unwrap_or(1.0) * 100.0).round() as u16).max(1)
+        }
+
+        fn find_window(windows: &[(String, NodeId)], id: &str) -> Option<NodeId> {
+            windows.iter().find(|(k, _)| k == id).map(|(_, n)| *n)
+        }
+
+        fn mount_stack(scene: &mut Scene, parent: NodeId, stack: &crate::tui::layout::WindowLayoutStackNode, windows: &[(String, NodeId)], w: u16) {
+            let box_id = scene.add(parent, Node::new(NodeContent::Box));
+            scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint {
+                direction: Direction::Stack,
+                width: Dimension::Weight(w),
+                height: Dimension::Weight(w),
+                ..Default::default()
+            });
+            let active = stack.active_window_kind_id.as_deref().unwrap_or_else(|| stack.children.first().map(|c| c.window_kind_id.as_str()).unwrap_or(""));
+            let tabs: Vec<WindowStackTabState> = stack
+                .children
+                .iter()
+                .map(|c| WindowStackTabState {
+                    label: c.window_kind_id.clone(),
+                    corner: c.corner.unwrap_or_default(),
+                })
+                .collect();
+            let active_idx = tabs.iter().position(|t| t.label == active).unwrap_or(0);
+            for child in &stack.children {
+                if let Some(win_id) = find_window(windows, &child.window_kind_id) {
+                    scene.reparent(win_id, box_id);
+                    let visible = child.window_kind_id == active;
+                    scene.node_mut(win_id).set_visible(visible);
+                    if let Some(chrome) = scene.node_mut(win_id).chrome() {
+                        if let ChromeState::Window(ref mut ws) = chrome {
+                            ws.stack_tabs = tabs.clone();
+                            ws.active_stack_tab = active_idx;
+                            ws.title = child.title.clone().unwrap_or_else(|| child.window_kind_id.clone());
+                        }
+                    }
                 }
             }
         }
+
+        fn mount_child(scene: &mut Scene, parent: NodeId, child: &WindowLayoutChild, windows: &[(String, NodeId)]) {
+            match child {
+                WindowLayoutChild::Axis(axis) => {
+                    let is_row = axis.kind == "row";
+                    let box_id = scene.add(parent, Node::new(NodeContent::Box));
+                    scene.node_mut(box_id).set_constraint(crate::tui::layout::Constraint {
+                        direction: if is_row { Direction::Row } else { Direction::Column },
+                        width: Dimension::Weight(weight(axis.size)),
+                        height: Dimension::Weight(weight(axis.size)),
+                        ..Default::default()
+                    });
+                    for c in &axis.children {
+                        mount_child(scene, box_id, c, windows);
+                    }
+                }
+                WindowLayoutChild::Stack(stack) => mount_stack(scene, parent, stack, windows, weight(stack.size)),
+            }
+        }
+
+        if let Some(zid) = layout.zoomed.as_deref() {
+            if let Some(win_id) = find_window(windows, zid) {
+                scene.reparent(win_id, mount);
+                scene.node_mut(win_id).set_visible(true);
+            }
+            return;
+        }
+
+        match &layout.root {
+            WindowLayoutRoot::Axis(axis) => mount_child(scene, mount, &WindowLayoutChild::Axis(axis.clone()), windows),
+            WindowLayoutRoot::Stack(stack) => mount_stack(scene, mount, stack, windows, 1),
+        }
+    }
+
+    impl Shell {
+        /// ?? Rebuilds the tiling mount tree and reparents window nodes.
+        pub fn remount(&mut self, scene: &mut Scene, layout: &WindowLayout) {
+            mount_window_layout(scene, self.canvas, layout, &self.windows, &mut self.mount_root);
+        }
     }
 }
-// #endregion 🔖️Chrome
+// #endregion ???Chrome
 
-// #region 🔖️Engine
+// #region ???Engine
 pub mod engine {
     use crate::tui::ansi::{emit_runs, AnsiPatch};
     use crate::tui::cell::{diff, Cell, CellBuffer};
@@ -3155,7 +3629,7 @@ pub mod engine {
         }
     }
 
-    /// 🖥️ The retained-mode pipeline: layout-if-dirty → paint-if-dirty → damage-diff → ANSI.
+    /// ??? The retained-mode pipeline: layout-if-dirty ? paint-if-dirty ? damage-diff ? ANSI.
     pub struct Tui {
         pub scene: Scene,
         pub theme: Theme,
@@ -3172,7 +3646,7 @@ pub mod engine {
             Self { scene: Scene::new(), theme, size, front: CellBuffer::new(size, blank), back: CellBuffer::new(size, blank), focus: None, full_redraw: true }
         }
 
-        /// 🔍️ The last fully-composed frame, for hosts/tests that need to inspect the actual render.
+        /// ??? The last fully-composed frame, for hosts/tests that need to inspect the actual render.
         pub fn frame(&self) -> &CellBuffer {
             &self.front
         }
@@ -3224,7 +3698,7 @@ pub mod engine {
             self.focus = Some(list[prev]);
         }
 
-        /// 📡️ Routes one input event to the focused widget (keys) or the hit node (mouse).
+        /// ??? Routes one input event to the focused widget (keys) or the hit node (mouse).
         pub fn dispatch(&mut self, event: &Event) -> Vec<(NodeId, WidgetSignal)> {
             let mut signals = Vec::new();
             match event {
@@ -3241,15 +3715,32 @@ pub mod engine {
                     }
                 }
                 Event::Mouse(m) => {
-                    // Mouse reporting is enabled for the alt screen; only button-down changes focus.
-                    // Move/drag must not steal focus from the active table/input widget.
                     if matches!(m.kind, crate::tui::event::MouseKind::Down(_)) {
                         if let Some(id) = self.scene.hit(m.pos) {
-                            self.focus = Some(id);
-                            let rect = self.scene.node(id).rect;
-                            if let NodeContent::Chrome(chrome) = &self.scene.node(id).content {
-                                if let Some(signal) = chrome.window_control_at(rect, m.pos) {
-                                    signals.push((id, signal));
+                            let mut focus_target = id;
+                            while !focusable(&self.scene, focus_target) {
+                                if let Some(p) = self.scene.node(focus_target).parent {
+                                    focus_target = p;
+                                } else {
+                                    break;
+                                }
+                            }
+                            if focusable(&self.scene, focus_target) {
+                                self.focus = Some(focus_target);
+                            }
+                            let mut chrome_probe = id;
+                            loop {
+                                let rect = self.scene.node(chrome_probe).rect;
+                                if let NodeContent::Chrome(chrome) = &self.scene.node(chrome_probe).content {
+                                    if let Some(signal) = chrome.window_hit(rect, m.pos) {
+                                        signals.push((chrome_probe, signal));
+                                    }
+                                    break;
+                                }
+                                if let Some(p) = self.scene.node(chrome_probe).parent {
+                                    chrome_probe = p;
+                                } else {
+                                    break;
                                 }
                             }
                         }
@@ -3283,7 +3774,7 @@ pub mod engine {
             walk(&self.scene, &self.theme, self.focus, self.scene.root(), &mut self.back);
         }
 
-        /// 🎬️ Solves layout if dirty, repaints, diffs against the last frame, and emits a patch.
+        /// ??? Solves layout if dirty, repaints, diffs against the last frame, and emits a patch.
         pub fn render(&mut self) -> AnsiPatch {
             let root_dirty = self.scene.take_dirty(self.scene.root()) != 0;
             if !root_dirty && !self.full_redraw {
@@ -3311,16 +3802,16 @@ pub mod engine {
             patch
         }
 
-        /// 🎬️ Forces a full-frame repaint regardless of dirty state.
+        /// ??? Forces a full-frame repaint regardless of dirty state.
         pub fn render_full(&mut self) -> AnsiPatch {
             self.full_redraw = true;
             self.render()
         }
     }
 }
-// #endregion 🔖️Engine
+// #endregion ???Engine
 
-// #region 🔖️Backend
+// #region ???Backend
 pub mod backend {
     use crate::tui::ansi::AnsiPatch;
     use crate::tui::event::Event;
@@ -3338,8 +3829,8 @@ pub mod backend {
         }
     }
 
-    //#region 🔖️Clipboard
-    /// 📋️ Host clipboard access, kept behind an interface so VT panes never depend on a crate.
+    //#region ???Clipboard
+    /// ??? Host clipboard access, kept behind an interface so VT panes never depend on a crate.
     pub trait Clipboard {
         fn copy_text(&mut self, text: &str) -> Result<(), BackendError>;
         fn paste_text(&mut self) -> Result<String, BackendError>;
@@ -3370,7 +3861,7 @@ pub mod backend {
         out
     }
 
-    /// 📋 Builds an OSC 52 clipboard-set sequence for selection `c`.
+    /// ?? Builds an OSC 52 clipboard-set sequence for selection `c`.
     pub fn osc52_copy_sequence(text: &str) -> String {
         let mut out = String::new();
         out.push('\u{1b}');
@@ -3467,7 +3958,7 @@ pub mod backend {
         }
     }
 
-    /// 🖥️ Clipboard that prefers OSC 52 (survives SSH/devcontainer) then falls back to native tools.
+    /// ??? Clipboard that prefers OSC 52 (survives SSH/devcontainer) then falls back to native tools.
     pub struct HostClipboard<F>
     where
         F: FnMut(&[u8]) -> Result<(), BackendError>,
@@ -3503,7 +3994,7 @@ pub mod backend {
         }
     }
 
-    /// 🧪 In-memory clipboard for tests and headless hosts.
+    /// ?? In-memory clipboard for tests and headless hosts.
     #[derive(Default)]
     pub struct MemoryClipboard {
         pub text: String,
@@ -3519,9 +4010,9 @@ pub mod backend {
             Ok(self.text.clone())
         }
     }
-    //#endregion 🔖️Clipboard
+    //#endregion ???Clipboard
 
-    /// 🔌️ A platform terminal I/O implementation, kept out of the retained-mode core.
+    /// ??? A platform terminal I/O implementation, kept out of the retained-mode core.
     pub trait TerminalBackend {
         fn size(&mut self) -> Result<Size, BackendError>;
         fn enter(&mut self) -> Result<(), BackendError>;
@@ -3541,7 +4032,7 @@ pub mod backend {
             BackendError { message: message.into() }
         }
 
-        /// 🖥️ Raw-mode terminal backend for unix (macOS/Linux), driven by `libc` alone.
+        /// ??? Raw-mode terminal backend for unix (macOS/Linux), driven by `libc` alone.
         pub struct NativeTerminal {
             fd: RawFd,
             original: libc::termios,
@@ -3651,7 +4142,7 @@ pub mod backend {
             BackendError { message: message.into() }
         }
 
-        /// 🖥️ VT-mode terminal backend for Windows consoles, driven by `windows-sys` alone.
+        /// ??? VT-mode terminal backend for Windows consoles, driven by `windows-sys` alone.
         pub struct NativeTerminal {
             stdin: HANDLE,
             stdout: HANDLE,
@@ -3757,23 +4248,23 @@ pub mod backend {
     #[cfg(all(feature = "tui-terminal", windows))]
     pub use native_windows::NativeTerminal;
 }
-// #endregion 🔖️Backend
+// #endregion ???Backend
 
-// #region 🔖️Pty
-/// 🧵 Pseudo-terminal child process spawn and byte I/O for the native TUI host.
+// #region ???Pty
+/// ?? Pseudo-terminal child process spawn and byte I/O for the native TUI host.
 #[cfg(feature = "tui-terminal")]
 pub mod pty {
     use std::io::Write;
     use std::path::Path;
 
-    /// 📐 Pseudo-terminal geometry in character cells.
+    /// ?? Pseudo-terminal geometry in character cells.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct PtySize {
         pub cols: u16,
         pub rows: u16,
     }
 
-    /// 💥 Failure from pseudo-terminal spawn or I/O.
+    /// ?? Failure from pseudo-terminal spawn or I/O.
     #[derive(Debug)]
     pub struct PtyError {
         pub message: String,
@@ -3801,7 +4292,7 @@ pub mod pty {
         use std::os::unix::process::CommandExt;
         use std::process::{Child, Command};
 
-        /// 🧵 Unix PTY master plus child process.
+        /// ?? Unix PTY master plus child process.
         pub struct Pty {
             master: File,
             child: Child,
@@ -3948,8 +4439,26 @@ pub mod pty {
                 }
             }
 
+            pub fn pid(&self) -> u32 {
+                self.child.id()
+            }
+
             pub fn kill(&mut self) -> Result<(), PtyError> {
-                self.child.kill().map_err(|e| err(format!("kill failed: {e}")))?;
+                let pid = self.child.id() as libc::pid_t;
+                unsafe {
+                    if libc::killpg(pid, libc::SIGTERM) != 0 {
+                        let _ = self.child.kill();
+                    }
+                }
+                for _ in 0..30 {
+                    if let Ok(Some(_)) = self.child.try_wait() {
+                        return Ok(());
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+                unsafe {
+                    let _ = libc::killpg(pid, libc::SIGKILL);
+                }
                 let _ = self.child.wait();
                 Ok(())
             }
@@ -4003,13 +4512,13 @@ pub mod pty {
         };
         use windows_sys::Win32::System::Pipes::{CreatePipe, PeekNamedPipe};
         use windows_sys::Win32::System::Threading::{
-            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess,
+            CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess, GetProcessId,
             InitializeProcThreadAttributeList, TerminateProcess, UpdateProcThreadAttribute,
             WaitForSingleObject, CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT,
             PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, PROCESS_INFORMATION, STARTUPINFOEXW,
         };
 
-        /// 🧵 Windows ConPTY master pipes plus child process.
+        /// ?? Windows ConPTY master pipes plus child process.
         pub struct Pty {
             hpcon: HPCON,
             input_write: HANDLE,
@@ -4264,6 +4773,10 @@ pub mod pty {
                 }
             }
 
+            pub fn pid(&self) -> u32 {
+                unsafe { GetProcessId(self.process) }
+            }
+
             pub fn kill(&mut self) -> Result<(), PtyError> {
                 unsafe {
                     if TerminateProcess(self.process, 1) == 0 {
@@ -4272,7 +4785,7 @@ pub mod pty {
                             std::io::Error::last_os_error()
                         )));
                     }
-                    WaitForSingleObject(self.process, 5000);
+                    WaitForSingleObject(self.process, 1500);
                 }
                 Ok(())
             }
@@ -4327,9 +4840,9 @@ pub mod pty {
     #[cfg(windows)]
     pub use windows_impl::Pty;
 }
-// #endregion 🔖️Pty
+// #endregion ???Pty
 
-// #region 🔖️WasmHost
+// #region ???WasmHost
 pub mod host {
     use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser};
     use crate::tui::engine::Tui;
@@ -4338,7 +4851,7 @@ pub mod host {
     use crate::tui::theme::Theme;
     use ui_styling::appearance::AppearanceName;
 
-    /// 🌐️ A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
+    /// ??? A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
     pub struct WasmHost {
         pub tui: Tui,
         parser: AnsiParser,
@@ -4381,7 +4894,7 @@ pub mod host {
         use super::WasmHost;
         use wasm_bindgen::prelude::*;
 
-        /// 🌐️ The `wasm-bindgen` surface for browser hosts (e.g. an xterm.js terminal).
+        /// ??? The `wasm-bindgen` surface for browser hosts (e.g. an xterm.js terminal).
         #[wasm_bindgen]
         pub struct TuiHost(WasmHost);
 
@@ -4416,21 +4929,21 @@ pub mod host {
     #[cfg(all(target_arch = "wasm32", feature = "tui-bindgen"))]
     pub use bindgen_host::TuiHost;
 }
-// #endregion 🔖️WasmHost
+// #endregion ???WasmHost
 
-// #region 🔖️Tests
+// #region ???Tests
 #[cfg(test)]
 mod tests {
     use crate::tui::ansi::{emit_runs, setup_sequence, teardown_sequence, AnsiParser, AnsiPatch};
     use crate::tui::cell::{attr, diff, Cell, CellBuffer, DiffRun};
-    use crate::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
+    use crate::tui::chrome::{mount_window_layout, shell, window_chip_layout, ChromeState, FooterState, KeyHint, NavItem, NavbarState, WindowState};
     use crate::tui::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
     use crate::tui::geometry::{Pos, Rect, Size};
     use crate::tui::layout::{create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
     use crate::tui::scene::{Node, NodeContent, Scene};
     use crate::tui::text::{display_width, truncate_to};
     use crate::tui::theme::{Role, Surface, Theme};
-    use crate::tui::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, TerminalState, WidgetSignal, WidgetState};
+    use crate::tui::widget::{Align, ChipState, DividerState, InputState, LabelState, ListState, LogScroll, LogState, SelectState, TableAlign, TableColumn, TableRow, TableState, TabsState, TerminalState, WidgetSignal, WidgetState, WizardState};
     use ui_styling::appearance::AppearanceName;
 
     fn row_text(buf: &CellBuffer, y: u16) -> String {
@@ -4493,7 +5006,7 @@ mod tests {
             root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
                 size: None,
                 active_window_kind_id: Some("b".into()),
-                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None }],
+                children: vec![WindowLayoutWindowNode {  window_kind_id: "a".into(), title: None, corner: None }, WindowLayoutWindowNode {  window_kind_id: "b".into(), title: None, corner: None }],
             }),
             zoomed: None,
         };
@@ -4512,13 +5025,19 @@ mod tests {
         w.focused = true;
         ChromeState::Window(w).paint(&theme, rect, &mut buf);
 
-        // exact shape: both tabs are real 2-row boxes sharing the window's own left/right wall, each
-        // bending its short inner wall down into the main body's top edge one row below
-        assert_eq!(row_text(&buf, 0), "┌️─️─️─️─️─️─️─️─️─️─️─️┐️                    ┌️─️─️─️─️─️┐️");
-        assert_eq!(row_text(&buf, 1), "│️ Puzzle 3D │️                    │️ ⤢ ✕️ │️");
-        assert_eq!(row_text(&buf, 2), "│️           └️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️┘️     │️");
-        assert_eq!(row_text(&buf, 3), "│️                                      │️");
-        assert_eq!(row_text(&buf, 4), "└️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️─️┘️");
+        // single top-left corner tab with inline actions; right edge stays flat at the body hairline
+        let row0 = row_text(&buf, 0);
+        let row1 = row_text(&buf, 1);
+        let row2 = row_text(&buf, 2);
+        assert!(row0.starts_with('\u{250c}'), "tab top-left corner: {row0:?}");
+        assert!(row1.contains("Puzzle 3D"), "title in tab: {row1:?}");
+        assert!(row1.contains('\u{2922}'), "maximize glyph: {row1:?}");
+        assert!(row1.contains('\u{29C9}'), "new-window glyph: {row1:?}");
+        assert!(row1.contains('\u{2715}'), "close glyph: {row1:?}");
+        assert!(row2.contains('\u{2514}'), "tab bends into body: {row2:?}");
+        assert_eq!(row2.chars().last(), Some('\u{2510}'), "flat top-right at body: {row2:?}");
+        assert_eq!(row_text(&buf, 4).chars().next(), Some('\u{2514}'));
+        assert_eq!(row_text(&buf, 4).chars().last(), Some('\u{2518}'));
 
         let title_x = (0..40).find(|&x| buf.get(x, 1).unwrap().ch == 'P').expect("title text rendered");
         assert_eq!(buf.get(title_x, 1).unwrap().fg, theme.role(Role::Accent));
@@ -4534,28 +5053,30 @@ mod tests {
         w.maximizable = false;
         ChromeState::Window(w).paint(&theme, rect, &mut buf);
 
-        // the title tab still rises, but the right side has no tab: its corner sits flat at the
-        // main body's top row instead of rising — the window stays one closed shape either way
-        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}                                 ");
-        assert_eq!(row_text(&buf, 1), "\u{2502} Log \u{2502}                                 ");
-        assert_eq!(row_text(&buf, 2), "\u{2502}     \u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
-        assert_eq!(row_text(&buf, 3), "\u{2502}                                      \u{2502}");
-        assert_eq!(row_text(&buf, 4), "\u{2502}                                      \u{2502}");
-        assert_eq!(row_text(&buf, 5), "\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
+        let row0 = row_text(&buf, 0);
+        let row1 = row_text(&buf, 1);
+        let row2 = row_text(&buf, 2);
+        assert!(row0.starts_with('\u{250c}'), "{row0:?}");
+        assert!(row1.contains("Log"), "{row1:?}");
+        assert!(!row1.contains('\u{2922}') && !row1.contains('\u{2715}'), "no action glyphs: {row1:?}");
+        assert!(row2.contains('\u{2514}'), "bend into body: {row2:?}");
+        assert_eq!(row2.chars().last(), Some('\u{2510}'), "flat right corner: {row2:?}");
         assert!(!row_text(&buf, 0).contains('\u{2922}') && !row_text(&buf, 1).contains('\u{2922}'), "no controls tab was requested");
     }
 
     #[test]
     fn window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title() {
         let theme = Theme::new(AppearanceName::Dark);
-        let rect = Rect::new(0, 0, 10, 5);
-        let mut buf = CellBuffer::new(Size { width: 10, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
-        let window = ChromeState::Window(WindowState::new("X"));
+        let rect = Rect::new(0, 0, 4, 5);
+        let mut buf = CellBuffer::new(Size { width: 4, height: 5 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let w = WindowState::new("X");
+        assert!(!window_chip_layout(&w, rect).has_tabs);
+        let window = ChromeState::Window(w);
         window.paint(&theme, rect, &mut buf);
-        // plain flat box: a single top row, no raised tabs at all
-        assert_eq!(row_text(&buf, 0), "\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
-        assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 0 }), None);
-        assert_eq!(window.window_control_at(rect, Pos { x: 5, y: 1 }), None);
+        // plain flat box when the raised corner chrome cannot fit
+        assert_eq!(row_text(&buf, 0), "┌──┐");
+        assert_eq!(window.window_control_at(rect, Pos { x: 2, y: 0 }), None);
+        assert_eq!(window.window_control_at(rect, Pos { x: 2, y: 1 }), None);
     }
 
     #[test]
@@ -4571,6 +5092,65 @@ mod tests {
         assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 1 }), Some(WidgetSignal::WindowClose));
         assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 0 }), None, "clicks on the tab's own top edge must not trigger a control");
         assert_eq!(window.window_control_at(rect, Pos { x: close_x, y: 2 }), None, "clicks below the tab row must not trigger a control");
+    }
+
+    #[test]
+    fn window_hit_resolves_tab_activation_and_new_tab_signals() {
+        let rect = Rect::new(0, 0, 60, 8);
+        let w = WindowState::new("Main").with_stack_tabs(vec!["tab1".into(), "tab2".into()], 0);
+        let layout = window_chip_layout(&w, rect);
+        let window = ChromeState::Window(w);
+        let group = layout.groups.iter().find(|g| g.corner == crate::tui::layout::WindowStackCorner::TopLeft).expect("top-left group");
+        let tab0 = group.tabs.first().expect("first tab geometry");
+        let tab1 = group.tabs.get(1).expect("second tab geometry");
+        assert_eq!(window.window_hit(rect, Pos { x: tab0.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(0)));
+        assert_eq!(window.window_hit(rect, Pos { x: tab1.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(1)));
+        let new_x = tab0.new_x.expect("new-window glyph geometry");
+        assert_eq!(window.window_hit(rect, Pos { x: new_x, y: rect.y + 1 }), Some(WidgetSignal::WindowNewTab));
+    }
+
+    #[test]
+    fn mount_window_layout_reparents_windows_and_preserves_widget_state() {
+        let mut scene = Scene::new();
+        let root = scene.root();
+        let canvas = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
+        let w1_chrome = scene.add(canvas, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new("w1")))));
+        let term = scene.add(
+            w1_chrome,
+            Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(Size { width: 10, height: 5 }, 100)))),
+        );
+        if let Some(WidgetState::Terminal(t)) = scene.node_mut(term).widget() {
+            t.feed(b"hello");
+        }
+        let layout = even_window_layout(&["w1".into()]);
+        let mut mount_root = None;
+        mount_window_layout(&mut scene, canvas, &layout, &[("w1".into(), w1_chrome)], &mut mount_root);
+        assert!(mount_root.is_some());
+        assert_ne!(scene.node(w1_chrome).parent, Some(canvas), "window chrome must leave the canvas direct-child list");
+        if let Some(WidgetState::Terminal(t)) = scene.node_mut(term).widget() {
+            let has_h = (0..t.screen.size.height).any(|y| {
+                (0..t.screen.size.width).any(|x| t.screen.cell_at(x, y).map(|c| c.ch) == Some('h'))
+            });
+            assert!(has_h);
+        }
+    }
+
+    #[test]
+    fn wizard_keys_filter_navigate_back_and_activate() {
+        let mut widget = WidgetState::Wizard(WizardState::new(vec!["build".into(), "dev".into(), "test".into()]));
+        let down = KeyEvent { key: Key::Down, mods: 0 };
+        assert_eq!(widget.on_key(&down), Some(WidgetSignal::SelectionChanged(1)));
+        let e = KeyEvent { key: Key::Char('e'), mods: 0 };
+        let v = KeyEvent { key: Key::Char('v'), mods: 0 };
+        assert_eq!(widget.on_key(&e), None);
+        assert_eq!(widget.on_key(&v), None);
+        let WidgetState::Wizard(w) = &widget else { unreachable!() };
+        assert_eq!(w.filter, "ev");
+        let enter = KeyEvent { key: Key::Enter, mods: 0 };
+        assert_eq!(widget.on_key(&enter), Some(WidgetSignal::Activated(1)));
+        let mut empty = WidgetState::Wizard(WizardState::new(vec!["only".into()]));
+        let backspace = KeyEvent { key: Key::Backspace, mods: 0 };
+        assert_eq!(empty.on_key(&backspace), Some(WidgetSignal::NavigateBack));
     }
 
     #[test]
@@ -4763,7 +5343,7 @@ mod tests {
         parser.feed(&bytes[..1], &mut events);
         assert!(events.is_empty());
         parser.feed(&bytes[1..], &mut events);
-        assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Char('ü'), mods: 0 })]);
+        assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Char('ü'), mods: 0 })]);
     }
 
     #[test]
@@ -4796,7 +5376,7 @@ mod tests {
         assert!(!patch.is_empty());
     }
 
-    //#region 🔖️Geometry
+    //#region ???Geometry
     #[test]
     fn rect_contains_checks_boundaries() {
         let r = Rect::new(2, 2, 3, 3);
@@ -4837,9 +5417,9 @@ mod tests {
         assert_eq!(top2.height, 10, "rows beyond the rect's height clamp to the full height");
         assert_eq!(rest3.height, 0);
     }
-    //#endregion 🔖️Geometry
+    //#endregion ???Geometry
 
-    //#region 🔖️Text
+    //#region ???Text
     #[test]
     fn text_char_cells_zero_and_wide() {
         assert_eq!(crate::tui::text::char_cells('a'), 1);
@@ -4856,9 +5436,9 @@ mod tests {
         assert_eq!(s2, "世");
         assert_eq!(w2, 2);
     }
-    //#endregion 🔖️Text
+    //#endregion ???Text
 
-    //#region 🔖️Cell
+    //#region ???Cell
     #[test]
     fn cell_buffer_get_returns_none_out_of_bounds() {
         let buf = CellBuffer::new(Size { width: 3, height: 3 }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -4871,7 +5451,7 @@ mod tests {
     fn cell_buffer_put_pairs_and_orphans_wide_char_continuations() {
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
         let mut buf = CellBuffer::new(Size { width: 5, height: 1 }, blank);
-        buf.put(1, 0, Cell { ch: '世', width: 2, ..blank });
+        buf.put(1, 0, Cell { ch: '?', width: 2, ..blank });
         assert_eq!(buf.get(1, 0).unwrap().width, 2);
         assert_eq!(buf.get(2, 0).unwrap().width, 0, "the wide char auto-populates its continuation cell");
 
@@ -4886,7 +5466,7 @@ mod tests {
     fn cell_buffer_put_clamps_wide_char_at_right_edge() {
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
         let mut buf = CellBuffer::new(Size { width: 3, height: 1 }, blank);
-        buf.put(2, 0, Cell { ch: '世', width: 2, ..blank });
+        buf.put(2, 0, Cell { ch: '?', width: 2, ..blank });
         assert_eq!(buf.get(2, 0).unwrap().width, 1, "a wide char at the last column clamps to width 1 instead of overflowing");
     }
 
@@ -4939,9 +5519,9 @@ mod tests {
         let runs = diff(&a, &b);
         assert_eq!(runs, vec![DiffRun { y: 0, x: 0, len: 30 }]);
     }
-    //#endregion 🔖️Cell
+    //#endregion ???Cell
 
-    //#region 🔖️Ansi
+    //#region ???Ansi
     #[test]
     fn emit_runs_writes_cursor_move_and_truecolor_sgr() {
         let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
@@ -5036,9 +5616,9 @@ mod tests {
             ]
         );
     }
-    //#endregion 🔖️Ansi
+    //#endregion ???Ansi
 
-    //#region 🔖️Vt
+    //#region ???Vt
     fn vt_screen(w: u16, h: u16) -> crate::tui::vt::VtScreen {
         crate::tui::vt::VtScreen::new(Size { width: w, height: h }, 100)
     }
@@ -5118,9 +5698,9 @@ mod tests {
         assert_eq!(s.size, Size { width: 4, height: 3 });
         assert_eq!(s.cursor, Pos { x: 3, y: 2 });
     }
-    //#endregion 🔖️Vt
+    //#endregion ???Vt
 
-    //#region 🔖️Scene
+    //#region ???Scene
     #[test]
     fn scene_node_mut_setters_update_content_and_visibility() {
         let mut scene = Scene::new();
@@ -5177,9 +5757,9 @@ mod tests {
         scene.remove(a);
         scene.node(a);
     }
-    //#endregion 🔖️Scene
+    //#endregion ???Scene
 
-    //#region 🔖️Layout
+    //#region ???Layout
     #[test]
     fn layout_column_direction_stacks_children_vertically() {
         let mut scene = Scene::new();
@@ -5221,7 +5801,7 @@ mod tests {
             root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
                 size: None,
                 active_window_kind_id: Some("a".into()),
-                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }],
+                children: vec![WindowLayoutWindowNode {  window_kind_id: "a".into(), title: None, corner: None }],
             }),
             zoomed: None,
         };
@@ -5243,9 +5823,9 @@ mod tests {
         zoom_window(&mut layout, None);
     }
 
-    //#endregion 🔖️Layout
+    //#endregion ???Layout
 
-    //#region 🔖️Widget
+    //#region ???Widget
     #[test]
     fn list_on_key_boundaries_toggle_and_activate() {
         let mut widget = WidgetState::List(ListState::new(vec!["a".to_string(), "b".to_string()]));
@@ -5483,12 +6063,34 @@ mod tests {
     #[test]
     fn window_stack_tabs_paint_on_body_top() {
         let theme = Theme::new(AppearanceName::Dark);
-        let rect = Rect::new(0, 0, 40, 6);
-        let mut buf = CellBuffer::new(Size { width: 40, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let rect = Rect::new(0, 0, 50, 6);
+        let mut buf = CellBuffer::new(Size { width: 50, height: 6 }, Cell::blank([0, 0, 0], [0, 0, 0]));
         let w = WindowState::new("Main").with_stack_tabs(vec!["a".into(), "b".into()], 1);
         ChromeState::Window(w).paint(&theme, rect, &mut buf);
-        let row: String = (0..40).filter_map(|x| buf.get(x, 2).map(|c| c.ch)).collect();
-        assert!(row.contains('[') && row.contains('b'), "stack tab strip missing: {row:?}");
+        let row: String = (0..50).filter_map(|x| buf.get(x, 1).map(|c| c.ch)).collect();
+        assert!(row.contains('a') && row.contains('b'), "corner stack tabs missing: {row:?}");
+        assert!(row.contains('\u{2922}') && row.contains('\u{2715}'), "inline action glyphs missing: {row:?}");
+    }
+
+    #[test]
+    fn window_stack_tabs_respect_bottom_corners() {
+        use crate::tui::chrome::WindowStackTabState;
+        use crate::tui::layout::WindowStackCorner;
+        let theme = Theme::new(AppearanceName::Dark);
+        let rect = Rect::new(0, 0, 50, 8);
+        let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        let w = WindowState::new("Main").with_stack_tab_states(
+            vec![
+                WindowStackTabState::new("top", WindowStackCorner::TopLeft),
+                WindowStackTabState::new("bot", WindowStackCorner::BottomRight),
+            ],
+            1,
+        );
+        ChromeState::Window(w).paint(&theme, rect, &mut buf);
+        let top = row_text(&buf, 1);
+        let bottom = row_text(&buf, 6);
+        assert!(top.contains("top"), "top tab missing: {top:?}");
+        assert!(bottom.contains("bot"), "bottom tab missing: {bottom:?}");
     }
 
     #[test]
@@ -5548,9 +6150,9 @@ mod tests {
         WidgetState::Chip(off).paint(&theme, rect, &mut buf_off, false);
         assert_eq!(buf_off.get(0, 0).unwrap().bg, theme.surface(Surface::Panel));
     }
-    //#endregion 🔖️Widget
+    //#endregion ???Widget
 
-    //#region 🔖️Chrome
+    //#region ???Chrome
     #[test]
     fn paint_navbar_places_left_center_and_right_items() {
         let theme = Theme::new(AppearanceName::Dark);
@@ -5584,9 +6186,9 @@ mod tests {
         assert!(row1.contains("quit"));
         assert!(row1.trim_end().ends_with("OK"));
     }
-    //#endregion 🔖️Chrome
+    //#endregion ???Chrome
 
-    //#region 🔖️Engine
+    //#region ???Engine
 
     #[test]
     fn engine_mouse_move_does_not_steal_focus() {
@@ -5658,9 +6260,9 @@ mod tests {
         let patch2 = tui.render();
         assert!(!patch2.0.is_empty(), "resize forces a full repaint too");
     }
-    //#endregion 🔖️Engine
+    //#endregion ???Engine
 
-    //#region 🔖️WasmHost
+    //#region ???WasmHost
     #[test]
     fn wasm_host_setup_and_teardown_match_ansi_sequences() {
         let host = crate::tui::host::WasmHost::new(10, 5, true);
@@ -5676,11 +6278,11 @@ mod tests {
         let patch = host.render();
         assert!(!patch.is_empty(), "resizing triggers a full repaint on the next render");
     }
-    //#endregion 🔖️WasmHost
+    //#endregion ???WasmHost
 
 
 
-    //#region 🔖️Clipboard
+    //#region ???Clipboard
     #[test]
     fn osc52_copy_sequence_is_base64_payload() {
         let seq = crate::tui::backend::osc52_copy_sequence("hi");
@@ -5691,9 +6293,9 @@ mod tests {
         crate::tui::backend::Clipboard::copy_text(&mut mem, "abc").unwrap();
         assert_eq!(crate::tui::backend::Clipboard::paste_text(&mut mem).unwrap(), "abc");
     }
-    //#endregion 🔖️Clipboard
+    //#endregion ???Clipboard
 
-    //#region 🔖️Pty
+    //#region ???Pty
     #[cfg(all(unix, feature = "tui-terminal"))]
     #[test]
     fn pty_spawn_echo_hello() {
@@ -5732,6 +6334,41 @@ mod tests {
 
     #[cfg(all(unix, feature = "tui-terminal"))]
     #[test]
+    fn pty_kill_terminates_child_process_group() {
+        use crate::tui::pty::{Pty, PtySize};
+        use std::process::Command;
+        use std::time::{Duration, Instant};
+
+        let mut pty = Pty::spawn(
+            "bash",
+            &["-c", "sleep 300 & sleep 300; wait"],
+            &[],
+            None,
+            PtySize { cols: 80, rows: 24 },
+        )
+        .expect("spawn bash sleep group");
+        let pid = pty.pid();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        let mut saw_child = false;
+        while Instant::now() < deadline {
+            let out = Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep");
+            if !out.stdout.is_empty() {
+                saw_child = true;
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
+        assert!(saw_child, "[DEBUG] expected child processes under pty leader pid={pid}");
+        pty.kill().expect("kill pty group");
+        std::thread::sleep(Duration::from_millis(200));
+        let out = Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep after kill");
+        assert!(out.stdout.is_empty(), "[DEBUG] child processes still alive after kill: {:?}", String::from_utf8_lossy(&out.stdout));
+        let leader = Command::new("ps").args(["-p", &pid.to_string()]).output().expect("ps leader");
+        assert!(leader.status.success() == false || leader.stdout.len() < 2, "[DEBUG] pty leader still running");
+    }
+
+    #[cfg(all(unix, feature = "tui-terminal"))]
+    #[test]
     fn pty_resize_ok() {
         use crate::tui::pty::{Pty, PtySize};
 
@@ -5747,6 +6384,6 @@ mod tests {
             .expect("resize");
         pty.kill().expect("kill");
     }
-    //#endregion 🔖️Pty
+    //#endregion ???Pty
 }
-// #endregion 🔖️Tests
+// #endregion ???Tests

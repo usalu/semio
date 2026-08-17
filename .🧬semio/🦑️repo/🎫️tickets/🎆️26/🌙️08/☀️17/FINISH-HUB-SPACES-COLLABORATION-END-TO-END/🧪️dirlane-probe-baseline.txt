@@ -1,0 +1,35 @@
+Navigating to http://127.0.0.1:6072/
+=== CONSOLE ===
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [DEBUG] plugin source "extensions" malformed event: event.plugins is not iterable
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[warning] [DEBUG] program imperative-extension-effect worker-backed load failed, falling back to main thread: Unexpected identifier 'cabi_post_semio'
+[log] [DEBUG] plugin worker + flow-extension-text (55 live)
+[log] [DEBUG] plugin worker + demonstrator (55 live)
+[log] [DEBUG] plugin worker + animate (55 live)
+[error] [DEBUG] program load failed imperative-extension-effect SyntaxError: Unexpected identifier 'cabi_post_semio'
+[log] [DEBUG] plugin worker + imperative (55 live)
+[warning] [DEBUG] program cad-extension-aec-building-structure worker-backed load failed, falling back to main thread: Unexpected identifier 'cabi_post_semio'
+[log] [DEBUG] plugin worker + s (55 live)
+[error] [DEBUG] program load failed cad-extension-aec-building-structure SyntaxError: Unexpected identifier 'cabi_post_semio'
+[log] [DEBUG] plugin worker + playbook (55 live)
+[log] [DEBUG] plugin worker + process-extension-concrete (55 live)
+[log] [DEBUG] plugin worker + trinity (55 live)
+[log] [DEBUG] plugin worker + flow-extension-draw (55 live)
+[log] [DEBUG] plugin worker + forms (55 live)
+[log] [DEBUG] plugin worker + flow-extension-logic (55 live)
+=== NETWORK (hub-related) ===
+{"t":1786986192569,"type":"request","method":"GET","url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/class-variance-authority.js?v=61c65fd5"}
+{"t":1786986192569,"type":"request","method":"GET","url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%87%EF%B8%8Fdirectory/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts"}
+{"t":1786986192689,"type":"response","status":200,"url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/class-variance-authority.js?v=61c65fd5"}
+{"t":1786986192696,"type":"response","status":200,"url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%87%EF%B8%8Fdirectory/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts"}
+{"t":1786986193395,"type":"request","method":"GET","url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%87%EF%B8%8Fdirectory/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts"}
+{"t":1786986193407,"type":"response","status":200,"url":"http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%87%EF%B8%8Fdirectory/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts"}
+{"t":1786986193745,"type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986193782,"type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986193782,"type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0"}
+{"t":1786986193784,"type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a0102a-4fd8-7ad2-b9b1-9f85acda2e15\",\"hlc\":{\"physicalMs\":1786977603544,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":"}
+=== ALL NETWORK COUNT === 1203

@@ -142,6 +142,23 @@ interface plugin {
   /// forwarding) — never falls through to `host.io-compose` itself, to keep cross-plugin routing
   /// one hop.
   artifact-compose: func(key: list<u8>, sources: list<u8>) -> result<list<u8>, plugin-error>;
+  /// 📇️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): this plugin's own registered NEW io
+  /// mechanism entries (`io::io_mechanism::io_entries`), JSON-encoded `Vec<io_schema::
+  /// IoEntryDescriptor>`. Additive alongside `list-artifact-dialects` (D3) — the host calls this
+  /// once per plugin at load time to build the NEW `(ArtifactDialect, ArtifactDialect)`-keyed
+  /// cross-plugin `IoRouter` graph, separate from the OLD `IoKey`-keyed one.
+  list-io-entries: func() -> result<list<u8>, plugin-error>;
+  /// 🌉️ Runs exactly ONE hop of this plugin's own local io mechanism registry. `from`/`into` are
+  /// `ArtifactDialect::to_coordinate()` strings; `payload`/the ok result are JSON-encoded
+  /// `io_schema::IoPayload`. Never chains — multi-hop routing across plugins is the host's job
+  /// (`host.io-run`); a guest that needs a second hop through another plugin's dialect calls the
+  /// host import, it never calls its own `io-run` export again.
+  io-run: func(source: string, target: string, payload: list<u8>) -> result<list<u8>, plugin-error>;
+  /// 🔍️ Confidence — as `io_schema::Confidence::rank()`, `0`=None..`3`=High — that `payload` (a
+  /// JSON-encoded `io_schema::IoPayload`) is dialect `into`, sniffed as though it arrived `from` a
+  /// carrier dialect. The host's `io-identify` fans this out across every loaded plugin's
+  /// carrier-`from` entries.
+  io-sniff: func(source: string, target: string, payload: list<u8>) -> result<u8, plugin-error>;
 }
 
 interface contributor {
@@ -224,6 +241,26 @@ interface host {
   /// spec; a full resolver (host-side `LinkResolver`/`LinkState` wiring, `🏪️store/🦀️component.rs`)
   /// is a later wave — a stub/passthrough host implementation is sufficient for this one.
   resolve-artifact-link: func(link: list<u8>) -> result<list<u8>, string>;
+  /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the deterministic, ≤3-hop,
+  /// cycle-free cross-plugin route `from -> into` over the merged `list-io-entries` graph of every
+  /// loaded plugin. `from`/`into` are `ArtifactDialect::to_coordinate()` strings; the ok result is
+  /// a JSON-encoded `io_schema::IoRoute`. SAME ranking rule as the guest-local `io::io_mechanism::
+  /// io_route`: highest minimum fidelity, then fewest hops, then lexicographic `into`-coordinate
+  /// order — see the host `IoRouter::resolve_io_route`/TS `IoEntryGraph.route` implementations.
+  io-routes: func(source: string, target: string) -> result<list<u8>, list<u8>>;
+  /// 🌉️ Executes the WHOLE resolved `from -> into` route across however many plugins own its hops
+  /// — guests never chain `io-run` themselves, only the host does. `payload`/the ok result are
+  /// JSON-encoded `io_schema::IoPayload`; each hop's output payload feeds the next hop's input.
+  /// Refuses the ENTIRE route (no partial execution) if the CALLING plugin owns any hop —
+  /// re-entering its own in-flight, non-reentrant store lock would deadlock; the exact guard is
+  /// `IoRouter::run_io`'s up-front ownership scan before any hop executes.
+  io-run: func(source: string, target: string, payload: list<u8>) -> result<list<u8>, list<u8>>;
+  /// 🔍️ Fans `io-sniff` out across every OTHER loaded plugin's carrier-`from` entries (skipping the
+  /// calling plugin's own, for the same reentrancy reason `io-run` refuses a self-owned hop),
+  /// merges by confidence descending then coordinate ascending. `payload` is a JSON-encoded
+  /// `io_schema::IoPayload`; the ok result is a JSON-encoded `Vec<(io_schema::ArtifactDialect,
+  /// io_schema::Confidence)>`.
+  io-identify: func(payload: list<u8>) -> result<list<u8>, list<u8>>;
 }
 
 world plugin-world {

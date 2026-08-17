@@ -148,7 +148,7 @@ export const MaximizeStack: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    const maximize = canvasElement.querySelector("[data-slot='mode-dock-maximize']");
+    const maximize = canvasElement.querySelector('[data-slot="mode-dock-tab-focus"]');
     expect(maximize).toBeTruthy();
     await userEvent.click(maximize!);
     expect(within(canvasElement).getByText("Alpha")).toBeTruthy();

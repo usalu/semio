@@ -7,7 +7,8 @@
   "_treePurityComment": "🌳️ SHAPE V2 (26/08/05/SHAPE-V2-TREE-PURITY-BROADCAST, user directive): inside an owner's domain tree only three things may exist — a per-language leaf file (taxonomyLeafFilenames / ecosystems.<lang>.leafFilename, always `<prefix>component.<ext>`), the packagesDirName folder, and plain <component> folders. entryLocation=\"packages\" means the entry file lives at <owner>/📦️packages/<lang>/<entry> (three-level shape: <owner>/📦️packages/<lang>/🎯️targets/<target>/<entry>) — 📦️packages holds ONLY packaging code (packagingFileNames/packagingFileSuffixes + the entry file), never data. rootDataDirNames/rootDataFileNames/rootDocFileNames are valid ONLY at the owner root. A sibling variant source file (old 🦀️config.rs / 🦀️terminology.rs / 🦀️wasm.rs / any 🦀️<topic>.rs beside a component.rs) is non-compliant under V2 and folds into its own <folder>/component.<ext> — same module content, only the #[path]/import wiring changes.",
   "_areaStateComment": "🗺️ areas maps an area root to one of areaStates, replacing the registry script's LEGACY_LAYOUT_TOLERANT boolean with per-area granularity. It is a DECLARED value (an area graduates deliberately); per-owner/per-package maturity is DERIVED from disk instead — see migratedMarker and packageMaturityStates, never a hand-maintained package list. NOTE for 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE: root script.ts's policyTaxonomyBarrelShapeBreaches compares against the area value \"taxonomy\", which predates this enum — the equivalent state here is \"clean\"; validateTaxonomy() rejects any area value outside areaStates so the mismatch surfaces instead of silently making that rule vacuous.",
   "_surfaceComment": "👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: a SURFACE is a subset-scoped UI binding with a role — 👁️viewer (read-only) or ✏️editor (mutating). Every OWNED subset carries both, beside 🧬️schema/🚪️io/📚️examples; a plugin may also mirror a FOREIGN subset's path to contribute a surface it does not own (contributedSubsetChildDirs), which requires a declared dependency on the owning plugin. Surfaces keep the mode/window shape 🎛️apps used, so modesDirName/windowsDirName/modeChildDirs/windowChildDirs are unchanged and now serve surfaces instead of apps. Sequencing (APA lesson 26/08/12): the surface* keys land FIRST and the app* keys are deleted only once the last 🎛️apps directory is gone — the Rust taxonomy assert! gate requires every listed facet dir on every plugin, so a flip in the other order panics all 33 plugins.",
-  "schemaVersion": 5,
+  "_cleanMechanismComment": "🧹 Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, wave W1 (allow-half only — W6 removes the old shapes). Target tree: artifact -> standard -> subset, each level ONE root 🦀️component.rs that #[path]-mounts exactly its own child dirs and exports one declaration function (artifact()/standard()/subset()); a subset never `use`s a sibling subset or another standard; ALL io (including the native DSL text grammar and pack binary protocol) moves under 🚪️io/{📥️import/🧩️deserializers,📤️export/🧵️serializers}/{📸️snapshot,🔺️diff,🧬️mutations,💡️inferences}/{📝️text,💾️binary} (schemaChildDirs x representationDirs, reused rather than duplicated as a new key), carrying the SAME spec filenames 🧬️schema/* carries today (📖️component.grammar.semio / 📡️component.protocol.semio / 🔣️component.json); shared code lives in 🔨️modules at the lowest common owner (standard -> artifact -> plugin -> ✏️s/🔨️modules -> framework), never at subset level. This wave adds 🔨️modules as an OPTIONAL (not required) child of plugin/artifact/standard roots — pluginChildDirs/artifactChildDirs/standardChildDirs grew the entry but pluginRequiredChildDirs/(no artifact- or standard-level required list exists) did NOT, so no completeness gate can fire on a still-missing 🔨️modules dir. The io-vocabulary map-key extension (artifactSpecFilenames/artifactSchemaSpecFilenames for the new 🚪️io/{import,export}/{deserializers,serializers}/{snapshot,diff,mutations,inferences}/{text,binary} paths) is deliberately NOT added yet: 🔍️discovery/🟦️component.ts's artifactFacetChildLevel only declares 🗿️artifacts as a legal child of io/<direction>/<codec> today, so adding those keys without first teaching that walker the schemaChildDirs alternative would fail validateTaxonomy/buildSemanticCensus — see the ticket's w1-b-report.md sharedFileRequests for the paired discovery.ts + taxonomy.json patch that lands both atomically. The old 🧬️schema/*/{📝️text,💾️binary} entries stay valid meanwhile (both shapes legal during migration; W6 deletes the old one). Module-path slugs (policy policyOwnerMountsChildrenBreaches, script.ts policyModulePathSlug/policyStandardModulePathSlug): strip the emoji prefix, kebab->snake, a leading digit gets an underscore prefix (📄txt->txt, ◻2d->_2d, 🧊️3d->_3d, 🖐️5d->_5d, ✳️i-json->i_json); a standard slug (standardDirPrefix) additionally gets prefixed 'v' when it starts with a digit or 'v_' when it starts with a letter, with '.'/'-' folded to '_' first (🔖️1->v1, 🔖️1.4->v1_4, 🔖️89a->v89a, 🔖️ap214->v_ap214, 🔖️ecma-376->v_ecma_376, 🔖️riff-pcm->v_riff_pcm) — this is a pure algorithm parameterized by the pre-existing standardDirPrefix/subsetDirPrefix keys, so no new taxonomy data key was needed for it.",
+  "schemaVersion": 6,
   "semanticManifestFilename": "🔣️component.json",
   "semanticExtensionKey": "x-semio",
   "semanticConsumerMinimum": 2,
@@ -289,7 +290,8 @@
   "artifactChildDirs": [
     "🧬️schema",
     "🚪️io",
-    "📚️examples"
+    "📚️examples",
+    "🔨️modules"
   ],
   "standardsDirName": "🏅️standards",
   "subsetsDirName": "🪆️subsets",
@@ -310,7 +312,8 @@
     "🪆️subsets"
   ],
   "standardChildDirs": [
-    "🪆️subsets"
+    "🪆️subsets",
+    "🔨️modules"
   ],
   "subsetComponentDirs": [
     "🧬️schema",
@@ -522,7 +525,8 @@
     "⚡️implementation"
   ],
   "pluginChildDirs": [
-    "🎮️commands"
+    "🎮️commands",
+    "🔨️modules"
   ],
   "pluginRequiredChildDirs": [
     "🎮️commands"

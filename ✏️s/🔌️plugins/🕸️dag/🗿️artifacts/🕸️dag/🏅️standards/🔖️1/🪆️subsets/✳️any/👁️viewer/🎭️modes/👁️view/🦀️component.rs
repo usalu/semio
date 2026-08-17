@@ -22,7 +22,7 @@ pub fn layout() -> WindowLayout {
             kind: "stack".into(),
             size: None,
             active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::DAG_VIEW_WINDOW_MAIN.into(), title: Some("DAG".into()), instance_id: None, template_id: None }],
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::DAG_VIEW_WINDOW_MAIN.into(), title: Some("DAG".into()), instance_id: None, template_id: None, corner: None }],
         }),
     }
 }

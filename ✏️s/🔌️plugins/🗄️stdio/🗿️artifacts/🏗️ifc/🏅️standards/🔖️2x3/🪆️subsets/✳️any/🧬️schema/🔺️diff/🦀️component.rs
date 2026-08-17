@@ -410,11 +410,6 @@ fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 /// exactly, same isomorphic 9-variant shape): `U`=Unset, `D`=Derived, `I[n]`=Int, `R[n]`=Real
 /// (Rust's `Display`/`FromStr` for `f64` round-trip exactly), `S[hex]`=Str, `E[hex]`=Enum,
 /// `F[n]`=Ref, `A[v,v,...]`=List, `T[hex,[v,v,...]]`=Typed.
-pub(crate) fn enc_part21_value(v: &Part21Value) -> String {
-    let mut out = String::new();
-    enc_part21_value_into(v, &mut out);
-    out
-}
 fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
     match v {
         Part21Value::Unset => out.push('U'),
@@ -685,11 +680,6 @@ pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Res
         entities.push((name, args));
     }
     Ok(Part21Instance { id, entities })
-}
-pub(crate) fn enc_instance_list(list: &[Part21Instance]) -> String {
-    let mut out = String::with_capacity(list.len().saturating_mul(64));
-    enc_instance_list_into(list, &mut out);
-    out
 }
 pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
     out.push('[');

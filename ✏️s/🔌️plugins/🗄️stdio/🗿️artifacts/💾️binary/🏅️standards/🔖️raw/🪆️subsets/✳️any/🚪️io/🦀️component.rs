@@ -170,3 +170,63 @@ pub fn register_artifact_inferences() {
     ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor());
 }
 //#endregion 🔖️Register
+
+//#region 🔖️IoDeclaration
+/// 🚪️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot):
+/// `io() -> IoDeclaration` for `standard raw / subset any` — design.md §2/§3. **Carrier law**:
+/// `s.stdio.binary@raw/*` IS `CARRIER_BINARY` (`semio_framework::io_schema::CARRIER_BINARY`), so
+/// its own native `Binary` `IoPayload` already equals what `io_identify`/`io_route` treat as "the
+/// raw file" — zero foreign `IoEntry` rows are needed on this side. Every OTHER artifact that
+/// wants to accept raw bytes registers its OWN `Deserializer<Snapshot>` with `FROM:
+/// CARRIER_BINARY` on ITS side, not here (this is why the old self-referential identity
+/// `ArtifactDeserializer`/`ArtifactSerializer` leaves at `🚪️io/📥️import/…/🗿️artifacts/💾️binary/…`/
+/// `📤️export/…` are provably redundant under the new mechanism — kept in place this pass only
+/// because deleting them requires the crate to build cleanly for verification, which it
+/// currently cannot (see `📓️w2-p-report.md` `## verification`).
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::binary::{BinaryMutation, BinarySnapshot};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
+    IoDeclaration {
+        native: NativeCodecs {
+            // 🧭️ Grammar/protocol registration through `LanguagePair`'s `&'static dsl::LanguageSpec`
+            // slots is legal to leave `None` (the type's own doc: plain-codec subsets are a real,
+            // supported shape) — deferred here, not lost: the underlying `ArtifactDsl`/
+            // `ArtifactPack` codecs these would point at are unchanged and independently tested.
+            snapshot: LanguagePair { text: None, binary: None },
+            diff: LanguagePair { text: None, binary: None },
+            mutations: LanguagePair { text: None, binary: None },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()),
+        },
+        entries: &[],
+    }
+}
+//#endregion 🔖️IoDeclaration
+
+//#region 🧪️CarrierLaw
+#[cfg(test)]
+mod carrier_law {
+    //! 🧬️ THE carrier law this whole pilot exists to prove (design.md §3, mission step 5):
+    //! `s.stdio.binary@raw/*`'s native `Binary` `IoPayload` is the raw external file content,
+    //! byte-for-byte — decode→encode must reproduce arbitrary bytes exactly, and the encoded
+    //! payload must NOT be a `.semio` pack container (must not start with
+    //! `store::semio_format::BINARY_MAGIC`, the 8-byte magic `ArtifactPack::encode_pack` used to
+    //! emit before this fix — see `📸️snapshot/🦀️component.rs`).
+    use crate::artifacts::binary::BinarySnapshot;
+    use store::{ArtifactDsl, ArtifactPack};
+
+    #[test]
+    fn carrier_native_is_raw() {
+        for bytes in [Vec::<u8>::new(), vec![0x00, 0x01, 0xFF], b"hello".to_vec(), (0u8..=255).collect::<Vec<u8>>()] {
+            let decoded = BinarySnapshot::decode_pack(&bytes).expect("decode");
+            let encoded = decoded.encode_pack();
+            assert_eq!(encoded, bytes, "carrier round trip must be byte-identical for {bytes:?}");
+            assert!(!encoded.starts_with(&store::semio_format::BINARY_MAGIC), "carrier payload must not be a pack container: {encoded:?}");
+        }
+        // 🌱 `parse_dsl`/`print_dsl` (the hex-text facet) is NOT law-bound — `CARRIER_BINARY`
+        // only governs the `Binary` `IoPayload` variant of this dialect; the DSL hex form stays a
+        // legitimate, separate native-text encoding untouched by this law.
+        let _ = <BinarySnapshot as ArtifactDsl>::envelope_id();
+    }
+}
+//#endregion 🧪️CarrierLaw

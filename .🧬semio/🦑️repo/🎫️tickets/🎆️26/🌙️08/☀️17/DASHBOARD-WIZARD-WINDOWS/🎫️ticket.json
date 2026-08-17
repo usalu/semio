@@ -1,0 +1,5 @@
+{
+  "title": "Dashboard Wizard Windows",
+  "description": "Rewrite semio TUI dashboard: single default wizard window, runtime command-tree discovery, PTY output fills window, fix chrome close/maximize/+ tab strip.",
+  "goal": "🎯"
+}

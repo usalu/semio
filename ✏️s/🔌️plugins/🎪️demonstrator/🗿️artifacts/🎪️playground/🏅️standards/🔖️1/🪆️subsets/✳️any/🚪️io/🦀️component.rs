@@ -23,7 +23,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_XLSX, DEP_ZIP]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

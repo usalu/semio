@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+page.on("console", (msg) => console.log("CONSOLE", msg.type(), msg.text().slice(0, 300)));
+page.on("pageerror", (err) => console.log("PAGEERROR", String(err).slice(0, 400)));
+page.on("requestfailed", (req) => console.log("REQFAIL", req.url(), req.failure()?.errorText));
+const resp = await page.goto("http://127.0.0.1:6029/", { waitUntil: "networkidle", timeout: 90_000 });
+console.log("STATUS", resp?.status());
+console.log("TITLE", await page.title());
+console.log("HTML_LEN", (await page.content()).length);
+console.log("BODY", (await page.locator("body").innerHTML().catch(()=>"" )).slice(0, 500));
+await page.waitForTimeout(5000);
+console.log("BODY_TEXT", (await page.locator("body").innerText().catch(()=>"" )).slice(0, 500));
+await browser.close();

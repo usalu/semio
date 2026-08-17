@@ -16,6 +16,6 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Same single-window layout as the sibling surface's own layout — read-only twin, no quadrant
 /// to allocate for edit affordances.
 pub fn layout() -> WindowLayout {
-    WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Document".into()), instance_id: None, template_id: None }] }) }
+    WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Document".into()), instance_id: None, template_id: None, corner: None }] }) }
 }
 //#endregion 🔖️Definition

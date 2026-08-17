@@ -272,11 +272,14 @@ mod tests {
         /// bytes.len()`.
         #[test]
         fn protocol_walk_law() {
+            // 🧬️ CARRIER LAW: `encode_pack` is now the raw `bytes` payload directly (no SEMIO
+            // envelope to unwrap first) — `walk_protocol` already expects "bytes that start at
+            // the payload" per this file's own protocol.semio doc comment, so it walks `packed`
+            // unmodified.
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_binary_snapshot());
-            let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
-            let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
-            assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
+            let trace = dsl::walk_protocol(&pack_spec, &packed).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
+            assert_eq!(trace.consumed, packed.len(), "pack walk did not consume every byte");
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {

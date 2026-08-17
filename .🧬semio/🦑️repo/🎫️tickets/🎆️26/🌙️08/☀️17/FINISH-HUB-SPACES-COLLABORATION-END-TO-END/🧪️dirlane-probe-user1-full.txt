@@ -1,0 +1,470 @@
+Navigating to http://127.0.0.1:6072/
+=== CONSOLE (all) ===
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [DEBUG] plugin source "extensions" malformed event: event.plugins is not iterable
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[warning] [DEBUG] program imperative-extension-effect worker-backed load failed, falling back to main thread: Unexpected identifier 'cabi_post_semio'
+[warning] [DEBUG] program cad-extension-aec-building-structure worker-backed load failed, falling back to main thread: Unexpected identifier 'cabi_post_semio'
+[error] [DEBUG] program load failed imperative-extension-effect SyntaxError: Unexpected identifier 'cabi_post_semio'
+[error] [DEBUG] program load failed cad-extension-aec-building-structure SyntaxError: Unexpected identifier 'cabi_post_semio'
+[log] [DEBUG] plugin worker + s (55 live)
+[log] [DEBUG] plugin worker + flow-extension-text (55 live)
+[log] [DEBUG] plugin worker + vcs (55 live)
+[log] [DEBUG] plugin worker + animate (55 live)
+[log] [DEBUG] plugin worker + process-extension-concrete (55 live)
+[log] [DEBUG] plugin worker + reasoning-mindmap (55 live)
+[log] [DEBUG] plugin worker + flow-extension-bim (55 live)
+[log] [DEBUG] plugin worker + mathematical (55 live)
+[log] [DEBUG] plugin worker + imperative (55 live)
+[log] [DEBUG] plugin worker + flow-extension-draw (55 live)
+[log] [DEBUG] plugin worker + norm (55 live)
+[log] [DEBUG] plugin worker + writer (55 live)
+[log] [DEBUG] plugin worker + architect (55 live)
+[log] [DEBUG] plugin worker + process-extension-wood (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + cad-extension-aec-building-energy (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + gis (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + sequence (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + sourcing-module-slabs (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + raster (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + cad-extension-spatial-shape (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + process-extension-robotic (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + playbook (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + flow-extension-list (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + imperative-extension-control (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + dag (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + fem (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + flow-extension-primitive (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + lowpoly (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + sourcing-module-windows (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + flow-extension-logic (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + flow-extension-dictionary (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[warning] [DEBUG] program stdio worker-backed load failed, falling back to main thread: The requested module './semio_s_plugin_stdio_component.js' does not provide an export named 'plugin'
+[log] [DEBUG] plugin worker + playbook-module-procedural (55 live)
+[log] [DEBUG] plugin worker + flow-extension-brep (55 live)
+[error] 
+thread '<unnamed>' (1) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5169:106:
+app id playbook-module-procedural must be a canonical surface id: surface id "playbook-module-procedural" missing '#'
+[error] note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[error] [DEBUG] program load failed playbook-module-procedural Error: unreachable
+    at worker.onmessage (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:520:22)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + cad (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + imperative-extension-math (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + flow-extension-math (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + forms (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[warning] [DEBUG] program worker demonstrator unresponsive for 10000ms: init
+[warning] [DEBUG] program worker trinity unresponsive for 10000ms: init
+[warning] [DEBUG] program worker puzzle unresponsive for 10000ms: init
+[warning] [DEBUG] program worker process-extension-metal unresponsive for 10000ms: init
+[warning] [DEBUG] program worker imperative-extension-text unresponsive for 10000ms: init
+[warning] [DEBUG] program worker imperative-extension-logic unresponsive for 10000ms: init
+[warning] [DEBUG] program worker sourcing-module-beams unresponsive for 10000ms: init
+[warning] [DEBUG] program worker remodel unresponsive for 10000ms: init
+[warning] [DEBUG] program worker sourcing unresponsive for 10000ms: init
+[warning] [DEBUG] program worker procedural unresponsive for 10000ms: init
+[warning] [DEBUG] program worker cad-extension-aec-building unresponsive for 10000ms: init
+[warning] [DEBUG] program worker shooting unresponsive for 10000ms: init
+[warning] [DEBUG] program worker process unresponsive for 10000ms: init
+[warning] [DEBUG] program worker block unresponsive for 10000ms: init
+[warning] [DEBUG] program worker flow unresponsive for 10000ms: init
+[log] [DEBUG] plugin worker + imperative-extension-text (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + cad-extension-aec-building (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + trinity (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + demonstrator (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + sourcing-module-beams (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + process-extension-metal (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + procedural (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+[log] [DEBUG] plugin worker + imperative-extension-logic (55 live)
+[error] [DEBUG] AppRouter.build failed SemioFaultError: plugin "process-extension-wood" contributes a surface for "s.process.process3d@1/*" without depending on owner "process-extension-concrete"
+    at AppRouter.build (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%8E%A0%EF%B8%8Fkernel/%F0%9F%9F%A6%EF%B8%8Fcomponent.ts:218:19)
+    at http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3151:24
+    at updateMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:6277:21)
+    at Object.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18701:20)
+    at exports.useMemo (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-UBREYCSO.js?v=61c65fd5:947:36)
+    at FrameworkOsShellInner (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodules/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%F0%9F%A7%B1%EF%B8%8Felements/ShellHost/%F0%9F%9F%A6%EF%B8%8Fcomponent.tsx:3149:21)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:18241:20)
+    at renderWithHooks (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:5386:24)
+    at updateFunctionComponent (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:7207:21)
+    at beginWork (http://127.0.0.1:6072/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/s-react/deps/chunk-5TLOYUQ3.js?v=61c65fd5:8257:20)
+=== NETWORK (hub-related) ===
+{"t":1786986228059,"type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986228244,"type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986228261,"type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0"}
+{"t":1786986228267,"type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a0102a-4fd8-7ad2-b9b1-9f85acda2e15\",\"hlc\":{\"physicalMs\":1786977603544,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":\"user.created\",\"userId\":\"seed\",\"email\":\"seed@localhost\",\"displayName\":\"System\"},\"recordedAtMs\":1786977603544}}"}
+=== DOM: data-row-id elements ===
+[
+  {
+    "id": "space:default",
+    "text": "Demo Studioatelierprivate10local\n  \n"
+  }
+]
+=== DOM: body text snippet (home) ===
+Artifact
+Fullscreen
+semio · s · home
+Editor
+Studios
+Close
+Create Space
+Name	Kind	Visibility	Members	Updated	Origin	Actions
+
+Demo Studio
+	
+atelier
+	
+private
+	
+1
+	
+0
+	
+local
+	
+Actions
+Utilities
+Display
+Remote: detached
+No one else is here
+Settings
+Marketplace
+History
+Command
+Search
+
+Search for items
+
+Find
+
+Find items in this view

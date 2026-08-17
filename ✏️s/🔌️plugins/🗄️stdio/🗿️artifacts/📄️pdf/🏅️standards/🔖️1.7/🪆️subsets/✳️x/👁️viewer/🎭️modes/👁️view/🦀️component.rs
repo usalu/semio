@@ -16,7 +16,7 @@ pub fn definition() -> ModeDefinition {
 /// quadrant to allocate for edit affordances.
 pub fn layout() -> WindowLayout {
     WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Pages".into()), instance_id: None, template_id: None }] }),
+        root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Pages".into()), instance_id: None, template_id: None, corner: None }] }),
     }
 }
 //#endregion 🔖️Definition

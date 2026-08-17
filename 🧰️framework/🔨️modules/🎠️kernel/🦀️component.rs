@@ -585,7 +585,7 @@ pub struct CommandContext {
 //#endregion 🔖️Invocation
 
 //#region 🔖️Presence
-pub use semio_framework_os_kernel::{PresencePeer, PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer};
+pub use semio_framework_os_kernel::{PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView, decode_presence_peer, encode_presence_peer};
 //#endregion 🔖️Presence
 
 //#region 🔖️Window

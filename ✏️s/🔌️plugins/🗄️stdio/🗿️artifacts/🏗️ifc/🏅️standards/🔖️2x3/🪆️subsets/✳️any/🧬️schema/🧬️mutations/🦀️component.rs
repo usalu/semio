@@ -7,7 +7,7 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
     enc_instance_list_into, enc_optional_edm_preamble, enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
+use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -93,11 +93,6 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
 /// `split_top_level`/...) rather than duplicating them a second time in this file — same
 /// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️component.rs` uses. Grammar: `keyword
 /// arg=value ...` (space-separated), one match arm per variant.
-fn enc_ifc2x3_snapshot(s: &Ifc2x3Snapshot) -> String {
-    let mut out = String::with_capacity(s.document.instances.len().saturating_mul(64));
-    enc_ifc2x3_snapshot_into(s, &mut out);
-    out
-}
 fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push('[');
     out.push_str(&enc_str(&s.schema));

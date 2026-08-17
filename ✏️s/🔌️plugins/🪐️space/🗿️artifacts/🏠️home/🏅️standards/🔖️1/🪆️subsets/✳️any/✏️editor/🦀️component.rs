@@ -299,6 +299,11 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Arc;
+    use semio_framework_os::{
+        create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty,
+        LocalStorageBackbonePort, OsBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA,
+    };
 
     fn empty_history() -> semio_framework_plugin::HistoryView {
         semio_framework_plugin::HistoryView::empty()

@@ -230,6 +230,15 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("playground.panel.")) {
     return resolve(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
   }
+  if (id.includes(".modeDock.") && id.endsWith(".close")) {
+    return resolve("ui.window.close");
+  }
+  if (id.includes(".modeDock.") && id.endsWith(".focus")) {
+    return resolve("ui.window.focus");
+  }
+  if (id.includes(".modeDock.") && id.endsWith(".newWindow")) {
+    return resolve("ui.window.newWindow");
+  }
   return resolve(id);
 }
 

@@ -10,11 +10,7 @@ use semio_framework_plugin::{
     build_world_3d_scene, mesh_from_kind, world3d_camera_json, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, WorldSunConfig,
 };
-use serde::Serialize;
 use serde_json::json;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
@@ -104,14 +100,6 @@ fn evaluated_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
         "hovered": false,
     }]);
     (meshes.to_string(), instances.to_string())
-}
-
-fn hash_value<T: Serialize>(value: &T) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    if let Ok(json) = serde_json::to_string(value) {
-        json.hash(&mut hasher);
-    }
-    hasher.finish()
 }
 
 fn preview_payload_cached(fixture: &Process3dSnapshot) -> (String, String) {

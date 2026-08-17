@@ -27,5 +27,7 @@ pub mod navbar;
 pub mod window;
 #[path = "../../../../🧱️elements/🪵️Log/⌨️component.rs"]
 pub mod log;
+#[path = "../../../../🧱️elements/🧙️Wizard/⌨️component.rs"]
+pub mod wizard;
 
 pub use component::*;

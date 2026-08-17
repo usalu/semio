@@ -43,7 +43,7 @@ pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
             kind: "stack".into(),
             size: None,
             active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }],
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
         }),
     }
 }

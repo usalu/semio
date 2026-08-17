@@ -4,7 +4,7 @@ use semio_framework::{
     kernel::{ArtifactKind, CapabilityRequirement, Rights, Scope},
     PluginManifest, TopicContribution, ViewModel,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
@@ -37,6 +37,11 @@ pub enum PluginHostError {
     Plugin(String),
     #[error("io route conflict for {key:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it")]
     IoRouteConflict { key: semio_framework::IoKey, existing_plugin: String, incoming_plugin: String },
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW `(ArtifactDialect,
+    /// ArtifactDialect)`-keyed graph's own conflict — separate from `IoRouteConflict` above (OLD
+    /// `IoKey`-keyed graph), since the two mechanisms are additive and independently registered.
+    #[error("io entry route conflict for {from:?} -> {into:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it")]
+    IoEntryRouteConflict { from: semio_framework::io_schema::ArtifactDialect, into: semio_framework::io_schema::ArtifactDialect, existing_plugin: String, incoming_plugin: String },
     #[error("plugin runtime conflict for {plugin_id}")]
     PluginRuntimeConflict { plugin_id: String },
     #[error("{0} lock poisoned")]
@@ -216,15 +221,161 @@ pub struct IoRouter {
 struct IoRouterState {
     routes: HashMap<semio_framework::IoKey, String>,
     runtimes: HashMap<String, Arc<WasmPluginRuntime>>,
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW mechanism's merged cross-plugin
+    /// graph — `(from, into) -> IoEntryRoute` — built from every plugin's `list-io-entries` roster,
+    /// separate from `routes` above (OLD `IoKey`-keyed graph). `BTreeMap` (not `HashMap`) is load-
+    /// bearing: `resolve_io_route`'s determinism proof depends on canonical iteration order, mirroring
+    /// `io::io_mechanism`'s own `EntryMap`.
+    io_entries: BTreeMap<IoEntryKey, IoEntryRoute>,
+}
+
+/// 🌉️ One edge of the NEW mechanism's merged graph: `(from, into)`.
+type IoEntryKey = (semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect);
+
+/// 🌉️ One edge's owner + declared strength — erased from the owning plugin's `IoEntryDescriptor`,
+/// plus which plugin registered it (needed by `run_io`'s reentrancy guard and `identify`'s fan-out).
+#[derive(Clone, Debug, PartialEq)]
+struct IoEntryRoute {
+    owner: String,
+    fidelity: semio_framework::io_schema::IoFidelity,
+    sniffs: bool,
+}
+
+/// 🌉️ Inverse of `io_schema::Confidence::rank()` — the WIT `io-sniff` guest export returns a raw
+/// `u8` rank byte, so the host reconstructs the typed `Confidence` from it before merging.
+fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
+    match rank {
+        3 => semio_framework::io_schema::Confidence::High,
+        2 => semio_framework::io_schema::Confidence::Medium,
+        1 => semio_framework::io_schema::Confidence::Low,
+        _ => semio_framework::io_schema::Confidence::None,
+    }
+}
+
+/// 🌉️ Inverse of `io_schema::IoFidelity::rank()` — mirrors `io::io_mechanism::rank_to_fidelity`
+/// (this file cannot import that private fn from `🚪️io/**`, out of this wave's boundary, so the
+/// tiny 4-arm match is duplicated here rather than requesting a visibility patch for one line).
+fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
+    match rank {
+        3 => semio_framework::io_schema::IoFidelity::Exact,
+        2 => semio_framework::io_schema::IoFidelity::Canonical,
+        1 => semio_framework::io_schema::IoFidelity::Semantic,
+        _ => semio_framework::io_schema::IoFidelity::Lossy,
+    }
+}
+
+/// 🌉️ `(Reverse(min fidelity rank), hop count, joined into-coordinate string)` — the SAME ranking
+/// tuple `io::io_mechanism::route_rank` uses, reimplemented here because the host's merged graph is
+/// a DIFFERENT data structure (owner-aware, built from N plugins' wire rosters) than the guest-local
+/// `io_mechanism`'s own `&'static IoEntry` registry; the algorithm is identical, only the storage
+/// differs.
+fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
+    let min_fidelity = hops.iter().map(|hop| hop.fidelity.rank()).min().unwrap_or(0);
+    let joined = hops.iter().map(|hop| hop.into.to_coordinate()).collect::<Vec<_>>().join(",");
+    (std::cmp::Reverse(min_fidelity), hops.len(), joined)
+}
+
+/// 🌉️ Breadth-bounded, cycle-free DFS enumeration of every simple path `from -> into` up to
+/// `remaining_hops`, mirroring `io::io_mechanism::walk_routes` exactly. `graph` is a `BTreeMap`, so
+/// iteration order is a pure function of the KEY SET, never of insertion/registration order — this
+/// plus sorting the FULL candidate set at the end in `resolve_io_route` (never short-circuiting on
+/// the first hit) is what makes the result independent of plugin load order — proven by
+/// `io_router_route_is_deterministic_across_load_order` below.
+fn walk_io_routes(
+    graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
+    current: &semio_framework::io_schema::ArtifactDialect,
+    into: &semio_framework::io_schema::ArtifactDialect,
+    remaining_hops: u8,
+    path: &mut Vec<semio_framework::io_schema::IoEntryDescriptor>,
+    visited: &mut BTreeSet<semio_framework::io_schema::ArtifactDialect>,
+    candidates: &mut Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>>,
+) {
+    if remaining_hops == 0 {
+        return;
+    }
+    for ((from, hop_into), route) in graph.iter() {
+        if from != current || visited.contains(hop_into) {
+            continue;
+        }
+        let descriptor = semio_framework::io_schema::IoEntryDescriptor { from: from.clone(), into: hop_into.clone(), fidelity: route.fidelity, sniffs: route.sniffs };
+        path.push(descriptor);
+        if hop_into == into {
+            candidates.push(path.clone());
+        } else {
+            visited.insert(hop_into.clone());
+            walk_io_routes(graph, hop_into, into, remaining_hops - 1, path, visited, candidates);
+            visited.remove(hop_into);
+        }
+        path.pop();
+    }
+}
+
+/// 🌉️ `resolve_route`'s host-side twin (`io::io_mechanism::resolve_route`) over the merged
+/// multi-plugin graph instead of one plugin's own local registry. Pure — no lock, no wasm call —
+/// so it is directly unit-testable with a synthetic graph (`io_router_route_is_deterministic_
+/// across_load_order`, `io_router_route_prefers_higher_minimum_fidelity`, below).
+fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+    let max_hops = max_hops.min(3);
+    if max_hops == 0 {
+        return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
+    }
+    let mut candidates: Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>> = Vec::new();
+    let mut path: Vec<semio_framework::io_schema::IoEntryDescriptor> = Vec::new();
+    let mut visited: BTreeSet<semio_framework::io_schema::ArtifactDialect> = BTreeSet::new();
+    visited.insert(from.clone());
+    walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates);
+    if candidates.is_empty() {
+        return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
+    }
+    candidates.sort_by(|a, b| io_route_rank(a).cmp(&io_route_rank(b)));
+    let best = candidates.into_iter().next().expect("candidates checked non-empty above");
+    let fidelity = rank_to_io_fidelity(best.iter().map(|hop| hop.fidelity.rank()).min().expect("a route has at least one hop"));
+    Ok(semio_framework::io_schema::IoRoute { hops: best, fidelity })
+}
+
+/// 🌉️ Pure preflight check behind `IoRouter::register_plugin`'s io-entries half: does merging
+/// `plugin_id`'s `incoming` roster (its `list-io-entries` wire bytes, decoded) into `existing`
+/// claim a `(from, into)` key a DIFFERENT plugin already owns? `None` means the merge is safe
+/// (either a brand-new key, or `plugin_id` re-claiming its OWN key — idempotent). Extracted as its
+/// own function so the conflict rule is unit-testable without a real `Arc<WasmPluginRuntime>`.
+fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
+    for descriptor in incoming {
+        let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
+        if let Some(current) = existing.get(&key) {
+            if current.owner != plugin_id {
+                return Some(PluginHostError::IoEntryRouteConflict { from: key.0, into: key.1, existing_plugin: current.owner.clone(), incoming_plugin: plugin_id.to_string() });
+            }
+        }
+    }
+    None
+}
+
+/// 🌉️ Pure predicate behind `IoRouter::run_io`'s reentrancy guard: does ANY hop of `route`, per
+/// `graph`, belong to `calling_plugin_id`? Returns the FIRST such hop's `(from, into)` for the
+/// error message, or `None` if the whole route is safe to execute. Extracted as its own function so
+/// the guard is unit-testable without a real `Arc<WasmPluginRuntime>` (`run_io` needs one for every
+/// OTHER hop it actually executes; this predicate needs none).
+fn route_reenters_calling_plugin<'route>(
+    graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
+    route: &'route semio_framework::io_schema::IoRoute,
+    calling_plugin_id: &str,
+) -> Option<(&'route semio_framework::io_schema::ArtifactDialect, &'route semio_framework::io_schema::ArtifactDialect)> {
+    route.hops.iter().find_map(|hop| {
+        let owner = &graph.get(&(hop.from.clone(), hop.into.clone()))?.owner;
+        (owner == calling_plugin_id).then_some((&hop.from, &hop.into))
+    })
 }
 
 impl IoRouter {
     pub fn new() -> Self {
-        Self { state: Mutex::new(IoRouterState { routes: HashMap::new(), runtimes: HashMap::new() }) }
+        Self { state: Mutex::new(IoRouterState { routes: HashMap::new(), runtimes: HashMap::new(), io_entries: BTreeMap::new() }) }
     }
 
     /// 📌️ Registers one already-loaded plugin's runtime + merges its composer roster into the
-    /// shared route table. Call once per plugin, after `WasmPluginRuntime::load` succeeds.
+    /// shared route table, AND (CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-D) its NEW `list-io-
+    /// entries` roster into `state.io_entries`. Call once per plugin, after `WasmPluginRuntime::
+    /// load` succeeds. Both graphs preflight BEFORE either commits — a conflict in either leaves
+    /// BOTH untouched, matching this file's existing all-or-nothing registration shape.
     pub fn register_plugin(&self, plugin_id: &str, runtime: Arc<WasmPluginRuntime>) -> Result<(), PluginHostError> {
         let wire_bytes = runtime.list_artifact_dialects()?;
         let entries: Vec<(semio_framework::ArtifactDialect, Vec<semio_framework::ArtifactDialect>)> = serde_json::from_slice(&wire_bytes).map_err(PluginHostError::Json)?;
@@ -251,6 +402,8 @@ impl IoRouter {
                 });
             }
         }
+        let io_entries_bytes = runtime.list_io_entries()?;
+        let io_entries: Vec<semio_framework::io_schema::IoEntryDescriptor> = serde_json::from_slice(&io_entries_bytes).map_err(PluginHostError::Json)?;
         let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         if let Some(existing) = state.runtimes.get(plugin_id) {
             if !Arc::ptr_eq(existing, &runtime) {
@@ -264,9 +417,16 @@ impl IoRouter {
                 }
             }
         }
+        if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, &io_entries) {
+            return Err(conflict);
+        }
         state.runtimes.entry(plugin_id.to_owned()).or_insert(runtime);
         for key in candidate_routes {
             state.routes.entry(key).or_insert_with(|| plugin_id.to_owned());
+        }
+        for descriptor in io_entries {
+            let key: IoEntryKey = (descriptor.from, descriptor.into);
+            state.io_entries.entry(key).or_insert(IoEntryRoute { owner: plugin_id.to_owned(), fidelity: descriptor.fidelity, sniffs: descriptor.sniffs });
         }
         Ok(())
     }
@@ -319,15 +479,108 @@ impl IoRouter {
         serde_json::to_vec(&dialects).map_err(PluginHostError::Json)
     }
 
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the deterministic, ≤3-hop,
+    /// cycle-free route `from -> into` over the merged `io_entries` graph — the WIT `io-routes`
+    /// host import. JSON `io_schema::IoRoute` bytes.
+    pub fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
+        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
+        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+        let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+        let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
+        drop(state);
+        serde_json::to_vec(&route).map_err(PluginHostError::Json)
+    }
+
+    /// 🌉️ Executes the WHOLE resolved `from -> into` route — the WIT `io-run` host import. Resolves
+    /// the route and every hop's owning runtime FIRST (holding the router's own lock only for that
+    /// lookup, never across a guest call), THEN, before running anything, refuses the ENTIRE route
+    /// if ANY hop is owned by `calling_plugin_id` itself: executing that hop would call back into
+    /// the calling plugin's own `Store` mutex while it is still held by the in-flight outer call
+    /// that reached this host import in the first place — a guaranteed deadlock on a non-reentrant
+    /// `std::sync::Mutex`. This generalizes `compose`'s one-hop self-route refusal (above) to a
+    /// resolved route of up to 3 hops; the guard is an up-front scan, not a per-hop check, so a
+    /// route is either run in full or not run at all — no partial execution on a refusal.
+    pub fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
+        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+        let hops = {
+            let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+            let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3)?;
+            if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id) {
+                return Err(PluginHostError::Plugin(format!(
+                    "io-run refused: hop {} -> {} is owned by the calling plugin `{calling_plugin_id}` itself — executing it would re-enter that plugin's own in-flight, non-reentrant store lock",
+                    reentrant_hop.0.to_coordinate(),
+                    reentrant_hop.1.to_coordinate()
+                )));
+            }
+            let mut hops = Vec::with_capacity(route.hops.len());
+            for hop in &route.hops {
+                let key: IoEntryKey = (hop.from.clone(), hop.into.clone());
+                let owner = state
+                    .io_entries
+                    .get(&key)
+                    .map(|entry| entry.owner.clone())
+                    .ok_or_else(|| PluginHostError::Plugin(format!("io-run: hop {} -> {} vanished from the router between resolve and execute", hop.from.to_coordinate(), hop.into.to_coordinate())))?;
+                let runtime = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns hop {} -> {} but its runtime is not registered with the router", hop.from.to_coordinate(), hop.into.to_coordinate())))?;
+                hops.push((hop.from.to_coordinate(), hop.into.to_coordinate(), runtime));
+            }
+            hops
+        };
+        let mut current = payload;
+        for (from_coordinate, into_coordinate, runtime) in hops {
+            current = runtime.io_run(&from_coordinate, &into_coordinate, current)?;
+        }
+        Ok(current)
+    }
+
+    /// 🔍️ Fans `io-sniff` out across every OTHER loaded plugin's carrier-`from` entries — the WIT
+    /// `io-identify` host import. Skips the calling plugin's own carrier entries for the SAME
+    /// reentrancy reason `run_io` refuses a self-owned hop (a fan-out is best-effort across
+    /// multiple plugins, so this SKIPS rather than refuses the whole call). JSON `Vec<(ArtifactDialect,
+    /// Confidence)>` bytes, sorted confidence descending then coordinate ascending — same shape and
+    /// order `io::io_mechanism::io_identify` produces for the guest-local case.
+    pub fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload_bytes).map_err(PluginHostError::Json)?;
+        let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
+            semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
+            semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
+        });
+        let candidates: Vec<(semio_framework::io_schema::ArtifactDialect, String)> = {
+            let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+            state
+                .io_entries
+                .iter()
+                .filter(|((from, _into), route)| *from == carrier && route.sniffs && route.owner != calling_plugin_id)
+                .map(|((_from, into), route)| (into.clone(), route.owner.clone()))
+                .collect()
+        };
+        let mut found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = Vec::new();
+        for (into, owner) in candidates {
+            let runtime = {
+                let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
+                state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns a carrier io entry but its runtime is not registered with the router")))?
+            };
+            let rank = runtime.io_sniff(&carrier.to_coordinate(), &into.to_coordinate(), &payload_bytes)?;
+            let confidence = rank_to_io_confidence(rank);
+            if confidence != semio_framework::io_schema::Confidence::None {
+                found.push((into, confidence));
+            }
+        }
+        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
+        serde_json::to_vec(&found).map_err(PluginHostError::Json)
+    }
+
     /// ✂️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): drops
     /// `plugin_id`'s runtime handle and every route it owns — required before a hot-reloaded
     /// plugin can re-register a FRESH `Arc<WasmPluginRuntime>` under the same id (`register_plugin`'s
     /// `PluginRuntimeConflict` check would otherwise reject the new `Arc` as a different pointer for
-    /// an already-registered plugin id) and before an unload actually drops the runtime.
+    /// an already-registered plugin id) and before an unload actually drops the runtime. Also drops
+    /// every NEW-mechanism `io_entries` row `plugin_id` owns (W1-D).
     pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
         let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         state.runtimes.remove(plugin_id);
         state.routes.retain(|_, owner| owner != plugin_id);
+        state.io_entries.retain(|_, route| route.owner != plugin_id);
         Ok(())
     }
 }
@@ -1837,7 +2090,7 @@ struct AppRouterState {
     /// 🗂️ `artifact_kind -> owning plugin_id`.
     owners: HashMap<String, String>,
     /// 🗂️ `plugin_id -> its declared dependency plugin ids` (contract §3's contribution gate).
-    dependencies: HashMap<String, std::collections::BTreeSet<String>>,
+    dependencies: HashMap<String, BTreeSet<String>>,
     /// 🗂️ `(dialect, role) -> registered AppRefs`, unsorted insertion order — `surfaces_for` sorts
     /// lazily against the CURRENT `owners` snapshot (never stale, since ownership never changes once
     /// claimed).
@@ -1862,7 +2115,7 @@ impl AppRouter {
     /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
     pub fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let dependencies: std::collections::BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
+        let dependencies: BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
         state.dependencies.insert(plugin_id.to_string(), dependencies);
         for spec in &manifest.artifact_kinds {
             state.owners.entry(spec.id.clone()).or_insert_with(|| plugin_id.to_string());
@@ -2448,6 +2701,24 @@ impl semio::framework::host::Host for HostState {
     fn resolve_artifact_link(&mut self, _link: Vec<u8>) -> Result<Vec<u8>, String> {
         Err("resolve-artifact-link not implemented — full resolver wiring is a later wave".to_string())
     }
+
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): see `IoRouter::io_routes`.
+    fn io_routes(&mut self, from: String, into: String) -> Result<Vec<u8>, Vec<u8>> {
+        let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-routes", "no host io router registered; call register_host_io_router"))?;
+        router.io_routes(&from, &into).map_err(|error| host_fault_bytes("os.host.io-routes", error.to_string()))
+    }
+
+    /// 🌉️ See `IoRouter::run_io` for the resolved-route execution + reentrancy guard.
+    fn io_run(&mut self, from: String, into: String, payload: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-run", "no host io router registered; call register_host_io_router"))?;
+        router.run_io(&self.plugin_id, &from, &into, payload).map_err(|error| host_fault_bytes("os.host.io-run", error.to_string()))
+    }
+
+    /// 🔍️ See `IoRouter::identify` for the carrier-scoped fan-out + skip-self guard.
+    fn io_identify(&mut self, payload: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        let router = self.io_router.as_ref().ok_or_else(|| host_fault_bytes("os.host.io-identify", "no host io router registered; call register_host_io_router"))?;
+        router.identify(&self.plugin_id, payload).map_err(|error| host_fault_bytes("os.host.io-identify", error.to_string()))
+    }
 }
 //#endregion 🔖️HostState
 
@@ -2902,6 +3173,40 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
+    /// 📇️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): this plugin's own registered NEW io
+    /// mechanism roster — JSON `Vec<io_schema::IoEntryDescriptor>` bytes, the WIT `list-io-entries`
+    /// export. Called once per plugin at load time by `IoRouter::register_plugin`, additive
+    /// alongside `list_artifact_dialects` (D3).
+    pub fn list_io_entries(&self) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_list_io_entries(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// 🌉️ Executes ONE hop of THIS plugin's own local io mechanism registry — the WIT `io-run`
+    /// guest export. `from`/`into` are `ArtifactDialect::to_coordinate()` strings; `payload`/the ok
+    /// result are JSON `io_schema::IoPayload` bytes. Callers (the host `IoRouter::run_io`) are
+    /// expected to have already confirmed this plugin owns `(from, into)`.
+    pub fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_io_run(&mut *store, from, into, &payload).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// 🔍️ Sniffs THIS plugin's own `(from, into)` hop — the WIT `io-sniff` guest export. Returns the
+    /// raw `io_schema::Confidence::rank()` byte (`0`=None..`3`=High).
+    pub fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_io_sniff(&mut *store, from, into, payload).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
     /// 💡️ Reads this guest's deterministic executable inference roster once at load time. Moved
     /// (PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §6) from the `plugin`
     /// interface bindings to the `contributor` interface bindings — same call idiom, new accessor.
@@ -3127,6 +3432,20 @@ impl extension_bindings::semio::framework::host::Host for ExtensionHostState {
     fn resolve_artifact_link(&mut self, _link: Vec<u8>) -> Result<Vec<u8>, String> {
         Err("resolve-artifact-link not implemented for extension host".to_string())
     }
+
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): same "purely additive, not wired into any
+    /// boot sequence" stub shape as every other `Host` fn on `ExtensionHostState` above.
+    fn io_routes(&mut self, _from: String, _into: String) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.io-routes", "io-routes not implemented for extension host"))
+    }
+
+    fn io_run(&mut self, _from: String, _into: String, _payload: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.io-run", "io-run not implemented for extension host"))
+    }
+
+    fn io_identify(&mut self, _payload: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(host_fault_bytes("os.host.io-identify", "io-identify not implemented for extension host"))
+    }
 }
 
 /// 🧩️ One instantiated `extension-world` component: its wasmtime store/bindings plus decoded manifest.
@@ -3282,6 +3601,134 @@ mod tests {
             assert!(!runtime.manifest.plugin_id.is_empty());
         }
     }
+
+    //#region 🔖️IoRouterW1d
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW `IoRouter` mechanism's own
+    /// route-resolution/determinism/reentrancy tests. Pure — `resolve_io_route`/
+    /// `route_reenters_calling_plugin` take a synthetic `BTreeMap<IoEntryKey, IoEntryRoute>`
+    /// directly, no `Arc<WasmPluginRuntime>`/real wasm component needed — so these run on every
+    /// CI/dev machine, unlike `io_router_routes_a_real_cross_plugin_compose_between_two_loaded_wasm_
+    /// plugins` below.
+    fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework::io_schema::ArtifactDialect {
+        semio_framework::io_schema::ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() }
+    }
+
+    /// 🎯️ The fixture EVERY test in this region shares — TWO mock plugins:
+    /// - `"stdio"` owns `s.stdio.binary@raw/*` (the binary carrier) `->` `s.stdio.gif@87a/*` at
+    ///   `Exact` fidelity, and declares a sniff.
+    /// - `"gif"` owns TWO hops: `s.stdio.gif@87a/*` `->` `s.stdio.gif@89a/*` (the 87a-to-89a
+    ///   migration, `Canonical` fidelity, no sniff) AND a DIRECT `s.stdio.binary@raw/*` `->`
+    ///   `s.stdio.gif@89a/*` shortcut at `Lossy` fidelity (with a sniff) — a real alternate route
+    ///   from the carrier straight to 89a, deliberately weaker so `route_prefers_higher_minimum_
+    ///   fidelity` below has something genuine to prefer AGAINST.
+    ///
+    /// This is also the literal fixture `🧪️w1d-io-router-parity.ts` (this ticket's folder) builds
+    /// through the TS `IoEntryGraph` — both sides must resolve `binary@raw/* -> gif@89a/*` to the
+    /// SAME 2-hop route via `stdio`'s `Exact` hop then `gif`'s `Canonical` migration hop, per
+    /// `📓️w1-d-report.md`.
+    fn io_router_w1d_fixture_entries() -> Vec<(&'static str, semio_framework::io_schema::IoEntryDescriptor)> {
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
+        let gif_87a = io_dialect("s.stdio.gif", "87a", "*");
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        vec![
+            ("stdio", semio_framework::io_schema::IoEntryDescriptor { from: binary_raw.clone(), into: gif_87a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }),
+            ("gif", semio_framework::io_schema::IoEntryDescriptor { from: gif_87a, into: gif_89a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Canonical, sniffs: false }),
+            ("gif", semio_framework::io_schema::IoEntryDescriptor { from: binary_raw, into: gif_89a, fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: true }),
+        ]
+    }
+
+    /// 🏗️ `IoRouter::register_plugin`'s io-entries merge, without needing a real
+    /// `Arc<WasmPluginRuntime>` — builds the SAME `BTreeMap<IoEntryKey, IoEntryRoute>` shape
+    /// directly from `(owner, descriptor)` rows, inserted in WHATEVER order `rows` lists them.
+    fn build_io_entry_graph(rows: &[(&'static str, semio_framework::io_schema::IoEntryDescriptor)]) -> BTreeMap<IoEntryKey, IoEntryRoute> {
+        let mut graph = BTreeMap::new();
+        for (owner, descriptor) in rows {
+            let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
+            graph.entry(key).or_insert(IoEntryRoute { owner: (*owner).to_string(), fidelity: descriptor.fidelity, sniffs: descriptor.sniffs });
+        }
+        graph
+    }
+
+    /// 🎯️ "Register two mock plugins in both orders" — the ticket's own determinism proof
+    /// requirement. `fixture()` order is `stdio, gif, gif`; `reversed` is the exact reverse. Both
+    /// graphs, and both resolved routes, must be byte-identical.
+    #[test]
+    fn io_router_route_is_deterministic_across_load_order() {
+        let forward = io_router_w1d_fixture_entries();
+        let mut reversed = forward.clone();
+        reversed.reverse();
+        let graph_forward = build_io_entry_graph(&forward);
+        let graph_reversed = build_io_entry_graph(&reversed);
+        assert_eq!(graph_forward, graph_reversed, "the merged graph itself must not depend on registration order");
+
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        let route_forward = resolve_io_route(&graph_forward, &binary_raw, &gif_89a, 3).expect("forward-order route resolves");
+        let route_reversed = resolve_io_route(&graph_reversed, &binary_raw, &gif_89a, 3).expect("reversed-order route resolves");
+        assert_eq!(route_forward, route_reversed, "the resolved route must not depend on registration order");
+        assert_eq!(route_forward.hops.len(), 2, "the winning route is the 2-hop stdio->gif87a->gif89a path, not the 1-hop lossy shortcut");
+    }
+
+    /// ⚖️ Proves the ranking rule's FIRST tie-break: highest minimum fidelity beats fewest hops.
+    /// The 1-hop `binary->gif89a` shortcut (Lossy) loses to the 2-hop `binary->gif87a->gif89a`
+    /// path (min fidelity Canonical) even though it has fewer hops.
+    #[test]
+    fn io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
+        assert_eq!(route.fidelity, semio_framework::io_schema::IoFidelity::Canonical);
+        assert_eq!(route.hops.len(), 2);
+        assert_eq!(route.hops[0].from, binary_raw);
+        assert_eq!(route.hops[1].into, gif_89a);
+    }
+
+    /// 🌉️ `max_hops` bound is honored: clamped to 1, only the direct (Lossy) shortcut is reachable.
+    #[test]
+    fn io_router_route_respects_max_hops() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 1).expect("1-hop route resolves");
+        assert_eq!(route.hops.len(), 1);
+        assert_eq!(route.fidelity, semio_framework::io_schema::IoFidelity::Lossy);
+    }
+
+    /// 🔒️ `route_reenters_calling_plugin` — the pure predicate behind `run_io`'s guard. A route
+    /// with NO hop owned by the caller is safe (`None`); a route where the caller owns even ONE
+    /// hop is refused, naming that hop.
+    #[test]
+    fn io_router_run_io_reentrancy_guard_predicate() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
+        assert_eq!(route_reenters_calling_plugin(&graph, &route, "norm"), None, "a plugin owning neither hop is safe");
+        let hop = route_reenters_calling_plugin(&graph, &route, "stdio").expect("stdio owns the first hop of this route");
+        assert_eq!(hop.0, &binary_raw);
+        assert_eq!(hop.1, &io_dialect("s.stdio.gif", "87a", "*"));
+        let hop = route_reenters_calling_plugin(&graph, &route, "gif").expect("gif owns the second hop of this route");
+        assert_eq!(hop.1, &gif_89a);
+    }
+
+    /// 🧯️ A duplicate `(from, into)` claimed by a DIFFERENT plugin than the first registration is a
+    /// typed conflict — mirrors `io::io_mechanism`'s own `duplicate_entry_is_a_typed_error` law for
+    /// the OLD graph's `IoRouteConflict`, generalized to the NEW `IoEntryRouteConflict`. Exercises
+    /// `io_entries_conflict` directly — the SAME function `register_plugin` calls — so this proves
+    /// the real preflight rule, not a re-derivation of it, without needing a live wasm component.
+    #[test]
+    fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
+        let graph = build_io_entry_graph(&[("stdio", semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true })]);
+
+        let same_plugin_reclaim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }];
+        assert!(io_entries_conflict(&graph, "stdio", &same_plugin_reclaim).is_none(), "the SAME plugin reclaiming its own key must not conflict");
+
+        let different_plugin_claim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: false }];
+        let conflict = io_entries_conflict(&graph, "gif", &different_plugin_claim).expect("a second plugin claiming the same key must conflict");
+        assert!(matches!(conflict, PluginHostError::IoEntryRouteConflict { ref existing_plugin, ref incoming_plugin, .. } if existing_plugin == "stdio" && incoming_plugin == "gif"));
+    }
+    //#endregion 🔖️IoRouterW1d
 
     //#region 🔖️IoRouterE2e
     /// 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W7: the

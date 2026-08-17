@@ -56,9 +56,6 @@ impl Viewport {
 #[derive(Clone, Debug)]
 enum SceneDragMode {
     PanViewport,
-    MoveNode { node_id: String, grab_x: f32, grab_y: f32 },
-    ConnectPort { source_node_id: String, source_port_id: String, is_output: bool },
-    Marquee,
     MapMarquee { start_x: f32, start_y: f32, method: String, merge_mode: String },
     MapPan,
     InkPan { start_x: f32, start_y: f32, camera_x: f64, camera_y: f64, zoom: f64 },
@@ -72,7 +69,6 @@ enum SceneDragMode {
 #[derive(Clone, Debug)]
 struct SceneDrag {
     mode: SceneDragMode,
-    button: i16,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -83,11 +79,8 @@ struct SceneSurfaceState {
     pointer_was_down: bool,
     last_click_ms: f64,
     last_click_target: Option<String>,
-    editor_cursor: usize,
     node_positions: HashMap<String, (f32, f32)>,
     selected_ids: HashSet<String>,
-    hover_row_id: Option<String>,
-    raster_digest: Option<u64>,
     pending_raster: Option<PendingRasterUpload>,
     pending_raster_uploads: Vec<PendingRasterUpload>,
     canvas_image_digests: HashMap<String, u64>,
@@ -267,10 +260,6 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
-fn surface_args(scene: &UiComponentSceneNode) -> Value {
-    json!({ "surfaceId": scene.surface_id })
-}
-
 fn scroll_key(surface_id: &str, suffix: &str) -> String {
     format!("{surface_id}.{suffix}")
 }
@@ -419,17 +408,6 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     });
                     schedule_scene_camera_dispatch(&scene.surface_id);
                 }
-                SceneDragMode::MoveNode { node_id, grab_x, grab_y } => {
-                    let vp = state.viewport;
-                    let (wx, wy) = vp.screen_to_world(x, y, inner);
-                    let nx = wx - grab_x;
-                    let ny = wy - grab_y;
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.node_positions.insert(node_id.clone(), (nx, ny));
-                    });
-                }
-                SceneDragMode::ConnectPort { .. } => {}
-                SceneDragMode::Marquee => {}
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
@@ -594,7 +572,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                 actions.push(scene_action(scene, "canvasPointerDown", canvas_world_pointer_json(scene, inner, x, y, json!({ "button": button, "extend": shift }))));
                 if button == 1 || button == 2 {
                     mutate_scene_state(&scene.surface_id, |state| {
-                        state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport, button });
+                        state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
                     });
                 }
             }
@@ -606,7 +584,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                             if state.viewport.zoom <= 0.0 {
                                 state.viewport = Viewport { x: doc.camera.x as f32, y: doc.camera.y as f32, zoom: doc.camera.zoom as f32 };
                             }
-                            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport, button });
+                            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
                         });
                     }
                 }
@@ -658,11 +636,6 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
             });
         }
         mutate_scene_state(&scene.surface_id, |state| {
-            if let Some(SceneDrag { mode: SceneDragMode::MoveNode { node_id, .. }, .. }) = state.drag.as_ref() {
-                if let Some((nx, ny)) = state.node_positions.get(node_id).copied() {
-                    actions.push(scene_action(scene, "moveMediaNode", json!({ "surfaceId": scene.surface_id, "nodeId": node_id, "x": nx, "y": ny })));
-                }
-            }
             state.drag = None;
             state.pointer_was_down = false;
         });
@@ -1364,8 +1337,6 @@ struct BlockListBlockJson {
     id: String,
     label: String,
     kind: String,
-    #[serde(default)]
-    description: Option<String>,
 }
 
 /// 🧩️ Mirrors `playbook::PlaybookStep`'s renderer-relevant fields.
@@ -2293,8 +2264,6 @@ mod event_feed_tests {
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnAuthorJson {
     #[serde(default)]
-    id: String,
-    #[serde(default)]
     name: String,
 }
 
@@ -2710,10 +2679,6 @@ struct CanvasLayer {
     x1: Option<f64>,
     #[serde(default)]
     y1: Option<f64>,
-    #[serde(default)]
-    source: Option<String>,
-    #[serde(default)]
-    target: Option<String>,
     #[serde(default, rename = "dataUrl")]
     data_url: Option<String>,
     #[serde(default)]
@@ -3398,7 +3363,7 @@ mod canvas2d_tests {
         let surface_id = "pan-settle-canvas2d";
         let node = canvas_scene(surface_id, "[]".to_string());
         mutate_scene_state(surface_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport, button: 1 });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
         });
         let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
         let actions = handle_scene_pointer_move(&node, bounds, 60.0, 60.0, true, 1, 5.0, 5.0);
@@ -3988,7 +3953,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
         if let Some(bounds) = selection_bounds {
             if let Some(handle) = ink_resize_handle_at(bounds, camera, inner, x, y, 8.0) {
                 mutate_scene_state(&scene.surface_id, |s| {
-                    s.drag = Some(SceneDrag { mode: SceneDragMode::InkResize { handle: handle.to_string(), from: bounds, start_x: x, start_y: y, selected_ids: selected_ids.clone() }, button });
+                    s.drag = Some(SceneDrag { mode: SceneDragMode::InkResize { handle: handle.to_string(), from: bounds, start_x: x, start_y: y, selected_ids: selected_ids.clone() } });
                 });
                 return actions;
             }
@@ -3997,7 +3962,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
 
     if utility == "pan" || button == 1 {
         mutate_scene_state(&scene.surface_id, |s| {
-            s.drag = Some(SceneDrag { mode: SceneDragMode::InkPan { start_x: x, start_y: y, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom }, button });
+            s.drag = Some(SceneDrag { mode: SceneDragMode::InkPan { start_x: x, start_y: y, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom } });
         });
         return actions;
     }
@@ -4011,7 +3976,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
     if utility == "eraserStroke" || utility == "eraserPoint" {
         let events = if utility == "eraserStroke" { erase_ink_stroke_events(&doc.blocks, world_x, world_y, 8.0) } else { erase_ink_stroke_points_events(&doc.blocks, world_x, world_y, doc.eraser_radius.unwrap_or(12.0)) };
         mutate_scene_state(&scene.surface_id, |s| {
-            s.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility.clone() }, button });
+            s.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility.clone() } });
         });
         if !events.is_empty() {
             actions.push(ink_apply_events_action(scene, &events, "begin", None));
@@ -4021,7 +3986,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
 
     if utility == "selectMarquee" {
         mutate_scene_state(&scene.surface_id, |s| {
-            s.drag = Some(SceneDrag { mode: SceneDragMode::InkMarqueeDrag { start_x: x, start_y: y }, button });
+            s.drag = Some(SceneDrag { mode: SceneDragMode::InkMarqueeDrag { start_x: x, start_y: y } });
             s.ink_marquee_points = vec![(x, y)];
         });
         return actions;
@@ -4032,7 +3997,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
         let block_id = ink_item_id(&block).to_string();
         mutate_scene_state(&scene.surface_id, |s| {
             s.ink_overrides.insert(block_id.clone(), block.clone());
-            s.drag = Some(SceneDrag { mode: SceneDragMode::InkStroke { block_id: block_id.clone() }, button });
+            s.drag = Some(SceneDrag { mode: SceneDragMode::InkStroke { block_id: block_id.clone() } });
         });
         actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], "begin", Some(&[block_id])));
         return actions;
@@ -4071,7 +4036,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
                     }
                 }
                 mutate_scene_state(&scene.surface_id, |s| {
-                    s.drag = Some(SceneDrag { mode: SceneDragMode::InkMove { origins, start_x: x, start_y: y }, button });
+                    s.drag = Some(SceneDrag { mode: SceneDragMode::InkMove { origins, start_x: x, start_y: y } });
                 });
             }
         }
@@ -4818,23 +4783,6 @@ fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
     None
 }
 
-fn push_bezier(ctx: &mut FrameworkWidgetContext<'_>, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
-    let cx0 = x0 + (x1 - x0) * 0.5;
-    let cy0 = y0;
-    let cx1 = x0 + (x1 - x0) * 0.5;
-    let cy1 = y1;
-    let segments = 16usize;
-    let mut last = (x0, y0);
-    for step in 1..=segments {
-        let t = step as f32 / segments as f32;
-        let u = 1.0 - t;
-        let px = u * u * u * x0 + 3.0 * u * u * t * cx0 + 3.0 * u * t * t * cx1 + t * t * t * x1;
-        let py = u * u * u * y0 + 3.0 * u * u * t * cy0 + 3.0 * u * t * t * cy1 + t * t * t * y1;
-        ctx.draw.push_line(last.0, last.1, px, py, color, width);
-        last = (px, py);
-    }
-}
-
 fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
@@ -4851,10 +4799,6 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
     engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
 }
 
-fn node_screen_pos(node: &ui_wgpu::wgpu::NodeGraphNodeRecord, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
-    let (nx, ny) = state.node_positions.get(&node.id).copied().unwrap_or((node.x as f32, node.y as f32));
-    viewport.world_to_screen(nx, ny, inner)
-}
 //#endregion NodeGraph
 
 //#region TiledMap
@@ -4906,7 +4850,7 @@ pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if button == 0 {
         mutate_scene_state(surface_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_string() }, button });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_string(), merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_string() } });
             state.map_marquee_points = vec![(sx as f32, sy as f32)];
             state.map_marquee_active = false;
         });
@@ -4915,7 +4859,7 @@ pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect
     if button == 1 {
         engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
         mutate_scene_state(surface_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan, button: 1 });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan });
         });
         return engine_canvas::with_map_host_mut(surface_id, |host| engine_canvas::map_interaction_actions(surface_id, controller_id, host)).unwrap_or_default();
     }

@@ -1,0 +1,25 @@
+
+    failures:
+
+    failures:
+        component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 224 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite' (24676204) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4432:102:
+    called `Result::unwrap()` on an `Err` value: ArtifactDefinitionError { code: "artifact-definition.category-identity", message: "s.stdio.ifc.localized does not use the canonical localization identity grammar" }
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   0.053s] ( 72/225) semio-framework-plugin component::app::example_source_tests::example_source_converts_into_example_definition_and_registers_on_app
+        PASS [   0.163s] ( 73/225) semio-framework-plugin component::app::artifact_inference_wire_tests::wire_execution_observes_midflight_cancellation
+        PASS [   0.059s] ( 74/225) semio-framework-plugin component::app::example_source_tests::example_delegates_to_example_source
+        PASS [   0.216s] ( 75/225) semio-framework-plugin component::app::artifact_inference_service_tests::artifact_inference_registry_rejects_any_conflicting_duplicate
+────────────
+     Summary [   0.998s] 75/225 tests run: 72 passed, 3 failed, 0 skipped
+        FAIL [   0.182s] ( 66/225) semio-framework-plugin component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically
+        FAIL [   0.218s] ( 67/225) semio-framework-plugin component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit
+        FAIL [   0.233s] ( 71/225) semio-framework-plugin component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite
+warning: 150/225 tests were not run due to test failure (run with --no-fail-fast to run all tests, or run with --max-fail)
+error: test run failed

@@ -14,9 +14,8 @@ use crate::artifacts::process3d::schema::mutations::{
     change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step,
     move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities, replace_step_measure, replace_stock_solid,
 };
-use crate::artifacts::process3d::{Capability, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, Pose, StepOrigin, WorkshopMachine};
 use protocol::OpText;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `Process3dMutation` — every real variant flattened into its own
@@ -98,7 +97,7 @@ enum Process3dMutationDsl {
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for Process3dMutationDsl {
+impl OpText for Process3dMutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {

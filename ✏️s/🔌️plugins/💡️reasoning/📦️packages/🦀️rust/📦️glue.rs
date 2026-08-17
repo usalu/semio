@@ -9,7 +9,6 @@
 //! master ticket `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard
 //! ruling, and its Shape V2 addendum for the `📦️packages`-relocated entry file).
 
-extern crate infinite_canvas as infinite_board_normal_undirected;
 extern crate infinite_canvas as infinite_board_port_directed;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

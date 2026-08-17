@@ -1,0 +1,221 @@
+$ bun ./📜️script.ts nx run os-hub:dev
+
+ NX   Running target dev for project os-hub and 1 task it depends on:
+
+
+
+> nx run os-hub-admin:build  [local cache]
+
+
+> nx run os-hub:dev
+
+> bun ./📜️script.ts dev
+
+
+[2m> [22m[2mnx run[22m os-hub-admin:build  [2m[local cache][22m
+
+> bun ./📜️script.ts build
+
+[36mvite v7.3.6 [32mbuilding client environment for production...[36m[39m
+transforming...
+Found 1 warning while optimizing generated CSS:
+
+[2m│       transition: background-color 120ms ease;[22m
+[2m│     }[22m
+[2m│[22m     *::-webkit-scrollbar:hover::-webkit-scrollbar-thumb {
+[2m┆[22m                                                        [33m[2m^--[22m Invalid state[39m
+[2m┆[22m
+[2m│       background-color: var(--scrollbar-thumb);[22m
+[2m│     }[22m
+
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:fs" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:url" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+[33m[plugin vite:resolve] Module "node:path" has been externalized for browser compatibility, imported by "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.[39m
+
+/asset/🔤️fonts/🔤️anta/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️latin-ext.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️latin-ext.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️math.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️math.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️anta/🔤️symbols.woff2 referenced in /asset/🔤️fonts/🔤️anta/🔤️symbols.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2 referenced in /asset/🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2 referenced in /asset/🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️0-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️0-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️1-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️1-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️2-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️2-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️3-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️3-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️4-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️4-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️5-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️5-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️6-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️6-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️7-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️7-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️8-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️8-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️9-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️9-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️10-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️10-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/🔤️fonts/😀️noto-emoji/🔤️11-400.woff2 referenced in /asset/🔤️fonts/😀️noto-emoji/🔤️11-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_dark.svg referenced in /asset/👆️cursor/🔣️cursor_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_pointer_dark_inkscape.svg referenced in /asset/👆️cursor/🔣️cursor_pointer_dark_inkscape.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_grab_dark.svg referenced in /asset/👆️cursor/🔣️cursor_grab_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_grabbing.svg referenced in /asset/👆️cursor/🔣️cursor_grabbing.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_ew-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_ew-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_ns-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_ns-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_nesw-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_nesw-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_nwse-resize_dark.svg referenced in /asset/👆️cursor/🔣️cursor_nwse-resize_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_move_dark.svg referenced in /asset/👆️cursor/🔣️cursor_move_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_crosshair_dark.svg referenced in /asset/👆️cursor/🔣️cursor_crosshair_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_selectable_dark.svg referenced in /asset/👆️cursor/🔣️cursor_selectable_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_foldable_dark.svg referenced in /asset/👆️cursor/🔣️cursor_foldable_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/asset/👆️cursor/🔣️cursor_not-allowed_dark.svg referenced in /asset/👆️cursor/🔣️cursor_not-allowed_dark.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+[32m✓[39m 2650 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts is dynamically imported by /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts but also statically imported by /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx, /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2m📤️dist/[22m[32m🌐️index.html                               [39m[1m[2m    0.82 kB[22m[1m[22m[2m │ gzip:   0.45 kB[22m
+[2m📤️dist/[22m[2massets/[22m[32mpdf.worker.min-iDqQPrd3.mjs          [39m[1m[2m1,232.30 kB[22m[1m[22m
+[2m📤️dist/[22m[2massets/[22m[35m🌐️index-CIwPbQyp.css                [39m[1m[2m  213.43 kB[22m[1m[22m[2m │ gzip:  31.85 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36m__vite-browser-external-DauzbRu6.js  [39m[1m[2m    0.34 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mreact.esm-oiCweJ02.js                [39m[1m[2m    7.16 kB[22m[1m[22m[2m │ gzip:   2.96 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mindex-NQ7lUUAI.js                    [39m[1m[2m   61.35 kB[22m[1m[22m[2m │ gzip:  18.70 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mdom.esm-jsHsi4Mv.js                  [39m[1m[2m  186.65 kB[22m[1m[22m[2m │ gzip:  39.70 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36mindex-DLtQAXGb.js                    [39m[1m[2m  192.38 kB[22m[1m[22m[2m │ gzip:  60.29 kB[22m
+[2m📤️dist/[22m[2massets/[22m[36m🌐️index-CcqdgzDu.js                 [39m[1m[33m2,613.31 kB[39m[22m[2m │ gzip: 611.12 kB[22m
+[32m✓ built in 9.52s[39m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+
+
+
+[0m[7m[1m[32m NX [39m[22m[27m[0m  [32mSuccessfully ran target [1mbuild[22m for project os-hub-admin[39m
+
+[2mNx read the output from the cache instead of running the command for 1 out of 1 tasks.[22m
+
+    Finished `dev` profile [unoptimized] target(s) in 3.89s
+     Running `/Users/ueli/Documents/semio/target/debug/os-hub`
+[0m[31m[budget] cargo run --manifest-path Cargo.toml exceeded 1200000ms — killed. Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying.[0m
+[0m[1m1410 |[0m       [0m[35mif[0m (resolved) {
+[0m[1m1411 |[0m         formattedArgs[[0m[33m0[0m] = resolved[0m[2m;[0m
+[0m[1m1412 |[0m       }
+[0m[1m1413 |[0m     }
+[0m[1m1414 |[0m   }
+[0m[1m1415 |[0m   [0m[35mconst[0m result = spawnSync(cmd, formattedArgs, {
+                        [31m[1m^[0m
+[0m[31merror[0m[2m:[0m [1mspawnSync cargo ETIMEDOUT[0m
+      path[0m[2m:[0m [0m[32m"cargo"[0m[0m[2m,[0m
+   syscall[0m[2m:[0m [0m[32m"spawnSync cargo"[0m[0m[2m,[0m
+     errno[0m[2m:[0m [0m[33m-60[0m[0m[2m,[0m
+ spawnargs[0m[2m:[0m [ [0m[32m"run"[0m[0m[0m[2m,[0m [0m[32m"--manifest-path"[0m[0m[0m[2m,[0m [0m[32m"Cargo.toml"[0m[0m ][0m[2m,[0m
+      code[0m[2m:[0m [32m"ETIMEDOUT"[0m
+
+[0m      [2mat [0m[0m[1m[3mspawnSync[0m[2m ([0m[0m[36mnode:child_process[0m[2m:[0m[33m254[0m[2m:[33m20[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmdInternal[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1415[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCmd[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1438[0m[2m:[33m18[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunCargo[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m2318[0m[2m:[33m3[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/[0m[36m📜️script.ts[0m[2m:[0m[33m44[0m[2m:[33m5[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrun[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m878[0m[2m:[33m71[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrunBundleScriptMain[0m[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m908[0m[2m:[33m16[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts dev" exited with non-zero status code
+
+
+ NX   Running target dev for project os-hub and 1 task it depends on failed
+
+Failed tasks:
+
+- os-hub:dev
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run os-hub:dev exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:607:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15262:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

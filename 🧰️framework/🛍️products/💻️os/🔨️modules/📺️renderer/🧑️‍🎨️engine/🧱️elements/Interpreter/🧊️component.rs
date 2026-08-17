@@ -10,7 +10,9 @@
 use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use serde_json::Value;
 use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
-use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiState};
+use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
+#[cfg(any(target_arch = "wasm32", test))]
+use ui_wgpu::wgpu::UiState;
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -195,7 +197,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 //#endregion RenderPlanValidator
 
 //#region RetainedEngineCutover
-/** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::wgpu::engine::Ui`
+/* 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::wgpu::engine::Ui`
  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
  * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
@@ -1508,6 +1510,10 @@ mod render_plan_validator_tests {
  * see the `🔬️IntrospectionExports` sub-region below for exactly how they end up reachable. */
 
 //#region 🔬️IntrospectionTypes
+// 🔬️ Live for real via the wasm32 `#[wasm_bindgen]` exports below (`🔬️IntrospectionExports`);
+// also gated `test` since `introspection_tests` (bottom of this region) exercises this whole
+// dump pipeline natively — neither cfg alone covers both compilations.
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 struct DumpViewport {
     w: f32,
@@ -1515,6 +1521,7 @@ struct DumpViewport {
     dpr: f32,
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 struct DumpNodeState {
     hovered: bool,
@@ -1522,6 +1529,7 @@ struct DumpNodeState {
     selected: bool,
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpNode {
@@ -1537,6 +1545,7 @@ struct DumpNode {
     state: DumpNodeState,
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpStructure {
@@ -1545,6 +1554,7 @@ struct DumpStructure {
     nodes: Vec<DumpNode>,
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpFrameStats {
@@ -1561,6 +1571,7 @@ struct DumpFrameStats {
 /// React side's `data-ui-path` (built from the same serialized `UiNode` tree — see this ticket's
 /// own path-grammar spec, shared verbatim between both sides). Exhaustive match: a new `UiNode`
 /// variant fails to compile here until wired, same discipline as `UiNode::presence`'s own match.
+#[cfg(any(target_arch = "wasm32", test))]
 fn ui_node_kind_tag(node: &UiNode) -> &'static str {
     match node {
         UiNode::Stack(_) => "stack",
@@ -1589,6 +1600,7 @@ fn ui_node_kind_tag(node: &UiNode) -> &'static str {
 /// `reconcile::explicit_id` (same variant→field mapping, the one `NodeKey::Explicit` itself keys
 /// retained children by, so this names the exact same identity the retained tree already
 /// reconciles against) since that function isn't part of `ui_wgpu`'s public surface.
+#[cfg(any(target_arch = "wasm32", test))]
 fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
     match node {
         UiNode::Stack(n) => n.id.as_deref(),
@@ -1612,6 +1624,7 @@ fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
 
 /// 🧭️ One path segment: `${kind}[${i}]` or `${kind}[${i}]#${id}` when `node` carries a non-empty
 /// declared id — the exact grammar the React side's `data-ui-path` mirrors.
+#[cfg(any(target_arch = "wasm32", test))]
 fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
     let kind = ui_node_kind_tag(node);
     match ui_node_declared_id(node) {
@@ -1622,10 +1635,12 @@ fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
 //#endregion 🔬️IntrospectionPathGrammar
 
 //#region 🔬️IntrospectionVisualFields
+#[cfg(any(target_arch = "wasm32", test))]
 fn rgba_array(color: ui_wgpu::wgpu::Rgba) -> [f32; 4] {
     [color.r, color.g, color.b, color.a]
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
     if disabled {
         color.with_alpha(color.a * 0.5)
@@ -1644,6 +1659,7 @@ fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
 /// documented unit mismatch, not a bug. `fontWeight` is always `None`: this renderer's `Theme`/
 /// `paint` layer has no font-weight concept at all (only `UiTextNode.emphasize`, which changes
 /// size+color, never weight) — a genuine gap, not a guess.
+#[cfg(any(target_arch = "wasm32", test))]
 fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<String>, Option<[f32; 4]>, Option<[f32; 4]>, Option<f32>) {
     match node {
         UiNode::Stack(stack) => {
@@ -1709,6 +1725,7 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 /// 🖱️ Same authored-hover-folds-into-live-hover rule `paint::paint_node` applies (private to
 /// `ui_wgpu::wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
 /// `presence.hover` counts as hovered too, unless the node is disabled.
+#[cfg(any(target_arch = "wasm32", test))]
 fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
     let live = node.flags.contains(ui_wgpu::wgpu::NodeFlags::HOVERED);
     if disabled {
@@ -1722,6 +1739,7 @@ fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled:
 /// order, same parent-relative-`LayoutBucket`-offset accumulation into absolute `(origin_x +
 /// node.layout.x, origin_y + node.layout.y)`), building one `DumpNode` per visited node and
 /// recording the first node found with `NodeFlags::FOCUSED` set as `focus_path`.
+#[cfg(any(target_arch = "wasm32", test))]
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
 fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
     let Some(node) = tree.node(id) else { return };
@@ -1769,12 +1787,14 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
 /// single docked window, no floating panels open), wrong in general once a test opens a floating
 /// panel too. Noted rather than guessed further; a real fix needs these two exports to grow an
 /// optional `windowId` JS argument, which this pass doesn't have sanction to add unasked.
+#[cfg(any(target_arch = "wasm32", test))]
 fn primary_window_id(engine: &ui_wgpu::wgpu::Ui) -> Option<String> {
     engine.window_ids().filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h))).max_by(|a, b| a.1.total_cmp(&b.1)).map(|(id, _)| id)
 }
 //#endregion 🔬️IntrospectionWindowSelection
 
 //#region 🔬️IntrospectionBuilders
+#[cfg(any(target_arch = "wasm32", test))]
 fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, focus_path: None, nodes: Vec::new() };
@@ -1797,14 +1817,17 @@ fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32) -> DumpStructure {
 /// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
+#[cfg(any(target_arch = "wasm32", test))]
 fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
     instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui) -> DumpFrameStats {
     let Some(window_id) = primary_window_id(engine) else {
         return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };

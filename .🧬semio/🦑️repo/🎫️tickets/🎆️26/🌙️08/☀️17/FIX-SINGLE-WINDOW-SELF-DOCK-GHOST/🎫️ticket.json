@@ -1,0 +1,10 @@
+{
+  "title": "Fix Single Window Self Dock Ghost",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "When only one window is active and it is dragged, the mode dock shows a split drop affordance next to itself which does not work. Suppress meaningless self-split and root-split drop zones when no other windows remain after lifting the drag source.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪49d5cfec47424182965d5cc53674996e"
+  ]
+}

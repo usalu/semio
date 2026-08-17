@@ -2614,9 +2614,27 @@ export function scriptPathFromUrl(scriptUrl: string): string {
 //#endregion 🔖️Process
 //#endregion 🔖️bundle-script
 
-//#region 🔖️uloc-metrics
+//#region 🔖️commit-metrics
 
 //#region Types
+export type MetricKindId = "uloc" | "size";
+
+export type MetricKind = {
+  id: MetricKindId;
+  token: string;
+  formatCount: (n: number) => string;
+};
+
+export type CommitMetricRow = {
+  kind: MetricKindId;
+  lang: string;
+  emoji: string;
+  code: number;
+  edited: number;
+  added: number;
+  removed: number;
+};
+
 export type MicroCommitLangMetrics = {
   lang: string;
   emoji: string;
@@ -2631,6 +2649,12 @@ export type UlocByLanguage = Record<string, number>;
 /** 📊️Repo-wide unified LOC per language (tracked git files; JSON uses key count). */
 export type UlocRunner = {
   countRepoByLanguage(root: string): UlocByLanguage;
+};
+
+/** 📊️Repo-wide uloc and byte size per language for commit metrics. */
+export type MetricsRunner = {
+  countRepoUlocByLanguage(root: string): UlocByLanguage;
+  countRepoSizeByLanguage(root: string): UlocByLanguage;
 };
 //#endregion Types
 
@@ -2794,7 +2818,7 @@ export function langMetricsEmoji(lang: string): string {
 
 /** 🌳️Resolves the git worktree root (never a subdirectory of the monorepo). */
 export function gitRepoRoot(start: string): string {
-  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8", env: safeGitEnv() });
+  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8", env: gitSpawnEnv() });
   if (r.status === 0) {
     const top = (r.stdout ?? "").trim();
     if (top) return top;
@@ -2804,7 +2828,7 @@ export function gitRepoRoot(start: string): string {
 
 function gitTrackedPaths(root: string): string[] {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, env: gitSpawnEnv() });
   if (r.status !== 0) return [];
   return (r.stdout ?? Buffer.alloc(0)).toString("utf8").split("\0").filter(Boolean);
 }
@@ -2854,88 +2878,107 @@ export function countUnifiedLocForFile(rel: string, data: string): number {
 
 function gitDir(root: string): string {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8", env: safeGitEnv() });
+  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
   if (r.status !== 0) return join(repoRoot, ".git");
   const dir = (r.stdout ?? "").trim();
   return dir.startsWith("/") ? dir : join(repoRoot, dir);
 }
 
-const ULOC_CACHE_VERSION = 4;
+const METRICS_CACHE_VERSION = 5;
 
-type UlocCacheFile = {
+type MetricsCacheFile = {
   version: number;
   head: string;
   trackedFiles: number;
-  totalLoc: number;
-  langCount: number;
-  counts: UlocByLanguage;
+  uloc: { totalLoc: number; langCount: number; counts: UlocByLanguage };
+  size: { totalBytes: number; langCount: number; counts: UlocByLanguage };
 };
 
-function ulocCachePath(root: string): string {
-  return join(gitDir(root), "compose-uloc-cache.json");
+function metricsCachePath(root: string): string {
+  return join(gitDir(root), "compose-metrics-cache.json");
 }
 
-function ulocCacheStats(counts: UlocByLanguage): { totalLoc: number; langCount: number } {
-  let totalLoc = 0;
+function metricsMapStats(counts: UlocByLanguage): { total: number; langCount: number } {
+  let total = 0;
   let langCount = 0;
   for (const n of Object.values(counts)) {
     if (n > 0) {
-      totalLoc += n;
+      total += n;
       langCount++;
     }
   }
-  return { totalLoc, langCount };
+  return { total, langCount };
 }
 
 /** 🧪️Whether cached uloc looks like a complete repo scan (rejects partial/stale caches). */
 export function isUlocCachePlausible(root: string, counts: UlocByLanguage): boolean {
-  const { totalLoc, langCount } = ulocCacheStats(counts);
+  const { total: totalLoc, langCount } = metricsMapStats(counts);
   if (totalLoc <= 0 || langCount === 0) return false;
   const tracked = gitTrackedPaths(root).length;
-  if (tracked === 0) return true;
+  if (tracked === 0) {
+    const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), encoding: "utf8", env: gitSpawnEnv() });
+    if (head.status === 0 && (head.stdout ?? "").trim()) return false;
+    return true;
+  }
   if (tracked < 100) return totalLoc > 0 && (langCount >= 2 || totalLoc >= 50);
   if (langCount < 6 && tracked >= 300) return false;
   if (totalLoc < tracked * 3) return false;
   return true;
 }
 
-function readUlocCache(root: string): UlocByLanguage | null {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: safeGitEnv() });
+function isSizeCachePlausible(root: string, counts: UlocByLanguage): boolean {
+  const { total: totalBytes, langCount } = metricsMapStats(counts);
+  if (totalBytes <= 0 || langCount === 0) return false;
+  const tracked = gitTrackedPaths(root).length;
+  if (tracked === 0) {
+    const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: gitRepoRoot(root), encoding: "utf8", env: gitSpawnEnv() });
+    if (head.status === 0 && (head.stdout ?? "").trim()) return false;
+    return true;
+  }
+  if (tracked < 100) return totalBytes > 0 && langCount >= 1;
+  if (langCount < 3 && tracked >= 300) return false;
+  return true;
+}
+
+function readMetricsCache(root: string): { uloc: UlocByLanguage; size: UlocByLanguage } | null {
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (head.status !== 0) return null;
   const h = (head.stdout ?? "").trim();
   if (!h) return null;
   try {
-    const raw = readFileSync(ulocCachePath(root), "utf8");
-    const parsed = JSON.parse(raw) as Partial<UlocCacheFile>;
-    if (parsed.version !== ULOC_CACHE_VERSION) return null;
-    if (parsed.head !== h || !parsed.counts || typeof parsed.counts !== "object") return null;
+    const raw = readFileSync(metricsCachePath(root), "utf8");
+    const parsed = JSON.parse(raw) as Partial<MetricsCacheFile>;
+    if (parsed.version !== METRICS_CACHE_VERSION) return null;
+    if (parsed.head !== h || !parsed.uloc?.counts || !parsed.size?.counts) return null;
     const tracked = gitTrackedPaths(root).length;
     if (typeof parsed.trackedFiles === "number" && Math.abs(tracked - parsed.trackedFiles) > 50) return null;
-    if (!isUlocCachePlausible(root, parsed.counts)) return null;
-    const stats = ulocCacheStats(parsed.counts);
-    if (typeof parsed.totalLoc === "number" && parsed.totalLoc !== stats.totalLoc) return null;
-    if (typeof parsed.langCount === "number" && parsed.langCount !== stats.langCount) return null;
-    return parsed.counts;
+    if (!isUlocCachePlausible(root, parsed.uloc.counts)) return null;
+    if (!isSizeCachePlausible(root, parsed.size.counts)) return null;
+    const ulocStats = metricsMapStats(parsed.uloc.counts);
+    if (parsed.uloc.totalLoc !== ulocStats.total || parsed.uloc.langCount !== ulocStats.langCount) return null;
+    const sizeStats = metricsMapStats(parsed.size.counts);
+    if (parsed.size.totalBytes !== sizeStats.total || parsed.size.langCount !== sizeStats.langCount) return null;
+    return { uloc: parsed.uloc.counts, size: parsed.size.counts };
   } catch {
     return null;
   }
 }
 
-function writeUlocCache(root: string, counts: UlocByLanguage): void {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: safeGitEnv() });
+function writeMetricsCache(root: string, uloc: UlocByLanguage, size: UlocByLanguage): void {
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (head.status !== 0) return;
   const h = (head.stdout ?? "").trim();
   if (!h) return;
-  const { totalLoc, langCount } = ulocCacheStats(counts);
-  const payload: UlocCacheFile = {
-    version: ULOC_CACHE_VERSION,
+  const ulocStats = metricsMapStats(uloc);
+  const sizeStats = metricsMapStats(size);
+  const payload: MetricsCacheFile = {
+    version: METRICS_CACHE_VERSION,
     head: h,
     trackedFiles: gitTrackedPaths(root).length,
-    totalLoc,
-    langCount,
-    counts,
+    uloc: { totalLoc: ulocStats.total, langCount: ulocStats.langCount, counts: uloc },
+    size: { totalBytes: sizeStats.total, langCount: sizeStats.langCount, counts: size },
   };
-  writeFileSync(ulocCachePath(root), JSON.stringify(payload));
+  writeFileSync(metricsCachePath(root), JSON.stringify(payload));
 }
 
 /** 📊️Scans all git-tracked paths and sums unified LOC per language bucket. */
@@ -2969,18 +3012,67 @@ export function scanRepoUnifiedLocUncached(root: string): UlocByLanguage {
   return out;
 }
 
-/** 📊️Repo uloc with per-HEAD cache under `.git/compose-uloc-cache.json`. */
+/** 📊️Scans tracked paths and sums on-disk byte size per language (includes binaries and large files). */
+export function scanRepoSizeByLanguageUncached(root: string): UlocByLanguage {
+  const repoRoot = gitRepoRoot(root);
+  const out: UlocByLanguage = {};
+  for (const rel of gitTrackedPaths(root)) {
+    if (shouldSkipPathForUloc(repoRoot, rel)) continue;
+    const lang = classifyPathForMetrics(rel);
+    if (!lang) continue;
+    const fp = join(repoRoot, rel);
+    if (!existsSync(fp)) continue;
+    try {
+      const st = statSync(fp);
+      if (!st.isFile() || st.size <= 0) continue;
+      out[lang] = (out[lang] ?? 0) + st.size;
+    } catch {
+      continue;
+    }
+  }
+  return out;
+}
+
+/** 📊️Repo uloc with per-HEAD cache under `.git/compose-metrics-cache.json`. */
 export function scanRepoUnifiedLoc(root: string): UlocByLanguage {
-  const cached = readUlocCache(root);
-  if (cached) return cached;
-  const counts = scanRepoUnifiedLocUncached(root);
-  writeUlocCache(root, counts);
-  return counts;
+  const cached = readMetricsCache(root);
+  if (cached) return cached.uloc;
+  const uloc = scanRepoUnifiedLocUncached(root);
+  const size = scanRepoSizeByLanguageUncached(root);
+  writeMetricsCache(root, uloc, size);
+  return uloc;
+}
+
+/** 📊️Repo byte size per language with per-HEAD cache. */
+export function scanRepoSizeByLanguage(root: string): UlocByLanguage {
+  const cached = readMetricsCache(root);
+  if (cached) return cached.size;
+  const uloc = scanRepoUnifiedLocUncached(root);
+  const size = scanRepoSizeByLanguageUncached(root);
+  writeMetricsCache(root, uloc, size);
+  return size;
 }
 
 /** 📊️Default uloc runner (tracked-file unified scan). */
 export function createDefaultUlocRunner(): UlocRunner {
   return { countRepoByLanguage: scanRepoUnifiedLoc };
+}
+
+/** 📊️Default metrics runner (uloc + size scans). */
+export function createDefaultMetricsRunner(): MetricsRunner {
+  return {
+    countRepoUlocByLanguage: scanRepoUnifiedLoc,
+    countRepoSizeByLanguage: scanRepoSizeByLanguage,
+  };
+}
+
+/** 📊️Adapts legacy uloc-only runners; size bloc still comes from repo scan. */
+export function metricsRunnerFromUloc(ulocRunner?: UlocRunner): MetricsRunner {
+  const uloc = ulocRunner ?? createDefaultUlocRunner();
+  return {
+    countRepoUlocByLanguage: uloc.countRepoByLanguage,
+    countRepoSizeByLanguage: scanRepoSizeByLanguage,
+  };
 }
 //#endregion Uloc counting
 
@@ -3009,7 +3101,7 @@ function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: numbe
 }
 
 function gitCachedNumstat(root: string): { path: string; added: number; removed: number }[] {
-  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024, env: gitSpawnEnv() });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
 }
@@ -3032,7 +3124,7 @@ export function gitRangeNumstat(root: string, base: string, head: string): { pat
   const r = spawnSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
     cwd: repoRoot,
     maxBuffer: 64 * 1024 * 1024,
-    env: safeGitEnv(),
+    env: gitSpawnEnv(),
   });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
@@ -3058,6 +3150,61 @@ export function accumulateGitDeltasFromNumstat(root: string, rows: { path: strin
 
 function accumulateGitDeltas(root: string): Map<string, { added: number; removed: number; edited: number }> {
   return accumulateGitDeltasFromNumstat(root, gitCachedNumstat(root));
+}
+
+function gitRevObjectByteSize(root: string, revPath: string): number {
+  const repoRoot = gitRepoRoot(root);
+  const r = spawnSync("git", ["rev-parse", revPath], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
+  if (r.status !== 0) return 0;
+  const hash = (r.stdout ?? "").trim();
+  if (!hash) return 0;
+  const s = spawnSync("git", ["cat-file", "-s", hash], { cwd: repoRoot, encoding: "utf8", env: gitSpawnEnv() });
+  if (s.status !== 0) return 0;
+  return Number(s.stdout) || 0;
+}
+
+function gitPathByteSizeAtRev(root: string, rev: string, path: string): number {
+  return gitRevObjectByteSize(root, `${rev}:${path}`);
+}
+
+function gitIndexPathByteSize(root: string, path: string): number {
+  return gitRevObjectByteSize(root, `:0:${path}`);
+}
+
+/** ➕️Accumulates per-language byte deltas from path size changes between two git revisions. */
+export function accumulateSizeDeltasFromPaths(
+  root: string,
+  rows: { path: string }[],
+  oldRev: string,
+  newRev: string,
+  pathPrefixes?: string[],
+): Map<string, { added: number; removed: number; edited: number }> {
+  const m = new Map<string, { added: number; removed: number; edited: number }>();
+  for (const row of rows) {
+    for (const path of pathsFromNumstatRow(row.path)) {
+      if (shouldSkipPathForUloc(root, path)) continue;
+      if (pathPrefixes && !pathUnderPrefixes(path, pathPrefixes)) continue;
+      const lang = classifyPathForMetrics(path);
+      if (!lang) continue;
+      const oldBytes = gitPathByteSizeAtRev(root, oldRev, path);
+      const newBytes = newRev === ":0" ? gitIndexPathByteSize(root, path) : gitPathByteSizeAtRev(root, newRev, path);
+      const d = splitGitNumstatDelta(newBytes, oldBytes);
+      const rowDelta = m.get(lang) ?? { added: 0, removed: 0, edited: 0 };
+      rowDelta.edited += d.edited;
+      rowDelta.added += d.added;
+      rowDelta.removed += d.removed;
+      m.set(lang, rowDelta);
+    }
+  }
+  return m;
+}
+
+function accumulateStagedSizeDeltas(root: string): Map<string, { added: number; removed: number; edited: number }> {
+  return accumulateSizeDeltasFromPaths(root, gitCachedNumstat(root), "HEAD", ":0");
+}
+
+function accumulateRangeSizeDeltas(root: string, base: string, head: string, pathPrefixes?: string[]): Map<string, { added: number; removed: number; edited: number }> {
+  return accumulateSizeDeltasFromPaths(root, gitRangeNumstat(root, base, head), base, head, pathPrefixes);
 }
 
 /** ➕️Sums git delta counters across all languages. */
@@ -3092,6 +3239,21 @@ export function appendGitDeltaSuffix(line: string, d: { added: number; removed: 
   return line;
 }
 
+/** 📊️Full inline `📊️metric…` suffixes (uloc + size) from bloc and git deltas. */
+export function formatBundleMetricSuffixes(
+  ulocDelta: { added: number; removed: number; edited: number },
+  sizeDelta: { added: number; removed: number; edited: number },
+  ulocBloc: number,
+  sizeBloc: number,
+  langEmoji?: string,
+  langSlug?: string,
+): string {
+  return (
+    formatMetricBody({ kind: "uloc", code: ulocBloc, ...ulocDelta, langEmoji, langSlug }) +
+    formatMetricBody({ kind: "size", code: sizeBloc, ...sizeDelta, langEmoji, langSlug })
+  );
+}
+
 /** 📊️Full `📊️uloc💯️…` metrics line from bloc and git deltas (bundle header, footer, languages). */
 export function formatBundleUlocSuffix(
   d: { added: number; removed: number; edited: number },
@@ -3099,7 +3261,7 @@ export function formatBundleUlocSuffix(
   langEmoji?: string,
   langSlug?: string,
 ): string {
-  return formatUlocMetricsBody({ code, ...d, langEmoji, langSlug });
+  return formatMetricBody({ kind: "uloc", code, ...d, langEmoji, langSlug });
 }
 //#endregion Git deltas
 
@@ -3215,7 +3377,31 @@ export function langMetricsSlug(lang: string): string {
     .slice(0, 24);
 }
 
-export type UlocMetricsBodyInput = {
+/** 🔢️Formats byte counts with 3 significant digits and B/KB/MB/GB. */
+export function formatMetricSizeCount(n: number): string {
+  const v = Math.abs(n);
+  if (!Number.isFinite(v) || v <= 0) return "0";
+  let rounded = roundSignificant(v, 3);
+  if (rounded === 0) rounded = roundSignificant(v, 1);
+  if (rounded === 0) return formatTinyPositive(v);
+  if (rounded >= 1_000_000_000) return `${formatSignificantCoeff(rounded / 1_000_000_000)}GB`;
+  if (rounded >= 1_000_000) return `${formatSignificantCoeff(rounded / 1_000_000)}MB`;
+  if (rounded >= 1_000) return `${formatSignificantCoeff(rounded / 1_000)}KB`;
+  return `${formatSignificantCoeff(rounded)}B`;
+}
+
+export const METRIC_KIND_ULOC: MetricKind = { id: "uloc", token: "📃uloc", formatCount: formatMetricLocCount };
+export const METRIC_KIND_SIZE: MetricKind = { id: "size", token: "💾size", formatCount: formatMetricSizeCount };
+export const METRIC_KINDS: Record<MetricKindId, MetricKind> = { uloc: METRIC_KIND_ULOC, size: METRIC_KIND_SIZE };
+
+/** 📊️Commit metrics block header. */
+export const COMMIT_METRIC_HEADER = "📊️metric";
+
+/** 🔢️Emoji for the aggregate total row (internal sums only). */
+export const COMMIT_METRIC_TOTAL_EMOJI = "🔢️";
+
+export type MetricBodyInput = {
+  kind: MetricKindId;
   code: number;
   added: number;
   edited: number;
@@ -3224,26 +3410,35 @@ export type UlocMetricsBodyInput = {
   langSlug?: string;
 };
 
-/** 📊️Renders one explicit `📊️uloc[emoji slug]💯️…` metrics line; omits empty segments. */
-export function formatUlocMetricsBody(input: UlocMetricsBodyInput): string {
-  const { code, added, edited, removed, langEmoji, langSlug } = input;
-  let line = MICRO_COMMIT_ULOC_HEADER;
+export type UlocMetricsBodyInput = MetricBodyInput & { kind?: MetricKindId };
+
+/** 📊️Renders one explicit `📊️metric…` line; omits empty segments. */
+export function formatMetricBody(input: MetricBodyInput): string {
+  const { kind, code, added, edited, removed, langEmoji, langSlug } = input;
+  const metricKind = METRIC_KINDS[kind];
+  let line = COMMIT_METRIC_HEADER;
   if (langEmoji && langSlug) line += `${langEmoji}${langSlug}`;
+  line += metricKind.token;
   const bloc = Math.max(0, Math.round(code));
-  if (bloc > 0) line += `💯️${formatMetricLocCount(bloc)}`;
+  if (bloc > 0) line += `💯️${metricKind.formatCount(bloc)}`;
   const net = added - removed;
   if (net !== 0) {
     const absNet = Math.abs(net);
-    line += net > 0 ? `📈️${formatMetricLocCount(absNet)}` : `📉️${formatMetricLocCount(absNet)}`;
+    line += net > 0 ? `📈️${metricKind.formatCount(absNet)}` : `📉️${metricKind.formatCount(absNet)}`;
     const previous = bloc - net;
     if (previous > 0) line += `➗️${formatMetricRatio(absNet / previous)}`;
   }
-  if (added > 0) line += `➕️${formatMetricLocCount(added)}`;
-  if (edited > 0) line += `✏️${formatMetricLocCount(edited)}`;
-  if (removed > 0) line += `➖️${formatMetricLocCount(removed)}`;
+  if (added > 0) line += `➕️${metricKind.formatCount(added)}`;
+  if (edited > 0) line += `✏️${metricKind.formatCount(edited)}`;
+  if (removed > 0) line += `➖️${metricKind.formatCount(removed)}`;
   const sum = gitDeltaLineTotal({ added, edited, removed });
-  if (sum > 0) line += `🟰️${formatMetricLocCount(sum)}`;
+  if (sum > 0) line += `🟰️${metricKind.formatCount(sum)}`;
   return line;
+}
+
+/** 📊️Renders one explicit `📊️metric📃uloc…` line (uloc alias). */
+export function formatUlocMetricsBody(input: Omit<MetricBodyInput, "kind"> & { kind?: MetricKindId }): string {
+  return formatMetricBody({ kind: input.kind ?? "uloc", code: input.code, added: input.added, edited: input.edited, removed: input.removed, langEmoji: input.langEmoji, langSlug: input.langSlug });
 }
 
 /** 📂️Sums unified LOC for tracked paths under prefixes (bundle-scoped 💯️). */
@@ -3277,6 +3472,28 @@ export function countUnifiedLocUnderPathPrefixes(root: string, prefixes: string[
   return total;
 }
 
+/** 📂️Sums on-disk bytes for tracked paths under prefixes (bundle-scoped size 💯️). */
+export function countBytesUnderPathPrefixes(root: string, prefixes: string[]): number {
+  const repoRoot = gitRepoRoot(root);
+  let total = 0;
+  for (const rel of gitTrackedPaths(root)) {
+    if (prefixes.length > 0 && !pathUnderPrefixes(rel, prefixes)) continue;
+    if (shouldSkipPathForUloc(repoRoot, rel)) continue;
+    const lang = classifyPathForMetrics(rel);
+    if (!lang) continue;
+    const fp = join(repoRoot, rel);
+    if (!existsSync(fp)) continue;
+    try {
+      const st = statSync(fp);
+      if (!st.isFile() || st.size <= 0) continue;
+      total += st.size;
+    } catch {
+      continue;
+    }
+  }
+  return total;
+}
+
 function sortMetricLanguages(codeByLang: UlocByLanguage, deltas: Map<string, { edited: number }>): string[] {
   const langs = new Set<string>();
   for (const [lang, n] of Object.entries(codeByLang)) {
@@ -3286,7 +3503,7 @@ function sortMetricLanguages(codeByLang: UlocByLanguage, deltas: Map<string, { e
   return [...langs].sort((a, b) => (codeByLang[b] ?? 0) - (codeByLang[a] ?? 0) || a.localeCompare(b));
 }
 
-function buildMicroCommitMetricsFromDeltas(codeByLang: UlocByLanguage, deltas: Map<string, { added: number; removed: number; edited: number }>): MicroCommitLangMetrics[] {
+function buildLangMetricsFromDeltas(codeByLang: UlocByLanguage, deltas: Map<string, { added: number; removed: number; edited: number }>): MicroCommitLangMetrics[] {
   const rows: MicroCommitLangMetrics[] = [];
   for (const lang of sortMetricLanguages(codeByLang, deltas)) {
     const d = deltas.get(lang) ?? { added: 0, removed: 0, edited: 0 };
@@ -3304,7 +3521,49 @@ function buildMicroCommitMetricsFromDeltas(codeByLang: UlocByLanguage, deltas: M
   return rows;
 }
 
-/** 📊️Builds micro-commit metrics: repo uloc per language + staged git deltas. */
+function buildMicroCommitMetricsFromDeltas(codeByLang: UlocByLanguage, deltas: Map<string, { added: number; removed: number; edited: number }>): MicroCommitLangMetrics[] {
+  return buildLangMetricsFromDeltas(codeByLang, deltas);
+}
+
+export type CommitMetricsBundle = {
+  uloc: MicroCommitLangMetrics[];
+  size: MicroCommitLangMetrics[];
+};
+
+/** 📊️Builds uloc + size metrics for staged changes. */
+export function buildCommitMetrics(root: string, runner: MetricsRunner = createDefaultMetricsRunner()): CommitMetricsBundle {
+  const repoRoot = gitRepoRoot(root);
+  const ulocDeltas = accumulateGitDeltas(repoRoot);
+  const sizeDeltas = accumulateStagedSizeDeltas(repoRoot);
+  const ulocByLang = runner.countRepoUlocByLanguage(repoRoot);
+  const sizeByLang = runner.countRepoSizeByLanguage(repoRoot);
+  return {
+    uloc: buildLangMetricsFromDeltas(ulocByLang, ulocDeltas),
+    size: buildLangMetricsFromDeltas(sizeByLang, sizeDeltas),
+  };
+}
+
+/** 📊️Builds uloc + size metrics for a git revision range (optional path prefixes). */
+export function buildCommitMetricsForRange(
+  root: string,
+  base: string,
+  head = "HEAD",
+  pathPrefixes?: string[],
+  runner: MetricsRunner = createDefaultMetricsRunner(),
+): CommitMetricsBundle {
+  const repoRoot = gitRepoRoot(root);
+  const numstat = gitRangeNumstat(repoRoot, base, head);
+  const ulocDeltas = accumulateGitDeltasFromNumstat(repoRoot, numstat, pathPrefixes);
+  const sizeDeltas = accumulateRangeSizeDeltas(repoRoot, base, head, pathPrefixes);
+  const ulocByLang = runner.countRepoUlocByLanguage(repoRoot);
+  const sizeByLang = runner.countRepoSizeByLanguage(repoRoot);
+  return {
+    uloc: buildLangMetricsFromDeltas(ulocByLang, ulocDeltas),
+    size: buildLangMetricsFromDeltas(sizeByLang, sizeDeltas),
+  };
+}
+
+/** 📊️Builds micro-commit uloc metrics: repo uloc per language + staged git deltas. */
 export function buildMicroCommitMetrics(root: string, ulocRunner: UlocRunner = createDefaultUlocRunner()): MicroCommitLangMetrics[] {
   const repoRoot = gitRepoRoot(root);
   const deltas = accumulateGitDeltas(repoRoot);
@@ -3320,17 +3579,17 @@ export function buildMicroCommitMetricsForRange(root: string, base: string, head
   return buildMicroCommitMetricsFromDeltas(codeByLang, deltas);
 }
 
-/** 📊️Micro-commit metrics block header (unified repo LOC). */
-export const MICRO_COMMIT_ULOC_HEADER = "📊️uloc";
+/** 📊️Micro-commit metrics block header (legacy alias). */
+export const MICRO_COMMIT_ULOC_HEADER = COMMIT_METRIC_HEADER;
 
-/** 🔢️Emoji for the aggregate total row (first line after the header). */
-export const MICRO_COMMIT_ULOC_TOTAL_EMOJI = "🔢️";
+/** 🔢️Emoji for the aggregate total row (legacy alias). */
+export const MICRO_COMMIT_ULOC_TOTAL_EMOJI = COMMIT_METRIC_TOTAL_EMOJI;
 
-/** 📊️Sums per-language uloc rows into one total. */
+/** 📊️Sums per-language metric rows into one total. */
 export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): MicroCommitLangMetrics {
   const total: MicroCommitLangMetrics = {
     lang: "Total",
-    emoji: MICRO_COMMIT_ULOC_TOTAL_EMOJI,
+    emoji: COMMIT_METRIC_TOTAL_EMOJI,
     code: 0,
     edited: 0,
     added: 0,
@@ -3345,9 +3604,10 @@ export function sumMicroCommitLangMetrics(metrics: MicroCommitLangMetrics[]): Mi
   return total;
 }
 
-/** 📊️Formats one per-language `📊️uloc{emoji}{slug}💯️…` row. */
-export function formatMicroCommitMetricLine(m: MicroCommitLangMetrics): string {
-  return formatUlocMetricsBody({
+/** 📊️Formats one per-language metric row for a kind. */
+export function formatCommitMetricLine(kind: MetricKindId, m: MicroCommitLangMetrics): string {
+  return formatMetricBody({
+    kind,
     code: m.code,
     added: m.added,
     edited: m.edited,
@@ -3357,17 +3617,49 @@ export function formatMicroCommitMetricLine(m: MicroCommitLangMetrics): string {
   });
 }
 
-/** 📊️Renders the unified LOC block: total `📊️uloc💯️…`, then per-language rows. */
+/** 📊️Formats one per-language `📊️metric🦀️rust📃uloc…` row. */
+export function formatMicroCommitMetricLine(m: MicroCommitLangMetrics): string {
+  return formatCommitMetricLine("uloc", m);
+}
+
+function commitMetricRowHasActivity(m: MicroCommitLangMetrics): boolean {
+  return m.code > 0 || m.edited > 0 || m.added > 0 || m.removed > 0;
+}
+
+/** 📊️Renders commit metrics: repo totals per kind, then per-language uloc+size pairs. */
+export function formatCommitMetricsLines(bundle: CommitMetricsBundle): string[] {
+  const { uloc, size } = bundle;
+  if (uloc.length === 0 && size.length === 0) return [];
+  const lines: string[] = [];
+  const ulocTotal = sumMicroCommitLangMetrics(uloc);
+  const sizeTotal = sumMicroCommitLangMetrics(size);
+  if (commitMetricRowHasActivity(ulocTotal)) {
+    lines.push(formatMetricBody({ kind: "uloc", code: ulocTotal.code, added: ulocTotal.added, edited: ulocTotal.edited, removed: ulocTotal.removed }));
+  }
+  if (commitMetricRowHasActivity(sizeTotal)) {
+    lines.push(formatMetricBody({ kind: "size", code: sizeTotal.code, added: sizeTotal.added, edited: sizeTotal.edited, removed: sizeTotal.removed }));
+  }
+  const sizeByLang = new Map(size.map((m) => [m.lang, m]));
+  const langs = sortMetricLanguages(
+    Object.fromEntries(uloc.map((m) => [m.lang, m.code])),
+    new Map(uloc.map((m) => [m.lang, { edited: m.edited }])),
+  );
+  for (const lang of langs) {
+    const u = uloc.find((m) => m.lang === lang);
+    const s = sizeByLang.get(lang);
+    if (u && commitMetricRowHasActivity(u)) lines.push(formatCommitMetricLine("uloc", u));
+    if (s && commitMetricRowHasActivity(s)) lines.push(formatCommitMetricLine("size", s));
+  }
+  for (const s of size) {
+    if (langs.includes(s.lang)) continue;
+    if (commitMetricRowHasActivity(s)) lines.push(formatCommitMetricLine("size", s));
+  }
+  return lines;
+}
+
+/** 📊️Renders the unified LOC block (legacy: uloc-only footer). */
 export function formatMicroCommitMetricsLines(metrics: MicroCommitLangMetrics[]): string[] {
-  if (metrics.length === 0) return [];
-  const total = sumMicroCommitLangMetrics(metrics);
-  const header = formatUlocMetricsBody({
-    code: total.code,
-    added: total.added,
-    edited: total.edited,
-    removed: total.removed,
-  });
-  return [header, ...metrics.map(formatMicroCommitMetricLine)];
+  return formatCommitMetricsLines({ uloc: metrics, size: [] });
 }
 
 /** ✅️Whether two git delta sums match on ➕️ ✏️ ➖️ (🟰️ follows). */
@@ -3375,8 +3667,8 @@ export function gitDeltaSumsEqual(a: { added: number; removed: number; edited: n
   return a.added === b.added && a.edited === b.edited && a.removed === b.removed;
 }
 
-/** 🚫️Per-language ➕️✏️➖️ must sum to the footer `📊️uloc` total line. */
-export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangMetrics[]): void {
+/** 🚫️Per-language ➕️✏️➖️ must sum to the footer total line for each metric kind. */
+export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangMetrics[], kind: MetricKindId = "uloc"): void {
   if (metrics.length === 0) return;
   const total = sumMicroCommitLangMetrics(metrics);
   let added = 0;
@@ -3388,14 +3680,21 @@ export function validateMicroCommitLangMetricsDeltaSum(metrics: MicroCommitLangM
     removed += m.removed;
   }
   if (!gitDeltaSumsEqual({ added, edited, removed }, total)) {
+    const kindToken = METRIC_KINDS[kind].token;
     throw new Error(
-      `commit: per-language 📊️uloc deltas do not sum to the footer total — languages ➕️${added}✏️${edited}➖️${removed}🟰️${gitDeltaLineTotal({ added, edited, removed })} vs footer ➕️${total.added}✏️${total.edited}➖️${total.removed}🟰️${gitDeltaLineTotal(total)}`,
+      `commit: per-language ${kindToken} deltas do not sum to the footer total — languages ➕️${added}✏️${edited}➖️${removed}🟰️${gitDeltaLineTotal({ added, edited, removed })} vs footer ➕️${total.added}✏️${total.edited}➖️${total.removed}🟰️${gitDeltaLineTotal(total)}`,
     );
   }
 }
+
+/** 🚫️Per-language delta sums for uloc and size footers. */
+export function validateCommitMetricsDeltaSum(bundle: CommitMetricsBundle): void {
+  validateMicroCommitLangMetricsDeltaSum(bundle.uloc, "uloc");
+  validateMicroCommitLangMetricsDeltaSum(bundle.size, "size");
+}
 //#endregion Format
 
-//#endregion 🔖️uloc-metrics
+//#endregion 🔖️commit-metrics
 
 //#region 🔖️micro-commit
 
@@ -3450,14 +3749,22 @@ export function safeGitEnv(extraEnv?: Record<string, string>): Record<string, st
   return env;
 }
 
+/** 🌳️Git subprocess env with explicit `cwd` — ignores inherited `GIT_DIR` / `GIT_WORK_TREE`. */
+export function gitSpawnEnv(): Record<string, string> {
+  const env = safeGitEnv();
+  delete env.GIT_DIR;
+  delete env.GIT_WORK_TREE;
+  return env;
+}
+
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 512 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 512 * 1024 * 1024, env: gitSpawnEnv() });
   if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
   return { ok: true, out: (r.stdout ?? "").trim() };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 512 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 512 * 1024 * 1024, env: gitSpawnEnv() });
   if (r.status !== 0) return [];
   const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
   if (!raw) return [];
@@ -3630,7 +3937,8 @@ export function bumpCounterFromHistory(
   if (max > 0) return { line1Base: epoch, nnn: pad3(max + 1) };
   const unparsedPrior = subjectsNewestFirst.find((subject) => {
     const normalized = normalizeEmojiPresentation(subject.trim());
-    return normalized.startsWith(`${contributorPrefix}🎆️`) && /🚩️\d+$/u.test(normalized);
+    const epochPrefix = normalizeEmojiPresentation(`${contributor.emoji}${contributor.alias}🎆️`);
+    return normalized.startsWith(epochPrefix) && /🚩\d+$/u.test(normalized) && !extractCounterFromSubject(subject);
   });
   if (unparsedPrior) throw new Error(`micro-commit: refusing to reset counter to 001 because prior subject could not be parsed: ${unparsedPrior}`);
   return { line1Base: epoch, nnn: "001" };
@@ -3677,10 +3985,14 @@ export function formatMicroCommitBulletLine(line: string): string {
   return body.replace(new RegExp(`^${EMOJI_LEAD_RE.source}\\s+`, "u"), "$1");
 }
 
-const MICRO_COMMIT_ULOC_ROW_RE = /^📊️uloc/u;
+const MICRO_COMMIT_METRIC_ROW_RE = /^📊️metric/u;
+
+function isCommitMetricLine(line: string): boolean {
+  return MICRO_COMMIT_METRIC_ROW_RE.test(line.trim());
+}
 
 function isMicroCommitUlocLine(line: string): boolean {
-  return MICRO_COMMIT_ULOC_ROW_RE.test(line.trim());
+  return isCommitMetricLine(line);
 }
 
 /** 📝️Normalizes LLM-authored bullet lines to `{emoji}{description}`. */
@@ -3842,7 +4154,7 @@ function ticketBullets(root: string): string[] {
   return bullets;
 }
 
-export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = [], ulocRunner?: UlocRunner): string {
+export function buildMicroCommitMessage(root: string, contributor: Contributor, diffBullets: string[] = [], metricsRunner?: MetricsRunner | UlocRunner): string {
   root = gitRepoRoot(root);
   const { line1Base, nnn } = nextCounter(root, contributor);
   const now = new Date();
@@ -3853,12 +4165,16 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
   if (bullets.length === 0) {
     throw new Error("micro-commit: at least one description bullet is required");
   }
-  const metricRows = buildMicroCommitMetrics(root, ulocRunner);
-  if (metricRows.length === 0) {
-    throw new Error("micro-commit: required 📊️uloc footer could not be built because no language metrics were collected");
+  const runner =
+    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
+      ? metricsRunner
+      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  const metricBundle = buildCommitMetrics(root, runner);
+  if (metricBundle.uloc.length === 0 && metricBundle.size.length === 0) {
+    throw new Error("micro-commit: required 📊️metric footer could not be built because no language metrics were collected");
   }
-  validateMicroCommitLangMetricsDeltaSum(metricRows);
-  const metrics = formatMicroCommitMetricsLines(metricRows);
+  validateCommitMetricsDeltaSum(metricBundle);
+  const metrics = formatCommitMetricsLines(metricBundle);
   const lines = [`${line1Base}🚩️${nnn}`, formatSecond(now), ...bullets];
   lines.push("", ...metrics);
   lines.push("", `Signed-off-by: ${contributor.name} <${contributor.email}>`);
@@ -4203,7 +4519,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   if (level === "prepare-only") process.exit(0);
 
   const dir = gitDir(root);
-  const commit = spawnSync("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8", env: safeGitEnv() });
+  const commit = spawnSync("git", ["commit", "-S", "-F", join(dir, "COMMIT_EDITMSG")], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (commit.status !== 0) {
     console.error((commit.stderr ?? commit.stdout ?? "git commit failed").trim());
     process.exit(commit.status ?? 1);
@@ -4211,7 +4527,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   wipeAfterCommit(root);
   if (level === "prepare-and-commit") process.exit(0);
 
-  const push = spawnSync("git", ["push"], { cwd: root, encoding: "utf8", env: safeGitEnv() });
+  const push = spawnSync("git", ["push"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() });
   if (push.status !== 0) {
     console.error((push.stderr ?? push.stdout ?? "git push failed").trim());
     process.exit(push.status ?? 1);
@@ -4232,7 +4548,7 @@ export type CommitBundleSection = { label: string; dates: CommitBundleDateSectio
 export const BUNDLE_WIP_SUBJECT_RE = /^(.+🎆️\d{2}🌙️\d{2}☀️\d{2})🔀️$/u;
 export const BUNDLE_DATE_SECTION_RE = /^🎆️\d{2}🌙️\d{2}☀️\d{2}$/u;
 const EMOJI_CLUSTER_RE = /^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u;
-const BUNDLE_SCOPE_RESERVED_RE = /🔀️|🚩️|📊️uloc|🔢️/u;
+const BUNDLE_SCOPE_RESERVED_RE = /🔀️|🚩️|📊️metric|🔢️/u;
 const LABEL_TOKEN_BLOCKLIST = new Set(["uloc", "repo", "the", "and"]);
 
 /** 🧭️Parses explicit `ct` / `cs` / `cp` step flags from argv segments. */
@@ -4370,7 +4686,7 @@ export function emojiClusterCountInLine(line: string): number {
 export function normalizeBundleScopeLabel(line: string): string {
   return line
     .trim()
-    .replace(/📊️uloc.*$/u, "")
+    .replace(/📊️metric.*$/u, "")
     .replace(/🔀️|🚩️/gu, "")
     .trim();
 }
@@ -4391,7 +4707,7 @@ export function bundleScopeLabelError(line: string): string | null {
     return "commit: bundle scope must be emoji + area name only — no paths or `|`";
   }
   if (BUNDLE_SCOPE_RESERVED_RE.test(raw)) {
-    return "commit: bundle scope must not include 🔀️ 🚩️ 📊️uloc or 🔢️ — script adds subject and uloc";
+    return "commit: bundle scope must not include 🔀️ 🚩️ 📊️metric or 🔢️ — script adds subject and metrics";
   }
   const norm = normalizeBundleScopeLabel(raw);
   if (!norm) return "commit: empty bundle scope after removing reserved emojis";
@@ -4558,13 +4874,19 @@ export function pathMatchesBundleIndex(path: string, bundleIndex: number, prefix
 export function normalizeBundleDateLine(line: string): string {
   return line
     .trim()
-    .replace(/📊️uloc.*$/u, "")
+    .replace(/📊️metric.*$/u, "")
     .trim();
 }
 
-/** 🎆️Bundle squash only: `🎆️YY🌙️MM☀️DD` + full per-day `📊️uloc💯️…` suffix. */
-export function formatBundleDateLine(dateLine: string, d: GitDeltaSum, bundleBloc: number): string {
-  return `${normalizeBundleDateLine(dateLine)}${formatBundleUlocSuffix(d, bundleBloc)}`;
+/** 🎆️Bundle squash only: `🎆️YY🌙️MM☀️DD` + full per-day `📊️metric…` suffixes. */
+export function formatBundleDateLine(
+  dateLine: string,
+  ulocDelta: GitDeltaSum,
+  sizeDelta: GitDeltaSum,
+  ulocBloc: number,
+  sizeBloc: number,
+): string {
+  return `${normalizeBundleDateLine(dateLine)}${formatBundleMetricSuffixes(ulocDelta, sizeDelta, ulocBloc, sizeBloc)}`;
 }
 
 export type BundleDateDeltasMap = Map<number, Map<string, GitDeltaSum>>;
@@ -4612,14 +4934,57 @@ export function buildBundleDateDeltasMap(root: string, base: string, head: strin
   return map;
 }
 
+function addSizeRowToBundleDateMap(map: BundleDateDeltasMap, row: { path: string }, dateLine: string, bi: number, root: string, oldRev: string, newRev: string): void {
+  const chunk = sumGitLangDeltas(accumulateSizeDeltasFromPaths(root, [{ path: row.path }], oldRev, newRev));
+  if (gitDeltaLineTotal(chunk) === 0) return;
+  const bundleMap = map.get(bi)!;
+  const prev = bundleMap.get(dateLine) ?? { added: 0, removed: 0, edited: 0 };
+  bundleMap.set(dateLine, addGitDeltaSums(prev, chunk));
+}
+
+/** 📊️Per-bundle per-day byte deltas from micro-commit parent..sha rows. */
+export function buildBundleDateSizeDeltasMap(root: string, base: string, head: string, bundles: CommitBundleSection[]): BundleDateDeltasMap {
+  root = gitRepoRoot(root);
+  const map: BundleDateDeltasMap = new Map();
+  for (let i = 0; i < bundles.length; i++) map.set(i, new Map());
+  const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
+  for (const sha of gitCommitShasInRange(root, base, head)) {
+    const parent = `${sha}^`;
+    const subject = git(root, ["log", "-1", "--format=%s", sha]).out;
+    const body = git(root, ["log", "-1", "--format=%B", sha]).out;
+    const dateLine = extractBundleDateLineFromCommit(subject, body);
+    if (!dateLine) continue;
+    for (const row of gitRangeNumstat(root, parent, sha)) {
+      const rowPaths = pathsFromNumstatRow(row.path);
+      if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
+      const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
+      if (owners.length === 0) {
+        throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+      }
+      if (owners.length > 1) {
+        const names = owners.map((i) => bundles[i]!.label).join(", ");
+        throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+      }
+      addSizeRowToBundleDateMap(map, row, dateLine, owners[0]!, root, parent, sha);
+    }
+  }
+  return map;
+}
+
 function bundleGitDeltasForPaths(root: string, base: string, head: string, pathPrefixes: string[]): { added: number; removed: number; edited: number } {
   const rows = gitRangeNumstat(root, base, head);
   const assigned = pathPrefixes.length > 0 ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes))) : [];
   return sumGitLangDeltas(accumulateGitDeltasFromNumstat(root, assigned));
 }
 
-function formatBundleHeaderLine(label: string, total: GitDeltaSum, bundleBloc: number): string {
-  return `${normalizeBundleScopeLabel(label)}${formatBundleUlocSuffix(total, bundleBloc)}`;
+function bundleSizeDeltasForPaths(root: string, base: string, head: string, pathPrefixes: string[]): GitDeltaSum {
+  const rows = gitRangeNumstat(root, base, head);
+  const assigned = pathPrefixes.length > 0 ? rows.filter((r) => pathsFromNumstatRow(r.path).some((p) => pathUnderPrefixes(p, pathPrefixes))) : [];
+  return sumGitLangDeltas(accumulateSizeDeltasFromPaths(root, assigned, base, head));
+}
+
+function formatBundleHeaderLine(label: string, ulocTotal: GitDeltaSum, sizeTotal: GitDeltaSum, ulocBloc: number, sizeBloc: number): string {
+  return `${normalizeBundleScopeLabel(label)}${formatBundleMetricSuffixes(ulocTotal, sizeTotal, ulocBloc, sizeBloc)}`;
 }
 
 /** 📊️Orders bundles by descending 🟰️ (➕️+✏️+➖️) from assigned path diffs. */
@@ -4665,11 +5030,11 @@ export function commitBundleBodyError(text: string): string | null {
   if (/^🐙️|^🧑️/.test(first) && first.includes("🚩️")) {
     return "commit: stdin must not include micro-commit subject lines";
   }
-  if (/^📊️uloc/m.test(text)) {
-    return "commit: stdin must not include the 📊️uloc footer — script adds it";
+  if (/^📊️metric/m.test(text)) {
+    return "commit: stdin must not include the 📊️metric footer — script adds it";
   }
-  if (/^🎆️\d{2}🌙️\d{2}☀️\d{2}📊️uloc/m.test(text)) {
-    return "commit: stdin must not include per-day 📊️uloc — script adds it to each 🎆️ line";
+  if (/^🎆️\d{2}🌙️\d{2}☀️\d{2}📊️metric/m.test(text)) {
+    return "commit: stdin must not include per-day 📊️metric — script adds it to each 🎆️ line";
   }
   return null;
 }
@@ -4694,7 +5059,7 @@ export function parseCommitBundleBody(text: string): CommitBundleSection[] {
   for (const raw of text.split("\n")) {
     const line = raw.trim();
     if (!line || line.startsWith("#")) continue;
-    if (line.startsWith("📊️uloc") || line.startsWith("Signed-off-by:")) continue;
+    if (line.startsWith("📊️metric") || line.startsWith("Signed-off-by:")) continue;
 
     const dateCandidate = normalizeBundleDateLine(line);
     if (BUNDLE_DATE_SECTION_RE.test(dateCandidate)) {
@@ -4795,8 +5160,37 @@ export function partitionRangeDeltasByBundle(root: string, base: string, head: s
   return { bundleTotals, rangeTotal };
 }
 
-/** 🚫️Per-day uloc must sum to bundle header totals; missing/extra dates imply attribution mistakes. */
-export function validateBundleDayDeltasAttribution(bundles: CommitBundleSection[], prefixSets: string[][], dateDeltas: BundleDateDeltasMap, bundleTotals: GitDeltaSum[]): void {
+/** 📊️Partition WIP-range byte deltas across bundles (one bundle per row). */
+export function partitionRangeSizeDeltasByBundle(root: string, base: string, head: string, bundles: CommitBundleSection[], prefixSets: string[][]): { bundleTotals: GitDeltaSum[]; rangeTotal: GitDeltaSum } {
+  const bundleTotals = bundles.map(() => ({ added: 0, removed: 0, edited: 0 }));
+  let rangeTotal: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+  for (const row of gitRangeNumstat(root, base, head)) {
+    const rowPaths = pathsFromNumstatRow(row.path);
+    if (rowPaths.length === 0 || rowPaths.every((p) => shouldSkipPathForUloc(root, p))) continue;
+    const chunk = sumGitLangDeltas(accumulateSizeDeltasFromPaths(root, [{ path: row.path }], base, head));
+    if (gitDeltaLineTotal(chunk) === 0) continue;
+    rangeTotal = addGitDeltaSums(rangeTotal, chunk);
+    const owners = resolveBundleIndicesForNumstatRow(row.path, prefixSets, bundles);
+    if (owners.length === 0) {
+      throw new Error(`commit: changed path is not attributed to any bundle — ${row.path}; add a bundle scope or fix labels`);
+    }
+    if (owners.length > 1) {
+      const names = owners.map((i) => bundles[i]!.label).join(", ");
+      throw new Error(`commit: changed path matches multiple bundles (${names}) — ${row.path}`);
+    }
+    const bi = owners[0]!;
+    bundleTotals[bi] = addGitDeltaSums(bundleTotals[bi]!, chunk);
+  }
+  return { bundleTotals, rangeTotal };
+}
+
+export function validateBundleDayDeltasAttribution(
+  bundles: CommitBundleSection[],
+  prefixSets: string[][],
+  dateDeltas: BundleDateDeltasMap,
+  bundleTotals: GitDeltaSum[],
+  kindToken = "📃uloc",
+): void {
   for (let bi = 0; bi < bundles.length; bi++) {
     const bundle = bundles[bi]!;
     const total = bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 };
@@ -4815,59 +5209,95 @@ export function validateBundleDayDeltasAttribution(bundles: CommitBundleSection[
       }
     }
     if (daySum.added !== total.added || daySum.edited !== total.edited || daySum.removed !== total.removed) {
-      throw new Error(`commit: per-day 📊️uloc for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`);
+      throw new Error(`commit: per-day 📊️metric${kindToken} for ${bundle.label} does not add up to the bundle total — days ${formatGitDeltaSumBrief(daySum)} vs bundle ${formatGitDeltaSumBrief(total)}; re-read log + diff and fix bundle/date attribution`);
     }
   }
 }
 
-/** 🚫️All bundle-commit uloc constraints (days→bundle, bundles→range, languages→range). */
-export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], ulocRunner?: UlocRunner): void {
+/** 🚫️All bundle-commit metrics constraints (days→bundle, bundles→range, languages→range). */
+export function validateBundleCommitAttribution(root: string, base: string, head: string, bundles: CommitBundleSection[], metricsRunner?: MetricsRunner | UlocRunner): void {
   root = gitRepoRoot(root);
+  const runner =
+    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
+      ? metricsRunner
+      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
   const prefixSets = buildBundlePathPrefixSets(root, base, head, bundles);
-  const { bundleTotals: partitioned, rangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
+  const { bundleTotals: ulocPartitioned, rangeTotal: ulocRangeTotal } = partitionRangeDeltasByBundle(root, base, head, bundles, prefixSets);
+  const { bundleTotals: sizePartitioned, rangeTotal: sizeRangeTotal } = partitionRangeSizeDeltasByBundle(root, base, head, bundles, prefixSets);
   const dateDeltas = buildBundleDateDeltasMap(root, base, head, bundles);
-  validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, partitioned);
+  const dateSizeDeltas = buildBundleDateSizeDeltasMap(root, base, head, bundles);
+  validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, ulocPartitioned, METRIC_KIND_ULOC.token);
+  validateBundleDayDeltasAttribution(bundles, prefixSets, dateSizeDeltas, sizePartitioned, METRIC_KIND_SIZE.token);
   for (let bi = 0; bi < bundles.length; bi++) {
     let allDays: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
     const perDay = dateDeltas.get(bi);
     if (perDay) {
       for (const d of perDay.values()) allDays = addGitDeltaSums(allDays, d);
     }
-    assertGitDeltaSumsEqual(allDays, partitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle total`);
+    assertGitDeltaSumsEqual(allDays, ulocPartitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle uloc total`);
+    let allSizeDays: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+    const perSizeDay = dateSizeDeltas.get(bi);
+    if (perSizeDay) {
+      for (const d of perSizeDay.values()) allSizeDays = addGitDeltaSums(allSizeDays, d);
+    }
+    assertGitDeltaSumsEqual(allSizeDays, sizePartitioned[bi] ?? { added: 0, removed: 0, edited: 0 }, `commit: all micro-commit days for ${bundles[bi]!.label} do not add up to the bundle size total`);
   }
   let bundleSum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
-  for (const t of partitioned) bundleSum = addGitDeltaSums(bundleSum, t);
-  assertGitDeltaSumsEqual(bundleSum, rangeTotal, "commit: all bundle header totals do not add up to the WIP range 📊️uloc — fix bundle attribution");
-  const metrics = buildMicroCommitMetricsForRange(root, base, head, undefined, ulocRunner);
-  validateMicroCommitLangMetricsDeltaSum(metrics);
-  const langTotal = sumMicroCommitLangMetrics(metrics);
-  assertGitDeltaSumsEqual({ added: langTotal.added, edited: langTotal.edited, removed: langTotal.removed }, rangeTotal, "commit: footer per-language 📊️uloc does not add up to the WIP range total");
+  for (const t of ulocPartitioned) bundleSum = addGitDeltaSums(bundleSum, t);
+  assertGitDeltaSumsEqual(bundleSum, ulocRangeTotal, "commit: all bundle header uloc totals do not add up to the WIP range — fix bundle attribution");
+  let bundleSizeSum: GitDeltaSum = { added: 0, removed: 0, edited: 0 };
+  for (const t of sizePartitioned) bundleSizeSum = addGitDeltaSums(bundleSizeSum, t);
+  assertGitDeltaSumsEqual(bundleSizeSum, sizeRangeTotal, "commit: all bundle header size totals do not add up to the WIP range — fix bundle attribution");
+  const metrics = buildCommitMetricsForRange(root, base, head, undefined, runner);
+  validateCommitMetricsDeltaSum(metrics);
+  const ulocLangTotal = sumMicroCommitLangMetrics(metrics.uloc);
+  assertGitDeltaSumsEqual({ added: ulocLangTotal.added, edited: ulocLangTotal.edited, removed: ulocLangTotal.removed }, ulocRangeTotal, "commit: footer per-language 📃uloc does not add up to the WIP range total");
+  const sizeLangTotal = sumMicroCommitLangMetrics(metrics.size);
+  assertGitDeltaSumsEqual({ added: sizeLangTotal.added, edited: sizeLangTotal.edited, removed: sizeLangTotal.removed }, sizeRangeTotal, "commit: footer per-language 💾size does not add up to the WIP range total");
 }
 
-export function buildCommitMessage(root: string, contributor: Contributor, bundles: CommitBundleSection[], wipSha: string, head = "HEAD", ulocRunner?: UlocRunner, now = new Date()): string {
+export function buildCommitMessage(root: string, contributor: Contributor, bundles: CommitBundleSection[], wipSha: string, head = "HEAD", metricsRunner?: MetricsRunner | UlocRunner, now = new Date()): string {
   root = gitRepoRoot(root);
   const pathAssignments = assignChangedPathsToBundles(root, wipSha, head, bundles);
   const sorted = sortCommitBundlesByEditTotal(root, wipSha, head, bundles, pathAssignments);
   bundles = sorted.bundles;
-  validateBundleCommitAttribution(root, wipSha, head, bundles, ulocRunner);
+  const runner =
+    metricsRunner && "countRepoUlocByLanguage" in metricsRunner
+      ? metricsRunner
+      : metricsRunnerFromUloc(metricsRunner as UlocRunner | undefined);
+  validateBundleCommitAttribution(root, wipSha, head, bundles, runner);
   const prefixSets = buildBundlePathPrefixSets(root, wipSha, head, bundles);
-  const { bundleTotals } = partitionRangeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
+  const { bundleTotals: ulocBundleTotals } = partitionRangeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
+  const { bundleTotals: sizeBundleTotals } = partitionRangeSizeDeltasByBundle(root, wipSha, head, bundles, prefixSets);
   const dateDeltas = buildBundleDateDeltasMap(root, wipSha, head, bundles);
-  const bundleBlocs = prefixSets.map((prefixes) => countUnifiedLocUnderPathPrefixes(root, prefixes));
+  const dateSizeDeltas = buildBundleDateSizeDeltasMap(root, wipSha, head, bundles);
+  const ulocBundleBlocs = prefixSets.map((prefixes) => countUnifiedLocUnderPathPrefixes(root, prefixes));
+  const sizeBundleBlocs = prefixSets.map((prefixes) => countBytesUnderPathPrefixes(root, prefixes));
   const lines: string[] = [formatBundleSubject(contributor, now), ""];
   for (let bi = 0; bi < bundles.length; bi++) {
     const bundle = bundles[bi]!;
-    const bloc = bundleBlocs[bi] ?? 0;
-    lines.push(formatBundleHeaderLine(bundle.label, bundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 }, bloc));
+    const ulocBloc = ulocBundleBlocs[bi] ?? 0;
+    const sizeBloc = sizeBundleBlocs[bi] ?? 0;
+    lines.push(
+      formatBundleHeaderLine(
+        bundle.label,
+        ulocBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 },
+        sizeBundleTotals[bi] ?? { added: 0, removed: 0, edited: 0 },
+        ulocBloc,
+        sizeBloc,
+      ),
+    );
     const perDay = dateDeltas.get(bi);
+    const perSizeDay = dateSizeDeltas.get(bi);
     for (const section of bundle.dates) {
-      const dayDelta = perDay?.get(section.dateLine) ?? { added: 0, removed: 0, edited: 0 };
-      lines.push(formatBundleDateLine(section.dateLine, dayDelta, bloc));
+      const dayUloc = perDay?.get(section.dateLine) ?? { added: 0, removed: 0, edited: 0 };
+      const daySize = perSizeDay?.get(section.dateLine) ?? { added: 0, removed: 0, edited: 0 };
+      lines.push(formatBundleDateLine(section.dateLine, dayUloc, daySize, ulocBloc, sizeBloc));
       lines.push(...section.bullets);
     }
     if (bi < bundles.length - 1) lines.push("");
   }
-  const metrics = formatMicroCommitMetricsLines(buildMicroCommitMetricsForRange(root, wipSha, head, undefined, ulocRunner));
+  const metrics = formatCommitMetricsLines(buildCommitMetricsForRange(root, wipSha, head, undefined, runner));
   if (metrics.length > 0) lines.push(...metrics, "");
   lines.push(`Signed-off-by: ${contributor.name} <${contributor.email}>`);
   return `${lines.join("\n")}\n`;
@@ -4927,7 +5357,7 @@ export function commitHistoryCompareLines(root: string, base: string, head: stri
       if (line.length < 12) continue;
       if (BUNDLE_WIP_SUBJECT_RE.test(line)) continue;
       if (BUNDLE_DATE_SECTION_RE.test(normalizeBundleDateLine(line))) continue;
-      if (line.startsWith("📊️uloc") || line.startsWith("Signed-off-by:")) continue;
+      if (line.startsWith("📊️metric") || line.startsWith("Signed-off-by:")) continue;
       if (line.startsWith("Signed-off-by:")) continue;
       if (/^🎆️\d{2}🌙️\d{2}☀️\d{2}⏰️/u.test(line)) continue;
       lines.add(normalizeCompareLine(line));

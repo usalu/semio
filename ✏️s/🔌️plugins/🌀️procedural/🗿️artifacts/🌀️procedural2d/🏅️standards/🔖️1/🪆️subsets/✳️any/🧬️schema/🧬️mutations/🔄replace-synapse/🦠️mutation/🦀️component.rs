@@ -1,9 +1,8 @@
 //! 🦠️ `🔄replace-synapse` payload and its `MutationKind` impl; diff/inverse delegate to the sibling leaves.
 use crate::artifacts::procedural2d::diff::Procedural2dDiff;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use flow::playbook::FormGeneration;
-use flow::{SynapseSpec, Widget};
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
+use flow::SynapseSpec;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 

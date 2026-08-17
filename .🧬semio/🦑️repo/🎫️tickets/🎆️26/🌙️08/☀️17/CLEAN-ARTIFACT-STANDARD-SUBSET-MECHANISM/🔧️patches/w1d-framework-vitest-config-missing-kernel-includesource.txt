@@ -1,0 +1,45 @@
+Target file (config file, not clearly owned by any wave in this ticket's boundary list):
+  🧰️framework/📦️packages/🟦️typescript/🧪️vitest.config.ts
+
+Reason: PRE-EXISTING gap, confirmed via `git log --date=iso` — last touched by commit a5cc4dd9ab
+(2026-08-07 15:56:49), over a week before this ticket started. `test.include`/`test.includeSource`
+list ONLY `"🟦️glue.ts"`. Vitest's in-source testing (`import.meta.vitest`) only executes `describe`/
+`it` blocks inside files that MATCH `includeSource` — files merely `export *`-re-exported by that
+file (e.g. `🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts`) are imported as plain modules, and their
+own `if (import.meta.vitest) { ... }` blocks never run. Discovered while verifying W1-D's new
+`describe("IoEntryGraph", ...)` block (added to `🎠️kernel/🟦️component.ts`, region `🧪️IoRouterTests`) —
+`bun ./📜️script.ts test --reporter=verbose` shows ZERO tests from either that new block OR the
+PRE-EXISTING `🧪️ExpandPluginRegistryTests` region in the SAME file (`describe("expandPluginRegistry"`
+never appears in the verbose test list either) — so this is not new breakage, it is a silent,
+long-standing gap that has swallowed every in-source test `🎠️kernel/🟦️component.ts` has ever
+declared. `bun nx run @semio-tech/framework:test`/`bun ./📜️script.ts test` still reports
+"158 passed (158)" both before and after W1-D's edits — unaffected either way, because none of
+`component.ts`'s in-source blocks were ever counted.
+
+--- a/🧰️framework/📦️packages/🟦️typescript/🧪️vitest.config.ts
++++ b/🧰️framework/📦️packages/🟦️typescript/🧪️vitest.config.ts
+@@ -18,8 +18,8 @@
+   test: {
+     name: "@semio-tech/framework",
+     mode: "test",
+     environment: "node",
+-    include: ["🟦️glue.ts"],
+-    coverage: { include: ["🟦️glue.ts"] },
+-    includeSource: ["🟦️glue.ts"],
++    include: ["🟦️glue.ts", "../../🔨️modules/**/🟦️component.ts"],
++    coverage: { include: ["🟦️glue.ts", "../../🔨️modules/**/🟦️component.ts"] },
++    includeSource: ["🟦️glue.ts", "../../🔨️modules/**/🟦️component.ts"],
+     passWithNoTests: false,
+   },
+
+Verification once applied:
+  cd 🧰️framework/📦️packages/🟦️typescript
+  bun ./📜️script.ts test --reporter=verbose
+Expect BOTH `describe("expandPluginRegistry", ...)` and `describe("IoEntryGraph", ...)` (region
+`🧪️IoRouterTests`, `🎠️kernel/🟦️component.ts`) to now appear and pass — plus every OTHER
+`🔨️modules/*/🟦️component.ts` file's own dormant in-source tests, if any exist, which the applying
+agent should scan for and account for in the new total (do not assume "158" stays the count; it
+will very likely rise). This patch does not touch anything inside W1-D's boundary; it only widens
+which files this package's `vitest.config.ts` scans for `import.meta.vitest` blocks. If a wider glob
+proves too broad (accidentally matching an unrelated `🟦️component.ts` this package doesn't actually
+depend on), narrow it to the specific modules `🟦️glue.ts` re-exports instead of a blanket `**`.

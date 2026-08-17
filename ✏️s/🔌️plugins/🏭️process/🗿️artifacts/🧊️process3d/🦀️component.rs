@@ -734,17 +734,17 @@ pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<Process
 //#endregion 🔖️FlowConverters
 
 //#region 🔖️SceneConverters
-/// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
-/// `child_id` — populated at mint time (`process_working_scene_to_snapshot`, the only place literal
-/// content is in hand), read at scene-reconstruction time
-/// (`process_working_scene_from_snapshot`). Mirrors `🌊️flow`'s own `FLOW_SCRATCH` pattern (this
-/// ticket's wave 4, `📓️wave4-reports/flow-report.md`) rather than lowpoly/cad/writer's plain
-/// "always empty" fallback: within the SAME process, a document round-tripped only through this
-/// module (never serialized out and a fresh process spun up to read it back) gets its real content
-/// back, not a fabricated empty scene. Still an `EngineRep`-shaped bridge, not a real resolver —
-/// crossing a process boundary (a fresh process loading a saved document, or an undo/redo that
-/// bypasses `ArtifactApp::handle`) still degrades to the honest empty fallback, matching every
-/// other exemplar's documented staleness gap.
+// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
+// `child_id` — populated at mint time (`process_working_scene_to_snapshot`, the only place literal
+// content is in hand), read at scene-reconstruction time
+// (`process_working_scene_from_snapshot`). Mirrors `🌊️flow`'s own `FLOW_SCRATCH` pattern (this
+// ticket's wave 4, `📓️wave4-reports/flow-report.md`) rather than lowpoly/cad/writer's plain
+// "always empty" fallback: within the SAME process, a document round-tripped only through this
+// module (never serialized out and a fresh process spun up to read it back) gets its real content
+// back, not a fabricated empty scene. Still an `EngineRep`-shaped bridge, not a real resolver —
+// crossing a process boundary (a fresh process loading a saved document, or an undo/redo that
+// bypasses `ArtifactApp::handle`) still degrades to the honest empty fallback, matching every
+// other exemplar's documented staleness gap.
 thread_local! {
     static PROCESS3D_STOCK_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Stock>> = std::cell::RefCell::new(std::collections::HashMap::new());
     static PROCESS3D_STEPS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<ProcessStep>>> = std::cell::RefCell::new(std::collections::HashMap::new());

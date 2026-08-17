@@ -13,7 +13,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 fn sourcing_window(window_kind_id: &str, title: &str) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }
+    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }
 }
 
 fn sourcing_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {

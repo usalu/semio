@@ -16,7 +16,10 @@ use store::EngineHandles;
 
 //#region 🔖️Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";
-const MODULE_APP_ID: &str = "playbook-module-procedural";
+/// 🪪️ Canonical surface id (`<artifact_kind>@<standard>/<subset>#<role>`, ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1) — `editor` because `.mutation(...)` grants
+/// `ExportSolid`/`ImportSolid`; mirrors `s.playbook.playbook@1/*#editor` in the sibling artifact.
+const MODULE_APP_ID: &str = "s.playbook.procedural@1/*#editor";
 const MODULE_DOCUMENT_SCHEMA: &str = "playbook.module.procedural.payload";
 const BODY_PARAMS: &str = "params";
 const BODY_PREVIEW: &str = "preview";
@@ -359,19 +362,6 @@ fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
     let mut handles = Vec::new();
     collect_geometry_handles_from_eval(channels, &mut handles);
     handles.into_iter().next()
-}
-
-fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin::MeshData> {
-    let parsed: Value = serde_json::from_str(mesh_json).ok()?;
-    if parsed.get("error").is_some() {
-        return None;
-    }
-    let positions: Vec<f32> =
-        parsed.get("position").or_else(|| parsed.get("positions")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect()).filter(|items: &Vec<f32>| !items.is_empty())?;
-    let normals: Vec<f32> = parsed.get("normal").or_else(|| parsed.get("normals")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect()).unwrap_or_default();
-    let indices: Vec<u32> =
-        parsed.get("index").or_else(|| parsed.get("indices")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect()).filter(|items: &Vec<u32>| !items.is_empty())?;
-    Some(mesh_from_indexed(&positions, &normals, &indices))
 }
 
 fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value) {
@@ -772,8 +762,12 @@ impl ArtifactApp for ModuleApp {
     }
 }
 
-fn create_module_app() -> App {
-    App::from_builder(
+/// 🧷️ Fallible — `App::try_from_builder` surfaces a malformed `MODULE_APP_ID` (or any other
+/// definition-time mistake) as a `PluginAssemblyError` this crate's `plugin()` entry point can
+/// propagate, instead of a guest panic that would trap the wasm instance for good (a trapped
+/// `wasm32-wasip2` instance cannot unwind — see `AppBuilder::try_build_definition`'s docs).
+fn create_module_app() -> Result<App, semio_framework_plugin::PluginAssemblyError> {
+    App::try_from_builder(
         App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
             .document(["semio", "forms"])
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
@@ -802,7 +796,7 @@ fn solid_format_arg() -> ActionArgDef {
 }
 
 fn module_plugin_bundle() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()).try_build()
+    Plugin::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
@@ -852,7 +846,7 @@ mod tests {
 
     #[test]
     fn module_app_declares_window_kinds() {
-        let app = create_module_app();
+        let app = create_module_app().expect("MODULE_APP_ID must be a canonical surface id");
         assert_eq!(app.definition.window_kinds.len(), 2);
         assert_eq!(app.definition.window_kinds[0].id, MODULE_WINDOW_PARAMS);
         assert_eq!(app.definition.window_kinds[0].body_key, BODY_PARAMS);
@@ -931,7 +925,7 @@ mod tests {
     #[test]
     fn export_solid_declares_only_format_arg_and_materializes_default() {
         use semio_framework_plugin::app::AppActionRegistry;
-        let definition = create_module_app().definition;
+        let definition = create_module_app().expect("MODULE_APP_ID must be a canonical surface id").definition;
         let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
         assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");
         let export = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");

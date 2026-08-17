@@ -139,10 +139,27 @@ export function resolveLayoutForMode(
  */
 export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], primaryPluginId?: string, hostMode = false): readonly PluginRegistryEntry[] {
   if (hostMode || !primaryPluginId) return plugins;
+  const byId = new Map(plugins.map((entry) => [entry.pluginId, entry] as const));
   const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
   const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
-  return [...primaryEntries, ...contributorEntries];
+  // 🔗️ Transitive `dependencies` closure of primary + contribution matches — `consumes`/`contributes`
+  // alone never pulls Cargo/`dependsOn` plugins (stdio, flow, cad, …), which left every demonstrator
+  // pane boot with "needs X which is not installed" and an empty usable load order.
+  const selected = new Map<string, PluginRegistryEntry>();
+  const queue: PluginRegistryEntry[] = [...primaryEntries, ...contributorEntries];
+  for (const entry of queue) selected.set(entry.pluginId, entry);
+  for (let index = 0; index < queue.length; index++) {
+    const entry = queue[index]!;
+    for (const dependency of entry.dependencies ?? []) {
+      if (selected.has(dependency.pluginId)) continue;
+      const dependencyEntry = byId.get(dependency.pluginId);
+      if (!dependencyEntry) continue;
+      selected.set(dependency.pluginId, dependencyEntry);
+      queue.push(dependencyEntry);
+    }
+  }
+  return [...selected.values()];
 }
 
 export type ExternalSlotResolverContext = {
@@ -435,7 +452,17 @@ export class AppRouter {
     const ownerByArtifactKind = new Map<string, string>();
     const seenRefs = new Set<string>();
     const grouped = new Map<string, { readonly dialect: ArtifactDialect; readonly role: AppRole; readonly entries: AppRef[] }>();
-    for (const manifest of manifests) {
+    // 🔢️ Ownership is claimed by whoever registers a kind FIRST (the single-pass rule above, kept for
+    // Rust parity), which makes the result depend on the ORDER manifests arrive in. The Rust host
+    // registers in a resolved, dependency-respecting order; the browser host collects manifests as ~55
+    // plugin workers finish loading, i.e. in nondeterministic completion order. A contributor
+    // extension could therefore land before the plugin that actually declares the kind and be recorded
+    // as its owner, after which the real owner — or a sibling extension — was rejected as an
+    // impermissible contributor and the whole router threw, leaving the shell with no surfaces at all.
+    // Sorting declarers ahead of pure contributors restores the host-independent order without
+    // changing the per-surface semantics.
+    const ordered = [...manifests].sort((left, right) => Number((right.artifactKinds?.length ?? 0) > 0) - Number((left.artifactKinds?.length ?? 0) > 0));
+    for (const manifest of ordered) {
       for (const kind of manifest.artifactKinds ?? []) {
         if (!ownerByArtifactKind.has(kind.id)) ownerByArtifactKind.set(kind.id, manifest.pluginId);
       }
@@ -528,6 +555,247 @@ export class AppRouter {
   }
 }
 //#endregion 🔖️AppRouter
+
+//#region 🔖️IoRouter
+/** ⚖️ Mirrors Rust `io_schema::IoFidelity` (`🔨️modules/🚪️io/🧬️schema/🦀️component.rs`) — declared
+ * strongest io fidelity one hop achieves. No `#[serde(rename_all)]` on the Rust enum, so the wire
+ * form is the bare Rust variant name. */
+export type IoFidelity = "Exact" | "Canonical" | "Semantic" | "Lossy";
+
+function ioFidelityRank(fidelity: IoFidelity): number {
+  switch (fidelity) {
+    case "Exact":
+      return 3;
+    case "Canonical":
+      return 2;
+    case "Semantic":
+      return 1;
+    case "Lossy":
+      return 0;
+  }
+}
+
+function ioFidelityFromRank(rank: number): IoFidelity {
+  if (rank >= 3) return "Exact";
+  if (rank === 2) return "Canonical";
+  if (rank === 1) return "Semantic";
+  return "Lossy";
+}
+
+/** 🎚️ Mirrors Rust `io_schema::Confidence` — how sure an `io-identify`/`io-sniff` is that a payload
+ * is a given dialect. Same no-`rename_all` wire form as {@link IoFidelity}. */
+export type IoConfidence = "None" | "Low" | "Medium" | "High";
+
+function ioConfidenceRank(confidence: IoConfidence): number {
+  switch (confidence) {
+    case "None":
+      return 0;
+    case "Low":
+      return 1;
+    case "Medium":
+      return 2;
+    case "High":
+      return 3;
+  }
+}
+
+/** 🌉️ Inverse of {@link ioConfidenceRank} — the WIT `io-sniff` guest export returns a raw `u8` rank
+ * byte (`Confidence::rank()`); the caller of {@link ioIdentify} reconstructs the typed value. */
+export function ioConfidenceFromRank(rank: number): IoConfidence {
+  if (rank >= 3) return "High";
+  if (rank === 2) return "Medium";
+  if (rank === 1) return "Low";
+  return "None";
+}
+
+/** 🗄️ Carrier dialects — mirrors Rust `io_schema::CARRIER_BINARY`/`CARRIER_TEXT`: the payload law's
+ * two exceptions, whose native encoding IS the raw external file content. */
+export const CARRIER_BINARY_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
+export const CARRIER_TEXT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.txt", standard: "utf-8", subset: "*" };
+
+/** 📇️ Mirrors Rust `io_schema::IoEntryDescriptor` — one registered io hop, erased to wire data
+ * (`#[serde(rename_all = "camelCase")]` on the Rust side). */
+export type IoEntryDescriptor = {
+  readonly from: ArtifactDialect;
+  readonly into: ArtifactDialect;
+  readonly fidelity: IoFidelity;
+  readonly sniffs: boolean;
+};
+
+/** 🗺️ Mirrors Rust `io_schema::IoRoute` — a resolved hop sequence, `camelCase` wire form. */
+export type IoRoute = {
+  readonly hops: readonly IoEntryDescriptor[];
+  readonly fidelity: IoFidelity;
+};
+
+/** 🗂️ One plugin's `list-io-entries` roster, as `IoEntryGraph.build` consumes it. */
+export type IoEntryGraphPlugin = {
+  readonly pluginId: string;
+  readonly entries: readonly IoEntryDescriptor[];
+};
+
+function ioEntryKey(from: ArtifactDialect, into: ArtifactDialect): string {
+  return `${dialectCoordinate(from)}->${dialectCoordinate(into)}`;
+}
+
+/**
+ * 🧭️ TS twin of the host `IoRouter`'s NEW io-mechanism graph (`💻️os/🔌️plugin/🖥️host/🦀️component.rs`,
+ * region `🔖️IoRouter` — the `io_entries`/`resolve_io_route`/`run_io`/`identify` additions,
+ * `📓️w1-d-report.md`). `(from, into) -> owning pluginId` merged from every loaded plugin's
+ * `list-io-entries` roster, plus deterministic route resolution: highest minimum fidelity, then
+ * fewest hops, then lexicographic `into` coordinate order — a pure function of the (from,into) KEY
+ * SET, never of plugin registration order (mirrors Rust `resolve_io_route`'s `BTreeMap` +
+ * full-candidate-set-sorted-at-the-end shape). Parity with the Rust side is asserted by running the
+ * identical fixture through both — see `🧪️w1d-io-router-parity.ts` in this ticket's folder.
+ */
+export class IoEntryGraph {
+  private readonly ownerByEntry: ReadonlyMap<string, { readonly pluginId: string; readonly descriptor: IoEntryDescriptor }>;
+
+  private constructor(ownerByEntry: ReadonlyMap<string, { readonly pluginId: string; readonly descriptor: IoEntryDescriptor }>) {
+    this.ownerByEntry = ownerByEntry;
+  }
+
+  /** 🏗️ Merges every `(pluginId, entries)` roster into one graph — mirrors Rust `IoRouter::
+   * register_plugin`'s io-entries half. A `(from,into)` key already owned by a DIFFERENT plugin
+   * throws (`IoEntryRouteConflict`'s TS twin); re-registering the SAME plugin's own key is
+   * idempotent (first registration wins). */
+  static build(plugins: readonly IoEntryGraphPlugin[]): IoEntryGraph {
+    const ownerByEntry = new Map<string, { readonly pluginId: string; readonly descriptor: IoEntryDescriptor }>();
+    for (const plugin of plugins) {
+      for (const descriptor of plugin.entries) {
+        const key = ioEntryKey(descriptor.from, descriptor.into);
+        const existing = ownerByEntry.get(key);
+        if (existing) {
+          if (existing.pluginId !== plugin.pluginId) {
+            throw new Error(`io entry route conflict for ${key}: ${JSON.stringify(existing.pluginId)} already owns it; ${JSON.stringify(plugin.pluginId)} cannot replace it`);
+          }
+          continue;
+        }
+        ownerByEntry.set(key, { pluginId: plugin.pluginId, descriptor });
+      }
+    }
+    return new IoEntryGraph(ownerByEntry);
+  }
+
+  /** 🌉️ SAME deterministic ranking rule as Rust `resolve_io_route`/`io::io_mechanism::
+   * resolve_route`: breadth-bounded (`maxHops` clamped to ≤3), cycle-free simple-path enumeration,
+   * ranked by (highest minimum fidelity, fewest hops, lexicographic joined `into` coordinate) —
+   * the FULL candidate set is sorted at the END (never short-circuited), so the winner never
+   * depends on iteration/insertion/registration order. */
+  route(from: ArtifactDialect, into: ArtifactDialect, maxHops = 3): IoRoute {
+    const bound = Math.min(maxHops, 3);
+    if (bound <= 0) throw new Error(`io_routes ${dialectCoordinate(from)} -> ${dialectCoordinate(into)}: max hops clamped to 0`);
+    const candidates: IoEntryDescriptor[][] = [];
+    const path: IoEntryDescriptor[] = [];
+    const visited = new Set<string>([dialectCoordinate(from)]);
+    const walk = (current: ArtifactDialect, remainingHops: number): void => {
+      if (remainingHops === 0) return;
+      for (const { descriptor } of this.ownerByEntry.values()) {
+        if (!dialectEquals(descriptor.from, current)) continue;
+        const nextCoordinate = dialectCoordinate(descriptor.into);
+        if (visited.has(nextCoordinate)) continue;
+        path.push(descriptor);
+        if (dialectEquals(descriptor.into, into)) {
+          candidates.push([...path]);
+        } else {
+          visited.add(nextCoordinate);
+          walk(descriptor.into, remainingHops - 1);
+          visited.delete(nextCoordinate);
+        }
+        path.pop();
+      }
+    };
+    walk(from, bound);
+    if (candidates.length === 0) throw new Error(`no io route from ${dialectCoordinate(from)} to ${dialectCoordinate(into)} within ${bound} hops`);
+    const rank = (hops: readonly IoEntryDescriptor[]): readonly [number, number, string] => {
+      const minFidelity = Math.min(...hops.map((hop) => ioFidelityRank(hop.fidelity)));
+      const joined = hops.map((hop) => dialectCoordinate(hop.into)).join(",");
+      return [-minFidelity, hops.length, joined];
+    };
+    const sorted = [...candidates].sort((a, b) => {
+      const [aInverseFidelity, aLength, aJoined] = rank(a);
+      const [bInverseFidelity, bLength, bJoined] = rank(b);
+      if (aInverseFidelity !== bInverseFidelity) return aInverseFidelity - bInverseFidelity;
+      if (aLength !== bLength) return aLength - bLength;
+      return aJoined.localeCompare(bJoined);
+    });
+    const best = sorted[0]!;
+    const minFidelityRank = Math.min(...best.map((hop) => ioFidelityRank(hop.fidelity)));
+    return { hops: best, fidelity: ioFidelityFromRank(minFidelityRank) };
+  }
+
+  /** 🪪️ The plugin that owns hop `(from,into)`, or `undefined`. */
+  ownerOf(from: ArtifactDialect, into: ArtifactDialect): string | undefined {
+    return this.ownerByEntry.get(ioEntryKey(from, into))?.pluginId;
+  }
+
+  /** 🔍️ Every registered hop whose `from` is `carrier` and which declares a `sniff` — the fan-out
+   * set {@link ioIdentify} sniffs, mirrors Rust `IoRouter::identify`'s carrier filter. */
+  carrierEntries(carrier: ArtifactDialect): ReadonlyArray<{ readonly into: ArtifactDialect; readonly pluginId: string }> {
+    const found: Array<{ readonly into: ArtifactDialect; readonly pluginId: string }> = [];
+    for (const { pluginId, descriptor } of this.ownerByEntry.values()) {
+      if (dialectEquals(descriptor.from, carrier) && descriptor.sniffs) found.push({ into: descriptor.into, pluginId });
+    }
+    return found;
+  }
+}
+
+/** 🌉️ Runs one hop of a resolved {@link IoRoute} — the caller's bridge into an actual loaded
+ * plugin's `io-run` export (this domain-neutral framework module never calls a plugin worker
+ * itself, same boundary {@link AppRouter}/{@link ArtifactMutationRouter} already draw). */
+export type IoHopRunner = (pluginId: string, from: ArtifactDialect, into: ArtifactDialect, payload: Uint8Array) => Promise<Uint8Array> | Uint8Array;
+
+/**
+ * 🧭️ TS twin of Rust `IoRouter::run_io` — resolves the WHOLE `from -> into` route over `graph`,
+ * then, BEFORE running any hop, refuses the ENTIRE route (no partial execution) if any hop is
+ * owned by `callingPluginId` itself: executing that hop would call back into the calling plugin's
+ * own in-flight worker call — the same reentrancy hazard the Rust guard exists to prevent. Each
+ * hop's output payload feeds the next hop's input via `runHop`.
+ */
+export async function ioRun(graph: IoEntryGraph, callingPluginId: string, from: ArtifactDialect, into: ArtifactDialect, payload: Uint8Array, runHop: IoHopRunner, maxHops = 3): Promise<Uint8Array> {
+  const route = graph.route(from, into, maxHops);
+  const hops = route.hops.map((hop) => {
+    const owner = graph.ownerOf(hop.from, hop.into);
+    if (owner === undefined) throw new Error(`io-run: hop ${dialectCoordinate(hop.from)} -> ${dialectCoordinate(hop.into)} vanished from the graph between resolve and execute`);
+    if (owner === callingPluginId) {
+      throw new Error(
+        `io-run refused: hop ${dialectCoordinate(hop.from)} -> ${dialectCoordinate(hop.into)} is owned by the calling plugin ${JSON.stringify(callingPluginId)} itself — executing it would re-enter that plugin's own in-flight worker call`,
+      );
+    }
+    return { hop, owner };
+  });
+  let current = payload;
+  for (const { hop, owner } of hops) {
+    current = await runHop(owner, hop.from, hop.into, current);
+  }
+  return current;
+}
+
+/** 🔍️ Sniffs one plugin's `(from,into)` hop — the caller's bridge into an actual loaded plugin's
+ * `io-sniff` export, returning the raw `Confidence::rank()` byte. Same DI boundary as {@link IoHopRunner}. */
+export type IoSniffRunner = (pluginId: string, from: ArtifactDialect, into: ArtifactDialect, payload: Uint8Array) => Promise<number> | number;
+
+/**
+ * 🧭️ TS twin of Rust `IoRouter::identify` — fans {@link IoSniffRunner} out across every OTHER
+ * plugin's `carrier`-`from` entries (skipping `callingPluginId`'s own, same reentrancy reason
+ * {@link ioRun} refuses a self-owned hop — a fan-out is best-effort, so this SKIPS rather than
+ * refuses the whole call), merges by confidence descending then coordinate ascending.
+ */
+export async function ioIdentify(graph: IoEntryGraph, callingPluginId: string, carrier: ArtifactDialect, payload: Uint8Array, sniffHop: IoSniffRunner): Promise<ReadonlyArray<readonly [ArtifactDialect, IoConfidence]>> {
+  const candidates = graph.carrierEntries(carrier).filter((entry) => entry.pluginId !== callingPluginId);
+  const found: Array<[ArtifactDialect, IoConfidence]> = [];
+  for (const { into, pluginId } of candidates) {
+    const confidence = ioConfidenceFromRank(await sniffHop(pluginId, carrier, into, payload));
+    if (confidence !== "None") found.push([into, confidence]);
+  }
+  found.sort((a, b) => {
+    const rankDiff = ioConfidenceRank(b[1]) - ioConfidenceRank(a[1]);
+    if (rankDiff !== 0) return rankDiff;
+    return dialectCoordinate(a[0]).localeCompare(dialectCoordinate(b[0]));
+  });
+  return found;
+}
+//#endregion 🔖️IoRouter
 
 //#region 🔖️OpeningResolver
 /** 🎚️ One user-pinned default — mirrors Rust `DefaultApp`
@@ -2359,3 +2627,130 @@ export class ArtifactInferenceRouter {
 }
 //#endregion 🔖️ArtifactRouters
 // #endregion 🎠️Kernel
+
+
+//#region 🧪️ExpandPluginRegistryTests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("expandPluginRegistry", () => {
+    it("includes transitive dependsOn of primary and consume-matched contributors", () => {
+      const plugins = [
+        { pluginId: "host-plugin", moduleUrl: "a", consumes: ["ext.tag"], dependencies: [{ pluginId: "core", version: "*" }] },
+        { pluginId: "core", moduleUrl: "b", dependencies: [{ pluginId: "stdio", version: "*" }] },
+        { pluginId: "stdio", moduleUrl: "c" },
+        { pluginId: "ext", moduleUrl: "d", contributes: ["ext.tag"], dependencies: [{ pluginId: "flow", version: "*" }] },
+        { pluginId: "flow", moduleUrl: "e", dependencies: [{ pluginId: "stdio", version: "*" }] },
+        { pluginId: "unrelated", moduleUrl: "f" },
+      ] as const;
+      const expanded = expandPluginRegistry(plugins, "host-plugin", false);
+      const ids = new Set(expanded.map((entry) => entry.pluginId));
+      expect(ids.has("host-plugin")).toBe(true);
+      expect(ids.has("core")).toBe(true);
+      expect(ids.has("stdio")).toBe(true);
+      expect(ids.has("ext")).toBe(true);
+      expect(ids.has("flow")).toBe(true);
+      expect(ids.has("unrelated")).toBe(false);
+    });
+  });
+}
+//#endregion 🧪️ExpandPluginRegistryTests
+
+//#region 🧪️IoRouterTests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  describe("IoEntryGraph", () => {
+    // 🧭️ SAME fixture as the Rust twin (`💻️os/🔌️plugin/🖥️host/🦀️component.rs`,
+    // `io_router_w1d_fixture_entries`) and `🧪️w1d-io-router-parity.ts` — `stdio` owns one Exact
+    // hop, `gif` owns a Canonical migration hop AND a competing Lossy direct shortcut.
+    const binaryRaw: ArtifactDialect = { artifactKind: "s.stdio.binary", standard: "raw", subset: "*" };
+    const gif87a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "87a", subset: "*" };
+    const gif89a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "89a", subset: "*" };
+    const fixturePlugins: IoEntryGraphPlugin[] = [
+      { pluginId: "stdio", entries: [{ from: binaryRaw, into: gif87a, fidelity: "Exact", sniffs: true }] },
+      {
+        pluginId: "gif",
+        entries: [
+          { from: gif87a, into: gif89a, fidelity: "Canonical", sniffs: false },
+          { from: binaryRaw, into: gif89a, fidelity: "Lossy", sniffs: true },
+        ],
+      },
+    ];
+
+    it("resolves the highest-minimum-fidelity route regardless of registration order", () => {
+      const forward = IoEntryGraph.build(fixturePlugins).route(binaryRaw, gif89a);
+      const reversed = IoEntryGraph.build([...fixturePlugins].reverse()).route(binaryRaw, gif89a);
+      expect(forward).toEqual(reversed);
+      expect(forward).toEqual({
+        hops: [
+          { from: binaryRaw, into: gif87a, fidelity: "Exact", sniffs: true },
+          { from: gif87a, into: gif89a, fidelity: "Canonical", sniffs: false },
+        ],
+        fidelity: "Canonical",
+      });
+    });
+
+    it("respects maxHops, picking the direct (weaker) shortcut when bounded to 1", () => {
+      const route = IoEntryGraph.build(fixturePlugins).route(binaryRaw, gif89a, 1);
+      expect(route).toEqual({ hops: [{ from: binaryRaw, into: gif89a, fidelity: "Lossy", sniffs: true }], fidelity: "Lossy" });
+    });
+
+    it("rejects a different plugin claiming an already-owned (from,into) key", () => {
+      expect(() => IoEntryGraph.build([...fixturePlugins, { pluginId: "intruder", entries: [{ from: binaryRaw, into: gif87a, fidelity: "Lossy", sniffs: false }] }])).toThrow(/conflict/);
+    });
+
+    it("ownerOf reports the registering plugin", () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      expect(graph.ownerOf(binaryRaw, gif87a)).toBe("stdio");
+      expect(graph.ownerOf(gif87a, gif89a)).toBe("gif");
+      expect(graph.ownerOf(gif89a, binaryRaw)).toBeUndefined();
+    });
+
+    it("carrierEntries returns only the sniff-declaring hops whose from is the given carrier", () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      const entries = graph.carrierEntries(binaryRaw);
+      expect(entries.map((entry) => ({ into: entry.into, pluginId: entry.pluginId }))).toEqual([
+        { into: gif87a, pluginId: "stdio" },
+        { into: gif89a, pluginId: "gif" },
+      ]);
+    });
+
+    it("ioRun executes the whole route hop by hop, feeding each hop's output to the next", async () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      const calls: string[] = [];
+      const result = await ioRun(graph, "norm", binaryRaw, gif89a, new Uint8Array([1]), (pluginId, from, into, payload) => {
+        calls.push(`${pluginId}:${dialectCoordinate(from)}->${dialectCoordinate(into)}`);
+        return new Uint8Array([...payload, payload.length]);
+      });
+      expect(calls).toEqual(["stdio:s.stdio.binary@raw/*->s.stdio.gif@87a/*", "gif:s.stdio.gif@87a/*->s.stdio.gif@89a/*"]);
+      expect(Array.from(result)).toEqual([1, 1, 2]);
+    });
+
+    it("ioRun refuses the WHOLE route (no partial execution) when the calling plugin owns any hop", async () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      let ran = false;
+      await expect(
+        ioRun(graph, "gif", binaryRaw, gif89a, new Uint8Array(), () => {
+          ran = true;
+          return new Uint8Array();
+        }),
+      ).rejects.toThrow(/refused/);
+      expect(ran).toBe(false);
+    });
+
+    it("ioIdentify fans sniffHop out across carrier entries, skipping the calling plugin's own, sorted by confidence then coordinate", async () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      const results = await ioIdentify(graph, "norm", binaryRaw, new Uint8Array(), (pluginId) => (pluginId === "stdio" ? 3 : 1));
+      expect(results).toEqual([
+        [gif87a, "High"],
+        [gif89a, "Low"],
+      ]);
+    });
+
+    it("ioIdentify skips the calling plugin's own carrier entries", async () => {
+      const graph = IoEntryGraph.build(fixturePlugins);
+      const results = await ioIdentify(graph, "stdio", binaryRaw, new Uint8Array(), () => 3);
+      expect(results).toEqual([[gif89a, "High"]]);
+    });
+  });
+}
+//#endregion 🧪️IoRouterTests

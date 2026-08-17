@@ -1,7 +1,7 @@
 //! 🔺️ Procedural3d artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::procedural3d::schema::diff::*;
-use crate::artifacts::procedural3d::schema::{Procedural3dArtifact, Procedural3dPreviewCamera};
+use crate::artifacts::procedural3d::schema::Procedural3dArtifact;
 use crate::artifacts::procedural3d::{widget_id, Procedural3dSnapshot};
 use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};

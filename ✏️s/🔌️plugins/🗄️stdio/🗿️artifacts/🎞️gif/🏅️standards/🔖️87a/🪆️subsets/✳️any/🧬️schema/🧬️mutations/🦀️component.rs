@@ -6,7 +6,7 @@
 //! those concepts; that scope lives entirely on 89a's mutation enum.
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
-use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};

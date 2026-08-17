@@ -50,3 +50,10 @@ wasm-bindgen-futures = "0.4.71"
 js-sys = "0.3.83"
 serde-wasm-bindgen = "0.6.5"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+# 🎲️ `.cargo/config.toml` sets `--cfg getrandom_backend="wasm_js"` for wasm32, but that flag alone makes
+# getrandom 0.3 `compile_error!` unless its own `wasm_js` Cargo feature is also on. This crate pulls
+# getrandom transitively (semio-framework-ui's wgpu features → wgpu/vello/hayro), and nothing in that
+# graph enables it — so the flow-core wasm-pack build, which the React renderer imports for
+# `createFlowSession`, failed for every `dev` run. Declared here (the wasm-pack build root) so feature
+# unification covers the whole graph, matching how 📐️cad and the wgpu target already do it.
+getrandom = { version = "0.3.4", features = ["wasm_js"] }

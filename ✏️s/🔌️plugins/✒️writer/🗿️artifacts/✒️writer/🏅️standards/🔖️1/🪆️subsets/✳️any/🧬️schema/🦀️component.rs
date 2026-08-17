@@ -409,6 +409,12 @@ pub fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
     serde_json::to_string(&items).ok()
 }
 
+/// 🎼️ `wire` counterpart of [`jack_completions_json`] — see [`WireWriterIdiom`]'s doc comment.
+pub fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
+    let items: Vec<Value> = <WireWriterIdiom as dsl::DslIdiom>::complete(text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+    serde_json::to_string(&items).ok()
+}
+
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
 pub fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {

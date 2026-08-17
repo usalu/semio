@@ -1,0 +1,272 @@
+=== body innerText after click ===
+Artifact
+Fullscreen
+semio · s · home
+Editor
+Studios
+Close
+Create Space
+Name	Kind	Visibility	Members	Updated	Origin	Actions
+
+Demo Studio
+	
+atelier
+	
+private
+	
+1
+	
+0
+	
+local
+	
+Actions
+Utilities
+Display
+Remote: detached
+No one else is here
+Settings
+Marketplace
+History
+Command
+Search
+
+Search for items
+
+Find
+
+Find items in this view
+
+Create Space
+Name
+Kind
+Atelier
+Visibility
+Private
+Cancel
+⎋️
+Create
+↵️
+=== all input/select/textarea elements ===
+[
+ {
+  "tag": "BUTTON",
+  "id": "framework.panel.artifact",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \n  \n  \n  \n  \nArtifact\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Artifact",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "ui.fullscreen.toggle",
+  "name": null,
+  "type": "button",
+  "role": "radio",
+  "text": "Fullscreen\n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "INPUT",
+  "id": "",
+  "name": null,
+  "type": "file",
+  "role": null,
+  "text": "",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "mode-dock-tab-root-s-home-main",
+  "name": null,
+  "type": "button",
+  "role": "tab",
+  "text": "\n  \n  \n  \nStudios\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.modeDock.root.close",
+  "name": null,
+  "type": "button",
+  "role": null,
+  "text": "\n  \n  \nClose",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "s-home-create-space",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "Create Space\n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "",
+  "name": null,
+  "type": "button",
+  "role": null,
+  "text": "\n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.window.sHomeMain.engagement.toggle",
+  "name": null,
+  "type": "button",
+  "role": null,
+  "text": "\n  \nActions\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.window.sHomeMain.utilityBar.unfold",
+  "name": null,
+  "type": "button",
+  "role": null,
+  "text": "\n  \n  \n  \nUtilities\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.category.display",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \n  \nDisplay\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Display",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "s-sync-status",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \nRemote: detached\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Remote: detached",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.settings",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \n  \nSettings\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Settings",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.marketplace",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \n  \nMarketplace\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Marketplace",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.panel.history",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \n  \nHistory\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "History",
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "framework.category.command",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "\n  \nCommand\n  \n  \n  \n  \n  \n  \n",
+  "value": "",
+  "ariaLabel": "Command",
+  "placeholder": null
+ },
+ {
+  "tag": "INPUT",
+  "id": "name",
+  "name": null,
+  "type": "text",
+  "role": null,
+  "text": "",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "kind",
+  "name": null,
+  "type": "button",
+  "role": "combobox",
+  "text": "Atelier\n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "visibility",
+  "name": null,
+  "type": "button",
+  "role": "combobox",
+  "text": "Private\n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "ui.dialog.cancel",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "Cancel⎋️\n  \n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ },
+ {
+  "tag": "BUTTON",
+  "id": "ui.dialog.submit",
+  "name": null,
+  "type": null,
+  "role": null,
+  "text": "Create↵️\n  \n",
+  "value": "",
+  "ariaLabel": null,
+  "placeholder": null
+ }
+]

@@ -1,8 +1,5 @@
 //! 📐️ Procedural3d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
-pub use crate::artifacts::procedural3d::schema::diff::Procedural3dDiff;
-pub use crate::artifacts::procedural3d::schema::mutations::Procedural3dMutation;
-pub use crate::artifacts::procedural3d::schema::snapshot::Procedural3dSnapshot;
 
 use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};

@@ -1231,12 +1231,20 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
   if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
   const boardScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
   if (runCmdStatus("bun", [boardScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-board-2d wasm build failed");
-  // React renderer always `import("@semio-tech/flow-core")` for `createFlowSession`, so the
-  // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
+  // React renderer `import("@semio-tech/flow-core")` for `createFlowSession`, so the pkg should exist
+  // even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
+  //
+  // ⚠️ That import is LAZY — it happens inside `createFlowSession`, so a shell whose surfaces never open
+  // a flow graph (Home, Space, Writer, …) runs perfectly without it. A broken flow crate must therefore
+  // degrade this build, not abort it: throwing here meant one unrelated subsystem's compile errors took
+  // down every `dev` server, including both hub user launchers. Warn loudly and continue; anything that
+  // actually needs a flow session fails visibly at that point instead.
   const flowCorePkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
   if (!existsSync(flowCorePkgWasm)) {
     const flowCoreScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts");
-    if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
+    if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+      console.warn("[dev] flow-core wasm build failed — continuing without it; surfaces that open a flow graph will fail until it builds again.");
+    }
   }
   const row = playgroundCatalog.find((entry) => entry.variant === variant);
   for (const engineCratePath of row?.engines ?? []) {
@@ -1326,18 +1334,54 @@ function markPluginBuildLeaseReady(variant: string): void {
 }
 
 /** @emoji 🕰️ Follower-side wait for the holder's `registryReady` flag, capped at
- * `PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS`. Returns early (treats the lease as ready-enough) if the lease
- * file vanishes (holder released/finished) or its `pid` dies mid-wait — either way nothing is left to
- * wait on. */
-async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number): Promise<void> {
+ * `PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS`. Returns `true` when the holder is ready, when the lease file
+ * vanishes (holder released/finished), or when its `pid` dies mid-wait — either way nothing is left to
+ * wait on.
+ *
+ * 🚨️ Returns `false` on timeout rather than throwing. This lease is a build-deduplication OPTIMISATION
+ * for the two-user launchers, never a precondition for running `dev` at all: a holder that is merely
+ * slow (heavy cargo contention) or wedged must degrade a second `dev` into doing its own build, not
+ * abort it. Throwing here made a single stale lease file break the primary `dev` workflow outright. */
+async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number): Promise<boolean> {
   const path = pluginBuildLeasePath(variant);
   const deadline = Date.now() + deadlineMs;
   while (Date.now() < deadline) {
     const lease = readPluginBuildLease(path);
-    if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return;
+    if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return true;
     await Bun.sleep(500);
   }
-  throw new Error(`plugin-build lease for "${variant}" did not become ready within ${deadlineMs}ms`);
+  return false;
+}
+
+/** @emoji 🧾️ Whether the shared build outputs a follower intends to serve are actually on disk — the
+ * generated playground catalog plus a non-empty `🔌️plugin-modules/`. Checked instead of trusting the
+ * lease flag alone, so a follower never serves an empty module directory just because some other
+ * process claimed readiness. */
+function pluginBuildOutputsPresent(): boolean {
+  try {
+    const modules = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
+    return existsSync(modules) && readdirSync(modules).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** @emoji 🪓️ Forcibly takes the lease for this process after a follower gave up waiting, so it can do
+ * the build itself. Best-effort: losing the ensuing `wx` race just means somebody else holds it and we
+ * build anyway, which is wasteful but always correct. */
+function takeOverPluginBuildLease(variant: string, port: number): void {
+  const path = pluginBuildLeasePath(variant);
+  try {
+    rmSync(path, { force: true });
+  } catch {
+    // 🏁️ A vanished lease is the desired end state either way.
+  }
+  try {
+    mkdirSync(pluginBuildLeaseDir(), { recursive: true });
+    writeFileSync(path, JSON.stringify({ pid: process.pid, port, startedAt: Date.now(), registryReady: false } satisfies PluginBuildLease, null, 2));
+  } catch {
+    // 🏁️ Unwritable lease dir is not a reason to refuse to build.
+  }
 }
 
 /** @emoji 🔓️ Releases this process's own plugin-build lease (no-op if it was never the holder, or lost
@@ -1391,22 +1435,39 @@ class DevScript extends BundleScript {
     // 🔐️ Two `dev s` processes for the same variant (the hub `users` launchers) must not both run the
     // ~30-crate `buildPluginsStreaming` — only the lease holder does; a follower waits for the holder's
     // registry catalog + engine wasm and then serves its own Vite off the same `🔌️plugin-modules/`.
-    const pluginBuildLease = streamPluginBuilds ? acquirePluginBuildLease(plugin, Number(process.env.S_OS_PORT ?? defaultPort)) : undefined;
+    const leasePort = Number(process.env.S_OS_PORT || defaultPort);
+    const pluginBuildLease = streamPluginBuilds ? acquirePluginBuildLease(plugin, leasePort) : undefined;
     if (pluginBuildLease) {
       const release = (): void => releasePluginBuildLease(plugin);
       process.once("exit", release);
-      process.once("SIGINT", () => {
-        release();
-        process.exit(130);
-      });
+      for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+        process.once(signal, () => {
+          release();
+          process.exit(signal === "SIGINT" ? 130 : 143);
+        });
+      }
     }
-    if (pluginBuildLease?.role === "follower") {
-      console.log(`[dev] plugin builds owned by pid ${pluginBuildLease.lease.pid} (port ${pluginBuildLease.lease.port}); serving only`);
-      await waitForPluginBuildLeaseReady(plugin, PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS);
+    // 🔀️ `follower` only survives as a role while the holder genuinely delivers: if it never reports
+    // ready within the budget, or reported ready without leaving usable outputs on disk, this process
+    // takes the lease over and builds for itself. The lease may cost a duplicated build; it may never
+    // cost a broken `dev`.
+    let leaseRole = pluginBuildLease?.role;
+    if (leaseRole === "follower") {
+      console.log(`[dev] plugin builds owned by pid ${pluginBuildLease?.role === "follower" ? pluginBuildLease.lease.pid : "?"} (port ${pluginBuildLease?.role === "follower" ? pluginBuildLease.lease.port : "?"}); serving only`);
+      const ready = await waitForPluginBuildLeaseReady(plugin, PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS);
+      if (!ready) console.warn(`[dev] plugin-build lease for "${plugin}" did not report ready within ${PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS}ms — building here instead of waiting further`);
+      else if (!pluginBuildOutputsPresent()) console.warn(`[dev] plugin-build lease for "${plugin}" reported ready but 🔌️plugin-modules/ is empty — building here`);
+      if (!ready || !pluginBuildOutputsPresent()) {
+        takeOverPluginBuildLease(plugin, leasePort);
+        leaseRole = "holder";
+      }
+    }
+    if (leaseRole === "follower") {
+      // 🍽️ Holder delivered: nothing to build, serve its outputs.
     } else if (streamPluginBuilds || process.env.SKIP_PLUGIN_BUILD === "1") {
       await ensurePluginRegistry(filterPlugin);
       await buildEngineWasm(plugin, renderer);
-      if (pluginBuildLease?.role === "holder") markPluginBuildLeaseReady(plugin);
+      if (leaseRole === "holder") markPluginBuildLeaseReady(plugin);
     } else {
       await buildPlugins(filterPlugin);
       await buildEngineWasm(plugin, renderer);
@@ -1470,7 +1531,7 @@ class DevScript extends BundleScript {
         ...frameworkOsLockedPrefsEnv(),
       },
     });
-    if (pluginBuildLease?.role === "holder") {
+    if (leaseRole === "holder") {
       await buildPluginsStreaming(filterPlugin);
       const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
       const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});

@@ -251,7 +251,7 @@ fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
         return Err(DbError::Corrupt("snapshot descriptor segment must use the identity codec".to_string()));
     }
     let mut pos = 2usize;
-    let seg_len = pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos)?;
     check_len(seg_len, 64 * 1024 * 1024, "snapshot descriptor segment length")?;
     let header_len = pos as u64;
     let mut frame = vec![0u8; (header_len + seg_len) as usize];
@@ -294,7 +294,7 @@ pub fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], par
     if !new_pages.is_empty() {
         required_flags |= pack::REQUIRED_CHUNKED;
     }
-    let options = pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    let options = pack::os_pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
     let mut writer = pack::PackWriter::begin(Vec::<u8>::new(), &options)?;
 
     let descriptor_bytes = descriptor.encode();
@@ -415,8 +415,8 @@ pub fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHa
 pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
     if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
         let sub = SubSource { inner: combined, base: handle.base, len: handle.len };
-        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
-        return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::VerificationLevel::Standard)?);
+        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard)?;
+        return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard)?);
     }
     match handle.parent_footer_offset() {
         Some(offset) => {
@@ -592,7 +592,7 @@ impl<'storage> SnapshotManager<'storage> {
     /// each chunk's content hash too, since `pack::PackFile::read_chunk` already validates it
     /// against the chunk table `pack::PackWriter::write_chunk` built from these same page bytes;
     /// no separate hash recomputation needed here.
-    pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::VerificationLevel) -> Result<(), DbError> {
+    pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
         let bytes = self.storage.read_generation(document, generation)?;
         let handle = open_latest(&bytes)?;
         let sub = SubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
@@ -722,7 +722,7 @@ mod tests {
         let bytes = build_generation(&descriptor, &pages, None).unwrap();
 
         // 🔬️ A real `pack::PackFile`, unrelated to this crate's own reader, must accept the bytes.
-        let file = pack::PackFile::open_manifest(bytes.as_slice(), &pack::PackLimits::default(), pack::VerificationLevel::Full).unwrap();
+        let file = pack::PackFile::open_manifest(bytes.as_slice(), &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Full).unwrap();
         assert_eq!(file.chunk_count(), 2);
         assert_eq!(file.manifest().unwrap().schema_name, "");
 
@@ -924,13 +924,13 @@ mod tests {
         let pages = vec![page(b"verify-me")];
         manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0)).unwrap();
 
-        manager.verify(&document, 0, pack::VerificationLevel::Full).unwrap();
+        manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full).unwrap();
 
         let mut corrupted = storage.read_generation(&document, 0).unwrap();
         let last = corrupted.len() - 1;
         corrupted[last] ^= 0xFF;
         storage.write_generation(&document, 0, &corrupted).unwrap();
-        assert!(manager.verify(&document, 0, pack::VerificationLevel::Standard).is_err());
+        assert!(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Standard).is_err());
     }
     //#endregion 🔖️Manager
 

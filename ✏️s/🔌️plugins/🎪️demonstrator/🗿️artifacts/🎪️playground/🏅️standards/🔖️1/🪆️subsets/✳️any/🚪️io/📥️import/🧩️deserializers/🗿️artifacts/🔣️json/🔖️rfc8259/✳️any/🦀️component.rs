@@ -1,8 +1,8 @@
 //! playground <- json
 use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_text};
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<PlaygroundSnapshot, store::TextError> {
     let mut out: PlaygroundSnapshot = serde_json::from_value(from.to_serde_value())

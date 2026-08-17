@@ -64,6 +64,58 @@ pub mod component {
             ensure_plugin_initialized();
             crate::wire_artifact_compose(&key, &sources).map_err(|message| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.artifact-compose"), message.to_string()))))
         }
+
+        /// 📇️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): this plugin's own registered NEW
+        /// io mechanism roster, JSON-encoded `Vec<io_schema::IoEntryDescriptor>` — additive
+        /// alongside `list_artifact_dialects` (D3), read once per plugin by the host `IoRouter`.
+        fn list_io_entries() -> Result<Vec<u8>, PluginError> {
+            ensure_plugin_initialized();
+            serde_json::to_vec(&semio_framework::io::io_mechanism::io_entries())
+                .map_err(|error| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.list-io-entries"), error.to_string()))))
+        }
+
+        /// 🌉️ Runs exactly ONE hop of this plugin's own local `io_mechanism` registry — never
+        /// chains into the host, multi-hop routing across plugins is `host.io-run`'s job.
+        fn io_run(from: String, into: String, payload: Vec<u8>) -> Result<Vec<u8>, PluginError> {
+            ensure_plugin_initialized();
+            let fault = |message: String| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.io-run"), message)));
+            let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&from).map_err(fault)?;
+            let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&into).map_err(fault)?;
+            let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload).map_err(|error| fault(error.to_string()))?;
+            let descriptor = semio_framework::io::io_mechanism::io_entries()
+                .into_iter()
+                .find(|entry| entry.from == from && entry.into == into)
+                .ok_or_else(|| fault(format!("no local io entry for hop {} -> {}", from.to_coordinate(), into.to_coordinate())))?;
+            let fidelity = descriptor.fidelity;
+            let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
+            let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).map_err(|error| fault(error.message))?;
+            serde_json::to_vec(&outcome.value).map_err(|error| fault(error.to_string()))
+        }
+
+        /// 🔍️ Confidence (as `io_schema::Confidence::rank()`) that `payload` is dialect `into`,
+        /// sniffed as though it arrived `from` a carrier dialect. Implemented via `io_identify`
+        /// (carrier-scoped by construction, matching the payload law) filtered to `into` — a
+        /// non-carrier `from` naturally yields `Confidence::None`/`0`.
+        fn io_sniff(from: String, into: String, payload: Vec<u8>) -> Result<u8, PluginError> {
+            ensure_plugin_initialized();
+            let fault = |message: String| PluginError::Fault(dsl::encode_fault_bytes(&Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.io-sniff"), message)));
+            let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&from).map_err(fault)?;
+            let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&into).map_err(fault)?;
+            let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload).map_err(|error| fault(error.to_string()))?;
+            let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
+                semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
+                semio_framework::io_schema::IoPayload::Text(_) => semio_framework::io_schema::CARRIER_TEXT,
+            });
+            if from != carrier {
+                return Ok(semio_framework::io_schema::Confidence::None.rank());
+            }
+            let confidence = semio_framework::io::io_mechanism::io_identify(&payload)
+                .into_iter()
+                .find(|(dialect, _)| *dialect == into)
+                .map(|(_, confidence)| confidence)
+                .unwrap_or(semio_framework::io_schema::Confidence::None);
+            Ok(confidence.rank())
+        }
     }
 
     /// 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (§6): `contributor` moved
@@ -213,6 +265,27 @@ pub mod component {
     /// other `host::` import here), so no `decode_fault_bytes` step is needed.
     pub fn host_resolve_artifact_link(link: &[u8]) -> Result<Vec<u8>, String> {
         semio::framework::host::resolve_artifact_link(link)
+    }
+
+    /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the host's merged, deterministic
+    /// cross-plugin route `from -> into`, JSON `io_schema::IoRoute` bytes. `from`/`into` are
+    /// `ArtifactDialect::to_coordinate()` strings.
+    pub fn host_io_routes(from: &str, into: &str) -> Result<Vec<u8>, String> {
+        semio::framework::host::io_routes(from, into).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
+    }
+
+    /// 🌉️ Executes the WHOLE cross-plugin route `from -> into` — the seam viewers/editors/commands
+    /// convert artifact payloads through (design.md §3: "`host_io_run` in Rust, `ioRun` in TS").
+    /// `payload`/the ok result are JSON-encoded `io_schema::IoPayload`.
+    pub fn host_io_run(from: &str, into: &str, payload: &[u8]) -> Result<Vec<u8>, String> {
+        semio::framework::host::io_run(from, into, payload).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
+    }
+
+    /// 🔍️ Fans `io-sniff` out across every OTHER loaded plugin's carrier-`from` entries, JSON
+    /// `Vec<(io_schema::ArtifactDialect, io_schema::Confidence)>` bytes, confidence-then-coordinate
+    /// sorted. `payload` is a JSON-encoded `io_schema::IoPayload`.
+    pub fn host_io_identify(payload: &[u8]) -> Result<Vec<u8>, String> {
+        semio::framework::host::io_identify(payload).map_err(|bytes| dsl::decode_fault_bytes(&bytes).message)
     }
 
     /// 🌉️ Installs the guest-side `io_dispatch` fallback hook: a local registry miss is retried via
@@ -4872,19 +4945,35 @@ pub mod app {
         /// @emoji 🧷️ Keybinding-vs-action-registry consistency is only enforced for apps that declare
         /// actions via `.mutation()`/`.view_action()`/`.shell_action()` — apps with an empty action
         /// registry keybind directly against controller actions instead, so there is nothing to check.
-        pub fn build_definition(mut self) -> AppDefinition {
-            assert!(!self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()), "app {} document must contain non-empty segments", self.id);
-            for (terminology_id, document) in &self.terminology_breadcrumbs {
-                assert!(self.terminologies.iter().any(|id| id == terminology_id), "app {} declares terminology_document for undeclared terminology {}", self.id, terminology_id);
-                assert!(!document.is_empty() && document.iter().all(|segment| !segment.trim().is_empty()), "app {} terminology_document for {} must contain non-empty segments", self.id, terminology_id);
+        pub fn try_build_definition(mut self) -> Result<AppDefinition, PluginAssemblyError> {
+            if !(!self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty())) {
+                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} document must contain non-empty segments", self.id)));
             }
-            assert!(!self.window_kinds.is_empty(), "app {} must declare at least one window kind", self.id);
-            assert!(!self.modes.is_empty(), "app {} must declare at least one mode", self.id);
+            for (terminology_id, document) in &self.terminology_breadcrumbs {
+                if !(self.terminologies.iter().any(|id| id == terminology_id)) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} declares terminology_document for undeclared terminology {}", self.id, terminology_id)));
+                }
+                if !(!document.is_empty() && document.iter().all(|segment| !segment.trim().is_empty())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} terminology_document for {} must contain non-empty segments", self.id, terminology_id)));
+                }
+            }
+            if !(!self.window_kinds.is_empty()) {
+                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} must declare at least one window kind", self.id)));
+            }
+            if !(!self.modes.is_empty()) {
+                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} must declare at least one mode", self.id)));
+            }
             let mut window_kind_ids = HashSet::new();
             for window in &self.window_kinds {
-                assert!(!window.id.trim().is_empty(), "app {} window kind id must be non-empty", self.id);
-                assert!(!window.body_key.trim().is_empty(), "app {} window kind {} body_key must be non-empty", self.id, window.id);
-                assert!(window_kind_ids.insert(window.id.clone()), "app {} duplicate window kind id {}", self.id, window.id);
+                if !(!window.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind id must be non-empty", self.id)));
+                }
+                if !(!window.body_key.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} body_key must be non-empty", self.id, window.id)));
+                }
+                if !(window_kind_ids.insert(window.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate window kind id {}", self.id, window.id)));
+                }
             }
             let mut panel_tab_ids = HashSet::new();
             for tab in &self.panel_tabs {
@@ -4910,54 +4999,77 @@ pub mod app {
                 layout_window_ids.extend(collect_window_kind_ids_from_layout(&named.layout));
             }
             for window_kind_id in layout_window_ids {
-                assert!(window_kind_ids.contains(&window_kind_id), "app {} layout references undeclared window kind {}", self.id, window_kind_id);
+                if !(window_kind_ids.contains(&window_kind_id)) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} layout references undeclared window kind {}", self.id, window_kind_id)));
+                }
             }
             let default_mode_id = self.default_mode_id.clone().unwrap_or_else(|| self.modes[0].id.clone());
-            assert!(self.modes.iter().any(|mode| mode.id == default_mode_id), "app {} default_mode_id {} does not reference a declared mode", self.id, default_mode_id);
+            if !(self.modes.iter().any(|mode| mode.id == default_mode_id)) {
+                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} default_mode_id {} does not reference a declared mode", self.id, default_mode_id)));
+            }
             let mut declared_action_ids = HashSet::new();
             for action in &self.actions {
-                assert!(declared_action_ids.insert(action.id.clone()), "app {} duplicate action id {}", self.id, action.id);
+                if !(declared_action_ids.insert(action.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate action id {}", self.id, action.id)));
+                }
                 validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
             }
             let mut declared_utility_ids = HashSet::new();
             for utility in &self.utilities {
-                assert!(!utility.id.trim().is_empty(), "app {} utility id must be non-empty", self.id);
-                assert!(declared_utility_ids.insert(utility.id.clone()), "app {} duplicate utility id {}", self.id, utility.id);
+                if !(!utility.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} utility id must be non-empty", self.id)));
+                }
+                if !(declared_utility_ids.insert(utility.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate utility id {}", self.id, utility.id)));
+                }
             }
             let mut declared_interaction_ids = HashSet::new();
             for interaction in &self.interactions {
-                assert!(!interaction.id.trim().is_empty(), "app {} interaction id must be non-empty", self.id);
-                assert!(declared_interaction_ids.insert(interaction.id.clone()), "app {} duplicate interaction id {}", self.id, interaction.id);
-                assert!(!interaction.granularities.is_empty(), "app {} interaction {} must declare at least one granularity", self.id, interaction.id);
-                assert!(!interaction.selection.modes.is_empty(), "app {} interaction {} must declare at least one selection mode", self.id, interaction.id);
-                assert!(!interaction.selection.methods.is_empty(), "app {} interaction {} must declare at least one selection method", self.id, interaction.id);
-                assert!(!interaction.selection.merges.is_empty(), "app {} interaction {} must declare at least one merge mode", self.id, interaction.id);
-                // 🕹️ W3b: `transitive` (hover or selection) means "expand to descendant closure" — over
-                // `HierarchyProvider::Flat` there is no descendant relation to expand along at all, so a
-                // transitive `Flat` domain could only ever silently degrade to non-transitive behavior;
-                // reject it at build time instead.
-                assert!(
-                    !interaction.hover.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat),
-                    "app {} interaction {} declares hover.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)",
-                    self.id,
-                    interaction.id
-                );
-                assert!(
-                    !interaction.selection.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat),
-                    "app {} interaction {} declares selection.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)",
-                    self.id,
-                    interaction.id
-                );
+                if !(!interaction.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction id must be non-empty", self.id)));
+                }
+                if !(declared_interaction_ids.insert(interaction.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate interaction id {}", self.id, interaction.id)));
+                }
+                if !(!interaction.granularities.is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} must declare at least one granularity", self.id, interaction.id)));
+                }
+                if !(!interaction.selection.modes.is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} must declare at least one selection mode", self.id, interaction.id)));
+                }
+                if !(!interaction.selection.methods.is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} must declare at least one selection method", self.id, interaction.id)));
+                }
+                if !(!interaction.selection.merges.is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} must declare at least one merge mode", self.id, interaction.id)));
+                } // 🕹️ W3b: `transitive` (hover or selection) means "expand to descendant closure" — over
+                  // `HierarchyProvider::Flat` there is no descendant relation to expand along at all, so a
+                  // transitive `Flat` domain could only ever silently degrade to non-transitive behavior;
+                  // reject it at build time instead.
+                if !(!interaction.hover.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat)) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} declares hover.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id)));
+                }
+                if !(!interaction.selection.transitive || !matches!(interaction.hierarchy, semio_framework::HierarchyProvider::Flat)) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} declares selection.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id)));
+                }
             }
             let mut declared_tool_ids = HashSet::new();
             for tool in &self.tools {
-                assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
-                assert!(declared_tool_ids.insert(tool.id.clone()), "app {} duplicate tool id {}", self.id, tool.id);
+                if !(!tool.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tool id must be non-empty", self.id)));
+                }
+                if !(declared_tool_ids.insert(tool.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate tool id {}", self.id, tool.id)));
+                }
             }
             let mut declared_command_ids = HashSet::new();
             for command in &self.commands {
-                assert!(!command.id.trim().is_empty(), "app {} command id must be non-empty", self.id);
-                assert!(declared_command_ids.insert(command.id.clone()), "app {} duplicate app command id {}", self.id, command.id);
+                if !(!command.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} command id must be non-empty", self.id)));
+                }
+                if !(declared_command_ids.insert(command.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate app command id {}", self.id, command.id)));
+                }
                 validate_arg_defs(&self.id, &format!("command {}", command.id), &command.args);
             }
             let app_declared_actions = !self.actions.is_empty();
@@ -4996,13 +5108,20 @@ pub mod app {
             let explicitly_owned_action_ids: HashSet<String> = self.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone()).chain(window.action_refs.iter().map(|action| action.as_str().to_string()))).collect();
             for window in &mut self.window_kinds {
                 for action_ref in &window.action_refs {
-                    let action = actions.iter().find(|action| action.id == action_ref.as_str()).unwrap_or_else(|| panic!("app {} window kind {} references undeclared action {}", self.id, window.id, action_ref.as_str()));
+                    let action = actions
+                        .iter()
+                        .find(|action| action.id == action_ref.as_str())
+                        .ok_or_else(|| PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} references undeclared action {}", self.id, window.id, action_ref.as_str())))?;
                     window.actions.push(action.clone());
                 }
                 let mut window_action_ids = HashSet::new();
                 for action in &window.actions {
-                    assert!(!action.id.trim().is_empty(), "app {} window kind {} action id must be non-empty", self.id, window.id);
-                    assert!(window_action_ids.insert(action.id.clone()), "app {} window kind {} duplicate action id {}", self.id, window.id, action.id);
+                    if !(!action.id.trim().is_empty()) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} action id must be non-empty", self.id, window.id)));
+                    }
+                    if !(window_action_ids.insert(action.id.clone())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} duplicate action id {}", self.id, window.id, action.id)));
+                    }
                     declared_action_ids.insert(action.id.clone());
                     validate_arg_defs(&self.id, &format!("window kind {} action {}", window.id, action.id), &action.args);
                 }
@@ -5043,39 +5162,59 @@ pub mod app {
             }
             if app_declared_actions {
                 for binding in &keybindings {
-                    assert!(declared_action_ids.contains(&binding.action.action), "app {} keybinding {} references undeclared action {}", self.id, binding.keys, binding.action.action);
+                    if !(declared_action_ids.contains(&binding.action.action)) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} keybinding {} references undeclared action {}", self.id, binding.keys, binding.action.action)));
+                    }
                 }
             }
             for window in &self.window_kinds {
                 for utility_ref in &window.utilities {
-                    assert!(declared_utility_ids.contains(utility_ref.as_str()), "app {} window kind {} references undeclared utility {}", self.id, window.id, utility_ref.as_str());
+                    if !(declared_utility_ids.contains(utility_ref.as_str())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} references undeclared utility {}", self.id, window.id, utility_ref.as_str())));
+                    }
                 }
                 for interaction_ref in &window.interactions {
-                    assert!(declared_interaction_ids.contains(interaction_ref.as_str()), "app {} window kind {} references undeclared interaction {}", self.id, window.id, interaction_ref.as_str());
+                    if !(declared_interaction_ids.contains(interaction_ref.as_str())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} references undeclared interaction {}", self.id, window.id, interaction_ref.as_str())));
+                    }
                 }
             }
             for mode in &self.modes {
                 let mut mode_command_ids = HashSet::new();
                 for command in &mode.commands {
-                    assert!(!command.id.trim().is_empty(), "app {} mode {} command id must be non-empty", self.id, mode.id);
-                    assert!(mode_command_ids.insert(command.id.clone()), "app {} mode {} duplicate command id {}", self.id, mode.id, command.id);
+                    if !(!command.id.trim().is_empty()) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} mode {} command id must be non-empty", self.id, mode.id)));
+                    }
+                    if !(mode_command_ids.insert(command.id.clone())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} mode {} duplicate command id {}", self.id, mode.id, command.id)));
+                    }
                     declared_command_ids.insert(command.id.clone());
                     validate_arg_defs(&self.id, &format!("mode {} command {}", mode.id, command.id), &command.args);
                 }
                 for tool_ref in &mode.tools {
-                    assert!(declared_tool_ids.contains(tool_ref.as_str()), "app {} mode {} references undeclared tool {}", self.id, mode.id, tool_ref.as_str());
+                    if !(declared_tool_ids.contains(tool_ref.as_str())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} mode {} references undeclared tool {}", self.id, mode.id, tool_ref.as_str())));
+                    }
                 }
             }
             let mode_referenced_tools: HashSet<&str> = self.modes.iter().flat_map(|mode| mode.tools.iter().map(|tool_ref| tool_ref.as_str())).collect();
             for tool in &self.tools {
-                assert!(mode_referenced_tools.contains(tool.id.as_str()), "app {} tool {} is not referenced by any mode", self.id, tool.id);
+                if !(mode_referenced_tools.contains(tool.id.as_str())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tool {} is not referenced by any mode", self.id, tool.id)));
+                }
             }
             if let Some(introduction) = &self.introduction {
-                assert!(!introduction.steps.is_empty(), "app {} introduction must declare at least one step", self.id);
+                if !(!introduction.steps.is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction must declare at least one step", self.id)));
+                }
                 let mut step_ids = HashSet::new();
                 for step in &introduction.steps {
-                    assert!(!step.id.trim().is_empty(), "app {} introduction step id must be non-empty", self.id);
-                    assert!(step_ids.insert(step.id.clone()), "app {} duplicate introduction step id {}", self.id, step.id);
+                    if !(!step.id.trim().is_empty()) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step id must be non-empty", self.id)));
+                    }
+                    if !(step_ids.insert(step.id.clone())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate introduction step id {}", self.id, step.id)));
+                    }
                     let validate_element_id = |id: &str, role: &str| validate_referenced_element_id(&self.id, &format!("introduction step {}", step.id), role, id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                     if let Some(id) = &step.introduce {
                         validate_element_id(id, "introduce");
@@ -5084,19 +5223,31 @@ pub mod app {
                         validate_element_id(id, "show");
                     }
                     for interaction in &step.interactions {
-                        assert!(!interaction.label.trim().is_empty(), "app {} introduction step {} interaction has an empty label", self.id, step.id);
+                        if !(!interaction.label.trim().is_empty()) {
+                            return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction has an empty label", self.id, step.id)));
+                        }
                         match &interaction.on {
                             IntroductionInteractionKind::Action(action_ref) => {
-                                assert!(declared_action_ids.contains(action_ref.as_str()), "app {} introduction step {} interaction references undeclared action {}", self.id, step.id, action_ref.as_str())
+                                if !(declared_action_ids.contains(action_ref.as_str())) {
+                                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared action {}", self.id, step.id, action_ref.as_str())));
+                                }
                             }
                             IntroductionInteractionKind::Utility(utility_ref) => {
-                                assert!(declared_utility_ids.contains(utility_ref.as_str()), "app {} introduction step {} interaction references undeclared utility {}", self.id, step.id, utility_ref.as_str())
+                                if !(declared_utility_ids.contains(utility_ref.as_str())) {
+                                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared utility {}", self.id, step.id, utility_ref.as_str())));
+                                }
                             }
-                            IntroductionInteractionKind::Tool(tool_ref) => assert!(declared_tool_ids.contains(tool_ref.as_str()), "app {} introduction step {} interaction references undeclared tool {}", self.id, step.id, tool_ref.as_str()),
+                            IntroductionInteractionKind::Tool(tool_ref) => {
+                                if !(declared_tool_ids.contains(tool_ref.as_str())) {
+                                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared tool {}", self.id, step.id, tool_ref.as_str())));
+                                }
+                            }
                             IntroductionInteractionKind::Panel(panel_tab_id) => validate_element_id(panel_tab_id, "interaction.panel"),
                             IntroductionInteractionKind::Expand(tree_id) => validate_element_id(tree_id, "interaction.expand"),
                             IntroductionInteractionKind::Pan(window_kind_id) | IntroductionInteractionKind::Zoom(window_kind_id) | IntroductionInteractionKind::Orbit(window_kind_id) => {
-                                assert!(window_kind_ids.contains(window_kind_id), "app {} introduction step {} interaction references undeclared window kind {}", self.id, step.id, window_kind_id)
+                                if !(window_kind_ids.contains(window_kind_id)) {
+                                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction references undeclared window kind {}", self.id, step.id, window_kind_id)));
+                                }
                             }
                         }
                     }
@@ -5104,10 +5255,14 @@ pub mod app {
             }
             let mut tutorial_ids = HashSet::new();
             for tutorial in &self.tutorials {
-                assert!(!tutorial.id.trim().is_empty(), "app {} tutorial id must be non-empty", self.id);
-                assert!(tutorial_ids.insert(tutorial.id.clone()), "app {} duplicate tutorial id {}", self.id, tutorial.id);
+                if !(!tutorial.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tutorial id must be non-empty", self.id)));
+                }
+                if !(tutorial_ids.insert(tutorial.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate tutorial id {}", self.id, tutorial.id)));
+                }
                 if let Err(reason) = semio_framework::validate_tutorial(tutorial) {
-                    panic!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason);
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason)));
                 }
                 let owner = format!("tutorial {}", tutorial.id);
                 let mut ui_changes: Vec<&semio_framework::TutorialUiChange> = Vec::new();
@@ -5118,21 +5273,41 @@ pub mod app {
                 }
                 for change in ui_changes {
                     match change {
-                        semio_framework::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } => assert!(declared_utility_ids.contains(utility_id), "app {} {} references undeclared utility {}", self.id, owner, utility_id),
-                        semio_framework::TutorialUiChange::ActiveTool { id: Some(tool_id) } => assert!(declared_tool_ids.contains(tool_id), "app {} {} references undeclared tool {}", self.id, owner, tool_id),
+                        semio_framework::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } => {
+                            if !(declared_utility_ids.contains(utility_id)) {
+                                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} references undeclared utility {}", self.id, owner, utility_id)));
+                            }
+                        }
+                        semio_framework::TutorialUiChange::ActiveTool { id: Some(tool_id) } => {
+                            if !(declared_tool_ids.contains(tool_id)) {
+                                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} references undeclared tool {}", self.id, owner, tool_id)));
+                            }
+                        }
                         _ => {}
                     }
                 }
                 for utility_id in tutorial.base.ui.active_utility_by_window_id.values() {
-                    assert!(declared_utility_ids.contains(utility_id), "app {} {} base.ui references undeclared utility {}", self.id, owner, utility_id);
+                    if !(declared_utility_ids.contains(utility_id)) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} base.ui references undeclared utility {}", self.id, owner, utility_id)));
+                    }
                 }
                 if let Some(tool_id) = &tutorial.base.ui.active_tool_id {
-                    assert!(declared_tool_ids.contains(tool_id), "app {} {} base.ui references undeclared tool {}", self.id, owner, tool_id);
+                    if !(declared_tool_ids.contains(tool_id)) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} base.ui references undeclared tool {}", self.id, owner, tool_id)));
+                    }
                 }
                 for event in &tutorial.tracks.events {
                     match &event.kind {
-                        semio_framework::TutorialEventKind::Action { action, .. } => assert!(declared_action_ids.contains(action), "app {} {} event references undeclared action {}", self.id, owner, action),
-                        semio_framework::TutorialEventKind::Command { command, .. } => assert!(declared_command_ids.contains(command), "app {} {} event references undeclared command {}", self.id, owner, command),
+                        semio_framework::TutorialEventKind::Action { action, .. } => {
+                            if !(declared_action_ids.contains(action)) {
+                                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} event references undeclared action {}", self.id, owner, action)));
+                            }
+                        }
+                        semio_framework::TutorialEventKind::Command { command, .. } => {
+                            if !(declared_command_ids.contains(command)) {
+                                return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} event references undeclared command {}", self.id, owner, command)));
+                            }
+                        }
                         semio_framework::TutorialEventKind::Key { .. } => {}
                     }
                 }
@@ -5146,27 +5321,45 @@ pub mod app {
             }
             let mut dialog_ids = HashSet::new();
             for dialog in &self.dialogs {
-                assert!(!dialog.id.trim().is_empty(), "app {} dialog id must be non-empty", self.id);
-                assert!(dialog_ids.insert(dialog.id.clone()), "app {} duplicate dialog id {}", self.id, dialog.id);
-                assert!(declared_action_ids.contains(dialog.submit_action.as_str()), "app {} dialog {} submit_action references undeclared action {}", self.id, dialog.id, dialog.submit_action.as_str());
+                if !(!dialog.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog id must be non-empty", self.id)));
+                }
+                if !(dialog_ids.insert(dialog.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate dialog id {}", self.id, dialog.id)));
+                }
+                if !(declared_action_ids.contains(dialog.submit_action.as_str())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} submit_action references undeclared action {}", self.id, dialog.id, dialog.submit_action.as_str())));
+                }
                 if let Some(cancel_action) = &dialog.cancel_action {
-                    assert!(declared_action_ids.contains(cancel_action.as_str()), "app {} dialog {} cancel_action references undeclared action {}", self.id, dialog.id, cancel_action.as_str());
+                    if !(declared_action_ids.contains(cancel_action.as_str())) {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog {} cancel_action references undeclared action {}", self.id, dialog.id, cancel_action.as_str())));
+                    }
                 }
                 validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
             }
             let mut media_port_ids = HashSet::new();
             for port in self.media_inputs.iter().chain(self.media_outputs.iter()) {
-                assert!(!port.id.trim().is_empty(), "app {} media port id must be non-empty", self.id);
-                assert!(media_port_ids.insert(port.id.clone()), "app {} duplicate media port id {}", self.id, port.id);
+                if !(!port.id.trim().is_empty()) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} media port id must be non-empty", self.id)));
+                }
+                if !(media_port_ids.insert(port.id.clone())) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate media port id {}", self.id, port.id)));
+                }
             }
             for port in &self.media_inputs {
-                assert!(port.direction == MediaPortDirection::In, "app {} media input {} must declare direction In", self.id, port.id);
+                if !(port.direction == MediaPortDirection::In) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} media input {} must declare direction In", self.id, port.id)));
+                }
             }
             for port in &self.media_outputs {
-                assert!(port.direction == MediaPortDirection::Out, "app {} media output {} must declare direction Out", self.id, port.id);
-                assert!(!matches!(port.media_type.form, MediaForm::Any), "app {} media output {} must not declare MediaForm::Any (Any is only legal on inputs, see media_types_compatible)", self.id, port.id);
+                if !(port.direction == MediaPortDirection::Out) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} media output {} must declare direction Out", self.id, port.id)));
+                }
+                if !(!matches!(port.media_type.form, MediaForm::Any)) {
+                    return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} media output {} must not declare MediaForm::Any (Any is only legal on inputs, see media_types_compatible)", self.id, port.id)));
+                }
             }
-            let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).unwrap_or_else(|error| panic!("app id {} must be a canonical surface id: {error}", self.id));
+            let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).map_err(|error| PluginAssemblyError::new("app-definition.invalid", format!("app id {} must be a canonical surface id: {error}", self.id)))?;
             let mut definition = AppDefinition {
                 id: self.id,
                 role,
@@ -5176,7 +5369,7 @@ pub mod app {
                 icon_id: self.icon_id,
                 controller_id: self.controller_id,
                 modes: Modes::try_from(self.modes.into_iter().map(|mode| ModeDefinition { id: mode.id, label: mode.label, icon_id: mode.icon_id, tools: mode.tools, layout_id: mode.layout_id, commands: mode.commands }).collect::<Vec<_>>())
-                    .expect("app must declare at least one mode (checked above)"),
+                    .map_err(|_| PluginAssemblyError::new("app-definition.invalid", "app definition must declare at least one mode (checked above)"))?,
                 default_mode_id,
                 window_kinds: WindowKinds::try_from(
                     self.window_kinds
@@ -5199,7 +5392,7 @@ pub mod app {
                         })
                         .collect::<Vec<_>>(),
                 )
-                .expect("app must declare at least one window kind (checked above)"),
+                .map_err(|_| PluginAssemblyError::new("app-definition.invalid", "app definition must declare at least one window kind (checked above)"))?,
                 panel_tabs: self.panel_tabs.into_iter().map(panel_tab_spec_to_definition).collect(),
                 keybindings,
                 utilities: self.utilities,
@@ -5234,7 +5427,18 @@ pub mod app {
                     }
                 }
             }
-            definition
+            Ok(definition)
+        }
+
+        /// 🧷️ Panicking convenience wrapper over `try_build_definition` for callers that construct
+        /// `AppDefinition`s from static, author-controlled data (the overwhelming majority) and are
+        /// not yet migrated onto the fallible path — a malformed definition here is a programming
+        /// error, not runtime user input, and existing tests already assert on the panic message.
+        /// Plugin `plugin()` entry points that assemble an `AppDefinition` from anything that could
+        /// legitimately fail at runtime should call `try_build_definition` directly and propagate the
+        /// `PluginAssemblyError` via `?` instead — see `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️component.rs`.
+        pub fn build_definition(self) -> AppDefinition {
+            self.try_build_definition().unwrap_or_else(|error| panic!("{error}"))
         }
     }
 
@@ -6882,6 +7086,77 @@ pub mod app {
             }
         }
         //#endregion 👁️✏️SurfaceTestkit
+
+        //#region 🔖️DeclarationTestkit
+        // 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C Task 4 — laws for the new
+        // declaration tree (`super::declarations`). Every law commits through the REAL
+        // `PluginBuilder::declare_artifact`/`try_build` path (or, for the pure id-derivation law, no
+        // registration at all) rather than reaching into `declarations::commit_artifact_declarations`
+        // directly, so a passing law is proof the whole public surface works end to end.
+        use super::declarations;
+
+        /// 🌳️ Builds a plugin from `declaration` and asserts every subset ends up registered in the
+        /// schema registry, the io registry (when it declares any `IoEntry` rows), and the app router
+        /// (manifest apps) — "nothing is silently dropped" (Task 4, law 1/3).
+        pub fn assert_declaration_tree_registers_all(plugin_id: &str, declaration: declarations::ArtifactDeclaration) {
+            let expected_schema_ids: Vec<&'static str> = declaration.standards.iter().flat_map(|standard| standard.subsets.iter().map(|subset| subset.schema.descriptor.id)).collect();
+            let expected_io_pairs: Vec<(String, String)> = declaration
+                .standards
+                .iter()
+                .flat_map(|standard| standard.subsets.iter())
+                .flat_map(|subset| subset.io.entries.iter())
+                .map(|entry| (semio_framework::io_schema::ArtifactDialect::from(entry.from).to_coordinate(), semio_framework::io_schema::ArtifactDialect::from(entry.into).to_coordinate()))
+                .collect();
+            let expected_surface_ids: Vec<String> = declaration
+                .standards
+                .iter()
+                .flat_map(|standard| standard.subsets.iter())
+                .flat_map(|subset| [subset.editor.definition.id.clone(), subset.viewer.definition.id.clone()])
+                .collect();
+
+            let plugin = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").declare_artifact(declaration).try_build().expect("a well-formed declaration tree must register");
+
+            for id in &expected_schema_ids {
+                assert!(::semio_framework_schema::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
+            }
+            let live_io_entries = semio_framework::io::io_mechanism::io_entries();
+            for (from, into) in &expected_io_pairs {
+                assert!(
+                    live_io_entries.iter().any(|entry| &entry.from.to_coordinate() == from && &entry.into.to_coordinate() == into),
+                    "io entry {from} -> {into} must be registered"
+                );
+            }
+            let live_app_ids: Vec<&str> = plugin.manifest.apps.iter().map(|app| app.id.as_str()).collect();
+            for id in &expected_surface_ids {
+                assert!(live_app_ids.contains(&id.as_str()), "surface {id:?} must be registered on the app router");
+            }
+        }
+
+        /// 🌳️ `invalid` must fail preflight by construction (e.g. two subsets whose schema
+        /// descriptors share an id with different content) — asserts the schema AND io registries are
+        /// byte-for-byte unchanged after the rejection: a preflight-failing declaration leaves ZERO
+        /// rows behind (Task 4, law 2/3).
+        pub fn assert_declaration_registration_is_atomic(plugin_id: &str, invalid: declarations::ArtifactDeclaration) {
+            let schema_count_before = ::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len());
+            let io_count_before = semio_framework::io::io_mechanism::io_entries().len();
+            let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").declare_artifact(invalid).try_build();
+            assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
+            assert_eq!(::semio_framework_schema::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
+            assert_eq!(semio_framework::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
+        }
+
+        /// 🌳️ Every subset's editor/viewer surface id must equal `surface_app_id(&dialect, role)` —
+        /// pure, no registration (Task 4, law 3/3).
+        pub fn assert_subset_declaration_ids_are_derived(declaration: &declarations::ArtifactDeclaration) {
+            for standard in &declaration.standards {
+                for subset in &standard.subsets {
+                    let dialect: semio_framework::ArtifactDialect = subset.dialect.into();
+                    assert_eq!(subset.editor.definition.id, semio_framework::surface_app_id(&dialect, semio_framework::AppRole::Editor), "editor surface id must be derived via surface_app_id");
+                    assert_eq!(subset.viewer.definition.id, semio_framework::surface_app_id(&dialect, semio_framework::AppRole::Viewer), "viewer surface id must be derived via surface_app_id");
+                }
+            }
+        }
+        //#endregion 🔖️DeclarationTestkit
     }
     //#endregion 🔖️Testkit
 
@@ -7699,6 +7974,11 @@ pub mod app {
             Self { definition: builder.build_definition(), examples: Vec::new() }
         }
 
+        /// 🧷️ Fallible twin of `from_builder` — see `AppBuilder::try_build_definition`.
+        pub fn try_from_builder(builder: AppBuilder) -> Result<Self, PluginAssemblyError> {
+            Ok(Self { definition: builder.try_build_definition()?, examples: Vec::new() })
+        }
+
         /// 📚️ Registers an example from a definition-leaf [`ExampleSource`] (canonical path).
         pub fn example_source(mut self, source: impl Into<ExampleSource>) -> Self {
             self.examples.push(ExampleDefinition::from(source.into()));
@@ -7762,7 +8042,7 @@ pub mod app {
     /// `Copy` + `Default` (`EMPTY`) so a leaf app's view costs nothing and needs no ceremony.
     #[derive(Clone, Copy, Default)]
     pub struct ChildContentView<'a> {
-        children: Option<&'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>>,
+        children: Option<&'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>>,
     }
 
     impl<'a> ChildContentView<'a> {
@@ -7770,7 +8050,7 @@ pub mod app {
         pub const EMPTY: Self = Self { children: None };
 
         /// 🏗️ Wraps a live child-store map (built by {@link VcsArtifactApp} before each dispatch).
-        pub fn new(children: &'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+        pub fn new(children: &'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
             Self { children: Some(children) }
         }
 
@@ -7788,7 +8068,7 @@ pub mod app {
         }
 
         /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
-        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<store::os_io::ArtifactDialect> {
+        pub fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
             self.children.and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(dialect, _)| dialect.clone())
         }
 
@@ -9550,7 +9830,7 @@ pub mod app {
         /// 🧸️ Adopts one owned child's persisted envelope into a live child store — the
         /// `AppCommand::LoadChildren` handler. A composing document restores its children through
         /// this, one call per child, after its own `load_document_pack`.
-        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
+        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
         /// 🧸️ Every live owned child's current envelope, for persistence — the `ReadChildren`
         /// handler and the child-side twin of `document_pack`.
         fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault>;
@@ -10031,7 +10311,7 @@ pub mod app {
         /// entry also carries the dialect captured at open/genesis time (`SpaceMember` itself has no
         /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
         /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
-        pub(crate) children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+        pub(crate) children: HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>,
         /// 📌️ Checkout pins for children that were NOT open when a checkpoint cascade ran. Draining
         /// this on `open_child` is what keeps a lazily-adopted child from silently sitting at head
         /// while the rest of the composition sits at a pinned checkpoint — the alternative (dropping
@@ -10192,7 +10472,7 @@ pub mod app {
         /// (`CompositionGraph::owner_of`) is fail-closed — a child dispatched against before being
         /// registered here (or absorbed from a genesis `GroupReceipt`, see `dispatch_emit_group`) is
         /// rejected as an `OwnershipViolation`, not silently accepted.
-        pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+        pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
             let slot = slot.into();
             let child_id = child_id.into();
             let kind = ArtifactKindId::parse(&dialect.artifact_kind).map_err(plugin_sdk_fault)?;
@@ -10227,7 +10507,7 @@ pub mod app {
         /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
         /// time anything dispatches against it. Registering in one place and validating from the other
         /// is precisely the inconsistency this seeds away.
-        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
+        pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
             let slot = slot.into();
             let child_id = child_id.into();
             let parent_id = self.store.envelope().id.clone();
@@ -10922,7 +11202,7 @@ pub mod app {
             // when no real dialect was ever threaded through `create_document_envelope`, and only
             // matters for the OWNERSHIP-GRAPH bookkeeping `dispatch_group` needs a real `ArtifactRef`
             // for, not for any wire/codec decision.
-            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
             let parent_ops: Vec<Vec<u8>> = artifact_mutations.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect();
 
@@ -11108,7 +11388,7 @@ pub mod app {
         /// themselves treat every member independently regardless of list order.
         fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let parent_id = self.store.envelope().id.clone();
-            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+            let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
             // 🪞️ Two SEPARATE passes over `self.children` (an immutable key/dialect snapshot, then
             // `values_mut()`) rather than repeated `get_mut` calls in a loop — `HashMap` iteration
@@ -12003,7 +12283,7 @@ pub mod app {
             store::print_document_pack(self.config_store.envelope()).map_err(|error| error.into_fault())
         }
 
-        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+        fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
             self.open_child(slot, child_id, dialect, envelope_pack)?;
             self.cache = None;
             Ok(())
@@ -13705,6 +13985,805 @@ pub mod app {
     //#endregion 🔖️SurfaceBuilders
 
     //#endregion 🔖️Surfaces
+
+    //#region 🔖️Declarations
+    /// 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C: the declaration tree a
+    /// subset/standard/artifact `component.rs` builds as PLAIN DATA (every field `pub`, every value a
+    /// struct literal — no framework registry function is ever named by a subset), handed to
+    /// `PluginBuilder::declare_artifact` and walked once, atomically, by `try_build`. Nested in its
+    /// own module rather than flattened into `app` because the pre-existing `🔖️ArtifactDeclaration`
+    /// region above (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE, kept per debt D1) already
+    /// owns the bare name `ArtifactDeclaration` — the two coexist as `app::ArtifactDeclaration` (old)
+    /// and `app::declarations::ArtifactDeclaration` (new), the same module-nesting trick the sibling
+    /// `🚪️io` file uses for its own old/new `IoPayload`/`Confidence` collision (`📓️w1-a-report.md`).
+    /// `PluginBuilder::artifact(ArtifactDeclaration)` already binds the OLD type on the one inherent
+    /// `PluginBuilder<Ready>` impl block, and Rust has no method overloading, so the new entry point
+    /// is named `.declare_artifact(...)` instead — a forced, documented deviation from design.md §2's
+    /// literal `.artifact(a: ArtifactDeclaration)` sketch.
+    pub mod declarations {
+        //! 🌳️ See the region doc above. `use super::*` inherits `app`'s own already-imported
+        //! `Dialect`/`ArtifactDialect`/`StandardId`/`ArtifactKindId`/`ArtifactLocale`/`AppRole`/
+        //! `surface_app_id`/`Rights`/`CapabilityRequirement`/`ArtifactKind`/`Scope`/`AppDefinition`/
+        //! `ArtifactEditor`/`ArtifactViewer`/`EditorApp`/`ViewerApp`/`VcsArtifactApp`/`PluginApp`/
+        //! `App`/`ExampleSource`/`ExampleDefinition`/`ArtifactInferenceService`/`AppActionRegistry`/
+        //! `PluginAssemblyError`. Every NEW io-mechanism type (`IoEntry`/`IoPayload`/io_schema's
+        //! wire types) is instead referenced by its FULL path (`semio_framework::io::io_mechanism::…`
+        //! / `semio_framework::io_schema::…`) everywhere below, deliberately never `use`d bare, so it
+        //! can never collide with the OLD same-named `IoPayload`/`Confidence` this glob import also
+        //! carries in from `app`'s own `🔖️Dialect` region.
+        use super::*;
+
+        //#region 🔖️LanguagePair
+        /// 🗣️ One text/binary [`dsl::LanguageSpec`] pair for one `NativeCodecs` channel.
+        /// `dsl::LanguageRole` names FIVE roles total (`Document`/`Ops`/`Diff`/`Pack`/`Spr`) —
+        /// `snapshot` pairs `Document`+`Pack`, `mutations` pairs `Ops`+`Spr`, `diff` carries `Diff`
+        /// text only (no binary diff role exists), `inferences` is wholly optional. Either half may
+        /// be `None`: a subset with no hand-authored grammar for a channel still owns that channel's
+        /// codec (`NativeCodecs.codec`), just with no `.grammar.semio`/`.protocol.semio` registered
+        /// for LSP/verification.
+        #[derive(Clone, Copy)]
+        pub struct LanguagePair {
+            pub text: Option<&'static dsl::LanguageSpec>,
+            pub binary: Option<&'static dsl::LanguageSpec>,
+        }
+        //#endregion 🔖️LanguagePair
+
+        //#region 🔖️NativeCodecs
+        /// 🧬️ The subset's own native DSL text grammar + pack binary protocol + the store-level
+        /// document codec that stitches them together (design.md §2) — home for the five `dsl::
+        /// LanguageSpec`s (`document`/`op`/`diff`/`pack`/`spr`) and the `store::ArtifactCodec` a
+        /// subset used to hand `PluginBuilder`/old `ArtifactDeclarationBuilder` as separate
+        /// registration channels (`.languages(...)` ×5 roles + `.document_codec_bare::<S,M>(...)`).
+        pub struct NativeCodecs {
+            pub snapshot: LanguagePair,
+            pub diff: LanguagePair,
+            pub mutations: LanguagePair,
+            pub inferences: Option<LanguagePair>,
+            pub codec: store::ArtifactCodec,
+        }
+        //#endregion 🔖️NativeCodecs
+
+        //#region 🔖️IoDeclaration
+        /// 🚪️ A subset's complete io surface: its native codecs plus every foreign-dialect hop it
+        /// contributes to the process-wide `semio_framework::io::io_mechanism` registry (`IoEntry`
+        /// rows built by the subset's own `serializer_entry`/`deserializer_entry`/`_text` calls —
+        /// `📓️w1-a-report.md`).
+        ///
+        /// There is exactly ONE conformance mechanism and it is NOT here: `Deserializer::CONFORMANCE`
+        /// runs inside every `deserializer_entry`, immediately after a successful decode INTO this
+        /// subset's dialect, which is precisely "conformance runs after every hop into the dialect".
+        /// A second payload-level hook on this struct would duplicate that one job across two places,
+        /// so it does not exist — see `📓️w1-c-report.md` "conformance decision".
+        pub struct IoDeclaration {
+            pub native: NativeCodecs,
+            pub entries: &'static [semio_framework::io::io_mechanism::IoEntry],
+        }
+        //#endregion 🔖️IoDeclaration
+
+        //#region 🔖️SchemaDeclaration
+        /// 🧬️ A subset's four-facet schema descriptor plus its inference schema(s) and any executable
+        /// native inference services — sourcing what old `ArtifactDeclarationBuilder::schema(s)`/
+        /// `.inferences(...)`/`.inference_services(...)` used to.
+        pub struct SchemaDeclaration {
+            pub descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor,
+            pub inferences: &'static [::semio_framework_schema::ArtifactInferenceDescriptor],
+            pub inference_services: Vec<ArtifactInferenceService>,
+        }
+        //#endregion 🔖️SchemaDeclaration
+
+        //#region 🔖️SurfaceDeclaration
+        /// 🎭️ One viewer or editor surface as plain data — everything `PluginBuilder::viewer::<V>`/
+        /// `.editor::<E>` compute from `V`/`E` today, minus the ability to capture: `factory` takes the
+        /// `AppDefinition` explicitly (`fn(&AppDefinition) -> Box<dyn PluginApp>`) rather than the
+        /// zero-arg `fn() -> Box<dyn PluginApp>` design.md §2 sketches — the SAME bare-fn-pointer-
+        /// cannot-capture constraint `📓️w1-a-report.md`'s "Constructor design decision" hit (a
+        /// monomorphized non-capturing `fn` item cannot close over `def`'s `AppActionRegistry`), so the
+        /// definition travels as an explicit parameter instead of being captured; the commit walk below
+        /// wraps it in a real capturing closure at the one call site that actually needs to (ordinary
+        /// application code, not a generic constructor, so capturing there is free).
+        pub struct SurfaceDeclaration {
+            pub definition: AppDefinition,
+            pub factory: fn(&AppDefinition) -> Box<dyn PluginApp>,
+            pub app_schema: fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>,
+            pub mutation_roster: Option<fn() -> (&'static str, &'static [protocol::SemanticDescriptor])>,
+            pub rights: Rights,
+        }
+
+        /// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
+        /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
+        /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
+        /// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`.
+        pub fn editor_surface<E: ArtifactEditor>(def: AppDefinition) -> SurfaceDeclaration {
+            fn factory<E: ArtifactEditor>(def: &AppDefinition) -> Box<dyn PluginApp> {
+                Box::new(VcsArtifactApp::with_registry(EditorApp::<E>::default(), AppActionRegistry::from_definition(def)))
+            }
+            fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+                E::app_schema()
+            }
+            SurfaceDeclaration { definition: def, factory: factory::<E>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
+        }
+
+        /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
+        /// §2.3 clause 4: a viewer's document store attaches Read only, never Write).
+        pub fn viewer_surface<V: ArtifactViewer>(def: AppDefinition) -> SurfaceDeclaration {
+            fn factory<V: ArtifactViewer>(def: &AppDefinition) -> Box<dyn PluginApp> {
+                Box::new(VcsArtifactApp::with_registry(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def)))
+            }
+            fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
+                V::app_schema()
+            }
+            SurfaceDeclaration { definition: def, factory: factory::<V>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
+        }
+        //#endregion 🔖️SurfaceDeclaration
+
+        //#region 🔖️SubsetDeclaration
+        /// 🪆️ One complete standalone subset — own schema, own io, own viewer, own editor, own
+        /// examples (design.md rule 2). `dialect` is the one source of truth `editor.definition.id`/
+        /// `viewer.definition.id` must derive from via `surface_app_id` (proven by
+        /// `testkit::assert_subset_declaration_ids_are_derived`).
+        pub struct SubsetDeclaration {
+            pub dialect: Dialect,
+            pub schema: SchemaDeclaration,
+            pub io: IoDeclaration,
+            pub viewer: SurfaceDeclaration,
+            pub editor: SurfaceDeclaration,
+            pub examples: &'static [ExampleSource],
+        }
+        //#endregion 🔖️SubsetDeclaration
+
+        //#region 🔖️MediaDeclaration
+        /// 🗂️ One standard's file-format identity — mimes/extensions only (design.md §2); the commit
+        /// walk synthesizes the remaining `semio_framework::FormatDescriptor` fields (`kind_id`/
+        /// `short_id`/`name`/`full_name`/`dir_name`) from the owning `ArtifactDeclaration.kind` +
+        /// `StandardDeclaration.id`, since a standard never needs a SEPARATE identity from its own
+        /// dialect coordinate.
+        pub struct MediaDeclaration {
+            pub mimes: &'static [&'static str],
+            pub extensions: &'static [&'static str],
+        }
+        //#endregion 🔖️MediaDeclaration
+
+        //#region 🔖️StandardDeclaration
+        pub struct StandardDeclaration {
+            pub id: StandardId,
+            pub media: MediaDeclaration,
+            pub subsets: Vec<SubsetDeclaration>,
+        }
+        //#endregion 🔖️StandardDeclaration
+
+        //#region 🔖️ArtifactDeclarationRoot
+        /// 🗿️ Root of the tree (design.md §2, verbatim shape) — one artifact, its standards, and
+        /// (unlike the old same-named type two regions up) no capabilities/migrations/composition
+        /// fields: see the W1-C report's "old channel → new home" table for why each is either
+        /// absorbed elsewhere (migrations → ordinary `IoEntry` rows, design.md §3) or left untouched
+        /// (composition still reads `<Snapshot as ArtifactCompositionFields>` directly; capabilities
+        /// still go through `PluginBuilder::capability`/`.local_backbone_storage()`).
+        pub struct ArtifactDeclaration {
+            pub kind: ArtifactKindId,
+            pub localization: &'static [(ArtifactLocale, &'static str)],
+            pub standards: Vec<StandardDeclaration>,
+        }
+        //#endregion 🔖️ArtifactDeclarationRoot
+
+        //#region 🔖️Registration
+        /// 🏗️ Everything `PluginBuilder::try_build` folds into its own `app_defs`/
+        /// `app_schema_descriptors`/`capabilities` vectors once a declared tree commits.
+        pub(crate) struct DeclaredRegistration {
+            pub app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
+            pub app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
+            pub capabilities: Vec<CapabilityRequirement>,
+        }
+
+        fn format_descriptor_of(artifact: &ArtifactDeclaration, standard: &StandardDeclaration) -> semio_framework::FormatDescriptor {
+            let kind_id = format!("{}@{}", artifact.kind.as_str(), standard.id.0);
+            semio_framework::FormatDescriptor {
+                kind_id: kind_id.clone(),
+                short_id: standard.id.0.to_string(),
+                aliases: Vec::new(),
+                mimes: standard.media.mimes.iter().map(|mime| mime.to_string()).collect(),
+                extensions: standard.media.extensions.iter().map(|extension| extension.to_string()).collect(),
+                name: kind_id.clone(),
+                full_name: kind_id.clone(),
+                neutral: false,
+                dir_name: kind_id.replace(['@', '.'], "-"),
+                is_binary: true,
+            }
+        }
+
+        /// ➕️ Baseline Read, plus Write when `surface.rights == Rights::Write` — see `editor_surface`/
+        /// `viewer_surface` doc for why `rights` alone drives this instead of a `Vec<Rights>` field.
+        fn capability_rows_for(surface: &SurfaceDeclaration) -> Vec<CapabilityRequirement> {
+            let mut rows = vec![CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }];
+            if surface.rights == Rights::Write {
+                rows.push(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App });
+            }
+            rows
+        }
+
+        fn check_surface_id(subset: &SubsetDeclaration, surface: &SurfaceDeclaration, role: AppRole) -> Result<(), PluginAssemblyError> {
+            let expected = surface_app_id(&subset.dialect.into(), role);
+            if surface.definition.id != expected {
+                return Err(PluginAssemblyError::new(
+                    "plugin-assembly.declaration-surface-id",
+                    format!("surface id {:?} for dialect {} must be derived via surface_app_id (expected {:?})", surface.definition.id, subset.dialect.artifact_kind, expected),
+                ));
+            }
+            Ok(())
+        }
+
+        /// 🔬️ Validates a whole batch of declared trees against every established registry WITHOUT
+        /// mutating any of them — schema/inference-descriptor/inference-service/language preflights
+        /// each own their independent lock (safe to call freely); document-codec and format-descriptor
+        /// preflights share ONE `store::begin_artifact_assembly()` guard (dropped before returning);
+        /// io entries get a hand-rolled coordinate-level duplicate check against `io_entries()` since
+        /// `semio_framework::io::io_mechanism` exposes no standalone dry-run (its own `io_register`
+        /// preflights+commits in one call — see the W1-C report's "atomicity" section for why holding
+        /// an outer guard across THAT call would deadlock the process-wide assembly mutex, and why this
+        /// function therefore never holds one while any io call could happen).
+        pub(crate) fn preflight_artifact_declarations(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
+            let mut schemas = Vec::new();
+            let mut inferences = Vec::new();
+            let mut inference_services = Vec::new();
+            let mut languages: Vec<dsl::LanguageSpec> = Vec::new();
+            let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
+            let mut format_rows = Vec::new();
+            for artifact in declarations {
+                for standard in &artifact.standards {
+                    format_rows.push(format_descriptor_of(artifact, standard));
+                    for subset in &standard.subsets {
+                        schemas.push(subset.schema.descriptor.clone());
+                        inferences.extend(subset.schema.inferences.iter().cloned());
+                        inference_services.extend(subset.schema.inference_services.iter().copied());
+                        for pair in [subset.io.native.snapshot, subset.io.native.diff, subset.io.native.mutations].into_iter().chain(subset.io.native.inferences) {
+                            languages.extend(pair.text.copied());
+                            languages.extend(pair.binary.copied());
+                        }
+                        codecs.push(subset.io.native.codec.clone());
+                        check_surface_id(subset, &subset.editor, AppRole::Editor)?;
+                        check_surface_id(subset, &subset.viewer, AppRole::Viewer)?;
+                    }
+                }
+            }
+            ::semio_framework_schema::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
+            ::semio_framework_schema::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
+            preflight_artifact_inference_services(&inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
+            dsl::preflight_languages(&languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
+            {
+                let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
+                store::preflight_document_codecs_in_assembly(&assembly, &codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
+                semio_framework::io::preflight_format_descriptors_in_assembly(&assembly, &format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
+            }
+            preflight_io_entries(declarations)
+        }
+
+        fn preflight_io_entries(declarations: &[ArtifactDeclaration]) -> Result<(), PluginAssemblyError> {
+            let mut proposed: BTreeMap<(String, String), semio_framework::io_schema::IoFidelity> = BTreeMap::new();
+            for artifact in declarations {
+                for standard in &artifact.standards {
+                    for subset in &standard.subsets {
+                        for entry in subset.io.entries {
+                            let key = (ArtifactDialect::from(entry.from).to_coordinate(), ArtifactDialect::from(entry.into).to_coordinate());
+                            match proposed.get(&key) {
+                                Some(fidelity) if *fidelity == entry.fidelity => {}
+                                Some(_) => return Err(PluginAssemblyError::new("plugin-assembly.declaration-io", format!("conflicting io entries declared for {} -> {}", key.0, key.1))),
+                                None => {
+                                    proposed.insert(key, entry.fidelity);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            let existing = semio_framework::io::io_mechanism::io_entries();
+            for ((from, into), fidelity) in &proposed {
+                if let Some(current) = existing.iter().find(|descriptor| &descriptor.from.to_coordinate() == from && &descriptor.into.to_coordinate() == into) {
+                    if current.fidelity != *fidelity {
+                        return Err(PluginAssemblyError::new("plugin-assembly.declaration-io", format!("io entry {from} -> {into} conflicts with an established entry at a different fidelity")));
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        /// 📌️ Commits every channel of every declared tree — preflight FIRST (no mutation possible
+        /// past this point), then schema/inference-descriptor/inference-service/language (each
+        /// independently atomic), then document-codec+format-descriptor under ONE shared assembly
+        /// guard (dropped before the next step), then one `io_register` call per subset (each
+        /// independently atomic — see `preflight_artifact_declarations`'s doc for why these cannot
+        /// share a guard with each other or with the codec/format step).
+        pub(crate) fn commit_artifact_declarations(declarations: Vec<ArtifactDeclaration>) -> Result<DeclaredRegistration, PluginAssemblyError> {
+            preflight_artifact_declarations(&declarations)?;
+
+            let mut schemas = Vec::new();
+            let mut inferences = Vec::new();
+            let mut inference_services = Vec::new();
+            let mut languages: Vec<dsl::LanguageSpec> = Vec::new();
+            let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
+            let mut format_rows = Vec::new();
+            let mut io_batches: Vec<&'static [semio_framework::io::io_mechanism::IoEntry]> = Vec::new();
+            let mut app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)> = Vec::new();
+            let mut app_schema_descriptors = Vec::new();
+            let mut capabilities = Vec::new();
+
+            for artifact in &declarations {
+                for standard in &artifact.standards {
+                    format_rows.push(format_descriptor_of(artifact, standard));
+                    for subset in &standard.subsets {
+                        schemas.push(subset.schema.descriptor.clone());
+                        inferences.extend(subset.schema.inferences.iter().cloned());
+                        inference_services.extend(subset.schema.inference_services.iter().copied());
+                        for pair in [subset.io.native.snapshot, subset.io.native.diff, subset.io.native.mutations].into_iter().chain(subset.io.native.inferences) {
+                            languages.extend(pair.text.copied());
+                            languages.extend(pair.binary.copied());
+                        }
+                        codecs.push(subset.io.native.codec.clone());
+                        io_batches.push(subset.io.entries);
+
+                        for surface in [&subset.editor, &subset.viewer] {
+                            let definition = surface.definition.clone();
+                            let factory = surface.factory;
+                            let examples = if surface.definition.role == AppRole::Editor { subset.examples.iter().map(ExampleDefinition::from).collect() } else { Vec::new() };
+                            app_defs.push((App { definition: definition.clone(), examples }, Box::new(move || factory(&definition))));
+                            app_schema_descriptors.push(surface.app_schema);
+                            capabilities.extend(capability_rows_for(surface));
+                        }
+                    }
+                }
+            }
+
+            ::semio_framework_schema::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
+            ::semio_framework_schema::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
+            register_artifact_inference_services(inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
+            dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
+            {
+                let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
+                store::register_document_codecs_in_assembly(&assembly, codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
+                semio_framework::io::register_format_descriptors_in_assembly(&assembly, format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
+            }
+            for batch in io_batches {
+                semio_framework::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
+            }
+
+            Ok(DeclaredRegistration { app_defs, app_schema_descriptors, capabilities })
+        }
+        //#endregion 🔖️Registration
+
+        //#region 🔖️Fixture
+        /// 🧪️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C Task 4 — the executable
+        /// specification: a synthetic TWO-standard, THREE-subset artifact (`crate::app::declarations::
+        /// fixture`) declared entirely through this tree, proving open→mutate→save works end to end
+        /// and that `io_route` finds the `standard 1 / subset strict` conformance-profile hop back to
+        /// `standard 1 / subset any`. Plugin waves reading this ticket copy this shape verbatim.
+        #[cfg(test)]
+        pub(crate) mod fixture {
+            // 🎯️ Deliberately NOT `use super::super::*` (the `app` module glob `declarations` itself
+            // uses) — that would re-import `app`'s OWN `ArtifactDeclaration` (old, debt D1) bare,
+            // colliding with `declarations::ArtifactDeclaration` (new, this region) also brought in by
+            // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
+            // imports instead, for exactly what this fixture needs from `app`.
+            use super::super::{
+                testkit, AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, Label, LocalizedLabel,
+                Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiNode, ViewEmit, Viewer,
+            };
+            use super::*;
+            use serde::de::DeserializeOwned;
+            use serde::{Deserialize, Serialize};
+            use ui_wgpu::wgpu::ui_text;
+
+            //#region 🔖️Dialects
+            pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
+            pub(crate) const STD1_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId("strict") };
+            pub(crate) const STD2_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("2"), subset: SubsetId::ANY };
+            //#endregion 🔖️Dialects
+
+            //#region 🔖️FixtureChannel
+            /// 🏗️ One self-contained subset's snapshot/diff/mutation/command/editor/viewer set — every
+            /// subset owns its own types (design.md rule 2), even though the three fixture subsets are
+            /// structurally identical (a real subset would differ in shape; only the WIRING this
+            /// fixture proves is what matters here). Plain `serde_json` text/binary codecs (no hand-
+            /// authored `.grammar.semio`/`.protocol.semio`) — `NativeCodecs.snapshot/diff/mutations`
+            /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
+            macro_rules! fixture_channel {
+                ($snapshot:ident, $diff:ident, $mutation:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
+                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+                    pub(crate) struct $snapshot {
+                        pub value: i32,
+                    }
+                    impl store::ArtifactDsl for $snapshot {
+                        const EXTENSION: &'static str = $schema;
+                        fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                            if text.trim().is_empty() {
+                                return Ok(Self::default());
+                            }
+                            serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                        }
+                        fn print_dsl(&self) -> String {
+                            serde_json::to_string(self).unwrap_or_default()
+                        }
+                    }
+                    impl ArtifactPack for $snapshot {
+                        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+                            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
+                        }
+                        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+                            if bytes.is_empty() {
+                                return Ok(Self::default());
+                            }
+                            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
+                        }
+                    }
+
+                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+                    pub(crate) struct $diff {
+                        pub value: Option<i32>,
+                    }
+                    impl MutationDiff<$snapshot> for $diff {
+                        fn apply(&self, base: &$snapshot) -> protocol::MutationApplyResult<$snapshot> {
+                            Ok($snapshot { value: self.value.unwrap_or(base.value) })
+                        }
+                        fn absorb(&mut self, other: Self) {
+                            if other.value.is_some() {
+                                self.value = other.value;
+                            }
+                        }
+                    }
+
+                    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+                    pub(crate) enum $mutation {
+                        SetValue { value: i32 },
+                    }
+                    impl Mutation<$snapshot> for $mutation {
+                        type Diff = $diff;
+                        fn diff(&self, _base: &$snapshot) -> protocol::MutationOutcome<$diff> {
+                            let $mutation::SetValue { value } = self;
+                            protocol::MutationOutcome::new($diff { value: Some(*value) })
+                        }
+                        fn inverse(&self, base: &$snapshot) -> Vec<Self> {
+                            vec![$mutation::SetValue { value: base.value }]
+                        }
+                    }
+                    impl protocol::OpText for $mutation {
+                        fn parse_op(line: &str) -> Result<Self, store::TextError> {
+                            serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+                        }
+                        fn print_op(&self) -> String {
+                            serde_json::to_string(self).unwrap_or_default()
+                        }
+                    }
+                    impl protocol::OpBinary for $mutation {
+                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()).into())
+                        }
+                        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
+                        }
+                    }
+
+                    #[derive(Clone, Copy, Debug, Default, PartialEq)]
+                    pub(crate) enum $command {
+                        #[default]
+                        Noop,
+                    }
+                    impl protocol::OpBinary for $command {
+                        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                            Ok(Vec::new())
+                        }
+                        fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                            Ok($command::Noop)
+                        }
+                    }
+
+                    #[derive(Default)]
+                    pub(crate) struct $editor;
+                    impl ArtifactEditor for $editor {
+                        const DIALECT: Dialect = $dialect;
+                        const DOCUMENT_SCHEMA: &'static str = $schema;
+                        type Snapshot = $snapshot;
+                        type Mutation = $mutation;
+                        type Config = NoConfig;
+                        type ConfigMutation = NoConfigMutation;
+                        type Draft = NoDraft;
+                        type DraftMutation = NoDraftMutation;
+                        type Presence = NoPresence;
+                        type PresenceMutation = NoPresenceMutation;
+                        type Transient = crate::app::NoTransient;
+                        type TransientMutation = crate::app::NoTransientMutation;
+                        type Command = $command;
+                        fn initial_snapshot() -> $snapshot {
+                            $snapshot::default()
+                        }
+                        fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<$mutation>, Fault> {
+                            Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
+                        }
+                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                            ui_text(Label::data(format!("value={}", doc.snapshot.value)))
+                        }
+                    }
+
+                    #[derive(Default)]
+                    pub(crate) struct $viewer;
+                    impl ArtifactViewer for $viewer {
+                        const DIALECT: Dialect = $dialect;
+                        const DOCUMENT_SCHEMA: &'static str = $schema;
+                        type Snapshot = $snapshot;
+                        type Mutation = $mutation;
+                        type Config = NoConfig;
+                        type ConfigMutation = NoConfigMutation;
+                        type Presence = NoPresence;
+                        type PresenceMutation = NoPresenceMutation;
+                        type Transient = crate::app::NoTransient;
+                        type TransientMutation = crate::app::NoTransientMutation;
+                        type Command = $command;
+                        fn initial_snapshot() -> $snapshot {
+                            $snapshot::default()
+                        }
+                        fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+                            Ok(ViewEmit::default())
+                        }
+                        fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+                            ui_text(Label::data(format!("value={}", doc.snapshot.value)))
+                        }
+                    }
+                };
+            }
+
+            fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, Std1AnyCommand, Std1AnyEditor, Std1AnyViewer, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
+            fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, Std1StrictCommand, Std1StrictEditor, Std1StrictViewer, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
+            fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, Std2AnyCommand, Std2AnyEditor, Std2AnyViewer, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
+            //#endregion 🔖️FixtureChannel
+
+            //#region 🔖️ProfileHop
+            /// 🚪️ `standard 1 / subset strict` is a CONFORMANCE PROFILE of `standard 1 / subset any` —
+            /// the one relationship design.md's io system models as an ordinary `IoEntry`, not a
+            /// separate mechanism. `Deserializer::CONFORMANCE` rejects a negative `value` (this
+            /// fixture's stand-in "profile" rule), proving §3's payload-law hop AND the W1-C
+            /// conformance decision (`Deserializer::CONFORMANCE`, not `IoDeclaration.conformance`) in
+            /// one exercise.
+            pub(crate) struct StrictFromAny;
+            impl semio_framework::io::io_mechanism::Deserializer<Std1StrictSnapshot> for StrictFromAny {
+                const FROM: Dialect = STD1_ANY_DIALECT;
+                const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
+                const CONFORMANCE: Option<fn(&Std1StrictSnapshot) -> Vec<dsl::Diagnostic>> = Some(check_non_negative);
+                fn deserialize(payload: &semio_framework::io_schema::IoPayload) -> semio_framework::io_schema::IoResult<Std1StrictSnapshot> {
+                    let semio_framework::io_schema::IoPayload::Binary(bytes) = payload else {
+                        return Err(semio_framework::io_schema::IoError { message: "StrictFromAny: expected a binary payload".to_string(), diagnostics: Vec::new() });
+                    };
+                    let base = Std1AnySnapshot::decode_pack(bytes).map_err(|error| semio_framework::io_schema::IoError { message: format!("StrictFromAny: base decode failed: {error}"), diagnostics: Vec::new() })?;
+                    Ok(semio_framework::io_schema::IoOutcome { value: Std1StrictSnapshot { value: base.value }, diagnostics: Vec::new() })
+                }
+            }
+
+            fn check_non_negative(snapshot: &Std1StrictSnapshot) -> Vec<dsl::Diagnostic> {
+                if snapshot.value < 0 {
+                    vec![dsl::Diagnostic::error("s.testkit.w1c-fixture.negative-value", dsl::TextSpan::at(0, 0), "conformance profile requires a non-negative value")]
+                } else {
+                    Vec::new()
+                }
+            }
+
+            pub(crate) struct StrictIntoAny;
+            impl semio_framework::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
+                const INTO: Dialect = STD1_ANY_DIALECT;
+                const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
+                fn serialize(from: &Std1StrictSnapshot) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+                    Ok(semio_framework::io_schema::IoOutcome { value: semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: from.value }.encode_pack()), diagnostics: Vec::new() })
+                }
+            }
+
+            fn std1_strict_entries() -> &'static [semio_framework::io::io_mechanism::IoEntry] {
+                static ENTRIES: std::sync::OnceLock<Vec<semio_framework::io::io_mechanism::IoEntry>> = std::sync::OnceLock::new();
+                ENTRIES.get_or_init(|| {
+                    vec![
+                        semio_framework::io::io_mechanism::deserializer_entry::<Std1StrictSnapshot, StrictFromAny>(STD1_STRICT_DIALECT),
+                        semio_framework::io::io_mechanism::serializer_entry::<Std1StrictSnapshot, StrictIntoAny>(STD1_STRICT_DIALECT),
+                    ]
+                })
+            }
+            //#endregion 🔖️ProfileHop
+
+            //#region 🔖️Builders
+            fn schema_descriptor(id: &'static str) -> ::semio_framework_schema::ArtifactSchemaDescriptor {
+                let leaves = ::semio_framework_schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "{}", proto: "" };
+                ::semio_framework_schema::ArtifactSchemaDescriptor { id, artifact: leaves.clone(), snapshot: leaves.clone(), diff: leaves.clone(), mutations: leaves }
+            }
+
+            fn native_codecs<S, M>(schema: &str) -> NativeCodecs
+            where
+                S: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+                M: Mutation<S> + PartialEq + Serialize + DeserializeOwned + Send + OpText + protocol::OpBinary + 'static,
+            {
+                NativeCodecs {
+                    snapshot: LanguagePair { text: None, binary: None },
+                    diff: LanguagePair { text: None, binary: None },
+                    mutations: LanguagePair { text: None, binary: None },
+                    inferences: None,
+                    codec: store::ArtifactCodec::of::<S, M>(schema.to_string()),
+                }
+            }
+
+            /// 🏗️ Minimal valid `AppDefinition` — `.document(...)`/`.mode(...)`/`.window_kind(...)` are
+            /// `AppBuilder::build_definition`'s hard asserts (non-empty document segments, ≥1 mode, ≥1
+            /// window kind); every fixture surface shares this shape since only the WIRING matters here.
+            fn editor_definition(dialect: Dialect) -> AppDefinition {
+                Editor::builder(dialect)
+                    .document(["semio", "testkit", "w1c-fixture"])
+                    .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+                    .window_kind("main", LocalizedLabel::data("Main"), "w1c.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .build_definition()
+            }
+
+            fn viewer_definition(dialect: Dialect) -> AppDefinition {
+                Viewer::builder(dialect)
+                    .document(["semio", "testkit", "w1c-fixture"])
+                    .mode("view", LocalizedLabel::data("View"), "eye")
+                    .window_kind("main", LocalizedLabel::data("Main"), "w1c.main", SurfaceKind::Canvas2d, IconName::AppWindow)
+                    .build_definition()
+            }
+
+            /// 🌳️ The fixture's whole tree: TWO standards, THREE subsets total — `standard "1"` owns
+            /// `any` (base) and `strict` (conformance profile of `any`, wired via `std1_strict_entries`);
+            /// `standard "2"` owns one independent `any` subset, proving the walk covers >1 standard.
+            pub(crate) fn build_declaration() -> ArtifactDeclaration {
+                ArtifactDeclaration {
+                    kind: ArtifactKindId::parse("s.testkit.w1c-fixture").expect("canonical fixture kind"),
+                    localization: &[],
+                    standards: vec![
+                        StandardDeclaration {
+                            id: StandardId("1"),
+                            media: MediaDeclaration { mimes: &["application/vnd.semio.w1c-fixture+json"], extensions: &["w1cfixture"] },
+                            subsets: vec![
+                                SubsetDeclaration {
+                                    dialect: STD1_ANY_DIALECT,
+                                    schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/*"), inferences: &[], inference_services: Vec::new() },
+                                    io: IoDeclaration { native: native_codecs::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1"), entries: &[] },
+                                    viewer: viewer_surface::<Std1AnyViewer>(viewer_definition(STD1_ANY_DIALECT)),
+                                    editor: editor_surface::<Std1AnyEditor>(editor_definition(STD1_ANY_DIALECT)),
+                                    examples: &[],
+                                },
+                                SubsetDeclaration {
+                                    dialect: STD1_STRICT_DIALECT,
+                                    schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@1/strict"), inferences: &[], inference_services: Vec::new() },
+                                    io: IoDeclaration { native: native_codecs::<Std1StrictSnapshot, Std1StrictMutation>("semio.testkit.w1c-fixture.std1-strict/v1"), entries: std1_strict_entries() },
+                                    viewer: viewer_surface::<Std1StrictViewer>(viewer_definition(STD1_STRICT_DIALECT)),
+                                    editor: editor_surface::<Std1StrictEditor>(editor_definition(STD1_STRICT_DIALECT)),
+                                    examples: &[],
+                                },
+                            ],
+                        },
+                        StandardDeclaration {
+                            id: StandardId("2"),
+                            media: MediaDeclaration { mimes: &["application/vnd.semio.w1c-fixture-2+json"], extensions: &["w1cfixture2"] },
+                            subsets: vec![SubsetDeclaration {
+                                dialect: STD2_ANY_DIALECT,
+                                schema: SchemaDeclaration { descriptor: schema_descriptor("s.testkit.w1c-fixture@2/*"), inferences: &[], inference_services: Vec::new() },
+                                io: IoDeclaration { native: native_codecs::<Std2AnySnapshot, Std2AnyMutation>("semio.testkit.w1c-fixture.std2-any/v1"), entries: &[] },
+                                viewer: viewer_surface::<Std2AnyViewer>(viewer_definition(STD2_ANY_DIALECT)),
+                                editor: editor_surface::<Std2AnyEditor>(editor_definition(STD2_ANY_DIALECT)),
+                                examples: &[],
+                            }],
+                        },
+                    ],
+                }
+            }
+            //#endregion 🔖️Builders
+
+            //#region 🔖️Tests
+            #[test]
+            fn ids_are_derived_from_the_dialect() {
+                testkit::assert_subset_declaration_ids_are_derived(&build_declaration());
+            }
+
+            #[test]
+            fn declaring_registers_schema_io_and_surfaces() {
+                testkit::assert_declaration_tree_registers_all("w1c-fixture-registers-all", build_declaration());
+            }
+
+            #[test]
+            fn a_conflicting_declaration_leaves_zero_rows_behind() {
+                let mut invalid = build_declaration();
+                // 🎯️ Force a preflight failure by construction: standard "2"'s subset gets standard
+                // "1"/"any"'s schema id, but with DIFFERENT facet content — `schema_descriptor` alone
+                // would build byte-identical (harmlessly idempotent) descriptors for the same id, so
+                // the `rust` leaf is perturbed to make the two genuinely conflict. Every OTHER field
+                // (dialect, io, surfaces) stays standard "2"'s own — `preflight_artifact_schema_
+                // descriptors`'s internal batch dedup rejects two DIFFERENT descriptors sharing one id
+                // before anything commits.
+                let mut conflicting = schema_descriptor("s.testkit.w1c-fixture@1/*");
+                conflicting.artifact.rust = "// a different, conflicting facet body";
+                invalid.standards[1].subsets[0].schema.descriptor = conflicting;
+                testkit::assert_declaration_registration_is_atomic("w1c-fixture-atomic", invalid);
+            }
+
+            #[test]
+            fn open_mutate_save_round_trips_through_the_generic_snapshot_builder() {
+                type Construction = SnapshotBuilder<Std1AnySnapshot, Std1AnyMutation>;
+                let bytes = Std1AnySnapshot { value: 1 }.encode_pack();
+                let opened = Construction::from_binary(&bytes).expect("open");
+                let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue { value: 42 });
+                assert!(outcome.messages().is_empty(), "a fresh mutate must not fail");
+                let saved = mutated.build().expect("save");
+                assert_eq!(saved.value, 42);
+            }
+
+            #[test]
+            fn io_route_finds_the_conformance_profile_hop() {
+                let _plugin = Plugin::builder("w1c-fixture-route").label("w1c-fixture-route").version("0.0.1").declare_artifact(build_declaration()).try_build().expect("fixture declares cleanly");
+                let route = semio_framework::io::io_mechanism::io_route(
+                    &ArtifactDialect::from(STD1_ANY_DIALECT),
+                    &ArtifactDialect::from(STD1_STRICT_DIALECT),
+                    3,
+                )
+                .expect("a route from the base subset into its conformance profile must exist");
+                assert_eq!(route.value.hops.len(), 1, "the profile hop is direct");
+
+                let payload = semio_framework::io_schema::IoPayload::Binary(Std1AnySnapshot { value: 7 }.encode_pack());
+                let result = semio_framework::io::io_mechanism::io_run(&route.value, payload).expect("running the route decodes into the profile");
+                let semio_framework::io_schema::IoPayload::Binary(bytes) = result.value else {
+                    panic!("profile hop must produce a binary payload");
+                };
+                let profiled = Std1StrictSnapshot::decode_pack(&bytes).expect("profile snapshot decodes");
+                assert_eq!(profiled.value, 7);
+            }
+            //#endregion 🔖️Tests
+        }
+        //#endregion 🔖️Fixture
+    }
+    //#endregion 🔖️Declarations
+
+    //#region 🔖️SnapshotBuilder
+    /// 🏗️ A generic [`ArtifactBuilder`] for a subset with no custom build logic — everything is one
+    /// snapshot value and the ordinary `Mutation`/`MutationDiff` algebra, so a trivial subset writes
+    /// zero builder boilerplate (Task 3): `type Construction = SnapshotBuilder<Snapshot, Mutation>;`
+    /// where old code hand-wrote its own `empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/
+    /// `absorb`/`build`. `mutate` reuses `MutationOutcome::apply_to` (this crate's own established
+    /// "apply once, fold a rejection into a Fatal message" idiom) rather than re-deriving it, matching
+    /// the trait's own doc: "the builder applies `outcome.diff()` once and returns that outcome intact".
+    pub struct SnapshotBuilder<S, M> {
+        snapshot: S,
+        _mutation: std::marker::PhantomData<fn() -> M>,
+    }
+
+    impl<S, M> SnapshotBuilder<S, M> {
+        fn wrap(snapshot: S) -> Self {
+            Self { snapshot, _mutation: std::marker::PhantomData }
+        }
+    }
+
+    impl<S, M> ArtifactBuilder for SnapshotBuilder<S, M>
+    where
+        S: Default + Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack,
+        M: Mutation<S>,
+        M::Diff: MutationDiff<S>,
+    {
+        type Snapshot = S;
+        type Mutation = M;
+        type Diff = M::Diff;
+
+        fn empty() -> Self {
+            Self::wrap(S::default())
+        }
+        fn from_snapshot(snapshot: S) -> Self {
+            Self::wrap(snapshot)
+        }
+        fn from_text(text: &str) -> Result<Self, store::TextError> {
+            Ok(Self::wrap(S::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::wrap(S::decode_pack(bytes)?))
+        }
+        fn mutate(self, mutation: M) -> (Self, protocol::MutationOutcome<M::Diff>) {
+            let mut snapshot = self.snapshot;
+            let outcome = mutation.diff(&snapshot).apply_to(&mut snapshot);
+            (Self::wrap(snapshot), outcome)
+        }
+        fn absorb(self, diff: M::Diff) -> protocol::MutationApplyResult<Self> {
+            diff.apply(&self.snapshot).map(Self::wrap)
+        }
+        fn build(self) -> Result<S, Vec<dsl::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+    //#endregion 🔖️SnapshotBuilder
     // #endregion app
 }
 

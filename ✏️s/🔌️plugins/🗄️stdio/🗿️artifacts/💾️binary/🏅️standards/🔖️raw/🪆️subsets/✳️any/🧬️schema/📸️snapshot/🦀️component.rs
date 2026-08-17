@@ -62,20 +62,22 @@ impl store::ArtifactDsl for BinarySnapshot {
     }
 }
 
+/// 🧬️ CARRIER LAW (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3):
+/// `s.stdio.binary@raw/*` is `CARRIER_BINARY` — its native `Binary` `IoPayload` IS the raw
+/// external file content, byte-for-byte. The previous impl wrapped `self.bytes` in a
+/// `SemioEnvelope` (`BINARY_MAGIC` header + token), which made every exported `.bin` file an
+/// unopenable `.semio` pack container instead of the honest raw bytes — exactly the
+/// `registry_export_media` class of bug the ticket exists to remove. Fixed here (the codec, not
+/// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
+/// Proven by `carrier_native_is_raw` in `🚪️io/🦀️component.rs`.
 impl store::ArtifactPack for BinarySnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &self.bytes))
+        Ok(self.bytes.clone())
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
-        }
         let _ = options;
-        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: inner })
+        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

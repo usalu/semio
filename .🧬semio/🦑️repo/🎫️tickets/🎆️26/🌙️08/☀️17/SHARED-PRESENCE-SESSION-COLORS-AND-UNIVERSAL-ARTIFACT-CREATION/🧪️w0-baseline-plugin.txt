@@ -1,0 +1,40 @@
+test component::plugin_runtime::plugin_builder_contract_tests::validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it ... ok
+
+failures:
+
+---- component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit' (26094152) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4399:13:
+assertion failed: definition.validate().is_ok()
+
+---- component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically' (26094153) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4415:42:
+called `Result::unwrap()` on an `Err` value: ArtifactDefinitionError { code: "artifact-definition.category-identity", message: "s.stdio.ifc.first-0 does not use the canonical resource identity grammar" }
+
+---- component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite' (26094151) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4432:102:
+called `Result::unwrap()` on an `Err` value: ArtifactDefinitionError { code: "artifact-definition.category-identity", message: "s.stdio.ifc.localized does not use the canonical localization identity grammar" }
+
+---- component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames stdout ----
+
+thread 'component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames' (26094232) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:17486:180:
+register child factory: Conflict { kind: "s.test.child" }
+
+---- component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads stdout ----
+
+thread 'component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads' (26094273) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:17362:80:
+seed valid open degraded conflict: ValidationFailed("history repeats or omits conflict identity test-degraded-conflict")
+
+
+failures:
+    component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite
+    component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit
+    component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically
+    component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames
+    component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads
+
+test result: FAILED. 225 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p semio-framework-plugin --lib`

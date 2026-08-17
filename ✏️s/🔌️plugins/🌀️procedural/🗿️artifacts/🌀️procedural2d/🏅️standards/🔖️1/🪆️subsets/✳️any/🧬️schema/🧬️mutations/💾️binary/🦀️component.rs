@@ -89,7 +89,7 @@ impl protocol::OpText for Procedural2dOperationDsl {
     }
 }
 
-impl protocol::OpBinary for Procedural2dOperationDsl {
+impl OpBinary for Procedural2dOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

@@ -1,0 +1,11 @@
+{
+  "title": "Corner Window Chips With Inline Actions",
+  "emoji": "\ud83e\ude9f",
+  "status": "open",
+  "description": "Replace the mode dock's separate right-side controls chip with per-tab inline actions (focus/maximize, new window, close) carrying localized tooltips and hotkeys, and give every window stack four corner tab groups (top-left, top-right, bottom-left, bottom-right) with drag-between-corners, one active tab per stack \u2014 across the React, wgpu and TUI renderers plus the shared layout schema.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafrunningsketchpad\ud83c\udfafrunningsketchpadapps",
+  "client": "cursor-chat",
+  "dates": {
+    "due": "2026-08-17"
+  }
+}

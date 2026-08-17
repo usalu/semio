@@ -202,6 +202,8 @@ import {
   type IconName,
   iconRenderPort,
   insertWindowAtDropZone,
+  resolveStackPathForWindowId,
+  splitWithWindow,
   interactiveActiveFillClass,
   interpolateTutorialCamera,
   isContextMenuPointerTarget,
@@ -1421,7 +1423,11 @@ function FrameworkOsShellInner({
       const primaryApp = appId
         ? (() => {
             const found = manifest.apps.find((app) => app.id === appId);
-            if (!found) throw new Error(`appId "${appId}" does not resolve to any app in the loaded program manifest`);
+            if (!found) {
+              // 🛟 Owner plugin not this handle — installPlugin retries when the owning crate loads.
+              console.log(`[DEBUG] establishPrimarySession deferring: appId "${appId}" not in ${handle.pluginId}`);
+              return undefined;
+            }
             return found;
           })()
         : (() => {
@@ -1472,7 +1478,13 @@ function FrameworkOsShellInner({
         dispatch({ type: "UPSERT_LOADED_PLUGIN", value: { handle, manifest: handle.manifest } });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "loaded" });
-        if (pluginId === primaryPluginId && !sessionRef.current) {
+        // 🎮️ Establish the session on whichever loaded plugin owns `appId` (demonstrator panes pin
+        // apps from dependency crates like cad/gis/puzzle). Falling back to the primary plugin only
+        // when no `appId` is pinned — previously every pane crashed with "appId does not resolve"
+        // because the primary crate's manifest never lists those dependency apps.
+        const ownsPinnedApp = appId !== undefined && handle.manifest.apps.some((app) => app.id === appId);
+        const shouldEstablish = !sessionRef.current && (ownsPinnedApp || (appId === undefined && pluginId === primaryPluginId));
+        if (shouldEstablish) {
           try {
             await establishPrimarySession(handle);
             dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "running" });
@@ -1487,7 +1499,7 @@ function FrameworkOsShellInner({
         pluginOpInFlightRef.current.delete(pluginId);
       }
     },
-    [registry, pluginSource, primaryPluginId, establishPrimarySession],
+    [registry, pluginSource, primaryPluginId, establishPrimarySession, appId],
   );
 
   /** 🔌️ Hot-swaps an already-loaded plugin to a newly built module — mirrors the os-core kernel's
@@ -6504,13 +6516,52 @@ function FrameworkOsShellInner({
                   value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout,
                 });
               }}
+              onWindowOpenInNewWindow={(windowId) => {
+                if (!session) return;
+                const extra = extraWindowInstancesRef.current.find((entry) => entry.id === windowId);
+                const windowKindId = extra?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowId)?.id;
+                if (!windowKindId) return;
+                const kind = session.app.windowKinds.find((entry) => entry.id === windowKindId);
+                if (!kind) return;
+                extraWindowCounterRef.current += 1;
+                const instanceId = `${windowKindId}-${extraWindowCounterRef.current}`;
+                const title = resolveAppLabel(
+                  appLabelsOverlay,
+                  "windowKind",
+                  kind.id,
+                  resolveManifestLabel(kind.label, uiTerminology, uiLocale),
+                );
+                const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId, title }];
+                extraWindowInstancesRef.current = nextExtraInstances;
+                dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
+                void refreshUi(session, { kind: "full" }, nextExtraInstances);
+                dispatch({
+                  type: "SET_SHELL_LAYOUT",
+                  value: (current) => {
+                    const base =
+                      current ??
+                      resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay, uiTerminology, uiLocale).modeLayout;
+                    const stackPath = resolveStackPathForWindowId(base, windowId);
+                    if (stackPath === null) {
+                      return insertWindowAtDropZone(base, instanceId, { kind: "root-split", side: "right" });
+                    }
+                    return splitWithWindow(base, stackPath, instanceId, "right");
+                  },
+                });
+                dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
+                noteShellCommand("shell.windowOpenInNewWindow", shellLabel("ui.shellCommand.windowOpenInNewWindow"), {
+                  windowId,
+                  windowKindId,
+                  instanceId,
+                });
+              }}
             />
           </App>
           </ShellFaultBoundary>
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
+  }, [activeWindowId, appLabelsOverlay, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, pluginSupervisorById, primaryPluginId, refreshUi, reloadPlugin, session, shellRoute, hostMode, uiLocale, uiTerminology, updateSpacePanel, dispatch, uninstallPlugin]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".

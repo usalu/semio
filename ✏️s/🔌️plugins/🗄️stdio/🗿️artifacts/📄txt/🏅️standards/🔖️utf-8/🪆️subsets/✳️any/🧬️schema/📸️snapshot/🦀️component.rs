@@ -92,6 +92,13 @@ impl TxtSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
+/// 🧬️ CARRIER LAW (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3):
+/// `s.stdio.txt@utf-8/*` is `CARRIER_TEXT` — its native `Text` `IoPayload` IS the raw external
+/// file text, verbatim. The previous impl prepended a `semio stdio.txt.dsl v1` preamble line
+/// (`wrap_text`) and stripped it back off on parse, which made every exported `.txt` file carry
+/// a foreign header line instead of the honest raw text. Fixed here (the codec, not the test):
+/// `parse_dsl`/`print_dsl` are now `TxtSnapshot::from_body`/`to_body` directly, no preamble.
+/// Proven by `carrier_native_is_raw` in `🚪️io/🦀️component.rs`.
 impl store::ArtifactDsl for TxtSnapshot {
     const EXTENSION: &'static str = "txt";
     fn envelope_id() -> &'static str {
@@ -99,15 +106,10 @@ impl store::ArtifactDsl for TxtSnapshot {
     }
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest.to_string(),
-            Err(_) => text.to_string(),
-        };
-        Ok(Self::from_body(&body))
+        Ok(Self::from_body(text))
     }
     fn print_dsl(&self) -> String {
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &self.to_body())
+        self.to_body()
     }
 }
 

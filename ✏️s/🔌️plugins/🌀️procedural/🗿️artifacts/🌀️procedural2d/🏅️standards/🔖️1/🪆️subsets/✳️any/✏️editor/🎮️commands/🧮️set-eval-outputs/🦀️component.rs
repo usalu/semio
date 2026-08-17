@@ -1,7 +1,6 @@
 //! 🧮️ 🧮️ Procedural2d play app commands command — `set-eval-outputs`.
 
 use crate::editor::procedural2d::config::{Procedural2dConfig, Procedural2dConfigMutation};
-use crate::artifacts::procedural2d::schema::host_from_fixture_with_session;
 use crate::artifacts::procedural2d::op::Procedural2dMutation;
 use crate::artifacts::procedural2d::Procedural2dSnapshot;
 use flow::FlowEvalSession;

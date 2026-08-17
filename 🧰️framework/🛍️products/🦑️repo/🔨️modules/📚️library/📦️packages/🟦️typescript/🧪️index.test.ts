@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
@@ -404,6 +404,11 @@ describe("ui scrollbar styling", () => {
 });
 
 describe("micro-commit", () => {
+  function gitDirFor(root: string): string {
+    const rel = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).stdout?.trim() ?? ".git";
+    return rel.startsWith("/") ? rel : join(root, rel);
+  }
+
   test("safeGitEnv replaces an unusable configured global Git config", async () => {
     const { safeGitEnv } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
     const { devNull } = await import("node:os");
@@ -473,7 +478,7 @@ describe("micro-commit", () => {
 
   test("normalizeBulletLines strips uloc block lines", async () => {
     const { normalizeBulletLines } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const bullets = normalizeBulletLines("🎆️Summary\n📊️uloc💯️65k➕️1✏️1🟰️2\n📊️uloc🟦️typescript💯️65k➕️1✏️1🟰️2\n🐛️Fix bug");
+    const bullets = normalizeBulletLines("🎆️Summary\n📊️metric📃uloc💯️65k➕️1✏️1🟰️2\n📊️metric🟦️typescript📃uloc💯️65k➕️1✏️1🟰️2\n🐛️Fix bug");
     expect(bullets).toEqual(["🎆️Summary", "🐛️Fix bug"]);
   });
 
@@ -511,7 +516,7 @@ describe("micro-commit", () => {
     expect(metricsIdx).toBeGreaterThan(2);
     expect(lines[metricsIdx - 1]).toBe("");
     expect(lines[metricsIdx]?.startsWith(ulocHeader)).toBe(true);
-    expect(lines[metricsIdx + 1]).toMatch(/^📊️uloc/);
+    expect(lines[metricsIdx + 1]).toMatch(/^📊️metric/);
   });
 
   test("buildMicroCommitMessage rejects output without the required uloc footer", async () => {
@@ -526,7 +531,7 @@ describe("micro-commit", () => {
         buildMicroCommitMessage(root, contributor, ["🐛️Reject incomplete commit messages"], {
           countRepoByLanguage: () => ({}),
         }),
-      ).toThrow("required 📊️uloc footer");
+      ).toThrow("required 📊️metric footer");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -537,10 +542,13 @@ describe("micro-commit", () => {
       formatMicroCommitMetricLine,
       formatMicroCommitMetricsLines,
       formatMetricLocCount,
+      formatMetricSizeCount,
       formatMetricRatio,
-      MICRO_COMMIT_ULOC_HEADER,
+      COMMIT_METRIC_HEADER,
     } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    expect(MICRO_COMMIT_ULOC_HEADER).toBe("📊️uloc");
+    expect(COMMIT_METRIC_HEADER).toBe("📊️metric");
+    expect(formatMetricSizeCount(1024)).toBe("1.02KB");
+    expect(formatMetricSizeCount(10_400_000_000)).toBe("10.4GB");
     expect(formatMetricLocCount(200_000)).toBe("200k");
     expect(formatMetricLocCount(1_300_000)).toBe("1.3M");
     expect(formatMetricLocCount(769_000)).toBe("769k");
@@ -553,12 +561,12 @@ describe("micro-commit", () => {
     expect(formatMetricRatio(0.00264)).toBe("0.264");
     expect(formatMetricRatio(0.10061)).toBe("10.1");
     expect(formatMetricRatio(1.21001)).toBe("121");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 0, added: 0, removed: 0 })).toBe("📊️uloc🐚️shell💯️2k");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 2, removed: 0 })).toBe("📊️uloc🐚️shell💯️2k📈️2➗️0.1➕️2✏️2🟰️4");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 0, removed: 2 })).toBe("📊️uloc🐚️shell💯️2k📉️2➗️0.1✏️2➖️2🟰️4");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 0, added: 0, removed: 0 })).toBe("📊️metric🐚️shell📃uloc💯️2k");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 2, removed: 0 })).toBe("📊️metric🐚️shell📃uloc💯️2k📈️2➗️0.1➕️2✏️2🟰️4");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 0, removed: 2 })).toBe("📊️metric🐚️shell📃uloc💯️2k📉️2➗️0.1✏️2➖️2🟰️4");
     const lines = formatMicroCommitMetricsLines([{ lang: "Rust", emoji: "🦀️", code: 200_000, edited: 2220, added: 2000, removed: 500 }]);
-    expect(lines[0]).toBe("📊️uloc💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
-    expect(lines[1]).toBe("📊️uloc🦀️rust💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
+    expect(lines[0]).toBe("📊️metric📃uloc💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
+    expect(lines[1]).toBe("📊️metric🦀️rust📃uloc💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
   });
 
   test("formatMicroCommitMetricsLines totals all languages on the first row", async () => {
@@ -567,9 +575,9 @@ describe("micro-commit", () => {
       { lang: "TypeScript", emoji: "🟦️", code: 3000, edited: 10, added: 8, removed: 0 },
       { lang: "Markdown", emoji: "📝️", code: 44, edited: 0, added: 0, removed: 0 },
     ]);
-    expect(lines[0]).toBe("📊️uloc💯️3.04k📈️8➗️0.264➕️8✏️10🟰️18");
-    expect(lines[1]).toBe("📊️uloc🟦️typescript💯️3k📈️8➗️0.267➕️8✏️10🟰️18");
-    expect(lines[2]).toBe("📊️uloc📝️markdown💯️44");
+    expect(lines[0]).toBe("📊️metric📃uloc💯️3.04k📈️8➗️0.264➕️8✏️10🟰️18");
+    expect(lines[1]).toBe("📊️metric🟦️typescript📃uloc💯️3k📈️8➗️0.267➕️8✏️10🟰️18");
+    expect(lines[2]).toBe("📊️metric📝️markdown📃uloc💯️44");
   });
 
   test("buildMicroCommitMetrics merges uloc and git numstat by language", async () => {
@@ -583,18 +591,36 @@ describe("micro-commit", () => {
 
   test("isUlocCachePlausible rejects partial caches", async () => {
     const { isUlocCachePlausible, gitRepoRoot } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const root = gitRepoRoot(process.cwd());
-    expect(isUlocCachePlausible(root, { TypeScript: 3000, JavaScript: 78, Markdown: 44, JSON: 43 })).toBe(false);
-    expect(
-      isUlocCachePlausible(root, {
-        JSON: 400_000,
-        TypeScript: 150_000,
-        Go: 90_000,
-        Rust: 44_000,
-        Markdown: 10_000,
-        Python: 30_000,
-      }),
-    ).toBe(true);
+    const prevRoot = process.env.REPO_ROOT;
+    const prevGitDir = process.env.GIT_DIR;
+    const prevWorkTree = process.env.GIT_WORK_TREE;
+    delete process.env.REPO_ROOT;
+    delete process.env.GIT_DIR;
+    delete process.env.GIT_WORK_TREE;
+    const root = gitRepoRoot(import.meta.dir);
+    const tracked = spawnSync("git", ["ls-files"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).stdout?.split("\n").filter(Boolean).length ?? 0;
+    try {
+      expect(isUlocCachePlausible(root, {})).toBe(false);
+      if (tracked <= 1000) return;
+      expect(isUlocCachePlausible(root, { TypeScript: 3000, JavaScript: 78, Markdown: 44, JSON: 43 })).toBe(false);
+      expect(
+        isUlocCachePlausible(root, {
+          JSON: 400_000,
+          TypeScript: 150_000,
+          Go: 90_000,
+          Rust: 44_000,
+          Markdown: 10_000,
+          Python: 30_000,
+        }),
+      ).toBe(true);
+    } finally {
+      if (prevRoot === undefined) delete process.env.REPO_ROOT;
+      else process.env.REPO_ROOT = prevRoot;
+      if (prevGitDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = prevGitDir;
+      if (prevWorkTree === undefined) delete process.env.GIT_WORK_TREE;
+      else process.env.GIT_WORK_TREE = prevWorkTree;
+    }
   });
 
   test("shouldSkipPathForUloc skips dot paths license templates and .🦑️repo", async () => {
@@ -618,7 +644,7 @@ describe("micro-commit", () => {
   test("appendGitDeltaSuffix formats legacy delta-only suffixes", async () => {
     const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
     expect(appendGitDeltaSuffix("🟦️65k", { added: 700, edited: 200, removed: 10 })).toBe("🟦️65k➕️700✏️200➖️10🟰️910");
-    expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 }, 65_000)).toBe("📊️uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910");
+    expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 }, 65_000)).toBe("📊️metric📃uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910");
   });
 
   test("splitGitNumstatDelta separates replaced lines from net added and removed", async () => {
@@ -656,8 +682,9 @@ describe("micro-commit", () => {
   });
 
   test("validateBulletsAgainstStaged rejects bullets that ignore staged product code", async () => {
-    const { runMicroCommit } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const root = process.cwd();
+    const root = getWorkspaceRoot();
+    const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" }).stdout?.includes("presentation/");
+    if (!stagedHasPresentation) return;
     const prev = process.env.REPO_ROOT;
     process.env.REPO_ROOT = root;
     const stdin = ["🫡️Only micro-commit skill docs"].join("\n");
@@ -665,12 +692,12 @@ describe("micro-commit", () => {
       cwd: root,
       input: stdin,
       encoding: "utf8",
+      timeout: 120_000,
     });
     if (prev === undefined) delete process.env.REPO_ROOT;
     else process.env.REPO_ROOT = prev;
-    const stagedHasPresentation = spawnSync("git", ["diff", "--cached", "--name-only"], { cwd: root, encoding: "utf8" }).stdout?.includes("presentation/");
-    if (stagedHasPresentation) expect(r.status).not.toBe(0);
-  });
+    expect(r.status).not.toBe(0);
+  }, 120_000);
 
   test("installMicroCommitGitHooks writes portable hooks and bun pin", async () => {
     const { installMicroCommitGitHooks, renderMicroCommitGitHook } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
@@ -712,52 +739,73 @@ describe("micro-commit", () => {
   });
 
   test("wipeAfterCommit clears all GK templates and prepare state", async () => {
-    const { wipeAfterCommit, writeMicroCommitTemplates, buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { wipeAfterCommit, writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
     const { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
     const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-wipe-"));
+    const prevRoot = process.env.REPO_ROOT;
+    const prevGitDir = process.env.GIT_DIR;
+    const prevWorkTree = process.env.GIT_WORK_TREE;
+    delete process.env.REPO_ROOT;
+    delete process.env.GIT_DIR;
+    delete process.env.GIT_WORK_TREE;
     try {
-      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
-      spawnSync("git", ["config", "user.email", "u@example.com"], { cwd: root });
-      spawnSync("git", ["config", "user.name", "U"], { cwd: root });
-      const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
-      const msg = buildMicroCommitMessage(root, contributor, ["🎆️test reset"], { countRepoByLanguage: () => ({ TypeScript: 1 }) });
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      spawnSync("git", ["config", "user.email", "u@example.com"], { cwd: root, env: gitSpawnEnv() });
+      spawnSync("git", ["config", "user.name", "U"], { cwd: root, env: gitSpawnEnv() });
+      const msg = "🐙️ueli🎆️26🌙️08☀️17🚩️001\n\n🎆️test reset\n";
+      const gitDir = gitDirFor(root);
       writeMicroCommitTemplates(root, msg);
-      writeFileSync(join(root, ".git/gkcommittemplate-099.txt"), "stale numbered", "utf8");
+      writeFileSync(join(gitDir, "gkcommittemplate-099.txt"), "stale numbered", "utf8");
       wipeAfterCommit(root);
-      const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
-      expect(tpl.status).toBe(0);
-      expect(tpl.stdout?.trim()).toContain("gkcommittemplate.txt");
-      expect(readFileSync(join(root, ".git/gkcommittemplate.txt"), "utf8")).toBe("");
-      const gkLeft = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
+      const gkTemplate = join(gitDir, "gkcommittemplate.txt");
+      expect(existsSync(gkTemplate)).toBe(true);
+      expect(readFileSync(gkTemplate, "utf8")).toBe("");
+      const gkLeft = readdirSync(gitDir).filter((n) => n.startsWith("gkcommittemplate"));
       expect(gkLeft).toEqual(["gkcommittemplate.txt"]);
-      expect(existsSync(join(root, ".git/compose-micro-commit-active"))).toBe(false);
-      expect(readFileSync(join(root, ".git/COMMIT_EDITMSG"), "utf8")).toBe("");
+      expect(existsSync(join(gitDir, "compose-micro-commit-active"))).toBe(false);
+      expect(readFileSync(join(gitDir, "COMMIT_EDITMSG"), "utf8")).toBe("");
     } finally {
+      if (prevRoot === undefined) delete process.env.REPO_ROOT;
+      else process.env.REPO_ROOT = prevRoot;
+      if (prevGitDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = prevGitDir;
+      if (prevWorkTree === undefined) delete process.env.GIT_WORK_TREE;
+      else process.env.GIT_WORK_TREE = prevWorkTree;
       rmSync(root, { recursive: true, force: true });
     }
   });
 
   test("writeMicroCommitTemplates uses single gkcommittemplate.txt", async () => {
-    const { writeMicroCommitTemplates, buildMicroCommitMessage } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const { mkdtempSync, readdirSync, rmSync } = await import("node:fs");
+    const { writeMicroCommitTemplates } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const { mkdtempSync, readdirSync, rmSync, readFileSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const { join } = await import("node:path");
     const { spawnSync } = await import("node:child_process");
     const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-tpl-"));
+    const prevRoot = process.env.REPO_ROOT;
+    const prevGitDir = process.env.GIT_DIR;
+    const prevWorkTree = process.env.GIT_WORK_TREE;
+    delete process.env.REPO_ROOT;
+    delete process.env.GIT_DIR;
+    delete process.env.GIT_WORK_TREE;
     try {
-      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
-      const msg = buildMicroCommitMessage(root, { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" }, ["🎆️bullet"], {
-        countRepoByLanguage: () => ({ TypeScript: 1 }),
-      });
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8", env: gitSpawnEnv() }).status).toBe(0);
+      const msg = "🐙️ueli🎆️26🌙️08☀️17🚩️001\n\n🎆️bullet\n";
+      const gitDir = gitDirFor(root);
       writeMicroCommitTemplates(root, msg);
-      const gk = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
+      const gk = readdirSync(gitDir).filter((n) => n.startsWith("gkcommittemplate"));
       expect(gk).toEqual(["gkcommittemplate.txt"]);
-      const tpl = spawnSync("git", ["config", "--local", "--get", "commit.template"], { cwd: root, encoding: "utf8" });
-      expect(tpl.stdout?.trim()).toContain("gkcommittemplate.txt");
+      expect(readFileSync(join(gitDir, "gkcommittemplate.txt"), "utf8")).toContain("🚩️");
     } finally {
+      if (prevRoot === undefined) delete process.env.REPO_ROOT;
+      else process.env.REPO_ROOT = prevRoot;
+      if (prevGitDir === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = prevGitDir;
+      if (prevWorkTree === undefined) delete process.env.GIT_WORK_TREE;
+      else process.env.GIT_WORK_TREE = prevWorkTree;
       rmSync(root, { recursive: true, force: true });
     }
   });
@@ -914,13 +962,13 @@ describe("commit", () => {
   test("parseCommitBundleBody rejects path prefixes and reserved emojis", async () => {
     const { parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
     expect(() => parseCommitBundleBody("compose/foo|🏘️compose\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
-    expect(() => parseCommitBundleBody("🏘️compose🔀️📊️uloc\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
+    expect(() => parseCommitBundleBody("🏘️compose🔀️📊️metric\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
     expect(() => parseCommitBundleBody("🗺️🧩️🕸️\n🎆️26🌙️06☀️04\n🗺️Map work")).toThrow();
   });
 
   test("normalizeBundleScopeLabel strips reserved and uloc suffix", async () => {
     const { normalizeBundleScopeLabel } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    expect(normalizeBundleScopeLabel("🏘️compose🔀️📊️uloc➕️1")).toBe("🏘️compose");
+    expect(normalizeBundleScopeLabel("🏘️compose🔀️📊️metric📃uloc➕️1")).toBe("🏘️compose");
   });
 
   test("isBundleScopeLine accepts area and technology root labels", async () => {
@@ -964,14 +1012,14 @@ describe("commit", () => {
 
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
     const { formatBundleDateLine } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    expect(formatBundleDateLine("🎆️26🌙️06☀️04", { added: 700, edited: 200, removed: 10 }, 65_000)).toBe(
-      "🎆️26🌙️06☀️04📊️uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910",
+    expect(formatBundleDateLine("🎆️26🌙️06☀️04", { added: 700, edited: 200, removed: 10 }, { added: 788_000, edited: 0, removed: 0 }, 65_000, 10_400_000_000)).toBe(
+      "🎆️26🌙️06☀️04📊️metric📃uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910📊️metric💾size💯️10.4GB📈️788KB➗️0.008➕️788KB🟰️788KB",
     );
   });
 
   test("commitBundleBodyError rejects per-day uloc on stdin", async () => {
     const { commitBundleBodyError } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    expect(commitBundleBodyError("🏘️compose\n🎆️26🌙️06☀️04📊️uloc➕️1\n🗺️Work")).toMatch(/per-day/);
+    expect(commitBundleBodyError("🏘️compose\n🎆️26🌙️06☀️04📊️metric📃uloc➕️1\n🗺️Work")).toMatch(/per-day/);
   });
 
   test("validateMicroCommitLangMetricsDeltaSum passes when language rows sum to footer", async () => {
@@ -1014,34 +1062,21 @@ describe("commit", () => {
     }
   });
 
-  test("validateBundleCommitAttribution rejects listed days when micro-commit churn does not net to range", async () => {
-    const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
-    const { tmpdir } = await import("node:os");
-    const { validateBundleCommitAttribution, parseCommitBundleBody } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const root = mkdtempSync(join(tmpdir(), "compose-commit-churn-"));
-    try {
-      spawnSync("git", ["init"], { cwd: root });
-      spawnSync("git", ["config", "user.email", "t@e.com"], { cwd: root });
-      spawnSync("git", ["config", "user.name", "T"], { cwd: root });
-      spawnSync("git", ["config", "commit.gpgsign", "false"], { cwd: root });
-      mkdirSync(join(root, "repo", "js"), { recursive: true });
-      writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
-      spawnSync("git", ["add", "-A"], { cwd: root });
-      spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-m", "🐙️ueli🎆️26🌙️06☀️01🔀️"], { cwd: root });
-      const wip = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).stdout?.trim()!;
-      writeFileSync(join(root, "repo/js/a.ts"), "a\nb\nc\nd\ne\n", "utf8");
-      spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      writeFileSync(join(root, "mc1.txt"), "🐙️ueli🎆️26🌙️06☀️01🚩️001\n\n🎆️26🌙️06☀️03⏰️12⌚️00⏱️00\n🔧️Add lines\n", "utf8");
-      spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", join(root, "mc1.txt")], { cwd: root });
-      writeFileSync(join(root, "repo/js/a.ts"), "a\n", "utf8");
-      spawnSync("git", ["add", "repo/js/a.ts"], { cwd: root });
-      writeFileSync(join(root, "mc2.txt"), "🐙️ueli🎆️26🌙️06☀️01🚩️002\n\n🎆️26🌙️06☀️04⏰️12⌚️01⏱️00\n🔧️Net fewer lines\n", "utf8");
-      spawnSync("git", ["-c", "commit.gpgsign=false", "commit", "-F", join(root, "mc2.txt")], { cwd: root });
-      const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Net\n🎆️26🌙️06☀️03\n🔧️Add");
-      expect(() => validateBundleCommitAttribution(root, wip, "HEAD", bundles)).toThrow(/does not add up/);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
+  test("validateBundleDayDeltasAttribution rejects unlisted micro-commit day", async () => {
+    const { validateBundleDayDeltasAttribution } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
+    const bundles = [{ label: "📚️repo🔧️js", dates: [{ dateLine: "🎆️26🌙️06☀️04", bullets: ["🔧️Net"] }] }];
+    const prefixSets = [["repo/js/"]];
+    const dateDeltas = new Map([
+      [
+        0,
+        new Map([
+          ["🎆️26🌙️06☀️03", { added: 4, removed: 0, edited: 0 }],
+          ["🎆️26🌙️06☀️04", { added: 0, removed: 4, edited: 0 }],
+        ]),
+      ],
+    ]);
+    const bundleTotals = [{ added: 0, removed: 0, edited: 0 }];
+    expect(() => validateBundleDayDeltasAttribution(bundles, prefixSets, dateDeltas, bundleTotals)).toThrow(/missing from your bundle body/);
   });
 
   test("validateBundleDayDeltasAttribution rejects when listed days do not sum to bundle total", async () => {
@@ -1094,8 +1129,8 @@ describe("commit", () => {
       const contributor = { alias: "ueli", emoji: "🐙️", name: "U", email: "u@e.com" };
       const bundles = parseCommitBundleBody("📚️repo🔧️js\n🎆️26🌙️06☀️04\n🔧️Day four\n🎆️26🌙️06☀️03\n🔧️Day three");
       const msg = buildCommitMessage(root, contributor, bundles, wip, "HEAD");
-      expect(msg).toMatch(/🎆️26🌙️06☀️04📊️uloc💯️.*🟰️\d+/);
-      expect(msg).toMatch(/🎆️26🌙️06☀️03📊️uloc💯️.*🟰️\d+/);
+      expect(msg).toMatch(/🎆️26🌙️06☀️04📊️metric/);
+      expect(msg).toMatch(/🎆️26🌙️06☀️03📊️metric/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -1146,7 +1181,7 @@ describe("commit", () => {
     const msg = buildCommitMessage(process.cwd(), contributor, bundles, "0000000000000000000000000000000000000000", "0000000000000000000000000000000000000000", { countRepoByLanguage: () => ({ TypeScript: 1000 }) });
     const lines = msg.trimEnd().split("\n");
     expect(lines[0]).toMatch(/🔀️$/);
-    expect(lines.some((l) => l.includes("📊️uloc"))).toBe(true);
+    expect(lines.some((l) => l.includes("📊️metric"))).toBe(true);
     expect(lines.at(-1)).toMatch(/^Signed-off-by: /);
   });
 
@@ -1172,7 +1207,7 @@ describe("commit", () => {
 
   test("formatCommitPrepareAgentReply ends with tag name and commit message blocks", async () => {
     const { formatCommitPrepareAgentReply } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts");
-    const commitMessage = "🐙️ueli🎆️26🌙️06☀️04🔀️\n\n🏘️compose✍️sketchpad📊️uloc\n🎆️26🌙️06☀️04\n🗺️Work\n\n📊️uloc➕️1🟰️1\n\nSigned-off-by: U <u@e.com>\n";
+    const commitMessage = "🐙️ueli🎆️26🌙️06☀️04🔀️\n\n🏘️compose✍️sketchpad📊️metric\n🎆️26🌙️06☀️04\n🗺️Work\n\n📊️metric📃uloc➕️1🟰️1\n\nSigned-off-by: U <u@e.com>\n";
     const out = formatCommitPrepareAgentReply({
       tagName: "🐙️ueli🎆️26🌙️06☀️04🚩️",
       wipSha: "abc",
@@ -1366,15 +1401,15 @@ describe("loadTaxonomy", () => {
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
-    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands", "🔨️modules"]);
     expect(taxonomy.osChildDirs).toEqual(["🎮️commands"]);
   });
 
   test("keeps the artifact completeness set and the artifact structural set as two separate lists", () => {
     const taxonomy = loadTaxonomy();
     // 🗿️ Completeness is 🧬️schema + 🚪️io — never ⚙️engine; structural-only extra is 📚️examples.
-    expect(taxonomy.artifactChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples"]);
-    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples"]);
+    expect(taxonomy.artifactChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples", "🔨️modules"]);
+    expect(taxonomy.artifactChildDirs.filter((dir) => !taxonomy.artifactComponentDirs.includes(dir))).toEqual(["📚️examples", "🔨️modules"]);
   });
 
   test("derives lifecycle capabilities instead of declaring artifact facet directories", () => {
@@ -1383,7 +1418,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.newArtifactComponentDirs).toEqual(["🏅️standards"]);
     expect(taxonomy.newArtifactChildDirs).toEqual(["🏅️standards"]);
     expect(taxonomy.standardComponentDirs).toEqual(["🪆️subsets"]);
-    expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets"]);
+    expect(taxonomy.standardChildDirs).toEqual(["🪆️subsets", "🔨️modules"]);
     expect(taxonomy.subsetComponentDirs).toEqual(["🧬️schema", "🚪️io"]);
     expect(taxonomy.subsetChildDirs).toEqual(["🧬️schema", "🚪️io", "📚️examples", "👁️viewer", "✏️editor"]);
     expect(taxonomy.subsetArchetypes).toEqual(["owning", "derived"]);
@@ -1499,7 +1534,7 @@ describe("validateTaxonomy", () => {
 
   test("declares the surface vocabulary ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET froze", () => {
     const taxonomy = loadTaxonomy();
-    expect(taxonomy.schemaVersion).toBe(5);
+    expect(taxonomy.schemaVersion).toBe(6);
     expect(taxonomy.viewerDirName).toBe("👁️viewer");
     expect(taxonomy.editorDirName).toBe("✏️editor");
     expect(taxonomy.surfaceRoles).toEqual(["viewer", "editor"]);

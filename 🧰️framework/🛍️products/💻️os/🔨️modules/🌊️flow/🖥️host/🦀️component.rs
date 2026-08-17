@@ -2231,10 +2231,10 @@ fn widget_has_input(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
-    use crate::*;
+    use super::*;
     use canvas::camera::{world_to_screen, Camera, Viewport};
     use canvas::Point;
-    use dag::HandleRole;
+    use dag::{computation_node_width, slider_widget_height, DagPreviewContent, HandleRole};
     use graph::dsl::{WireEdge, WireNode};
     use graph::manifest::PropertyBag;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
@@ -3062,8 +3062,8 @@ mod tests {
         assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
-        let mut store = FlowStore::new(envelope);
-        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).expect("apply add-widget operations");
+        let mut store = FlowStore::new(envelope).expect("valid flow store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).expect("apply add-widget operations");
         assert_eq!(store.snapshot().expect("projection").widgets.len(), count_before + 1);
 
         store.dispatch(ArtifactCommand::Undo).expect("undo");

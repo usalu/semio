@@ -1,0 +1,20 @@
+   Compiling semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+   Compiling semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 5m 06s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_hub-aa96fd09ce6119b8)
+
+running 11 tests
+test directory::tests::command_naming_a_deleted_space_is_not_found ... ok
+test directory::tests::invite_create_redeem_revoke_round_trip ... ok
+test directory::tests::atelier_rejects_a_second_distinct_author ... ok
+test directory::tests::owner_membership_can_never_be_removed ... ok
+test directory::sqlite::tests::user_space_membership_round_trip ... ok
+test directory::sqlite::tests::share_token_gating ... ok
+test directory::sqlite::tests::sync_session_lifecycle ... ok
+test directory::sqlite::tests::seed_is_replayable ... ok
+test directory::tests::archive_space_demotes_every_author_to_spectator ... ok
+test directory::tests::event_log_replay_matches_projections ... ok
+test directory::tests::upsert_member_with_unknown_email_creates_the_user_first ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

@@ -42,6 +42,10 @@ pub struct PluginBuilder<State> {
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
     app_schema_descriptors: Vec<fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>>,
     document_app_ids: Vec<&'static str>,
+    /// 🌳️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C — the new declaration tree,
+    /// walked by `.declare_artifact(...)`/`try_build()` alongside (never instead of) `artifacts`
+    /// above, which stays bound to the OLD `ArtifactDeclaration` type (debt D1).
+    declared_artifacts: Vec<crate::app::declarations::ArtifactDeclaration>,
     _state: PhantomData<State>,
 }
 
@@ -67,6 +71,7 @@ impl PluginBuilder<NeedsLabel> {
             app_defs: Vec::new(),
             app_schema_descriptors: Vec::new(),
             document_app_ids: Vec::new(),
+            declared_artifacts: Vec::new(),
             _state: PhantomData,
         }
     }
@@ -92,6 +97,7 @@ impl PluginBuilder<NeedsLabel> {
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
+            declared_artifacts: self.declared_artifacts,
             _state: PhantomData,
         }
     }
@@ -119,6 +125,7 @@ impl PluginBuilder<NeedsVersion> {
             app_defs: self.app_defs,
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
+            declared_artifacts: self.declared_artifacts,
             _state: PhantomData,
         }
     }
@@ -136,6 +143,17 @@ impl PluginBuilder<Ready> {
     /// 🧾️ Registers one definition-only artifact through the same typed preflight registry.
     pub fn artifact_definition(mut self, definition: crate::app::ArtifactDefinition) -> Self {
         self.artifact_definitions.push(definition);
+        self
+    }
+
+    /// 🌳️ Declares one artifact through the NEW declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-
+    /// STANDARD-SUBSET-MECHANISM, design.md §2). Sibling of `.artifact(...)` above (bound to the OLD
+    /// `ArtifactDeclaration`, debt D1) — a distinct method name because Rust has no overloading and
+    /// both types share the bare name `ArtifactDeclaration` at their own module scope. `try_build()`
+    /// walks every declared tree and registers it atomically (preflight across every channel, then
+    /// commit), additive alongside every old registration path — see `crate::app::declarations`.
+    pub fn declare_artifact(mut self, declaration: crate::app::declarations::ArtifactDeclaration) -> Self {
+        self.declared_artifacts.push(declaration);
         self
     }
 
@@ -334,7 +352,7 @@ impl PluginBuilder<Ready> {
             version,
             artifacts,
             artifact_definitions,
-            capabilities,
+            mut capabilities,
             commands,
             artifact_kinds,
             host_media_handlers,
@@ -344,13 +362,24 @@ impl PluginBuilder<Ready> {
             contributions,
             owner_mutation_rosters,
             apps: _,
-            app_defs,
-            app_schema_descriptors,
+            mut app_defs,
+            mut app_schema_descriptors,
             document_app_ids,
+            declared_artifacts,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
         let version = version.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.version", "typestate-ready builder has no version"))?;
+        // 🌳️ New declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C):
+        // committed FIRST, fully self-contained (own preflight-then-commit, own assembly-guard
+        // scoping — see `crate::app::declarations::commit_artifact_declarations`'s doc), so it never
+        // interleaves with the OLD registration path's own `store::begin_artifact_assembly()` use
+        // near the end of this function. Its surfaces/app-schemas/capabilities fold into the exact
+        // same vectors `.viewer()`/`.editor()`/`.capability()` already populate below.
+        let declared_registration = crate::app::declarations::commit_artifact_declarations(declared_artifacts)?;
+        app_defs.extend(declared_registration.app_defs);
+        app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
+        capabilities.extend(declared_registration.capabilities);
         let mut definitions = ArtifactDefinitionRegistry::new();
         for definition in artifact_definitions {
             definitions.register(definition).map_err(PluginAssemblyError::definition)?;

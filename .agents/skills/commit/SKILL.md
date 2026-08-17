@@ -8,7 +8,7 @@ description: >-
 
 # Commit (bundle)
 
-**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️uloc` block at the end of each message. Per-bundle and per-day full `📊️uloc💯️…` apply only here (`bun ./📜️script.ts commit prepare`).
+**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️metric` block at the end of each message. Per-bundle and per-day inline `📊️metric📃uloc…📊️metric💾size…` apply only here (`bun ./📜️script.ts commit prepare`).
 
 ## Rule (always)
 
@@ -23,8 +23,8 @@ description: >-
 | Script (automatic)                                                                                                                     | You (from analysis)                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Subject `🐙️…🔀️`                                                                                                                        | —                                                                                                    |
-| Per-bundle and per-day full `📊️uloc💯️…` from git **after** you name bundles (`🟰️` = ➕️+✏️+➖️); **bundles sorted highest 🟰️ first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
-| Footer `📊️uloc💯️…` (+ per-language `📊️uloc{emoji}{slug}💯️…` rows) + `Signed-off-by`                                                                    | Date lines `🎆️YY🌙️MM☀️DD` (no uloc on stdin)                                                         |
+| Per-bundle and per-day inline `📊️metric📃uloc…📊️metric💾size…` from git **after** you name bundles (`🟰️` = ➕️+✏️+➖️); **bundles sorted highest 🟰️ first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
+| Footer `📊️metric` block (`📃uloc` + `💾size` totals, then per-language pairs) + `Signed-off-by`                                                                    | Date lines `🎆️YY🌙️MM☀️DD` (no metrics on stdin)                                                         |
 | Four `git` commands on prepare stdout                                                                                                  | **New** bullets `{emoji}{description}`                                                               |
 
 **Nothing** in the script reads prior commit bullets and auto-fills the bundle body. Prior messages may be wrong or another format — **never** copy them.
@@ -41,13 +41,13 @@ description: >-
 
 Do not assume yesterday’s bundle boundaries still apply. Do not let path-token heuristics replace reading the tree.
 
-**Uloc constraints (enforced on `check` and `prepare`):**
+**Metrics constraints (enforced on `check` and `prepare`):**
 
 | Level                    | Must sum (➕️ ✏️ ➖️ 🟰️)              |
 | ------------------------ | ----------------------------------- |
-| Each bundle’s `🎆️` days  | That bundle’s scope header `📊️uloc` |
-| All bundle headers       | Footer `📊️uloc💯️…` (full WIP range) |
-| Each footer language row | Same footer `📊️uloc💯️…` deltas     |
+| Each bundle’s `🎆️` days  | That bundle’s scope header metrics (`📃uloc` and `💾size`) |
+| All bundle headers       | Footer `📊️metric` totals (full WIP range) |
+| Each footer language row | Same footer totals per kind (`📃uloc`, `💾size`)     |
 
 Every changed path must belong to **exactly one** bundle. If days, bundles, or languages do not add up, attribution is wrong — fix scopes/dates and re-run check.
 
@@ -106,10 +106,10 @@ EOF
 
 ## Bundle body rules
 
-- **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅️framework`, `🖱️ui⚛️react`) — no paths, no `🔀️` / `📊️uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰️** once scopes exist.
-- **Dates:** group bullets by calendar day (`🎆️YY🌙️MM☀️DD`), **newest first** within each bundle. Script appends full `📊️uloc💯️…` to each date line from micro-commits that day (same bundle paths).
+- **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅️framework`, `🖱️ui⚛️react`) — no paths, no `🔀️` / `📊️metric`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰️** once scopes exist.
+- **Dates:** group bullets by calendar day (`🎆️YY🌙️MM☀️DD`), **newest first** within each bundle. Script appends inline `📊️metric…` to each date line from micro-commits that day (same bundle paths).
 - **Bullets:** impact order; one leading emoji; written **after** reading the diff.
-- **Never** paste subject, uloc block, or `Signed-off-by` on stdin.
+- **Never** paste subject, metrics block, or `Signed-off-by` on stdin.
 - **Rejected:** bullets that verbatim-match a line from a prior commit in the range.
 
 ## Your reply (prepare-only)
@@ -121,7 +121,7 @@ Paste **entire** `prepare` stdout verbatim — **six** fenced blocks, in order:
 3. `git push --follow-tags`
 4. One chained line (tag + squash + push)
 5. **Tag name only** — e.g. `🐙️ueli🎆️26🌙️06☀️04🚩️` (single line in the fence)
-6. **Full commit message** — subject `…🔀️`, bundles, `📊️uloc`, `Signed-off-by` (exact script output)
+6. **Full commit message** — subject `…🔀️`, bundles, `📊️metric`, `Signed-off-by` (exact script output)
 
 - Blocks 1–4 are shell commands to copy-run; blocks 5–6 are for review / GitKraken.
 - Do not merge, reorder, omit, or re-wrap; do not add prose outside the fences.

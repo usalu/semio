@@ -30,6 +30,9 @@ const en = {
   "admin.session.submit": "Sign in",
   "admin.session.probing": "Checking admin access…",
   "admin.session.error": "That token was rejected by the hub.",
+  "admin.session.unreachableTitle": "No hub is answering",
+  "admin.session.unreachableDescription": "This page could not reach a hub. Start one, then reload:",
+  "admin.session.unreachableHint": "A running hub also serves this admin page itself at /admin on its own port — the separate admin dev server is only for iterating on this UI.",
 
   "admin.overview.title": "Overview",
   "admin.overview.spaces": "Spaces",
@@ -135,6 +138,9 @@ const de = {
   "admin.session.submit": "Anmelden",
   "admin.session.probing": "Admin-Zugriff wird geprüft…",
   "admin.session.error": "Dieses Token wurde vom Hub abgelehnt.",
+  "admin.session.unreachableTitle": "Kein Hub erreichbar",
+  "admin.session.unreachableDescription": "Diese Seite konnte keinen Hub erreichen. Starte einen und lade neu:",
+  "admin.session.unreachableHint": "Ein laufender Hub liefert diese Admin-Seite auch selbst unter /admin auf seinem eigenen Port aus — der separate Admin-Dev-Server dient nur der Arbeit an dieser Oberfläche.",
 
   "admin.overview.title": "Übersicht",
   "admin.overview.spaces": "Räume",

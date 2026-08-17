@@ -5,7 +5,8 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_PANES, demonstratorPaneRuntimeVariant } from "./🟦️brand.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
@@ -32,7 +33,35 @@ const resolvedPlaygroundAssets = demonstratorTargets.flatMap((target) => target.
 /** @emoji 🔌️ `_vendor` (shared `🟨️host-shim.js` deps every plugin imports) plus each demonstrator pane's
  * own resolved plugin crate dir — mirrors `os/dev`'s single-variant `pluginModuleDirNames`, unioned
  * across all six panes instead of just one. */
-const pluginModuleDirNames = ["_vendor", ...new Set(demonstratorTargets.map((target) => target.pluginId))];
+/** @emoji 🔌️ Transitive `dependsOn` + consume-matched extensions of every pane's primary crate —
+ * without these dirs the shell's PluginSource snapshot can't install cad/gis/puzzle/… and each pane's
+ * `appId` (owned by those crates, not by `demonstrator`) never resolves. */
+function demonstratorPluginModuleIds(rootPluginIds: readonly string[]): string[] {
+  const catalog = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
+  const byId = new Map(catalog.map((target) => [target.pluginId, target] as const));
+  const selected = new Set(rootPluginIds);
+  const queue = [...rootPluginIds];
+  for (let index = 0; index < queue.length; index++) {
+    const target = byId.get(queue[index]!);
+    if (!target) continue;
+    for (const dependency of target.dependsOn ?? []) {
+      if (selected.has(dependency)) continue;
+      selected.add(dependency);
+      queue.push(dependency);
+    }
+    const consumes = new Set(target.consumes ?? []);
+    if (consumes.size === 0) continue;
+    for (const extension of EXTENSION_TARGETS) {
+      if (selected.has(extension.pluginId)) continue;
+      if (!(extension.contributes ?? []).some((tag) => consumes.has(tag))) continue;
+      selected.add(extension.pluginId);
+      queue.push(extension.pluginId);
+    }
+  }
+  return [...selected];
+}
+
+const pluginModuleDirNames = ["_vendor", ...demonstratorPluginModuleIds([...new Set(demonstratorTargets.map((target) => target.pluginId))])];
 //#endregion 🔖️DemonstratorUnionAssets
 
 export default defineConfig({
@@ -75,6 +104,7 @@ export default defineConfig({
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
+    semioPluginHotSwapVitePlugin(),
     ...semioAssetsVitePlugin(repoRoot),
     // 🔌️ Same reasoning as `os/dev`'s vite config: the bundler `resolve.alias` above only covers static
     // imports — plugins are also fetched at runtime via absolute-URL `import()`, which a production build

@@ -25,6 +25,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SHomeMutation, protocol::ProtocolError>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::home::mutations::change_catalog_generation;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {

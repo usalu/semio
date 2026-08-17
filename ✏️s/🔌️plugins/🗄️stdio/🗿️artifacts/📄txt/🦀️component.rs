@@ -19,6 +19,18 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
     crate::registry::definition_only_assembly("txt", definition)
 }
 
+//#region 🔖️ArtifactDeclaration
+/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot): the whole
+/// `s.stdio.txt` artifact through the declaration tree — one standard, `utf-8`, one subset,
+/// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️component.rs`'s `artifact()` doc
+/// comment for the `localization: &[]` deferral rationale (identical here).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::artifacts::txt::standards::v_utf_8::standard()] }
+}
+//#endregion 🔖️ArtifactDeclaration
+
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.txt".into(),

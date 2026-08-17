@@ -21,7 +21,7 @@ pub fn layout() -> WindowLayout {
             kind: "stack".into(),
             size: None,
             active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: shape::WINDOW_KIND_ID.into(), title: Some("Shape".into()), instance_id: None, template_id: None }],
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: shape::WINDOW_KIND_ID.into(), title: Some("Shape".into()), instance_id: None, template_id: None, corner: None }],
         }),
     }
 }

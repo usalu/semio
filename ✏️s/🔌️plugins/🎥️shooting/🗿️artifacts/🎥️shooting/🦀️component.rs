@@ -515,17 +515,17 @@ pub fn shooting_base64_encode(bytes: &[u8]) -> String {
     out
 }
 
-/// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
-/// `child_id` — the `EngineRep`-shaped bridge every wave-4 exemplar uses since no `LinkResolver`/
-/// child-dispatch seam reaches `ArtifactApp::handle` yet (checked directly against
-/// `🔌️plugin/🦀️component.rs`, W1-owned, read-only for this wave). Populated only by
-/// `shooting_set_emblem_from_base64` (the sole place this migration ever has literal emblem bytes in
-/// hand — no mutation triad touches the emblem, see this region's own module doc comment), read by
-/// `shooting_emblem_image`/`shooting_emblem_bytes`. Degrades to an honest `None`/empty on a cache
-/// miss (a fresh process loading a persisted document, or a handle surviving a store-level undo/redo
-/// that bypasses `ArtifactApp::handle`) — never fabricates data, matching every other exemplar's
-/// documented staleness gap.
 thread_local! {
+    /// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
+    /// `child_id` — the `EngineRep`-shaped bridge every wave-4 exemplar uses since no `LinkResolver`/
+    /// child-dispatch seam reaches `ArtifactApp::handle` yet (checked directly against
+    /// `🔌️plugin/🦀️component.rs`, W1-owned, read-only for this wave). Populated only by
+    /// `shooting_set_emblem_from_base64` (the sole place this migration ever has literal emblem bytes in
+    /// hand — no mutation triad touches the emblem, see this region's own module doc comment), read by
+    /// `shooting_emblem_image`/`shooting_emblem_bytes`. Degrades to an honest `None`/empty on a cache
+    /// miss (a fresh process loading a persisted document, or a handle surviving a store-level undo/redo
+    /// that bypasses `ArtifactApp::handle`) — never fabricates data, matching every other exemplar's
+    /// documented staleness gap.
     static SHOOTING_EMBLEM_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioImageSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

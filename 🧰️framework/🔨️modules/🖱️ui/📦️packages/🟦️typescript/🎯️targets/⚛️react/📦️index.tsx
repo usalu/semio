@@ -2147,6 +2147,7 @@ export const uiChromeTranslationBundles = {
           windowActivate: { label: { normal: "Fenster aktivieren", beginner: "Fenster aktivieren" } },
           windowClose: { label: { normal: "Fenster schließen", beginner: "Fenster schließen" } },
           windowSplit: { label: { normal: "Fenster teilen", beginner: "Fenster teilen" } },
+          windowOpenInNewWindow: { label: { normal: "In neuem Fenster öffnen", beginner: "In neuem Fenster öffnen" } },
           panelToggle: { label: { normal: "Panel umschalten", beginner: "Panel umschalten" } },
           panelTab: { label: { normal: "Panel-Tab wechseln", beginner: "Panel-Tab wechseln" } },
         },
@@ -2221,6 +2222,12 @@ export const uiChromeTranslationBundles = {
           expand: { label: { normal: "Ausklappen", beginner: "Ausklappen" } },
           cancel: { label: { normal: "Abbrechen", beginner: "Abbrechen" } },
           error: { label: { normal: "Fehler", beginner: "Fehler" } },
+        },
+        window: {
+          close: { label: { normal: "Schließen", beginner: "Schließen" } },
+          focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
+          unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
+          newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
         },
         contextMenu: {
           select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
@@ -2940,6 +2947,7 @@ export const uiChromeTranslationBundles = {
           windowActivate: { label: { normal: "Activate Window", beginner: "Activate Window" } },
           windowClose: { label: { normal: "Close Window", beginner: "Close Window" } },
           windowSplit: { label: { normal: "Split Window", beginner: "Split Window" } },
+          windowOpenInNewWindow: { label: { normal: "Open in New Window", beginner: "Open in New Window" } },
           panelToggle: { label: { normal: "Toggle Panel", beginner: "Toggle Panel" } },
           panelTab: { label: { normal: "Switch Panel Tab", beginner: "Switch Panel Tab" } },
         },
@@ -3014,6 +3022,12 @@ export const uiChromeTranslationBundles = {
           expand: { label: { normal: "Expand", beginner: "Expand" } },
           cancel: { label: { normal: "Cancel", beginner: "Cancel" } },
           error: { label: { normal: "Error", beginner: "Error" } },
+        },
+        window: {
+          close: { label: { normal: "Close", beginner: "Close" } },
+          focus: { label: { normal: "Focus", beginner: "Focus" } },
+          unfocus: { label: { normal: "Unfocus", beginner: "Unfocus" } },
+          newWindow: { label: { normal: "New Window", beginner: "New Window" } },
         },
         contextMenu: {
           select: { label: { normal: "Select", beginner: "Select" } },
@@ -6984,7 +6998,9 @@ export interface WindowChromeProps {
   readonly stackSlot?: string;
   readonly bodySlot?: string;
   readonly bodyStyle?: React.CSSProperties;
-  readonly titleChips: React.ReactNode;
+  readonly titleChips?: React.ReactNode;
+  /** @emoji 🧭️ Optional top-right chip content rendered ahead of enlarge/close in the controls cell. */
+  readonly capRightChips?: React.ReactNode;
   readonly body?: React.ReactNode;
   readonly enlarge?: WindowChromeControlAction;
   readonly close?: WindowChromeControlAction;
@@ -7096,6 +7112,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       bodySlot = "window-chrome-body",
       bodyStyle,
       titleChips,
+      capRightChips,
       body,
       enlarge,
       close,
@@ -7152,9 +7169,11 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       return wrapLevel(
         <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
           <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
-          <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-            {titleChips}
-          </div>
+          {titleChips ? (
+            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" data-dim className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+              {titleChips}
+            </div>
+          ) : null}
         </div>,
       );
     }
@@ -7179,12 +7198,15 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       >
         <WindowChromeSilhouetteBorder stack={stackEl} geometry={geometry} active={active} introduceTarget={introduceTarget} borderKind={borderKind} silhouetteSlot={silhouetteSlot} />
         <div ref={capRef} data-slot={capSlot} data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent" style={capRowStyle}>
-          <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-            {titleChips}
-          </div>
+          {titleChips ? (
+            <div data-slot={chipSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+              {titleChips}
+            </div>
+          ) : null}
           <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
-          {enlarge || close ? (
+          {capRightChips || enlarge || close ? (
             <div data-slot={controlsSlot} data-window-silhouette-chip data-dock={capDock} className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
+              {capRightChips}
               {enlarge ? (
                 <button
                   type="button"
@@ -9063,11 +9085,14 @@ export interface EngagementSpec {
   status?: EngagementStatus[];
 }
 
+export type WindowStackCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+
 export interface WindowLayoutWindowNode {
   kind: "window";
   id: string;
   title?: UiLabel;
   size?: number;
+  corner?: WindowStackCorner;
 }
 
 export interface WindowLayoutStackNode {
@@ -9788,6 +9813,7 @@ import {
   insertWindowAtDropZone,
   Mode,
   removeWindowFromLayout,
+  resolveStackPathForWindowId,
   splitWithWindow,
   splitWithStack,
   extractStackFromLayout,
@@ -9804,6 +9830,11 @@ import {
   modeDockDragInsertTabs,
   mergeStackTabsIntoStack,
   resolveModeTabInsertPreview,
+  WINDOW_STACK_CORNERS,
+  resolveWindowCorner,
+  modeStackTabsByCorner,
+  insertWindowAsTabAtCorner,
+  setWindowCornerInLayout,
   App,
   Ui,
   type ModeWindowDescriptor,
@@ -9848,6 +9879,7 @@ export {
   insertWindowAtDropZone,
   Mode,
   removeWindowFromLayout,
+  resolveStackPathForWindowId,
   splitWithWindow,
   splitWithStack,
   extractStackFromLayout,
@@ -9864,6 +9896,11 @@ export {
   modeDockDragInsertTabs,
   mergeStackTabsIntoStack,
   resolveModeTabInsertPreview,
+  WINDOW_STACK_CORNERS,
+  resolveWindowCorner,
+  modeStackTabsByCorner,
+  insertWindowAsTabAtCorner,
+  setWindowCornerInLayout,
   App,
   Ui,
   type ModeWindowDescriptor,
@@ -14833,23 +14870,25 @@ if (import.meta.vitest) {
 
     it("modeDockTabsWithInsertPreview inserts a ghost tab at the drop index for that stack", () => {
       const tabs = [
-        { id: "a", title: "A" },
-        { id: "b", title: "B" },
+        { id: "a", title: "A", iconId: "app-window" as const },
+        { id: "b", title: "B", iconId: "app-window" as const },
       ];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 1 }, "1", [{ id: "drag", title: "Drag" }]);
+      const ghost = [{ id: "drag", title: "Drag", iconId: "app-window" as const }];
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topLeft", index: 1 }, "1", "topLeft", ghost);
       expect(row.map((tab) => tab.id)).toEqual(["a", "drag", "b"]);
       expect(row[1]?.preview).toBe("ghost");
-      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", index: 1 }, "1", [{ id: "drag", title: "Drag" }]).map((tab) => tab.id)).toEqual(["a", "b"]);
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "2", corner: "topLeft", index: 1 }, "1", "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
+      expect(modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topRight", index: 1 }, "1", "topLeft", ghost).map((tab) => tab.id)).toEqual(["a", "b"]);
     });
 
     it("modeDockTabsWithInsertPreview inserts ghost tabs for every window in a dragged stack", () => {
       const tabs = [
-        { id: "a", title: "A" },
-        { id: "b", title: "B" },
+        { id: "a", title: "A", iconId: "app-window" as const },
+        { id: "b", title: "B", iconId: "app-window" as const },
       ];
-      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", index: 0 }, "1", [
-        { id: "x", title: "X" },
-        { id: "y", title: "Y" },
+      const row = modeDockTabsWithInsertPreview(tabs, { stackPath: "1", corner: "topLeft", index: 0 }, "1", "topLeft", [
+        { id: "x", title: "X", iconId: "app-window" as const },
+        { id: "y", title: "Y", iconId: "app-window" as const },
       ]);
       expect(row.map((tab) => tab.id)).toEqual(["x", "y", "a", "b"]);
       expect(row[0]?.preview).toBe("ghost");
@@ -14881,7 +14920,7 @@ if (import.meta.vitest) {
         x: 0,
         y: 0,
       };
-      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", index: 0 });
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "1", corner: "topLeft", index: 0 });
       const merged = next.kind === "stack" ? next : next.kind === "row" || next.kind === "column" ? next.children.find((child) => child.kind === "stack" && child.children.some((window) => window.id === "c")) : null;
       expect(merged?.kind).toBe("stack");
       if (merged?.kind === "stack") expect(merged.children.map((child) => child.id)).toEqual(["a", "b", "c"]);
@@ -15201,13 +15240,98 @@ if (import.meta.vitest) {
     it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {
       const tabBar = { left: 0, top: 0, right: 200, bottom: 24, width: 200, height: 24 } as DOMRect;
       const body = { left: 0, top: 24, right: 200, bottom: 224, width: 200, height: 200 } as DOMRect;
-      const targets = new Map([["1", { tabBar, body, tabBarElement: null }]]);
-      expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", index: 0 });
+      const targets = new Map([
+        [
+          "1",
+          {
+            corners: { topLeft: { rect: tabBar, element: null as unknown as HTMLElement } },
+            body,
+          },
+        ],
+      ]);
+      expect(computeModeDropZone(100, 12, targets, null)).toEqual({ kind: "tab", stackPath: "1", corner: "topLeft", index: 0 });
       expect(computeModeDropZone(100, 30, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "top" });
       expect(computeModeDropZone(100, 200, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "bottom" });
       expect(computeModeDropZone(50, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "left" });
       expect(computeModeDropZone(150, 120, targets, null)).toEqual({ kind: "split", stackPath: "1", side: "right" });
     });
+    it("modeStackTabsByCorner groups windows by corner defaulting to topLeft", () => {
+      const groups = modeStackTabsByCorner([
+        { kind: "window", id: "a" },
+        { kind: "window", id: "b", corner: "topRight" },
+        { kind: "window", id: "c", corner: "bottomLeft" },
+        { kind: "window", id: "d", corner: "bottomRight" },
+        { kind: "window", id: "e", corner: "topLeft" },
+      ]);
+      expect(groups.topLeft.map((child) => child.id)).toEqual(["a", "e"]);
+      expect(groups.topRight.map((child) => child.id)).toEqual(["b"]);
+      expect(groups.bottomLeft.map((child) => child.id)).toEqual(["c"]);
+      expect(groups.bottomRight.map((child) => child.id)).toEqual(["d"]);
+    });
+
+    it("applyModeDrop moves a tab to another corner of the same stack", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        activeId: "a",
+        children: [
+          { kind: "window", id: "a", corner: "topLeft" },
+          { kind: "window", id: "b", corner: "topLeft" },
+        ],
+      };
+      const drag = {
+        dragKind: "tab" as const,
+        windowId: "b",
+        stackPath: "",
+        tabIndex: 1,
+        pointerId: 1,
+        ghostLabel: "B",
+        x: 0,
+        y: 0,
+      };
+      const next = applyModeDrop(layout, drag, { kind: "tab", stackPath: "", corner: "bottomRight", index: 0 });
+      expect(next.kind).toBe("stack");
+      if (next.kind !== "stack") return;
+      expect(next.activeId).toBe("b");
+      expect(next.children.map((child) => ({ id: child.id, corner: child.corner }))).toEqual([
+        { id: "a", corner: "topLeft" },
+        { id: "b", corner: "bottomRight" },
+      ]);
+    });
+
+    it("insertWindowAsTabAtCorner preserves one activeId across corners", () => {
+      const layout: WindowLayoutNode = {
+        kind: "stack",
+        activeId: "a",
+        children: [{ kind: "window", id: "a", corner: "topLeft" }],
+      };
+      const next = insertWindowAsTabAtCorner(layout, "", "b", "topRight");
+      expect(next.kind).toBe("stack");
+      if (next.kind !== "stack") return;
+      expect(next.activeId).toBe("b");
+      expect(modeStackTabsByCorner(next.children).topRight.map((child) => child.id)).toEqual(["b"]);
+      expect(modeStackTabsByCorner(next.children).topLeft.map((child) => child.id)).toEqual(["a"]);
+    });
+
+    it("computeModeDropZone resolves distinct corner tab bars", () => {
+      const topLeft = { left: 0, top: 0, right: 80, bottom: 24, width: 80, height: 24 } as DOMRect;
+      const topRight = { left: 120, top: 0, right: 200, bottom: 24, width: 80, height: 24 } as DOMRect;
+      const body = { left: 0, top: 24, right: 200, bottom: 224, width: 200, height: 200 } as DOMRect;
+      const targets = new Map([
+        [
+          "0",
+          {
+            corners: {
+              topLeft: { rect: topLeft, element: null as unknown as HTMLElement },
+              topRight: { rect: topRight, element: null as unknown as HTMLElement },
+            },
+            body,
+          },
+        ],
+      ]);
+      expect(computeModeDropZone(40, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topLeft", index: 0 });
+      expect(computeModeDropZone(160, 12, targets, null)).toEqual({ kind: "tab", stackPath: "0", corner: "topRight", index: 0 });
+    });
+
 
     it("beginWindowTemplateDrag records a session for mode dock preview", () => {
       beginWindowTemplateDrag({ payload: { windowKindId: "main", templateId: "top" }, label: "Top" });

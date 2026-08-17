@@ -115,7 +115,10 @@ export class AdminClient {
 //#region 🔖️Session
 const TOKEN_STORAGE_KEY = "semio.hub.admin.token";
 
-export type AdminSessionStatus = "probing" | "authorized" | "unauthorized";
+/** @emoji 🚦️ `unreachable` is deliberately distinct from `unauthorized`: a hub that is not running at
+ * all fails the probe with a transport error, and reporting that as "your token was rejected" sends
+ * the operator hunting for a credential when the actual fix is to start the hub. */
+export type AdminSessionStatus = "probing" | "authorized" | "unauthorized" | "unreachable";
 
 export interface AdminSessionState {
   status: AdminSessionStatus;
@@ -146,8 +149,11 @@ export function AdminSessionProvider({ baseUrl, children }: { readonly baseUrl: 
       .then(() => {
         if (!cancelled) setStatus("authorized");
       })
-      .catch(() => {
-        if (!cancelled) setStatus("unauthorized");
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // 🩺️ Only a real HTTP rejection means "bad/absent token"; anything else (ECONNREFUSED, DNS,
+        // timeout, CORS) means the hub is not answering at all.
+        setStatus(error instanceof AdminHttpError ? "unauthorized" : "unreachable");
       });
     return () => {
       cancelled = true;
@@ -179,6 +185,21 @@ export function AdminTokenForm(): React.ReactElement {
   const t = useAdminT();
   const { status, setToken } = useAdminSession();
   const [draft, setDraft] = React.useState("");
+
+  // 🔌️ No hub answering: a token form here would be a dead end, so show what is actually wrong and the
+  // command that fixes it instead of prompting for a credential that cannot help.
+  if (status === "unreachable") {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div id="admin-session-unreachable" className="flex w-full max-w-md flex-col gap-single">
+          <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.unreachableTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("admin.session.unreachableDescription")}</p>
+          <code className="rounded bg-muted px-single py-single text-xs">bun nx run os-hub:dev</code>
+          <p className="text-sm text-muted-foreground">{t("admin.session.unreachableHint")}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full items-center justify-center">

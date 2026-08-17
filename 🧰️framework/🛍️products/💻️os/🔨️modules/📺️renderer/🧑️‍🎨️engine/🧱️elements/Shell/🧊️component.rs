@@ -7,7 +7,7 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 use crate::dock::{
-    compute_dock_drop_zone, dock_tab_content_width, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
+    compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
     WindowSilhouette,
 };
 use crate::engine_canvas::theme_is_dark;
@@ -39,7 +39,7 @@ use semio_framework_os_kernel::os_directory::{
 };
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
-    WidgetInteractionMaps,
+    WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
     ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
@@ -956,7 +956,7 @@ pub struct ShellState {
     pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
     pub dock_drag_snapshot: Option<ui_wgpu::wgpu::WindowLayout>,
     pub dock_canvas_bounds: Rect,
-    pub dock_drop_tab_bars: Vec<(Vec<usize>, Rect, Vec<f32>)>,
+    pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
     pub layout_override: Option<ui_wgpu::wgpu::WindowLayout>,
     pub split_resize_origin: Vec<f32>,
@@ -1550,10 +1550,6 @@ impl ShellState {
         tabs.iter().flat_map(|tab| if tab.children.is_empty() { vec![tab] } else { Self::flatten_panel_tab_leaves(&tab.children) }).collect()
     }
 
-    fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
-        PanelTabDefinition { kind: semio_framework::PanelTabKind::App(id.into()), label: LocalizedLabel::data(label), group, body_key: Some(String::new()), children: Vec::new() }
-    }
-
     fn sync_dock(&mut self) {
         if let Some(session) = &self.session {
             if let Some(layout) = self.layout_override.clone() {
@@ -1587,23 +1583,9 @@ impl ShellState {
         self.pending_dock_drag = Some((payload, (x, y)));
     }
 
-    fn dock_tab_bars_for_drop(&self, atlas: &mut FontAtlas, theme: &Theme, canvas: Rect, labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>) -> Vec<(Vec<usize>, Rect, Vec<f32>)> {
-        self.dock
-            .stack_tab_bar_rects(canvas, theme)
-            .into_iter()
-            .filter_map(|(path, rect)| {
-                let windows = self.dock.stack_windows_at_path(&path)?;
-                let widths: Vec<f32> = windows
-                    .iter()
-                    .map(|id| {
-                        let label = labels.get(id).map(String::as_str).unwrap_or(id);
-                        let _ = icon_ids.get(id);
-                        dock_tab_content_width(atlas, theme, label)
-                    })
-                    .collect();
-                Some((path, rect, widths))
-            })
-            .collect()
+    fn dock_tab_bars_for_drop(&self, atlas: &mut FontAtlas, theme: &Theme, canvas: Rect, labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>) -> Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)> {
+        let _ = icon_ids;
+        self.dock.stack_corner_tab_bar_rects(canvas, theme, atlas, labels)
     }
 
     fn contributions_json_from_plugins(plugins: &[ProgramBridgeEntry]) -> String {
@@ -3683,6 +3665,7 @@ impl ShellState {
             } else if let Some((payload, _)) = self.pending_dock_drag.take() {
                 if let Some(hit) = input.hit_at(x, y) {
                     if let Some(rest) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("dock.tab.")) {
+                        let rest = rest.strip_suffix(".focus").or_else(|| rest.strip_suffix(".close")).or_else(|| rest.strip_suffix(".new")).unwrap_or(rest);
                         if let Some((path_str_value, window_id)) = rest.split_once('.') {
                             if window_id == payload.window_id {
                                 let path = parse_path(path_str_value);
@@ -3794,6 +3777,7 @@ impl ShellState {
             }
             if let Some(id) = hit.control_id.as_deref() {
                 if let Some(rest) = id.strip_prefix("dock.tab.") {
+                    let rest = rest.strip_suffix(".focus").or_else(|| rest.strip_suffix(".close")).or_else(|| rest.strip_suffix(".new")).unwrap_or(rest);
                     if let Some((path_str_value, window_id)) = rest.split_once('.') {
                         let path = parse_path(path_str_value);
                         let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
@@ -4284,19 +4268,23 @@ impl ShellState {
                 }
                 return Ok(true);
             }
-            id if id.starts_with("dock.focus.") => {
-                let path = parse_path(id.trim_start_matches("dock.focus."));
-                self.dock.toggle_maximize(&path);
-                self.persist_dock_layout();
-                self.note_control_command(id, None).await?;
-                return Ok(true);
-            }
-            id if id.starts_with("dock.close.") => {
-                let path = parse_path(id.trim_start_matches("dock.close."));
-                if self.dock.close_active_in_stack(&path) {
-                    self.active_window_id = self.dock.active_window_id.clone();
+            id if id.starts_with("dock.tab.") && id.ends_with(".focus") => {
+                if let Some((path, window_id)) = Self::parse_dock_tab_action_id(id, "focus") {
+                    self.dock.set_stack_active(&path, window_id);
+                    self.active_window_id = Some(window_id.to_string());
+                    self.dock.toggle_maximize(&path);
                     self.persist_dock_layout();
                     self.note_control_command(id, None).await?;
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("dock.tab.") && id.ends_with(".close") => {
+                if let Some((path, window_id)) = Self::parse_dock_tab_action_id(id, "close") {
+                    if self.dock.close_window_in_stack(&path, window_id) {
+                        self.active_window_id = self.dock.active_window_id.clone();
+                        self.persist_dock_layout();
+                        self.note_control_command(id, None).await?;
+                    }
                 }
                 return Ok(true);
             }
@@ -4432,18 +4420,6 @@ impl ShellState {
             _ => {}
         }
         Ok(false)
-    }
-
-    async fn execute_search_item(&mut self, item_id: &str) -> Result<(), String> {
-        if let Ok(index) = item_id.parse::<usize>() {
-            self.activate_search_item(index).await?;
-            return Ok(());
-        }
-        let items = self.filtered_search_items();
-        if let Some(index) = items.iter().position(|item| item.id == item_id) {
-            self.activate_search_item(index).await?;
-        }
-        Ok(())
     }
 
     fn update_tree_hover(&mut self, input: &InputState<ActionDescriptor>) {
@@ -5525,7 +5501,7 @@ mod shell_input_tests {
         shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
         assert!(shell.dock.remove_window("a"));
         let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
-        let zone = DockDropZone::Tab { stack_path: vec![0], index: 2 };
+        let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 };
         shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(zone) });
         assert!(shell.layout_override.is_none(), "sanity: nothing persisted yet");
         let input = InputState::<ActionDescriptor>::default();
@@ -5981,16 +5957,6 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     "circle-dot"
 }
 
-fn app_icon_id<'a>(app: &'a AppDefinition, icons: &IconAtlas) -> &'a str {
-    if let Some(id) = app.icon_id {
-        let id = id.as_str();
-        if icons.icon_uv(id).is_some() {
-            return id;
-        }
-    }
-    "component"
-}
-
 /// 🧭️ This renderer only has a 2-panel (left/right) layout; fold the framework's 6-anchor model back down to
 /// left/right. A middle anchor would fold right (the details/overflow side) but never occurs here — `PanelGroup`
 /// only ever maps to the four corner anchors.
@@ -6053,6 +6019,9 @@ pub(crate) fn resolve_window_utilities<'a>(app: &'a AppDefinition, window_kind: 
 
 /// 📇️ The first window kind whose resolved actions include `action_id` — the window the palette/keybinding
 /// redirect focuses to open an arg-carrying action's form (Architecture Decision 8, P3/P4).
+// 🎯️ Exercised today only by `Dock`'s own `action_host_window_id_finds_scoping_window` test — the
+// palette/keybinding redirect call site itself hasn't landed yet, hence the matching test-only cfg.
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn action_host_window_id(app: &AppDefinition, action_id: &str) -> Option<String> {
     app.window_kinds.iter().find(|kind| semio_framework::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
 }
@@ -6628,15 +6597,23 @@ impl ShellState {
         }
     }
 
+    /// 🧭️ Parses `dock.tab.{path}.{window}.{action}` into `(path, window_id)`.
+    fn parse_dock_tab_action_id<'a>(control_id: &'a str, action: &str) -> Option<(Vec<usize>, &'a str)> {
+        let rest = control_id.strip_prefix("dock.tab.")?;
+        let rest = rest.strip_suffix(&format!(".{action}"))?;
+        let (path_str_value, window_id) = rest.split_once('.')?;
+        Some((parse_path(path_str_value), window_id))
+    }
+
     /// 🕒️ Maps a chrome control id to its `noteShellCommand` `(commandId, label)` pair — factored out
     /// of `handle_shell_hit`'s per-arm dispatch so the mapping is unit-testable without a full
     /// `ShellState` fixture. Only control ids that represent a discrete, loggable user command are
     /// covered; everything else is `None` (`handle_shell_hit` keeps its existing behavior either way).
     fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
-        if control_id.starts_with("dock.close.") {
+        if control_id.starts_with("dock.tab.") && control_id.ends_with(".close") {
             return Some(("shell.windowClose", "Close".to_string()));
         }
-        if control_id.starts_with("dock.focus.") {
+        if control_id.starts_with("dock.tab.") && control_id.ends_with(".focus") {
             return Some(("shell.windowMaximize", "Focus".to_string()));
         }
         if control_id.starts_with("shell.layout.") {
@@ -7226,8 +7203,8 @@ mod command_registry_tests {
     /// doesn't fire on everything.
     #[test]
     fn shell_command_for_control_maps_dock_and_panel_control_ids() {
-        assert_eq!(ShellState::shell_command_for_control("dock.close.0.a", false), Some(("shell.windowClose", "Close".to_string())));
-        assert_eq!(ShellState::shell_command_for_control("dock.focus.0", false), Some(("shell.windowMaximize", "Focus".to_string())));
+        assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.close", false), Some(("shell.windowClose", "Close".to_string())));
+        assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.focus", false), Some(("shell.windowMaximize", "Focus".to_string())));
         assert_eq!(ShellState::shell_command_for_control("shell.layout.compact", false), Some(("shell.applyNamedLayout", "Apply Layout".to_string())));
         assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.details", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string())));
         assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.settings", true), Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string())));
@@ -9042,7 +9019,6 @@ impl ShellState {
                 }],
                 true,
             );
-            x += fixture_rect.w + theme.gap_standard;
         }
         let mut rx = width - theme.padding_standard;
         let fullscreen_item = ChromeGroupItem {
@@ -9628,7 +9604,6 @@ impl ShellState {
             chrome_text(overlay, atlas, input, theme, "Cancel", cancel_rect.x + 12.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
             input.register_hit(HitTarget { rect: cancel_rect, event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }), control_id: Some("s-checkin-cancel".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
         }
-        // render_palette removed
         if let Some(menu) = &self.context_menu {
             self.render_context_menu(overlay, atlas, icons, input, theme, menu, width, height);
         }
@@ -10198,17 +10173,6 @@ impl ShellState {
             input.register_hit(HitTarget { rect: row, event: None, control_id: Some(format!("{item_prefix}.{index}")), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
             row_y += theme.control_height + 2.0;
         }
-    }
-
-    fn window_engagement_chrome_visible(engagement: &WindowEngagement, window_id: &str, engagement_inputs: &HashMap<String, String>, activated: bool) -> bool {
-        if engagement.session_active.unwrap_or(false) {
-            return true;
-        }
-        let draft = engagement_inputs.get(window_id).or_else(|| engagement.input.as_ref().and_then(|input| input.value.as_ref())).map(|value| value.trim()).filter(|value| !value.is_empty());
-        if draft.is_some() {
-            return true;
-        }
-        activated
     }
 
     fn measures_for_kind(&self, kind: &semio_framework::WindowKindDefinition) -> Vec<WindowMeasure> {
@@ -11020,17 +10984,6 @@ impl ShellState {
         overlay.pop_scissor();
     }
 
-    fn render_palette(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, x: f32, y: f32, w: f32, title: &str, hint: &str) {
-        let h = 120.0;
-        overlay.push_glass([x, y, w, h], theme.border_radius, theme.glass(Level::Menu));
-        chrome_text(overlay, atlas, input, theme, title, x + 12.0, y + 24.0, theme.font_size_body, theme.text);
-        if !hint.is_empty() {
-            chrome_text(overlay, atlas, input, theme, hint, x + 12.0, y + 48.0, theme.font_size_small, theme.text_muted);
-        }
-        let filter_rect = Rect::new(x + 8.0, y + h - theme.control_height - 8.0, w - 16.0, theme.control_height);
-        overlay.push_rounded([filter_rect.x, filter_rect.y, filter_rect.w, filter_rect.h], theme.input_bg, theme.border_radius);
-        input.register_hit(HitTarget { rect: filter_rect, event: None, control_id: Some(format!("shell.palette.{title}")), kind: HitKind::Input, drag_axis: None, drag_data: None });
-    }
 }
 
 // #region 💾️🎨️🌐️ UiPrefsThemesI18n
@@ -11266,6 +11219,11 @@ struct ChromePrefsState {
     ui_layout: String,
     theme_id: String,
     custom_themes: HashMap<String, String>,
+    // 🎨️ Only ever read/written by the `w3-prefs-i18n-themes` draft-color-editor primitives below
+    // (`begin_custom_theme_draft`/`set_draft_theme_color`/`save_draft_theme`/`discard_draft_theme`),
+    // which stay unwired to any real UI on purpose (see `build_settings_theme_ui`'s doc comment) —
+    // exercised today only by `ui_prefs_themes_i18n_tests`, hence the matching `cfg` here.
+    #[cfg(all(test, not(target_arch = "wasm32")))]
     draft_theme: Option<String>,
     worker_count: u32,
 }
@@ -11284,7 +11242,14 @@ fn load_chrome_prefs() -> ChromePrefsState {
     let custom_themes =
         prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
     let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
-    ChromePrefsState { ui_layout, theme_id, custom_themes, draft_theme: None, worker_count }
+    ChromePrefsState {
+        ui_layout,
+        theme_id,
+        custom_themes,
+        #[cfg(all(test, not(target_arch = "wasm32")))]
+        draft_theme: None,
+        worker_count,
+    }
 }
 
 fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
@@ -11309,6 +11274,9 @@ pub(crate) fn active_ui_layout() -> String {
     with_chrome_prefs(|prefs| prefs.ui_layout.clone())
 }
 
+// 🎨️ Same "stays unwired on purpose" status as the draft-theme cluster below — exercised only by
+// `ui_prefs_themes_i18n_tests` today.
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn set_active_ui_layout(layout: &str) {
     let value = if layout == "tablet" { "tablet" } else { "desktop" };
     with_chrome_prefs(|prefs| prefs.ui_layout = value.to_string());
@@ -11318,15 +11286,12 @@ pub(crate) fn active_worker_count() -> u32 {
     with_chrome_prefs(|prefs| prefs.worker_count)
 }
 
-pub(crate) fn set_active_worker_count(count: u32) {
-    with_chrome_prefs(|prefs| prefs.worker_count = count.max(1));
-}
-
 pub(crate) fn custom_theme_ids() -> Vec<String> {
     with_chrome_prefs(|prefs| prefs.custom_themes.keys().cloned().collect())
 }
 
 /// 🎨️ Starts (or replaces) the in-memory draft for a new custom theme cloned from `base_id`.
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn begin_custom_theme_draft(base_id: &str, label: &str, slug: &str) -> String {
     let id = format!("custom.{slug}");
     let draft = CustomChromeTheme { id: id.clone(), label: label.to_string(), base: base_id.to_string(), light: ChromeColorOverrides::default(), dark: ChromeColorOverrides::default() };
@@ -11337,6 +11302,7 @@ pub(crate) fn begin_custom_theme_draft(base_id: &str, label: &str, slug: &str) -
 /// 🎨️ Mutates one paint slot (`"background" | "panel" | "navbar" | "text" | "accent"`) of the
 /// in-progress draft for one appearance (`"light" | "dark"`). Returns `false` if there is no draft
 /// or `field` is unknown.
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn set_draft_theme_color(appearance: &str, field: &str, hex: &str) -> bool {
     with_chrome_prefs(|prefs| {
         let Some(raw) = prefs.draft_theme.clone() else { return false };
@@ -11358,6 +11324,7 @@ pub(crate) fn set_draft_theme_color(appearance: &str, field: &str, hex: &str) ->
 
 /// 🎨️ Commits the in-progress draft into the custom-theme registry and activates it. Returns the
 /// new theme id, or `None` if there was no draft.
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn save_draft_theme() -> Option<String> {
     with_chrome_prefs(|prefs| {
         let raw = prefs.draft_theme.take()?;
@@ -11369,6 +11336,7 @@ pub(crate) fn save_draft_theme() -> Option<String> {
     })
 }
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
 pub(crate) fn discard_draft_theme() {
     with_chrome_prefs(|prefs| prefs.draft_theme = None);
 }

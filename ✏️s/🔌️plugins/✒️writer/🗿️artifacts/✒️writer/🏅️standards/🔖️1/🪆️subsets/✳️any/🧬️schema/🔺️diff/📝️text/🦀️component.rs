@@ -1,6 +1,5 @@
 //! 🔺️ Writer artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::writer::schema::diff::WriterDiff;
 use crate::artifacts::writer::schema::WriterArtifact;
 use crate::artifacts::writer::{document_child_handle_and_cache, WriterSnapshot};
 use protocol::MutationDiff;

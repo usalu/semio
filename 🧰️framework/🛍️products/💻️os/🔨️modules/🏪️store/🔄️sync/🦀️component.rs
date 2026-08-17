@@ -183,6 +183,10 @@ pub enum ArtifactEvent {
     Status(ArtifactSyncStatus),
     /// @emoji 📡️ The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
+    /// @emoji 🎨️ The hub assigned (or re-confirmed, on reconnect) this connection's session color —
+    /// `crate::os_spr::wire::ServerFrame::Session`, sent once per connection after `Welcome`. The
+    /// actor stores it and stamps it onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
+    Session { actor: String, color: u8 },
     /// @emoji 👻️ A peer published an ephemeral preview blob (`crate::os_spr::wire::ServerFrame::Preview`)
     /// on the uncredited, loss-tolerant preview lane — the counterpart of
     /// {@link ArtifactActorMsg::PublishPreview}.
@@ -472,38 +476,21 @@ fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
     crate::os_spr::decode_presence_peer(bytes).ok()
 }
 
-/// @emoji 📡️ Assembles `PresencePeer.interaction` from local `InteractionState` plus each domain's
-/// declared hover/selection behavior — the ONE place this logic lives, so every app broadcasts
-/// selection+hover with ZERO app-side code (call this wherever a `PresenceHeartbeat`'s `peer` is
-/// built, right before `presence_to_bytes`, at the same cadence cursor updates already get
-/// throttled at — this fn is pure/stateless, so it invents no throttle of its own). Forwards each
-/// domain's already-computed `ids` verbatim (never re-derives a closure itself) — EXPLICIT ids
-/// only cross the wire; a receiver re-expands any transitive closure via its own
-/// `crate::os_spr::DomainTopology`. Only the `"pointer"` hover channel ever broadcasts (any other
-/// channel, e.g. a drag-only one, stays local); a domain whose `HoverSpec::broadcast`/
-/// `SelectionSpec::broadcast` is `false` contributes nothing for that half. A domain that ends up
-/// with both halves empty is omitted from `domains` entirely.
-pub fn assemble_presence_interaction(app_id: &str, state: &crate::os_spr::InteractionState, hover_specs: &std::collections::BTreeMap<String, crate::os_spr::HoverSpec>, selection_specs: &std::collections::BTreeMap<String, crate::os_spr::SelectionSpec>) -> crate::os_spr::PresenceInteraction {
-    let mut domain_ids: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();
-    domain_ids.extend(state.selection.keys());
-    domain_ids.extend(state.hover.keys());
+// 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
+// `assemble_presence_interaction` MOVED to `crate::os_spr::wire`'s `🔖️PresenceInteraction` region —
+// guests never enable this crate's `sync` feature, and `VcsArtifactApp` must be able to call it
+// without pulling in the whole actor layer. Re-imported at the top of this module (`use
+// crate::os_spr::assemble_presence_interaction`-equivalent via the `crate::os_spr::{...}` import
+// list) rather than re-exported here — every call site below already goes through
+// `crate::os_spr::assemble_presence_interaction` directly.
 
-    let mut domains = Vec::new();
-    for domain_id in domain_ids {
-        let selected = if selection_specs.get(domain_id).is_some_and(|spec| spec.broadcast) { state.selection.get(domain_id).map(|selection| selection.ids.clone()).unwrap_or_default() } else { Vec::new() };
-        let hovered = if hover_specs.get(domain_id).is_some_and(|spec| spec.broadcast) {
-            state.hover.get(domain_id).filter(|hover| hover.channel == "pointer").map(|hover| hover.ids.clone()).unwrap_or_default()
-        } else {
-            Vec::new()
-        };
-        if selected.is_empty() && hovered.is_empty() {
-            continue;
-        }
-        let granularity = state.active_granularity.get(domain_id).cloned().unwrap_or_default();
-        domains.push(crate::os_spr::PresenceDomain { domain: domain_id.clone(), granularity, selected, hovered });
-    }
-
-    crate::os_spr::PresenceInteraction { app_id: app_id.to_string(), domains }
+/// @emoji 🎨️ Stamps a peer's hub-assigned session color and canonical surface onto an outbound
+/// `PresencePeer` right before {@link presence_to_bytes} — the ONE place either field is ever
+/// filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). Pure so
+/// both the native and wasm actors (and their tests) can share it.
+fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surface: Option<&str>) {
+    peer.color = session_color;
+    peer.surface = surface.map(str::to_string);
 }
 
 /// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
@@ -876,6 +863,10 @@ mod native_actor {
         hub_space_id: Option<String>,
         hub_token: Option<String>,
         hub_surface: Option<String>,
+        /// @emoji 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) —
+        /// `None` until the hub sends it (or for a folder-only document, which never connects to a
+        /// hub). Stamped onto every outbound `PresenceHeartbeat` via {@link stamp_session}.
+        session_color: Option<u8>,
         semio_hub: Option<HubConn>,
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
@@ -945,6 +936,7 @@ mod native_actor {
                 hub_space_id,
                 hub_token,
                 hub_surface,
+                session_color: None,
                 semio_hub: None,
                 server_frontier: None,
                 resume_token: None,
@@ -1041,7 +1033,8 @@ mod native_actor {
                     }
                     false
                 }
-                ArtifactActorMsg::PresenceHeartbeat { peer } => {
+                ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
+                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref());
                     self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview).await;
                     false
                 }
@@ -1283,6 +1276,10 @@ mod native_actor {
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
                     self.emit(ArtifactEvent::Presence { peers });
                 }
+                ServerFrame::Session { actor, color } => {
+                    self.session_color = Some(color);
+                    self.emit(ArtifactEvent::Session { actor, color });
+                }
                 ServerFrame::CreditGrant { .. } => {
                     // 🪙️ Command-lane credit-based flow control: no client-side backpressure
                     // implemented this wave (scope is frame plumbing, not congestion control) —
@@ -1501,6 +1498,8 @@ mod wasm_actor {
         hub_space_id: Option<String>,
         hub_token: Option<String>,
         hub_surface: Option<String>,
+        /// @emoji 🎨️ See the native actor's matching field — same role, wasm side.
+        session_color: Option<u8>,
         ws: Option<WebSocket>,
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
         resume_token: Option<String>,
@@ -1600,7 +1599,8 @@ mod wasm_actor {
                         self.relay_operations(&envelopes);
                     }
                 }
-                ArtifactActorMsg::PresenceHeartbeat { peer } => {
+                ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
+                    stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref());
                     self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview);
                 }
                 ArtifactActorMsg::PublishPreview { key, seq, payload } => {
@@ -1643,6 +1643,10 @@ mod wasm_actor {
                 ServerFrame::Presence { peers } => {
                     let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
                     let _ = self.events.send(ArtifactEvent::Presence { peers });
+                }
+                ServerFrame::Session { actor, color } => {
+                    self.session_color = Some(color);
+                    let _ = self.events.send(ArtifactEvent::Session { actor, color });
                 }
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
@@ -1718,6 +1722,7 @@ mod wasm_actor {
             hub_space_id,
             hub_token,
             hub_surface,
+            session_color: None,
             ws: None,
             server_frontier: None,
             resume_token: None,
@@ -2377,6 +2382,24 @@ mod tests {
             "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
         );
     }
+
+    /// 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4: both
+    /// actors call `stamp_session` on every outbound `PresenceHeartbeat` right before
+    /// `presence_to_bytes` — shells never fill `color`/`surface` themselves. This proves the pure
+    /// helper both actors call: sets both fields from the actor's own `session_color`/`hub_surface`
+    /// state, overwriting whatever the shell handed in, and clears `surface` to `None` when the
+    /// document has no hub binding (folder-only) even if `session_color` is somehow set.
+    #[test]
+    fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
+        let mut peer = PresencePeer { actor: "actor-1".into(), connected_at_ms: 1000, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: Some(99), surface: Some("shell-should-never-set-this".into()), views: Vec::new(), ui: None };
+        stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor"));
+        assert_eq!(peer.color, Some(7));
+        assert_eq!(peer.surface.as_deref(), Some("s.space.home@1/*#editor"));
+
+        stamp_session(&mut peer, None, None);
+        assert_eq!(peer.color, None, "no session color yet (folder-only document, or hub not yet assigned one)");
+        assert_eq!(peer.surface, None, "folder-only document carries no surface");
+    }
     //#endregion 🧪️Helpers
 
     //#region 🧪️WireBridge
@@ -2404,7 +2427,11 @@ mod tests {
     /// total, one per variant plus one extra each for `Welcome`'s `Bootstrap` and `Ack`'s
     /// `ApplyOutcome` sub-variants) — the previous 4-fixture set (`client-hello`, `client-commands`,
     /// `server-welcome`, `server-ack`) is superseded; the first two names are reused (byte-identical
-    /// role), the latter two are replaced by the more specific names below and deleted here.
+    /// role), the latter two are replaced by the more specific names below and deleted here. 🎯️
+    /// ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.2: extended
+    /// to 20 with `server-session.bin` (`ServerFrame::Session`, tag 9); `client-presence.bin`/
+    /// `server-presence.bin` regenerate off `sample_presence_peer_with_interaction`'s v3 shape
+    /// (`color`/`surface`/`views`/`ui`, no more `cursor`/`viewport`).
     #[test]
     fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
@@ -2501,6 +2528,7 @@ mod tests {
         write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction())] }, Lane::Preview);
         write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
         write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+        write_server(&fixtures_dir, "📦️server-session.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command);
         //#endregion 🔖️ServerFrame
     }
 
@@ -2520,19 +2548,17 @@ mod tests {
     }
 
     /// @emoji 🕹️ A `PresencePeer` whose `interaction` carries THREE domains (one selection-only, one
-    /// hover-only, one with both) — `📦️client-presence.bin`/`📦️server-presence.bin` regenerate off
-    /// this so the TS vitest twin exercises bit 7 with a realistic multi-domain payload, not just the
-    /// placeholder JSON blob the fixtures carried before this field existed.
+    /// hover-only, one with both), TWO `views` (one Orbit with a pointer, one Canvas), a `color` +
+    /// `surface`, and a `ui` — `📦️client-presence.bin`/`📦️server-presence.bin` regenerate off this so
+    /// the TS vitest twin exercises every `PresencePeer` v3 flag bit (§C7.1) with a realistic payload.
     fn sample_presence_peer_with_interaction() -> PresencePeer {
         PresencePeer {
             actor: "actor-1".to_string(),
+            connected_at_ms: 1_700_000_000_000,
             label: Some("Ada".to_string()),
             presence_pack: None,
-            connected_at_ms: 1_700_000_000_000,
             user_id: Some("user-9".to_string()),
             role: Some("owner".to_string()),
-            cursor: Some(crate::os_spr::PresencePoint { x: 12.5, y: -4.0 }),
-            viewport: Some(crate::os_spr::PresenceViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
             drag_ghost_json: None,
             interaction: Some(crate::os_spr::PresenceInteraction {
                 app_id: "space".to_string(),
@@ -2542,100 +2568,49 @@ mod tests {
                     crate::os_spr::PresenceDomain { domain: "canvas".to_string(), granularity: "node".to_string(), selected: vec!["n9".to_string()], hovered: vec!["n9".to_string(), "n10".to_string()] },
                 ],
             }),
+            color: Some(5),
+            surface: Some("s.space.home@1/*#editor".to_string()),
+            views: vec![
+                crate::os_spr::PresenceWindowView {
+                    window_id: "w1".to_string(),
+                    space: "world".to_string(),
+                    kind: crate::os_spr::PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 },
+                    size: [1024.0, 768.0],
+                    pointer: Some([0.5, 0.5, 0.5]),
+                },
+                crate::os_spr::PresenceWindowView {
+                    window_id: "w2".to_string(),
+                    space: "canvas".to_string(),
+                    kind: crate::os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 },
+                    size: [800.0, 600.0],
+                    pointer: None,
+                },
+            ],
+            ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         }
     }
     //#endregion 🧪️WireBridge
 
+    // 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
+    // `assemble_presence_interaction` and its `🧪️PresenceInteraction` tests MOVED to
+    // `crate::os_spr::wire`'s `🔖️PresenceInteraction` region (`assemble_presence_interaction_tests`
+    // module there) alongside the function itself — see this file's `🔖️WireBridge` region for the
+    // pointer left behind.
+
     //#region 🧪️PresenceInteraction
-    fn selection(ids: &[&str]) -> crate::os_spr::DomainSelection {
-        crate::os_spr::DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: None }
-    }
-
-    fn hover(channel: &str, ids: &[&str]) -> crate::os_spr::DomainHover {
-        crate::os_spr::DomainHover { channel: channel.into(), ids: ids.iter().map(|id| id.to_string()).collect() }
-    }
-
-    fn broadcasting_hover_spec() -> crate::os_spr::HoverSpec {
-        crate::os_spr::HoverSpec { enabled: true, transitive: false, channels: vec!["pointer".into()], broadcast: true }
-    }
-
-    fn broadcasting_selection_spec() -> crate::os_spr::SelectionSpec {
-        crate::os_spr::SelectionSpec { modes: vec![crate::os_spr::SelectionMode::Multiple], methods: vec![crate::os_spr::SelectionMethod::Pick], merges: vec![crate::os_spr::MergeMode::Replace], transitive: false, broadcast: true }
-    }
-
-    #[test]
-    fn assemble_presence_interaction_includes_broadcasting_domains() {
-        let mut state = crate::os_spr::InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["n1", "n2"]));
-        state.hover.insert("graph".into(), hover("pointer", &["n3"]));
-        state.active_granularity.insert("graph".into(), "node".into());
-
-        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
-        let selection_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
-
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
-        assert_eq!(interaction.app_id, "draw");
-        assert_eq!(interaction.domains.len(), 1);
-        let domain = &interaction.domains[0];
-        assert_eq!(domain.domain, "graph");
-        assert_eq!(domain.granularity, "node");
-        assert_eq!(domain.selected, vec!["n1".to_string(), "n2".to_string()]);
-        assert_eq!(domain.hovered, vec!["n3".to_string()]);
-    }
-
-    #[test]
-    fn assemble_presence_interaction_omits_domains_with_broadcast_disabled() {
-        let mut state = crate::os_spr::InteractionState::default();
-        state.selection.insert("private".into(), selection(&["secret"]));
-        state.hover.insert("private".into(), hover("pointer", &["secret"]));
-
-        let hover_specs = std::collections::BTreeMap::from([("private".to_string(), crate::os_spr::HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
-        let selection_specs = std::collections::BTreeMap::from([("private".to_string(), crate::os_spr::SelectionSpec { broadcast: false, ..broadcasting_selection_spec() })]);
-
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
-        assert!(interaction.domains.is_empty(), "broadcast:false on both halves drops the domain entirely");
-    }
-
-    #[test]
-    fn assemble_presence_interaction_only_broadcasts_the_pointer_hover_channel() {
-        let mut state = crate::os_spr::InteractionState::default();
-        state.hover.insert("graph".into(), hover("drag-preview", &["n1"]));
-
-        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_hover_spec())]);
-        let selection_specs = std::collections::BTreeMap::new();
-
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
-        assert!(interaction.domains.is_empty(), "a non-pointer hover channel never broadcasts");
-    }
-
-    #[test]
-    fn assemble_presence_interaction_respects_each_half_independently() {
-        let mut state = crate::os_spr::InteractionState::default();
-        state.selection.insert("graph".into(), selection(&["n1"]));
-        state.hover.insert("graph".into(), hover("pointer", &["n2"]));
-
-        let hover_specs = std::collections::BTreeMap::from([("graph".to_string(), crate::os_spr::HoverSpec { broadcast: false, ..broadcasting_hover_spec() })]);
-        let selection_specs = std::collections::BTreeMap::from([("graph".to_string(), broadcasting_selection_spec())]);
-
-        let interaction = assemble_presence_interaction("draw", &state, &hover_specs, &selection_specs);
-        assert_eq!(interaction.domains.len(), 1);
-        assert_eq!(interaction.domains[0].selected, vec!["n1".to_string()], "selection still broadcasts");
-        assert!(interaction.domains[0].hovered.is_empty(), "hover suppressed by its own broadcast:false");
-    }
-
     #[test]
     fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
         let mut producer = PresenceHeartbeatProducer::new(100);
         let mut first = sample_presence_peer_with_interaction();
-        first.cursor = Some(crate::os_spr::PresencePoint { x: 1.0, y: 2.0 });
+        first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
         assert_eq!(producer.offer(1_000, first.clone()), Some(first));
 
         let mut intermediate = sample_presence_peer_with_interaction();
-        intermediate.cursor = Some(crate::os_spr::PresencePoint { x: 3.0, y: 4.0 });
+        intermediate.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
         assert_eq!(producer.offer(1_040, intermediate), None);
 
         let mut latest = sample_presence_peer_with_interaction();
-        latest.cursor = Some(crate::os_spr::PresencePoint { x: 5.0, y: 6.0 });
+        latest.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
         assert_eq!(producer.offer(1_099, latest.clone()), None);
         assert_eq!(producer.pending(), Some(&latest));
         assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
@@ -2663,7 +2638,7 @@ mod tests {
         assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == first));
 
         let mut latest = sample_presence_peer_with_interaction();
-        latest.viewport = Some(crate::os_spr::PresenceViewport { x: 2.0, y: 3.0, zoom: 4.0 });
+        latest.ui = Some(crate::os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
         assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
         assert!(cmd_rx.try_recv().is_err(), "sub-interval offer must not publish");
         assert!(host.presence_heartbeat("doc", 600, latest.clone()));
@@ -3202,6 +3177,7 @@ mod tests {
                 ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
                 ArtifactEvent::Status(_) => "status",
                 ArtifactEvent::Presence { .. } => "presence",
+                ArtifactEvent::Session { .. } => "session",
                 ArtifactEvent::Preview { .. } => "preview",
                 ArtifactEvent::CommandOutcome { .. } => "commandOutcome",
                 ArtifactEvent::Conflict(_) => "conflict",

@@ -1,0 +1,13 @@
+{
+  "title": "Microkernel Pooled Actor Plugin Runtime",
+  "emoji": "🧫️",
+  "status": "open",
+  "description": "Rebuild the s OS plugin runtime as a microkernel host + pooled actor runtime so 50+ plugins x 50+ extensions each can run concurrently on web (React and wgpu renderers) and desktop (wgpu+winit native), with no mobile-hostile assumptions in the kernel.\n\nScope: manifest-only registry with activation events (installed packages consume zero runtime resources); one actor per active plugin/extension with mailbox, budget, capability set, owning worker shard; fixed shard pool with interactive/user-visible/background/maintenance lanes and hierarchical fair scheduling; effect-only reactor ABI poll(events,budget)-\u003eTurnResult replacing exchange() and every synchronous host import except pure log/now-ms; resumable jobs start-job/step-job/cancel-job; capability broker plus hierarchical quotas; checkpoint/restore with LRU suspension; watchdog, progressive failure policy and quarantine; host-rendered revisioned UI patches with immutable scene snapshots; OS task-manager window; desktop helper-process shards as the last wave. All 33 plugins and 26 extension crates migrate to the new SDK. Proven by a 50x50 synthetic scale fixture plus bench harness across react/wgpu/native, the 58-variant parity sweep, and native smoke.\n\nPlan of record: /Users/ueli/.claude/plans/make-sure-that-s-vast-tulip.md (mirrored into this ticket as design notes). Workforce: coordinator Opus 5 (sol), executors Sonnet 5 (terra), read-only explorers Haiku 4.5 (luna). Registry llm enum has no opus-5 entry yet; actual coordinator model is Claude Opus 5.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2567"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ef1e5a2dee3f4209be0fd9d84f724414"
+  ]
+}

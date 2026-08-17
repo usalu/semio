@@ -389,12 +389,12 @@ pub(crate) fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpac
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️HomeSpaceRows
-/// 🏠️ One row of the Home overview table — ticket
-/// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: replaces the pre-ticket virtual-file-
-/// system scene with a real table of every space, fed by the event-sourced hub directory read model
-/// UNIONED with the local-only catalog. Lives at plugin root (not `editor::home`) for the same reason
-/// `list_all_space_catalog_entries` does: the Home viewer renders the SAME rows and a viewer file can
-/// never import through `::editor::` (`policyViewerPurityBreaches`).
+// 🏠️ One row of the Home overview table — ticket
+// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: replaces the pre-ticket virtual-file-
+// system scene with a real table of every space, fed by the event-sourced hub directory read model
+// UNIONED with the local-only catalog. Lives at plugin root (not `editor::home`) for the same reason
+// `list_all_space_catalog_entries` does: the Home viewer renders the SAME rows and a viewer file can
+// never import through `::editor::` (`policyViewerPurityBreaches`).
 app_labels! {
     /// 🗣️ Table strings shared by the Home editor's AND viewer's main-window render (both surfaces
     /// render the same 7-column table) — lives here, not in `editor::home::terminology::SHomeLabels`,

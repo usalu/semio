@@ -4,9 +4,7 @@
 //! inferences tree under `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/` predates this ticket and is
 //! reused as-is (never guessed); only this file plus the `✏️editor`/`👁️viewer` surfaces are new.
 
-pub use crate::artifacts::assembly::schema::diff::AssemblyDiff;
-pub use crate::artifacts::assembly::schema::mutations::AssemblyMutation;
-pub use crate::artifacts::assembly::schema::snapshot::{ASSEMBLY_DOCUMENT_SCHEMA, AssemblySnapshot};
+pub use crate::artifacts::assembly::schema::snapshot::ASSEMBLY_DOCUMENT_SCHEMA;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 

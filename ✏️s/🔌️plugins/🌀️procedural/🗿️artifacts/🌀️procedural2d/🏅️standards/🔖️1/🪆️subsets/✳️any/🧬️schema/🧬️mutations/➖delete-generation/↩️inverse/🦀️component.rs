@@ -1,8 +1,7 @@
 //! ↩️ Inverse for `DeleteGeneration`, reconstructed from BASE.
 use super::mutation::DeleteGeneration;
 use crate::artifacts::procedural2d::mutations::Procedural2dMutation;
-use crate::artifacts::procedural2d::{widget_id, Procedural2dSnapshot};
-use crate::artifacts::procedural2d::mutations::{widget_index};
+use crate::artifacts::procedural2d::Procedural2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteGeneration, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

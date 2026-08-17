@@ -137,12 +137,15 @@ export type UiStatus = GeneratedUiStatus;
 
 
 
+export type WindowStackCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+
 export type WindowLayoutWindowNode = {
   readonly kind: "window";
   readonly windowKindId: string;
   readonly title?: string;
   readonly instanceId?: string;
   readonly templateId?: string;
+  readonly corner?: WindowStackCorner;
 };
 
 export type WindowLayoutStackNode = {

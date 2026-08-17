@@ -6,7 +6,7 @@
  */
 // #endregion Header
 
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactPresencePeer, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
 import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
@@ -46,6 +46,10 @@ async function ensureRustHost(): Promise<RustWorkerHost | null> {
 
 const rustHostPromise = ensureRustHost();
 
+function isBackboneWorkerWireMessage(message: unknown): message is BackboneWorkerWireMessage {
+  return typeof message === "object" && message !== null && "wire" in message && (message as BackboneWorkerWireMessage).wire instanceof Uint8Array;
+}
+
 function decodeWorkerRequest(message: BackboneWorkerWireMessage): BackboneWorkerRequest {
   return decodeBackboneWorkerRequest(message.wire);
 }
@@ -53,7 +57,9 @@ function decodeWorkerRequest(message: BackboneWorkerWireMessage): BackboneWorker
 const workerScope = typeof self !== "undefined" ? (self as unknown as DedicatedWorkerGlobalScope) : null;
 
 if (workerScope) {
-  workerScope.onmessage = (messageEvent: MessageEvent<BackboneWorkerWireMessage>) => {
+  workerScope.onmessage = (messageEvent: MessageEvent<unknown>) => {
+    // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
+    if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
     void rustHostPromise.then((host) => {
       if (host) {
@@ -95,6 +101,10 @@ type ArtifactState = {
   frontier: WireFrontierSummary | null;
   /** 🎟️ The hub's last `Welcome.resume_token`, echoed back on the next `hello` after a reconnect. */
   resumeToken: string | null;
+  /** 🎨️ This connection's hub-assigned session color (`ServerFrame::Session.color`) — `null` until
+   * the hub sends it (or for a folder-only document, which never connects to a hub). Stamped onto
+   * every outbound heartbeat via {@link stampSession}. */
+  sessionColor: number | null;
   /** 🧺️ Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`. */
   pendingBatches: Map<number, MutationEnvelope[]>;
   nextBatchId: number;
@@ -283,6 +293,14 @@ function fromWireEnvelope(envelope: WireMutationEnvelope): MutationEnvelope {
       undoPolicy: "exactBaseOnly",
     },
   };
+}
+
+/** 🎨️ Stamps `state`'s hub-assigned session color and canonical surface onto an outbound
+ * `ArtifactPresencePeer` right before `encodePresencePeer` — the ONE place either field is ever
+ * filled; shells never set `peer.color`/`peer.surface` themselves (contract-freeze §C7.4). The TS
+ * twin of the Rust actor's `stamp_session`. */
+function stampSession(peer: ArtifactPresencePeer, state: ArtifactState): ArtifactPresencePeer {
+  return { ...peer, color: state.sessionColor ?? undefined, surface: hubBinding(state.config)?.surface };
 }
 
 /** ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed `inverse` —
@@ -514,6 +532,11 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
   if ("CreditGrant" in frame) {
     // 🪙️ Command-lane credit-based flow control: no client-side backpressure implemented this wave
     // (scope is frame plumbing, not congestion control) — accepted and ignored.
+    return;
+  }
+  if ("Session" in frame) {
+    state.sessionColor = frame.Session.color;
+    post({ kind: "session", documentId: state.config.documentId, actor: frame.Session.actor, color: frame.Session.color });
     return;
   }
   if ("Error" in frame) {
@@ -781,6 +804,7 @@ function openArtifact(config: ArtifactActorConfig): void {
     status: { persisted: false, pendingMutations: 0, remote: { kind: "detached" } },
     frontier: null,
     resumeToken: null,
+    sessionColor: null,
     pendingBatches: new Map(),
     nextBatchId: 0,
     hlcCounter: 0,
@@ -845,7 +869,7 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
       break;
     }
     case "presenceHeartbeat":
-      sendWireFrame(state, { Presence: { peer: encodePresencePeer(message.peer) } }, "preview");
+      sendWireFrame(state, { Presence: { peer: encodePresencePeer(stampSession(message.peer, state)) } }, "preview");
       break;
     case "publishPreview":
       sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
@@ -941,6 +965,32 @@ if (import.meta.vitest) {
       expect(decoded.frame).toEqual(frame);
     });
 
+    // 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
+    // `stampSession` is the ONE place `peer.color`/`peer.surface` are ever filled — shells never set
+    // them themselves. Overwrites whatever the caller handed in, and derives `surface` from the
+    // document's own hub binding (`null`/absent for a folder-only document).
+    it("stampSession fills color/surface from actor state, overwriting whatever the caller set", () => {
+      const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", surface: "s.space.home@1/*#editor" }], actor: "actor-1" };
+      const hubState = { config: hubConfig, sessionColor: 7 } as unknown as ArtifactState;
+      const peer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, color: 99, surface: "shell-should-never-set-this", views: [] };
+      const stamped = stampSession(peer, hubState);
+      expect(stamped.color).toBe(7);
+      expect(stamped.surface).toBe("s.space.home@1/*#editor");
+
+      const folderConfig: ArtifactActorConfig = { documentId: "doc-2", schema: "demo/v1", bindings: [{ kind: "folder", path: "/tmp/doc-2" }], actor: "actor-1" };
+      const folderState = { config: folderConfig, sessionColor: null } as unknown as ArtifactState;
+      const stampedFolder = stampSession(peer, folderState);
+      expect(stampedFolder.color).toBeUndefined();
+      expect(stampedFolder.surface).toBeUndefined();
+    });
+
+    it("handleHubFrame stores the hub-assigned session color on a Session frame", () => {
+      const config: ArtifactActorConfig = { documentId: "doc-3", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+      const state = { config, sessionColor: null } as unknown as ArtifactState;
+      handleHubFrame(state, { Session: { actor: "actor-1", color: 3 } });
+      expect(state.sessionColor).toBe(3);
+    });
+
     // 🎬️ Shared fixtures: the exact same bytes `store/sync/rs/lib.rs`'s
     // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side
     // (19 fixtures, one per `ClientFrame`/`ServerFrame` variant plus a `Bootstrap`/`ApplyOutcome`
@@ -1005,17 +1055,22 @@ if (import.meta.vitest) {
       // fixture became real; it never did, because the fixture path above pointed at a directory that
       // no longer existed.
       // 👥️ A REAL `encode_presence_peer` blob (Rust writes `sample_presence_peer_with_interaction()`,
-      // whose own doc says these fixtures exist "so the TS vitest twin exercises bit 7 with a
-      // realistic multi-domain payload"). Decoding it here proves the scalar fields AND the bit-7
-      // interaction section cross the language boundary, and re-encoding proves it byte-for-byte.
+      // whose own doc says these fixtures exist "so the TS vitest twin exercises every `PresencePeer`
+      // v3 flag bit (§C7.1) with a realistic payload"). Decoding it here proves the scalar fields,
+      // the bit-5 interaction section, the color/surface/views/ui fields all cross the language
+      // boundary, and re-encoding proves it byte-for-byte.
       const peer = decodePresencePeer(new Uint8Array(presence.frame.Presence.peer), [0]);
       expect(peer.actor).toBe("actor-1");
       expect(peer.label).toBe("Ada");
       expect(peer.userId).toBe("user-9");
       expect(peer.role).toBe("owner");
       expect(peer.connectedAtMs).toBe(1_700_000_000_000);
-      expect(peer.cursor).toEqual({ x: 12.5, y: -4 });
-      expect(peer.viewport).toEqual({ x: 0, y: 0, zoom: 1 });
+      expect(peer.color).toBe(5);
+      expect(peer.surface).toBe("s.space.home@1/*#editor");
+      expect(peer.views).toHaveLength(2);
+      expect(peer.views[0]).toEqual({ windowId: "w1", space: "world", kind: { kind: "orbit", position: [1, 2, 3], target: [0, 0, 0], up: [0, 1, 0], fov: 45 }, size: [1024, 768], pointer: [0.5, 0.5, 0.5] });
+      expect(peer.views[1]).toEqual({ windowId: "w2", space: "canvas", kind: { kind: "canvas", x: 12.5, y: -4, zoom: 1 }, size: [800, 600], pointer: undefined });
+      expect(peer.ui).toEqual({ hoveredPath: "row[2]#t1", focusedPath: undefined, pressedPath: undefined });
       expect(peer.interaction?.app_id).toBe("space");
       expect(peer.interaction?.domains).toEqual([
         { domain: "outline", granularity: "task", selected: ["t1", "t2"], hovered: [] },
@@ -1089,6 +1144,11 @@ if (import.meta.vitest) {
       const error = loadServer("📦️server-error.bin");
       if (typeof error.frame === "string" || !("Error" in error.frame)) throw new Error("expected an Error frame");
       expect(error.frame.Error.code).toBe("rejected");
+
+      const session = loadServer("📦️server-session.bin");
+      if (typeof session.frame === "string" || !("Session" in session.frame)) throw new Error("expected a Session frame");
+      expect(session.frame.Session.actor).toBe("actor-1");
+      expect(session.frame.Session.color).toBe(5);
     });
   });
 

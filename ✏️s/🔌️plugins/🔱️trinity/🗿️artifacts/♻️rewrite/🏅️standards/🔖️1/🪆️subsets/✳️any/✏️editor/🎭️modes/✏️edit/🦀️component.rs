@@ -21,7 +21,7 @@ fn window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowL
         kind: "stack".into(),
         size,
         active_window_kind_id: None,
-        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None }],
+        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: window_kind_id.into(), title: Some(title.into()), instance_id: None, template_id: None, corner: None }],
     })
 }
 

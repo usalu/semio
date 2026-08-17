@@ -434,13 +434,13 @@ pub mod vcs_integration {
             let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
             out.push(presence);
             if let Some(author) = &self.author {
-                pack::write_varint_u64(&mut out, author.0.len() as u64);
+                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64);
                 out.extend_from_slice(author.0.as_bytes());
             }
             if let Some(ts) = &self.timestamp {
-                pack::write_varint_u64(&mut out, ts.actor);
-                pack::write_varint_u64(&mut out, ts.physical_ms);
-                pack::write_varint_u64(&mut out, ts.logical);
+                pack::os_pack::write_varint_u64(&mut out, ts.actor);
+                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms);
+                pack::os_pack::write_varint_u64(&mut out, ts.logical);
             }
             Ok(out)
         }
@@ -453,7 +453,7 @@ pub mod vcs_integration {
             let presence = bytes[32];
             let mut pos = 33usize;
             let author = if presence & 0b01 != 0 {
-                let len = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
                 let end = pos + len;
                 let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
                 pos = end;
@@ -462,9 +462,9 @@ pub mod vcs_integration {
                 None
             };
             let timestamp = if presence & 0b10 != 0 {
-                let actor = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let physical_ms = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let logical = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
                 Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
             } else {
                 None

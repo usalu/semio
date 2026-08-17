@@ -1,0 +1,40 @@
+18905 | |         composer: ChildrenMacroComposer,
+18906 | |     }
+      | |_____- in this macro invocation
+      |
+      = note: this warning originates in the macro `derive_artifact_facets` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused `Result` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19068:5
+      |
+19068 | /     subset! {
+19069 | |         pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+19070 | |             validator: MacroDerivedValidator,
+19071 | |         }
+19072 | |     }
+      | |_____^
+      |
+      = note: this `Result` may be an `Err` variant, which should be handled
+      = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+      |
+19068 |     let _ = subset! {
+      |     +++++++
+
+warning: unused return value of `semio_framework::register_subset_validator` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19068:5
+      |
+19068 | /     subset! {
+19069 | |         pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+19070 | |             validator: MacroDerivedValidator,
+19071 | |         }
+19072 | |     }
+      | |_____^
+      |
+help: use `let _ = ...` to ignore the resulting value
+      |
+19068 |     let _ = subset! {
+      |     +++++++
+
+warning: `semio-framework-plugin` (lib test) generated 9 warnings (2 duplicates)
+    Finished `dev` profile [unoptimized] target(s) in 2m 39s

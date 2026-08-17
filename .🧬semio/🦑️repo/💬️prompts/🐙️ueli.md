@@ -2,6 +2,24 @@
 
 ## Templates
 
+### Research
+
+---
+
+Find all architectural inconsistencies regarding XXX.
+Create an exhaustive plan for a workforce of parallel agents as giant downloadable markdown file.
+Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99ueli/%E2%9B%B3wip
+
+---
+
+We want to make our software XXX-first.
+What architectural changes do you recommend?
+Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99ueli/%E2%9B%B3wip
+
+---
+
+### Changes
+
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
@@ -26,11 +44,17 @@ Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the mai
 XXX is extremly adhoc. Make sure it has absolutely clean mechanisms, exhaustively feature complete and is battle-tested.
 Everything end to end.
 
----
 
 # 🔍️ Research
 
 ##
+
+---
+
+We want to make our software LLM-first.
+What architectural changes do you recommend?
+We have a plugin-based (which have again extensions) virtual operating system. 
+We want to design a single MCP-Server that assists in every part (authoring artifacts, remote controlling the ui, etc). 
 
 ---
 
@@ -378,6 +402,29 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Introduce a new framework product: server
+A server contains everything from api, auth, database, ui for different kind of users with different permissions (admin, manager, …), etc.
+A server must be deployable on edge, on-prem,  etc.
+The hub is an instance of a server.
+
+---
+
+Achieve the following end to end:
+Every artifact can be created within a space.
+All editors and viewers share persistence, presence, etc.
+Make sure that dev user 1 and user 2 can create and collaboratively work on any artifact, they see each other (e.g. cursor and cameras in 3d scenes, maps, etc - cursor on ui elements such as hover, selection, etc - every user gets a unique color for the session and the hover and selection is based on the unique color, etc)
+
+---
+
+The current artifact system is still adhoc.
+The hierarchy is: artifact -> standard -> subset
+All subsets are complete standalone implementations.
+Every subset has a viewer and an editor.
+All io must exclusively go over the io system with different serializers and deserializers.
+Every code that is shared must be inside modules (e.g. if multiple subsets share code which didnt change across the standards or subsets)
+
+---
+
 Generalize/Extend the current metrics mechanism for commits
 
 📊️metric📃uloc💯️2.68M📈️788➗️0.03➕️810✏️1.07k➖️22🟰️1.9k
@@ -424,7 +471,6 @@ When the user edits an artifact, the mutations are saved and checked in into vcs
 Add new dev config for s for user 1 and user 2 that run on different ports and connect to the same hub.
 user 1, user 2 and hub must be running at the same time.
 The hub needs to have an admin page that shows all spaces and allows to manage them, see active connections, etc.
-
 
 ---
 
@@ -2338,6 +2384,20 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+The ui system should change:
+Everything must have the same kind of silhouettes (rectangle with chips around it). The chips are glassy and the content of the element flows through the active chips.
+e.g.
+
+---
+
+Extend/Change/Refactor the window system:
+Instead of the left top chip being tabs and the right top chips being actions such as close, maximize, etc, inline all actions on the chip name by adding x icon and maximize icon, etc.
+Make sure that all those actions have a tooltip with hotkey if there is one, etc
+From now on, windows in the same stack dont have to be next to each other on the top right but they can also be docked on the top right corner and also on the bottom left corner and the bottom right corner.
+Per window stack only one tab can be active.
 
 ---
 

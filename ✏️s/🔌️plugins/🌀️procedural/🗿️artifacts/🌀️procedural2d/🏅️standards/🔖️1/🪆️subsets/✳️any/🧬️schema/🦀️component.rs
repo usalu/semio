@@ -208,8 +208,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Procedural2dBuilderFacets {
-        construction: derived_construction::Procedural2dBuilderConstruction,
-        analysis: derived_analysis::Procedural2dAnalyzerAnalysis,
+        construction: Procedural2dBuilderConstruction,
+        analysis: Procedural2dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Procedural2dComposerComposition,
     }
     builder: Procedural2dBuilder,

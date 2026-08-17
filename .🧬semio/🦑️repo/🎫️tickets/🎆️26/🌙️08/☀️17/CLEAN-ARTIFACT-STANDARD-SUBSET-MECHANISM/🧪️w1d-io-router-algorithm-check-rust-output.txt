@@ -1,0 +1,15 @@
+[ok] merged graph identical regardless of registration order
+[ok] resolved route identical regardless of registration order
+[ok] winning route is the 2-hop path, not the 1-hop lossy shortcut
+[ok] route fidelity is Canonical (min of Exact,Canonical)
+[ok] route has 2 hops
+[ok] first hop starts at binary carrier
+[ok] last hop ends at gif89a
+[ok] bounded to 1 hop picks the direct lossy shortcut
+[ok] a plugin owning neither hop is safe
+[ok] stdio owns (and is refused for) the first hop
+[ok] gif owns (and is refused for) the second hop
+[ok] same plugin reclaiming its own key is not a conflict
+[ok] a different plugin claiming the same key is a conflict
+
+All checks passed

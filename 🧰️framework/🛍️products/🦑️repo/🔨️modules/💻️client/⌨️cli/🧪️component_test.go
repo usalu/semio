@@ -33,6 +33,26 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// #region 🧬️RepoMetaDir
+
+func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
+	root := t.TempDir()
+	previous := GetRootDir()
+	SetRootDir(root)
+	t.Cleanup(func() { SetRootDir(previous) })
+
+	got := GetRepoMetaDir()
+	want := filepath.Join(root, ".🧬semio", "🦑️repo")
+	if got != want {
+		t.Fatalf("GetRepoMetaDir() = %q, want %q", got, want)
+	}
+	if strings.Contains(got, ".🦑️repo") {
+		t.Fatalf("GetRepoMetaDir() retained legacy path: %q", got)
+	}
+}
+
+// #endregion 🧬️RepoMetaDir
+
 // #region 🎼️Helpers
 
 func TestMain(m *testing.M) {

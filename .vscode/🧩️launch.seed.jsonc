@@ -2219,6 +2219,39 @@
       }
     },
     {
+      "name": "📦️new🧩️taxonomy🗿️artifact",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts new artifact",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.3
+      }
+    },
+    {
+      "name": "📦️new🧩️taxonomy🏅️standard",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts new standard",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.4
+      }
+    },
+    {
+      "name": "📦️new🧩️taxonomy🪆️subset",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts new subset",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.5
+      }
+    },
+    {
       "name": "📦️build🖱️ui🏪️assets",
       "type": "node-terminal",
       "request": "launch",

@@ -9,9 +9,9 @@ use crate::artifacts::docx::schema::diff::{
     diff_insert_block, diff_insert_style, diff_remove_block, diff_remove_part, diff_remove_style, diff_set_block_content, diff_set_part, diff_set_run_formatting, diff_set_run_text, diff_set_snapshot, diff_set_style_based_on, diff_set_style_name,
     resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
 };
-use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
+use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
 use crate::artifacts::docx::DocxSnapshot;
-use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};

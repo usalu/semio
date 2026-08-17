@@ -43,6 +43,18 @@
         "id": "framework.repo.command.root-script-delegation",
         "kind": "command",
         "responsibility": "Delegates an otherwise unhandled Semio CLI invocation to the root script, preserving the parsed verb and positional segments."
+      },
+      {
+        "directory": "🧭️command-tree-discovery",
+        "id": "framework.repo.command.command-tree-discovery",
+        "kind": "command",
+        "responsibility": "Runtime repo walk producing the wizard command tree from nx targets, taxonomy paths, and playground catalog."
+      },
+      {
+        "directory": "🎛️terminal-dashboard",
+        "id": "framework.repo.command.terminal-dashboard",
+        "kind": "command",
+        "responsibility": "Interactive TUI dashboard with wizard-built commands in tiled PTY windows."
       }
     ]
   }

@@ -102,7 +102,21 @@ self.addEventListener("message", async (event) => {
 
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio plugin jco component bridge */
-import { plugin } from "./${componentBase}.js";
+let plugin = (await import("./${componentBase}.js")).plugin;
+let reloadNonce = 0;
+
+// 🩹️ A guest panic traps the wasm32-wasip2 instance for good (\`panic = "abort"\`, no unwind) — the
+// guest's own \`clearInstanceGuard\` export can no longer reach a dead instance either. Re-importing
+// the SAME specifier returns the cached (still-dead) module, so recovery re-imports it under a fresh
+// \`?semioReload=\` query — the same cache-busting shape \`PluginSource.moduleUrl\` already uses for hot
+// reload (see \`🎠️kernel/🟦️component.ts\`) — to force a genuinely new module evaluation and thus a new
+// \`WebAssembly.Instance\`.
+async function reloadPlugin() {
+  reloadNonce += 1;
+  const fresh = await import(\`./${componentBase}.js?semioReload=\${reloadNonce}\`);
+  plugin = fresh.plugin;
+  return plugin;
+}
 
 const apps = new Set();
 let tail = Promise.resolve();
@@ -119,10 +133,20 @@ function runSerialized(fn) {
         const detail = payload !== undefined ? \`\${message} payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : message;
         const busy = detail.includes("plugin instance busy") || detail.includes("plugin busy");
         const trapped = detail.includes("unreachable") || /trap|panicked/i.test(detail);
-        if (busy || trapped) {
+        if (trapped) {
+          // 💀️ Genuinely dead instance — clearing the guard cell cannot help (see comment above);
+          // re-instantiate the whole module so this and every later call runs against a live instance.
+          apps.clear();
+          try {
+            await reloadPlugin();
+          } catch {
+            /* reload failure surfaces on the next attempt's own call instead */
+          }
+        } else if (busy) {
+          // 🔒️ Contended, not dead — a cheap in-place guard clear is enough.
           try { plugin.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
         }
-        if (!busy) throw error;
+        if (!busy && !trapped) throw error;
         await new Promise((resolve) => setTimeout(resolve, attempt + 1));
       }
     }

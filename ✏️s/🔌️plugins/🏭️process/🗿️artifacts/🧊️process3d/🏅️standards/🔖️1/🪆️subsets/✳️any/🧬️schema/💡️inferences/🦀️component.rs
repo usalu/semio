@@ -30,7 +30,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
-use super::bounds::{brep_bounding_box, BoundingBox};
+use super::bounds::BoundingBox;
 
 /// 🕳️ Tessellation tolerance for kernel replay/export.
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
@@ -53,7 +53,7 @@ pub struct Process3dInference {
     pub step_count: u64,
 }
 
-impl protocol::Inference<Process3dSnapshot> for Process3dInference {
+impl Inference<Process3dSnapshot> for Process3dInference {
     fn infer(snapshot: &Process3dSnapshot) -> Self {
         Self { stock_bounds: BoundingBox { min: snapshot.stock_pose.position, max: snapshot.stock_pose.position }, step_count: 0 }
     }
@@ -94,7 +94,7 @@ impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::a
     /// `outline`/`bounds`-style facets).
     fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
-        <Process3dInference as protocol::Inference<Process3dSnapshot>>::infer(snapshot)
+        <Process3dInference as Inference<Process3dSnapshot>>::infer(snapshot)
     }
 }
 //#endregion 🔖️ArtifactInferrer

@@ -10,179 +10,20 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::RwLock;
 
 //#region 🔖️Dialect
-/// 🏅️ A standard slug — the text after `🔖️` in `🏅️standards/🔖️<standard>/` (e.g. "2.0", "ap214", "1").
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct StandardId(pub &'static str);
-
-/// 🪆️ A subset id — the text materialized as `🪆️subsets/✳️<dir>/`. Real subset ids name an
-/// industry-defined conformance profile/class/view of the standard (e.g. `"a"` = PDF/A, `"cc6"` =
-/// STEP AP214 CC6 advanced B-Rep, `"rv"` = IFC4 Reference View) — never a version and never a
-/// conformance LEVEL (PDF/A-2 vs -3, level "b"/"u"): level is data the subset's own analyzer
-/// detects and reports, not part of the id (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
-/// `ANY` is the unconstrained base subset every standard carries (dir `✳️any`) — there is by
-/// definition nothing to validate against it. The vocabulary of real subsets a given standard
-/// declares lives in that standard's `🪆️subsets/🔣️component.json` manifest (checked by
-/// `policyStandardSubsetVocabularyBreaches` in script.ts and by each standard's own
-/// `composer_roster_matches_declared_subset_vocabulary` test), not in this type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct SubsetId(pub &'static str);
-
-impl SubsetId {
-    pub const ANY: SubsetId = SubsetId("*");
-}
-
-/// 🎯️ Fully-qualified dialect coordinate: which artifact, which standard, which subset.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Dialect {
-    pub artifact_kind: &'static str,
-    pub standard: StandardId,
-    pub subset: SubsetId,
-}
-
-/// 🎯️ Owned serde twin of `Dialect` — `Dialect` is `&'static str`-based (fine for compile-time
-/// composer registration) and so cannot be persisted, sent over the WIT wire, or built from
-/// runtime UI/store input. `ArtifactDialect` is the persisted/wire form; every other dialect
-/// consumer (document envelopes, the hub's multi-user pin, WIT `migrate-artifact`, the io leaf
-/// generators) should read/write THIS type, converting to/from `Dialect` only at the point a
-/// `'static` compose call actually needs one.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub struct ArtifactDialect {
-    pub artifact_kind: String,
-    pub standard: String,
-    pub subset: String,
-}
-
-impl From<Dialect> for ArtifactDialect {
-    fn from(d: Dialect) -> Self {
-        ArtifactDialect { artifact_kind: d.artifact_kind.to_string(), standard: d.standard.0.to_string(), subset: d.subset.0.to_string() }
-    }
-}
-
-impl ArtifactDialect {
-    /// 🧵️ Canonical single-string coordinate form: `"s.stdio.gif@87a/*"`. This is the one format
-    /// that crosses every boundary in the system (WIT `migrate-artifact` from/to fields, the hub's
-    /// `Hello` dialect pin, `ArtifactEnvelope.dialect` when serialized to a human-legible log) —
-    /// picking ONE textual encoding here means none of those call sites need their own parser.
-    pub fn to_coordinate(&self) -> String {
-        format!("{}@{}/{}", self.artifact_kind, self.standard, self.subset)
-    }
-
-    /// 🧵️ Inverse of `to_coordinate`. `@` separates artifact_kind from standard/subset; the LAST
-    /// `/` separates standard from subset (artifact_kind may itself contain `/`-free dots, e.g.
-    /// `s.stdio.gif`, but never a literal `@` or trailing-`/`-ambiguous suffix by construction).
-    pub fn parse_coordinate(s: &str) -> Result<Self, String> {
-        let (kind, rest) = s.split_once('@').ok_or_else(|| format!("dialect coordinate {s:?} missing '@'"))?;
-        let (standard, subset) = rest.rsplit_once('/').ok_or_else(|| format!("dialect coordinate {s:?} missing '/'"))?;
-        if kind.is_empty() || standard.is_empty() || subset.is_empty() {
-            return Err(format!("dialect coordinate {s:?} has an empty component"));
-        }
-        Ok(ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() })
-    }
-}
+/// 🧬️ `StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect` moved verbatim to
+/// `🚪️io/🧬️schema/🦀️component.rs` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A
+/// task 1) so the vocabulary — and `ArtifactDialect::to_coordinate`/`parse_coordinate`, the ONE
+/// dialect-coordinate codec in the repo — has a single definition site regardless of which crate
+/// mounts this file. Re-exported here unchanged so every existing reference in this file (and
+/// every downstream `io::Dialect`/`io::ArtifactDialect` import) keeps resolving to the exact same
+/// type.
+pub use crate::io_schema::{ArtifactDialect, Dialect, StandardId, SubsetId};
 //#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactRef
-/// 🪪️ Canonical artifact-kind id — the ONLY spelling `Dialect.artifact_kind`, schema ids, catalog
-/// keys, and format rows are meant to derive from (ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM `📓️design-full-plan.md` section "1. Kernel
-/// primitives"). Grammar: exactly three dot-separated ASCII segments, `s.<plugin>.<artifact>` —
-/// the first segment is always the literal `s`, the remaining two are lowercase-ASCII kebab
-/// (`[a-z0-9-]`, no leading/trailing/doubled hyphen). This wave lands the type and validator
-/// only; renaming existing artifact ids to this grammar is a later wave — see
-/// `is_canonical_artifact_kind`.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct ArtifactKindId(String);
-
-impl ArtifactKindId {
-    /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
-    /// rule broke rather than a generic "invalid" — the same courtesy `ArtifactDialect::parse_coordinate`
-    /// gives its callers.
-    pub fn parse(s: &str) -> Result<Self, String> {
-        if !is_canonical_artifact_kind(s) {
-            return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
-        }
-        Ok(ArtifactKindId(s.to_string()))
-    }
-
-    /// 🔍️ Borrowed access to the full `s.<plugin>.<artifact>` string.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// 🔌️ Second segment — the owning plugin slug.
-    pub fn plugin(&self) -> &str {
-        self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
-    }
-
-    /// 🗿️ Third segment — the artifact slug within the plugin.
-    pub fn artifact(&self) -> &str {
-        self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
-    }
-}
-
-impl std::fmt::Display for ArtifactKindId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-/// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse` — usable wherever a
-/// `bool` fits better than a `Result` (e.g. `script.ts`-adjacent policy breach scans).
-pub fn is_canonical_artifact_kind(kind: &str) -> bool {
-    let mut segments = kind.split('.');
-    let Some(first) = segments.next() else { return false };
-    if first != "s" {
-        return false;
-    }
-    let Some(plugin) = segments.next() else { return false };
-    let Some(artifact) = segments.next() else { return false };
-    if segments.next().is_some() {
-        return false;
-    }
-    is_kebab_segment(plugin) && is_kebab_segment(artifact)
-}
-
-/// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
-/// hyphen, no doubled hyphen.
-fn is_kebab_segment(segment: &str) -> bool {
-    if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
-        return false;
-    }
-    segment.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-}
-
-/// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
-/// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"` — the `!` separates identity (which
-/// artifact) from dialect (which coordinate it is read/written in). Reuses
-/// `ArtifactDialect::to_coordinate`/`parse_coordinate` for the half after `!` so there remains
-/// exactly one dialect-coordinate codec in the codebase.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ArtifactRef {
-    pub artifact_id: String,
-    pub dialect: ArtifactDialect,
-}
-
-impl ArtifactRef {
-    /// 🧵️ Canonical wire form: `"<artifact_id>!<kind>@<standard>/<subset>"`.
-    pub fn to_uri(&self) -> String {
-        format!("{}!{}", self.artifact_id, self.dialect.to_coordinate())
-    }
-
-    /// 🧵️ Inverse of `to_uri`. Splits on the FIRST `!` — the dialect coordinate after it resolves
-    /// its own `@`/`/` boundaries via `ArtifactDialect::parse_coordinate`, so an artifact id may
-    /// itself contain dots or dashes and still round-trip exactly.
-    pub fn parse_uri(s: &str) -> Result<Self, String> {
-        let (artifact_id, coordinate) = s.split_once('!').ok_or_else(|| format!("artifact ref uri {s:?} missing '!'"))?;
-        if artifact_id.is_empty() {
-            return Err(format!("artifact ref uri {s:?} has an empty artifact id"));
-        }
-        let dialect = ArtifactDialect::parse_coordinate(coordinate)?;
-        Ok(ArtifactRef { artifact_id: artifact_id.to_string(), dialect })
-    }
-}
+/// 🧬️ `ArtifactKindId`/`is_canonical_artifact_kind`/`ArtifactRef` moved verbatim to
+/// `🚪️io/🧬️schema/🦀️component.rs` alongside `🔖️Dialect` above — see that region's doc comment.
+pub use crate::io_schema::{ArtifactKindId, ArtifactRef, is_canonical_artifact_kind};
 //#endregion 🔖️ArtifactRef
 
 //#region 🔐️CodecContracts
@@ -2353,4 +2194,513 @@ mod tests {
     }
 }
 //#endregion 🔖️Tests
+
+//#region 🔖️IoMechanism
+/// 🚪️🆕️ The new io mechanism (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task
+/// 2-4, design.md §3): `Serializer`/`Deserializer` typed traits, a type-erased `IoEntry` vtable
+/// row, a `(from, into)`-keyed registry, breadth-bounded deterministic routing (`io_route`),
+/// route execution (`io_run`), carrier-dialect identification (`io_identify`), and the SDK-facing
+/// constructors plugins build entries from. Nested in its OWN module (not flattened into `io`'s
+/// top level) so its `IoPayload`/`Confidence` — deliberately DIFFERENT, wider types than the OLD
+/// file's `IoPayload`/`Confidence` a few regions up (this one adds `Confidence::None` and is not
+/// used by anything above this region) — never collide names with them in the same scope. D2: the
+/// OLD registry above (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/`FormatCatalog`)
+/// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
+pub mod io_mechanism {
+    use crate::io_schema::{ArtifactDialect, CARRIER_BINARY, CARRIER_TEXT, Confidence, Dialect, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute};
+    use dsl::Diagnostic;
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::sync::RwLock;
+
+    //#region 🔖️Traits
+    /// 🎹️ A typed native-value → foreign-payload encoder. `INTO`/`FIDELITY` are the foreign
+    /// dialect and the strongest fidelity this serializer achieves.
+    pub trait Serializer<S> {
+        const INTO: Dialect;
+        const FIDELITY: IoFidelity;
+        fn serialize(from: &S) -> IoResult<IoPayload>;
+    }
+
+    /// 🎹️ A typed foreign-payload → native-value decoder. `FROM`/`FIDELITY` are the foreign
+    /// dialect and the strongest fidelity this deserializer achieves. `CONFORMANCE` is D5's
+    /// `SubsetValidator` replacement, run by `deserializer_entry`/`deserializer_entry_text` right
+    /// after a successful `deserialize` — an addition beyond the ticket's literal trait sketch: an
+    /// `IoEntry.run`'s bare-`fn`-pointer field cannot capture a runtime `conformance` CONSTRUCTOR
+    /// PARAMETER (a closure that closes over any value, even a `Copy` fn pointer, cannot coerce to
+    /// a bare `fn` pointer), so a compile-time-resolvable associated const is the only channel that
+    /// keeps `IoEntry.run` a true, non-capturing function pointer.
+    pub trait Deserializer<S> {
+        const FROM: Dialect;
+        const FIDELITY: IoFidelity;
+        const CONFORMANCE: Option<fn(&S) -> Vec<Diagnostic>> = None;
+        fn sniff(_payload: &IoPayload) -> Confidence {
+            Confidence::None
+        }
+        fn deserialize(payload: &IoPayload) -> IoResult<S>;
+    }
+    //#endregion 🔖️Traits
+
+    //#region 🔖️Entry
+    /// 🧾️ Type-erased io vtable row: one directed hop `from -> into` at a declared `fidelity`, an
+    /// optional `sniff` (carrier-dialect identification), and the erased `run` this hop executes.
+    pub struct IoEntry {
+        pub from: Dialect,
+        pub into: Dialect,
+        pub fidelity: IoFidelity,
+        pub sniff: Option<fn(&IoPayload) -> Confidence>,
+        pub run: fn(&IoPayload) -> IoResult<IoPayload>,
+    }
+
+    fn same_io_entry(left: &IoEntry, right: &IoEntry) -> bool {
+        let same_sniff = match (left.sniff, right.sniff) {
+            (Some(a), Some(b)) => std::ptr::fn_addr_eq(a, b),
+            (None, None) => true,
+            _ => false,
+        };
+        ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from)
+            && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into)
+            && left.fidelity == right.fidelity
+            && same_sniff
+            && std::ptr::fn_addr_eq(left.run, right.run)
+    }
+
+    fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
+        IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }
+    }
+    //#endregion 🔖️Entry
+
+    //#region 🔖️Registry
+    type EntryKey = (ArtifactDialect, ArtifactDialect);
+    type EntryMap = BTreeMap<EntryKey, &'static IoEntry>;
+
+    static IO_MECHANISM_REGISTRY: std::sync::OnceLock<RwLock<EntryMap>> = std::sync::OnceLock::new();
+
+    fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
+        IO_MECHANISM_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
+    }
+
+    /// ⚠️ A duplicate `(from, into)` registration for a genuinely different entry, or a poisoned
+    /// registry lock.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum IoRegistryError {
+        Duplicate { from: ArtifactDialect, into: ArtifactDialect },
+        Unavailable,
+    }
+
+    impl std::fmt::Display for IoRegistryError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Duplicate { from, into } => write!(f, "io entry already registered for {} -> {}", from.to_coordinate(), into.to_coordinate()),
+                Self::Unavailable => f.write_str("io mechanism registry unavailable"),
+            }
+        }
+    }
+    impl std::error::Error for IoRegistryError {}
+
+    fn build_proposed(entries: &[&'static IoEntry]) -> Result<EntryMap, IoRegistryError> {
+        let mut proposed: EntryMap = BTreeMap::new();
+        for entry in entries {
+            let key = (ArtifactDialect::from(entry.from), ArtifactDialect::from(entry.into));
+            match proposed.get(&key) {
+                Some(existing) if same_io_entry(existing, entry) => {}
+                Some(_) => return Err(IoRegistryError::Duplicate { from: key.0, into: key.1 }),
+                None => {
+                    proposed.insert(key, entry);
+                }
+            }
+        }
+        Ok(proposed)
+    }
+
+    fn validate_against(existing: &EntryMap, proposed: &EntryMap) -> Result<(), IoRegistryError> {
+        for (key, entry) in proposed {
+            if let Some(current) = existing.get(key) {
+                if !same_io_entry(current, entry) {
+                    return Err(IoRegistryError::Duplicate { from: key.0.clone(), into: key.1.clone() });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// 📌️ Registers `entries` atomically under the SAME `store::begin_artifact_assembly()`
+    /// publication barrier `register_composer_entries` (the OLD mechanism, above) uses, so a
+    /// plugin's old- and new-mechanism registrations never interleave. A duplicate `(from, into)`
+    /// key for a genuinely DIFFERENT entry is a typed error and leaves the registry unchanged
+    /// (preflight via `build_proposed`+`validate_against`, THEN commit — all-or-nothing, proven by
+    /// `registration_is_all_or_nothing` below); re-registering the identical static entry is
+    /// idempotent, mirroring `register_composer_entries`.
+    #[must_use]
+    pub fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
+        let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;
+        let proposed = build_proposed(&entries.iter().collect::<Vec<_>>())?;
+        let mut registry = io_mechanism_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
+        validate_against(&registry, &proposed)?;
+        for (key, entry) in proposed {
+            registry.entry(key).or_insert(entry);
+        }
+        Ok(())
+    }
+    //#endregion 🔖️Registry
+
+    //#region 🔖️Route
+    fn walk_routes(registry: &EntryMap, current: &ArtifactDialect, into: &ArtifactDialect, remaining_hops: u8, path: &mut Vec<&'static IoEntry>, visited: &mut BTreeSet<ArtifactDialect>, candidates: &mut Vec<Vec<&'static IoEntry>>) {
+        if remaining_hops == 0 {
+            return;
+        }
+        for (key, entry) in registry.iter() {
+            if &key.0 != current || visited.contains(&key.1) {
+                continue;
+            }
+            let next = key.1.clone();
+            path.push(entry);
+            if &next == into {
+                candidates.push(path.clone());
+            } else {
+                visited.insert(next.clone());
+                walk_routes(registry, &next, into, remaining_hops - 1, path, visited, candidates);
+                visited.remove(&next);
+            }
+            path.pop();
+        }
+    }
+
+    fn route_rank(route: &[&'static IoEntry]) -> (std::cmp::Reverse<u8>, usize, String) {
+        let min_fidelity = route.iter().map(|entry| entry.fidelity.rank()).min().unwrap_or(0);
+        let joined = route.iter().map(|entry| ArtifactDialect::from(entry.into).to_coordinate()).collect::<Vec<_>>().join(",");
+        (std::cmp::Reverse(min_fidelity), route.len(), joined)
+    }
+
+    fn rank_to_fidelity(rank: u8) -> IoFidelity {
+        match rank {
+            3 => IoFidelity::Exact,
+            2 => IoFidelity::Canonical,
+            1 => IoFidelity::Semantic,
+            _ => IoFidelity::Lossy,
+        }
+    }
+
+    /// 🌉️ Breadth-bounded, cycle-free enumeration of every simple path `from -> into` up to
+    /// `max_hops` (clamped to ≤3), picking the best by (1) highest MINIMUM fidelity along the
+    /// route, (2) fewest hops, (3) lexicographic order of the joined `to_coordinate()` strings of
+    /// every dialect visited after `from`. Sorting the FULL candidate set at the end (rather than
+    /// short-circuiting on the first hit) plus the registry already being a `BTreeMap` (whose
+    /// iteration order never depends on insertion order) together give `route_is_deterministic`.
+    fn resolve_route(registry: &EntryMap, from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+        let max_hops = max_hops.min(3);
+        if max_hops == 0 {
+            return Err(IoError { message: format!("io_route {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+        }
+        let mut candidates: Vec<Vec<&'static IoEntry>> = Vec::new();
+        let mut path: Vec<&'static IoEntry> = Vec::new();
+        let mut visited: BTreeSet<ArtifactDialect> = BTreeSet::new();
+        visited.insert(from.clone());
+        walk_routes(registry, from, into, max_hops, &mut path, &mut visited, &mut candidates);
+        if candidates.is_empty() {
+            return Err(IoError { message: format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate()), diagnostics: Vec::new() });
+        }
+        candidates.sort_by(|a, b| route_rank(a).cmp(&route_rank(b)));
+        let best = candidates.into_iter().next().expect("candidates checked non-empty above");
+        let fidelity = rank_to_fidelity(best.iter().map(|entry| entry.fidelity.rank()).min().expect("a route has at least one hop"));
+        Ok(IoOutcome::clean(IoRoute { hops: best.iter().map(|entry| descriptor_of(entry)).collect(), fidelity }))
+    }
+
+    /// 🌉️ `resolve_route` against the process-wide registry.
+    pub fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
+        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        resolve_route(&registry, from, into, max_hops)
+    }
+
+    fn resolve_run(registry: &EntryMap, route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+        let mut current = payload;
+        let mut diagnostics = Vec::new();
+        for hop in &route.hops {
+            let key = (hop.from.clone(), hop.into.clone());
+            let entry = registry.get(&key).ok_or_else(|| IoError { message: format!("io_run: no entry registered for hop {} -> {}", hop.from.to_coordinate(), hop.into.to_coordinate()), diagnostics: Vec::new() })?;
+            let outcome = (entry.run)(&current).map_err(|error| IoError { message: format!("io_run: hop {} -> {} failed: {}", hop.from.to_coordinate(), hop.into.to_coordinate(), error.message), diagnostics: error.diagnostics })?;
+            current = outcome.value;
+            diagnostics.extend(outcome.diagnostics);
+        }
+        Ok(IoOutcome { value: current, diagnostics })
+    }
+
+    /// 🌉️ Folds `IoEntry::run` along every hop of `route`, accumulating diagnostics; on failure
+    /// the `IoError.message` names which hop (by dialect coordinates) failed.
+    pub fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
+        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        resolve_run(&registry, route, payload)
+    }
+    //#endregion 🔖️Route
+
+    //#region 🔖️Identify
+    fn resolve_identify(registry: &EntryMap, payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
+        let carrier = ArtifactDialect::from(match payload {
+            IoPayload::Binary(_) => CARRIER_BINARY,
+            IoPayload::Text(_) => CARRIER_TEXT,
+        });
+        let mut found: Vec<(ArtifactDialect, Confidence)> = registry
+            .values()
+            .filter(|entry| ArtifactDialect::from(entry.from) == carrier)
+            .filter_map(|entry| entry.sniff.map(|sniff| (ArtifactDialect::from(entry.into), sniff(payload))))
+            .filter(|(_, confidence)| *confidence != Confidence::None)
+            .collect();
+        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
+        found
+    }
+
+    /// 🔍️ Runs `sniff` of every entry whose `from` is the carrier dialect matching `payload`'s own
+    /// variant (`CARRIER_BINARY` for `Binary`, `CARRIER_TEXT` for `Text` — never both), drops
+    /// `Confidence::None`, sorts by confidence (descending) then coordinate (ascending).
+    pub fn io_identify(payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
+        match io_mechanism_registry().read() {
+            Ok(registry) => resolve_identify(&registry, payload),
+            Err(_) => Vec::new(),
+        }
+    }
+
+    /// 📇️ Every registered entry, erased to owned descriptors — the WIT `list-io-entries` guest
+    /// export body and the TS `IoEntryDescriptor[]` mirror both use this shape.
+    pub fn io_entries() -> Vec<IoEntryDescriptor> {
+        match io_mechanism_registry().read() {
+            Ok(registry) => registry.values().map(|entry| descriptor_of(entry)).collect(),
+            Err(_) => Vec::new(),
+        }
+    }
+    //#endregion 🔖️Identify
+
+    //#region 🔖️Constructors
+    /// 🎹️ Builds an `IoEntry` from a `Serializer<S>` impl for a binary-pack-native `S`. Bounds on
+    /// `store::ArtifactPack` directly rather than inventing a parallel "native decode" trait —
+    /// this file already depends on `store::` throughout (e.g. `ArtifactAssemblyRegistryPlan`
+    /// a few regions up), so this introduces no new dependency. The plugin's own decode function is
+    /// `S::decode_pack`, resolved by monomorphization of the inner `run` item — never a runtime
+    /// `fn` pointer parameter threaded through a closure, which `IoEntry.run`'s bare-`fn`-pointer
+    /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
+    /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code.
+    pub fn serializer_entry<S: store::ArtifactPack, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: store::ArtifactPack, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
+            let IoPayload::Binary(bytes) = payload else {
+                return Err(IoError { message: "serializer_entry: expected a binary native payload".to_string(), diagnostics: Vec::new() });
+            };
+            let value = S::decode_pack(bytes).map_err(|error| IoError { message: format!("native pack decode failed: {error}"), diagnostics: Vec::new() })?;
+            T::serialize(&value)
+        }
+        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
+    }
+
+    /// 🎹️ `serializer_entry`'s twin for a DSL-text-native `S` (`store::ArtifactDsl` instead of
+    /// `store::ArtifactPack`) — together the smallest constructor pair covering both halves of the
+    /// payload law's native encoding (pack XOR DSL).
+    pub fn serializer_entry_text<S: store::ArtifactDsl, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: store::ArtifactDsl, T: Serializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
+            let IoPayload::Text(text) = payload else {
+                return Err(IoError { message: "serializer_entry_text: expected a text native payload".to_string(), diagnostics: Vec::new() });
+            };
+            let value = S::parse_dsl(text).map_err(|error| IoError { message: format!("native dsl decode failed: {error}"), diagnostics: Vec::new() })?;
+            T::serialize(&value)
+        }
+        IoEntry { from: own, into: T::INTO, fidelity: T::FIDELITY, sniff: None, run: run::<S, T> }
+    }
+
+    fn deserializer_sniff<S, T: Deserializer<S>>(payload: &IoPayload) -> Confidence {
+        T::sniff(payload)
+    }
+
+    /// 🎹️ Builds an `IoEntry` from a `Deserializer<S>` impl for a binary-pack-native `S`. Runs
+    /// `T::CONFORMANCE` (D5's `SubsetValidator` replacement) after a successful deserialize,
+    /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
+    /// below proves the diagnostics reach the caller.
+    pub fn deserializer_entry<S: store::ArtifactPack, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: store::ArtifactPack, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
+            let outcome = T::deserialize(payload)?;
+            let mut diagnostics = outcome.diagnostics;
+            if let Some(conformance) = T::CONFORMANCE {
+                diagnostics.extend(conformance(&outcome.value));
+            }
+            Ok(IoOutcome { value: IoPayload::Binary(outcome.value.encode_pack()), diagnostics })
+        }
+        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+    }
+
+    /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
+    pub fn deserializer_entry_text<S: store::ArtifactDsl, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: store::ArtifactDsl, T: Deserializer<S>>(payload: &IoPayload) -> IoResult<IoPayload> {
+            let outcome = T::deserialize(payload)?;
+            let mut diagnostics = outcome.diagnostics;
+            if let Some(conformance) = T::CONFORMANCE {
+                diagnostics.extend(conformance(&outcome.value));
+            }
+            Ok(IoOutcome { value: IoPayload::Text(outcome.value.print_dsl()), diagnostics })
+        }
+        IoEntry { from: T::FROM, into: own, fidelity: T::FIDELITY, sniff: Some(deserializer_sniff::<S, T>), run: run::<S, T> }
+    }
+    //#endregion 🔖️Constructors
+
+    //#region 🔖️Laws
+    #[cfg(test)]
+    mod laws {
+        //! 🧪️ Task 4's seven laws. Every routing/registration law runs against a LOCAL `EntryMap`
+        //! (never the process-global `IO_MECHANISM_REGISTRY`) so tests never interfere with each
+        //! other under the test harness's default parallel execution — only
+        //! `conformance_runs_after_deserialize` exercises the public constructor + `IoEntry.run`
+        //! directly (no registry needed for that one at all).
+        use super::*;
+        use crate::io_schema::{StandardId, SubsetId};
+
+        const A: Dialect = Dialect { artifact_kind: "test.io-mechanism.a", standard: StandardId("1"), subset: SubsetId("*") };
+        const B: Dialect = Dialect { artifact_kind: "test.io-mechanism.b", standard: StandardId("1"), subset: SubsetId("*") };
+        const C: Dialect = Dialect { artifact_kind: "test.io-mechanism.c", standard: StandardId("1"), subset: SubsetId("*") };
+        const D: Dialect = Dialect { artifact_kind: "test.io-mechanism.d", standard: StandardId("1"), subset: SubsetId("*") };
+        const E: Dialect = Dialect { artifact_kind: "test.io-mechanism.e", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
+            Ok(IoOutcome::clean(payload.clone()))
+        }
+
+        fn key(from: Dialect, into: Dialect) -> EntryKey {
+            (ArtifactDialect::from(from), ArtifactDialect::from(into))
+        }
+
+        #[test]
+        fn route_is_deterministic() {
+            static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+
+            let mut order1: EntryMap = BTreeMap::new();
+            order1.insert(key(A, B), &AB);
+            order1.insert(key(B, C), &BC);
+
+            let mut order2: EntryMap = BTreeMap::new();
+            order2.insert(key(B, C), &BC);
+            order2.insert(key(A, B), &AB);
+
+            let route1 = resolve_route(&order1, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists");
+            let route2 = resolve_route(&order2, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists");
+            assert_eq!(route1.value, route2.value, "route must not depend on registration order");
+        }
+
+        #[test]
+        fn route_respects_max_hops() {
+            static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static CD: IoEntry = IoEntry { from: C, into: D, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static DE: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            let mut registry: EntryMap = BTreeMap::new();
+            registry.insert(key(A, B), &AB);
+            registry.insert(key(B, C), &BC);
+            registry.insert(key(C, D), &CD);
+            registry.insert(key(D, E), &DE);
+
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 2).is_err(), "3 hops must fail a max_hops of 2");
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(D), 3).is_ok(), "3 hops must succeed at the max_hops=3 ceiling");
+            assert!(resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(E), 10).is_err(), "4 hops must fail even when the caller asks for 10 — max_hops is hard-clamped to 3");
+        }
+
+        #[test]
+        fn route_never_cycles() {
+            static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static BA: IoEntry = IoEntry { from: B, into: A, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            let mut registry: EntryMap = BTreeMap::new();
+            registry.insert(key(A, B), &AB);
+            registry.insert(key(B, A), &BA);
+            registry.insert(key(B, C), &BC);
+
+            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists despite a cycle in the graph");
+            assert_eq!(route.value.hops.len(), 2, "the cycle edge B->A must never appear in the winning route");
+        }
+
+        #[test]
+        fn route_prefers_higher_minimum_fidelity() {
+            static DIRECT: IoEntry = IoEntry { from: A, into: C, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
+            static AB: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static BC: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            let mut registry: EntryMap = BTreeMap::new();
+            registry.insert(key(A, C), &DIRECT);
+            registry.insert(key(A, B), &AB);
+            registry.insert(key(B, C), &BC);
+
+            let route = resolve_route(&registry, &ArtifactDialect::from(A), &ArtifactDialect::from(C), 3).expect("route exists").value;
+            assert_eq!(route.fidelity, IoFidelity::Exact, "the 2-hop all-Exact route must beat the shorter 1-hop Lossy direct route");
+            assert_eq!(route.hops.len(), 2);
+        }
+
+        #[test]
+        fn identify_only_sniffs_carriers() {
+            fn always_high(_: &IoPayload) -> Confidence {
+                Confidence::High
+            }
+            static CARRIER_ENTRY: IoEntry = IoEntry { from: CARRIER_TEXT, into: A, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
+            static NON_CARRIER_ENTRY: IoEntry = IoEntry { from: B, into: C, fidelity: IoFidelity::Exact, sniff: Some(always_high), run: passthrough };
+            let mut registry: EntryMap = BTreeMap::new();
+            registry.insert(key(CARRIER_TEXT, A), &CARRIER_ENTRY);
+            registry.insert(key(B, C), &NON_CARRIER_ENTRY);
+
+            let found = resolve_identify(&registry, &IoPayload::Text("hello".to_string()));
+            assert_eq!(found, vec![(ArtifactDialect::from(A), Confidence::High)], "only the carrier-origin entry may be sniffed");
+        }
+
+        #[test]
+        fn duplicate_entry_is_a_typed_error() {
+            static ENTRY_A: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static ENTRY_B: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
+
+            let mut existing: EntryMap = BTreeMap::new();
+            existing.insert(key(A, B), &ENTRY_A);
+
+            let same = build_proposed(&[&ENTRY_A]).unwrap();
+            assert!(validate_against(&existing, &same).is_ok(), "re-registering the identical entry is idempotent");
+
+            let different = build_proposed(&[&ENTRY_B]).unwrap();
+            assert!(matches!(validate_against(&existing, &different), Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
+        }
+
+        #[test]
+        fn registration_is_all_or_nothing() {
+            static ORIGINAL: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+            static CONFLICTING: IoEntry = IoEntry { from: A, into: B, fidelity: IoFidelity::Lossy, sniff: None, run: passthrough };
+            static FRESH: IoEntry = IoEntry { from: D, into: E, fidelity: IoFidelity::Exact, sniff: None, run: passthrough };
+
+            let mut existing: EntryMap = BTreeMap::new();
+            existing.insert(key(A, B), &ORIGINAL);
+
+            let proposed = build_proposed(&[&CONFLICTING, &FRESH]).expect("the batch is internally conflict-free");
+            assert!(matches!(validate_against(&existing, &proposed), Err(IoRegistryError::Duplicate { .. })), "one conflicting key must fail the whole batch");
+            assert!(!existing.contains_key(&key(D, E)), "FRESH must not leak into the registry as a side effect of a failed validation");
+            assert_eq!(existing.len(), 1, "existing registry state must be untouched by a failed validation");
+        }
+
+        struct JsonDeserializer;
+        impl Deserializer<serde_json::Value> for JsonDeserializer {
+            const FROM: Dialect = B;
+            const FIDELITY: IoFidelity = IoFidelity::Exact;
+            const CONFORMANCE: Option<fn(&serde_json::Value) -> Vec<Diagnostic>> = Some(flag_non_object);
+
+            fn deserialize(payload: &IoPayload) -> IoResult<serde_json::Value> {
+                let IoPayload::Text(text) = payload else {
+                    return Err(IoError { message: "expected text payload".to_string(), diagnostics: Vec::new() });
+                };
+                let value: serde_json::Value = serde_json::from_str(text).map_err(|error| IoError { message: error.to_string(), diagnostics: Vec::new() })?;
+                Ok(IoOutcome::clean(value))
+            }
+        }
+
+        fn flag_non_object(value: &serde_json::Value) -> Vec<Diagnostic> {
+            if value.is_object() { Vec::new() } else { vec![Diagnostic::error("test.io-mechanism.not-object", dsl::TextSpan::at(0, 0), "value is not a JSON object")] }
+        }
+
+        #[test]
+        fn conformance_runs_after_deserialize() {
+            let entry = deserializer_entry::<serde_json::Value, JsonDeserializer>(A);
+
+            let conforming = (entry.run)(&IoPayload::Text("{}".to_string())).expect("an empty object deserializes cleanly");
+            assert!(conforming.diagnostics.is_empty(), "an object payload has no conformance diagnostics");
+
+            let non_conforming = (entry.run)(&IoPayload::Text("42".to_string())).expect("deserialize still succeeds when conformance is unhappy");
+            assert_eq!(non_conforming.diagnostics.len(), 1, "CONFORMANCE's diagnostics must reach the caller after a successful deserialize");
+        }
+    }
+    //#endregion 🔖️Laws
+}
+//#endregion 🔖️IoMechanism
 // #endregion io

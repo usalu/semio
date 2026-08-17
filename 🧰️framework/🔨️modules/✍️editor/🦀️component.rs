@@ -3,7 +3,7 @@
 //! `EditorHost` mirrors projection text and LSP adornments for WASM play surfaces only; authoritative
 //! packs and edits belong in the OS `ArtifactStore` (see `sync_from_scene_json` / pack apply paths).
 
-use canvas::camera::{Camera, Viewport};
+use canvas::camera::Viewport;
 use canvas::text as canvas_text;
 pub use infinite_canvas::{self as canvas, *};
 use serde::Deserialize;

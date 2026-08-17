@@ -19,6 +19,21 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
     crate::registry::definition_only_assembly("binary", definition)
 }
 
+//#region 🔖️ArtifactDeclaration
+/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot): the whole
+/// `s.stdio.binary` artifact through the declaration tree — one standard, `raw`, one subset,
+/// `any`. `localization: &[]` — the real en/de localized descriptors already live in
+/// `🧬️schema/📜️artifact-definition.json` (the OLD `ArtifactDefinition` channel this artifact stays
+/// on for `📇️registry`'s catalog, kept per `assembly()` below); wiring them into this NEW field
+/// too is a follow-up, not required for the carrier law or for this tree to register cleanly
+/// (see `📓️w2-p-report.md` `## openQuestions`).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard()] }
+}
+//#endregion 🔖️ArtifactDeclaration
+
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "stdio.binary".into(),

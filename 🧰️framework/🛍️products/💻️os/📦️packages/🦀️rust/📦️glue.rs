@@ -233,14 +233,25 @@ pub mod os_directory;
 // file's own `os_workflow` mount for the real fix, and the run crate's glue.rs for the matching
 // `extern crate semio_framework as workflow;` alias change.
 
-// 🚪️ `io`'s `ArtifactDialect`/`Dialect` vocabulary is mounted independently in every crate that
-// needs it (`semio-framework`, each plugin's own glue.rs) rather than depended on, because
-// `semio-framework` itself depends on `semio-framework-os-kernel` — a kernel-side dependency on
-// `semio-framework` would be circular. This mount exists solely so `store::ArtifactEnvelope` can
-// carry a persisted `dialect`/`migrated_from` coordinate (26/08/10 D4 evolution slice); it is the
-// same file, same nominal-type-per-compilation-unit tradeoff every other mount already accepts.
+// 🚪️ `io`'s FULL registry file (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/…) is
+// still mounted independently here AND in `semio-framework`'s own glue (as `io`) — that half of
+// the double-mount is recorded debt D2 (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM),
+// cleaned up wholesale at W6 alongside the old registry itself. This mount exists solely so
+// `store::ArtifactEnvelope` can carry a persisted `dialect`/`migrated_from` coordinate (26/08/10
+// D4 evolution slice); a kernel-side dependency on the full `semio-framework` crate (to reuse ITS
+// `io` mount instead) would be circular — see the `os_workflow`/`workflow` comment above.
 #[path = "../../../../🔨️modules/🚪️io/🦀️component.rs"]
 pub mod os_io;
+
+// 🧬️ `io`'s pure `StandardId`/`SubsetId`/`Dialect`/`ArtifactDialect`/`ArtifactKindId`/`ArtifactRef`
+// vocabulary (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-A task 1) is mounted
+// ONCE, here — it has no `store::`/registry dependency, so unlike `os_io` above it does not need
+// double-mounting. `semio-framework`'s own glue re-exports THIS module (`pub use
+// semio_framework_os_kernel::io_schema;`) instead of remounting the schema file a second time; the
+// registry file (`os_io`/`io`, both still mounted) references it uniformly via `crate::io_schema`,
+// which resolves correctly whichever crate compiles that shared file.
+#[path = "../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs"]
+pub mod io_schema;
 
 #[path = "."]
 pub mod os_store {

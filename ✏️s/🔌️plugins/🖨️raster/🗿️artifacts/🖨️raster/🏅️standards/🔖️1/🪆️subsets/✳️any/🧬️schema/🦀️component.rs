@@ -244,10 +244,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::artifacts::raster::{RasterSnapshot, RasterTransform};
 
-/// 📄️ The `semio` example document, handcrafted in the `.raster` DSL — {@link semio_example_document}/
-/// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_RASTER_EXAMPLE_TEXT: &str = crate::artifacts::raster::dsl::SEMIO_RASTER_EXAMPLE_TEXT;
-
 pub fn create_raster_id(prefix: &str) -> String {
     let next = {
         let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();

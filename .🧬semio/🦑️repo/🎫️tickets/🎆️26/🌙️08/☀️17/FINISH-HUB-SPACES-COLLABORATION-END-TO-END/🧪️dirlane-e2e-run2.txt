@@ -1,0 +1,57 @@
+--- booting user1 (6072) ---
+--- booting user2 (6073) ---
+=== PROOF 1: directory WS open for both shells ===
+user1: directory ws-open count=1 [
+  'ws://127.0.0.1:8787/directory/ws?token=01a010b5-2db9-7683-8d0e-b0c5fe0d558a&since=0'
+]
+user1: directory ws-recv count=1
+user2: directory ws-open count=1 [
+  'ws://127.0.0.1:8787/directory/ws?token=01a010b5-7e98-72d1-9e9a-04ab18104045&since=0'
+]
+user2: directory ws-recv count=1
+=== rows BEFORE create (user1) === [{"id":"space:default","text":"Demo Studioatelierprivate10local"}]
+=== rows BEFORE create (user2) === [{"id":"space:default","text":"Demo Studioatelierprivate10local"}]
+--- user1: opening Create Space dialog, name = E2E Proof Space 1786986818002 ---
+--- waiting for round trip ---
+=== rows AFTER create (user1, own browser) ===
+[
+ {
+  "id": "space:01a010b6-f727-7280-b89b-a2776710991b",
+  "text": "E2E Proof Space 1786986818002atelierpublic11786986821501hub"
+ },
+ {
+  "id": "space:default",
+  "text": "Demo Studioatelierprivate10local"
+ }
+]
+--- waiting for user2 to receive the live event (no reload) ---
+=== rows on user2 (live, no reload) ===
+[
+ {
+  "id": "space:01a010b6-f727-7280-b89b-a2776710991b",
+  "text": "E2E Proof Space 1786986818002atelierpublic11786986821501hub"
+ },
+ {
+  "id": "space:default",
+  "text": "Demo Studioatelierprivate10local"
+ }
+]
+=== directory-relevant network for both, full run ===
+{"t":1786986804471,"label":"user1:6072","type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986804517,"label":"user1:6072","type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986804523,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-2db9-7683-8d0e-b0c5fe0d558a&since=0"}
+{"t":1786986804527,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-2db9-7683-8d0e-b0c5fe0d558a&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a00f5e-bbc4-7e83-8088-4ee516c764f3\",\"hlc\":{\"physicalMs\":1786964261827,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":\"user.created\",\"userId\":\"seed\",\"email\":\"seed@localhost\",\"displayName\":\"System\"},\"recordedAtMs\":1786964261828}}"}
+{"t":1786986821376,"label":"user1:6072","type":"request","method":"POST","url":"http://127.0.0.1:8787/directory/commands"}
+{"t":1786986821613,"label":"user1:6072","type":"response","status":202,"url":"http://127.0.0.1:8787/directory/commands"}
+{"t":1786986821620,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-2db9-7683-8d0e-b0c5fe0d558a&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":4,\"id\":\"01a010b6-f73a-7042-b150-ea8331b6fd7a\",\"hlc\":{\"physicalMs\":1786986821431,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a00f5f-43e2-7322-b9e3-c3c709940dad#hub-rest\"},\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"body\":{\"kind\":\"space.created\",\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"name\":\"E2E Proof Space 1786986818002\",\"spaceKind\":\"atelier\",\"visibility\":\"public\",\"ownerUserId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\"},\"recordedAtMs\":1786986821434}}"}
+{"t":1786986821620,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-2db9-7683-8d0e-b0c5fe0d558a&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":5,\"id\":\"01a010b6-f77d-71f1-b173-43297885564c\",\"hlc\":{\"physicalMs\":1786986821431,\"logical\":1},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a00f5f-43e2-7322-b9e3-c3c709940dad#hub-rest\"},\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"body\":{\"kind\":\"member.upserted\",\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"role\":\"author\"},\"recordedAtMs\":1786986821501}}"}
+{"t":1786986804438,"label":"user2:6073","type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986804547,"label":"user2:6073","type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986804647,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-7e98-72d1-9e9a-04ab18104045&since=0"}
+{"t":1786986804659,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-7e98-72d1-9e9a-04ab18104045&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a00f5e-bbc4-7e83-8088-4ee516c764f3\",\"hlc\":{\"physicalMs\":1786964261827,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":\"user.created\",\"userId\":\"seed\",\"email\":\"seed@localhost\",\"displayName\":\"System\"},\"recordedAtMs\":1786964261828}}"}
+{"t":1786986821612,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-7e98-72d1-9e9a-04ab18104045&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":4,\"id\":\"01a010b6-f73a-7042-b150-ea8331b6fd7a\",\"hlc\":{\"physicalMs\":1786986821431,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a00f5f-43e2-7322-b9e3-c3c709940dad#hub-rest\"},\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"body\":{\"kind\":\"space.created\",\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"name\":\"E2E Proof Space 1786986818002\",\"spaceKind\":\"atelier\",\"visibility\":\"public\",\"ownerUserId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\"},\"recordedAtMs\":1786986821434}}"}
+{"t":1786986821613,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b5-7e98-72d1-9e9a-04ab18104045&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":5,\"id\":\"01a010b6-f77d-71f1-b173-43297885564c\",\"hlc\":{\"physicalMs\":1786986821431,\"logical\":1},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a00f5f-43e2-7322-b9e3-c3c709940dad#hub-rest\"},\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"body\":{\"kind\":\"member.upserted\",\"spaceId\":\"01a010b6-f727-7280-b89b-a2776710991b\",\"userId\":\"01a00f5f-43e2-7322-b9e3-c3c709940dad\",\"role\":\"author\"},\"recordedAtMs\":1786986821501}}"}
+=== FINAL RESULT ===
+spaceName: E2E Proof Space 1786986818002
+appears in user1 own table: true
+appears in user2 table: true

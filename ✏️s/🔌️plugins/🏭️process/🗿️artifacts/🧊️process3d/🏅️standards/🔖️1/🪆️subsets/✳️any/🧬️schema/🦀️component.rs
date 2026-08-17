@@ -269,8 +269,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Process3dBuilderFacets {
-        construction: derived_construction::Process3dBuilderConstruction,
-        analysis: derived_analysis::Process3dAnalyzerAnalysis,
+        construction: Process3dBuilderConstruction,
+        analysis: Process3dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Process3dComposerComposition,
     }
     builder: Process3dBuilder,

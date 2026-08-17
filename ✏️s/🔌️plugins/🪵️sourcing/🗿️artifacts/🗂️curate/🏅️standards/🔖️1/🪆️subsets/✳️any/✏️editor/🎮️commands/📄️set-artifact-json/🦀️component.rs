@@ -1,8 +1,7 @@
 //! 📄️ 📄️ Sourcing curate app commands command — `set-artifact-json`.
 
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::editor::sourcing::{reset_document_effect, EMPTY_EXAMPLE_ID};
-use crate::artifacts::curate::schema::empty_document;
+use crate::editor::sourcing::reset_document_effect;
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -29,7 +28,8 @@ mod tests {
     use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
     use crate::editor::sourcing::testkit::new_app;
     use crate::editor::sourcing::SourcingCurateCommand;
-    use crate::editor::sourcing::DEMO_STOCK_EXAMPLE_ID;
+    use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
+    use crate::artifacts::curate::schema::empty_document;
     use semio_framework::kernel::HostEffect;
     use semio_framework_plugin::{HistoryView, PluginApp};
 

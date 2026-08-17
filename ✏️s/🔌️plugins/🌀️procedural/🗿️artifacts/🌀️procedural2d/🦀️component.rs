@@ -1,8 +1,5 @@
 //! 📏️ Procedural2d artifact — snapshot re-exports, widget id helper, and artifact kind.
 
-pub use crate::artifacts::procedural2d::schema::diff::Procedural2dDiff;
-pub use crate::artifacts::procedural2d::schema::mutations::Procedural2dMutation;
-pub use crate::artifacts::procedural2d::schema::snapshot::Procedural2dSnapshot;
 
 use flow::Widget;
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};

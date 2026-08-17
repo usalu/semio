@@ -1,0 +1,79 @@
+--- booting user1 (6072) ---
+--- booting user2 (6073) ---
+=== PROOF 1: directory WS open for both shells ===
+user1: directory ws-open count=2 [
+  'ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0',
+  'ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5'
+]
+user1: directory ws-recv count=3
+user2: directory ws-open count=2 [
+  'ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0',
+  'ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5'
+]
+user2: directory ws-recv count=3
+=== rows BEFORE create (user1) === [{"id":"space:default","text":"Demo Studioatelierprivate10local"}]
+=== rows BEFORE create (user2) === [{"id":"space:default","text":"Demo Studioatelierprivate10local"}]
+--- user1: opening Create Space dialog, name = E2E Proof Space 1786986517173 ---
+--- waiting for round trip ---
+=== rows AFTER create (user1, own browser) ===
+[
+ {
+  "id": "space:default",
+  "text": "Demo Studioatelierprivate10local"
+ }
+]
+--- waiting for user2 to receive the live event (no reload) ---
+=== rows on user2 (live, no reload) ===
+[
+ {
+  "id": "space:default",
+  "text": "Demo Studioatelierprivate10local"
+ }
+]
+--- not found live yet, reloading user2 as a fallback check ---
+=== rows on user2 (after reload) ===
+[
+ {
+  "id": "space:default",
+  "text": "Demo Studioatelierprivate10local"
+ }
+]
+=== directory-relevant network for both, full run ===
+{"t":1786986503691,"label":"user1:6072","type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986503716,"label":"user1:6072","type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986503754,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0"}
+{"t":1786986503766,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a0102a-4fd8-7ad2-b9b1-9f85acda2e15\",\"hlc\":{\"physicalMs\":1786977603544,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":\"user.created\",\"userId\":\"seed\",\"email\":\"seed@localhost\",\"displayName\":\"System\"},\"recordedAtMs\":1786977603544}}"}
+{"t":1786986503766,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":4,\"id\":\"01a010b0-5ec6-7303-a312-7a8569c2b674\",\"hlc\":{\"physicalMs\":1786986389190,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a010a6-0358-7da0-b6b5-5a0005877235#hub-rest\"},\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"body\":{\"kind\":\"space.created\",\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"name\":\"a\",\"spaceKind\":\"studio\",\"visibility\":\"public\",\"ownerUserId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\"},\"recordedAtMs\":1786986389190}}"}
+{"t":1786986503766,"label":"user1:6072","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":5,\"id\":\"01a010b0-5ecb-7013-ba04-9dfa7e31403b\",\"hlc\":{\"physicalMs\":1786986389190,\"logical\":1},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a010a6-0358-7da0-b6b5-5a0005877235#hub-rest\"},\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"body\":{\"kind\":\"member.upserted\",\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"role\":\"author\"},\"recordedAtMs\":1786986389195}}"}
+{"t":1786986516294,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=0"}
+{"t":1786986516810,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986516810,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986517805,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986517805,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986519811,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986519811,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986519989,"label":"user1:6072","type":"request","method":"POST","url":"http://127.0.0.1:8787/directory/commands"}
+{"t":1786986523868,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986523868,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986531839,"label":"user1:6072","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986531843,"label":"user1:6072","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010a6-0361-73a0-9e1f-3874f55c31ba&since=5"}
+{"t":1786986504138,"label":"user2:6073","type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986504234,"label":"user2:6073","type":"response","status":200,"url":"http://127.0.0.1:8787/auth/sessions/me"}
+{"t":1786986504599,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0"}
+{"t":1786986504606,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":1,\"id\":\"01a0102a-4fd8-7ad2-b9b1-9f85acda2e15\",\"hlc\":{\"physicalMs\":1786977603544,\"logical\":0},\"actor\":{\"kind\":\"system\",\"id\":\"system:seed\"},\"userId\":\"seed\",\"body\":{\"kind\":\"user.created\",\"userId\":\"seed\",\"email\":\"seed@localhost\",\"displayName\":\"System\"},\"recordedAtMs\":1786977603544}}"}
+{"t":1786986504606,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":4,\"id\":\"01a010b0-5ec6-7303-a312-7a8569c2b674\",\"hlc\":{\"physicalMs\":1786986389190,\"logical\":0},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a010a6-0358-7da0-b6b5-5a0005877235#hub-rest\"},\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"body\":{\"kind\":\"space.created\",\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"name\":\"a\",\"spaceKind\":\"studio\",\"visibility\":\"public\",\"ownerUserId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\"},\"recordedAtMs\":1786986389190}}"}
+{"t":1786986504606,"label":"user2:6073","type":"ws-recv","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0","data":"{\"kind\":\"event\",\"event\":{\"seq\":5,\"id\":\"01a010b0-5ecb-7013-ba04-9dfa7e31403b\",\"hlc\":{\"physicalMs\":1786986389190,\"logical\":1},\"actor\":{\"kind\":\"user\",\"id\":\"user:01a010a6-0358-7da0-b6b5-5a0005877235#hub-rest\"},\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"body\":{\"kind\":\"member.upserted\",\"spaceId\":\"01a010b0-5ec6-7303-a312-7a7bb7635d9b\",\"userId\":\"01a010a6-0358-7da0-b6b5-5a0005877235\",\"role\":\"author\"},\"recordedAtMs\":1786986389195}}"}
+{"t":1786986516294,"label":"user2:6073","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=0"}
+{"t":1786986516810,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986516810,"label":"user2:6073","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986517805,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986517805,"label":"user2:6073","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986519812,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986519812,"label":"user2:6073","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986523868,"label":"user2:6073","type":"ws-open","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986523868,"label":"user2:6073","type":"ws-close","url":"ws://127.0.0.1:8787/directory/ws?token=01a010b0-2842-79d0-ae5a-7566bd3fdd2d&since=5"}
+{"t":1786986532890,"label":"user2:6073","type":"request","method":"GET","url":"http://127.0.0.1:8787/auth/sessions/me"}
+=== FINAL RESULT ===
+spaceName: E2E Proof Space 1786986517173
+appears in user1 own table: false
+appears in user2 table: false

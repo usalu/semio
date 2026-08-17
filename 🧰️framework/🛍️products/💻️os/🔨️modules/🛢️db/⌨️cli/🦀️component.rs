@@ -415,7 +415,7 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     println!("  created_at_ms: {}", descriptor.created_at_ms);
 
     if verify {
-        match manager.verify(&document, generation, pack::VerificationLevel::Full) {
+        match manager.verify(&document, generation, pack::os_pack::VerificationLevel::Full) {
             Ok(()) => println!("== verify: OK =="),
             Err(err) => {
                 println!("== verify: FAIL ==");
@@ -436,7 +436,7 @@ fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::Arti
     let manager = db::snapshot::SnapshotManager::new(storage);
     match manager.load_latest(document)? {
         Some((generation, _descriptor)) => {
-            manager.verify(document, generation, pack::VerificationLevel::Full)?;
+            manager.verify(document, generation, pack::os_pack::VerificationLevel::Full)?;
             Ok(format!("wal records={} snapshot generation={generation} (verified)", records.len()))
         }
         None => Ok(format!("wal records={} snapshot=none", records.len())),

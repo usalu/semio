@@ -1,0 +1,376 @@
+    Blocking waiting for file lock on build directory
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7765:57
+     |
+7765 |         children: Option<&'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>>,
+     |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+7765 -         children: Option<&'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>>,
+7765 +         children: Option<&'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7773:61
+     |
+7773 |         pub fn new(children: &'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+     |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7773 -         pub fn new(children: &'a HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+7773 +         pub fn new(children: &'a HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7791:69
+     |
+7791 |         pub fn dialect(&self, slot: &str, child_id: &str) -> Option<store::os_io::ArtifactDialect> {
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7791 -         pub fn dialect(&self, slot: &str, child_id: &str) -> Option<store::os_io::ArtifactDialect> {
+7791 +         pub fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9553:76
+     |
+9553 | ...   fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> R...
+     |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9553 -         fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
+9553 +         fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault>;
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10034:57
+      |
+10034 |         pub(crate) children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+      |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10034 -         pub(crate) children: HashMap<(String, String), (store::os_io::ArtifactDialect, Box<dyn SpaceMember>)>,
+10034 +         pub(crate) children: HashMap<(String, String), (ArtifactDialect, Box<dyn SpaceMember>)>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10195:101
+      |
+10195 | ...<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10195 -         pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+10195 +         pub fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10230:105
+      |
+10230 | ...<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fau...
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10230 -         pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: store::os_io::ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
+10230 +         pub fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: Box<dyn SpaceMember>) -> Result<(), Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10925:90
+      |
+10925 | ...   let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind:...
+      |                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10925 -             let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+10925 +             let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11111:90
+      |
+11111 | ...   let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind:...
+      |                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11111 -             let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| store::os_io::ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+11111 +             let parent_dialect = self.store.envelope().dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12006:76
+      |
+12006 | ...   fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> ...
+      |                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12006 -         fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: store::os_io::ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+12006 +         fn load_child_pack(&mut self, slot: &str, child_id: &str, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+      |
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2812:9
+     |
+2794 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2812 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2813 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3822:9
+     |
+3820 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3821 |         definitions: ArtifactDefinitionRegistry,
+3822 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3823 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3824 |         inference_services: ArtifactInferenceServiceRegistry,
+3825 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3826 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 10 suggestions)
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 4 warnings
+   Compiling semio-framework-os-flow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-logic v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-text v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-list v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-primitive v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-dictionary v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-flow-extension-math v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust)
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:3009:87
+     |
+3009 | ...te::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🌊️default.flow")).expect("fixture"));
+     |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: couldn't read `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/../../../📚️examples/🌊️default.flow`: No such file or directory (os error 2)
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1255:20
+     |
+1255 |         let text = include_str!("../../../📚️examples/🌊️default.flow");
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Registry`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2240:76
+     |
+2240 |     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
+     |                                                                            ^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2313:30
+     |
+2313 |             state.registry = std::sync::Arc::new(registry);
+     |                              ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2313 -             state.registry = std::sync::Arc::new(registry);
+2313 +             state.registry = Arc::new(registry);
+     |
+
+error[E0433]: cannot find module or crate `vcs` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1161:84
+     |
+1161 | ...old(before.clone(), |acc, operation| vcs::apply_mutation(&acc, operation).expect("valid flow replay diff").0);
+     |                                         ^^^ use of unresolved module or unlinked crate `vcs`
+     |
+     = help: if you wanted to use a crate named `vcs`, use `cargo add vcs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `vcs` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1119:23
+     |
+1119 |         let forward = vcs::apply_mutation(fixture, operation).expect("valid flow diff").0;
+     |                       ^^^ use of unresolved module or unlinked crate `vcs`
+     |
+     = help: if you wanted to use a crate named `vcs`, use `cargo add vcs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `vcs` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🌿️vcs/🦀️component.rs:1123:24
+     |
+1123 |             restored = vcs::apply_mutation(&restored, back).expect("valid inverse flow diff").0;
+     |                        ^^^ use of unresolved module or unlinked crate `vcs`
+     |
+     = help: if you wanted to use a crate named `vcs`, use `cargo add vcs` to add it to your `Cargo.toml`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:847:39
+    |
+847 |                         default: Some(json!(1.0)),
+    |                                  ---- ^^^^^^^^^^ expected `DslValue`, found `Value`
+    |                                  |
+    |                                  arguments to this enum variant are incorrect
+    |
+help: the type constructed contains `serde_json::Value` due to the type of the argument passed
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:847:34
+    |
+847 |                         default: Some(json!(1.0)),
+    |                                  ^^^^^----------^
+    |                                       |
+    |                                       this argument influences the type of `Some`
+note: tuple variant defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+    |
+606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1084:35
+     |
+1084 |                     default: Some(serde_json::json!(false)),
+     |                              ---- ^^^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found `Value`
+     |                              |
+     |                              arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `serde_json::Value` due to the type of the argument passed
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1084:30
+     |
+1084 |                     default: Some(serde_json::json!(false)),
+     |                              ^^^^^------------------------^
+     |                                   |
+     |                                   this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1106:35
+     |
+1106 |                     default: Some(serde_json::json!(5)),
+     |                              ---- ^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found `Value`
+     |                              |
+     |                              arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `serde_json::Value` due to the type of the argument passed
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1106:30
+     |
+1106 |                     default: Some(serde_json::json!(5)),
+     |                              ^^^^^--------------------^
+     |                                   |
+     |                                   this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1170:27
+     |
+1170 |             default: Some(serde_json::json!(5.0)),
+     |                      ---- ^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found `Value`
+     |                      |
+     |                      arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `serde_json::Value` due to the type of the argument passed
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1170:22
+     |
+1170 |             default: Some(serde_json::json!(5.0)),
+     |                      ^^^^^----------------------^
+     |                           |
+     |                           this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1182:26
+     |
+1182 |             params: Some(serde_json::json!({ "height": 6.0, "nested": { "a": [1.0, 2.0, "three\"quoted"] } })),
+     |                     ---- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found `Value`
+     |                     |
+     |                     arguments to this enum variant are incorrect
+     |
+help: the type constructed contains `serde_json::Value` due to the type of the argument passed
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1182:21
+     |
+1182 |             params: Some(serde_json::json!({ "height": 6.0, "nested": { "a": [1.0, 2.0, "three\"quoted"] } })),
+     |                     ^^^^^------------------------------------------------------------------------------------^
+     |                          |
+     |                          this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../../📖️playbook/🦀️component.rs:1186:144
+     |
+1186 | ...w(PlaybookExpr::Const { value: serde_json::json!("advanced") }) },
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `DslValue`, found `Value`
+     |
+     = note: this error originates in the macro `$crate::json_internal` which comes from the expansion of the macro `serde_json::json` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/../../🖥️host/🦀️component.rs:2464:13
+     |
+2464 |         let mut host = host_with_test_bridge();
+     |             ----^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0308, E0433.
+For more information about an error, try `rustc --explain E0308`.
+warning: `semio-framework-os-flow` (lib test) generated 3 warnings
+error: could not compile `semio-framework-os-flow` (lib test) due to 11 previous errors; 3 warnings emitted

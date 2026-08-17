@@ -658,6 +658,18 @@ pub mod layout {
         "stack".into()
     }
 
+    /// 🧭️ Corner of a window stack where a tab chip docks.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+    #[serde(rename_all = "camelCase")]
+    pub enum WindowStackCorner {
+        #[default]
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight,
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
@@ -674,6 +686,9 @@ pub mod layout {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         pub template_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        pub corner: Option<WindowStackCorner>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -742,7 +757,7 @@ pub mod layout {
     }
 
     pub fn create_window_layout(window_kind_id: impl Into<String>, title: Option<String>, instance_id: Option<String>, template_id: Option<String>) -> WindowLayoutWindowNode {
-        WindowLayoutWindowNode { kind: kind_window(), window_kind_id: window_kind_id.into(), title, instance_id, template_id }
+        WindowLayoutWindowNode { kind: kind_window(), window_kind_id: window_kind_id.into(), title, instance_id, template_id, corner: None }
     }
 
     pub fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>) -> WindowLayout {
@@ -1299,7 +1314,7 @@ pub mod layout {
                             kind: "stack".into(),
                             size: Some(0.5),
                             active_window_kind_id: Some("main".into()),
-                            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None }],
+                            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None  corner: None }],
                         }),
                         WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "vertical".into(), size: Some(0.5), children: vec![] }),
                     ],

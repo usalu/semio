@@ -70,6 +70,12 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_raw {
+                // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
+                // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
+                #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
                 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
                 // codecs already lived beside `BinarySnapshot`'s `ArtifactDsl`/`ArtifactPack` impls in
                 // `subsets::any::schema::snapshot` (untouched); `empty_binary_snapshot`/
@@ -88,6 +94,15 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        // 🪆️ Subset root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
+                        // W2-P pilot): `subset() -> SubsetDeclaration`, assembles the schema/io/
+                        // viewer/editor/examples children mounted below (and `crate::editor::binary`/
+                        // `crate::viewer::binary`, mounted at the plugin's top-level `editor`/`viewer`
+                        // modules, not here — see that file's own doc comment).
+                        #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -234,6 +249,12 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v_utf_8 {
+                // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
+                // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
+                #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
                 // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
                 // `TxtEngine` (zero construction sites) deleted outright; `empty_txt_snapshot`/
                 // `demo_txt_snapshot` moved to `subsets::any::schema`; register cluster + `io_registry`
@@ -249,6 +270,13 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        // 🪆️ Subset root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
+                        // W2-P pilot): `subset() -> SubsetDeclaration` — see `💾️binary`'s mirrored
+                        // mount above for the shared reasoning.
+                        #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]

@@ -29,7 +29,7 @@ use semio_framework_plugin::{
     DomainTopology, Emit, Fault, GranularityDefinition, HierarchyProvider, HostEffect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     MediaClass, MediaError, MediaForm, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityDefinition, WindowMeasure,
 };
-use store::{ArtifactDsl, EngineHandles};
+use store::EngineHandles;
 use serde_json::Value;
 use serde_json::json;
 use std::collections::HashMap;
@@ -173,7 +173,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
                 let mut operations = Vec::new();
                 for (target_id, value) in &object {
                     let Some(number) = value.as_f64() else { continue };
-                    let Some((index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
+                    let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::procedural3d::widget_id(widget) == target_id) else { continue };
                     if let flow::Widget::InputSlider { id, min, max, step, .. } = widget {
                         operations.push(Procedural3dMutation::UpdateWidget(crate::artifacts::procedural3d::schema::mutations::update_widget::mutation::UpdateWidget { widget: flow::Widget::InputSlider { id: id.clone(), value: number, min: *min, max: *max, step: *step } }));
                     }
@@ -531,7 +531,7 @@ pub fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
 pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         "procedural.3d",
-        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Flow },
+        MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
         semio_framework_plugin::ArtifactPresentation { id: "3d.procedural".into(), name: "3D Procedural".into(), dimension: "3d".into(), component_kind: "procedural3d".into() },
     )
     .with_ports(vec![
@@ -539,7 +539,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             id: "params:in".into(),
             label: "Parameters".into(),
             direction: semio_framework_plugin::MediaPortDirection::In,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: None,
             required: false,
             multiplicity: semio_framework::PortMultiplicity::One},
@@ -547,7 +547,7 @@ pub fn procedural3d_io() -> semio_framework_plugin::AppIo {
             id: "geometry:out".into(),
             label: "Geometry".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             kind_id: Some("3d.mesh".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many},
@@ -770,7 +770,7 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
 }
 
 /// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
-pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<semio_framework_plugin::HostEffect> {
+pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Procedural3dConfig) -> Vec<HostEffect> {
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
@@ -786,7 +786,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
         let node_hash = flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
-            effects.push(semio_framework_plugin::HostEffect::InvokeExtension {
+            effects.push(HostEffect::InvokeExtension {
                 extension_id: "brep".into(),
                 capability: "tessellate".into(),
                 request_json: json!({ "handle": handle, "tolerance": tolerance, "nodeHash": node_hash }).to_string(),

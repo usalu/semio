@@ -1,6 +1,5 @@
 //! 🌉️ Flow eval bridge and channel-eval helpers.
 
-use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
 use std::collections::{BTreeSet, HashMap};
@@ -12,7 +11,6 @@ use neural::{
 
 use crate::artifact::*;
 use crate::host::*;
-use crate::drawing::*;
 
 
 // #region 🔖️EvalBridge

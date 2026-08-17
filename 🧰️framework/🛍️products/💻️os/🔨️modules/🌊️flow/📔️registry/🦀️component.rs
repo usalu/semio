@@ -1,6 +1,5 @@
 //! 📔️ Flow extension registry and contribution install surface.
 
-use crate::infinite::board::ports::directed_dag as dag;
 use neural_engine as neural;
 
 use std::collections::BTreeMap;
@@ -43,10 +42,10 @@ struct ContributedFlowExtension {
     manifest_json: String,
 }
 
-struct FlowExtensionRegistryState {
+pub(crate) struct FlowExtensionRegistryState {
     contributed: BTreeMap<String, ContributedFlowExtension>,
-    registry: Arc<neural::Registry>,
-    generation: u64,
+    pub(crate) registry: Arc<neural::Registry>,
+    pub(crate) generation: u64,
 }
 
 pub(crate) static FLOW_EXTENSION_STATE: LazyLock<Mutex<FlowExtensionRegistryState>> = LazyLock::new(|| Mutex::new(FlowExtensionRegistryState {

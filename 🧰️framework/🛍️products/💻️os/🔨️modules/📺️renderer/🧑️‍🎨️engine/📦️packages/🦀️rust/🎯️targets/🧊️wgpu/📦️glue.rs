@@ -1006,14 +1006,13 @@ impl ApplicationHandler<HostUserEvent> for SemioApp {
     }
 
     fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
-        if let HostUserEvent::RuntimeReady { runtime, callbacks } = event {
-            if let Some(window) = self.window.clone() {
-                start_frame_loop(window, runtime.clone());
-            }
-            self.runtime = Some(runtime);
-            self.callbacks = Some(callbacks);
-            event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
+        let HostUserEvent::RuntimeReady { runtime, callbacks } = event;
+        if let Some(window) = self.window.clone() {
+            start_frame_loop(window, runtime.clone());
         }
+        self.runtime = Some(runtime);
+        self.callbacks = Some(callbacks);
+        event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -1301,17 +1300,17 @@ thread_local! {
 }
 
 //#region 🔖️RoleBoot
-/// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: boot role from
-/// `SEMIO_APP_ROLE` (native, read directly)/`VITE_SEMIO_APP_ROLE` (wasm — wasm has no env var
-/// access, so `🟦️boot.ts` reads `import.meta.env.VITE_SEMIO_APP_ROLE` and calls
-/// `semioWgpuSetAppRole` before/at mount), default `editor` (`ChromeRole::from_boot_env`'s own
-/// fallback). Deliberately additive, same idiom as `ICON_ATLAS_RUNTIME` immediately above: a
-/// `thread_local` a caller opts into reading (`boot_app_role`) rather than a parameter threaded
-/// through every existing mount/native entry point — this crate currently fails to build clean for
-/// reasons entirely outside this lease (a concurrent, unrelated plugin-crate refactor breaks a
-/// transitive dependency; confirmed via `git status` showing 70+ uncommitted stdio-plugin files —
-/// see `📓️w1-d-report.md`), so a signature change on `run_native`/`semio_wgpu_mount` could not be
-/// verified to compile and was avoided.
+// 👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §5: boot role from
+// `SEMIO_APP_ROLE` (native, read directly)/`VITE_SEMIO_APP_ROLE` (wasm — wasm has no env var
+// access, so `🟦️boot.ts` reads `import.meta.env.VITE_SEMIO_APP_ROLE` and calls
+// `semioWgpuSetAppRole` before/at mount), default `editor` (`ChromeRole::from_boot_env`'s own
+// fallback). Deliberately additive, same idiom as `ICON_ATLAS_RUNTIME` immediately above: a
+// `thread_local` a caller opts into reading (`boot_app_role`) rather than a parameter threaded
+// through every existing mount/native entry point — this crate currently fails to build clean for
+// reasons entirely outside this lease (a concurrent, unrelated plugin-crate refactor breaks a
+// transitive dependency; confirmed via `git status` showing 70+ uncommitted stdio-plugin files —
+// see `📓️w1-d-report.md`), so a signature change on `run_native`/`semio_wgpu_mount` could not be
+// verified to compile and was avoided.
 thread_local! {
     static BOOT_APP_ROLE: RefCell<ui_wgpu::wgpu::component::role_chrome::ChromeRole> = RefCell::new(resolve_native_boot_role());
 }
