@@ -1203,7 +1203,13 @@
       \nointerlineskip
       \hbox{%
         \hspace{\semio@table@long@cellpad}%
-        \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
+        \IfFileExists{#1}{%
+          \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
+        }{%
+          \parbox[c][\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax][c]{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{%
+            \centering\SemioSans\itshape\fontsize{8pt}{10pt}\selectfont\color{semio-chrome-text-normal}Kein freigegebenes Bild%
+          }%
+        }%
       }%
       \nointerlineskip
       \hrule height\dimexpr\semio@table@long@cellpad-\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
