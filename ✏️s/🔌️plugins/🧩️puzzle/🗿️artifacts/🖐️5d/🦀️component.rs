@@ -6,9 +6,6 @@
 //! per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, an artifact is a `🧬️schema` +
 //! `🚪️io` system only; behaviour lives in the sibling editor module, `crate::editor::puzzle5d`.
 
-pub use crate::artifacts::puzzle5d::schema::diff::Puzzle5dDiff;
-pub use crate::artifacts::puzzle5d::schema::mutations::Puzzle5dMutation;
-pub use crate::artifacts::puzzle5d::schema::snapshot::Puzzle5dSnapshot;
 
 use serde::{Deserialize, Serialize};
 
@@ -760,20 +757,20 @@ pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::Art
 //#endregion 🔖️WholeListConverters
 
 //#region 🔖️KindCatalogScratch
-/// 🖌️ Ephemeral working-scene cache: `kind_catalogs` child_id → its live `SemioKitSnapshot` content.
-/// Per this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/
-/// `VcsArtifactApp.children` exist structurally in the framework but are NOT populated by any plugin
-/// as of 2026-08-13 (no `open_child`/`register_child` caller yet), so there is no live resolver seam
-/// to read a composed child's content back through — every render/export/inference/mutation call site
-/// funnels through `kind_catalogs_of` below instead, which reads this cache. Populated wherever a
-/// `Puzzle5dSnapshot` with real kind-catalog content is built (`puzzle5d_snapshot_from_kind_catalogs`,
-/// `seed_kind_catalogs_scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant
-/// (matches the repo-wide `EngineRep` contract). Staleness gap documented rather than fail-closed
-/// (same category as `sourcing`'s `SOURCING_CATALOG_SCRATCH`: `kind_catalogs` is only ever whole-
-/// value-replaced via `ReplaceKindCatalogs`, never incrementally mutated in-history, so there is no
-/// undo/redo-of-a-partial-edit scenario to go stale across — only a whole-document undo/redo, which
-/// re-seeds the cache from the restored snapshot's own DSL/pack parse path).
 thread_local! {
+    /// 🖌️ Ephemeral working-scene cache: `kind_catalogs` child_id → its live `SemioKitSnapshot` content.
+    /// Per this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/
+    /// `VcsArtifactApp.children` exist structurally in the framework but are NOT populated by any plugin
+    /// as of 2026-08-13 (no `open_child`/`register_child` caller yet), so there is no live resolver seam
+    /// to read a composed child's content back through — every render/export/inference/mutation call site
+    /// funnels through `kind_catalogs_of` below instead, which reads this cache. Populated wherever a
+    /// `Puzzle5dSnapshot` with real kind-catalog content is built (`puzzle5d_snapshot_from_kind_catalogs`,
+    /// `seed_kind_catalogs_scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant
+    /// (matches the repo-wide `EngineRep` contract). Staleness gap documented rather than fail-closed
+    /// (same category as `sourcing`'s `SOURCING_CATALOG_SCRATCH`: `kind_catalogs` is only ever whole-
+    /// value-replaced via `ReplaceKindCatalogs`, never incrementally mutated in-history, so there is no
+    /// undo/redo-of-a-partial-edit scenario to go stale across — only a whole-document undo/redo, which
+    /// re-seeds the cache from the restored snapshot's own DSL/pack parse path).
     static PUZZLE5D_KIND_CATALOGS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

@@ -1,12 +1,10 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `remove-step-at`.
 
 use crate::editor::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::artifacts::imperative::dsl::ValueDsl;
-use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
-use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, PathRef, Step};
+use crate::artifacts::imperative::mutations::{delete_step, ImperativeMutation};
+use crate::artifacts::imperative::{ImperativeSnapshot, PathRef, Step};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Helpers
 /// 🆔️ Allocates a fresh `step-N` id one past the highest suffix used anywhere in the document

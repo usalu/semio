@@ -1,7 +1,5 @@
 //! 🪣️ `set-fill-count` command.
 
-use crate::artifacts::puzzle3d::schema::PrecomputeLane;
-use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 use crate::editor::puzzle3d::PUZZLE3D_FILL_COUNT_MAX;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;

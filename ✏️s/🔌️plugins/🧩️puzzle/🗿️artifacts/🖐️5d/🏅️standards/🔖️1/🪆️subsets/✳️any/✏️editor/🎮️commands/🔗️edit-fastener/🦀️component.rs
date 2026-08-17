@@ -1,6 +1,6 @@
 //! 🔗️ `edit-fastener` command.
 
-use crate::editor::puzzle5d::{find_part_by_grip_full_id, next_fastener_id, puzzle5d_grip_full_id, puzzle5d_resolve_number_edit, world_grip_position, Puzzle5dActionCtx, Puzzle5dDocument, Puzzle5dFastener, PUZZLE5D_PROXIMITY_RADIUS};
+use crate::editor::puzzle5d::{puzzle5d_resolve_number_edit, Puzzle5dActionCtx, Puzzle5dFastener};
 use serde_json::Value;
 
 fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {

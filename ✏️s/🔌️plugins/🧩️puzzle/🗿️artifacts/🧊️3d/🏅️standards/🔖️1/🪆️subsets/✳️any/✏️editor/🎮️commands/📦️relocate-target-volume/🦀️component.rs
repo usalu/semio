@@ -1,8 +1,7 @@
 //! 📦️ `relocate-target-volume` command.
 
-use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx, Puzzle3dTargetVolume, PUZZLE3D_ID_COUNTER};
+use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx};
 use serde_json::{json, Value};
-use std::sync::atomic::Ordering;
 
 /// 🚚️ Absolute pose push from the gumball for one unlocked target volume.
 pub fn relocate_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

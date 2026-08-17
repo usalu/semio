@@ -31,11 +31,11 @@ pub struct En1996Snapshot {
     #[state(artifact)]
     pub f_vk_mpa: f64,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
-    pub masonry_class: crate::artifacts::en1996::MasonryClass,
+    pub masonry_class: MasonryClass,
     #[state(artifact)]
-    pub design_situation: crate::document::DesignSituation,
+    pub design_situation: DesignSituation,
     #[state(artifact)]
     pub mu: f64,
     #[state(artifact)]
@@ -45,9 +45,9 @@ pub struct En1996Snapshot {
     #[state(artifact)]
     pub unit: String,
     #[state(artifact)]
-    pub exposure: crate::artifacts::en1996::part_2::ExposureClass,
+    pub exposure: part_2::ExposureClass,
     #[state(artifact)]
-    pub mortar: crate::artifacts::en1996::part_2::MortarClass,
+    pub mortar: part_2::MortarClass,
     #[state(artifact)]
     pub bed_joint_thickness_mm: f64,
     #[state(artifact)]

@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dSnapshot, PUZZLE_2D_SCHEMA};
+use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dSnapshot};
 use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -242,8 +242,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Puzzle2dBuilderFacets {
-        construction: derived_construction::Puzzle2dBuilderConstruction,
-        analysis: derived_analysis::Puzzle2dAnalyzerAnalysis,
+        construction: Puzzle2dBuilderConstruction,
+        analysis: Puzzle2dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Puzzle2dComposerComposition,
     }
     builder: Puzzle2dBuilder,

@@ -18,7 +18,7 @@ use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::aabb::{aabb_key, SemioAabb};
+use super::aabb::SemioAabb;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a mesh snapshot. One field per named inference under

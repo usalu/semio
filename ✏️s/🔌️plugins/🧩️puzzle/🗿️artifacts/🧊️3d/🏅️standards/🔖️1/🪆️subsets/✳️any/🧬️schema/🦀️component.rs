@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dSnapshot, PUZZLE_3D_SCHEMA};
+use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dSnapshot};
 use artifact_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -270,8 +270,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Puzzle3dBuilderFacets {
-        construction: derived_construction::Puzzle3dBuilderConstruction,
-        analysis: derived_analysis::Puzzle3dAnalyzerAnalysis,
+        construction: Puzzle3dBuilderConstruction,
+        analysis: Puzzle3dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Puzzle3dComposerComposition,
     }
     builder: Puzzle3dBuilder,

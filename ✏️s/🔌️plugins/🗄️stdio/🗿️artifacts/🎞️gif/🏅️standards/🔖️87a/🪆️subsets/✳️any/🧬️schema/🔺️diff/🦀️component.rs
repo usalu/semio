@@ -743,14 +743,14 @@ fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
     w.write_u8(c.g);
     w.write_u8(c.b);
 }
-fn read_bin_rgb(r: &mut dsl::ByteReader) -> Result<GifRgb, dsl::PackError> {
+fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackError> {
     Ok(GifRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
 fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
     w.write_u8(if t.sorted { 1 } else { 0 });
     write_bin_vec(w, &t.colors, write_bin_rgb);
 }
-fn read_bin_color_table(r: &mut dsl::ByteReader) -> Result<GifColorTable, dsl::PackError> {
+fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackError> {
     let sorted = r.read_u8()? != 0;
     let colors = read_bin_vec(r, read_bin_rgb)?;
     Ok(GifColorTable { sorted, colors })
@@ -759,7 +759,7 @@ fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
@@ -772,7 +772,7 @@ fn write_bin_image(w: &mut dsl::ByteWriter, f: &GifImage) {
     write_bin_option(w, &f.lct, write_bin_color_table);
     write_bin_blob(w, &f.indices);
 }
-fn read_bin_image(r: &mut dsl::ByteReader) -> Result<GifImage, dsl::PackError> {
+fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GifImage, dsl::PackError> {
     Ok(GifImage { left: r.read_u32_le()?, top: r.read_u32_le()?, width: r.read_u32_le()?, height: r.read_u32_le()?, interlace: r.read_u8()? != 0, lct: read_bin_option(r, read_bin_color_table)?, indices: read_bin_blob(r)? })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
@@ -785,7 +785,7 @@ fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl
         }
     }
 }
-fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
@@ -798,7 +798,7 @@ fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&m
         write_item(w, item);
     }
 }
-fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -821,7 +821,7 @@ fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_v
         }
     }
 }
-fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),
@@ -850,7 +850,7 @@ fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GifImageDiff) {
     write_bin_tri_flag(w, &d.lct, write_bin_color_table);
     write_bin_option(w, &d.indices, |w, v| write_bin_blob(w, v));
 }
-fn read_bin_image_diff(r: &mut dsl::ByteReader) -> Result<GifImageDiff, dsl::PackError> {
+fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifImageDiff, dsl::PackError> {
     Ok(GifImageDiff {
         left: read_bin_option(r, |r| r.read_u32_le())?,
         top: read_bin_option(r, |r| r.read_u32_le())?,

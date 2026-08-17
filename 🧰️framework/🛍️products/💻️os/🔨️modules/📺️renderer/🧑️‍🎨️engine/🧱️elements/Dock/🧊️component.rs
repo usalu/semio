@@ -9,8 +9,7 @@
 use semio_framework::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{
-    chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Label, Level, Locale, LocalizedLabel, Rect, Rgba,
-    Terminology, Theme, UiPresence, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    chrome_item_text, draw_text, even_window_layout, push_chrome_group_border, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 
 pub type DockPath = Vec<usize>;
@@ -48,8 +47,8 @@ pub struct DockRenderContext<'a> {
     pub icons: &'a IconAtlas,
     pub input: &'a mut InputState<ActionDescriptor>,
     pub theme: &'a Theme,
-    pub window_labels: &'a std::collections::HashMap<String, String>,
-    pub window_icon_ids: &'a std::collections::HashMap<String, String>,
+    pub window_labels: &'a HashMap<String, String>,
+    pub window_icon_ids: &'a HashMap<String, String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1389,9 +1388,9 @@ fn collect_stack_bodies(
 }
 
 fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
-    let mut scroll = std::collections::HashMap::new();
-    let mut collapsed = std::collections::HashMap::new();
-    let mut selects = std::collections::HashMap::new();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
     let mut widget_ctx = crate::interpreter::framework_widget_context(ctx.draw, None, ctx.atlas, Some(ctx.icons), ctx.input, ctx.theme, &mut scroll, &mut collapsed, &mut selects, None);
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }

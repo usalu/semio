@@ -46,12 +46,12 @@ impl Default for SequenceArtifact {
 
 impl SequenceArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::sequence::SequenceSnapshot {
-        crate::artifacts::sequence::SequenceSnapshot { schema: self.schema.clone(), content: self.content.clone() }
+    pub fn to_snapshot(&self) -> SequenceSnapshot {
+        SequenceSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::sequence::SequenceSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             content: snapshot.content,
@@ -63,7 +63,7 @@ impl SequenceArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::sequence::SequenceSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: SequenceSnapshot) {
         self.schema = snapshot.schema;
         self.content = snapshot.content;
     }
@@ -224,8 +224,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SequenceBuilderFacets {
-        construction: derived_construction::SequenceBuilderConstruction,
-        analysis: derived_analysis::SequenceAnalyzerAnalysis,
+        construction: SequenceBuilderConstruction,
+        analysis: SequenceAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SequenceComposerComposition,
     }
     builder: SequenceBuilder,

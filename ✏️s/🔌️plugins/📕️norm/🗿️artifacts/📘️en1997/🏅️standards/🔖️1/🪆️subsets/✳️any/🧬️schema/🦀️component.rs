@@ -34,7 +34,7 @@ pub struct En1997Artifact {
     #[state(artifact)]
     pub design_approach: String,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub settlement_limit_mm: f64,
     #[state(artifact)]
@@ -68,14 +68,14 @@ impl Default for En1997Artifact {
 }
 
 impl From<En1997Snapshot> for En1997Artifact {
-    fn from(snapshot: crate::artifacts::en1997::En1997Snapshot) -> Self {
+    fn from(snapshot: En1997Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1997Artifact {
-    pub fn to_snapshot(&self) -> crate::artifacts::en1997::En1997Snapshot {
-        crate::artifacts::en1997::En1997Snapshot {
+    pub fn to_snapshot(&self) -> En1997Snapshot {
+        En1997Snapshot {
             v_ed_kn: self.v_ed_kn.clone(),
             h_ed_kn: self.h_ed_kn.clone(),
             footing_area_m2: self.footing_area_m2.clone(),
@@ -101,7 +101,7 @@ impl En1997Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::artifacts::en1997::En1997Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1997Snapshot) -> Self {
         Self {
             v_ed_kn: snapshot.v_ed_kn,
             h_ed_kn: snapshot.h_ed_kn,
@@ -129,7 +129,7 @@ impl En1997Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1997::En1997Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1997Snapshot) {
         self.v_ed_kn = snapshot.v_ed_kn;
         self.h_ed_kn = snapshot.h_ed_kn;
         self.footing_area_m2 = snapshot.footing_area_m2;
@@ -302,8 +302,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1997BuilderFacets {
-        construction: derived_construction::En1997BuilderConstruction,
-        analysis: derived_analysis::En1997AnalyzerAnalysis,
+        construction: En1997BuilderConstruction,
+        analysis: En1997AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1997ComposerComposition,
     }
     builder: En1997Builder,

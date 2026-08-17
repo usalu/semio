@@ -68,7 +68,7 @@ mod tests {
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let config_snapshot = SpaceIndexConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { snapshot: &config_snapshot };
+        let cfg = ConfigView { snapshot: &config_snapshot };
         let events = vec![
             event(1, DirectoryEventBody::UserCreated { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into() }, None),
             event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
@@ -90,7 +90,7 @@ mod tests {
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let config_snapshot = SpaceIndexConfig::default();
-        let cfg = semio_framework_plugin::ConfigView { snapshot: &config_snapshot };
+        let cfg = ConfigView { snapshot: &config_snapshot };
         let events = vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
         let events_json = serde_json::to_string(&events).unwrap();
         let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");

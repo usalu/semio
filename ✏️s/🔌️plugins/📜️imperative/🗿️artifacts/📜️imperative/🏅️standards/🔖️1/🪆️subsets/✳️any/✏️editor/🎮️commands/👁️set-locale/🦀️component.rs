@@ -1,7 +1,6 @@
 //! 👁️ 👁️ Imperative play app commands command — `set-locale`.
 
 use crate::editor::imperative::config::ImperativeConfigMutation;
-use crate::editor::imperative::engine::ImperativeHost;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

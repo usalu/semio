@@ -167,7 +167,7 @@ fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::Vcs
 /// stdio children is a DIFFERENT component from stdio itself. Idempotent, so calling it from N
 /// plugins is harmless.
 pub fn register_child_store_factories() {
-    dsl::register_child_store_factory(dsl::os_io::ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical semio artifact kind"), std::sync::Arc::new(SemioChildStoreFactory));
+    let _ = dsl::register_child_store_factory(dsl::os_io::ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical semio artifact kind"), std::sync::Arc::new(SemioChildStoreFactory));
 }
 //#endregion 🔖️ChildStoreFactories
 

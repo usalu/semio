@@ -645,7 +645,7 @@ where
     P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
 {
-    let _ = register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
+    register_child_store_factory(kind, Arc::new(TypedChildStoreFactory::<P, Mutation>::new(schema)))
 }
 
 //#region 🔖️CompositionDsl
@@ -4501,10 +4501,6 @@ where
         self.set_state(envelope, applied_edit_ids, redo_edit_ids)?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
         Ok(CommandReceipt { edit_ids: self.applied_edit_ids.clone(), generation: self.generation(), messages: Vec::new(), worst: None })
-    }
-
-    pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), VcsError> {
-        self.set_state(envelope, applied_edit_ids, Vec::new())
     }
 
     /// @emoji 💾️ Restores full store state including the redo stack, so `Redo` survives
@@ -9107,9 +9103,9 @@ mod tests {
         replay.ingest_remote(delete).expect("delete applies cleanly");
         replay.ingest_remote(modify).expect("modify applies under LaissezFaire");
 
-        let mut ledger = std::collections::HashMap::new();
+        let mut ledger = HashMap::new();
         ledger.insert(modify_edit_id.clone(), first.messages_for_edit(&modify_edit_id).to_vec());
-        let mut replayed = std::collections::HashMap::new();
+        let mut replayed = HashMap::new();
         replayed.insert(modify_edit_id.clone(), replay.messages_for_edit(&modify_edit_id).to_vec());
         assert!(!ledger[&modify_edit_id].is_empty(), "the modify edit must have raised a message for this law to be meaningful");
 
@@ -9250,7 +9246,7 @@ mod tests {
 
         assert_eq!(store.conflicts().len(), cap, "pruning must bring the ledger back down to the cap");
         assert!(store.conflicts().iter().any(|conflict| conflict.id == open.id && conflict.status == crate::os_spr::ConflictStatus::Open), "the Open conflict must never be evicted, no matter how far over cap the resolved backlog grows");
-        let surviving_seeds: std::collections::HashSet<u64> = store.conflicts().iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
+        let surviving_seeds: HashSet<u64> = store.conflicts().iter().filter(|conflict| conflict.status == crate::os_spr::ConflictStatus::Accepted).map(|conflict| conflict.timestamp.physical_ms).collect();
         assert_eq!(surviving_seeds.len(), cap - 1);
         for evicted_seed in 0..=overflow {
             assert!(!surviving_seeds.contains(&evicted_seed), "seed {evicted_seed} was among the oldest resolved conflicts and must be pruned first");

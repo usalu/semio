@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.en1995")]
 pub struct En1995Artifact {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub m_ed_knm: f64,
     #[state(artifact)]
@@ -64,14 +64,14 @@ impl Default for En1995Artifact {
 }
 
 impl From<En1995Snapshot> for En1995Artifact {
-    fn from(snapshot: crate::artifacts::en1995::En1995Snapshot) -> Self {
+    fn from(snapshot: En1995Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1995Artifact {
-    pub fn to_snapshot(&self) -> crate::artifacts::en1995::En1995Snapshot {
-        crate::artifacts::en1995::En1995Snapshot {
+    pub fn to_snapshot(&self) -> En1995Snapshot {
+        En1995Snapshot {
             annex: self.annex.clone(),
             m_ed_knm: self.m_ed_knm.clone(),
             n_ed_kn: self.n_ed_kn.clone(),
@@ -95,7 +95,7 @@ impl En1995Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::artifacts::en1995::En1995Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1995Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             m_ed_knm: snapshot.m_ed_knm,
@@ -121,7 +121,7 @@ impl En1995Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1995::En1995Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1995Snapshot) {
         self.annex = snapshot.annex;
         self.m_ed_knm = snapshot.m_ed_knm;
         self.n_ed_kn = snapshot.n_ed_kn;
@@ -292,8 +292,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1995BuilderFacets {
-        construction: derived_construction::En1995BuilderConstruction,
-        analysis: derived_analysis::En1995AnalyzerAnalysis,
+        construction: En1995BuilderConstruction,
+        analysis: En1995AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1995ComposerComposition,
     }
     builder: En1995Builder,

@@ -1,10 +1,6 @@
 //! 🧱️ EN 1996 app — document entities (constitutional: general).
 
-pub use crate::artifacts::en1996::schema::diff::En1996Diff;
-pub use crate::artifacts::en1996::schema::mutations::En1996Mutation;
-pub use crate::artifacts::en1996::schema::snapshot::En1996Snapshot;
 
-use crate::document::{AnnexChoice, DesignSituation};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types

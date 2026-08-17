@@ -728,7 +728,7 @@ fn write_bin_field_diff(w: &mut dsl::ByteWriter, d: &CsvFieldDiff) {
         }
     }
 }
-fn read_bin_field_diff(r: &mut dsl::ByteReader) -> Result<CsvFieldDiff, dsl::PackError> {
+fn read_bin_field_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvFieldDiff, dsl::PackError> {
     let mut d = CsvFieldDiff::default();
     if r.read_u8()? == 1 {
         let len = r.read_varint_u64()? as usize;
@@ -758,7 +758,7 @@ fn write_bin_record_diff(w: &mut dsl::ByteWriter, d: &CsvRecordDiff) {
         }
     }
 }
-fn read_bin_record_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordDiff, dsl::PackError> {
+fn read_bin_record_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordDiff, dsl::PackError> {
     let fields = if r.read_u8()? == 1 {
         let n = r.read_varint_u64()? as usize;
         let mut items = Vec::with_capacity(n);
@@ -787,7 +787,7 @@ fn write_bin_records_diff(w: &mut dsl::ByteWriter, d: &CsvRecordsDiff) {
         crate::artifacts::csv::schema::mutations::write_bin_record(w, &a.record);
     }
 }
-fn read_bin_records_diff(r: &mut dsl::ByteReader) -> Result<CsvRecordsDiff, dsl::PackError> {
+fn read_bin_records_diff(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecordsDiff, dsl::PackError> {
     let removed_n = r.read_varint_u64()? as usize;
     let mut removed = Vec::with_capacity(removed_n);
     for _ in 0..removed_n {

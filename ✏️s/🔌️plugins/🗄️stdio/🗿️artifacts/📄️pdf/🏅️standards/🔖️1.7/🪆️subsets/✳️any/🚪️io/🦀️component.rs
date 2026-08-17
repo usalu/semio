@@ -22,7 +22,6 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{Obj
 pub mod derived_composition {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfSnapshot;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -39,7 +38,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY || s.dialect == DEP_DEFLATE)

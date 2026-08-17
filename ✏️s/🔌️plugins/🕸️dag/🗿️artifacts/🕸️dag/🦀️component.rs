@@ -31,7 +31,7 @@ pub use infinite_board_port_directed_dag::{DagEdgePatch, DagFixtureEdge, DagNode
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the dag plugin's
 /// nodes/edges now live in this composed child's `nodes`/`edges` rather than inline on `DagSnapshot`.
-pub type DagContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
+pub type DagContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{

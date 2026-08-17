@@ -1,7 +1,4 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
-// 🪶️ `linkage` (nightly, already the pinned toolchain workspace-wide): lets
-// `inlined `plugin_bundle_installer_shim` module (fallback stub).
-#![feature(linkage)]
 
 #[cfg(feature = "os-host-full")]
 pub mod host {
@@ -504,7 +501,7 @@ pub mod host {
             let Some(target_port) = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)) else {
                 return false;
             };
-            match crate::workflow::negotiate_media_contract(source_port, target_port) {
+            match workflow::negotiate_media_contract(source_port, target_port) {
                 Ok(contract) if contract == edge.contract => true,
                 Ok(_) => {
                     conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-type-mismatch"), message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id), target: vec![edge.id.clone()], op_index: None });
@@ -2129,7 +2126,7 @@ pub mod instance {
     //! 📦️ App instance schemas, parameters, and studio bindings.
 
     use crate::workflow;
-    use semio_framework::{ConfigFieldShape, ConfigSpec};
+    use semio_framework::ConfigSpec;
     use serde::{Deserialize, Serialize};
     use serde_json::{Value, json};
     use std::collections::{HashMap, HashSet};
@@ -2473,7 +2470,7 @@ pub mod instance {
     //#endregion 🔖️Parameters
 
     //#region 🔖️Materialize
-    use std::sync::{LazyLock, Mutex, OnceLock};
+    use std::sync::{Mutex, OnceLock};
 
     static OS_FIXTURE_JSON: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
 
@@ -2686,7 +2683,7 @@ pub mod media_export_raster {
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
     #[cfg(not(feature = "os-host-full"))]
-    use std::sync::LazyLock;
+    use std::sync::{LazyLock, Mutex};
 
     //#region 🔖️MediaRegistryRegistryStubs
     // 🧬️ Default-feature builds have no `workflow` module, so keep a local registry. With
@@ -2752,8 +2749,8 @@ pub mod media_export_raster {
     /// dependency closure), the direction this ticket's other framework-product crates already use.
     use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
     use serde_json::Value;
-    use std::collections::HashMap;
-    use std::sync::{Mutex, OnceLock};
+    
+    
 
     /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
     pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
@@ -3132,7 +3129,7 @@ pub mod workflow {
     }
     //#endregion 🔖️RegistryStubs
     use base64::Engine;
-    use semio_framework::{MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat, media_types_compatible};
+    use semio_framework::{MediaCompat, MediaWireFormat, media_types_compatible};
     use serde::{Deserialize, Serialize};
     use serde_json::{Value, json};
     use std::collections::{HashMap, HashSet};
@@ -4666,11 +4663,3 @@ pub use semio_framework::*;
 pub use store::{ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort, document_backbone_ref, set_host_backbone_port};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
-
-//#region 🔖️PluginInstallerShim
-// 🛡️ Fallback installer stub inlined after the external shim path went missing during crate consolidation.
-mod plugin_bundle_installer_shim_inline {
-    #[allow(dead_code)]
-    pub fn install_noop() {}
-}
-//#endregion 🔖️PluginInstallerShim

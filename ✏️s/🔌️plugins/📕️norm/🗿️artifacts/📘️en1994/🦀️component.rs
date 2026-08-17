@@ -1,11 +1,6 @@
 //! En1994 — document entities (constitutional: general).
 
-pub use crate::artifacts::en1994::schema::diff::En1994Diff;
-pub use crate::artifacts::en1994::schema::mutations::En1994Mutation;
-pub use crate::artifacts::en1994::schema::snapshot::En1994Snapshot;
 
-use crate::document::AnnexChoice;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types
 

@@ -289,8 +289,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec FlowBuilderFacets {
-        construction: derived_construction::FlowBuilderConstruction,
-        analysis: derived_analysis::FlowAnalyzerAnalysis,
+        construction: FlowBuilderConstruction,
+        analysis: FlowAnalyzerAnalysis,
         composition: super::super::io::derived_composition::FlowComposerComposition,
     }
     builder: FlowBuilder,

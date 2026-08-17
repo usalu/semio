@@ -1,17 +1,12 @@
 //! 🌊️ OS flow family glue — wires document/catalogue/registry/bridge/host/drawing/wasm/vcs, brep geometry, and wasm SDK.
 //! Light/draw/brep operator packs are packaged extensions under ✏️s/🔌️plugins/🌊️flow.
 
-extern crate self as flow;
-extern crate self as flow_extension_wasm;
 extern crate self as flow_extension_sdk;
 
 //#region 🔖️KernelCrateAliases
 /// 🧬️ Derive macros (`DslRecord`/`DslArtifact`/`DslOps`) resolve `dsl`/`store`/`pack`/`spr` as crate roots.
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as spr;
-extern crate semio_framework_os_kernel as protocol;
 //#endregion 🔖️KernelCrateAliases
 
 //#region 🔖️KernelModuleAliases
@@ -54,7 +49,6 @@ pub use registry::*;
 
 #[path = "../../🌉️bridge/🦀️component.rs"]
 pub mod bridge;
-pub use bridge::*;
 
 #[path = "../../🖥️host/🦀️component.rs"]
 pub mod host;
@@ -66,7 +60,6 @@ pub use drawing::*;
 
 #[path = "../../🌉️wasm/🦀️component.rs"]
 pub mod wasm_session;
-pub use wasm_session::*;
 
 #[path = "../../🌿️vcs/🦀️component.rs"]
 pub mod vcs;

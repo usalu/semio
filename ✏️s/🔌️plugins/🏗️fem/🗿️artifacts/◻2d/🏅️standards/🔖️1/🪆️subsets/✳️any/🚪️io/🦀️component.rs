@@ -10,10 +10,9 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.j
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::fem2d::Fem2dSnapshot;
     use crate::artifacts::fem2d::standards::v1::subsets::any::schema::Fem2dAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
@@ -32,7 +31,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

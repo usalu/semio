@@ -21,7 +21,7 @@ use crate::artifacts::stl::schema::diff::{self, StlDiff};
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
 use protocol::Mutation;
-use protocol::{DiffCodec, OpBinary, OpText};
+use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations

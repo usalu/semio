@@ -28,7 +28,7 @@ pub mod derived_composition {
             &[DIALECT_ANY, DIALECT_A, DEP_BINARY, DEP_DEFLATE]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = PdfAnyComposer::compose(sources)?;
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(check_pdf_a_conformance(&inner.snapshot));

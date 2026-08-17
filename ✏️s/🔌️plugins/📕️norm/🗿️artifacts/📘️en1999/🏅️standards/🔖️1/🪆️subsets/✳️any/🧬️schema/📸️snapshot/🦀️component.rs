@@ -62,7 +62,7 @@ pub struct En1999Snapshot {
     #[state(artifact)]
     pub sigma_ed_shell_mpa: f64,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
 }
 //#endregion 🔖️Snapshot
 

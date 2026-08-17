@@ -5,7 +5,7 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::curate::CurateSnapshot;
     use crate::artifacts::curate::standards::v1::subsets::any::schema::CurateAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

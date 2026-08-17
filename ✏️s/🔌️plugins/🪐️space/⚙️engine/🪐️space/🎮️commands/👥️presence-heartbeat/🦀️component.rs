@@ -15,7 +15,7 @@ pub struct PresenceHeartbeat {
 
 /// 🐢️ A heartbeat only records this client's own identity for the presence broadcast — it must
 /// declare `None` `ui_scope` so it never triggers a full-shell `refresh-ui` for the sending client.
-pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let config_mutations = vec![SpaceConfigMutation::SetClient { client_id: Some(payload.client_id.clone()), client_name: Some(payload.name.clone()) }];
     Ok(Emit { config_mutations, ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
 }

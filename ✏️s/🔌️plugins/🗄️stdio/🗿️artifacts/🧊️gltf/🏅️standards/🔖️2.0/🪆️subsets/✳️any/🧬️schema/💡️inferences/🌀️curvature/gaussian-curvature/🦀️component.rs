@@ -16,7 +16,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfGaussianCurvatureInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     from_raw(context, &super::raw(context))
 }
 

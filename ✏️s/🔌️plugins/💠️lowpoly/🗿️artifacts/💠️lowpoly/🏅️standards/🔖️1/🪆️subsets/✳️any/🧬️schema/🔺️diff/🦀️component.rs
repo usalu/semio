@@ -1,6 +1,6 @@
 //! 🧬️ Lowpoly diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySelection};
+use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

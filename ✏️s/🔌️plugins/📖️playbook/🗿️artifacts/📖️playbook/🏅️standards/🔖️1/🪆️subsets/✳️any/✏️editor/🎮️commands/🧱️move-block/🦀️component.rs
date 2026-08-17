@@ -1,8 +1,7 @@
 //! 🧱️ 🧱️ Playbook play app commands command — `move-block`.
 
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
-use crate::artifacts::playbook::schema::default_block;
-use crate::artifacts::playbook::op::{add_block_operation, move_block_operation, remove_block_operation, PlaybookMutation};
+use crate::artifacts::playbook::op::{move_block_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};

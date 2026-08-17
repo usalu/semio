@@ -28,12 +28,12 @@ use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge,
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use graph::manifest::PropertyBag;
 use imperative_engine::{
-    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
+    compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step,
 };
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
     ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
     Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
@@ -68,8 +68,8 @@ pub fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// `.artifact_kind(...)` literal (schema/media type copied verbatim) plus the extra `steps:in` input
 /// port (Wave-2 port recipe): incoming computation results from an upstream workflow node insert as
 /// new steps in the sequence document (see `SequencePlayApp::import_media` below).
-pub fn sequence_io() -> semio_framework::AppIo {
-    semio_framework::AppIo {
+pub fn sequence_io() -> AppIo {
+    AppIo {
         document_schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Computation, form: semio_framework::MediaForm::Sequence },
         ports: vec![semio_framework::MediaPortSpec {
@@ -152,7 +152,7 @@ const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
 
 fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
-    serde_json::from_value(serde_json::to_value(dict).unwrap_or(serde_json::Value::Null)).unwrap_or_default()
+    serde_json::from_value(serde_json::to_value(dict).unwrap_or(Value::Null)).unwrap_or_default()
 }
 
 /// 🧭️ `pub` — reused by other app taxonomy nodes (panels/commands: control-flow nesting, catalogue slots).
@@ -191,8 +191,8 @@ fn default_control_slot(kind: &str) -> &'static str {
     }
 }
 
-fn neural_value_to_dsl_value(value: &NeuralValue) -> dsl::DslValue {
-    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+fn neural_value_to_dsl_value(value: &NeuralValue) -> DslValue {
+    dsl::to_dsl_value(value).unwrap_or(DslValue::Null)
 }
 
 // 🧯️ `unnecessary_wraps` — mirrors `IoPortSpec::value_type`'s `Option<String>` field shape; every
@@ -796,7 +796,7 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     fn initial_snapshot() -> SequenceSnapshot {
-        crate::artifacts::sequence::default_snapshot()
+        default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -822,7 +822,7 @@ impl ArtifactEditor for SequencePlayApp {
         let id = next_available_step_id(fixture);
         let live = fixture.to_fixture();
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
-        let step = crate::artifacts::sequence::SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
+        let step = SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
         Ok(Emit::mutations(vec![crate::artifacts::sequence::mutations::create_step(step)]))
     }
 

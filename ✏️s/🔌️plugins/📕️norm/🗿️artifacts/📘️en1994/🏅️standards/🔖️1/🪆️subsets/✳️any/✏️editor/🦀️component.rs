@@ -147,7 +147,7 @@ impl crate::document::NormFamily for En1994Family {
     }
 }
 
-pub type Host = crate::document::NormHost<En1994Family>;
+pub type Host = NormHost<En1994Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest

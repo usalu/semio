@@ -16,7 +16,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfThicknessDistributionInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     let samples = super::samples(context);
     if samples.is_empty() {
         unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))

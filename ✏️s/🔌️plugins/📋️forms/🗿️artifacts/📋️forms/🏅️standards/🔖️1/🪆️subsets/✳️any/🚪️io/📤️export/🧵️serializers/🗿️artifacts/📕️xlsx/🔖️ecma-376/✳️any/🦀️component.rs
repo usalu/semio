@@ -1,6 +1,6 @@
 //! Serialize forms to stdio.xlsx.
 use crate::artifacts::forms::FormsSnapshot;
-use semio_s_plugin_stdio::artifacts::xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::xlsx::XlsxSnapshot;
 
 pub fn register() {}
 

@@ -5,24 +5,10 @@
 //! reverse structural converter and stdio's own real `parse_json_text` for `deserialize_bytes`.
 use crate::artifacts::remodel::RemodelSnapshot;
 use crate::artifacts::remodel::REMODEL_DOCUMENT_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonValue};
-use std::str::FromStr;
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
 
 pub fn register() {}
-
-/// 🔁️ Structural `JsonValue -> serde_json::Value` conversion (reverse of the export leaf's
-/// converter — see this file's module doc comment and that leaf's for the stdio_gap this fixes).
-fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
-    match value {
-        JsonValue::Null => serde_json::Value::Null,
-        JsonValue::Bool { value } => serde_json::Value::Bool(*value),
-        JsonValue::Number { lexeme } => serde_json::Number::from_str(lexeme).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null),
-        JsonValue::String { value } => serde_json::Value::String(value.clone()),
-        JsonValue::Array { items } => serde_json::Value::Array(items.iter().map(json_value_to_serde).collect()),
-        JsonValue::Object { members } => serde_json::Value::Object(members.iter().map(|member| (member.key.clone(), json_value_to_serde(&member.value))).collect()),
-    }
-}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<RemodelSnapshot, store::TextError> {
     let _ = REMODEL_DOCUMENT_SCHEMA;

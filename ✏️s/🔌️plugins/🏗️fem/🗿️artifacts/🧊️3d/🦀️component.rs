@@ -1,8 +1,5 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
-pub use crate::artifacts::fem3d::schema::diff::Fem3dDiff;
-pub use crate::artifacts::fem3d::schema::mutations::Fem3dMutation;
-pub use crate::artifacts::fem3d::schema::snapshot::Fem3dSnapshot;
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

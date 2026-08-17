@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfPrincipalAxesInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Vec<GltfDirectionScore>> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Vec<GltfDirectionScore>> {
     estimate(context.principal_axes.clone(), GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 

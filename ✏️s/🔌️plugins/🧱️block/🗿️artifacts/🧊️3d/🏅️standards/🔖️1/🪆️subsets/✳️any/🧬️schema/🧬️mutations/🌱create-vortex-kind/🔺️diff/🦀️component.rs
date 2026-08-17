@@ -2,7 +2,6 @@
 use crate::artifacts::block3d::diff::Block3dDiff;
 use crate::artifacts::block3d::diff::{Block3dVortexKindsDelta};
 use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::{Block3dVortexKind};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::CreateVortexKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

@@ -1,8 +1,7 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `add-step`.
 
 use crate::editor::imperative::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::artifacts::imperative::dsl::ValueDsl;
-use crate::artifacts::imperative::mutations::{create_step, delete_step, edit_step_params, reorder_steps, ImperativeMutation};
+use crate::artifacts::imperative::mutations::{create_step, ImperativeMutation};
 use crate::artifacts::imperative::{Dictionary, ImperativeSnapshot, PathRef, Step};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};

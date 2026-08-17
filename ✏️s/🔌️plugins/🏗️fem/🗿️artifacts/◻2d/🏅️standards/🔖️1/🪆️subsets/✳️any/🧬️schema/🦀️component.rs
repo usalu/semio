@@ -231,8 +231,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Fem2dBuilderFacets {
-        construction: derived_construction::Fem2dBuilderConstruction,
-        analysis: derived_analysis::Fem2dAnalyzerAnalysis,
+        construction: Fem2dBuilderConstruction,
+        analysis: Fem2dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Fem2dComposerComposition,
     }
     builder: Fem2dBuilder,

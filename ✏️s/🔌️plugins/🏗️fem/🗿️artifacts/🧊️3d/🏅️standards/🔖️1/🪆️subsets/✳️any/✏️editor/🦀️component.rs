@@ -30,10 +30,6 @@ use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const FEM3D_APP_ID: &str = "fem3d-play";
-
-/// 📦️ The `fem3d-play` "default" example, embedded via `crate::artifacts::fem3d::dsl` — shared by the
-/// manifest's `.example(...)` registration, the `setActiveExample` handler, and every test fixture.
-const FEM3D_EXAMPLE_DSL: &str = crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -126,10 +122,10 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 /// solved `crate::model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
 /// `crate::artifacts::fem3d::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
-pub fn fem3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn fem3d_io() -> AppIo {
+    AppIo {
         document_schema: crate::artifacts::fem3d::FEM_3D_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
@@ -144,7 +140,7 @@ pub fn fem3d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Any },
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         kind_id: None,
         required: true,
         multiplicity: semio_framework::PortMultiplicity::One,
@@ -158,7 +154,7 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         kind_id: Some("computation.fem3d".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::One,
@@ -524,9 +520,10 @@ pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::
 ///
 /// 🚧️ SDK GAP (contract §2.4, `App { definition, examples }` split): `EditorBuilder` has no
 /// `.example(...)`/`.workflow(...)` methods — the pre-migration chain's trailing
-/// `.example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"), FEM3D_EXAMPLE_DSL,
-/// "file")` and `.workflow("fem3d", "FEM 3D", "structure")` calls are dropped here, not ported.
-/// `FEM3D_EXAMPLE_DSL` itself stays — `setActiveExample`'s handler and every test fixture still use it.
+/// `.example("default", LocalizedLabel::native("Family House", "Einfamilienhaus"),
+/// crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
+/// "structure")` calls are dropped here, not ported. `setActiveExample`'s handler loads the same
+/// `FEM3D_EXAMPLE_TEXT` fixture directly.
 pub fn create_fem3d_app() -> AppDefinition {
     Editor::builder(crate::artifacts::fem3d::FEM3D_DIALECT)
             .document(["semio", "fem", "fem3d"])

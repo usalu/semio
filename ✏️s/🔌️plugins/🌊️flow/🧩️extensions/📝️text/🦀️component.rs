@@ -67,8 +67,8 @@ pub fn extension_manifest_json() -> String {
 }
 
 /// 🌊️ Builds an in-process operator registry for this extension.
-pub fn module_registry() -> neural_engine::Registry {
-    let mut registry = neural_engine::Registry::new();
+pub fn module_registry() -> Registry {
+    let mut registry = Registry::new();
     register(&mut registry);
     registry
 }

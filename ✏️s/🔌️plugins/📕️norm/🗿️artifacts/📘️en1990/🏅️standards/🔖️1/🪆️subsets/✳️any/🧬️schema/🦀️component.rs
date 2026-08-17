@@ -23,7 +23,7 @@ pub struct En1990Artifact {
     #[state(artifact)]
     pub consequence_class: u8,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub seismic_a_ed_kn: f64,
     #[state(presence)]
@@ -199,8 +199,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1990BuilderFacets {
-        construction: derived_construction::En1990BuilderConstruction,
-        analysis: derived_analysis::En1990AnalyzerAnalysis,
+        construction: En1990BuilderConstruction,
+        analysis: En1990AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1990ComposerComposition,
     }
     builder: En1990Builder,

@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfVoidVolumeInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     context
         .solid
         .map(|metrics| exact(metrics.2, GltfUnit::CubicMetre, context.sample_count, Some(context.topology)))

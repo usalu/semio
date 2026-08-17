@@ -5,6 +5,6 @@ use crate::artifacts::shooting::mutations::ShootingMutation;
 use crate::artifacts::shooting::ShootingSnapshot;
 
 
-pub fn inverse(payload: &CreateShot, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
+pub fn inverse(payload: &CreateShot, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     vec![ShootingMutation::DeleteShot(crate::artifacts::shooting::mutations::delete_shot::mutation::DeleteShot { id: payload.shot.id.clone() })]
 }

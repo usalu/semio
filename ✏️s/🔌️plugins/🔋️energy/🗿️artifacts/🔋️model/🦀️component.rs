@@ -1,6 +1,5 @@
 //! 🎪 Energy model artifact — headless BEM document surface over `crate::Model`.
 
-pub use crate::artifacts::model::schema::diff::EnergyModelDiff;
 pub use crate::artifacts::model::schema::mutations::EnergyModelMutation;
 pub use crate::artifacts::model::schema::snapshot::EnergyModelSnapshot;
 

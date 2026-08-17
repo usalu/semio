@@ -17,14 +17,14 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOrientationConsistencyInference::DESCRIPTOR
 }
 
-pub fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
+pub(crate) fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None)
 }
 
-pub fn unavailable_for_assembly(sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
+pub(crate) fn unavailable_for_assembly(sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(if context.topology.oriented { 1.0 } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 

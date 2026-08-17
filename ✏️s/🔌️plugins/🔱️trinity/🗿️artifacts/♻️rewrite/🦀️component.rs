@@ -1,13 +1,9 @@
 //! ♻️ `trinity.rewrite.rule` artifact — document entities (constitutional: general).
 
-pub use crate::artifacts::rewrite::schema::diff::RewriteDiff;
-pub use crate::artifacts::rewrite::schema::mutations::RewriteRuleMutation;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-use crate::artifacts::jack::PropertyValue;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity rewrite-engine errors.
@@ -63,8 +59,6 @@ impl From<LayoutPoint> for (f64, f64) {
     }
 }
 
-/// 📸️ Persisted rewrite snapshot — defined in `snapshot::schema`.
-pub use super::snapshot::schema::RewriteSnapshot;
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 

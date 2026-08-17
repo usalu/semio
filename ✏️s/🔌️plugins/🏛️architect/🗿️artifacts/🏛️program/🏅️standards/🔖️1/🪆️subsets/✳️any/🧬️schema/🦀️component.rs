@@ -2,7 +2,6 @@
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;
-use crate::artifacts::program::ProgramSnapshot;
 use graph::{orient_endpoints, Undirected};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -576,8 +575,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec ProgramBuilderFacets {
-        construction: derived_construction::ProgramBuilderConstruction,
-        analysis: derived_analysis::ProgramAnalyzerAnalysis,
+        construction: ProgramBuilderConstruction,
+        analysis: ProgramAnalyzerAnalysis,
         composition: super::super::io::derived_composition::ProgramComposerComposition,
     }
     builder: ProgramBuilder,

@@ -148,7 +148,7 @@ impl crate::document::NormFamily for Vdi3805Family {
     }
 }
 
-pub type Host = crate::document::NormHost<Vdi3805Family>;
+pub type Host = NormHost<Vdi3805Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest

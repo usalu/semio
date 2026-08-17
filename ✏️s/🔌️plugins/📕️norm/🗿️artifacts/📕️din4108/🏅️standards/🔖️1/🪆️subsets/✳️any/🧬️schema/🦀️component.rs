@@ -14,7 +14,7 @@ pub struct Din4108Artifact {
     #[state(artifact)]
     pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
     #[state(artifact)]
-    pub climate: crate::document::ClimateZoneDe,
+    pub climate: ClimateZoneDe,
     #[state(artifact)]
     pub airtightness_n50: f64,
     #[state(artifact)]
@@ -257,8 +257,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Din4108BuilderFacets {
-        construction: derived_construction::Din4108BuilderConstruction,
-        analysis: derived_analysis::Din4108AnalyzerAnalysis,
+        construction: Din4108BuilderConstruction,
+        analysis: Din4108AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Din4108ComposerComposition,
     }
     builder: Din4108Builder,

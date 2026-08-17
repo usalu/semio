@@ -16,15 +16,12 @@ use crate::editor::home::commands::{copy_invite_link, create_space, delete_space
 use crate::editor::home::config::HomeConfig;
 use crate::editor::home::presence::{HomePresence, HomePresenceMutation};
 use crate::artifacts::home::SHomeSnapshot;
-use semio_framework_os::{create_backbone_document, empty_space_snapshot, list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty, OsBackbonePort, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView, app_commands, create_tab_stack_layout, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, FaultOrigin, Label, LocalizedLabel, UiNode};
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
-use std::sync::Arc;
-use store::LocalStorageBackbonePort;
 
 //#region 🔖️Constants
 pub const S_HOME_CONTROLLER_ID: &str = "s-home";

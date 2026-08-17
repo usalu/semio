@@ -11,7 +11,7 @@ use semio_framework::kernel::HostEffect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
 use std::sync::Arc;
-use ui_wgpu::wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::wgpu::{UiNode, WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
 use js_sys::{Array, Function, Reflect};

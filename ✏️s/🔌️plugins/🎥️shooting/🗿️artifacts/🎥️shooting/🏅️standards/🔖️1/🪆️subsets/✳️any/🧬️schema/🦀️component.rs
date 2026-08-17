@@ -88,8 +88,8 @@ impl Default for ShootingArtifact {
 
 impl ShootingArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::shooting::ShootingSnapshot {
-        crate::artifacts::shooting::ShootingSnapshot {
+    pub fn to_snapshot(&self) -> ShootingSnapshot {
+        ShootingSnapshot {
             schema: self.schema.clone(),
             assets: self.assets.clone(),
             saved_cameras: self.saved_cameras.clone(),
@@ -102,7 +102,7 @@ impl ShootingArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::shooting::ShootingSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: ShootingSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             assets: snapshot.assets,
@@ -117,7 +117,7 @@ impl ShootingArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::shooting::ShootingSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: ShootingSnapshot) {
         self.schema = snapshot.schema;
         self.assets = snapshot.assets;
         self.saved_cameras = snapshot.saved_cameras;
@@ -511,8 +511,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec ShootingBuilderFacets {
-        construction: derived_construction::ShootingBuilderConstruction,
-        analysis: derived_analysis::ShootingAnalyzerAnalysis,
+        construction: ShootingBuilderConstruction,
+        analysis: ShootingAnalyzerAnalysis,
         composition: super::super::io::derived_composition::ShootingComposerComposition,
     }
     builder: ShootingBuilder,

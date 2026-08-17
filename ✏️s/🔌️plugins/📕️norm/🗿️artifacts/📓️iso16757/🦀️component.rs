@@ -1,10 +1,7 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
-pub use crate::artifacts::iso16757::schema::diff::Iso16757Diff;
-pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
 pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -1043,55 +1040,55 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     LANGUAGES
         .get_or_init(|| {
             vec![
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "iso16757.document",
                     extension: Some("iso16757"),
-                    role: crate::dsl::LanguageRole::Document,
+                    role: dsl::LanguageRole::Document,
                     grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("iso16757.document"),
+                    hooks: dsl::passthrough_hooks("iso16757.document"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "iso16757.op",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Ops,
+                    role: dsl::LanguageRole::Ops,
                     grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("iso16757.op"),
+                    hooks: dsl::passthrough_hooks("iso16757.op"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "iso16757.diff",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Diff,
+                    role: dsl::LanguageRole::Diff,
                     grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: crate::dsl::passthrough_hooks("iso16757.diff"),
+                    hooks: dsl::passthrough_hooks("iso16757.diff"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "iso16757.pack",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Pack,
+                    role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("iso16757.pack"),
+                    hooks: dsl::passthrough_hooks("iso16757.pack"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "iso16757.spr",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Spr,
+                    role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("iso16757.spr"),
+                    hooks: dsl::passthrough_hooks("iso16757.spr"),
                 },
             ]
         })

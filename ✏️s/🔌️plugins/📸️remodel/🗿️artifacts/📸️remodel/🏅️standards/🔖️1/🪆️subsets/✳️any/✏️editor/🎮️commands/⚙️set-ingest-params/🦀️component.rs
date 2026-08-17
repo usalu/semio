@@ -1,9 +1,9 @@
 //! ⚙️ ⚙️ Remodel play app commands command — `set-ingest-params`.
 
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::artifacts::remodel::mutations::{update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
+use crate::artifacts::remodel::mutations::update_ingest_params;
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{DenseParams, DenseResolution, FeatureDetector, FeatureParams, GeoParams, IngestParams, MatchParams, MatcherKind, MeshParams, MotionParams, RemodelSnapshot, RobustLossKind, SfmParams};
+use crate::artifacts::remodel::{IngestParams, RemodelSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

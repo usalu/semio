@@ -9,7 +9,7 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot
 pub mod derived_composition {
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 
@@ -24,7 +24,7 @@ pub mod derived_composition {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)

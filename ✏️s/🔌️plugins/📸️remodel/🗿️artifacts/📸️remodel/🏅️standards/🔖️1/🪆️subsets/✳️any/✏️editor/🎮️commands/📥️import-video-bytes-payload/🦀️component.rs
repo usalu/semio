@@ -1,11 +1,10 @@
 //! 📥️ 📥️ Remodel play app commands command — `import-video-bytes-payload`.
 
-use crate::editor::remodel::commands::import_frame_payload;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::editor::remodel::engine::{describe_video_probe, images as remodel_image, video as remodel_video, video_codec_to_artifact};
-use crate::editor::remodel::{decode_still_image, payload_from_data_url};
-use crate::artifacts::remodel::mutations::{add_stream_frame, change_stream_sync, create_asset, create_stream, delete_stream, replace_stream_source};
-use crate::artifacts::remodel::schema::{next_remodel_id, video_codec_from_label};
+use crate::editor::remodel::payload_from_data_url;
+use crate::artifacts::remodel::mutations::{create_asset, create_stream};
+use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, VideoSource};
 use base64::Engine as _;
@@ -60,35 +59,6 @@ fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness:
     false
 }
 
-/// 🧩️ Pure reconstruction of the blur-gate rolling window from `stream_id`'s already-persisted frames
-/// (most recent `BLUR_GATE_ROLLING_WINDOW` first, then scored oldest-to-newest so the window fills in
-/// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
-/// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
-/// ticks.
-fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
-    let mut scratch = VideoImportScratch::default();
-    let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
-    let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
-    recent.reverse();
-    for frame in recent {
-        let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
-        let Ok(image) = decode_still_image(&asset.mime, &bytes) else { continue };
-        scratch.rolling_scores.push_back(local_sharpness_score(&image));
-    }
-    scratch
-}
-
-/// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
-/// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
-/// prior call's already-committed mutations, since dispatches within one batch are sequential).
-fn batch_stream_id(scene: &RemodelSnapshot, index: u32) -> String {
-    if index == 0 {
-        next_remodel_id("stream")
-    } else {
-        scene.streams.last().map_or_else(|| next_remodel_id("stream"), |stream| stream.id.clone())
-    }
-}
 //#endregion 🔖️VideoImportScratch
 
 //#region 🔖️ImportFramePayload

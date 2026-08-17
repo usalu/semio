@@ -7,7 +7,7 @@
 //! writer's `WriterDiff::apply`/`absorb` already established.
 
 use crate::artifacts::dag::schema::DagArtifact;
-use crate::artifacts::dag::{DagContentChild, DagFixtureEdge, DagNodeSpec, DagSnapshot};
+use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec, DagSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar

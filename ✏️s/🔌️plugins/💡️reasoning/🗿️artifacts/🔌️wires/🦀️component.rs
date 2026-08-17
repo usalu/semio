@@ -75,7 +75,7 @@ pub fn empty_wires_snapshot() -> WiresSnapshot {
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — the wires board's
 /// nodes/edges now live in this composed child rather than inline on `WiresSnapshot`.
-pub type WiresContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
+pub type WiresContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};

@@ -20,7 +20,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::sur
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Pnt3;
 
 // #region 🔖️SewApi
 

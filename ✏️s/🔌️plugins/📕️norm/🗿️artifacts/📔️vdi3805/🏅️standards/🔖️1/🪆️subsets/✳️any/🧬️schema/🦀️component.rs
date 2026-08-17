@@ -38,8 +38,8 @@ pub struct Vdi3805Artifact {
 //#region 🔖️Conversions
 impl Vdi3805Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::vdi3805::Vdi3805Snapshot {
-        crate::artifacts::vdi3805::Vdi3805Snapshot {
+    pub fn to_snapshot(&self) -> Vdi3805Snapshot {
+        Vdi3805Snapshot {
             manufacturer_file: self.manufacturer_file.clone(),
             catalog: self.catalog.clone(),
             edition_profile: self.edition_profile.clone(),
@@ -53,7 +53,7 @@ impl Vdi3805Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::vdi3805::Vdi3805Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: Vdi3805Snapshot) -> Self {
         Self {
             manufacturer_file: snapshot.manufacturer_file,
             catalog: snapshot.catalog,
@@ -68,7 +68,7 @@ impl Vdi3805Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vdi3805::Vdi3805Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Vdi3805Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -224,8 +224,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Vdi3805BuilderFacets {
-        construction: derived_construction::Vdi3805BuilderConstruction,
-        analysis: derived_analysis::Vdi3805AnalyzerAnalysis,
+        construction: Vdi3805BuilderConstruction,
+        analysis: Vdi3805AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Vdi3805ComposerComposition,
     }
     builder: Vdi3805Builder,
@@ -308,7 +308,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
             let sheet_no: u16 = fields.get(4).and_then(|s| s.parse().ok()).unwrap_or(2);
             products.push(CatalogueProduct {
                 identity,
-                title: crate::artifacts::vdi3805::bilingual("Produkt", "Product"),
+                title: bilingual("Produkt", "Product"),
                 sheet: SheetId(sheet_no),
                 records: Vec::new(),
                 configuration: Configuration { id: format!("cfg.{}", article_number), parameters: BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },

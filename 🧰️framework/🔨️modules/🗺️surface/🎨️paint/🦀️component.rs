@@ -338,7 +338,7 @@ pub struct RasterHost {
     /// here would duplicate authoritative state, the exact violation this ticket exists to remove.
     document: RasterDocument,
     /// 🖼️ (d) ephemeral working representation — decoded-image GPU cache, rebuildable from `buffers`.
-    images: canvas::raster::RasterImageCache,
+    images: raster::RasterImageCache,
     /// 🖌️ (d) ephemeral working representation during an active paint gesture — raw pixel scratch
     /// buffers keyed by layer: drop at any instant and nothing a user has committed is lost. The eventual persisted commit of
     /// painted pixels is an `image:in`-shaped asset import through the plugin's real `add-layer-asset`
@@ -385,13 +385,13 @@ impl Default for RasterHost {
 
 impl RasterHost {
     pub fn new() -> Self {
-        let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
-        let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
+        let theme_clear = theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+        let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(theme_clear);
         Self {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
             document: RasterDocument { layers: vec![] },
-            images: canvas::raster::RasterImageCache::default(),
+            images: raster::RasterImageCache::default(),
             buffers: RasterLayerBuffers::default(),
             active_utility: "selectMarquee".into(),
             brush_size: 24.0,
@@ -411,8 +411,8 @@ impl RasterHost {
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         let v: serde_json::Value = serde_json::from_str(json)?;
-        canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
-        let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
+        theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+        let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(self.theme_clear);
         self.checkerboard_light_cell = checkerboard_light_cell;
         self.checkerboard_dark_cell = checkerboard_dark_cell;
         Ok(())
@@ -431,15 +431,15 @@ impl RasterHost {
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
-        self.camera.zoom = canvas::camera::clamp_zoom(zoom);
+        self.camera.zoom = camera::clamp_zoom(zoom);
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+        camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     }
 
     fn screen_to_world(&self, sx: f64, sy: f64) -> Point {
-        canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+        camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     }
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
@@ -638,10 +638,10 @@ impl RasterHost {
                             }
                         }
                         let mask_img = self.images.insert(mask_key, image_from_rgba(mask_state.width, mask_state.height, mask_rgba));
-                        canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+                        raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
                     }
                 }
-                canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+                raster::draw_image_arc(scene, &img, Affine::IDENTITY);
                 scene.pop_layer();
                 if self.show_selection_chrome && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id)) {
                     let stroke = Rect::new(0.0, 0.0, *width as f64, *height as f64);
@@ -691,17 +691,17 @@ impl RasterHost {
 
     pub fn build_mask_scene(&mut self, layer_id: &str) -> Scene {
         let mut scene = Scene::new();
-        let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
+        let cam = camera::camera_content_affine(&self.camera, &self.viewport);
         let key = format!("mask:{layer_id}");
         let rgba = self.buffers.mask.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
         let img = self.images.insert(key, image_from_rgba(512, 512, rgba));
-        canvas::raster::draw_image_arc(&mut scene, &img, cam);
+        raster::draw_image_arc(&mut scene, &img, cam);
         scene
     }
 
     fn build_scene_for_layer(&mut self, isolated: Option<&str>) -> Scene {
         let mut scene = Scene::new();
-        let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
+        let cam = camera::camera_content_affine(&self.camera, &self.viewport);
         for layer in self.document.layers.clone() {
             self.append_layer_node(&mut scene, cam, &layer, isolated);
         }
@@ -710,11 +710,11 @@ impl RasterHost {
 
     pub fn build_render_scene(&mut self) -> Scene {
         let inner = self.build_vector_scene();
-        canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+        render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     }
 }
 
-impl canvas::canvas_content::CanvasContent for RasterHost {
+impl canvas_content::CanvasContent for RasterHost {
     fn build_scene(&self) -> Scene {
         Scene::new()
     }
@@ -811,7 +811,7 @@ enum PickEntry {
 
 impl RasterHost {
     fn pixel_screen_bounds(&self, parent: Affine, transform: &Affine, width: u32, height: u32) -> ScreenRect {
-        let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+        let world = camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
         let hw = width as f64 * 0.5;
         let hh = height as f64 * 0.5;
         let corners = [world * Point::new(-hw, -hh), world * Point::new(hw, -hh), world * Point::new(hw, hh), world * Point::new(-hw, hh)];
@@ -959,7 +959,7 @@ impl RasterHost {
                 let content_h = bounds.height.max(1.0);
                 let inner_w = (viewport_w.max(1.0) - padding * 2.0).max(1.0);
                 let inner_h = (viewport_h.max(1.0) - padding * 2.0).max(1.0);
-                let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+                let zoom = camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
                 (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5, zoom)
             }
         };
@@ -970,12 +970,12 @@ impl RasterHost {
     pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, FrameworkSurfacePaintError> {
         let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json)?;
         let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json)?;
-        let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
+        let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: camera::clamp_zoom(content_camera.zoom) };
         let cv = Viewport { width: (content_viewport.width.max(1.0)) as u32, height: (content_viewport.height.max(1.0)) as u32, dpr: 1.0 };
-        let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
-        let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
-        let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
-        let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+        let top_left_world = camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+        let bottom_right_world = camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+        let top_left = camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+        let bottom_right = camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
         let rect = ScreenRect::from_points(&[top_left, bottom_right]);
         Ok(serde_json::json!({ "x": rect.x, "y": rect.y, "width": rect.width, "height": rect.height }).to_string())
     }

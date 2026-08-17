@@ -2,7 +2,6 @@
 use crate::artifacts::block5d::diff::Block5dDiff;
 use crate::artifacts::block5d::diff::{Block5dGripKindsDelta};
 use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::{Block5dGripKind};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::CreateGripKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

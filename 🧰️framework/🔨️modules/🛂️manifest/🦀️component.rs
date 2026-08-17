@@ -1459,20 +1459,6 @@ pub enum IntroductionGesture {
     }
 }
 
-impl IntroductionPointerButton {
-    fn is_left(&self) -> bool {
-        matches!(self, Self::Left)
-    }
-
-    fn is_right(&self) -> bool {
-        matches!(self, Self::Right)
-    }
-}
-
-fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]) -> bool {
-    modifiers == [IntroductionKeyModifier::Alt]
-}
-
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]

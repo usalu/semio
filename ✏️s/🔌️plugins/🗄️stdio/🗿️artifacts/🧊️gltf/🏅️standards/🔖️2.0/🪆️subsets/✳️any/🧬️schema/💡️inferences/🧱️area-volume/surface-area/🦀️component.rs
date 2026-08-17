@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfSurfaceAreaInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(context.surface_area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }
 

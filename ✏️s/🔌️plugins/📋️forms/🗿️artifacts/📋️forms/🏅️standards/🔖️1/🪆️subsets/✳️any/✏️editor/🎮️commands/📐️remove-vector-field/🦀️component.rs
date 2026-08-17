@@ -1,7 +1,6 @@
 //! 📐️ 📐️ Forms play app commands command — `remove-vector-field`.
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
-use crate::editor::forms::parse_value_json;
 use crate::artifacts::forms::schema::update_block_operation;
 use crate::artifacts::forms::{op::FormMutation, FormsSnapshot, FormVectorField};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

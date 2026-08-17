@@ -3,7 +3,6 @@
 use crate::editor::architect::architect_action;
 use crate::editor::architect::catalog::REGISTER_IDS;
 use crate::editor::architect::chrome::{tree_item_with_action, tree_node, tree_section};
-use crate::artifacts::program::ProgramSnapshot;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use serde_json::json;
 

@@ -11,7 +11,7 @@ impl GltfInferenceLeaf for GltfOrientedBoundsInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOrientedBoundsInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
     exact(context.oriented_bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {

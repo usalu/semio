@@ -1,32 +1,18 @@
 //! 🌿️ Flow document VCS: operations, DSL, store, and forms bridge.
 
 use crate::infinite::board::ports::directed_dag as dag;
-use crate::infinite::canvas as canvas;
 use neural_engine as neural;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::collections::{BTreeMap, BTreeSet};
 
-use dag::{
-    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
-    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
-};
-use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
-    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
-    INPUT_KIND, OUTPUT_KIND,
+    Atom, Dictionary, Neuron, Synapse, Tree, Value as NeuralValue,
 };
-use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
-use crate::catalogue::*;
-use crate::registry::*;
-use crate::bridge::*;
 use crate::host::*;
 use crate::drawing::*;
-use crate::wasm_session::*;
-use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
 
 
 // #region 🔖️ArtifactVcs
@@ -36,8 +22,6 @@ use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_jso
 use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
-use crate::os_store::create_document_envelope;
-use crate::os_store::ArtifactCommand;
 use crate::os_store::{ArtifactEnvelope, ArtifactStore};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";

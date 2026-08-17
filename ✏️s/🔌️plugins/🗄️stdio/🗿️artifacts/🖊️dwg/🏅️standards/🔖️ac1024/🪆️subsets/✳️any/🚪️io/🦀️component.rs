@@ -94,7 +94,7 @@ impl<'a> ByteCursor<'a> {
     }
 }
 
-fn read_literal_length(src: &mut ByteCursor, opcode: u8) -> Result<u32, String> {
+fn read_literal_length(src: &mut ByteCursor<'_>, opcode: u8) -> Result<u32, String> {
     let mut lowbits = (opcode & 0xF) as u32;
     if lowbits == 0 {
         let mut lastbyte;
@@ -110,7 +110,7 @@ fn read_literal_length(src: &mut ByteCursor, opcode: u8) -> Result<u32, String> 
     Ok(lowbits + 3)
 }
 
-fn read_compressed_bytes(src: &mut ByteCursor, opcode: u8, bits: u32) -> Result<u32, String> {
+fn read_compressed_bytes(src: &mut ByteCursor<'_>, opcode: u8, bits: u32) -> Result<u32, String> {
     let mut cb = (opcode as u32) & bits;
     if cb == 0 {
         let mut lastbyte;
@@ -132,14 +132,14 @@ fn read_compressed_bytes(src: &mut ByteCursor, opcode: u8, bits: u32) -> Result<
 /// standalone-scratch-crate technique: the OR-then-add-separately variant silently desyncs the
 /// decompressor on real (longer, more opcode-varied) section data while still round-tripping
 /// shorter synthetic streams -- exactly the class of bug this technique exists to catch.
-fn two_byte_offset(src: &mut ByteCursor, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
+fn two_byte_offset(src: &mut ByteCursor<'_>, plus: u32, existing_offset: u32) -> Result<(u8, u32), String> {
     let first = src.u8()?;
     let second = src.u8()?;
     let offset = existing_offset | ((first as u32) >> 2) | ((second as u32) << 6);
     Ok((first, offset + plus))
 }
 
-fn copy_bytes(n: u32, src: &mut ByteCursor, dec: &mut Vec<u8>) -> Result<u8, String> {
+fn copy_bytes(n: u32, src: &mut ByteCursor<'_>, dec: &mut Vec<u8>) -> Result<u8, String> {
     for _ in 0..n {
         dec.push(src.u8()?);
     }
@@ -1150,7 +1150,6 @@ pub fn encode_r2004_snapshot(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> R
 pub mod derived_composition {
     use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
     use crate::artifacts::dwg::DwgSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
@@ -1166,7 +1165,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency

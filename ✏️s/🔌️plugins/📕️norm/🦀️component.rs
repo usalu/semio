@@ -9,7 +9,7 @@ use semio_framework_plugin::{Plugin, PluginAssemblyError};
 /// call per family with the role-split pair — the shared `NormConfig`/`NormPresence` config/presence
 /// schema every one of the fifteen `PlayApp`s uses is still registered idempotently by whichever
 /// editor binds first (`ArtifactEditor::app_schema()` override), mirroring the `🗒️note` exemplar.
-pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din18599 = crate::artifacts::din18599::declaration(crate::artifacts::din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;

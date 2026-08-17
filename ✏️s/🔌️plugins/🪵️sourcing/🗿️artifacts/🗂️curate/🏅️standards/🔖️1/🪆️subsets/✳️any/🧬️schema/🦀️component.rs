@@ -51,8 +51,8 @@ impl Default for CurateArtifact {
 
 impl CurateArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::curate::CurateSnapshot {
-        crate::artifacts::curate::CurateSnapshot {
+    pub fn to_snapshot(&self) -> CurateSnapshot {
+        CurateSnapshot {
             catalog: self.catalog.clone(),
             stock_extra: self.stock_extra.clone(),
             curated: self.curated.clone(),
@@ -60,7 +60,7 @@ impl CurateArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::curate::CurateSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: CurateSnapshot) -> Self {
         Self {
             catalog: snapshot.catalog,
             stock_extra: snapshot.stock_extra,
@@ -70,7 +70,7 @@ impl CurateArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::curate::CurateSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: CurateSnapshot) {
         self.catalog = snapshot.catalog;
         self.stock_extra = snapshot.stock_extra;
         self.curated = snapshot.curated;
@@ -806,8 +806,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec CurateBuilderFacets {
-        construction: derived_construction::CurateBuilderConstruction,
-        analysis: derived_analysis::CurateAnalyzerAnalysis,
+        construction: CurateBuilderConstruction,
+        analysis: CurateAnalyzerAnalysis,
         composition: super::super::io::derived_composition::CurateComposerComposition,
     }
     builder: CurateBuilder,

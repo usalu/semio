@@ -39,7 +39,7 @@ pub enum EnergyModelMutation {
 mod tests {
     use super::*;
     use protocol::MutationDiff;
-    use protocol::SemanticMutation;
+    
     use protocol::Mutation;
 
     /// 🧾️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `new_model_json` must be a FULL,

@@ -2,7 +2,7 @@
 
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::{element_id, FemDof, FemElement, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::artifacts::fem2d::FemMaterial;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

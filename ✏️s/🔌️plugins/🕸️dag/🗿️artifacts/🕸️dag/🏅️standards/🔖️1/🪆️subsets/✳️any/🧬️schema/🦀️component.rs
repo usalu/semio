@@ -2,7 +2,7 @@
 
 use crate::artifacts::dag::mutations::delete_node;
 use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec, DAG_DOCUMENT_SCHEMA};
+use crate::artifacts::dag::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -39,17 +39,17 @@ impl Default for DagArtifact {
 
 impl DagArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::dag::DagSnapshot {
-        crate::artifacts::dag::DagSnapshot { schema: self.schema.clone(), content: self.content.clone() }
+    pub fn to_snapshot(&self) -> DagSnapshot {
+        DagSnapshot { schema: self.schema.clone(), content: self.content.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::dag::DagSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: DagSnapshot) -> Self {
         Self { schema: snapshot.schema, content: snapshot.content, selected_node_ids: Vec::new(), camera: DagCamera::default(), locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::dag::DagSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: DagSnapshot) {
         self.schema = snapshot.schema;
         self.content = snapshot.content;
     }
@@ -203,8 +203,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec DagBuilderFacets {
-        construction: derived_construction::DagBuilderConstruction,
-        analysis: derived_analysis::DagAnalyzerAnalysis,
+        construction: DagBuilderConstruction,
+        analysis: DagAnalyzerAnalysis,
         composition: super::super::io::derived_composition::DagComposerComposition,
     }
     builder: DagBuilder,

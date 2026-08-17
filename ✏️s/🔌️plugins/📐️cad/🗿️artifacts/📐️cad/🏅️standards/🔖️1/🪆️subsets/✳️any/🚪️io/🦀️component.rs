@@ -20,7 +20,7 @@ pub mod derived_composition {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::CadAnalyzer;
     use crate::artifacts::cad::CadSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };

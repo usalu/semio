@@ -28,7 +28,7 @@ use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::{ArtifactDsl, ArtifactPack};
+use store::ArtifactPack;
 
 //#region 🔖️Constants
 pub const REMODEL_PLAY_APP_ID: &str = "remodel-play";

@@ -5,8 +5,8 @@
 //! model now (ticket 26/08/11's object-subset rework landed in stdio; this leaf's own call site
 //! was lagging — see `w5b-w-report.md` for the full note).
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::{parse_json_text, write_json_text};
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::json::standards::v_rfc8259::subsets::any::schema::snapshot::parse_json_text;
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 pub fn register() {}
 pub fn deserialize(from: &JsonSnapshot) -> Result<DrawSnapshot, String> {
     let mut snap: DrawSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| e.to_string())?;

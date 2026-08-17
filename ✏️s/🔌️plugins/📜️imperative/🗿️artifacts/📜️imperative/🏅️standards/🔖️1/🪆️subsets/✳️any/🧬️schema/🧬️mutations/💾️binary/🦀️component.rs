@@ -88,7 +88,7 @@ impl protocol::OpText for ImperativeMutationDsl {
     }
 }
 
-impl protocol::OpBinary for ImperativeMutationDsl {
+impl OpBinary for ImperativeMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

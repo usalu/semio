@@ -2,7 +2,7 @@
 //! and reference overlays, plus the scene's nodes.
 
 use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_pane_suffix, cad_tree_item, CadPlayRuntime, CadPlayView};
+use crate::editor::cad::{cad_action, cad_tree_item, CadPlayRuntime, CadPlayView};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};

@@ -1,8 +1,6 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-up`.
 
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
-use crate::artifacts::wires::schema::{fixture_camera, node_position};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::op::WiresMutation;
 use crate::artifacts::wires::WiresSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

@@ -18,7 +18,7 @@ use crate::artifacts::tiff::schema::diff::{
     self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order, enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
     read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
 };
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
+use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};

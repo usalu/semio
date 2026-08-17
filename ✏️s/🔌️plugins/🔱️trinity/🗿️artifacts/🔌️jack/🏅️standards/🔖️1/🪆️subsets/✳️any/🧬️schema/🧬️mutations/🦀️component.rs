@@ -8,7 +8,7 @@
 //! never through this enum.
 
 use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
+use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};

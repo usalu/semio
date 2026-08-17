@@ -1,7 +1,5 @@
 //! 🪣️ `set-kind-weight` command.
 
-use crate::artifacts::puzzle3d::schema::PrecomputeLane;
-use semio_framework::kernel::UiDirtyScope;
 use serde_json::Value;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::puzzle3d_ensure_catalog_kind_weights;

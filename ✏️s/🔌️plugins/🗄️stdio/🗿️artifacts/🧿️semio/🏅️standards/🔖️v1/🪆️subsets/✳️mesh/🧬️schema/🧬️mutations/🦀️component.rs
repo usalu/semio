@@ -56,12 +56,11 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
     dec_list, dec_material, dec_mesh, dec_point3, dec_primitive, dec_rgba, dec_str, dec_texture, dec_topology, dec_uv, decode_option, enc_list, enc_material, enc_mesh, enc_point3, enc_primitive, enc_rgba, enc_str, enc_texture, enc_topology, enc_uv,
     encode_option, hex_decode, hex_encode, SemioMeshDiff,
 };
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `✳️brep`/`✳️flow`'s own facets document).

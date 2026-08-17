@@ -1,7 +1,5 @@
 //! 🧬️ EN 1996 diff schema — sparse field delta.
 
-use crate::artifacts::en1996::schema::En1996Artifact as EnArtifact;
-use crate::artifacts::en1996::En1996Snapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

@@ -3,8 +3,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-pub use crate::artifacts::en1990::schema::diff::En1990Diff;
-pub use crate::artifacts::en1990::schema::mutations::En1990Mutation;
 pub use crate::artifacts::en1990::schema::snapshot::En1990QkEntry;
 pub use crate::artifacts::en1990::schema::snapshot::En1990Snapshot;
 
@@ -66,23 +64,23 @@ pub fn en1990_qk_entries_from_table(table: &semio_s_plugin_stdio::artifacts::sem
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `q_k` entries behind a composed-child handle —
-/// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
-/// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
-/// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same standing gap
-/// every prior wave's report documents), so this is the only way a persisted content-addressed
-/// handle round-trips to the real entries within one process — mirrors `➗️mathematical`'s
-/// `MATH_SCRATCH`/`✒️writer`'s `WRITER_SCRATCH`.
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar, called out honestly rather than
-/// hidden: a fresh process (a store-level undo/redo past this session's history, or a genuinely
-/// reloaded persisted `.en1990` document) sees a `q_k` handle whose cache entry was never
-/// populated — `en1990_qk` fails soft to an EMPTY table rather than panicking. For a compliance
-/// calculation this means a reloaded document's variable-action combinations read as empty until
-/// W1 lands a resolver; every check this artifact performs already routes through `en1990_qk`, so
-/// the gap is visibly empty, not silently wrong-but-plausible. Not a fix for the missing
-/// resolver — a bridge until one lands.
 thread_local! {
+    /// 🌱 Ephemeral, session-side cache of the live `q_k` entries behind a composed-child handle —
+    /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+    /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+    /// (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned, read-only — same standing gap
+    /// every prior wave's report documents), so this is the only way a persisted content-addressed
+    /// handle round-trips to the real entries within one process — mirrors `➗️mathematical`'s
+    /// `MATH_SCRATCH`/`✒️writer`'s `WRITER_SCRATCH`.
+    ///
+    /// ⚠️ Same documented staleness gap as every prior exemplar, called out honestly rather than
+    /// hidden: a fresh process (a store-level undo/redo past this session's history, or a genuinely
+    /// reloaded persisted `.en1990` document) sees a `q_k` handle whose cache entry was never
+    /// populated — `en1990_qk` fails soft to an EMPTY table rather than panicking. For a compliance
+    /// calculation this means a reloaded document's variable-action combinations read as empty until
+    /// W1 lands a resolver; every check this artifact performs already routes through `en1990_qk`, so
+    /// the gap is visibly empty, not silently wrong-but-plausible. Not a fix for the missing
+    /// resolver — a bridge until one lands.
     static EN1990_QK_SCRATCH: RefCell<HashMap<String, Vec<En1990QkEntry>>> = RefCell::new(HashMap::new());
 }
 

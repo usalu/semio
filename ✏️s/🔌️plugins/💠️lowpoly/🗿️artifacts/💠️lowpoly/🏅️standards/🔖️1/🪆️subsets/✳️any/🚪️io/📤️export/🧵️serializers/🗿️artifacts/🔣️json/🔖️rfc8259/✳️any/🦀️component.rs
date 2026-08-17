@@ -1,6 +1,6 @@
 //! lowpoly -> json
 use crate::artifacts::lowpoly::LowpolySnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_pretty};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 /// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's

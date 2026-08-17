@@ -1,10 +1,6 @@
 //! En1992 — document entities (constitutional: general).
 
-pub use crate::artifacts::en1992::schema::diff::En1992Diff;
-pub use crate::artifacts::en1992::schema::mutations::En1992Mutation;
-pub use crate::artifacts::en1992::schema::snapshot::En1992Snapshot;
 
-use crate::document::AnnexChoice;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types

@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfInertiaTensorInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Vec<f64>> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Vec<f64>> {
     let moments = super::moments_of_inertia::raw(context);
     estimate(vec![moments.x, 0.0, 0.0, 0.0, moments.y, 0.0, 0.0, 0.0, moments.z], GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }

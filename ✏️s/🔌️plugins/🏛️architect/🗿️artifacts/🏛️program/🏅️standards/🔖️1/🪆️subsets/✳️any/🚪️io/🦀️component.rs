@@ -10,7 +10,7 @@ pub mod derived_composition {
     use crate::artifacts::program::standards::v1::subsets::any::schema::ProgramAnalyzer;
     use crate::artifacts::program::ProgramSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.program", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };

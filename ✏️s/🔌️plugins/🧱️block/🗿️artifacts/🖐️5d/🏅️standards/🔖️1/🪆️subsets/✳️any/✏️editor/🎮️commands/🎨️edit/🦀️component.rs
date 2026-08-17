@@ -8,7 +8,7 @@ pub const BLOCK5D_EXAMPLE_CAPSULE: &str = "nakagin-capsule";
 //#region 🔖️ReplaceDocument
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
-fn replace_document_operations(current: &crate::artifacts::block5d::Block5dSnapshot, next: &crate::artifacts::block5d::Block5dSnapshot) -> Vec<crate::artifacts::block5d::op::Block5dMutation> {
+fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot) -> Vec<Block5dMutation> {
     use crate::artifacts::block5d::mutations as m;
     let mut ops = Vec::new();
 

@@ -1,7 +1,7 @@
 //! 🪜️ 🪜️ Playbook play app commands command — `add-step`.
 
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
-use crate::artifacts::playbook::op::{add_step_operation, change_title_operation, move_step_operation, remove_step_operation, PlaybookMutation};
+use crate::artifacts::playbook::op::{add_step_operation, PlaybookMutation};
 use crate::artifacts::playbook::PlaybookSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};

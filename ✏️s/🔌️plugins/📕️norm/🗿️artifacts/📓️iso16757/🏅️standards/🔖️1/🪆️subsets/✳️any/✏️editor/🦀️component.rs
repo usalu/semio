@@ -137,7 +137,7 @@ pub struct Iso16757Family;
 
 impl crate::document::NormFamily for Iso16757Family {
     type Document = Iso16757Snapshot;
-    type Mutation = crate::artifacts::iso16757::mutations::Iso16757Mutation;
+    type Mutation = Iso16757Mutation;
 
     fn family_id() -> crate::document::NormFamilyId {
         crate::document::NormFamilyId::Iso16757
@@ -148,7 +148,7 @@ impl crate::document::NormFamily for Iso16757Family {
     }
 }
 
-pub type Host = crate::document::NormHost<Iso16757Family>;
+pub type Host = NormHost<Iso16757Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest

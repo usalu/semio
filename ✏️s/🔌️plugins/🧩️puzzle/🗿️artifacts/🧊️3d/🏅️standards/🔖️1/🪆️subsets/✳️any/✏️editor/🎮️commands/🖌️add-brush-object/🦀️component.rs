@@ -1,8 +1,6 @@
 //! 🖌️ `add-brush-object` command.
 
-use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
 use crate::artifacts::puzzle3d::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
-use semio_framework_plugin::SelectionSet;
 use serde_json::Value;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::drive_precompute;

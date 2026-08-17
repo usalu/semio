@@ -1,10 +1,10 @@
 //! 🧹️ 🧹️ Remodel play app commands command — `clear-geo-products`.
 
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::artifacts::remodel::mutations::{replace_dense, replace_geo_products, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, replace_tracks};
+use crate::artifacts::remodel::mutations::replace_geo_products;
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{MeshSource, RemodelMesh, RemodelSnapshot};
-use semio_framework_plugin::{mesh_from_kind, ConfigView, ArtifactView, Emit, Fault, MeshData};
+use crate::artifacts::remodel::RemodelSnapshot;
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

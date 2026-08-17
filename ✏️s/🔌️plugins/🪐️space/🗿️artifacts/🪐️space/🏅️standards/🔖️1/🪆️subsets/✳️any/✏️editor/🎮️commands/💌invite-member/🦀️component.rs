@@ -26,7 +26,7 @@ pub fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _c
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn invite_member_relays_upsert_member() {

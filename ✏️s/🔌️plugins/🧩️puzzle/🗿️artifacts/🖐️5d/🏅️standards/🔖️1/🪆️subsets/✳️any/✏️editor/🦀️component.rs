@@ -24,8 +24,8 @@ use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactPresentation, ConfigView, ArtifactEditor, Editor, EditorApp, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, SelectionSet, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactPresentation, ConfigView, ArtifactEditor, Editor, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IconName, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
@@ -1302,13 +1302,13 @@ fn puzzle5d_interaction_part_and_fastener_ids(interaction: &InteractionView<'_>)
 //#endregion 🔖️ActionContext
 
 //#region 🔖️PlayApp
-/// 🧩️ B1: Puzzle-5d play app. Owns the precompute engine and the registered-mesh cache — both
-/// per-call scratch, never VCS-tracked; the persisted document (bare `Puzzle5dDocument` json) lives in
-/// the wrapping `VcsArtifactApp`'s document store, and the ephemeral view state lives in the wrapping
-/// store's real, VCS-tracked `Puzzle5dConfig` artifact (see `🦀️config.rs`) — every read comes from
-/// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`.
-/// Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
-/// Undo/redo/checkpoints are handled by the wrapper.
+// 🧩️ B1: Puzzle-5d play app. Owns the precompute engine and the registered-mesh cache — both
+// per-call scratch, never VCS-tracked; the persisted document (bare `Puzzle5dDocument` json) lives in
+// the wrapping `VcsArtifactApp`'s document store, and the ephemeral view state lives in the wrapping
+// store's real, VCS-tracked `Puzzle5dConfig` artifact (see `🦀️config.rs`) — every read comes from
+// `cfg.snapshot`, every write flows out as a `Puzzle5dConfigMutation` in the returned `Emit`.
+// Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
+// Undo/redo/checkpoints are handled by the wrapper.
 thread_local! {
     /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
     /// so the precompute session lives here until `EngineHandles` carries it.
@@ -2048,45 +2048,19 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .build_definition()
 }
 
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 📥️ Tier C DWG mesh import — always returns the empty puzzle-5d document; never errors on a structurally valid mesh.
-pub(crate) fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-    serde_json::to_value(empty_document()).map_err(|error| error.to_string())
-}
-
 // 🗂️ `Puzzle5dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
 // print/parse puzzle-5d play documents without depending on this crate's concrete
 // `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle5dPlayApp>()` on
 // `crate::artifacts::puzzle5d::declaration()` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
 // M1) — the old side-effecting `register_puzzle5d_exports()` wrapper (this app file's only caller of
-// `register_document_codec_for_app`) is gone. The 5d mesh export/import OS-host registration is
-// `register_mesh_io()` below (moved app-ward from the deleted artifact-side `⚙️engine` per ticket
-// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — an artifact is schema + io only, this
-// registration is genuine host-wiring behaviour), still wired through `🧩️puzzle/🦀️component.rs`'s
-// `.setup()` since no `ArtifactDeclaration` field covers this OS-host media registry.
+// `register_document_codec_for_app`) is gone. The 5d mesh export/import OS-host registration
+// (`register_mesh_io()`/`puzzle5d_document_from_mesh`) was never rewired to a real `.setup()` caller
+// after the artifacts-only-plugin-architecture migration (`🧩️puzzle/🦀️component.rs`'s `plugin()`
+// builder chain has no `.setup()` call at all) and was deleted as dead code (ticket
+// 26/08/17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS) — same fate as puzzle3d's
+// sibling mesh bridge. Mesh export/import should be re-derived from `io_dispatch`'s real
+// `ComposerEntry` chain if/when this bridge is needed again.
 //#endregion 🔖️Manifest
-
-//#region 🚪️OsHostMeshIo
-/// 🖼️ Registers the `"5d.puzzle"` OS-host mesh export/import bridge.
-///
-/// 🚚️ Relocated from the deleted artifact-side `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): OS-host registration wiring is app/host
-/// behaviour, not artifact schema — no `ArtifactDeclaration` field covers this OS-host media registry
-/// (see `crate::artifacts::puzzle5d::declaration()`'s own doc), so it stays wired through
-/// `🧩️puzzle/🦀️component.rs`'s `.setup()`. `puzzle5d_document_from_mesh` (above) stays its importer/
-/// dwg callback, now a same-file sibling instead of a cross-node `pub(crate)` reach.
-///
-/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
-/// OBJ/STL `register_mesh_exporter`/`register_mesh_importer` calls this used to make are DELETED,
-/// not migrated -- same reasoning as puzzle3d's sibling `register_mesh_io` (see that function's doc
-/// comment): `🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
-/// `io_registry::entries()` already carries real `ComposerEntry` rows for `"s.stdio.obj"`/
-/// `"s.stdio.stl"`, reachable via `io_dispatch` once the OS media pipeline's `native_kind` bridging
-/// bug is fixed (`component_kind` = `"puzzle5d"`, not the raw `"5d.puzzle"` workflow kind id). GLB
-/// stays registered here (same stdio-format-catalog gap as puzzle3d/cad — no `"s.stdio.glb"`
-/// dialect exists yet). `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are
-/// outside this wave's five-function scope and stay untouched.
-//#endregion 🚪️OsHostMeshIo
 
 //#region 🧪️Testkit
 /// 🧪️ The one puzzle5d-app test harness — every other taxonomy node's `🧪️Tests` region builds on it

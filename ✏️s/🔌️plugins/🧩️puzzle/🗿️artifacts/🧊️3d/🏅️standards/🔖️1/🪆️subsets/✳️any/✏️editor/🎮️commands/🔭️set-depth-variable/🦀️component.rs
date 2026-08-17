@@ -1,6 +1,5 @@
 //! 🔭️ `set-depth-variable` command.
 
-use crate::editor::puzzle3d::modes::edit::options::lod::{PUZZLE3D_LOD_SLIDER_MAX, PUZZLE3D_LOD_SLIDER_MIN};
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use serde_json::Value;
 

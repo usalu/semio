@@ -36,7 +36,7 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schem
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CadGeometry {
     #[serde(default)]
-    pub anchors: Vec<serde_json::Value>,
+    pub anchors: Vec<Value>,
     #[serde(default)]
     pub vertices: Vec<CadVertex>,
     #[serde(default)]

@@ -17,6 +17,11 @@ workspace = true
 default = ["render"]
 typegen = []
 render = ["dep:typst-assets"]
+# 🌉️ Declared (but never enabled) so `🗺️surface/🏔️terrain/🦀️component.rs`'s path-mounted
+# `#[cfg(feature = "session-bindgen")]` wasm bridge doesn't trip `unexpected_cfgs` here — this
+# crate path-mounts that file without the surface crate's own `session-bindgen` default, by design
+# (avoids duplicate `TerrainSession` symbols linking surface+infinite into one cdylib).
+session-bindgen = []
 
 [[bin]]
 name = "dump-guestslim-typst-fonts"

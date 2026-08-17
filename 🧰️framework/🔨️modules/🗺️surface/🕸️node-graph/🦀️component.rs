@@ -21,7 +21,7 @@
 pub use infinite_canvas::board::ports::directed_dag as dag;
 pub use infinite_canvas as canvas;
 
-use dag::{dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
+use dag::{dag_screen_to_world, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

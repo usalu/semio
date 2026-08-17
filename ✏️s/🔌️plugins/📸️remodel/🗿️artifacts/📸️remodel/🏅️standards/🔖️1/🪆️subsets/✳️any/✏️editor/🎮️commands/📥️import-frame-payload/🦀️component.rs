@@ -2,83 +2,17 @@
 
 use crate::editor::remodel::commands::import_video_bytes_payload;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
-use crate::editor::remodel::engine::{describe_video_probe, images as remodel_image, video as remodel_video, video_codec_to_artifact};
+use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::{decode_still_image, payload_from_data_url};
-use crate::artifacts::remodel::mutations::{add_stream_frame, change_stream_sync, create_asset, create_stream, delete_stream, replace_stream_source};
-use crate::artifacts::remodel::schema::{next_remodel_id, video_codec_from_label};
+use crate::artifacts::remodel::mutations::{add_stream_frame, create_asset, create_stream};
+use crate::artifacts::remodel::schema::next_remodel_id;
 use crate::artifacts::remodel::op::RemodelMutation;
-use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot, VideoSource};
+use crate::artifacts::remodel::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelSnapshot};
 use base64::Engine as _;
-use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault, HostEffect};
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
 
 //#region 🔖️VideoImportScratch
-/// 📥️ Rolling blur-gate scratch for one in-progress `importVideoFramePayload`/`importVideoBytesPayload`
-/// batch — mirrors the reconstruction engine's own relative-sharpness gate (not reusable directly: that
-/// gate lives inside a whole `FrameSource`, this one only needs the rolling-median scratch itself).
-#[derive(Clone, Debug, Default, PartialEq)]
-struct VideoImportScratch {
-    rolling_scores: VecDeque<f32>,
-}
-
-const BLUR_GATE_ROLLING_WINDOW: usize = 15;
-const BLUR_GATE_MIN_SAMPLES: usize = 3;
-
-/// 🧭️ Gradient-energy sharpness proxy — a local mirror of the reconstruction engine's private
-/// `sharpness_score` (not exported by that topic file), reused here so import-time frame gating uses
-/// the identical signal.
-fn local_sharpness_score(image: &remodel_image::ImageRgba8) -> f32 {
-    let gray = remodel_image::ImageGray::from_rgba8_luma(image);
-    let grad = remodel_image::scharr_gradients(&gray);
-    if grad.gx.is_empty() {
-        return 0.0;
-    }
-    let sum_sq: f32 = grad.gx.iter().zip(grad.gy.iter()).map(|(&gx, &gy)| gx * gx + gy * gy).sum();
-    sum_sq / grad.gx.len() as f32
-}
-
-fn local_rolling_median(scores: &VecDeque<f32>) -> f32 {
-    let mut v: Vec<f32> = scores.iter().copied().collect();
-    v.sort_by(f32::total_cmp);
-    v[v.len() / 2]
-}
-
-/// 🚦️ Whether the sample should be rejected by the relative blur gate, given `scratch`'s rolling window
-/// and `min_sharpness` (a fraction of the rolling median); also records the sample if accepted.
-fn blur_gate_reject(scratch: &mut VideoImportScratch, score: f32, min_sharpness: f32) -> bool {
-    if scratch.rolling_scores.len() >= BLUR_GATE_MIN_SAMPLES {
-        let median = local_rolling_median(&scratch.rolling_scores);
-        if score < min_sharpness * median {
-            return true;
-        }
-    }
-    if scratch.rolling_scores.len() >= BLUR_GATE_ROLLING_WINDOW {
-        scratch.rolling_scores.pop_front();
-    }
-    scratch.rolling_scores.push_back(score);
-    false
-}
-
-/// 🧩️ Pure reconstruction of the blur-gate rolling window from `stream_id`'s already-persisted frames
-/// (most recent `BLUR_GATE_ROLLING_WINDOW` first, then scored oldest-to-newest so the window fills in
-/// the same order the original per-tick `RefCell` scratch would have) — the pure-trait replacement
-/// for carrying `VideoImportScratch` as hidden interior-mutable state across `ImportVideoFramePayload`
-/// ticks.
-fn rebuild_video_import_scratch(scene: &RemodelSnapshot, stream_id: &str) -> VideoImportScratch {
-    let mut scratch = VideoImportScratch::default();
-    let Some(stream) = scene.streams.iter().find(|stream| stream.id == stream_id) else { return scratch };
-    let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
-    recent.reverse();
-    for frame in recent {
-        let Some(asset) = crate::artifacts::remodel::remodel_asset(&scene.assets, &frame.asset_id) else { continue };
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&asset.data) else { continue };
-        let Ok(image) = decode_still_image(&asset.mime, &bytes) else { continue };
-        scratch.rolling_scores.push_back(local_sharpness_score(&image));
-    }
-    scratch
-}
-
 /// 🆔️ The stream a batch tick lands on: `index == 0` starts a new stream, `index > 0` appends to
 /// `scene.streams.last()` — the stream THIS batch's `index == 0` call just created (each call sees the
 /// prior call's already-committed mutations, since dispatches within one batch are sequential).

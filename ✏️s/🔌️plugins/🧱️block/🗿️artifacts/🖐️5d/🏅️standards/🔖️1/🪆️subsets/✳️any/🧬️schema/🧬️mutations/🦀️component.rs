@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block5d_snapshot();
-        let grip_kind = crate::artifacts::block5d::Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };
+        let grip_kind = Block5dGripKind { id: "gk0".into(), name: "gk0".into(), label: "GK0".into(), color: "#888".into(), default_rope_kind: "rope.standard".into() };
         base.grip_kinds.push(grip_kind.clone());
         let outcome = create_grip_kind(grip_kind).diff(&base);
         assert_fatal_never_applies(&outcome);

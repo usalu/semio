@@ -24,7 +24,7 @@ pub fn handle(payload: &RemoveMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _c
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn remove_member_relays_remove_member() {

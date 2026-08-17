@@ -3,7 +3,6 @@
 //! domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — passed in by
 //! the caller, since `ArtifactApp::render` carries no `InteractionView` (a discovered framework gap).
 
-use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{s_play_action, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INSPECTOR_TAB_ID};

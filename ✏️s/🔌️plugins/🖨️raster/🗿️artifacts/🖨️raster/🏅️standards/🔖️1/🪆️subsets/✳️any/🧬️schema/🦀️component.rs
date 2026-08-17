@@ -55,8 +55,8 @@ impl Default for RasterArtifact {
 
 impl RasterArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::raster::RasterSnapshot {
-        crate::artifacts::raster::RasterSnapshot {
+    pub fn to_snapshot(&self) -> RasterSnapshot {
+        RasterSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
             title: self.title.clone(),
@@ -66,7 +66,7 @@ impl RasterArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::raster::RasterSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: RasterSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -78,7 +78,7 @@ impl RasterArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::raster::RasterSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: RasterSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -227,8 +227,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec RasterBuilderFacets {
-        construction: derived_construction::RasterBuilderConstruction,
-        analysis: derived_analysis::RasterAnalyzerAnalysis,
+        construction: RasterBuilderConstruction,
+        analysis: RasterAnalyzerAnalysis,
         composition: super::super::io::derived_composition::RasterComposerComposition,
     }
     builder: RasterBuilder,

@@ -28,7 +28,7 @@ pub fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, 
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn copy_invite_link_relays_share_link() {

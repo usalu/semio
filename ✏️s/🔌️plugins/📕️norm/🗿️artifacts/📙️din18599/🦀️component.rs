@@ -1,7 +1,5 @@
 //! ⚡️ DIN V 18599 app — document entities (constitutional: general).
 
-pub use crate::artifacts::din18599::schema::diff::Din18599Diff;
-pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
 pub use crate::artifacts::din18599::schema::snapshot::Din18599Snapshot;
 
 use crate::document::ClimateZoneDe;
@@ -94,20 +92,20 @@ pub fn din18599_climate_data_from_table(table: &semio_s_plugin_stdio::artifacts:
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `climate` data behind a composed-child handle —
-/// NEVER persisted (matches the `EngineRep` contract). No `LinkResolver`/child-dispatch seam exists
-/// in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
-/// read-only — same standing gap every prior wave's report documents), so this is the only way a
-/// persisted content-addressed handle round-trips to the real climate data within one process —
-/// mirrors `➗️mathematical`'s `MATH_SCRATCH`/en1990's `EN1990_QK_SCRATCH`.
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
-/// undo/redo past this session's history, or a genuinely reloaded persisted `.din18599` document)
-/// sees a `climate` handle whose cache entry was never populated — `din18599_climate` fails soft to
-/// an all-zero `MonthlyClimate` rather than panicking. Every energy-balance calculation this
-/// artifact performs already routes through `din18599_climate`, so the gap is visibly zeroed, not
-/// silently wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
 thread_local! {
+    /// 🌱 Ephemeral, session-side cache of the live `climate` data behind a composed-child handle —
+    /// NEVER persisted (matches the `EngineRep` contract). No `LinkResolver`/child-dispatch seam exists
+    /// in `ArtifactApp::handle` yet (checked directly against `🔌️plugin/🦀️component.rs`, W1-owned,
+    /// read-only — same standing gap every prior wave's report documents), so this is the only way a
+    /// persisted content-addressed handle round-trips to the real climate data within one process —
+    /// mirrors `➗️mathematical`'s `MATH_SCRATCH`/en1990's `EN1990_QK_SCRATCH`.
+    ///
+    /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+    /// undo/redo past this session's history, or a genuinely reloaded persisted `.din18599` document)
+    /// sees a `climate` handle whose cache entry was never populated — `din18599_climate` fails soft to
+    /// an all-zero `MonthlyClimate` rather than panicking. Every energy-balance calculation this
+    /// artifact performs already routes through `din18599_climate`, so the gap is visibly zeroed, not
+    /// silently wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
     static DIN18599_CLIMATE_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, MonthlyClimate>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
@@ -139,7 +137,7 @@ pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599Cli
 /// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses
 /// instead of the old `.climate` field. All-zero (never a panic) on a cache miss, per this
 /// region's own doc comment.
-pub fn din18599_climate(snapshot: &crate::artifacts::din18599::Din18599Snapshot) -> MonthlyClimate {
+pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
     DIN18599_CLIMATE_SCRATCH.with(|cache| cache.borrow().get(&snapshot.climate.child_id).cloned()).unwrap_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] })
 }
 //#endregion 🔖️WorkingScene

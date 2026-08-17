@@ -39,7 +39,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 
-use crate::artifacts::jack::{Edge, JackSnapshot, Node, Port, PortDirection, PropertyBag, TrinityRamError};
+use crate::artifacts::jack::{Edge, JackSnapshot, Node, Port, PortDirection, PropertyBag};
 use store::{ArtifactDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖️DslMirrors

@@ -2,7 +2,7 @@
 
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
 use crate::artifacts::curate::op::SourcingMutation;
-use crate::artifacts::curate::{CurateSnapshot, SortDirection, TableSort};
+use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

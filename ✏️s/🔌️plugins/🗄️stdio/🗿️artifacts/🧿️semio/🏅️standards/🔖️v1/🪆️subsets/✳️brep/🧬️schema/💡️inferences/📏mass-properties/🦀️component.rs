@@ -7,9 +7,8 @@
 
 // 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`].
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;

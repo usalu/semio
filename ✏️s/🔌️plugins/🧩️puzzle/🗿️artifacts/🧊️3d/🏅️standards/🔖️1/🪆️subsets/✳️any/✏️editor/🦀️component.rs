@@ -29,15 +29,14 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::HostEffect;
 use semio_framework_plugin::{
-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, App, AppIo, ConfigView, DialogDefinition,
+    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ConfigView, DialogDefinition,
     ArtifactEditor, Dialect, Editor, DraftView, NoDraft, NoDraftMutation, ArtifactView, Emit, Fault, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec,
-    MediaType, PortMultiplicity, SelectionSet, ToolRef, UiNode, UiTreeSectionNode, WindowEngagement, WindowMeasure, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    MediaType, PortMultiplicity, ToolRef, UiNode, UiTreeSectionNode, WindowEngagement, WindowMeasure, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, INTERACTION_SELECT_ACTION_ID,
 };
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
 // replaces `ArtifactApp` as the authoring trait; `EditorApp<E>` is the runtime `ArtifactApp`
 // adapter, needed by this file's own test harness (`VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>`).
-use semio_framework_plugin::EditorApp;
 // 🕹️ `InteractionView` is defined inside `semio_framework_plugin::app` (the plugin SDK's internal
 // module) but is NOT re-exported at that crate's root alongside `ArtifactApp`/`ConfigView`/`DraftView`
 // — a gap in the ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3 wave's `pub use app::{..}`
@@ -1919,14 +1918,14 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️PlayApp
-/// 🧩️ Puzzle-3d play app. Owns the precompute engine and the gumball scratch session; the persisted
-/// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsArtifactApp`'s operation store and
-/// the view state in `Puzzle3dConfig`. Each action rehydrates the engine from the projection, mutates
-/// a transient [`Puzzle3dScene`], then emits the granular operation delta.
-///
-/// 🧲️ Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
-/// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
-/// operations; `transformEnd` commits the base→scratch fixture delta once.
+// 🧩️ Puzzle-3d play app. Owns the precompute engine and the gumball scratch session; the persisted
+// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsArtifactApp`'s operation store and
+// the view state in `Puzzle3dConfig`. Each action rehydrates the engine from the projection, mutates
+// a transient [`Puzzle3dScene`], then emits the granular operation delta.
+//
+// 🧲️ Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
+// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
+// operations; `transformEnd` commits the base→scratch fixture delta once.
 thread_local! {
     /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
     /// so the precompute/gumball scratch lives here until `EngineHandles` carries it.
@@ -1934,10 +1933,6 @@ thread_local! {
 }
 
 fn with_puzzle3d_app<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
-    PUZZLE3D_PLAY_SESSION.with(|app| f(&app.borrow()))
-}
-
-fn with_puzzle3d_app_mut<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
     PUZZLE3D_PLAY_SESSION.with(|app| f(&app.borrow()))
 }
 
@@ -2737,99 +2732,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .build_definition()
 }
 
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 🌀️ Undoes glTF's Y-up convention to land in this world's Z-up frame — mirrors the fixed +90° turn
-/// about X the viewer applies visually but which raw `registerBrushMesh` vertices never carry.
-fn glb_frame_correct(position: [f32; 3]) -> [f32; 3] {
-    [position[0], -position[2], position[1]]
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
-    let [qx, qy, qz, qw] = quat;
-    let (x, y, z) = (point[0] as f64, point[1] as f64, point[2] as f64);
-    let (cx, cy, cz) = (qy * z - qz * y, qz * x - qx * z, qx * y - qy * x);
-    let (tx, ty, tz) = (2.0 * cx, 2.0 * cy, 2.0 * cz);
-    let (ux, uy, uz) = (qy * tz - qz * ty, qz * tx - qx * tz, qx * ty - qy * tx);
-    [(x + qw * tx + ux) as f32, (y + qw * ty + uy) as f32, (z + qw * tz + uz) as f32]
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 💾️ Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a
-/// single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through
-/// `registerBrushMesh` this session fall back to a box.
-pub(crate) fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
-    let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
-    let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
-    let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
-    let mut merged = semio_framework_plugin::MeshData::default();
-    for object in fixture.objects.iter().filter(|object| !object.hidden) {
-        let mesh_url = resolve_object_mesh_url(object, &fixture.meta);
-        let (positions, indices): (&[f32], &[u32]) = match mesh_url.as_deref().and_then(|url| registry.get(url)) {
-            Some((positions, indices)) => (positions, indices),
-            None => (&fallback.positions, &fallback.indices),
-        };
-        let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let scale = object_scale_json(object);
-        let index_offset = (merged.positions.len() / 3) as u32;
-        for chunk in positions.chunks_exact(3) {
-            let corrected = glb_frame_correct([chunk[0], chunk[1], chunk[2]]);
-            let scaled = [corrected[0] * scale[0] as f32, corrected[1] * scale[1] as f32, corrected[2] * scale[2] as f32];
-            let rotated = quat_rotate_point(scaled, orientation);
-            merged.positions.push(rotated[0] + object.origin[0] as f32);
-            merged.positions.push(rotated[1] + object.origin[1] as f32);
-            merged.positions.push(rotated[2] + object.origin[2] as f32);
-        }
-        merged.indices.extend(indices.iter().map(|index| index + index_offset));
-    }
-    if merged.positions.is_empty() {
-        return Ok(fallback);
-    }
-    merged.compute_normals();
-    Ok(merged)
-}
-
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-/// 📥️ Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
-pub(crate) fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
-    serde_json::to_value(empty_fixture()).map_err(|error| error.to_string())
-}
-
-/// 🗂️ Registers `Puzzle3dPlaySnapshot`'s pack<->dsl codec under its real `document_schema()` string
-/// so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents without
-/// depending on this crate's concrete `Projection`/`Mutation` types. Puzzle3d's own plugin load path
-/// no longer calls this (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE` M1: superseded there by
-/// `.document_codec::<Puzzle3dPlayApp>()` on `crate::artifacts::puzzle3d::schema::declaration()`) —
-/// kept `pub` and unchanged SOLELY because
-/// `🎪️demonstrator/🎪️panes/🧩️aggregator/🦀️component.rs::register_exports()` imports and calls it
-/// directly as its one cross-plugin host-export entry point; deleting it would break that crate's
-/// compile. `register_document_codec_for_app` tolerates the resulting double registration when both
-/// plugins load in the same process — true before this conversion too, since the old umbrella
-/// `register()` and demonstrator's aggregator pane already called this same function independently.
-/// The 3d mesh export/import OS-host registration is `register_mesh_io`, just below, wired through
-/// `🧩️puzzle/🦀️component.rs`'s own `.setup()`.
-/// 🖼️ Registers the `"3d.puzzle"` OS-host mesh export/import bridge. Rehomed from the former
-/// `⚙️engine`'s own `register_mesh_io` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES —
-/// APA's original relocation off `apps::puzzle3d::register_puzzle3d_exports` reasoned OS-host
-/// registration belongs to the owning artifact's own engine; ENGINELESS-ARTIFACTS supersedes that:
-/// there is no engine, and this registration calls straight into this app's own
-/// `puzzle3d_mesh_from_document`/`puzzle3d_document_from_mesh`, so it belongs here). No
-/// `ArtifactDeclaration` field covers this OS-host media registry (see `declaration()`'s own doc), so
-/// it stays wired through `🧩️puzzle/🦀️component.rs`'s `.setup()`.
-///
-/// 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1: the
-/// OBJ/STL `register_mesh_exporter`/`register_mesh_importer` calls this used to make are DELETED,
-/// not migrated -- `🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`'s
-/// `io_registry::entries()` already carries real `ComposerEntry` rows for `"s.stdio.obj"` and
-/// `"s.stdio.stl"` (`DEP_OBJ`/`DEP_STL` import, `EXPORT_OBJ_DIALECT`/`EXPORT_STL_DIALECT` export),
-/// so the OS media pipeline's `registry_export_media`/`registry_import_media` (host
-/// `🦀️component.rs`) now resolves those two formats via `io_dispatch` once its `native_kind`
-/// bridging bug is fixed (same wave: it must read `OsArtifactDescriptor.component_kind`, i.e.
-/// `"puzzle3d"`, not the raw `"3d.puzzle"` workflow kind id). GLB stays registered here — no
-/// `"s.stdio.glb"` dialect exists in stdio's format catalog (only `"s.stdio.gltf"`, JSON text), so
-/// binary-glTF has no artifact-io equivalent to migrate to yet; flagged as a genuine remainder, not
-/// silently dropped. `register_mesh_dwg_export_handler`/`register_mesh_dwg_import_handler` are a
-/// separate pair of functions, not in this wave's five-function scope, so both stay untouched.
 //#endregion 🔖️Manifest
 
 //#region 🧪️Testkit

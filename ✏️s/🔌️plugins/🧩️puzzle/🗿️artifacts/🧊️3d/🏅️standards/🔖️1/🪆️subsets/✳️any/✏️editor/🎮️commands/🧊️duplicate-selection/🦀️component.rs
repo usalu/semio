@@ -1,8 +1,5 @@
 //! 🧊️ `duplicate-selection` command.
 
-use crate::editor::puzzle3d::panels::inspection;
-use serde_json::Value;
-use std::collections::HashSet;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::next_object_id;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;

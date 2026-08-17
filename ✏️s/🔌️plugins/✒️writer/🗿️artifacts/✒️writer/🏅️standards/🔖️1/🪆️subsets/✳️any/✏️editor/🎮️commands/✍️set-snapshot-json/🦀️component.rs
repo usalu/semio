@@ -1,11 +1,9 @@
 //! ✍️ ✍️ Writer play app commands command — `set-snapshot-json`.
 
-use crate::editor::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::reset_document_effect;
-use crate::artifacts::writer::schema::{apply_jack_rename, format_writer_text, jack_symbol_at_offset, JackSymbolKind};
-use crate::artifacts::writer::dsl::{dag_jack_example_document, jack_example_document};
-use crate::artifacts::writer::op::{EditText, WriterMutation};
-use crate::artifacts::writer::{writer_snapshot_with_text, writer_text, WriterSnapshot};
+use crate::artifacts::writer::op::WriterMutation;
+use crate::artifacts::writer::WriterSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

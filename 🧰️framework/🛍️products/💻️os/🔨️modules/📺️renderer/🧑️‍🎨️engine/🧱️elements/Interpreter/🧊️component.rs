@@ -9,8 +9,8 @@
 
 use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use serde_json::Value;
-use ui_wgpu::wgpu::{draw_text, render_widget, Rect, SelectItem, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
-use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiPresence, UiState};
+use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
+use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiState};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 
@@ -1723,7 +1723,7 @@ fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled:
 /// node.layout.x, origin_y + node.layout.y)`), building one `DumpNode` per visited node and
 /// recording the first node found with `NodeFlags::FOCUSED` set as `focus_path`.
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
-fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: ui_wgpu::wgpu::NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
+fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
     let Some(node) = tree.node(id) else { return };
     let ui_node = &node.spec.0;
     let presence = ui_node.presence();

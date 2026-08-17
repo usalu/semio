@@ -1,7 +1,6 @@
 //! Deserialize cad via stdio.dwg.
 
 use crate::artifacts::cad::CadSnapshot;
-use crate::artifacts::cad::io::{cad_from_wire, pack_err_as_text};
 use semio_s_plugin_stdio::artifacts::dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 //#region Deserialize

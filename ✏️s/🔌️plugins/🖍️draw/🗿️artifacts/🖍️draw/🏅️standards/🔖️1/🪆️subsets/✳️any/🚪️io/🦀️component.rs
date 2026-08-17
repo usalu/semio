@@ -184,7 +184,7 @@ pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u
 //#endregion 🔖️SemioBridge
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::draw::DrawSnapshot;
     use crate::artifacts::draw::standards::v1::subsets::any::schema::DrawAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

@@ -42,8 +42,8 @@ impl Default for GisTerrainArtifact {
 impl GisTerrainArtifact {
     /// 📸️ Persisted subset. `mesh` is always re-derived here (never carried verbatim off `self`) so
     /// it can never drift from what `(exaggeration, imported_features_json)` actually determine.
-    pub fn to_snapshot(&self) -> crate::artifacts::gisterrain::GisTerrainSnapshot {
-        crate::artifacts::gisterrain::GisTerrainSnapshot {
+    pub fn to_snapshot(&self) -> GisTerrainSnapshot {
+        GisTerrainSnapshot {
             exaggeration: self.exaggeration,
             imported_features_json: self.imported_features_json.clone(),
             mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(self.exaggeration, &self.imported_features_json))),
@@ -51,7 +51,7 @@ impl GisTerrainArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::gisterrain::GisTerrainSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
         Self {
             exaggeration: snapshot.exaggeration,
             imported_features_json: snapshot.imported_features_json,
@@ -61,7 +61,7 @@ impl GisTerrainArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::gisterrain::GisTerrainSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: GisTerrainSnapshot) {
         self.exaggeration = snapshot.exaggeration;
         self.imported_features_json = snapshot.imported_features_json;
         self.mesh = snapshot.mesh;
@@ -208,8 +208,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec GisterrainBuilderFacets {
-        construction: derived_construction::GisterrainBuilderConstruction,
-        analysis: derived_analysis::GisTerrainAnalyzerAnalysis,
+        construction: GisterrainBuilderConstruction,
+        analysis: GisTerrainAnalyzerAnalysis,
         composition: super::super::io::derived_composition::GisTerrainComposerComposition,
     }
     builder: GisterrainBuilder,

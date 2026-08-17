@@ -9,7 +9,7 @@
 //! both `🪟️windows/{◻2d,🧊️3d}`'s `definition()`/`window_measures()`/`render()`), never artifact schema.
 
 use crate::artifacts::puzzle3d::Puzzle3dError;
-use crate::artifacts::puzzle5d::{Puzzle5dError, Puzzle5dSnapshot};
+use crate::artifacts::puzzle5d::Puzzle5dError;
 
 //#region 🔖️BrushEngine
 pub use crate::artifacts::puzzle3d::schema::BrushPlacePayload;

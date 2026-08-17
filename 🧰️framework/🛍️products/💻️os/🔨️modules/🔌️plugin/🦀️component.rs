@@ -347,8 +347,8 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildGenesis, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
-        GroupMeta, GroupReceipt, HistoryColumn, HistoryLane, Mutation, MutationDiff, OwnerRef, SpaceMember,
+        build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
+        GroupMeta, HistoryColumn, HistoryLane, Mutation, MutationDiff, SpaceMember,
     };
     use ui_wgpu::wgpu::{
         collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, NamedLayout,
@@ -405,7 +405,7 @@ pub mod app {
     /// clamped to the last declared granularity for a deeper id than declared granularities), parented
     /// to the next-shallower prefix. Dedup'd (and stably ordered) by id via the `BTreeMap` key.
     fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
-        let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+        let mut nodes: BTreeMap<String, protocol::TopologyNode> = BTreeMap::new();
         for id in known_ids {
             let segments: Vec<&str> = id.split(delimiter).collect();
             let mut prefix = String::new();
@@ -693,11 +693,11 @@ pub mod app {
     /// `store::ArtifactPack` binary codec `ArtifactBuilder::from_binary` already uses.
     pub fn composer_entry_of<C: ArtifactComposer>() -> ComposerEntry
     where
-        C::Snapshot: store::ArtifactPack,
+        C::Snapshot: ArtifactPack,
     {
         fn erased_compose<C: ArtifactComposer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
         where
-            C::Snapshot: store::ArtifactPack,
+            C::Snapshot: ArtifactPack,
         {
             let typed_sources: Vec<ComposeSource> = sources
                 .iter()
@@ -710,7 +710,7 @@ pub mod app {
                 })
                 .collect();
             let composed = C::compose(&typed_sources)?;
-            let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+            let bytes = ArtifactPack::encode_pack(&composed.snapshot);
             Ok(ComposedArtifact { dialect: C::WRITES, payload: IoPayload::Binary(bytes), diagnostics: composed.diagnostics, confidence: composed.confidence })
         }
         ComposerEntry { writes: C::WRITES, reads: C::reads(), compose: erased_compose::<C> }
@@ -726,13 +726,13 @@ pub mod app {
     /// registry composer entries already use.
     pub fn deserializer_entry_of<D: ArtifactDeserializer>() -> ComposerEntry
     where
-        D::From: store::ArtifactPack,
-        D::Into: store::ArtifactPack,
+        D::From: ArtifactPack,
+        D::Into: ArtifactPack,
     {
         fn erased_compose<D: ArtifactDeserializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
         where
-            D::From: store::ArtifactPack,
-            D::Into: store::ArtifactPack,
+            D::From: ArtifactPack,
+            D::Into: ArtifactPack,
         {
             let source = match sources {
                 [one] => one,
@@ -747,9 +747,9 @@ pub mod app {
                 }
             };
             let from =
-                <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+                <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
             let into = D::deserialize(&from).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+            let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
             Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
         }
         ComposerEntry { writes: D::INTO, reads: &[D::FROM], compose: erased_compose::<D> }
@@ -760,13 +760,13 @@ pub mod app {
     /// source as `S::From`, runs `S::serialize`, re-packs the result as `S::Into`.
     pub fn serializer_entry_of<S: ArtifactSerializer>() -> ComposerEntry
     where
-        S::From: store::ArtifactPack,
-        S::Into: store::ArtifactPack,
+        S::From: ArtifactPack,
+        S::Into: ArtifactPack,
     {
         fn erased_compose<S: ArtifactSerializer>(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>
         where
-            S::From: store::ArtifactPack,
-            S::Into: store::ArtifactPack,
+            S::From: ArtifactPack,
+            S::Into: ArtifactPack,
         {
             let source = match sources {
                 [one] => one,
@@ -780,9 +780,9 @@ pub mod app {
                     return Err(ComposeError { message: format!("serializer {}->{} source must be Binary (ArtifactPack-encoded)", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() });
                 }
             };
-            let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+            let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
             let into = S::serialize(&from).map_err(|e| ComposeError { message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
-            let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+            let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
             Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
         }
         ComposerEntry { writes: S::INTO, reads: &[S::FROM], compose: erased_compose::<S> }
@@ -797,7 +797,7 @@ pub mod app {
     /// fallible `absorb` boundary so malformed input cannot become an unchanged snapshot.
     pub trait ArtifactBuilder: Sized {
         type Snapshot;
-        type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+        type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
         type Diff;
         fn empty() -> Self;
         fn from_snapshot(snapshot: Self::Snapshot) -> Self;
@@ -923,8 +923,8 @@ pub mod app {
     /// 🧬️ Hook bundle from which all public artifact lifecycle types are derived.
     pub trait DerivedArtifactSpec: Sized + 'static {
         type Snapshot;
-        type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
-        type Diff: protocol::MutationDiff<Self::Snapshot>;
+        type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+        type Diff: MutationDiff<Self::Snapshot>;
         type Construction: ArtifactBuilder<Snapshot = Self::Snapshot, Mutation = Self::Mutation, Diff = Self::Diff>;
         type Analysis: ArtifactAnalysis;
         type Composition: ArtifactComposition<Snapshot = Self::Snapshot>;
@@ -1565,15 +1565,15 @@ pub mod app {
         pub cancellation_id: String,
     }
 
-    static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
-    static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
+    static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
+    static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
 
-    fn active_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
-        ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+    fn active_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+        ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
     }
 
-    fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
-        CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+    fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+        CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
     }
 
     struct ArtifactInferenceCancellationGuard(String);
@@ -1635,7 +1635,7 @@ pub mod app {
             }
             _ => {}
         }
-        let mut identifiers = std::collections::BTreeSet::new();
+        let mut identifiers = BTreeSet::new();
         let mut bytes = request.policy.len().saturating_add(request.canonical_payload.len());
         if let Some(previous_state) = &request.previous_state {
             bytes = bytes.saturating_add(previous_state.len());
@@ -2427,7 +2427,7 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct ArtifactDefinition {
         identity: ArtifactIdentity,
-        capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+        capabilities: BTreeMap<ArtifactIdentity, ArtifactCapability>,
     }
 
     impl ArtifactDefinition {
@@ -2438,7 +2438,7 @@ pub mod app {
 
         /// 🏗️ Starts an empty definition and claims its artifact identity.
         pub fn new(identity: ArtifactIdentity) -> Self {
-            Self { identity, capabilities: std::collections::BTreeMap::new() }
+            Self { identity, capabilities: BTreeMap::new() }
         }
 
         /// 🪪️ Returns the definition's hierarchical artifact identity.
@@ -2603,7 +2603,7 @@ pub mod app {
 
         /// 🛡️ Validates identity ownership and all claims before registration mutates a registry.
         pub fn validate(&self) -> Result<(), ArtifactDefinitionError> {
-            let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+            let mut claims = BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
             for capability in self.capabilities() {
                 if !capability.identity.is_within(&self.identity) || capability.identity == self.identity {
                     return Err(ArtifactDefinitionError::new("artifact-definition.capability-owner", format!("capability {} is not a descendant of artifact {}", capability.identity, self.identity)));
@@ -2691,8 +2691,8 @@ pub mod app {
 
     /// 📚️ Deterministic, conflict-rejecting registry for independently assembled definitions.
     pub struct ArtifactDefinitionRegistry {
-        definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
-        claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+        definitions: BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+        claims: BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
     }
 
     impl Default for ArtifactDefinitionRegistry {
@@ -2704,7 +2704,7 @@ pub mod app {
     impl ArtifactDefinitionRegistry {
         /// 🏗️ Creates an empty artifact-definition registry.
         pub fn new() -> Self {
-            Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+            Self { definitions: BTreeMap::new(), claims: BTreeMap::new() }
         }
 
         /// 🛡️ Registers exactly one new definition or rejects it without partial mutation.
@@ -2964,7 +2964,7 @@ pub mod app {
                     &self.definition,
                     &mut self.definition_error,
                     ArtifactCapabilityKind::composer(),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
                 );
                 self.composers.push(entry);
             }
@@ -2996,7 +2996,7 @@ pub mod app {
                     &self.definition,
                     &mut self.definition_error,
                     ArtifactCapabilityKind::subset_validator(),
-                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+                    ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
                 );
                 self.subset_validators.push(entry);
             }
@@ -3189,7 +3189,7 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), service.metadata().inference_schema)?]));
         }
         for entry in composers {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate())?]));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate())?]));
         }
         for row in formats {
             let claims = row
@@ -3203,7 +3203,7 @@ pub mod app {
         for entry in subset_validators {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(
                 ArtifactCapabilityKind::subset_validator(),
-                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate())?],
+                vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate())?],
             ));
         }
         for spec in languages {
@@ -3320,7 +3320,7 @@ pub mod app {
         pub id: String,
         pub owner: String,
         pub kind: HostMediaHandlerKind,
-        pub artifact_kind: semio_framework::ArtifactKindSpec,
+        pub artifact_kind: ArtifactKindSpec,
         pub document_schema: String,
         pub file_stem: Option<String>,
         pub executable_identity: HostMediaExecutableIdentity,
@@ -3331,7 +3331,7 @@ pub mod app {
     pub struct HostMediaHandlerDeclaration {
         id: ArtifactIdentity,
         kind: HostMediaHandlerKind,
-        artifact_kind: semio_framework::ArtifactKindSpec,
+        artifact_kind: ArtifactKindSpec,
         document_schema: String,
         file_stem: Option<String>,
         executable: HostMediaExecutable,
@@ -3345,7 +3345,7 @@ pub mod app {
 
     impl HostMediaHandlerDeclaration {
         /// 🏗️ Describes one mesh-DWG bridge without invoking its converter during assembly.
-        pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+        pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::MeshDwgBridge,
@@ -3359,7 +3359,7 @@ pub mod app {
         }
 
         /// 🏗️ Describes one 2D SVG renderer without invoking it during assembly.
-        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+        pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
             let declaration = Self {
                 id: ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?,
                 kind: HostMediaHandlerKind::TwoDSvgExport,
@@ -3401,7 +3401,7 @@ pub mod app {
             Ok(())
         }
 
-        pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+        pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
             ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
             self.validate_shape()?;
             let declared = declared_media_kinds
@@ -5799,7 +5799,7 @@ pub mod app {
             use semio_framework::{effective_action_args, DslValue};
             use store::pack_rt::dsl_value_to_json;
             let definition = manifest().definition;
-            let app = A::default();
+            let _app = A::default();
             let skip = [
                 "undo",
                 "redo",
@@ -6438,12 +6438,12 @@ pub mod app {
             #[test]
             fn generation_mismatch_is_rejected_with_the_frozen_code() {
                 let mut sender = new_app::<TxnApp>();
-                let (near, mut far) = store::MemoryBackbone::pair("mem://txn", "mem://txn");
+                let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn");
                 sender.attach_backbone(Box::new(near)).expect("attach");
                 sender.dispatch_typed(TxnCommand::Increment, &meta("remote")).expect("the peer edits its own copy");
                 let mut envelopes = Vec::new();
                 for message in far.receive().expect("receive") {
-                    if let store::BackboneMessage::Mutations { envelopes: operations } = message {
+                    if let BackboneMessage::Mutations { envelopes: operations } = message {
                         envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
                     }
                 }
@@ -6892,7 +6892,7 @@ pub mod app {
         /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
         /// not a hand-written pre-migration string. One shared helper rather than one dialect per test.
         fn canonical_test_app_id(slug: &str) -> String {
-            semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+            surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
         }
 
         #[test]
@@ -7338,7 +7338,7 @@ pub mod app {
             assert_eq!(introduction.steps.len(), 5);
         }
 
-        fn minimal_tutorial(id: &str) -> semio_framework::TutorialDefinition {
+        fn minimal_tutorial(id: &str) -> TutorialDefinition {
             use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
             TutorialDefinition {
                 id: id.into(),
@@ -7638,7 +7638,7 @@ pub mod app {
         /// 🪪️ Contract §1 fixture — a canonical id built via `surface_app_id` from a fixture `Dialect`,
         /// not a hand-written pre-migration string like the retired `"puzzle2d-play"`/`"demo-play"`.
         fn canonical_test_app_id(slug: &str) -> String {
-            semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+            surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
         }
 
         #[test]
@@ -8182,7 +8182,7 @@ pub mod app {
     /// not a generic `TransientStore<P, M>` instance: hover here is applied directly by the interaction
     /// dispatch interception, never through an app's own `Emit`/ephemeral lane, so the `Mutation`-trait
     /// machinery `TransientStore` requires would be unused ceremony.
-    pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+    pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
 
     /// 🕹️ The single mutation `VcsArtifactApp::interaction_store` (the framework-owned, persisted-local
     /// selection + active mode/granularity store — see that field's doc comment) ever applies: a
@@ -9242,7 +9242,7 @@ pub mod app {
         /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
         /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
         /// that the shells drive must override this so chrome actions reach `handle`.
-        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -9270,10 +9270,10 @@ pub mod app {
         /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
         /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
         /// interception only calls this when a media type is declared).
-        fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
             Err(ClipboardError::EmptySelection)
         }
-        fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
+        fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
             Vec::new()
         }
         /// 🕹️ This app's `InteractionTopology` for the CURRENT document/config — one `DomainTopology`
@@ -10263,7 +10263,7 @@ pub mod app {
                     member.commit_checkpoint(message.clone(), authors.clone()).map_err(|error| error.into_fault())?;
                 }
                 if let Some(checkpoint_id) = member.current_checkpoint_id() {
-                    pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+                    pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
                 }
             }
             pins.sort_by(|left, right| left.child_ref.artifact_id.cmp(&right.child_ref.artifact_id));
@@ -10312,13 +10312,13 @@ pub mod app {
         /// @emoji 🧪️ The document store itself — needed to assert on checkpoint metadata
         /// (`composition_pins`), which no snapshot-level accessor exposes.
         #[cfg(test)]
-        pub(crate) fn test_store(&self) -> &store::ArtifactStore<A::Snapshot, A::Mutation> {
+        pub(crate) fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
             &self.store
         }
 
         /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
         #[cfg(test)]
-        pub(crate) fn test_store_mut(&mut self) -> &mut store::ArtifactStore<A::Snapshot, A::Mutation> {
+        pub(crate) fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
             &mut self.store
         }
 
@@ -11221,7 +11221,7 @@ pub mod app {
         /// with one root `TopologyNode` per valid id instead.
         fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState) -> Result<protocol::InteractionTopology, Fault> {
             let defs: Vec<InteractionDefinition> = self.registry.interactions().cloned().collect();
-            let mut domains = std::collections::BTreeMap::new();
+            let mut domains = BTreeMap::new();
             for def in &defs {
                 if matches!(def.hierarchy, protocol::HierarchyProvider::Flat) {
                     continue;
@@ -11245,7 +11245,7 @@ pub mod app {
             let validated = protocol::validate_state(&outlines, &topology, &combined);
             self.interaction_hover = validated.hover.clone();
             let persisted_before = self.interaction_store.snapshot().unwrap_or_default();
-            let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+            let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
             if persisted != persisted_before {
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone()));
                 self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::SetState(persisted)], description: None, lane: HistoryLane::Interaction }).map_err(|error| error.into_fault())?;
@@ -11567,7 +11567,7 @@ pub mod app {
                 let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
                 let interaction_hover = self.interaction_hover.clone();
                 let emit = {
-                    let VcsArtifactApp { app, cache, children, .. } = self;
+                    let VcsArtifactApp { app: _, cache, children, .. } = self;
                     let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                     let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                     let cfg = ConfigView { snapshot: config };
@@ -11668,7 +11668,7 @@ pub mod app {
             let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
             let interaction_hover = self.interaction_hover.clone();
             let (verb, emit, ephemeral) = {
-                let VcsArtifactApp { app, cache, children, presence_store, transient_store, .. } = self;
+                let VcsArtifactApp { app: _, cache, children, presence_store, transient_store, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let cfg = ConfigView { snapshot: config };
@@ -11724,7 +11724,7 @@ pub mod app {
             }
             self.refresh_cache()?;
             let emit = {
-                let VcsArtifactApp { app, cache, children, .. } = self;
+                let VcsArtifactApp { app: _, cache, children, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let _cfg = ConfigView { snapshot: config };
@@ -12142,7 +12142,7 @@ pub mod app {
                 return Ok(node);
             }
             let mut node = {
-                let VcsArtifactApp { app, cache, children, .. } = self;
+                let VcsArtifactApp { app: _, cache, children, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let cfg = ConfigView { snapshot: config };
@@ -12176,7 +12176,7 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return HashMap::new();
             }
-            let VcsArtifactApp { app, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
@@ -12187,7 +12187,7 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
@@ -12201,7 +12201,7 @@ pub mod app {
             if self.refresh_cache().is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app, cache, registry, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, registry, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let cfg = ConfigView { snapshot: config };
@@ -12211,7 +12211,7 @@ pub mod app {
 
         fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let _cfg = ConfigView { snapshot: config };
@@ -12226,7 +12226,7 @@ pub mod app {
 
         fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
             self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, children, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
             let _cfg = ConfigView { snapshot: config };
@@ -12593,12 +12593,12 @@ pub mod app {
         /// don't grow a dead column.
         pub fn render_rows(view: &TableRowsView) -> UiNode {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
-            let mut columns: Vec<serde_json::Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
+            let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
             if has_actions {
                 columns.push(serde_json::json!({ "id": "actions", "label": view.actions_label }));
             }
             let columns_json = serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into());
-            let rows: Vec<serde_json::Value> = view
+            let rows: Vec<Value> = view
                 .rows
                 .iter()
                 .map(|row| {
@@ -12933,10 +12933,10 @@ pub mod app {
             let view = TableRowsView { columns: vec!["Name".into()], rows: vec![TableRow { id: "space:abc".into(), cells: vec!["Atelier".into()], actions: Vec::new() }], actions_label: "Actions".into() };
             let UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view) else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
-            let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
+            let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
             assert_eq!(rows[0]["id"], serde_json::json!("space:abc"));
             assert_eq!(rows[0]["col0"], serde_json::json!({ "kind": "text", "value": "Atelier" }));
-            let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
+            let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
             assert!(columns.iter().all(|column| column["id"] != "actions"));
         }
 
@@ -12950,9 +12950,9 @@ pub mod app {
             };
             let UiNode::ComponentScene(node) = TableWindowKit::render_rows(&view) else { panic!("expected ComponentScene") };
             let scene = node.table.expect("table scene");
-            let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
+            let columns: Vec<Value> = serde_json::from_str(&scene.columns_json).expect("columns_json parses");
             assert!(columns.iter().any(|column| column["id"] == "actions" && column["label"] == "Actions"));
-            let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
+            let rows: Vec<Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
             let button = &rows[0]["actions"]["buttons"][0];
             assert_eq!(button["iconId"], serde_json::json!("trash-2"));
             assert_eq!(button["action"]["controllerId"], serde_json::json!("s.space.home"));
@@ -13073,7 +13073,7 @@ pub mod app {
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -13206,7 +13206,7 @@ pub mod app {
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -13368,7 +13368,7 @@ pub mod app {
         fn command_id(command: &Self::Command) -> &'static str {
             E::command_id(command)
         }
-        fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
             E::command_from_action(action, args)
         }
         fn config_spec() -> ConfigSpec {
@@ -13512,7 +13512,7 @@ pub mod app {
         fn command_id(command: &Self::Command) -> &'static str {
             V::command_id(command)
         }
-        fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
             V::command_from_action(action, args)
         }
         fn config_spec() -> ConfigSpec {
@@ -13749,7 +13749,7 @@ pub mod plugin_runtime {
         /// 🪪️ Per-instance local actor id, set by `AppCommand::Hello` and read back by every `Command`
         /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
         /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
-        static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+        static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(HashMap::new());
     }
 
     fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
@@ -14049,7 +14049,7 @@ pub mod plugin_runtime {
         struct WireTestSnapshot {
             value: i32,
         }
-        impl store::ArtifactPack for WireTestSnapshot {
+        impl ArtifactPack for WireTestSnapshot {
             fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
@@ -14086,7 +14086,7 @@ pub mod plugin_runtime {
                 vec![WireTestOp::Add(-delta)]
             }
         }
-        impl protocol::OpBinary for WireTestOp {
+        impl OpBinary for WireTestOp {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
                 Ok(serde_json::to_vec(self).expect("wire test op always encodes"))
             }
@@ -14300,7 +14300,7 @@ pub mod plugin_runtime {
     /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
     /// depending on its concrete `Snapshot`/`Mutation` types.
     pub fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<String>) -> Result<(), store::DocumentCodecRegistryError> {
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
+        store::register_document_codec(store::ArtifactCodec::of::<A::Snapshot, A::Mutation>(schema))
     }
 
     /// @emoji 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -15689,7 +15689,7 @@ pub mod plugin_runtime {
             }
         }
 
-        impl store::ArtifactPack for TestSnapshot {
+        impl ArtifactPack for TestSnapshot {
             fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
@@ -15735,11 +15735,11 @@ pub mod plugin_runtime {
             assert_eq!(de.reads.to_vec(), vec![DummyDeserializer::FROM]);
 
             let seed = TestSnapshot { count: 7, label: "x".into() };
-            let bytes = store::ArtifactPack::encode_pack(&seed);
+            let bytes = ArtifactPack::encode_pack(&seed);
             let composed = (ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }]).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
             assert_eq!(composed.dialect, DummySerializer::INTO);
             match composed.payload {
-                IoPayload::Binary(out) => assert_eq!(<TestSnapshot as store::ArtifactPack>::decode_pack(&out).unwrap(), seed),
+                IoPayload::Binary(out) => assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&out).unwrap(), seed),
                 IoPayload::Text(_) => panic!("expected Binary payload"),
             }
 
@@ -15889,7 +15889,7 @@ pub mod plugin_runtime {
             }
         }
 
-        impl store::ArtifactPack for TestConfig {
+        impl ArtifactPack for TestConfig {
             fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
             }
@@ -16517,7 +16517,7 @@ pub mod plugin_runtime {
             // The child came back as its OWN live store, at the value its own history ended on —
             // and reload went through the real factory, not a cache.
             let child = reloaded.child_store("slot", "child-1").expect("child restored");
-            let restored: TestSnapshot = <TestSnapshot as store::ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child pack")).expect("decode child");
+            let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child pack")).expect("decode child");
             assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
         }
 
@@ -16748,7 +16748,7 @@ pub mod plugin_runtime {
             let definition = synthetic_play_app().definition;
             for id in ["copy", "cut", "paste"] {
                 let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
-                assert_eq!(action.kind, semio_framework::ActionKind::Clipboard);
+                assert_eq!(action.kind, ActionKind::Clipboard);
             }
         }
 
@@ -18790,7 +18790,7 @@ mod derived_artifact_children_tests {
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self(snapshot)
         }
-        fn from_text(_text: &str) -> Result<Self, store::TextError> {
+        fn from_text(_text: &str) -> Result<Self, TextError> {
             Ok(Self::empty())
         }
         fn from_binary(_bytes: &[u8]) -> Result<Self, store::PackError> {
@@ -18804,7 +18804,7 @@ mod derived_artifact_children_tests {
         fn absorb(self, _diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             Ok(self)
         }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             Ok(self.0)
         }
     }
@@ -19073,7 +19073,7 @@ mod subset_macro_tests {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.test.subset-macro", standard: StandardId("1"), subset: SubsetId("derived") };
 
         fn validate(_payload: &IoPayload) -> Vec<Diagnostic> {
-            vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: dsl::FaultScope::default() }]
+            vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: FaultScope::default() }]
         }
     }
 

@@ -673,7 +673,7 @@ mod tests {
 
     fn round_trip<T>(value: T) -> T
     where
-        T: Serialize + serde::de::DeserializeOwned,
+        T: Serialize + de::DeserializeOwned,
     {
         let encoded = value.serialize(ValueSerializer).expect("encode into DslValue");
         T::deserialize(&mut ValueDeserializer::new(encoded)).expect("decode from DslValue")

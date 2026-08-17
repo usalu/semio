@@ -4,7 +4,7 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.j
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::model::EnergyModelSnapshot;
     use crate::artifacts::model::standards::v1::subsets::any::schema::EnergyModelAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

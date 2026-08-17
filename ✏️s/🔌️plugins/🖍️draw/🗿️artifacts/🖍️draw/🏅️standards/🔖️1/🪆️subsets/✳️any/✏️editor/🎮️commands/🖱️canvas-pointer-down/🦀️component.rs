@@ -334,7 +334,7 @@ fn commit_with_utility_reset(operations: Vec<DrawMutation>, description: &str) -
         return Emit::default();
     }
     let mut emit = Emit::commit(operations, description);
-    emit.effects.push(semio_framework_plugin::kernel::HostEffect::SetActiveUtility { window_id: crate::editor::draw::DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: crate::editor::draw::DRAW_DEFAULT_UTILITY.into() });
+    emit.effects.push(HostEffect::SetActiveUtility { window_id: crate::editor::draw::DRAW_PLAY_WINDOW_CANVAS.into(), utility_id: crate::editor::draw::DRAW_DEFAULT_UTILITY.into() });
     emit
 }
 

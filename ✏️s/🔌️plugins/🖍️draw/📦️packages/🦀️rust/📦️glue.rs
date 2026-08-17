@@ -412,7 +412,7 @@ pub mod artifacts {
         pub mod op { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::mutations::text::*; pub use crate::artifacts::draw::standards::v1::subsets::any::schema::mutations::{draw_op_for_layer_field, patch_layer_field, DrawMutation}; }
         pub mod dsl { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::text::*; pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::text::*; } }
+        pub mod diff {  pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::*; pub mod schema { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::draw::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 

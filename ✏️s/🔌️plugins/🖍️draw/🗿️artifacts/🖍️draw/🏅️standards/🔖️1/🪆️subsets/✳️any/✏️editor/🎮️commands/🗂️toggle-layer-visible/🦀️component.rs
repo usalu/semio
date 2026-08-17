@@ -2,12 +2,11 @@
 
 use crate::editor::draw::config::{DrawConfig, DrawConfigMutation};
 use crate::editor::draw::commands::canvas_pointer_down::DrawSession;
-use crate::artifacts::draw::schema::{create_draw_boolean_layer, create_layer_by_kind, find_draw_layer, find_draw_layer_location, layer_id};
-use crate::artifacts::draw::op::{draw_op_for_layer_field, DrawMutation};
+use crate::artifacts::draw::schema::find_draw_layer;
+use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[dsl(keyword = "toggle-layer-visible")]

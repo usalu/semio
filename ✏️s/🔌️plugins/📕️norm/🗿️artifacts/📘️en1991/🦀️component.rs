@@ -1,10 +1,6 @@
 //! En1991 — document entities (constitutional: general).
 
-pub use crate::artifacts::en1991::schema::diff::En1991Diff;
-pub use crate::artifacts::en1991::schema::mutations::En1991Mutation;
-pub use crate::artifacts::en1991::schema::snapshot::En1991Snapshot;
 
-use crate::document::AnnexChoice;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Types

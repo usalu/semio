@@ -61,7 +61,7 @@ pub const S_PLAY_INTERACTION_DOMAIN: &str = "graph";
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentHelpers
-pub(crate) fn s_play_action(action: &str, args: Option<Value>) -> semio_framework_plugin::ActionDescriptor {
+pub(crate) fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     semio_framework_plugin::ActionFactory::new(S_PLAY_CONTROLLER_ID).action(action, args)
 }
 
@@ -729,7 +729,7 @@ mod tests {
 
     #[test]
     fn initial_snapshot_is_empty_not_demo() {
-        let app = SpaceApp::default();
+        let _app = SpaceApp::default();
         assert!(SpaceApp::initial_snapshot().graph.nodes.is_empty());
     }
 
@@ -872,7 +872,7 @@ mod tests {
         let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
-        let app = SpaceApp::default();
+        let _app = SpaceApp::default();
         let catalogue_json = serde_json::to_string(&SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(catalogue_json.contains("\"Apps\""));
 
@@ -890,7 +890,7 @@ mod tests {
         let doc = ArtifactView::new(&projection, &history);
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
         let cfg = ConfigView { snapshot: &config };
-        let app = SpaceApp::default();
+        let _app = SpaceApp::default();
         let parameters_json = serde_json::to_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));

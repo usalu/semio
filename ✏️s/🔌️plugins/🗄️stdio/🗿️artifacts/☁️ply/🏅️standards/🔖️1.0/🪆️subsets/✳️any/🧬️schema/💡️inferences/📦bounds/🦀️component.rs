@@ -8,7 +8,7 @@
 //! an element literally named `"face"`, if present — also generic, no assumption it exists. A
 //! pure whole-snapshot fold — no `InferredField` needed.
 
-use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyProperty, PlyValue};
+use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
 use serde::{Deserialize, Serialize};
 

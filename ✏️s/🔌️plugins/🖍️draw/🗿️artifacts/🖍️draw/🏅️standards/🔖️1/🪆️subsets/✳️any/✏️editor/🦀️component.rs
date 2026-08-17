@@ -22,7 +22,7 @@ use crate::editor::draw::terminology::DrawPlayLabels;
 use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::{DrawSnapshot, DRAW_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
-    ActionDescriptor, ActionKind, App, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
+    ActionDescriptor, ActionKind, ConfigView, ArtifactEditor, ArtifactView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
     MediaPayload, MediaType, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, SurfaceKind, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementStatus,
 };
 use semio_framework_plugin::app::InteractionView;
@@ -206,7 +206,7 @@ impl ArtifactEditor for DrawPlayApp {
 pub fn draw_io() -> semio_framework::AppIo {
     semio_framework::AppIo {
         document_schema: DRAW_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![draw_vector_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
@@ -225,7 +225,7 @@ pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
         id: "vector:out".into(),
         label: "Vector".into(),
         direction: semio_framework::MediaPortDirection::Out,
-        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some("2d.drawing".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
@@ -235,11 +235,11 @@ pub fn draw_vector_out_port() -> semio_framework::MediaPortSpec {
 /// 🖼️ Exports the current draw document as an SVG `Media` payload for the `vector:out` port —
 /// reuses `crate::artifacts::draw::io::draw_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
-pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<semio_framework::Media, semio_framework::MediaError> {
-    let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| semio_framework::MediaError::Payload("vector:out".into(), error))?;
-    Ok(semio_framework::Media {
-        media_type: semio_framework::MediaType { class: semio_framework::MediaClass::TwoD, form: semio_framework::MediaForm::Vector },
-        payload: semio_framework::MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
+pub fn draw_vector_media(doc: &DrawSnapshot) -> Result<Media, MediaError> {
+    let (svg, _width, _height) = crate::artifacts::draw::io::draw_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
+    Ok(Media {
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+        payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg },
     })
 }
 //#endregion 🔖️Io

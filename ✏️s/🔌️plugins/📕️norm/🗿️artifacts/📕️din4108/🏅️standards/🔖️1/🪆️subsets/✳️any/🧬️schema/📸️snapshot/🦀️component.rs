@@ -16,7 +16,7 @@ pub struct Din4108Snapshot {
     pub category: String,
     #[dsl(table)]
     #[state(artifact)]
-    pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
+    pub layers: Vec<LayerDocument>,
     #[state(artifact)]
     pub climate: ClimateZoneDe,
     #[state(artifact)]

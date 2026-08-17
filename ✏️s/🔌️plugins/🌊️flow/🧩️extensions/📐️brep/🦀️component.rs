@@ -2,11 +2,9 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::{build_manifest_json, evaluate_json};
-use neural_engine::{channel_output, Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle, GeometryKind};
-use semio_framework_3d::engine::{ParamDomain, PointClassification, Vec3};
-use std::collections::{HashMap, HashSet};
-use std::sync::{Mutex, OnceLock, RwLock};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel};
+use std::sync::{Mutex, OnceLock};
 
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
@@ -1798,7 +1796,7 @@ mod tests {
 
         let _serial = test_serial();
         reset_test_kernel();
-        let manifest_json = super::extension_manifest_json();
+        let manifest_json = extension_manifest_json();
         let bundle = ExtensionBundle::new("brep", "Brep", "0.3.0")
             .extends("flow")
             .contributes_topic(
@@ -1854,7 +1852,7 @@ mod tests {
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
-    use flow_extension_sdk::{build_manifest_json, evaluate_json};
+    use flow_extension_sdk::evaluate_json;
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::ExtensionBundle;
     use serde::Deserialize;

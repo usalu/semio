@@ -70,14 +70,14 @@ pub fn block2d_io() -> AppIo {
 //#endregion 🔖️Io
 
 //#region 🔌️Registration
-/// 🗂️ `Block2dSnapshot`'s pack↔dsl codec, `block2d`'s artifact schema/inference descriptors, its
-/// composer table and its pilot-language grammars now register declaratively via
-/// `crate::artifacts::block2d::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-/// M1/W1d), consumed by `.artifact(crate::artifacts::block2d::declaration())` in the plugin root
-/// (`🧱️block/🦀️component.rs`) — replacing this app's former side-effecting `register()`. Nothing
-/// app-scope-only remains here: `Block2dPlayApp::app_schema()` now returns
-/// `crate::editor::block2d::config::schema::app_schema_descriptor()` directly (ticket W1c), so the
-/// plugin root's `.setup()` escape hatch is gone entirely.
+// 🗂️ `Block2dSnapshot`'s pack↔dsl codec, `block2d`'s artifact schema/inference descriptors, its
+// composer table and its pilot-language grammars now register declaratively via
+// `crate::artifacts::block2d::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+// M1/W1d), consumed by `.artifact(crate::artifacts::block2d::declaration())` in the plugin root
+// (`🧱️block/🦀️component.rs`) — replacing this app's former side-effecting `register()`. Nothing
+// app-scope-only remains here: `Block2dPlayApp::app_schema()` now returns
+// `crate::editor::block2d::config::schema::app_schema_descriptor()` directly (ticket W1c), so the
+// plugin root's `.setup()` escape hatch is gone entirely.
 //#endregion 🔌️Registration
 
 //#region 🔖️Commands
@@ -132,7 +132,7 @@ impl ArtifactEditor for Block2dPlayApp {
         crate::artifacts::block2d::schema::empty_block2d_snapshot()
     }
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<AppIo> {
         Some(block2d_io())
     }
 
@@ -507,7 +507,7 @@ mod tests {
 
     #[test]
     fn command_from_action_bridges_set_active_example() {
-        let app = Block2dPlayApp;
+        let _app = Block2dPlayApp;
         assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": "left" }))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
     }
 

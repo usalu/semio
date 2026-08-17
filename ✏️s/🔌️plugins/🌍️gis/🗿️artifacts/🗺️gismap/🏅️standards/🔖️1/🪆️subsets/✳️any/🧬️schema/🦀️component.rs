@@ -67,8 +67,8 @@ impl GisMapArtifact {
     /// `self`) via `gis_map_snapshot_with_derived_children` so they can never drift from what
     /// `positions`/`routes`/`regions` actually contain; `image` carries straight through (real, but
     /// not derivable from anything this plugin owns — see the field's own doc comment).
-    pub fn to_snapshot(&self) -> crate::artifacts::gismap::GisMapSnapshot {
-        gis_map_snapshot_with_derived_children(crate::artifacts::gismap::GisMapSnapshot {
+    pub fn to_snapshot(&self) -> GisMapSnapshot {
+        gis_map_snapshot_with_derived_children(GisMapSnapshot {
             positions: self.positions.clone(),
             routes: self.routes.clone(),
             regions: self.regions.clone(),
@@ -78,7 +78,7 @@ impl GisMapArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::gismap::GisMapSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: GisMapSnapshot) -> Self {
         Self {
             positions: snapshot.positions,
             routes: snapshot.routes,
@@ -89,7 +89,7 @@ impl GisMapArtifact {
     }
 
     /// Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::gismap::GisMapSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: GisMapSnapshot) {
         self.positions = snapshot.positions;
         self.routes = snapshot.routes;
         self.regions = snapshot.regions;
@@ -237,8 +237,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec GismapBuilderFacets {
-        construction: derived_construction::GismapBuilderConstruction,
-        analysis: derived_analysis::GisMapAnalyzerAnalysis,
+        construction: GismapBuilderConstruction,
+        analysis: GisMapAnalyzerAnalysis,
         composition: super::super::io::derived_composition::GisMapComposerComposition,
     }
     builder: GismapBuilder,
@@ -282,7 +282,7 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
             })
             .unwrap_or_default()
     };
-    crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot {
+    gis_map_snapshot_with_derived_children(GisMapSnapshot {
         positions: features("positions"),
         routes: features("routes"),
         regions: features("regions"),
@@ -609,7 +609,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
             MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point.x, "lat": point.y })) }
         })
         .collect();
-    let document = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
+    let document = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions, routes: Vec::new(), regions: Vec::new(), ..Default::default() });
     serde_json::to_value(document).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport

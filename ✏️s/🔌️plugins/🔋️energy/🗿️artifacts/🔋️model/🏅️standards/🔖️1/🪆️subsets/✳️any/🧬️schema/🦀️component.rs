@@ -232,8 +232,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec ModelBuilderFacets {
-        construction: derived_construction::ModelBuilderConstruction,
-        analysis: derived_analysis::EnergyModelAnalyzerAnalysis,
+        construction: ModelBuilderConstruction,
+        analysis: EnergyModelAnalyzerAnalysis,
         composition: super::super::io::derived_composition::EnergyModelComposerComposition,
     }
     builder: ModelBuilder,

@@ -11,7 +11,7 @@ impl GltfInferenceLeaf for GltfElongationInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfElongationInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
     exact(if extent[0] > 0.0 { extent[1] / extent[0] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))

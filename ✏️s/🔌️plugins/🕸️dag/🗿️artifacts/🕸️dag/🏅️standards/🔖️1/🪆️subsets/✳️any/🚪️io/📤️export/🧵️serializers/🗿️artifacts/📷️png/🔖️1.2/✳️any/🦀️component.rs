@@ -1,6 +1,6 @@
 //! Serialize dag to stdio.png.
 use crate::artifacts::dag::DagSnapshot;
-use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
 
 pub fn register() {}
 

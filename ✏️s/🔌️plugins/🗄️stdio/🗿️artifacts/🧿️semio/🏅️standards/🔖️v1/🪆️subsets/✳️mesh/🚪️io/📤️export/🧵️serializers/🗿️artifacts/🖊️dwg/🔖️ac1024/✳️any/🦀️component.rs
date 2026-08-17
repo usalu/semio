@@ -12,7 +12,6 @@
 
 use crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing;
 use crate::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgSnapshot};
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 

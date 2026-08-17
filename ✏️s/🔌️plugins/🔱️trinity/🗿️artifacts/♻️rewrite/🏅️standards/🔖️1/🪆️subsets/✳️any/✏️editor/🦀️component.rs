@@ -566,12 +566,12 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::rewrite::terminology::TrinityRewriteLabels>(&config.locale);
         match body_key {
-            TRINITY_REWRITE_PLAY_BODY_BEFORE => crate::editor::rewrite::modes::edit::windows::before::render(state, config),
-            TRINITY_REWRITE_PLAY_BODY_AFTER => crate::editor::rewrite::modes::edit::windows::after::render(state, config),
-            TRINITY_REWRITE_PLAY_BODY_LHS => crate::editor::rewrite::modes::edit::windows::lhs::render(state, config),
-            TRINITY_REWRITE_PLAY_BODY_RHS => crate::editor::rewrite::modes::edit::windows::rhs::render(state, config),
-            TRINITY_REWRITE_PLAY_BODY_JACK => crate::editor::rewrite::modes::edit::windows::jack::render(state, config),
-            TRINITY_REWRITE_PLAY_BODY_PARAMETERS => crate::editor::rewrite::modes::edit::windows::parameters::render(state, labels),
+            TRINITY_REWRITE_PLAY_BODY_BEFORE => edit::windows::before::render(state, config),
+            TRINITY_REWRITE_PLAY_BODY_AFTER => edit::windows::after::render(state, config),
+            TRINITY_REWRITE_PLAY_BODY_LHS => edit::windows::lhs::render(state, config),
+            TRINITY_REWRITE_PLAY_BODY_RHS => edit::windows::rhs::render(state, config),
+            TRINITY_REWRITE_PLAY_BODY_JACK => edit::windows::jack::render(state, config),
+            TRINITY_REWRITE_PLAY_BODY_PARAMETERS => edit::windows::parameters::render(state, labels),
             TRINITY_REWRITE_PLAY_BODY_DOCUMENT => crate::editor::rewrite::panels::document::render(state, config, labels),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => crate::editor::rewrite::panels::catalogue::render(labels),
             TRINITY_REWRITE_PLAY_BODY_INSPECTION => crate::editor::rewrite::panels::inspection::render(),

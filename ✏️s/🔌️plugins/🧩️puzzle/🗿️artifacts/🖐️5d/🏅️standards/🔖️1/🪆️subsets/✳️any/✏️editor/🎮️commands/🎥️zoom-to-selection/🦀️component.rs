@@ -1,9 +1,6 @@
 //! 🎥️ `zoom-to-selection` command.
 
-use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dCamera3d};
-use crate::editor::puzzle5d::modes::edit::windows::board2d;
 use crate::editor::puzzle5d::{gumball_target_world, Puzzle5dActionCtx};
-use serde_json::Value;
 
 /// 🔍️ `zoomToSelection`/`focusSelection`: recenters both cameras on the selection, preserving the
 /// volume camera's orbit offset. Aborts (emitting nothing at all) when nothing is selected — the

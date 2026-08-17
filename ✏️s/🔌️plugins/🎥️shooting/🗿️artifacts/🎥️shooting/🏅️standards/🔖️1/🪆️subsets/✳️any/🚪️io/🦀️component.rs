@@ -4,7 +4,7 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.d
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.bmp", "stdio.dwg", "stdio.gif", "stdio.jpg", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg", "stdio.tiff", "stdio.txt"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::shooting::ShootingSnapshot;
     use crate::artifacts::shooting::standards::v1::subsets::any::schema::ShootingAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

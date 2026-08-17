@@ -347,13 +347,13 @@ macro_rules! fault_from_thiserror {
     };
 }
 
-#[cfg(all(feature = "js", target_arch = "wasm32"))]
+#[cfg(target_arch = "wasm32")]
 /// @emoji 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
 pub fn fault_to_js(fault: Fault) -> wasm_bindgen::JsValue {
     wasm_bindgen::JsValue::from_str(&serde_json::to_string(&fault).unwrap_or(fault.message))
 }
 
-#[cfg(all(feature = "js", target_arch = "wasm32"))]
+#[cfg(target_arch = "wasm32")]
 /// @emoji 🌐️ Maps `Result<T, Fault>` into `Result<T, JsValue>` for wasm exports.
 pub fn result_fault_to_js<T>(result: Result<T, Fault>) -> Result<T, wasm_bindgen::JsValue> {
     result.map_err(fault_to_js)

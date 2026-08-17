@@ -34,8 +34,6 @@ extern crate infinite_canvas as infinite_board_port_directed_dag;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<Mutation, ConfigMutation>, Fault>`, the exact signature `ArtifactEditor::handle` and

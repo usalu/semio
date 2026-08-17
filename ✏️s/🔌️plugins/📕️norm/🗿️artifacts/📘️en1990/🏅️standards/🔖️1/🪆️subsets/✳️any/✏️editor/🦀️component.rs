@@ -148,7 +148,7 @@ impl crate::document::NormFamily for En1990Family {
     }
 }
 
-pub type Host = crate::document::NormHost<En1990Family>;
+pub type Host = NormHost<En1990Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest

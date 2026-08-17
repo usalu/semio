@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfCentroidInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     if context.topology.watertight && context.volume > 1e-15 {
         exact(GltfVec3::new(context.centroid), GltfUnit::Metre, context.sample_count, Some(context.topology))
     } else {

@@ -1,9 +1,9 @@
 //! 💬️ 💬️ Writer play app commands command — `engagement-input`.
 
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
-use crate::artifacts::writer::op::{EditText, WriterMutation};
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
-use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, ArtifactView, Emit, Fault};
+use crate::artifacts::writer::op::WriterMutation;
+use crate::artifacts::writer::WriterSnapshot;
+use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

@@ -1,7 +1,7 @@
 //! 🧺️ 🧺️ Sourcing curate app commands command — `curate-remove`.
 
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::schema::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
+use crate::artifacts::curate::schema::{curation_decision_for_set, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

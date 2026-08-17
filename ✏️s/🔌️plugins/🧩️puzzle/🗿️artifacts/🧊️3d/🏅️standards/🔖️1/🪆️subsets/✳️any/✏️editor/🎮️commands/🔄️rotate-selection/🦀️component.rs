@@ -1,7 +1,6 @@
 //! 🔄️ `rotate-selection` command.
 
 use serde_json::Value;
-use std::sync::atomic::Ordering;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::mesh_selection_ids;
 use crate::editor::puzzle3d::puzzle3d_apply_rotate;

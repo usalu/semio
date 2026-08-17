@@ -4,9 +4,6 @@
 //! shared `Puzzle3dError`, and the `artifact_kind()` spec the play app's manifest binds. Sibling
 //! nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`, `🎒️pack`, `📡️spr`, `⚙️engine`.
 
-pub use crate::artifacts::puzzle3d::schema::diff::Puzzle3dDiff;
-pub use crate::artifacts::puzzle3d::schema::mutations::Puzzle3dMutation;
-pub use crate::artifacts::puzzle3d::schema::snapshot::Puzzle3dSnapshot;
 
 use serde::{Deserialize, Serialize};
 

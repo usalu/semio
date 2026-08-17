@@ -1,7 +1,5 @@
 //! 🗺️ GIS map artifact — the document entity the 2d app edits (constitutional: general).
 
-pub use crate::artifacts::gismap::schema::diff::GisMapDiff;
-pub use crate::artifacts::gismap::schema::mutations::GisMapMutation;
 pub use crate::artifacts::gismap::schema::snapshot::GisMapSnapshot;
 
 use protocol::{Identified, Patchable};

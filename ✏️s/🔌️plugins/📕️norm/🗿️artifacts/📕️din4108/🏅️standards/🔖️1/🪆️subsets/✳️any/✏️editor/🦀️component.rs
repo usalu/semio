@@ -148,7 +148,7 @@ impl crate::document::NormFamily for Din4108Family {
     }
 }
 
-pub type Host = crate::document::NormHost<Din4108Family>;
+pub type Host = NormHost<Din4108Family>;
 //#endregion 🧩️ComplianceFamily
 
 //#region ðï¸Manifest

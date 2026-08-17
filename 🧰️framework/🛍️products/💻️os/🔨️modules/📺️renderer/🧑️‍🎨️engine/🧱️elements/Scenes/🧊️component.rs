@@ -8,7 +8,7 @@
 
 use crate::engine_canvas;
 use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{push_find_item, ContextMenuItem, ShellFindItem, ShellState};
+use crate::shell::{push_find_item, ShellFindItem};
 use base64::Engine;
 use infinite_world::{render_world_3d, World3dState};
 use semio_framework::IconName;
@@ -18,7 +18,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
-use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
+use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -687,7 +687,7 @@ fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y:
     }
 }
 
-fn double_click_action(scene: &UiComponentSceneNode, target: &str, inner: Rect, x: f32, y: f32) -> Option<ActionDescriptor> {
+fn double_click_action(scene: &UiComponentSceneNode, target: &str, inner: Rect, _x: f32, y: f32) -> Option<ActionDescriptor> {
     match scene.component_kind {
         SurfaceKind::VirtualFileSystem => {
             let vfs = scene.virtual_file_system.as_ref()?;
@@ -2789,7 +2789,7 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a
  * continuously-rendering surface (paint-2d) was pushing up to `(extent/cell)^2` solid quads every
  * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
-fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::wgpu::Theme, extent: f32) {
+fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
     let cell = 16.0;
     let half = extent * 0.5;
     let light = theme.checker_light;
@@ -2826,7 +2826,7 @@ fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, in
 }
 
 /** 📐️ Theme-aware LOD world grid for canvas-2d — same large/medium/small/micro steps as flow and infinite boards. */
-fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::wgpu::Theme) {
+fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme) {
     if viewport.zoom <= 0.0 {
         return;
     }

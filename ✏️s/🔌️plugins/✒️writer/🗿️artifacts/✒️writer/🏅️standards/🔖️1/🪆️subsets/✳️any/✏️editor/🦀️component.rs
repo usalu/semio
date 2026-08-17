@@ -112,7 +112,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// `reset_document_effect` (`📓️wave3-reports/cad-report.md`). The spr is a fresh, edit-free op-log
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &WriterSnapshot) -> HostEffect {
-    let pack = <WriterSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&scene.schema, &scene.id, scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("writer document spr encode is infallible for a fresh, edit-free envelope");
     HostEffect::LoadDocument { pack, spr }

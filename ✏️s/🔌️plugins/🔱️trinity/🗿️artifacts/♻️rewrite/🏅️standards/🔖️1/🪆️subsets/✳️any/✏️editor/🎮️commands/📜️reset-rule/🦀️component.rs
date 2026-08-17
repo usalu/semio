@@ -1,13 +1,9 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `reset-rule`.
 
 use crate::editor::rewrite::config::RewriteConfigMutation;
-use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
-use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
-use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
-use serde_json::Value;
 
 /// 🧬️ `resetRule` is a genuine whole-document reset (back to the blank default rule) — not
 /// expressible as a granular mutation, so it routes through `HostEffect::LoadDocument` (outside

@@ -12,7 +12,7 @@ impl GltfInferenceLeaf for GltfCharacteristicLengthInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfCharacteristicLengthInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(if context.surface_area > 0.0 { context.surface_area.sqrt() } else { context.diagonal }, GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {

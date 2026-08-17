@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfGenusInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     context
         .topology
         .genus

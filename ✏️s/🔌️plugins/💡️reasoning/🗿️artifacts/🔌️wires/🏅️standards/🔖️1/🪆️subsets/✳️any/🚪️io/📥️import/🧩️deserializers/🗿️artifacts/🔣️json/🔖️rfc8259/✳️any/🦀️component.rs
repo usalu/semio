@@ -1,7 +1,7 @@
 //! wires <- json
 use crate::artifacts::wires::WiresSnapshot;
 use crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
 
 pub fn register() {}
 

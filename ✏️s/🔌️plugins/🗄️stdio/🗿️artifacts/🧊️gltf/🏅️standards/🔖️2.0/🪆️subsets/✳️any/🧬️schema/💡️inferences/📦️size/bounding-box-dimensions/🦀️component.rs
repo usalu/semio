@@ -12,7 +12,7 @@ impl GltfInferenceLeaf for GltfBoundingBoxDimensionsInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfBoundingBoxDimensionsInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     exact(GltfVec3::new(context.dimensions), GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {

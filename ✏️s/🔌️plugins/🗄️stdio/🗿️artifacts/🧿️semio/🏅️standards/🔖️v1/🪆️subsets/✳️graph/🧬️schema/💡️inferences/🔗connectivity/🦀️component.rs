@@ -20,7 +20,7 @@
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::normal_internals::undirected::UndirectedGraph;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
-use graph_core::{GraphView, NodeId, PropertyBag};
+use graph_core::{NodeId, PropertyBag};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

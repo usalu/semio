@@ -70,8 +70,8 @@ impl Default for FormsArtifact {
 
 impl FormsArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::forms::FormsSnapshot {
-        crate::artifacts::forms::FormsSnapshot {
+    pub fn to_snapshot(&self) -> FormsSnapshot {
+        FormsSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
             version: self.version.clone(),
@@ -82,7 +82,7 @@ impl FormsArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::forms::FormsSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: FormsSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -95,7 +95,7 @@ impl FormsArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::forms::FormsSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: FormsSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.version = snapshot.version;
@@ -116,7 +116,7 @@ pub use crate::playbook::{
     is_block_visible as is_question_visible, is_extension_block_kind as is_extension_question_kind, step_errors, visible_blocks as visible_questions,
 };
 
-pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
+pub fn initial_try_values(spec: &FormsSnapshot, overrides: &serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
     crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), overrides)
 }
 //#endregion 🔖️PlaybookVocabulary
@@ -476,8 +476,8 @@ mod tests {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec FormsBuilderFacets {
-        construction: derived_construction::FormsBuilderConstruction,
-        analysis: derived_analysis::FormsAnalyzerAnalysis,
+        construction: FormsBuilderConstruction,
+        analysis: FormsAnalyzerAnalysis,
         composition: super::super::io::derived_composition::FormsComposerComposition,
     }
     builder: FormsBuilder,

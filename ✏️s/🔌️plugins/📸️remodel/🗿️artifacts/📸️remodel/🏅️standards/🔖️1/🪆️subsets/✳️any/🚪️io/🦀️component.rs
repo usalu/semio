@@ -60,6 +60,7 @@ pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
 /// never lost for the live document; this inverse exists for the case the cache has gone cold (see
 /// `remodel_mesh_workspace`'s doc comment) and only the canonical-but-partial `SemioMeshSnapshot`
 /// content is available.
+#[cfg(test)]
 pub(crate) fn semio_mesh_to_mesh_data(semio: &SemioMeshSnapshot) -> MeshData {
     let Some(primitive) = semio.meshes.first().and_then(|mesh| mesh.primitives.first()) else {
         return MeshData::default();
@@ -285,10 +286,9 @@ mod exporters_tests {
 //#endregion 🧪️ExportersTests
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::remodel::RemodelSnapshot;
     use crate::artifacts::remodel::standards::v1::subsets::any::schema::RemodelAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -312,7 +312,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_DWG, DEP_GLTF, DEP_JSON, DEP_LAS, DEP_OBJ, DEP_PLY, DEP_PNG, DEP_STL, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

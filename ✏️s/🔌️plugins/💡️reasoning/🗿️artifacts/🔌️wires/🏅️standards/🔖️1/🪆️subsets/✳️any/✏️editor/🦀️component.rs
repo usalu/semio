@@ -31,7 +31,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use semio_framework::kernel::HostEffect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
+    ui_text, ActionDescriptor, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel,
     MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};

@@ -34,7 +34,7 @@ mod tests {
     use super::*;
     use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn open_artifact_with_relays_the_explicit_choice() {

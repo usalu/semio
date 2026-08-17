@@ -149,6 +149,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
     imperative_extension_sdk::imperative_module_topic_contribution("logic", "Logic", "brain", "logic", "Logic", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
+#[cfg(target_arch = "wasm32")]
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Logic", MODULE_VERSION)

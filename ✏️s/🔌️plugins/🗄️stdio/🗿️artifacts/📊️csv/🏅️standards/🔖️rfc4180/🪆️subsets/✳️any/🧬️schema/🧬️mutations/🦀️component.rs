@@ -186,7 +186,7 @@ fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "csv binary utf8 string", offset: 0, detail: e.to_string() })
@@ -195,7 +195,7 @@ pub(crate) fn write_bin_field(w: &mut dsl::ByteWriter, f: &CsvField) {
     write_bin_str(w, &f.value);
     w.write_u8(if f.quoted { 1 } else { 0 });
 }
-pub(crate) fn read_bin_field(r: &mut dsl::ByteReader) -> Result<CsvField, dsl::PackError> {
+pub(crate) fn read_bin_field(r: &mut dsl::ByteReader<'_>) -> Result<CsvField, dsl::PackError> {
     let value = read_bin_str(r)?;
     let quoted = r.read_u8()? != 0;
     Ok(CsvField { value, quoted })
@@ -206,7 +206,7 @@ pub(crate) fn write_bin_record(w: &mut dsl::ByteWriter, rec: &CsvRecord) {
         write_bin_field(w, f);
     }
 }
-pub(crate) fn read_bin_record(r: &mut dsl::ByteReader) -> Result<CsvRecord, dsl::PackError> {
+pub(crate) fn read_bin_record(r: &mut dsl::ByteReader<'_>) -> Result<CsvRecord, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut fields = Vec::with_capacity(n);
     for _ in 0..n {
@@ -222,7 +222,7 @@ fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &CsvSnapshot) {
         write_bin_record(w, r);
     }
 }
-fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<CsvSnapshot, dsl::PackError> {
+fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<CsvSnapshot, dsl::PackError> {
     let schema = read_bin_str(r)?;
     let has_header = r.read_u8()? != 0;
     let n = r.read_varint_u64()? as usize;

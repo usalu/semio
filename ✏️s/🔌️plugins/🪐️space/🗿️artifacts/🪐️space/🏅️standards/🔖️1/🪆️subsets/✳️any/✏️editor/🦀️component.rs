@@ -61,7 +61,7 @@ fn create_artifact_kind_options() -> Vec<ActionArgOption> {
 /// mirrors `draw_play_action`'s precedent (`🖍️draw`'s editor root).
 pub const SPACE_INDEX_CONTROLLER_ID: &str = "s-space-index";
 
-pub fn space_index_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
+pub fn space_index_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionFactory::new(SPACE_INDEX_CONTROLLER_ID).action(action, args)
 }
 //#endregion 🔖️Actions
@@ -254,7 +254,7 @@ pub(crate) mod testkit {
 
     #[allow(dead_code)]
     pub fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
-        use semio_framework_plugin::PluginApp;
+        
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 }
@@ -334,7 +334,7 @@ mod tests {
     /// artifact editors already use (e.g. `🌍️gis/🗿️artifacts/🗺️gismap`).
     #[test]
     fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        let cases: Vec<(&str, serde_json::Value)> = vec![
+        let cases: Vec<(&str, Value)> = vec![
             ("createArtifact", serde_json::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
             ("deleteArtifact", serde_json::json!({ "id": "artifact-1" })),
             ("renameArtifact", serde_json::json!({ "id": "artifact-1", "newName": "Renamed" })),

@@ -31,12 +31,12 @@ use store::ArtifactPack;
 pub fn sourcing_curate_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: SOURCING_CURATE_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Kit },
+        document_media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "catalog:out".into(),
             label: "Catalog".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
             kind_id: Some("kit.catalog".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many,
@@ -223,7 +223,7 @@ impl ArtifactEditor for SourcingCurateApp {
             return Err(MediaError::Payload(port.to_string(), "document:in importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let snapshot = <CurateSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let snapshot = <CurateSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
     }
 
@@ -275,7 +275,7 @@ impl ArtifactEditor for SourcingCurateApp {
 /// stock_from_catalogue}`) builds this effect instead of an `Emit::mutations([...])`. The spr is a
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurateSnapshot) -> semio_framework::kernel::HostEffect {
-    let pack = <CurateSnapshot as store::ArtifactPack>::encode_pack(document);
+    let pack = <CurateSnapshot as ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA, "curate", document.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("curate document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework::kernel::HostEffect::LoadDocument { pack, spr }
@@ -498,7 +498,7 @@ mod tests {
     /// backs.
     #[test]
     fn every_rendered_action_bridges_through_the_framework_harness() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit);
+        testkit::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurateApp>>(sourcing_manifest_for_testkit);
     }
 
     /// ⚖️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
@@ -625,8 +625,8 @@ mod tests {
         assert_eq!(ports.len(), 3, "document:in, document:out, catalog:out");
         let catalog_out = ports.iter().find(|port| port.id == "catalog:out").expect("catalog:out port declared");
         assert_eq!(catalog_out.kind_id.as_deref(), Some("kit.catalog"));
-        assert_eq!(catalog_out.media_type.class, semio_framework_plugin::MediaClass::Kit);
-        assert_eq!(catalog_out.media_type.form, semio_framework_plugin::MediaForm::Type);
+        assert_eq!(catalog_out.media_type.class, MediaClass::Kit);
+        assert_eq!(catalog_out.media_type.form, MediaForm::Type);
     }
 
     #[test]

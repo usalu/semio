@@ -121,14 +121,14 @@ impl Default for En1998Artifact {
 }
 
 impl From<En1998Snapshot> for En1998Artifact {
-    fn from(snapshot: crate::artifacts::en1998::En1998Snapshot) -> Self {
+    fn from(snapshot: En1998Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1998Artifact {
-    pub fn to_snapshot(&self) -> crate::artifacts::en1998::En1998Snapshot {
-        crate::artifacts::en1998::En1998Snapshot {
+    pub fn to_snapshot(&self) -> En1998Snapshot {
+        En1998Snapshot {
             seismic_zone: self.seismic_zone.clone(),
             ground_type: self.ground_type.clone(),
             importance_class: self.importance_class.clone(),
@@ -181,7 +181,7 @@ impl En1998Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::artifacts::en1998::En1998Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1998Snapshot) -> Self {
         Self {
             seismic_zone: snapshot.seismic_zone,
             ground_type: snapshot.ground_type,
@@ -236,7 +236,7 @@ impl En1998Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1998::En1998Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1998Snapshot) {
         self.seismic_zone = snapshot.seismic_zone;
         self.ground_type = snapshot.ground_type;
         self.importance_class = snapshot.importance_class;
@@ -436,8 +436,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1998BuilderFacets {
-        construction: derived_construction::En1998BuilderConstruction,
-        analysis: derived_analysis::En1998AnalyzerAnalysis,
+        construction: En1998BuilderConstruction,
+        analysis: En1998AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1998ComposerComposition,
     }
     builder: En1998Builder,

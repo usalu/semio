@@ -1,6 +1,6 @@
 //! 🤝️ `engagement-input` command.
 
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
+use crate::editor::puzzle5d::modes::edit::windows::board2d;
 use crate::editor::puzzle5d::{Puzzle5dActionCtx, PUZZLE5D_PLAY_WINDOWS};
 use serde_json::Value;
 

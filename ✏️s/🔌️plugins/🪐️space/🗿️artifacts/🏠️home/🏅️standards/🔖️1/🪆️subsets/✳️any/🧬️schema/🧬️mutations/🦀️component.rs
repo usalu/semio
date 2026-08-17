@@ -26,7 +26,7 @@ pub use super::change_catalog_generation::mutation::{change_catalog_generation, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
+    
 
     #[test]
     fn home_op_text_round_trips_every_variant() {

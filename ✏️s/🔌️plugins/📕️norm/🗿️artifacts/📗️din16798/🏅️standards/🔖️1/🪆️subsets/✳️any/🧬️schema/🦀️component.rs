@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Artifact {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub occupancy: String,
     #[state(artifact)]
@@ -433,8 +433,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Din16798BuilderFacets {
-        construction: derived_construction::Din16798BuilderConstruction,
-        analysis: derived_analysis::Din16798AnalyzerAnalysis,
+        construction: Din16798BuilderConstruction,
+        analysis: Din16798AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Din16798ComposerComposition,
     }
     builder: Din16798Builder,

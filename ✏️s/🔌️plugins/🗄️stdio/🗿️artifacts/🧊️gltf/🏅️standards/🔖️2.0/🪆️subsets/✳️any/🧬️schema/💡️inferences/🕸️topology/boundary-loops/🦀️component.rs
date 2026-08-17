@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfBoundaryLoopsInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     exact(context.topology.boundary_loops, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 

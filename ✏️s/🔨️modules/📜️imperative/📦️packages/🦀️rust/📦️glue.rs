@@ -1,7 +1,5 @@
 //! ⚙️ Headless imperative engine: ordered path of side-effect steps.
 
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 #[path = "../../⚙️engine/🦀️component.rs"]
 pub mod engine;

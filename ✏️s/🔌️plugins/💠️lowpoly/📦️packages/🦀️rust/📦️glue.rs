@@ -499,7 +499,7 @@ pub mod artifacts {
         pub mod op { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::*; pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::text::*; pub mod schema { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::text::*; } }
+        pub mod diff { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::*;  pub mod schema { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 

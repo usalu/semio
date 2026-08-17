@@ -19,7 +19,7 @@ pub mod derived_composition {
     use crate::artifacts::flow::standards::v1::subsets::any::schema::FlowAnalyzer;
     use crate::artifacts::flow::FlowSnapshot;
     use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.flow", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };

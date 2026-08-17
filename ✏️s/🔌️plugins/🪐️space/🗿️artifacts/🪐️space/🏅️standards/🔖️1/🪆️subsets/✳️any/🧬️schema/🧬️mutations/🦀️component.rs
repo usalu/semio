@@ -35,7 +35,7 @@ mod tests {
     use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::Mutation;
-    use protocol::SemanticMutation;
+    
 
     fn sample_row(id: &str) -> SpaceArtifactRow {
         SpaceArtifactRow {

@@ -1,8 +1,5 @@
 //! 🖌️ `register-brush-mesh` command.
 
-use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
-use crate::artifacts::puzzle3d::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
-use semio_framework_plugin::SelectionSet;
 use serde_json::Value;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 

@@ -102,7 +102,6 @@ impl Part21Preamble for Ifc2x3EdmPreamble {
 pub mod derived_composition {
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
     use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::Ifc2x3Analyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
@@ -118,7 +117,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_TXT)

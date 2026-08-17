@@ -1,13 +1,11 @@
 //! 🪟️ 🧩️ Flow play app commands command — `move-media-node`.
 
-use crate::artifacts::flow::schema::widget_id;
 use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::host_operations;
-use flow::{ FlowEvalSession, Widget};
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct MoveMediaNode {

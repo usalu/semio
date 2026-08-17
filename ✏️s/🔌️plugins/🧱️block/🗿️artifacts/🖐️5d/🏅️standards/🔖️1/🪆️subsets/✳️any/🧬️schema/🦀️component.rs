@@ -1,6 +1,6 @@
 //! 🧬️ Block5d artifact schema — every field with its state class.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot, BLOCK_5D_SCHEMA};
+use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -235,8 +235,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Block5dBuilderFacets {
-        construction: derived_construction::Block5dBuilderConstruction,
-        analysis: derived_analysis::Block5dAnalyzerAnalysis,
+        construction: Block5dBuilderConstruction,
+        analysis: Block5dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Block5dComposerComposition,
     }
     builder: Block5dBuilder,

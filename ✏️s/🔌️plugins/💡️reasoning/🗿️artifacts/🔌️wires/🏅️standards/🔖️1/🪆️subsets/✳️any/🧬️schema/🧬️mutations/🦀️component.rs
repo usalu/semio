@@ -48,16 +48,16 @@ pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: Dsl
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WiresSnapshot, diff = WiresDiff, schema = "s.reasoning.wires")]
 pub enum WiresMutation {
-    CreateNode(super::create_node::mutation::CreateNode),
-    DeleteNode(super::delete_node::mutation::DeleteNode),
-    MoveNode(super::move_node::mutation::MoveNode),
-    ResizeNode(super::resize_node::mutation::ResizeNode),
-    ChangeNodeKind(super::change_node_kind::mutation::ChangeNodeKind),
-    ChangeNodeShape(super::change_node_shape::mutation::ChangeNodeShape),
-    EditNodeText(super::edit_node_text::mutation::EditNodeText),
-    SetNodeRoot(super::set_node_root::mutation::SetNodeRoot),
-    ConnectNodes(super::connect_nodes::mutation::ConnectNodes),
-    DisconnectNodes(super::disconnect_nodes::mutation::DisconnectNodes),
+    CreateNode(CreateNode),
+    DeleteNode(DeleteNode),
+    MoveNode(MoveNode),
+    ResizeNode(ResizeNode),
+    ChangeNodeKind(ChangeNodeKind),
+    ChangeNodeShape(ChangeNodeShape),
+    EditNodeText(EditNodeText),
+    SetNodeRoot(SetNodeRoot),
+    ConnectNodes(ConnectNodes),
+    DisconnectNodes(DisconnectNodes),
 }
 //#endregion 🔖️Mutations
 

@@ -12,7 +12,7 @@ impl GltfInferenceLeaf for GltfAxisAlignedBoundsInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfAxisAlignedBoundsInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
     exact(context.bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {

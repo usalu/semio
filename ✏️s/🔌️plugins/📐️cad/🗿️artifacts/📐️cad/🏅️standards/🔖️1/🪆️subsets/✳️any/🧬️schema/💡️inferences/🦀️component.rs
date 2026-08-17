@@ -957,12 +957,12 @@ mod scene_compute {
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
     /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
-    pub fn forest_pane_bundle(pane: crate::artifacts::cad::CadPaneId) -> (Vec<CadObject>, CadGeometry) {
+    pub fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
         let model_index = match pane {
-            crate::artifacts::cad::CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
-            crate::artifacts::cad::CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
-            crate::artifacts::cad::CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
-            crate::artifacts::cad::CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
+            CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
+            CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
+            CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
+            CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
         };
         cad_document_pane_bundle(FOREST_LEFT_MODEL_JSON, model_index)
     }

@@ -9,8 +9,6 @@
 //! is NOT graph-shaped in the `SemioGraphSnapshot` sense (that subset is an INSTANCE graph: nodes with
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
-pub use crate::artifacts::jack::schema::diff::JackDiff;
-pub use crate::artifacts::jack::schema::mutations::TrinityGraphMutation;
 
 use graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
 use serde::{Deserialize, Serialize};
@@ -90,7 +88,7 @@ impl From<ManifestValidationError> for TrinityRamError {
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.graph` document — jack's `nodes`/`edges`
 /// instance data now lives in this composed child's own `nodes`/`edges`, not on `JackSnapshot`.
-pub type JackContentChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot>;
+pub type JackContentChild = store::ArtifactChild<SemioGraphSnapshot>;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{

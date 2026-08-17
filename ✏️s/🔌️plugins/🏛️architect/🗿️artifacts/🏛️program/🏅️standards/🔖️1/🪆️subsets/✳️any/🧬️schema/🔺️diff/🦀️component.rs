@@ -2,7 +2,6 @@
 
 use crate::artifacts::program::kernel::*;
 use crate::artifacts::program::registers::*;
-use crate::artifacts::program::ProgramSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

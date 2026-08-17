@@ -3,7 +3,7 @@ use crate::artifacts::block2d::mutations::Block2dMutation;
 use crate::artifacts::block2d::Block2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::MoveCamera2d, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
+pub fn inverse(_payload: &super::mutation::MoveCamera2d, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
     vec![super::super::move_camera2d::mutation::move_camera2d(base.camera2d.x, base.camera2d.y)]
 }
 //#endregion 🔖️Inverse

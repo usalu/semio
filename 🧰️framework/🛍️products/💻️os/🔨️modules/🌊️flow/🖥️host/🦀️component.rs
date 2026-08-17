@@ -8,16 +8,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
 use dag::{
-    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
-    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle, IoPortSpec,
+    dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle,
 };
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
-    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorImpl, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
+    channel_output, compute_dirty_set, Atom, BudgetedEval, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
     INPUT_KIND, OUTPUT_KIND,
 };
-use flow_extension_sdk::FlowExtensionManifest;
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
@@ -25,9 +23,7 @@ use crate::catalogue::*;
 use crate::registry::*;
 use crate::bridge::*;
 use crate::drawing::*;
-use crate::wasm_session::*;
 use crate::vcs::*;
-use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_json, retain_geometry_handles, tessellate_geometry};
 use crate::os_store::{create_document_envelope, ArtifactCommand};
 
 
@@ -108,7 +104,7 @@ pub struct FlowHost {
     eval_bridge: Option<EvalBridge>,
     host_catalogue_json: String,
     kind_infos: HashMap<String, OperatorInfo>,
-    neural_cache: std::sync::Arc<NeuralCache>,
+    neural_cache: Arc<NeuralCache>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
     next_widget_serial: u64,
@@ -139,13 +135,13 @@ impl Default for FlowHost {
 
 impl FlowHost {
     pub fn from_fixture(fixture: FlowFixture) -> Self {
-        Self::from_fixture_with_cache(fixture, std::sync::Arc::new(NeuralCache::new()))
+        Self::from_fixture_with_cache(fixture, Arc::new(NeuralCache::new()))
     }
 
     /// 🧠️ Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
     /// stateless request/response program boundary that reconstructs `FlowHost` on every call)
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
-    pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
+    pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: Arc<NeuralCache>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
         // 🌱️ A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
         // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
@@ -1886,11 +1882,11 @@ use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 /// ⏱️ Max cache-missed neuron dispatches per `flowEvalTick` — keeps one dispatch from blocking the worker while still converging small graphs in a single tick.
 pub const FLOW_EVAL_TICK_STEP_BUDGET: usize = 512;
 
-static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, std::collections::HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static FLOW_SESSION_GEOMETRY: LazyLock<Mutex<HashMap<u64, HashSet<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 static NEXT_FLOW_SESSION_ID: AtomicU64 = AtomicU64::new(1);
 
 fn sync_flow_geometry_retention() {
-    let merged: std::collections::HashSet<String> = FLOW_SESSION_GEOMETRY
+    let merged: HashSet<String> = FLOW_SESSION_GEOMETRY
         .lock()
         .map(|entries| entries.values().flat_map(|set| set.iter().cloned()).collect())
         .unwrap_or_default();
@@ -1919,12 +1915,12 @@ pub struct FlowEvalSession {
     eval_json: String,
     status_json: String,
     tick_scheduled: bool,
-    live_geometry_handles: std::collections::HashSet<String>,
+    live_geometry_handles: HashSet<String>,
     /// 🧊 Tessellated preview meshes keyed by geometry handle — filled via extension `tessellate`
     /// because runtime-installable brep owns the kernel that minted the handles.
-    preview_mesh_json_by_handle: std::collections::HashMap<String, String>,
+    preview_mesh_json_by_handle: HashMap<String, String>,
     /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`.
-    pending_tessellate_by_hash: std::collections::HashMap<u64, String>,
+    pending_tessellate_by_hash: HashMap<u64, String>,
 }
 
 impl Default for FlowEvalSession {
@@ -1952,9 +1948,9 @@ impl FlowEvalSession {
             eval_json: String::new(),
             status_json: "{}".into(),
             tick_scheduled: false,
-            live_geometry_handles: std::collections::HashSet::new(),
-            preview_mesh_json_by_handle: std::collections::HashMap::new(),
-            pending_tessellate_by_hash: std::collections::HashMap::new(),
+            live_geometry_handles: HashSet::new(),
+            preview_mesh_json_by_handle: HashMap::new(),
+            pending_tessellate_by_hash: HashMap::new(),
         }
     }
 
@@ -2045,7 +2041,7 @@ impl FlowEvalSession {
     }
 
     /// 🧹 Drops preview meshes/pending tessellates whose handles are no longer live.
-    pub fn retain_preview_meshes(&mut self, live_handles: &std::collections::HashSet<String>) {
+    pub fn retain_preview_meshes(&mut self, live_handles: &HashSet<String>) {
         self.preview_mesh_json_by_handle.retain(|handle, _| live_handles.contains(handle));
         self.pending_tessellate_by_hash.retain(|_, handle| live_handles.contains(handle));
     }
@@ -2129,7 +2125,7 @@ pub fn flow_host_with_session(fixture: &FlowFixture, session: &FlowEvalSession) 
 /// (B1), so the off-main-thread eval driver cannot live on the app ZST. One session per plugin wasm
 /// instance is correct for the playground/single-document hosts; multi-instance hosts must graduate
 /// this to an instance-keyed map when that lands.
-static PROCESS_FLOW_EVAL_SESSION: std::sync::Mutex<Option<FlowEvalSession>> = std::sync::Mutex::new(None);
+static PROCESS_FLOW_EVAL_SESSION: Mutex<Option<FlowEvalSession>> = Mutex::new(None);
 
 /// 🧠 Runs `body` with the process-local [`FlowEvalSession`], creating it on first use.
 pub fn with_process_flow_eval_session<R>(body: impl FnOnce(&mut FlowEvalSession) -> R) -> R {

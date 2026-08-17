@@ -2319,7 +2319,7 @@ mod tests {
         });
     }
 
-    fn sample_operation_envelope(edit_id: &str, n: i32) -> crate::os_spr::MutationEnvelope {
+    fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
             actor: None,
@@ -2332,7 +2332,7 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let document_id = crate::os_spr::ArtifactId("demo".to_string());
+        let document_id = ArtifactId("demo".to_string());
         let schema = crate::os_spr::SchemaId("demo/v1".to_string());
         let mut envelopes = crate::os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
         envelopes.pop().expect("exactly one op envelope for a single-op edit")
@@ -2429,14 +2429,14 @@ mod tests {
             assert_eq!(&decoded, frame, "{name} frame round trip");
         }
 
-        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
-        let wire_envelope = crate::os_spr::MutationEnvelope {
-            mutation_id: crate::os_spr::MutationId("op-1".to_string()),
-            document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
-            actor: crate::os_spr::ActorId("actor-1".to_string()),
+        let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
+        let wire_envelope = MutationEnvelope {
+            mutation_id: MutationId("op-1".to_string()),
+            document_id: ArtifactId("doc-1".to_string()),
+            actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
 
@@ -2449,7 +2449,7 @@ mod tests {
                 protocol_version: 1,
                 schema: "demo/v1".to_string(),
                 pack_schema_hash: [7u8; 32],
-                actor: crate::os_spr::ActorId("actor-1".to_string()),
+                actor: ActorId("actor-1".to_string()),
                 token: Some("token-1".to_string()),
                 resume_token: None,
                 frontier: None,
@@ -2474,7 +2474,7 @@ mod tests {
         );
         write_server(&fixtures_dir, "📦️server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
         write_server(&fixtures_dir, "📦️server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
-        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: crate::os_spr::ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command);
+        write_server(&fixtures_dir, "📦️server-commands.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".to_string()), frontier: frontier.clone() }, Lane::Command);
         write_server(
             &fixtures_dir,
             "📦️server-ack-accepted.bin",
@@ -2497,7 +2497,7 @@ mod tests {
             &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }], frontier: frontier.clone() },
             Lane::Command,
         );
-        write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: crate::os_spr::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
+        write_server(&fixtures_dir, "📦️server-preview.bin", &ServerFrame::Preview { actor: ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
         write_server(&fixtures_dir, "📦️server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction())] }, Lane::Preview);
         write_server(&fixtures_dir, "📦️server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
         write_server(&fixtures_dir, "📦️server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
@@ -2507,14 +2507,14 @@ mod tests {
     /// @emoji 🧸️ A second, distinct `MutationEnvelope` for `📦️server-ack-transformed.bin`'s
     /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
     /// the vitest canary can assert it decodes as its own value, not an accidental copy.
-    fn sample_wire_envelope_for_fixtures() -> crate::os_spr::MutationEnvelope {
-        crate::os_spr::MutationEnvelope {
-            mutation_id: crate::os_spr::MutationId("op-2".to_string()),
-            document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
-            actor: crate::os_spr::ActorId("actor-2".to_string()),
-            dependencies: vec![crate::os_spr::MutationId("op-1".to_string())],
-            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
-            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: crate::os_spr::OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+    fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
+        MutationEnvelope {
+            mutation_id: MutationId("op-2".to_string()),
+            document_id: ArtifactId("doc-1".to_string()),
+            actor: ActorId("actor-2".to_string()),
+            dependencies: vec![MutationId("op-1".to_string())],
+            diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
+            inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         }
     }
@@ -2691,7 +2691,7 @@ mod tests {
         let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").expect("envelopes from history edit");
         assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
         assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
-        let recovered = <DemoMutation as crate::os_spr::OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+        let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
         assert_eq!(recovered, DemoMutation::SetN { n: 42 });
     }
     //#endregion 🧪️Helpers
@@ -2743,7 +2743,7 @@ mod tests {
                             return event;
                         }
                     }
-                    Ok(Err(tokio::sync::broadcast::error::RecvError::Lagged(_))) => continue,
+                    Ok(Err(broadcast::error::RecvError::Lagged(_))) => continue,
                     other => panic!("no matching event before deadline: {other:?}"),
                 }
             }
@@ -2761,7 +2761,7 @@ mod tests {
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
@@ -2819,7 +2819,7 @@ mod tests {
         /// `Welcome` then a follow-up `Commands`), but with a placeholder `chain_hash`/`resume_token`
         /// (this mock has no durable log to derive a real chain hash from).
         struct MockHub {
-            log: Arc<Mutex<Vec<(u64, crate::os_spr::MutationEnvelope)>>>,
+            log: Arc<Mutex<Vec<(u64, MutationEnvelope)>>>,
             broadcast: tokio_broadcast::Sender<ServerFrame>,
         }
 
@@ -2860,7 +2860,7 @@ mod tests {
             let (frontier, backlog) = {
                 let log = semio_hub.log.lock().await;
                 let ordinal = log.last().map_or(0, |(ordinal, _)| *ordinal);
-                let backlog: Vec<crate::os_spr::MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
+                let backlog: Vec<MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
                 (mock_frontier(ordinal), backlog)
             };
             let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
@@ -2958,7 +2958,7 @@ mod tests {
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
@@ -2994,7 +2994,7 @@ mod tests {
 
             // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
+                store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None }).expect("apply on a");
                 channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
@@ -3045,7 +3045,7 @@ mod tests {
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None }).expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
@@ -3072,7 +3072,7 @@ mod tests {
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store.dispatch(crate::os_store::ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;

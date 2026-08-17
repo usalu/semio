@@ -14,7 +14,6 @@ use crate::artifacts::en1994::schema::mutations::{
     change_m_ed_knm::mutation::ChangeMEdKnm, change_m_pl_rd::mutation::ChangeMPlRd, change_m_pla::mutation::ChangeMPla, change_n_cycles_stud::mutation::ChangeNCyclesStud, change_span_m::mutation::ChangeSpanM, change_v_ed_kn::mutation::ChangeVEdKn,
     change_v_ed_per_stud_kn::mutation::ChangeVEdPerStudKn, change_v_l_rd::mutation::ChangeVLRd,
 };
-use crate::document::AnnexChoice;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar.semio");

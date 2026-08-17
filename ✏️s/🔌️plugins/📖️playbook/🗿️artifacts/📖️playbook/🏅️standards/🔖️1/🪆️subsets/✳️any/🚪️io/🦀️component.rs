@@ -4,7 +4,7 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.docx", "stdio.
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.docx", "stdio.json", "stdio.md", "stdio.pdf", "stdio.txt"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::PlaybookAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

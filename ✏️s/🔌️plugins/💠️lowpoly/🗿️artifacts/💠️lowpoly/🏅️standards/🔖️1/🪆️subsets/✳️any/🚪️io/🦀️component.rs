@@ -4,7 +4,7 @@ pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.g
 pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.dwg", "stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"] }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::lowpoly::LowpolySnapshot;
     use crate::artifacts::lowpoly::standards::v1::subsets::any::schema::LowpolyAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

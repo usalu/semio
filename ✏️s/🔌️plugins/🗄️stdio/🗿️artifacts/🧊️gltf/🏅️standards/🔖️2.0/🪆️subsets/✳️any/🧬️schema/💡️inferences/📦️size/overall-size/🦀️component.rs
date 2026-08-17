@@ -11,7 +11,7 @@ impl GltfInferenceLeaf for GltfOverallSizeInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOverallSizeInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     exact(context.diagonal, GltfUnit::Metre, context.sample_count, Some(context.topology))
 }
 pub fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {

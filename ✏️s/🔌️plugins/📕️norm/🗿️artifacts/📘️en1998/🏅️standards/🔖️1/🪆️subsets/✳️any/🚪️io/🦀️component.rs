@@ -15,7 +15,6 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod derived_composition {
     use crate::artifacts::en1998::standards::v1::subsets::any::schema::En1998Analyzer;
     use crate::artifacts::en1998::En1998Snapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.en1998", standard: StandardId("1"), subset: SubsetId("*") };
@@ -30,7 +29,7 @@ pub mod derived_composition {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

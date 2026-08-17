@@ -23,13 +23,11 @@ use crate::editor::cad::modes::edit::windows::{building, energy, shape, structur
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{apply_from_building, apply_typology_fallback, run_derive_from_geometry, solid_for_object};
 use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY,
     CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
 use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
-use crate::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use crate::artifacts::cad::op::CadMutation;
 use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use base64::Engine as _;

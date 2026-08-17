@@ -1,7 +1,7 @@
 //! 📇 Runtime imperative operator registry composed from `imperative.module` contributions.
 
 use imperative_extension_sdk::ImperativeExtensionManifest;
-use neural_engine::{node_hash, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry};
+use neural_engine::{node_hash, Dictionary, EvalError, Operator, OperatorImpl, Registry};
 use semio_framework::{parse_contributions, ProgramContributionEntry};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};

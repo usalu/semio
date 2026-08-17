@@ -54,14 +54,14 @@ pub fn block5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 pub fn block5d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         BLOCK_5D_SCHEMA,
-        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         semio_framework_plugin::ArtifactPresentation { id: "5d.block".into(), name: "Part Kind".into(), dimension: "5d".into(), component_kind: "block5d".into() },
     )
     .with_ports(vec![semio_framework_plugin::MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         kind_id: Some("kit.catalog".into()),
         required: false,
         multiplicity: semio_framework_plugin::PortMultiplicity::Many,
@@ -457,7 +457,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_forest_left_fixture() {
         let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::editor::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(projection.grips.len(), 1);
@@ -478,7 +478,7 @@ mod tests {
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
         let mut app: Block5dApp = new_app();
-        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::editor::block5d::commands::set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
+        testkit::dispatch(&mut app, Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {

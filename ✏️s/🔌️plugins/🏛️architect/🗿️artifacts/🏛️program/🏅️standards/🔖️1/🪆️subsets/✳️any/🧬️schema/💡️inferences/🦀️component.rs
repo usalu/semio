@@ -1241,7 +1241,7 @@ fn change_summary(program: &ProgramSnapshot) -> ProgramReport {
 }
 
 fn open_issue_summary(program: &ProgramSnapshot) -> ProgramReport {
-    let open: Vec<_> = program.issues.iter().filter(|i| !matches!(i.header.status, crate::artifacts::program::kernel::LifecycleStatus::Closed | crate::artifacts::program::kernel::LifecycleStatus::Complete)).collect();
+    let open: Vec<_> = program.issues.iter().filter(|i| !matches!(i.header.status, LifecycleStatus::Closed | LifecycleStatus::Complete)).collect();
     ProgramReport {
         kind: ReportKind::OpenIssueSummary,
         title: "Open Issue Summary".into(),
@@ -1916,7 +1916,7 @@ fn analyze_scenario(program: &ProgramSnapshot) -> AnalysisResult {
 }
 
 fn analyze_sensitivity(program: &ProgramSnapshot) -> AnalysisResult {
-    let mandatory = program.requirements.iter().filter(|r| r.header.priority == crate::artifacts::program::kernel::Priority::Mandatory).count();
+    let mandatory = program.requirements.iter().filter(|r| r.header.priority == Priority::Mandatory).count();
     AnalysisResult {
         kind: AnalysisKind::Sensitivity,
         title: "Sensitivity Analysis".into(),
@@ -2018,14 +2018,14 @@ fn analyze_requirement_sorting(program: &ProgramSnapshot) -> AnalysisResult {
     }
 }
 
-fn priority_weight(priority: &crate::artifacts::program::kernel::Priority) -> f64 {
+fn priority_weight(priority: &Priority) -> f64 {
     match priority {
-        crate::artifacts::program::kernel::Priority::Mandatory => 5.0,
-        crate::artifacts::program::kernel::Priority::Essential => 4.0,
-        crate::artifacts::program::kernel::Priority::Preferred => 3.0,
-        crate::artifacts::program::kernel::Priority::Optional => 2.0,
-        crate::artifacts::program::kernel::Priority::Deferred => 1.0,
-        crate::artifacts::program::kernel::Priority::Prohibited => 0.0,
+        Priority::Mandatory => 5.0,
+        Priority::Essential => 4.0,
+        Priority::Preferred => 3.0,
+        Priority::Optional => 2.0,
+        Priority::Deferred => 1.0,
+        Priority::Prohibited => 0.0,
     }
 }
 

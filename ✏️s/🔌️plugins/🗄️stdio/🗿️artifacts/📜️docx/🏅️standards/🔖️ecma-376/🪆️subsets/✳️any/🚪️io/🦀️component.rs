@@ -63,7 +63,6 @@ pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocum
 pub mod derived_composition {
     use crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::DocxAnalyzer;
     use crate::artifacts::docx::DocxSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -80,7 +79,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_ZIP, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency

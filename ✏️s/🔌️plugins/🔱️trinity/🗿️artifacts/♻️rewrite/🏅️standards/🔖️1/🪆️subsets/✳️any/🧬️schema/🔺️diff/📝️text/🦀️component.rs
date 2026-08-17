@@ -1,6 +1,5 @@
 //! 🔺️ Rewrite artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::rewrite::schema::diff::*;
 
 use crate::artifacts::rewrite::schema::diff::RewriteDiff;
 use crate::artifacts::rewrite::schema::RewriteArtifact;

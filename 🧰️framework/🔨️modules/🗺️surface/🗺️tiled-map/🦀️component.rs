@@ -116,7 +116,7 @@ pub fn gis_map_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &camera::Viewport) -> f64 {
     let cy = viewport.height as f64 * 0.5;
     let left = map_viewport::screen_to_world(camera, viewport, Point::new(0.0, cy));
     let right = map_viewport::screen_to_world(camera, viewport, Point::new(viewport.width as f64, cy));
@@ -161,12 +161,12 @@ pub fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
     }
 }
 
-fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+fn current_map_lod(camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     let idx = resolve_map_lod_index_from_span(viewport_lon_span_degrees(camera, viewport));
     &GIS_MAP_LODS[idx]
 }
 
-fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &camera::Viewport) -> u32 {
     let span = viewport_lon_span_degrees(camera, viewport).max(1e-6);
     let w = viewport.width.max(1) as f64;
     let z = ((360.0 / span) * (w / 256.0)).log2();
@@ -179,7 +179,7 @@ fn forced_lod_tile_z(id: &str) -> Option<u32> {
 }
 
 /// @emoji 🧷️ Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
-fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+fn pick_tile_z_target(camera: &camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     let ideal = ideal_tile_z_for_viewport(camera, viewport);
     let span = viewport_lon_span_degrees(camera, viewport);
     let lod_idx = resolve_map_lod_index_from_span(span);
@@ -197,7 +197,7 @@ fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera
     ideal.min(vector_tiles::max_tile_z_for_span(span))
 }
 
-fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     if let Some(id) = forced_lod_id {
         if let Some(idx) = GIS_MAP_LOD_SCALE.index_of(id) {
             return &GIS_MAP_LODS[idx];
@@ -212,10 +212,10 @@ pub const MAP_CAMERA_ZOOM_MIN: f64 = 8.0;
 pub const MAP_CAMERA_ZOOM_MAX: f64 = 100_000_000.0;
 
 pub fn gis_map_camera_limits_json() -> String {
-    gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
+    gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
 }
 
-pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
+pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
     serde_json::json!({
         "min": projection::cover_zoom_for_viewport(viewport).max(MAP_CAMERA_ZOOM_MIN),
         "max": MAP_CAMERA_ZOOM_MAX,
@@ -227,12 +227,12 @@ fn clamp_map_zoom(zoom: f64) -> f64 {
     zoom.clamp(MAP_CAMERA_ZOOM_MIN, MAP_CAMERA_ZOOM_MAX)
 }
 
-fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
+fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
     zoom.max(projection::cover_zoom_for_viewport(viewport)).min(MAP_CAMERA_ZOOM_MAX)
 }
 
 /// @emoji 🧷️ Keeps the viewport filled by the world map with no empty margins or outscroll.
-fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &camera::Viewport) {
     camera.zoom = clamp_map_zoom_for_viewport(camera.zoom, viewport);
     let half_w = viewport.width as f64 / (2.0 * camera.zoom);
     let half_h = viewport.height as f64 / (2.0 * camera.zoom);
@@ -256,7 +256,7 @@ mod map_viewport {
     }
 }
 
-fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+fn map_wheel_screen(camera: &mut camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     let zoom_factor = if delta_y < 0.0 {
         1.12
     } else if delta_y > 0.0 {
@@ -1094,14 +1094,14 @@ pub mod vector_tiles {
 // #endregion 🔖️VectorTiles
 
 // #region 🔖️MapExtension
-pub trait MapExtension: canvas::CanvasExtension {
+pub trait MapExtension: CanvasExtension {
     fn map_crs(&self) -> &str;
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct DefaultMapExtension;
 
-impl canvas::CanvasExtension for DefaultMapExtension {
+impl CanvasExtension for DefaultMapExtension {
     fn extension_id(&self) -> &str {
         "gis.map/default"
     }
@@ -1376,7 +1376,7 @@ pub struct MapFeatureTables {
 
 #[derive(Default)]
 struct MapTileLedger {
-    tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+    tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
     last_raster_visible: std::collections::BTreeSet<String>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
     last_vector_visible: std::collections::BTreeSet<String>,
@@ -1384,9 +1384,9 @@ struct MapTileLedger {
 
 pub struct MapHost {
     /// 🖱️ (c) Preview/Effect — live viewport camera during pan/zoom, never dispatched at frame rate.
-    pub camera: canvas::camera::Camera,
+    pub camera: camera::Camera,
     /// 🖥️ (d) Render-session wiring — device viewport size/DPR, not document content.
-    pub viewport: canvas::camera::Viewport,
+    pub viewport: camera::Viewport,
     /// 🗺️ (a) elsewhere, not here — see the module docstring: mirrors the gis plugin's real
     /// `GismapSnapshot` positions/routes/regions, which already carries the full 12-triad mutation
     /// vocabulary. Refreshed wholesale by [`MapHost::sync_map_json`]; never mutated field-by-field here.
@@ -1428,7 +1428,7 @@ enum MapInteraction {
     #[default]
     None,
     Pan {
-        origin: canvas::camera::Camera,
+        origin: camera::Camera,
         start_screen: Point,
     },
 }
@@ -1547,7 +1547,7 @@ fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool 
 
 impl Default for MapHost {
     fn default() -> Self {
-        let viewport = canvas::camera::Viewport::default();
+        let viewport = camera::Viewport::default();
         Self {
             camera: projection::default_world_camera(&viewport),
             viewport,
@@ -1582,7 +1582,7 @@ struct LabelDeclutter {
 }
 
 impl LabelDeclutter {
-    fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+    fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
         let width = viewport.width.max(1) as f64;
         let height = viewport.height.max(1) as f64;
         let cell = cell_px.max(12.0);
@@ -1844,7 +1844,7 @@ impl MapHost {
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
         let image = RasterImage::rgba8(w, h, Arc::new(rgba.into_raw()));
-        self.tiles.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+        self.tiles.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
         Ok(())
     }
 
@@ -2521,7 +2521,7 @@ impl MapHost {
         let mut declutter = LabelDeclutter::for_viewport(&self.viewport, cell, max_labels);
         for candidate in candidates {
             if declutter.try_place(&candidate.label, candidate.screen, px) {
-                canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+                text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
             }
         }
     }
@@ -2720,7 +2720,7 @@ impl MapHost {
         if !self.layer_visibility.raster {
             return;
         }
-        let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+        let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
         for (key, img) in &self.tiles.tile_images {
             let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
                 continue;
@@ -2735,7 +2735,7 @@ impl MapHost {
         for (tz, tx, ty, img) in draw {
             let rect = projection::tile_world_rect(tz, tx, ty);
             let aff = self.tile_raster_affine(rect, img.width(), img.height());
-            canvas::raster::draw_image_arc(scene, &img, aff);
+            raster::draw_image_arc(scene, &img, aff);
         }
     }
 
@@ -2845,7 +2845,7 @@ impl MapHost {
                 let label = pos.name.as_deref().or(pos.label.as_deref()).map(str::trim).filter(|t| !t.is_empty());
                 if let Some(label) = label {
                     let anchor = Point::new(s.x, s.y - r - ui_styling::radii::MAP_LABEL_ANCHOR_OFFSET);
-                    canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+                    text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
                 }
             }
         }
@@ -2880,7 +2880,7 @@ impl MapHost {
     }
 }
 
-impl canvas::canvas_content::CanvasContent for MapHost {
+impl canvas_content::CanvasContent for MapHost {
     fn build_scene(&self) -> Scene {
         self.build_render_scene()
     }
@@ -3228,8 +3228,8 @@ mod tests {
         let h = host.viewport.height as f64;
         for (sx, sy) in [(0.0, 0.0), (w, 0.0), (w, h), (0.0, h)] {
             let p = super::map_viewport::screen_to_world(&host.camera, &host.viewport, super::Point::new(sx, sy));
-            assert!(p.x >= -super::projection::WORLD_HALF - 1e-8 && p.x <= super::projection::WORLD_HALF + 1e-8, "x out of world at ({sx},{sy}): {}", p.x);
-            assert!(p.y >= -super::projection::WORLD_HALF - 1e-8 && p.y <= super::projection::WORLD_HALF + 1e-8, "y out of world at ({sx},{sy}): {}", p.y);
+            assert!(p.x >= -WORLD_HALF - 1e-8 && p.x <= WORLD_HALF + 1e-8, "x out of world at ({sx},{sy}): {}", p.x);
+            assert!(p.y >= -WORLD_HALF - 1e-8 && p.y <= WORLD_HALF + 1e-8, "y out of world at ({sx},{sy}): {}", p.y);
         }
     }
 
@@ -3497,7 +3497,7 @@ mod tests {
         let z = host.pick_raster_tile_zoom();
         assert!(z < super::GIS_MAP_LOD_TILE_Z[7], "forced building at world view must clamp tile z (got {z})");
         let raw: Vec<serde_json::Value> = serde_json::from_str(&host.visible_tiles_json()).expect("json");
-        assert!(raw.len() <= super::MAX_VISIBLE_TILE_REQUESTS);
+        assert!(raw.len() <= MAX_VISIBLE_TILE_REQUESTS);
     }
 
     #[test]
@@ -3543,7 +3543,7 @@ mod tests {
         let mut host = super::MapHost::new();
         host.set_size(256, 256, 1.0);
         host.fit_world_camera();
-        let rect = super::projection::tile_world_rect(1, 0, 0);
+        let rect = tile_world_rect(1, 0, 0);
         let nw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0(), rect.y1()));
         let sw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0(), rect.y0()));
         assert!(nw.y < sw.y, "north edge should be above south edge on screen");
@@ -3901,7 +3901,7 @@ mod tests {
 
     fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
         zoom_host_to_representative_lod(host, lod_id);
-        let rect = super::projection::tile_world_rect(tz, tx, ty);
+        let rect = tile_world_rect(tz, tx, ty);
         let cx = (rect.x0() + rect.x1()) * 0.5;
         let cy = (rect.y0() + rect.y1()) * 0.5;
         host.set_camera(cx, -cy, host.camera.zoom);
@@ -3959,7 +3959,7 @@ mod tests {
         host.set_lod_mode("country");
         zoom_host_over_tile(&mut host, "country", 5, 17, 11);
         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
-        let rect = super::projection::tile_world_rect(5, 17, 11);
+        let rect = tile_world_rect(5, 17, 11);
         let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
         assert!(host.tile_rect_intersects_viewport(rect), "tile must intersect (span={span})");
         let scene = host.build_vector_scene();
@@ -4105,7 +4105,7 @@ mod tests {
         host.sync_map_json(r#"{"positions":[{"id":"p1","lon":10.0,"lat":20.0}]}"#).expect("sync");
         assert!(!host.focus_feature("position", "missing"));
         assert!(host.focus_feature("position", "p1"));
-        let expected = super::projection::lonlat_to_world(10.0, 20.0);
+        let expected = lonlat_to_world(10.0, 20.0);
         assert!((host.camera.x - expected.x).abs() < 1e-9);
         assert!((host.camera.y - expected.y).abs() < 1e-9);
     }
@@ -4226,10 +4226,10 @@ mod tests {
 
     #[test]
     fn parse_tile_key_rejects_malformed_keys() {
-        assert_eq!(super::tiles::parse_tile_key("1/2/3"), Some((1, 2, 3)));
-        assert_eq!(super::tiles::parse_tile_key("1/2"), None);
-        assert_eq!(super::tiles::parse_tile_key("1/2/3/4"), None);
-        assert_eq!(super::tiles::parse_tile_key("a/b/c"), None);
+        assert_eq!(tiles::parse_tile_key("1/2/3"), Some((1, 2, 3)));
+        assert_eq!(tiles::parse_tile_key("1/2"), None);
+        assert_eq!(tiles::parse_tile_key("1/2/3/4"), None);
+        assert_eq!(tiles::parse_tile_key("a/b/c"), None);
     }
 
     #[test]

@@ -4,7 +4,7 @@
 //! the paired import leaf's doc comment: bridges via json's own RFC8259 text codec rather than a
 //! per-leaf structural converter, matching `s/plugin/lowpoly`'s identical export leaf.
 use crate::artifacts::curate::CurateSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_pretty};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

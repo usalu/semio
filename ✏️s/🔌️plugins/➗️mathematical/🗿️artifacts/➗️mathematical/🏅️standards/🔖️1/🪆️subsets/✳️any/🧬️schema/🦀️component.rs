@@ -218,8 +218,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec MathematicalBuilderFacets {
-        construction: derived_construction::MathematicalBuilderConstruction,
-        analysis: derived_analysis::MathematicalAnalyzerAnalysis,
+        construction: MathematicalBuilderConstruction,
+        analysis: MathematicalAnalyzerAnalysis,
         composition: super::super::io::derived_composition::MathematicalComposerComposition,
     }
     builder: MathematicalBuilder,

@@ -2,11 +2,8 @@
 //! exactly one `ObjectKind`: its identity, representations (meshes at LOD/tags — the semio_compose_rs
 //! `type` app's successor), and the `VortexKind` templates placed on its rim.
 
-pub use crate::artifacts::block3d::schema::diff::Block3dDiff;
-pub use crate::artifacts::block3d::schema::mutations::Block3dMutation;
 pub use crate::artifacts::block3d::schema::snapshot::Block3dSnapshot;
 
-use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 use serde::{Deserialize, Serialize};
@@ -105,19 +102,19 @@ pub fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild
 }
 
 //#region 🔖️CatalogScratch
-/// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
-/// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
-/// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
-/// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
-/// child's content back through — every render/export/inference/mutation-diff call site funnels
-/// through `vortex_kinds_of` below instead, which reads this cache. Populated wherever a full vortex-
-/// kinds list is written (`set_vortex_kinds`/`set_vortex_kinds_parts`, `seed_vortex_kind_catalog_
-/// scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant (matches the repo-
-/// wide `EngineRep` contract). Staleness gap, documented rather than fail-closed: store-level undo/
-/// redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale relative to
-/// `catalog`'s handle across an undo/redo that changes which vortex-kinds were loaded; a miss falls
-/// back to an empty catalog (an id with no matching type is silently dropped, never fabricated).
 thread_local! {
+    /// 🖌️ Ephemeral working-scene cache: `catalog` child_id → its live `SemioKitSnapshot` content. Per
+    /// this ticket's `📓️migration-recipe.md` §3/§4: `ArtifactView::with_children`/`VcsArtifactApp.children`
+    /// exist structurally in the framework but are NOT populated by any plugin as of 2026-08-13 (no
+    /// `open_child`/`register_child` caller yet), so there is no live resolver seam to read a composed
+    /// child's content back through — every render/export/inference/mutation-diff call site funnels
+    /// through `vortex_kinds_of` below instead, which reads this cache. Populated wherever a full vortex-
+    /// kinds list is written (`set_vortex_kinds`/`set_vortex_kinds_parts`, `seed_vortex_kind_catalog_
+    /// scratch`) — NEVER persisted, NEVER a snapshot field, droppable at any instant (matches the repo-
+    /// wide `EngineRep` contract). Staleness gap, documented rather than fail-closed: store-level undo/
+    /// redo bypasses `ArtifactApp::handle` entirely, so a live session's cache CAN go stale relative to
+    /// `catalog`'s handle across an undo/redo that changes which vortex-kinds were loaded; a miss falls
+    /// back to an empty catalog (an id with no matching type is silently dropped, never fabricated).
     static BLOCK3D_VORTEX_KIND_CATALOG_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

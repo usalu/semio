@@ -30,7 +30,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curate::CurateSnapshot;
+    
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {

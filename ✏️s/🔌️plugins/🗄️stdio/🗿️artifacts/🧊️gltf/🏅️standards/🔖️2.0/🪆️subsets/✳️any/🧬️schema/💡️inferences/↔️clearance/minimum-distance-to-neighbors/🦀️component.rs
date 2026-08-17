@@ -20,15 +20,15 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfMinimumDistanceToNeighborsInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 
-pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
     estimate(pair.minimum_distance, GltfUnit::Metre, pair.sample_count, None)
 }
 
-pub fn from_assembly(distances: &[f64], sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
+pub(crate) fn from_assembly(distances: &[f64], sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
     (!distances.is_empty()).then(|| estimate(distances.iter().copied().fold(f64::INFINITY, f64::min), GltfUnit::Metre, sample_count, Some(topology)))
 }
 

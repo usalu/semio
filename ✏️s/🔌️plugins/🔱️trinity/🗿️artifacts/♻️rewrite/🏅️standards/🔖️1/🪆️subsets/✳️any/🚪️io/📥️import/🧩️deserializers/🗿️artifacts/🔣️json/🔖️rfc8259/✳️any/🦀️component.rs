@@ -1,7 +1,7 @@
 //! rewrite <- json
 use crate::artifacts::rewrite::{RewriteSnapshot};
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_text};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::parse_json_text;
 
 pub fn register() {}
 

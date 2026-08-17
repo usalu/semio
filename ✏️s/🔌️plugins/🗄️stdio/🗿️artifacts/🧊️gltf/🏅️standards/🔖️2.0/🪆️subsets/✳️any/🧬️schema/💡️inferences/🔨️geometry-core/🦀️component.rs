@@ -731,9 +731,9 @@ fn segment_distance_squared(first_start: V3, first_end: V3, second_start: V3, se
     let dd = dot(first_direction, between);
     let ee = dot(second_direction, between);
     let denominator = aa * cc - bb * bb;
-    let (mut first, mut second) = if denominator <= f64::EPSILON { (0.0, if cc > 0.0 { ee / cc } else { 0.0 }) } else { ((bb * ee - cc * dd) / denominator, (aa * ee - bb * dd) / denominator) };
+    let mut first = if denominator <= f64::EPSILON { 0.0 } else { (bb * ee - cc * dd) / denominator };
     first = first.clamp(0.0, 1.0);
-    second = if cc > 0.0 { ((bb * first + ee) / cc).clamp(0.0, 1.0) } else { 0.0 };
+    let mut second = if cc > 0.0 { ((bb * first + ee) / cc).clamp(0.0, 1.0) } else { 0.0 };
     first = if aa > 0.0 { ((bb * second - dd) / aa).clamp(0.0, 1.0) } else { 0.0 };
     let delta = sub(add(first_start, mul(first_direction, first)), add(second_start, mul(second_direction, second)));
     dot(delta, delta)

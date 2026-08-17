@@ -62,7 +62,7 @@ pub struct En1999Artifact {
     #[state(artifact)]
     pub sigma_ed_shell_mpa: f64,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(presence)]
     pub selected_check_index: Option<u32>,
 }
@@ -76,14 +76,14 @@ impl Default for En1999Artifact {
 }
 
 impl From<En1999Snapshot> for En1999Artifact {
-    fn from(snapshot: crate::artifacts::en1999::En1999Snapshot) -> Self {
+    fn from(snapshot: En1999Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1999Artifact {
-    pub fn to_snapshot(&self) -> crate::artifacts::en1999::En1999Snapshot {
-        crate::artifacts::en1999::En1999Snapshot {
+    pub fn to_snapshot(&self) -> En1999Snapshot {
+        En1999Snapshot {
             n_ed_kn: self.n_ed_kn.clone(),
             m_ed_knm: self.m_ed_knm.clone(),
             a_mm2: self.a_mm2.clone(),
@@ -113,7 +113,7 @@ impl En1999Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::artifacts::en1999::En1999Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1999Snapshot) -> Self {
         Self {
             n_ed_kn: snapshot.n_ed_kn,
             m_ed_knm: snapshot.m_ed_knm,
@@ -145,7 +145,7 @@ impl En1999Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1999::En1999Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1999Snapshot) {
         self.n_ed_kn = snapshot.n_ed_kn;
         self.m_ed_knm = snapshot.m_ed_knm;
         self.a_mm2 = snapshot.a_mm2;
@@ -322,8 +322,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1999BuilderFacets {
-        construction: derived_construction::En1999BuilderConstruction,
-        analysis: derived_analysis::En1999AnalyzerAnalysis,
+        construction: En1999BuilderConstruction,
+        analysis: En1999AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1999ComposerComposition,
     }
     builder: En1999Builder,

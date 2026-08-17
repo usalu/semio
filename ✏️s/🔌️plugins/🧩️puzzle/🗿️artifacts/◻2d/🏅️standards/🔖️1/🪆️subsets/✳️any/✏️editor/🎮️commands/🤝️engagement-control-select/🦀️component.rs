@@ -1,10 +1,6 @@
 //! 🤝️ `engagement-control-select` command.
 
-use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::modes::edit::windows::overview;
-use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select;
-use crate::editor::puzzle2d::{puzzle2d_window_and_engagements_scope, Puzzle2dActionCtx, PUZZLE2D_PANES};
-use semio_framework_plugin::kernel::HostEffect;
+use crate::editor::puzzle2d::Puzzle2dActionCtx;
 use serde_json::Value;
 
 pub fn engagement_control_select(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {

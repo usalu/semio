@@ -1,6 +1,6 @@
 //! 🖌️ `set-brush-placement-overlap-budget` command.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 
 pub fn set_brush_placement_overlap_budget(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

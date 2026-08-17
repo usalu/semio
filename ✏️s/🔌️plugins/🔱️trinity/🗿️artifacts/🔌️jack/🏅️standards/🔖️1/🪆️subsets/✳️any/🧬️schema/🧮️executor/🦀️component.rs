@@ -2,13 +2,11 @@
 #![allow(dead_code)]
 
 use crate::artifacts::jack::mutations::{apply_trinity_graph_mutations, change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
-use crate::artifacts::jack::{port_key, Camera, Edge, EntityRef, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
-use serde::{Deserialize, Serialize};
+use crate::artifacts::jack::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, QueryResult, QueryResultKind, ReturnItem};
+use crate::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
 use crate::language_service::parse;
-use crate::lexer::{lex_spanned, Token, SpannedToken};
 
 /// 🎯️ Variable binding in a match row.
 #[derive(Clone, Debug, Default)]

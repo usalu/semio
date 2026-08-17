@@ -1,5 +1,5 @@
 //! sequence <- json
-use crate::artifacts::sequence::{SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::SequenceSnapshot;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

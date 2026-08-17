@@ -1,8 +1,8 @@
 //! 📜️ 📜️ Trinity Rewrite app command — `node-graph-edit`.
 
 use crate::editor::rewrite::config::RewriteConfigMutation;
-use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
-use crate::artifacts::rewrite::schema::{ParameterKind, Rhs};
+use crate::artifacts::jack::{Graph, JackSnapshot};
+use crate::artifacts::rewrite::schema::Rhs;
 use crate::artifacts::rewrite::mutations::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
@@ -102,53 +102,6 @@ fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
     }
     changed
 }
-fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
-        return false;
-    };
-    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
-        return false;
-    };
-    let left_var = lhs.pattern.left_var.clone();
-    let changed = match clause_kind {
-        "where" => {
-            if lhs.where_clause.is_some() {
-                false
-            } else {
-                lhs.where_clause = Some(format!("{left_var}.name = 'value'"));
-                true
-            }
-        }
-        "create" => {
-            rhs.create.push(crate::artifacts::rewrite::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
-            true
-        }
-        "merge" => {
-            rhs.merge.push(crate::artifacts::rewrite::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
-            true
-        }
-        "set" => {
-            rhs.set.push(crate::artifacts::rewrite::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
-            true
-        }
-        "delete" => {
-            rhs.delete.push(left_var);
-            true
-        }
-        "parameter" => {
-            let name = format!("param{}", rhs.parameters.len());
-            state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
-            rhs.parameters.push(crate::artifacts::rewrite::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
-            true
-        }
-        _ => false,
-    };
-    if changed {
-        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
-        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
-    }
-    changed
-}
 fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
     let mut changed = false;
     for operation in operations {
@@ -206,23 +159,6 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
     }
     changed
 }
-fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
-    let fixture = JackSnapshot::from_json(fixture_json).ok()?;
-    let mut nodes = fixture.nodes();
-    for node in nodes.iter_mut() {
-        if !node_ids.iter().any(|id| id == &node.id) {
-            continue;
-        }
-        match field {
-            "name" => node.name = value.into(),
-            "kind" => node.kind = value.into(),
-            _ => {}
-        }
-    }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
-    Graph::from_fixture(fixture).ok()?.fixture_json().ok()
-}
-
 /// 🕹️ `selected_node_ids` now comes from `interaction.selection("graph").ids` (framework-owned) —
 /// deleting a selected id here is enough on its own: the framework re-validates/prunes the "graph"
 /// domain's selection against the fresh `interaction_topology` right after this document dispatch

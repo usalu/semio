@@ -77,10 +77,10 @@ pub fn gis2d_layer_tree_item(id: String, label: impl Into<Label>, description: O
 /// Wave 2 port recipe): `features:in` (any TwoD×Vector producer feeds new/patched
 /// positions/routes/regions) and `map:out` (this document's own feature layers, the `2d.map`
 /// interchange kind gis3d's `map:in` consumes).
-pub fn gis2d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn gis2d_io() -> AppIo {
+    AppIo {
         document_schema: GIS_MAP_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
         // 🚮️ V7 deprecated-codec-enum retirement (SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT):
         // `AppIo.{export,import}_formats` stays framework-owned and carries no `&'static str`
@@ -100,7 +100,7 @@ pub fn gis2d_features_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "features:in".into(),
         label: "Features".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
@@ -115,7 +115,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "map:out".into(),
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
@@ -125,10 +125,10 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🎞️ `map:out`'s `Media` value — this document's positions/routes/regions as a `2d.map` structured
 /// payload; reuses the exact descriptor JSON shape the ◻2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
-pub fn gis2d_map_media(document: &GisMapSnapshot) -> semio_framework_plugin::Media {
-    semio_framework_plugin::Media {
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
-        payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) },
+pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
+    Media {
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+        payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) },
     }
 }
 //#endregion 🔖️Io

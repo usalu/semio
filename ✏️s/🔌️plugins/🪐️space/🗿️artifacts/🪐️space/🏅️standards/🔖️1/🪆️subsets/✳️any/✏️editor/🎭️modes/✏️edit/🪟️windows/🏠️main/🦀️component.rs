@@ -44,8 +44,8 @@ pub fn definition() -> WindowKindDefinition {
 /// yet) — not a new gap.
 fn row_actions(row: &SpaceArtifactRow) -> Vec<TableRowAction> {
     vec![
-        TableRowAction { icon_id: IconName::FolderOpen, label: Some(Label::data("Open")), action: crate::editor::space_index::space_index_action("openArtifact", Some(serde_json::json!({ "id": row.id }))) },
-        TableRowAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: crate::editor::space_index::space_index_action("requestDeleteArtifact", Some(serde_json::json!({ "id": row.id }))) },
+        TableRowAction { icon_id: IconName::FolderOpen, label: Some(Label::data("Open")), action: space_index_action("openArtifact", Some(serde_json::json!({ "id": row.id }))) },
+        TableRowAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: space_index_action("requestDeleteArtifact", Some(serde_json::json!({ "id": row.id }))) },
     ]
 }
 

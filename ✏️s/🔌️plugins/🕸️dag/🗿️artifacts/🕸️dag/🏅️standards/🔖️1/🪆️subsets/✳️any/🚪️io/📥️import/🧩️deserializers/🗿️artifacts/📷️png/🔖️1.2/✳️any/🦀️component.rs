@@ -1,5 +1,4 @@
 //! Deserialize dag via stdio.png.
-use crate::artifacts::dag::io::{dag_from_wire, pack_err_as_text};
 use crate::artifacts::dag::DagSnapshot;
 use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 

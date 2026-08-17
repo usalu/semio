@@ -3,7 +3,6 @@
 //! `crate::editor::fem3d`; only the `Fem3dMutation` codec pair survives here).
 
 use crate::artifacts::fem3d::schema::mutations::text::Fem3dMutation;
-use crate::artifacts::fem3d::schema::mutations::update_analysis_settings;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol

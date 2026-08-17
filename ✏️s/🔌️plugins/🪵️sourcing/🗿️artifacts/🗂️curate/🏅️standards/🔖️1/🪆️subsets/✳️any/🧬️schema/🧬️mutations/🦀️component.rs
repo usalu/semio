@@ -54,7 +54,7 @@ pub use super::delete_curated_item::mutation::{delete_curated_item, DeleteCurate
 #[cfg(test)]
 mod tests {
     use super::*;
-    use protocol::SemanticMutation;
+    
     use crate::artifacts::curate::CuratedItem;
     use protocol::Mutation;
 

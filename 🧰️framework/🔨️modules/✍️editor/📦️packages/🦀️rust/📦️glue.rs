@@ -1,6 +1,5 @@
 //! ✍️ Package glue for the canvas-agnostic editor.
 
-extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as store;
 #[path = "../../🦀️component.rs"]
 mod component;

@@ -15,7 +15,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfPrincipalFrameInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfPrincipalFrame> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfPrincipalFrame> {
     estimate(context.principal_frame.clone(), GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 

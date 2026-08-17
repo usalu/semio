@@ -20,15 +20,15 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfClearanceDistributionInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 
-pub fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> GltfMeasure<GltfStatistics> {
+pub(crate) fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> GltfMeasure<GltfStatistics> {
     estimate(statistics(&[pair.minimum_distance], &policy.histogram_edges), GltfUnit::Metre, pair.sample_count, None)
 }
 
-pub fn from_assembly(distances: &[f64], policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) -> Option<GltfMeasure<GltfStatistics>> {
+pub(crate) fn from_assembly(distances: &[f64], policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) -> Option<GltfMeasure<GltfStatistics>> {
     (!distances.is_empty()).then(|| estimate(statistics(distances, &policy.histogram_edges), GltfUnit::Metre, sample_count, Some(topology)))
 }
 

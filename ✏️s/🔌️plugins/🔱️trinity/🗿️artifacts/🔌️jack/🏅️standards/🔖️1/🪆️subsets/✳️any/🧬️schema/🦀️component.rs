@@ -289,8 +289,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec JackBuilderFacets {
-        construction: derived_construction::JackBuilderConstruction,
-        analysis: derived_analysis::JackAnalyzerAnalysis,
+        construction: JackBuilderConstruction,
+        analysis: JackAnalyzerAnalysis,
         composition: super::super::io::derived_composition::JackComposerComposition,
     }
     builder: JackBuilder,

@@ -49,18 +49,18 @@ pub struct WriterArtifact {
 //#region 🔖️Conversions
 impl Default for WriterArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::writer::WriterSnapshot::default())
+        Self::from_snapshot(WriterSnapshot::default())
     }
 }
 
 impl WriterArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::writer::WriterSnapshot {
-        crate::artifacts::writer::WriterSnapshot { schema: self.schema.clone(), id: self.id.clone(), language_id: self.language_id.clone(), uri: self.uri.clone(), document: self.document.clone() }
+    pub fn to_snapshot(&self) -> WriterSnapshot {
+        WriterSnapshot { schema: self.schema.clone(), id: self.id.clone(), language_id: self.language_id.clone(), uri: self.uri.clone(), document: self.document.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot with UI defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::writer::WriterSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: WriterSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, language_id: snapshot.language_id, uri: snapshot.uri, document: snapshot.document, ..Self::default_ui() }
     }
 
@@ -85,7 +85,7 @@ impl WriterArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::writer::WriterSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: WriterSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.language_id = snapshot.language_id;
@@ -242,8 +242,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec WriterBuilderFacets {
-        construction: derived_construction::WriterBuilderConstruction,
-        analysis: derived_analysis::WriterAnalyzerAnalysis,
+        construction: WriterBuilderConstruction,
+        analysis: WriterAnalyzerAnalysis,
         composition: super::super::io::derived_composition::WriterComposerComposition,
     }
     builder: WriterBuilder,

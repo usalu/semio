@@ -12,7 +12,7 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
     use crate::artifacts::semio::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
     use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
         Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
 

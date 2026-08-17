@@ -338,8 +338,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec RemodelBuilderFacets {
-        construction: derived_construction::RemodelBuilderConstruction,
-        analysis: derived_analysis::RemodelAnalyzerAnalysis,
+        construction: RemodelBuilderConstruction,
+        analysis: RemodelAnalyzerAnalysis,
         composition: super::super::io::derived_composition::RemodelComposerComposition,
     }
     builder: RemodelBuilder,

@@ -33,7 +33,7 @@ use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
 };
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use store::EngineHandles;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Map, Value};
 
 //#region 🔖️Constants
@@ -289,12 +289,12 @@ semio_framework_plugin::app_commands! {
 pub fn forms_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: FORMS_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "dictionary:out".into(),
             label: "Dictionary".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("form.dictionary".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many,

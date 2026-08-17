@@ -27,7 +27,7 @@ pub mod derived_composition {
             &[DIALECT_ANY, DIALECT_BASELINE, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = TiffAnyComposer::compose(sources)?;
             let mut diagnostics = inner.diagnostics;
             diagnostics.extend(check_tiff_baseline_conformance(&inner.snapshot));

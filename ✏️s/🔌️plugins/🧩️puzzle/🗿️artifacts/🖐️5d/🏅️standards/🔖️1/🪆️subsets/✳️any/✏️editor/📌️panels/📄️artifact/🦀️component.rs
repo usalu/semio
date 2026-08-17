@@ -68,7 +68,7 @@ pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
         .iter()
         .map(|fastener| tree_item_with_action(fastener.id.clone(), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_interaction_select(PUZZLE5D_GRANULARITY_FASTENER, &fastener.id)))
         .collect();
-    let mut sections = vec![
+    let sections = vec![
         UiTreeSectionNode {
             presence: UiPresence::default(),
             id: "puzzle5d-play-document.parts".into(),

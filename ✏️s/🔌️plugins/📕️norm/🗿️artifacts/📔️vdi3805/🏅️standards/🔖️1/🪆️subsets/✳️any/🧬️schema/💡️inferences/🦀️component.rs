@@ -43,7 +43,7 @@ impl protocol::InferenceSpec<Vdi3805Snapshot> for Vdi3805Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::vdi3805::standards::v1::subsets::any::schema::Vdi3805Builder {
+impl ArtifactInferrer for standards::v1::subsets::any::schema::Vdi3805Builder {
     type Snapshot = Vdi3805Snapshot;
     type Inference = Vdi3805Inference;
 }
@@ -96,7 +96,7 @@ use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, dia
 /// `pass_check`/`fail_check`/`validate_structure`/`diagnostics_to_report` are pure helpers imported
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
 use crate::artifacts::vdi3805::*;
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
+use crate::document::{CheckReport, CheckResult, Quantity, QuantityKind};
 
 // #region SheetParts
 macro_rules! define_vdi_part {

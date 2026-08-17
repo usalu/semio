@@ -8,7 +8,7 @@
 //! rest of the artifact's schema, not behind an engine facade.
 
 use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::next_id;
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot, Puzzle5dPartAnchor, Puzzle5dCompatSpecificity};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️GripRefs

@@ -2184,6 +2184,12 @@ pub mod artifacts {
                 pub mod engine {
                     pub use super::subsets::any::io::*;
                     pub use super::subsets::any::schema::*;
+                    // 🎯 io and schema each define their own inferences/mutations submodule
+                    // (io holds binary/text codecs, schema holds the actual domain logic) --
+                    // disambiguate the resulting glob collision by explicitly preferring
+                    // schema, the richer, load-bearing side.
+                    pub use super::subsets::any::schema::inferences;
+                    pub use super::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod subsets {
@@ -5207,6 +5213,10 @@ pub mod artifacts {
             pub use super::standards::v_ecma_376::subsets::any::io::export::serializers::*;
             pub use super::standards::v_ecma_376::subsets::any::io::import::deserializers::*;
             pub use super::standards::v_ecma_376::subsets::any::io::io_registry;
+            // 🎯 export::serializers and import::deserializers each define their own
+            // artifacts submodule (per-dialect zip/xml helpers) -- disambiguate the resulting
+            // glob collision by explicitly preferring serializers, the export side.
+            pub use super::standards::v_ecma_376::subsets::any::io::export::serializers::artifacts;
         }
 
         #[path = "."]

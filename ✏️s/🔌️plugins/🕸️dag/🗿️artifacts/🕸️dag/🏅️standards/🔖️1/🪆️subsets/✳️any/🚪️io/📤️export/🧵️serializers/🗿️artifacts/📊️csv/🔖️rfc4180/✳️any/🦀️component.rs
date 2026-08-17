@@ -1,6 +1,6 @@
 //! Serialize dag to stdio.csv.
 use crate::artifacts::dag::DagSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::csv::CsvSnapshot;
 
 pub fn register() {}
 

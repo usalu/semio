@@ -21,7 +21,7 @@ use crate::artifacts::lowpoly::{artifact_kind, LowpolySnapshot, LOWPOLY_DOCUMENT
 use semio_framework_plugin::{NoDraft, NoDraftMutation, DraftView,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, ArtifactEditor, ConfigView, ArtifactView, Editor, Emit, Fault, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode, UtilityCategory,
     UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus, WindowMeasure,
-    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
+    GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use semio_framework_plugin::app::InteractionView;
 use store::EngineHandles;
@@ -64,14 +64,14 @@ pub fn lowpoly_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// migration's boundary — flagged under `sharedFileRequests` in this wave's report.
 pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        document_schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
+        document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
                 id: "mesh:in".into(),
                 label: "Mesh".into(),
                 direction: semio_framework_plugin::MediaPortDirection::In,
-                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,
                 required: false,
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
@@ -80,7 +80,7 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
                 id: "mesh:out".into(),
                 label: "Mesh".into(),
                 direction: semio_framework_plugin::MediaPortDirection::Out,
-                media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
                 kind_id: None,
                 required: false,
                 multiplicity: semio_framework_plugin::PortMultiplicity::Many,
@@ -97,7 +97,7 @@ pub fn lowpoly_io() -> semio_framework_plugin::AppIo {
 thread_local! {
     /// 🖌️ Mid-gesture scratch survives across `ArtifactApp::handle` calls (associated fn has no `&mut self`).
     /// Host-owned session scratch lands with CHANNEL_VERSION 5; until then one TLS slot per thread.
-    static LOWPOLY_SCRATCH: std::cell::RefCell<crate::editor::lowpoly::session::LowpolyScratch> = std::cell::RefCell::new(crate::editor::lowpoly::session::LowpolyScratch::default());
+    static LOWPOLY_SCRATCH: std::cell::RefCell<LowpolyScratch> = std::cell::RefCell::new(LowpolyScratch::default());
 }
 //#endregion 🔖️ScratchSlot
 
@@ -453,7 +453,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
 /// for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::HostEffect {
-    let pack = <LowpolySnapshot as store::ArtifactPack>::encode_pack(scene);
+    let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "lowpoly", scene.clone(), None);
     let spr = store::print_document_spr(&envelope).expect("lowpoly document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::HostEffect::LoadDocument { pack, spr }

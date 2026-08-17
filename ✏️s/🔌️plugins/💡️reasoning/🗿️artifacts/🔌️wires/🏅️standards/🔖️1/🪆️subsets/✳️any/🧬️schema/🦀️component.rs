@@ -220,8 +220,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec WiresBuilderFacets {
-        construction: derived_construction::WiresBuilderConstruction,
-        analysis: derived_analysis::WiresAnalyzerAnalysis,
+        construction: WiresBuilderConstruction,
+        analysis: WiresAnalyzerAnalysis,
         composition: super::super::io::derived_composition::WiresComposerComposition,
     }
     builder: WiresBuilder,

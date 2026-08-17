@@ -16,7 +16,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfConnectedComponentsInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     exact(context.topology.components, GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }
 

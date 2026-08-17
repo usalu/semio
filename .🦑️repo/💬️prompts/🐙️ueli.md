@@ -378,6 +378,41 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Generalize/Extend the current metrics mechanism for commits
+
+📊️metric📃uloc💯️2.68M📈️788➗️0.03➕️810✏️1.07k➖️22🟰️1.9k
+📊️metric📃uloc🦀️rust💯️1.26M📈️724➗️0.06➕️746✏️985➖️22🟰️1.75k
+📊️metric📃uloc🧾️json💯️874k
+📊️metric📃uloc🟦️typescript💯️307k📈️53➗️0.02➕️53✏️76🟰️129
+📊️metric📃uloc🔵️go💯️94.9k
+📊️metric📃uloc🟣️csharp💯️32.6k
+📊️metric📃uloc📝️markdown💯️28.6k
+📊️metric📃uloc🐍️python💯️27.9k
+📊️metric📃uloc🎨️css💯️26.9k
+📊️metric📃uloc🟨️javascript💯️15k
+📊️metric📃uloc📐️tex💯️9.28k
+📊️metric📃uloc⚙️toml💯️4.99k📈️11➗️0.221➕️11✏️4🟰️15
+📊️metric📃uloc🌐️html💯️2.61k
+📊️metric📃uloc🛢️sql💯️1.87k
+📊️metric📃uloc📋️yaml💯️1.23k
+📊️metric📃uloc💠️powershell💯️906
+📊️metric📃uloc🐚️shell💯️590
+📊️metric📃uloc📑️csv💯️70
+📊️metric📃uloc📄️xml💯️17
+📊️metric💾size💯️10.4GB📈️788KB➗️0.03➕️81MB✏️1.07GB➖️22KB🟰️1.09GB
+📊️metric💾size🦀️rust💯️4GB📈️5MB➗️0.03➕️5MB✏️6MB➖️22KB🟰️12MB
+…
+
+---
+
+📊️metric📃uloc💯️2.68M📈️788➗️0.03➕️810✏️1.07k➖️22🟰️1.9k
+📊️metric💾size💯️10.4GB📈️82MB➗️0.03➕️81MB✏️1.07GB➖️22KB🟰️1.09GB
+📊️metric🦀️rust📃uloc💯️1.26M📈️724➗️0.06➕️746✏️985➖️22🟰️1.75k
+📊️metric🦀️rust💾size💯️4GB📈️5MB➗️0.03➕️5MB✏️6MB➖️22KB🟰️12MB
+…
+
+---
+
 Achieve the following end to end:
 Running s with running plugins.
 Running hub with persistance for spaces and live presence between all users in the same app/viewer/editor.

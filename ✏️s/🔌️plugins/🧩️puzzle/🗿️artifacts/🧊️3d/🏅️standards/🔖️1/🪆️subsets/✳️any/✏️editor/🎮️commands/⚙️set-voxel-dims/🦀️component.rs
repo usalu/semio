@@ -1,6 +1,6 @@
 //! ⚙️ `set-voxel-dims` command.
 
-use crate::editor::puzzle3d::{puzzle3d_absolute_or_delta, sync_precompute_session, Puzzle3dActionCtx, PUZZLE3D_VORTEX_DIRECTION_INWARDS, PUZZLE3D_VORTEX_DIRECTION_OUTWARDS, PUZZLE3D_VORTEX_SHOW_ALWAYS, PUZZLE3D_VORTEX_SHOW_SELECTED};
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use serde_json::Value;
 
 pub fn set_voxel_dims(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Artifact {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub m_ed_knm: f64,
     #[state(artifact)]
@@ -42,7 +42,7 @@ pub struct En1992Artifact {
     #[state(artifact)]
     pub udl_kn_m: f64,
     #[state(artifact)]
-    pub fire_rating: crate::artifacts::en1992::part_1_2::FireRating,
+    pub fire_rating: FireRating,
     #[state(artifact)]
     pub provided_axis_distance_mm: f64,
     #[state(artifact)]
@@ -50,7 +50,7 @@ pub struct En1992Artifact {
     #[state(artifact)]
     pub bridge_delta_sigma_s_mpa: f64,
     #[state(artifact)]
-    pub tightness_class: crate::artifacts::en1992::part_3::TightnessClass,
+    pub tightness_class: TightnessClass,
     #[state(artifact)]
     pub hd_over_h: f64,
     #[state(artifact)]
@@ -327,8 +327,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1992BuilderFacets {
-        construction: derived_construction::En1992BuilderConstruction,
-        analysis: derived_analysis::En1992AnalyzerAnalysis,
+        construction: En1992BuilderConstruction,
+        analysis: En1992AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1992ComposerComposition,
     }
     builder: En1992Builder,

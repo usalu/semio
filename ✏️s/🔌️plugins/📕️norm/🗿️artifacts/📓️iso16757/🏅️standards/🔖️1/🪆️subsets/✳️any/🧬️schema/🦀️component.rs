@@ -220,8 +220,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Iso16757BuilderFacets {
-        construction: derived_construction::Iso16757BuilderConstruction,
-        analysis: derived_analysis::Iso16757AnalyzerAnalysis,
+        construction: Iso16757BuilderConstruction,
+        analysis: Iso16757AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Iso16757ComposerComposition,
     }
     builder: Iso16757Builder,
@@ -368,7 +368,7 @@ pub mod part_2 {
     pub fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
         match node {
             GeometryNode::Primitive { kind, parameters } => {
-                let mut resolved = std::collections::BTreeMap::new();
+                let mut resolved = BTreeMap::new();
                 for (key, value) in parameters {
                     resolved.insert(key.clone(), *values.get(key).unwrap_or(value));
                 }
@@ -628,7 +628,7 @@ pub mod part_5 {
         }
     }
 
-    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &std::collections::BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
+    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
         match rule {
             PartNumberRule::Literal { value } => Ok(value.clone()),
             PartNumberRule::Table { rows, output_column } => {

@@ -29,7 +29,7 @@ use crate::artifacts::mathematical::op::MathematicalMutation;
 use crate::artifacts::mathematical::{MathematicalGeometry, MathematicalGraph, MathematicalSnapshot, MATHEMATICAL_DIALECT, MATH_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, Dialect, Editor, EditorApp, NoDraft, NoDraftMutation, DraftView, SurfaceKind, UiComponentSceneNode, UiPresence,
+    ArtifactEditor, Dialect, Editor, NoDraft, NoDraftMutation, DraftView, SurfaceKind, UiComponentSceneNode, UiPresence,
     ui_text, ActionArgDef, ActionArgOption, ConfigView, ArtifactView, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
 };
 use serde_json::{json, Value};
@@ -50,13 +50,13 @@ pub use graph_window::MATH_PLAY_BODY_GRAPH;
 /// (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
 pub fn mathematical_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::artifacts::mathematical::MATH_DOCUMENT_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
+        document_schema: MATH_DOCUMENT_SCHEMA.into(),
+        document_media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
             label: "Result".into(),
             direction: semio_framework_plugin::MediaPortDirection::Out,
-            media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             kind_id: Some("computation.mathematical".into()),
             required: false,
             multiplicity: semio_framework::PortMultiplicity::Many,

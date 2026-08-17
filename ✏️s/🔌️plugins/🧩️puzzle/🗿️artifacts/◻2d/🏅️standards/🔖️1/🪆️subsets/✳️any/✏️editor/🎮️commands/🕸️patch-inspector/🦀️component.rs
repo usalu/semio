@@ -1,6 +1,6 @@
 //! 🕸️ `patch-inspector` command.
 
-use crate::editor::puzzle2d::{add_node_to_fixture, patch_inspector_nodes, Puzzle2dActionCtx};
+use crate::editor::puzzle2d::{patch_inspector_nodes, Puzzle2dActionCtx};
 use serde_json::Value;
 
 pub fn patch_inspector(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {

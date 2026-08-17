@@ -1,6 +1,6 @@
 //! 🎬️ Sequence artifact — the document entity this plugin's app edits (constitutional: general).
 
-use neural_engine::{Atom, Dictionary, Value};
+use neural_engine::{Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{

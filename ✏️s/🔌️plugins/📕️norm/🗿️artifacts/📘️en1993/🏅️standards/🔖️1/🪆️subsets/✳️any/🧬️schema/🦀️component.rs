@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Artifact {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub n_ed_kn: f64,
     #[state(artifact)]
@@ -481,8 +481,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1993BuilderFacets {
-        construction: derived_construction::En1993BuilderConstruction,
-        analysis: derived_analysis::En1993AnalyzerAnalysis,
+        construction: En1993BuilderConstruction,
+        analysis: En1993AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1993ComposerComposition,
     }
     builder: En1993Builder,

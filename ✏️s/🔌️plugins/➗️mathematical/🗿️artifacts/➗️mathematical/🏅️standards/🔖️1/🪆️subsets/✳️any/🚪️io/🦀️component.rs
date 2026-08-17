@@ -13,7 +13,7 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::mathematical::MathematicalSnapshot;
     use crate::artifacts::mathematical::standards::v1::subsets::any::schema::MathematicalAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

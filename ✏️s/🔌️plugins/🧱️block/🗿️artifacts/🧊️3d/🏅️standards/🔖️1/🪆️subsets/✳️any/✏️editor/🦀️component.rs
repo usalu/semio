@@ -96,14 +96,14 @@ fn window_id_from_args(args: Option<&Value>) -> String {
 pub fn block3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo::from_document(
         BLOCK_3D_SCHEMA,
-        semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         semio_framework_plugin::ArtifactPresentation { id: "3d.block".into(), name: "Object Kind".into(), dimension: "3d".into(), component_kind: "block3d".into() },
     )
     .with_ports(vec![semio_framework_plugin::MediaPortSpec {
         id: "catalog:out".into(),
         label: "Kit Catalog".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Kit, form: semio_framework_plugin::MediaForm::Type },
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
         kind_id: Some("kit.catalog".into()),
         required: false,
         multiplicity: semio_framework_plugin::PortMultiplicity::Many,
@@ -560,7 +560,7 @@ mod tests {
         let representation_id = snapshot.representations[0].id.clone();
         let vortex_id = snapshot.vortices[0].id.clone();
         let history = semio_framework_plugin::HistoryView::empty();
-        let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
+        let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Block3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let topology = <Block3dPlayApp as ArtifactEditor>::interaction_topology(&doc, &cfg);
@@ -620,7 +620,7 @@ mod tests {
     #[test]
     fn set_active_example_loads_capsule_fixture() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::editor::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.object_kind.id, "Capsule J");
         assert_eq!(projection.representations.len(), 2);
@@ -652,7 +652,7 @@ mod tests {
     #[test]
     fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::editor::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         let media = app.export_media("catalog:out").expect("export catalog");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
         match media.payload {
@@ -668,7 +668,7 @@ mod tests {
     #[test]
     fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
         let mut app: Block3dApp = new_app();
-        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: crate::editor::block3d::commands::set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
+        testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() }));
         testkit::dispatch(
             &mut app,
             Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] }),

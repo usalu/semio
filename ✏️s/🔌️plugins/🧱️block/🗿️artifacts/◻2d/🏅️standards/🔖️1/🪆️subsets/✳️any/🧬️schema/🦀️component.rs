@@ -1,6 +1,6 @@
 //! 🧬️ Block2d artifact schema — every field with its state class.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot, BLOCK_2D_SCHEMA};
+use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -223,8 +223,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Block2dBuilderFacets {
-        construction: derived_construction::Block2dBuilderConstruction,
-        analysis: derived_analysis::Block2dAnalyzerAnalysis,
+        construction: Block2dBuilderConstruction,
+        analysis: Block2dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Block2dComposerComposition,
     }
     builder: Block2dBuilder,

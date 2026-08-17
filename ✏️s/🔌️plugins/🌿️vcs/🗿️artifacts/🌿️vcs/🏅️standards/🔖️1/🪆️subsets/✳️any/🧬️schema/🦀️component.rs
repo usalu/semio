@@ -232,8 +232,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec VcsBuilderFacets {
-        construction: derived_construction::VcsBuilderConstruction,
-        analysis: derived_analysis::VcsAnalyzerAnalysis,
+        construction: VcsBuilderConstruction,
+        analysis: VcsAnalyzerAnalysis,
         composition: super::super::io::derived_composition::VcsComposerComposition,
     }
     builder: VcsBuilder,

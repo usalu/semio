@@ -5,7 +5,6 @@
 //! `app_commands!` in the app's `🦀️component.rs` (see `crate::editor::fem2d::Fem2dCommand`).
 
 use crate::artifacts::fem2d::schema::mutations::text::Fem2dMutation;
-use crate::artifacts::fem2d::schema::mutations::update_analysis_settings;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol

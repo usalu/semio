@@ -29,7 +29,6 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::{mutations::S
 use crate::artifacts::semio::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoSnapshot};
 use protocol::Mutation;
-use protocol::MutationDiff;
 use protocol::OpBinary;
 use protocol::OpText;
 use serde::{Deserialize, Serialize};

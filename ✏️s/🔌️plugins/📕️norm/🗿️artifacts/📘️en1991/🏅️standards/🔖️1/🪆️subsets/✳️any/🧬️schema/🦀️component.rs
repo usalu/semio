@@ -13,9 +13,9 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub area_m2: f64,
     #[state(artifact)]
-    pub category: crate::document::ImposedCategory,
+    pub category: ImposedCategory,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub self_weight_material: String,
     #[state(artifact)]
@@ -23,7 +23,7 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub assumed_g_k_kn_m2: f64,
     #[state(artifact)]
-    pub fire_curve: crate::artifacts::en1991::part_1_2::FireCurve,
+    pub fire_curve: FireCurve,
     #[state(artifact)]
     pub fire_resistance_min: f64,
     #[state(artifact)]
@@ -314,8 +314,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1991BuilderFacets {
-        construction: derived_construction::En1991BuilderConstruction,
-        analysis: derived_analysis::En1991AnalyzerAnalysis,
+        construction: En1991BuilderConstruction,
+        analysis: En1991AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1991ComposerComposition,
     }
     builder: En1991Builder,

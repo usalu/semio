@@ -92,7 +92,7 @@ mod tests {
     fn open_studio_loads_ephemeral_created_studio() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
-        let home = crate::editor::home::HomeApp;
+        let _home = crate::editor::home::HomeApp;
         let home_projection = crate::editor::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&home_projection, &history);
@@ -120,7 +120,7 @@ mod tests {
     fn create_space_navigates_without_download_and_opens_empty() {
         use crate::editor::home::commands::create_studio;
         use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
-        let home = crate::editor::home::HomeApp;
+        let _home = crate::editor::home::HomeApp;
         let home_projection = crate::editor::home::HomeApp::initial_snapshot();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&home_projection, &history);

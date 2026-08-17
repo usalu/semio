@@ -16,7 +16,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfExposedAreaInference::DESCRIPTOR
 }
 
-pub fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, contact_area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
+pub(crate) fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, contact_area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     if part_count <= 1 {
         return surface_area.clone();
     }
@@ -25,7 +25,7 @@ pub fn from_assembly(surface_area: &GltfMeasure<f64>, part_count: usize, contact
     }
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 

@@ -9,7 +9,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 
 
 use crate::artifacts::home::schema::mutations::text::SHomeMutation;
-use crate::artifacts::home::schema::mutations::change_catalog_generation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `SHomeMutation` to its binary command form.

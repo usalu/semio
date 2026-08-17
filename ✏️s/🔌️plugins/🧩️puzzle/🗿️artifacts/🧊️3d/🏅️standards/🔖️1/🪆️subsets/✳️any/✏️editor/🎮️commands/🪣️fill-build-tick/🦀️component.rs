@@ -2,7 +2,6 @@
 
 use crate::artifacts::puzzle3d::schema::PrecomputeLane;
 use semio_framework::kernel::UiDirtyScope;
-use serde_json::Value;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use crate::editor::puzzle3d::puzzle3d_fill_build_scope;
 use crate::editor::puzzle3d::puzzle3d_fill_tool_active;

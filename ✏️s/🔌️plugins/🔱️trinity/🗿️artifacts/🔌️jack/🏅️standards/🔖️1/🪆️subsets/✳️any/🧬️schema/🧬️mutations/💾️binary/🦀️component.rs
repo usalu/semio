@@ -12,7 +12,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
 use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node};
 use crate::artifacts::jack::schema::mutations::text::TrinityGraphMutation;
-use crate::artifacts::jack::{Edge, EntityRef, JackSnapshot, Node, PropertyValue};
+use crate::artifacts::jack::{Edge, EntityRef, Node, PropertyValue};
 use protocol::{OpBinary, OpText};
 use store::TextError;
 
@@ -105,8 +105,8 @@ enum TrinityGraphOperationDsl {
 }
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for TrinityGraphOperationDsl {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+impl OpText for TrinityGraphOperationDsl {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -129,7 +129,7 @@ impl protocol::OpText for TrinityGraphOperationDsl {
     }
 }
 
-impl protocol::OpBinary for TrinityGraphOperationDsl {
+impl OpBinary for TrinityGraphOperationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

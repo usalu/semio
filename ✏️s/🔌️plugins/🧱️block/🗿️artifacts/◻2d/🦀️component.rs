@@ -2,11 +2,7 @@
 //! exactly one `NodeKind`: its identity, rim presentation, and the `HandleKind` templates placed on
 //! that rim.
 
-pub use crate::artifacts::block2d::schema::diff::Block2dDiff;
-pub use crate::artifacts::block2d::schema::mutations::Block2dMutation;
-pub use crate::artifacts::block2d::schema::snapshot::Block2dSnapshot;
 
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 

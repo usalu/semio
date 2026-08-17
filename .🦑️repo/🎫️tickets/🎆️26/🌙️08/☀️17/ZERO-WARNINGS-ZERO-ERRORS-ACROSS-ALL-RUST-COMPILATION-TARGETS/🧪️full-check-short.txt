@@ -1,0 +1,462 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking semio-s-plugin-draw-fsm-macros v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust)
+    Checking semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+    Checking semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Checking semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:793:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:798:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:801:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:801:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:801:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:806:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:806:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:841:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:880:45: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:881:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:885:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:888:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:888:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:888:100: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:890:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:893:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:896:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:897:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:899:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:899:51: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:907:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:908:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:930:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:939:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1024:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1029:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1032:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1032:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1032:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1037:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1037:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1072:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1133:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1138:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1141:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1141:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1141:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1146:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1146:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1181:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1231:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1236:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1239:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1239:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1239:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1244:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1244:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1279:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1325:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1330:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1333:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1333:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1333:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1338:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1338:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1373:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1411:45: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1412:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1416:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1419:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1419:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1419:100: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1421:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1424:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1427:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1428:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1430:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1430:51: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1438:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1439:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1461:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1470:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1520:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1525:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1528:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1528:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1528:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1533:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1533:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1568:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1612:46: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1617:22: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1620:14: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1620:52: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1620:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1625:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1625:87: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1660:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/dsl_value_serde.rs:676:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:251:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:256:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:256:82: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:257:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9106:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9108:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9249:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2322:60: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2335:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2432:77: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2433:29: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2434:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2435:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2436:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2438:114: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2439:120: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2452:24: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2477:127: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2500:92: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2510:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2511:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2512:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2513:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2514:20: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2515:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2516:114: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2517:120: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2694:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2746:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2764:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2822:38: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2863:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2961:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:2997:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:3048:30: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:3075:28: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:398:15: warning: constant `EXAMPLES_DIR_NAME` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:399:15: warning: constant `ASSETS_DIR_NAME` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:402:12: warning: function `repo_root` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:414:8: warning: function `collect_files` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:431:12: warning: function `find_example_asset` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:468:12: warning: function `read_example_asset_text` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:474:12: warning: function `read_example_asset_bytes` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:480:12: warning: function `artifact_dir` is never used
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧪️fixture-sweep/🦀️component.rs:645:13: warning: field `plugin` is never read
+warning: `semio-framework-os-kernel` (lib test) generated 134 warnings (run `cargo fix --lib -p semio-framework-os-kernel --tests` to apply 125 suggestions)
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+    Checking semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+    Checking semio-compose-rs v0.1.0 (/Users/ueli/Documents/semio/compose/client/lib/rs)
+    Checking semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+    Checking semio-s-plugin-trinity-jack-lsp v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:254:25: warning: `read_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:297:25: warning: `WriteOptions` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:418:91: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:419:70: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:595:79: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:418:59: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:439:56: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:437:23: warning: `write_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:441:23: warning: `write_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:442:23: warning: `write_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:443:23: warning: `write_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:456:33: warning: `read_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:465:35: warning: `read_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:466:41: warning: `read_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:467:37: warning: `read_varint_u64` is ambiguous: ambiguous name
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:835:9: warning: fields `primary_mesh`, `textures`, `base_material`, and `label` are never read
+warning: `semio-framework-schema` (lib test) generated 1 warning
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2608:21: error[E0432]: unresolved import `super::Level`: no `Level` in `wgpu::draw`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2626:60: error[E0432]: unresolved import `super::Level`: no `Level` in `wgpu::draw`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2646:21: error[E0432]: unresolved import `super::Level`: no `Level` in `wgpu::draw`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2665:21: error[E0432]: unresolved import `super::Level`: no `Level` in `wgpu::draw`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1423:69: error[E0433]: cannot find type `IconName` in this scope: use of undeclared type `IconName`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4695:29: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4755:44: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4766:44: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:234:49: error[E0433]: cannot find type `Profile` in this scope: use of undeclared type `Profile`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:239:98: error[E0433]: cannot find type `DurabilityClass` in this scope: use of undeclared type `DurabilityClass`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:261:49: error[E0433]: cannot find type `Profile` in this scope: use of undeclared type `Profile`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:263:38: error[E0433]: cannot find type `DbError` in this scope: use of undeclared type `DbError`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:725:104: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:927:44: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:933:52: warning: `VerificationLevel` is ambiguous: ambiguous name
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:706:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:707:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:784:54: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:667:34: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:668:25: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:668:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:807:56: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1202:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:26:5: warning: unused import: `Emit`
+warning: `semio-framework-os-kernel-db` (lib test) generated 27 warnings (15 duplicates)
+error: could not compile `semio-framework-os-kernel-db` (lib test) due to 4 previous errors; 45 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-os-kernel-db` (lib) generated 15 warnings
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:726:120: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:727:118: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+compose/client/lib/rs/lib.rs:10987:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:10989:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:10990:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:10991:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:10992:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:10993:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11082:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11084:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11085:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11157:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11159:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11160:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11162:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11163:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14600:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14602:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14603:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14710:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14716:97: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15248:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15286:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15288:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15289:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16652:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16654:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16655:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16672:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16674:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16675:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16676:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16677:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16678:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16695:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16697:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16698:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16708:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16710:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16711:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16715:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16716:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16717:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16718:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16719:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16720:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16721:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16722:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16723:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16734:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16736:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16737:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16738:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16739:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16749:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16751:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16752:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16756:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16757:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16767:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16769:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16770:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16774:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16775:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16776:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16777:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16778:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16779:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16780:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16781:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16782:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16792:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16794:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16795:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16874:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16876:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16877:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16878:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16880:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16881:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16963:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16965:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16966:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16968:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17115:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17117:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17118:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17119:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17120:56: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17120:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17157:93: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19359:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19359:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19370:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19370:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19382:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19382:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19394:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19394:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19395:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19395:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19434:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19455:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19455:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19456:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19456:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19488:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19488:86: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19489:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19489:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19503:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19529:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19529:86: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19530:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19530:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19548:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19551:157: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19590:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19607:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19686:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19737:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19824:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19826:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19826:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19847:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19848:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19848:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19875:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20333:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20346:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20411:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20424:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20476:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20489:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20548:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20561:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20624:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20626:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20650:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:20650:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21024:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21039:16: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21039:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21062:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21062:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21063:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21063:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21087:16: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21087:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21090:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21132:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21133:16: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21133:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21243:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21243:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21308:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21462:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21462:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21536:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21593:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21597:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:21597:71: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:102:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:152:72: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1992:49: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:2010:53: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1415:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1423:100: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1500:104: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1364:70: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1364:125: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1114:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1124:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1384:51: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1208:28: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1234:51: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1016:100: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1248:176: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1282:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1282:132: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1031:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:437:61: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1154:131: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:1046:74: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:488:122: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:735:146: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1019:110: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:439:129: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:489:150: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1201:63: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:441:138: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1038:99: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:899:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:910:23: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:922:23: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:493:97: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1212:94: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1039:99: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:877:107: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:446:102: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:447:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:494:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:450:157: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:497:145: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1039:161: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1217:92: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:451:122: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:396:80: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:498:128: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:417:93: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1057:83: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1230:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:459:83: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:511:121: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:305:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:460:81: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:512:149: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1247:70: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:516:97: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:462:94: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1079:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:517:30: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:520:144: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:463:93: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:521:127: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1263:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1273:86: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:530:66: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1290:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:536:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:557:54: error[E0308]: mismatched types: expected `Option<String>`, found `Option<Label>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:298:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:470:42: error[E0308]: mismatched types: expected `Label`, found `&str`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1300:86: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:323:48: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:318:73: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:325:76: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:327:103: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:659:88: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:1317:20: error[E0308]: mismatched types: expected `String`, found `Label`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:717:137: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:525:99: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:422:108: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:433:26: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4771:43: error[E0277]: the trait bound `Vec<NodeGraphNodeRecord>: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `Vec<NodeGraphNodeRecord>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4771:56: error[E0277]: the trait bound `Vec<NodeGraphEdgeRecord>: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `Vec<NodeGraphEdgeRecord>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4771:69: error[E0277]: the trait bound `NodeGraphViewport: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4845:85: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4846:129: error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied: unsatisfied trait bound
+compose/client/lib/rs/lib.rs:19265:60: error[E0053]: method `apply` has an incompatible type for trait: expected `Result<KitProjection, ...>`, found `KitProjection`
+compose/client/lib/rs/lib.rs:19285:60: error[E0053]: method `diff` has an incompatible type for trait: expected `MutationOutcome<KitDiff>`, found `KitDiff`
+warning: `semio-framework-ui` (lib test) generated 3 warnings
+error: could not compile `semio-framework-ui` (lib test) due to 94 previous errors; 3 warnings emitted
+compose/client/lib/rs/lib.rs:19308:15: error[E0599]: no method named `dispatch` found for enum `std::result::Result<T, E>` in the current scope: method not found in `std::result::Result<ArtifactStore<KitProjection, _>, VcsError>`
+compose/client/lib/rs/lib.rs:19309:26: error[E0599]: no method named `snapshot` found for enum `std::result::Result<T, E>` in the current scope: method not found in `std::result::Result<ArtifactStore<KitProjection, _>, VcsError>`
+compose/client/lib/rs/lib.rs:19310:62: error[E0599]: no method named `envelope` found for enum `std::result::Result<T, E>` in the current scope: method not found in `std::result::Result<ArtifactStore<KitProjection, _>, VcsError>`
+compose/client/lib/rs/lib.rs:19310:80: error[E0599]: no method named `applied_edit_ids` found for enum `std::result::Result<T, E>` in the current scope: method not found in `std::result::Result<ArtifactStore<KitProjection, _>, VcsError>`
+warning: `semio-compose-rs` (lib) generated 89 warnings (89 duplicates)
+warning: `semio-compose-rs` (lib test) generated 160 warnings
+error: could not compile `semio-compose-rs` (lib test) due to 6 previous errors; 160 warnings emitted
+DONE_MARKER
+
+[exited with code 0]

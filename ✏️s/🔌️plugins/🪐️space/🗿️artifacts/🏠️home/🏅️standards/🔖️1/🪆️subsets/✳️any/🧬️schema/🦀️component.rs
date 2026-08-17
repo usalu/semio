@@ -199,8 +199,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec HomeBuilderFacets {
-        construction: derived_construction::HomeBuilderConstruction,
-        analysis: derived_analysis::SHomeAnalyzerAnalysis,
+        construction: HomeBuilderConstruction,
+        analysis: SHomeAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SHomeComposerComposition,
     }
     builder: HomeBuilder,

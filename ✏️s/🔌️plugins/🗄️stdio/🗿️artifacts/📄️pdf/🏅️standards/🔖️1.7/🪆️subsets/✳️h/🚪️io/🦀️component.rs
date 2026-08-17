@@ -30,7 +30,7 @@ pub mod derived_composition {
 
         /// ✅ Always `Ok` -- PDF/H has no hard checks to gate on (see module doc comment). Advisory
         /// diagnostics from `check_h_conformance` are folded onto the successful `Composition`.
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = PdfAnyComposer::compose(sources)?;
             let checks = check_h_conformance(&inner.snapshot);
             let mut diagnostics = inner.diagnostics;

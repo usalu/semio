@@ -1,7 +1,5 @@
 // GIS terrain artifact — the document entity the 3d app edits (constitutional: general).
 
-pub use crate::artifacts::gisterrain::schema::diff::GisTerrainDiff;
-pub use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
 pub use crate::artifacts::gisterrain::schema::snapshot::GisTerrainSnapshot;
 
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;

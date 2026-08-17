@@ -17,7 +17,7 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfFaceNormalDistributionInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     let face_angles = context
         .faces
         .iter()

@@ -4,11 +4,7 @@
 //! fields — see `s/plugin/puzzle/app/5d/dsl/rs/lib.rs:62` for the known pack table-column bug this
 //! dodges).
 
-pub use crate::artifacts::block5d::schema::diff::Block5dDiff;
-pub use crate::artifacts::block5d::schema::mutations::Block5dMutation;
-pub use crate::artifacts::block5d::schema::snapshot::Block5dSnapshot;
 
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use serde::{Deserialize, Serialize};
 

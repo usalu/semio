@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot, PUZZLE_5D_SCHEMA};
+use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
 use artifact_schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use serde::{Deserialize, Serialize};
@@ -269,8 +269,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Puzzle5dBuilderFacets {
-        construction: derived_construction::Puzzle5dBuilderConstruction,
-        analysis: derived_analysis::Puzzle5dAnalyzerAnalysis,
+        construction: Puzzle5dBuilderConstruction,
+        analysis: Puzzle5dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Puzzle5dComposerComposition,
     }
     builder: Puzzle5dBuilder,

@@ -60,7 +60,7 @@ impl Default for LowpolyArtifact {
             schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
             objects: Vec::new(),
             active_object_id: None,
-            selection: crate::artifacts::lowpoly::LowpolySelection::default(),
+            selection: LowpolySelection::default(),
             selected_object_ids: Vec::new(),
             paint_utility: "brush".into(),
             active_paint_layer: 0,
@@ -516,8 +516,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec LowpolyBuilderFacets {
-        construction: derived_construction::LowpolyBuilderConstruction,
-        analysis: derived_analysis::LowpolyAnalyzerAnalysis,
+        construction: LowpolyBuilderConstruction,
+        analysis: LowpolyAnalyzerAnalysis,
         composition: super::super::io::derived_composition::LowpolyComposerComposition,
     }
     builder: LowpolyBuilder,

@@ -6,7 +6,6 @@ use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use semio_framework_plugin::{Emit, Fault};
 use serde_json::json;
-use store::ArtifactDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
@@ -34,13 +33,6 @@ pub(crate) fn preset_query(preset_id: &str) -> &'static str {
 
 fn error_result_json(message: &str) -> String {
     json!({ "error": message }).to_string()
-}
-fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
-    match preset_id {
-        "nakagin" | "nakagin-capsule-tower" => Some(crate::editor::jack::NAKAGIN_FIXTURE_DSL),
-        "branch-chain" => Some(crate::editor::jack::BRANCH_FIXTURE_DSL),
-        _ => None,
-    }
 }
 
 pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {

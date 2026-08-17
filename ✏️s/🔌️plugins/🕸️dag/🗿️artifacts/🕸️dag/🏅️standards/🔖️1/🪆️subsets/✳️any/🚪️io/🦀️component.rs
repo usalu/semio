@@ -13,7 +13,7 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::dag::DagSnapshot;
     use crate::artifacts::dag::standards::v1::subsets::any::schema::DagAnalyzer;
     use semio_framework_plugin::ArtifactAnalyzer as _;

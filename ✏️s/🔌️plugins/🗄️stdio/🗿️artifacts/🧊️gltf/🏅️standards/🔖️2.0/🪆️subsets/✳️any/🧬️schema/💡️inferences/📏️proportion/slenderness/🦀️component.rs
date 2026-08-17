@@ -11,7 +11,7 @@ impl GltfInferenceLeaf for GltfSlendernessInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfSlendernessInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
     exact(if extent[1] > 0.0 { extent[0] / extent[1] } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))

@@ -1,7 +1,7 @@
 //! 🔺️ Sourcing curate artifact — sparse field-delta diff codec and apply/absorb.
 
 use crate::artifacts::curate::schema::diff::{
-    CurateCuratedDelta, CurateCuratedPatchEntry, CurateDiff, CurateObjectKindExtraPatchEntry, CurateStockExtraDelta,
+    CurateCuratedDelta, CurateDiff, CurateStockExtraDelta,
 };
 use crate::artifacts::curate::schema::CurateArtifact;
 use crate::artifacts::curate::{CuratedItem, CurateSnapshot, ObjectKindExtra};
@@ -13,7 +13,6 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️component.grammar
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️component.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::curate::schema::diff::*;
 
 
 //#region 🔖️Apply

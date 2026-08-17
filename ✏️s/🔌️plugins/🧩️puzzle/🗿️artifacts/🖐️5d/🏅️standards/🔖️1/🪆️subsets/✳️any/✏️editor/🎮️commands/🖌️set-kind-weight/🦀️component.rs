@@ -1,6 +1,6 @@
 //! 🖌️ `set-kind-weight` command.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use crate::editor::puzzle5d::puzzle5d_ensure_catalog_kind_weights;
 use crate::editor::puzzle5d::puzzle5d_kind_ids;

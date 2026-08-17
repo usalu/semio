@@ -7,7 +7,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::text::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::touch_artifact;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `SSpaceMutation` to its binary command form.

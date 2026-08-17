@@ -344,7 +344,7 @@ mod tests {
     #[test]
     fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block3d_snapshot();
-        let vortex_kind = crate::artifacts::block3d::Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
+        let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
         crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);
         let outcome = create_vortex_kind(vortex_kind).diff(&base);
         assert_fatal_never_applies(&outcome);

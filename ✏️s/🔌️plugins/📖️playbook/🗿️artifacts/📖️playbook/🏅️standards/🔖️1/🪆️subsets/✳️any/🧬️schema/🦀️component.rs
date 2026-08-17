@@ -268,8 +268,8 @@ mod document_helpers_tests {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PlaybookBuilderFacets {
-        construction: derived_construction::PlaybookBuilderConstruction,
-        analysis: derived_analysis::PlaybookAnalyzerAnalysis,
+        construction: PlaybookBuilderConstruction,
+        analysis: PlaybookAnalyzerAnalysis,
         composition: super::super::io::derived_composition::PlaybookComposerComposition,
     }
     builder: PlaybookBuilder,

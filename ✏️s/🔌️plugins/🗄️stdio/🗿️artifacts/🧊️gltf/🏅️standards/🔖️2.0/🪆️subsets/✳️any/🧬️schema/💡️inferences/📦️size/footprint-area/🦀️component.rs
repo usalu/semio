@@ -12,7 +12,7 @@ impl GltfInferenceLeaf for GltfFootprintAreaInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfFootprintAreaInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let area = context.faces.iter().map(|face| 0.5 * cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]]))[2].abs()).sum();
     estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }

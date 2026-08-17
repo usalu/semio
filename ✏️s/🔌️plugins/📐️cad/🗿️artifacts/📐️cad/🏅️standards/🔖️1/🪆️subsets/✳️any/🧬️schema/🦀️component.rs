@@ -372,8 +372,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec CadBuilderFacets {
-        construction: derived_construction::CadBuilderConstruction,
-        analysis: derived_analysis::CadAnalyzerAnalysis,
+        construction: CadBuilderConstruction,
+        analysis: CadAnalyzerAnalysis,
         composition: super::super::io::derived_composition::CadComposerComposition,
     }
     builder: CadBuilder,

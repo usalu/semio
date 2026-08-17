@@ -9,7 +9,6 @@
 
 extern crate semio_framework_os_kernel as store_sync;
 extern crate semio_framework_os_kernel as dsl_core;
-extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -236,7 +235,7 @@ fn fetch_map_tile_bytes_blocking(url: &str) -> Option<Vec<u8>> {
     if !resolved.starts_with("http://") && !resolved.starts_with("https://") {
         return None;
     }
-    let mut response = ureq::get(&resolved).call().ok()?;
+    let response = ureq::get(&resolved).call().ok()?;
     let mut bytes = Vec::new();
     response.into_reader().read_to_end(&mut bytes).ok()?;
     Some(bytes)

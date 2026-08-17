@@ -20,7 +20,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfVec3 {
     let eigenvalues = context.principal_frame.eigenvalues;
     GltfVec3::new([eigenvalues[1] + eigenvalues[2], eigenvalues[0] + eigenvalues[2], eigenvalues[0] + eigenvalues[1]])
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     estimate(raw(context), GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
 }
 

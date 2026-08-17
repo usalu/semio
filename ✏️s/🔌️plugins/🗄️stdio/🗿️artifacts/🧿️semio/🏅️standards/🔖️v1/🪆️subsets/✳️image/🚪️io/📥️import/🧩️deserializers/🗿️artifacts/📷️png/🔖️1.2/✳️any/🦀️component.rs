@@ -15,7 +15,7 @@
 //!   `SemioImageMetadataEntry` and are dropped on import.
 
 use crate::artifacts::png::{
-    schema::snapshot::{PngChunkMarker, PngColorType, PngTextChunk, PngTextKind},
+    schema::snapshot::{PngColorType, PngTextChunk},
     PngSnapshot,
 };
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};

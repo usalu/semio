@@ -27,7 +27,7 @@ mod tests {
     use super::*;
     use crate::editor::space_index::commands::create_artifact;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn touch_artifact_stamps_the_row() {

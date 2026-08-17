@@ -2,7 +2,7 @@
 
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation, RasterConfigViewportSize};
 use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::{RasterCamera, RasterSnapshot};
+use crate::artifacts::raster::RasterSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

@@ -16,13 +16,13 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfContactAreaInference::DESCRIPTOR
 }
 
-pub fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
+pub(crate) fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
     pair.contact_area
         .map(|area| if area == 0.0 { exact(area, GltfUnit::SquareMetre, pair.sample_count, None) } else { estimate(area, GltfUnit::SquareMetre, pair.sample_count, None) })
         .unwrap_or_else(|| unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
 }
 
-pub fn from_assembly(part_count: usize, area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
+pub(crate) fn from_assembly(part_count: usize, area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     if part_count <= 1 {
         return exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology));
     }
@@ -31,7 +31,7 @@ pub fn from_assembly(part_count: usize, area: f64, complete: bool, sample_count:
     }
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 

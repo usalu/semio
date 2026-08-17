@@ -1,12 +1,11 @@
 //! 🖥️ Semio framework OS host — Shape V2 glue.
-#![feature(linkage)]
 
 extern crate semio_framework_os_kernel as store;
+#[cfg(feature = "os-host-full")]
 extern crate semio_framework_os_kernel as protocol;
+#[cfg(feature = "os-host-full")]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
-extern crate semio_framework_os_kernel as spr;
 
 //#region 🔖️OsHostFull
 // 🧬️ `workflow_kernel` is the private path-mount of `🔨️modules/🔁️workflow` — kept distinct from the

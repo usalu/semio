@@ -222,8 +222,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec ImperativeBuilderFacets {
-        construction: derived_construction::ImperativeBuilderConstruction,
-        analysis: derived_analysis::ImperativeAnalyzerAnalysis,
+        construction: ImperativeBuilderConstruction,
+        analysis: ImperativeAnalyzerAnalysis,
         composition: super::super::io::derived_composition::ImperativeComposerComposition,
     }
     builder: ImperativeBuilder,

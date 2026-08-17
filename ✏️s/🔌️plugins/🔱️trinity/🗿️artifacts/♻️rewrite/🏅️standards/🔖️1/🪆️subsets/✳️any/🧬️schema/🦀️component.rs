@@ -629,8 +629,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec RewriteBuilderFacets {
-        construction: derived_construction::RewriteBuilderConstruction,
-        analysis: derived_analysis::RewriteAnalyzerAnalysis,
+        construction: RewriteBuilderConstruction,
+        analysis: RewriteAnalyzerAnalysis,
         composition: super::super::io::derived_composition::RewriteComposerComposition,
     }
     builder: RewriteBuilder,

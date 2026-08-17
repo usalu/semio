@@ -260,7 +260,7 @@ pub mod spatial {
 
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{ArenaId, EdgeId, FaceId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;

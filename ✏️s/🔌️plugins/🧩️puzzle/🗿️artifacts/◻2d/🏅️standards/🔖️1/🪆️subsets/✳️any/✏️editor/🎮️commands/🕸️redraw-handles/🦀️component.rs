@@ -1,7 +1,6 @@
 //! 🕸️ `redraw-handles` command.
 
-use crate::editor::puzzle2d::{add_node_to_fixture, patch_inspector_nodes, Puzzle2dActionCtx};
-use serde_json::Value;
+use crate::editor::puzzle2d::Puzzle2dActionCtx;
 
 /// 🧲️ Re-snaps every edge's handle angle onto its node-center line.
 pub fn redraw_handles(ctx: &mut Puzzle2dActionCtx<'_>) {

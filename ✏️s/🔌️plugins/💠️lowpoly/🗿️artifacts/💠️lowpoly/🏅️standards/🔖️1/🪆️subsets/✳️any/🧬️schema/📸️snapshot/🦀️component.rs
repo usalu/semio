@@ -338,7 +338,7 @@ pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &s
             transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh: Some(crate::artifacts::lowpoly::mesh_child_handle(object_id, mesh_json)),
-            paint_layers: vec![crate::artifacts::lowpoly::LowpolyPaintLayer::new("Base")],
+            paint_layers: vec![LowpolyPaintLayer::new("Base")],
         }],
     }
 }

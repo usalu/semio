@@ -1088,14 +1088,14 @@ pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
 pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let bytes = read_bin_blob(r)?;
     String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "ply binary utf8 string", offset: 0, detail: e.to_string() })
 }
@@ -1105,7 +1105,7 @@ pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item:
         write_item(w, item);
     }
 }
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -1123,7 +1123,7 @@ pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_
         }
     }
 }
-pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
@@ -1137,7 +1137,7 @@ pub(crate) fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
         PlyFormat::BinaryBigEndian => 2,
     });
 }
-pub(crate) fn read_bin_format(r: &mut dsl::ByteReader) -> Result<PlyFormat, dsl::PackError> {
+pub(crate) fn read_bin_format(r: &mut dsl::ByteReader<'_>) -> Result<PlyFormat, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PlyFormat::Ascii),
         1 => Ok(PlyFormat::BinaryLittleEndian),
@@ -1157,7 +1157,7 @@ pub(crate) fn write_bin_scalar_type(w: &mut dsl::ByteWriter, k: PlyScalarType) {
         PlyScalarType::Double => 7,
     });
 }
-pub(crate) fn read_bin_scalar_type(r: &mut dsl::ByteReader) -> Result<PlyScalarType, dsl::PackError> {
+pub(crate) fn read_bin_scalar_type(r: &mut dsl::ByteReader<'_>) -> Result<PlyScalarType, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PlyScalarType::Char),
         1 => Ok(PlyScalarType::UChar),
@@ -1214,7 +1214,7 @@ pub(crate) fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
         }
     }
 }
-pub(crate) fn read_bin_value(r: &mut dsl::ByteReader) -> Result<PlyValue, dsl::PackError> {
+pub(crate) fn read_bin_value(r: &mut dsl::ByteReader<'_>) -> Result<PlyValue, dsl::PackError> {
     let malformed = |offset: usize, detail: String| dsl::PackError::Malformed { what: "ply binary value", offset: offset as u64, detail };
     match r.read_u8()? {
         0 => Ok(PlyValue::Char(i8::from_le_bytes(r.read_bytes(1)?.try_into().map_err(|_| malformed(r.position(), "expected 1 byte".into()))?))),
@@ -1245,7 +1245,7 @@ pub(crate) fn write_bin_property(w: &mut dsl::ByteWriter, p: &PlyProperty) {
         }
     }
 }
-pub(crate) fn read_bin_property(r: &mut dsl::ByteReader) -> Result<PlyProperty, dsl::PackError> {
+pub(crate) fn read_bin_property(r: &mut dsl::ByteReader<'_>) -> Result<PlyProperty, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PlyProperty::Scalar { name: read_bin_str(r)?, kind: read_bin_scalar_type(r)? }),
         1 => Ok(PlyProperty::List { name: read_bin_str(r)?, count_kind: read_bin_scalar_type(r)?, value_kind: read_bin_scalar_type(r)? }),
@@ -1255,7 +1255,7 @@ pub(crate) fn read_bin_property(r: &mut dsl::ByteReader) -> Result<PlyProperty, 
 pub(crate) fn write_bin_row(w: &mut dsl::ByteWriter, row: &PlyRow) {
     write_bin_vec(w, &row.values, write_bin_value);
 }
-pub(crate) fn read_bin_row(r: &mut dsl::ByteReader) -> Result<PlyRow, dsl::PackError> {
+pub(crate) fn read_bin_row(r: &mut dsl::ByteReader<'_>) -> Result<PlyRow, dsl::PackError> {
     Ok(PlyRow { values: read_bin_vec(r, read_bin_value)? })
 }
 pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
@@ -1264,7 +1264,7 @@ pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
     write_bin_vec(w, &e.properties, write_bin_property);
     write_bin_vec(w, &e.rows, write_bin_row);
 }
-pub(crate) fn read_bin_element(r: &mut dsl::ByteReader) -> Result<PlyElement, dsl::PackError> {
+pub(crate) fn read_bin_element(r: &mut dsl::ByteReader<'_>) -> Result<PlyElement, dsl::PackError> {
     let name = read_bin_str(r)?;
     let count = r.read_varint_u64()? as usize;
     let properties = read_bin_vec(r, read_bin_property)?;
@@ -1280,7 +1280,7 @@ pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PlySnapshot) {
     write_bin_vec(w, &s.comments, |w, c: &String| write_bin_str(w, c));
     write_bin_vec(w, &s.elements, write_bin_element);
 }
-pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<PlySnapshot, dsl::PackError> {
+pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PlySnapshot, dsl::PackError> {
     let schema = read_bin_str(r)?;
     let format = read_bin_format(r)?;
     let comments = read_bin_vec(r, read_bin_str)?;
@@ -1304,13 +1304,13 @@ fn write_bin_row_field_change(w: &mut dsl::ByteWriter, c: &PlyRowFieldChange) {
     write_bin_str(w, &c.name);
     write_bin_value(w, &c.value);
 }
-fn read_bin_row_field_change(r: &mut dsl::ByteReader) -> Result<PlyRowFieldChange, dsl::PackError> {
+fn read_bin_row_field_change(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowFieldChange, dsl::PackError> {
     Ok(PlyRowFieldChange { name: read_bin_str(r)?, value: read_bin_value(r)? })
 }
 fn write_bin_row_diff(w: &mut dsl::ByteWriter, d: &PlyRowDiff) {
     write_bin_vec(w, &d.fields, write_bin_row_field_change);
 }
-fn read_bin_row_diff(r: &mut dsl::ByteReader) -> Result<PlyRowDiff, dsl::PackError> {
+fn read_bin_row_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowDiff, dsl::PackError> {
     Ok(PlyRowDiff { fields: read_bin_vec(r, read_bin_row_field_change)? })
 }
 fn write_bin_rows_diff(w: &mut dsl::ByteWriter, d: &PlyRowsDiff) {
@@ -1324,7 +1324,7 @@ fn write_bin_rows_diff(w: &mut dsl::ByteWriter, d: &PlyRowsDiff) {
         write_bin_row(w, &a.row);
     });
 }
-fn read_bin_rows_diff(r: &mut dsl::ByteReader) -> Result<PlyRowsDiff, dsl::PackError> {
+fn read_bin_rows_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowsDiff, dsl::PackError> {
     let removed = read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -1342,7 +1342,7 @@ fn write_bin_element_diff(w: &mut dsl::ByteWriter, d: &PlyElementDiff) {
     write_bin_option(w, &d.properties, |w, props: &Vec<PlyProperty>| write_bin_vec(w, props, write_bin_property));
     write_bin_option(w, &d.rows, write_bin_rows_diff);
 }
-fn read_bin_element_diff(r: &mut dsl::ByteReader) -> Result<PlyElementDiff, dsl::PackError> {
+fn read_bin_element_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyElementDiff, dsl::PackError> {
     let properties = read_bin_option(r, |r| read_bin_vec(r, read_bin_property))?;
     let rows = read_bin_option(r, read_bin_rows_diff)?;
     Ok(PlyElementDiff { properties, rows })

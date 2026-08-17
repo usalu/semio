@@ -29,7 +29,7 @@ pub struct SHomeInference {
     pub content_digest: String,
 }
 
-impl protocol::Inference<SHomeSnapshot> for SHomeInference {
+impl Inference<SHomeSnapshot> for SHomeInference {
     fn infer(snapshot: &SHomeSnapshot) -> Self {
         Self { content_digest: compute_content_digest(snapshot) }
     }
@@ -68,7 +68,7 @@ impl ArtifactInferrer for crate::artifacts::home::standards::v1::subsets::any::s
     /// `outline`/`bounds`-style facets).
     fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = (cache, session);
-        <SHomeInference as protocol::Inference<SHomeSnapshot>>::infer(snapshot)
+        <SHomeInference as Inference<SHomeSnapshot>>::infer(snapshot)
     }
 }
 //#endregion 🔖️ArtifactInferrer

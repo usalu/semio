@@ -36,10 +36,10 @@ pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
 /// `GisTerrainSnapshot::imported_features_json`) and `scene:out` (this terrain as `3d.mesh`).
 /// `document_media_type` is Data×Value (the document is a scalar "exaggeration + imported overlay"
 /// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
-pub fn gis3d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn gis3d_io() -> AppIo {
+    AppIo {
         document_schema: GIS_3D_TERRAIN_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
@@ -55,7 +55,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "map:in".into(),
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: Some("2d.map".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::One,
@@ -70,7 +70,7 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: "Scene".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         kind_id: Some("3d.mesh".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
@@ -82,10 +82,10 @@ pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🏔️terrain window's `render`/`build_terrain_scene_json`), so this exports the same terrain descriptor
 /// fields (exaggeration + imported overlay) as a structured `3d.mesh` payload rather than a real
 /// triangulated mesh — an honest placeholder for the day a tessellator lands, not a silent fake.
-pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> semio_framework_plugin::Media {
-    semio_framework_plugin::Media {
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
-        payload: semio_framework_plugin::MediaPayload::Structured {
+pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
+    Media {
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        payload: MediaPayload::Structured {
             schema: "3d.mesh".into(),
             json: serde_json::json!({
                 "exaggeration": document.exaggeration,

@@ -55,7 +55,7 @@ pub fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, 
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn create_artifact_mints_an_id_adds_a_row_and_relays_the_open_command() {

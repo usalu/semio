@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Remodel play app commands command — `set-layer-visibility`.
 
-use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation, RemodelWorldCamera};
+use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
 use crate::artifacts::remodel::op::RemodelMutation;
 use crate::artifacts::remodel::RemodelSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};

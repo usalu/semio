@@ -18,7 +18,7 @@ use crate::editor::imperative::engine::imperative_io;
 use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::{ImperativeSnapshot, Step, IMPERATIVE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, App, ArtifactEditor, CommandDefinition, ConfigView, ArtifactView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
+    NoDraft, NoDraftMutation, DraftView, ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, ArtifactEditor, CommandDefinition, ConfigView, ArtifactView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, UiNode,
     GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec,
     DomainTopology, InteractionTopology, TopologyNode,
 };
@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn the_manifest_stitches_every_taxonomy_node() {
         let json = serde_json::to_string(&create_imperative_app()).expect("app definition json");
-        for id in [main::IMPERATIVE_PLAY_WINDOW_MAIN, script::IMPERATIVE_PLAY_WINDOW_SCRIPT] {
+        for id in [IMPERATIVE_PLAY_WINDOW_MAIN, script::IMPERATIVE_PLAY_WINDOW_SCRIPT] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
         assert!(json.contains(edit::IMPERATIVE_PLAY_MODE_EDIT), "mode missing from the manifest");
@@ -541,7 +541,7 @@ mod tests {
         let mut app = imperative_app();
         let base = default_snapshot();
         let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
-        path.steps.push(crate::artifacts::imperative::Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
+        path.steps.push(Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
         let expected_after = crate::artifacts::imperative::imperative_snapshot_with_content(&base.schema, &path, &crate::artifacts::imperative::imperative_working_scene(&base).seed);
         assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after);
     }

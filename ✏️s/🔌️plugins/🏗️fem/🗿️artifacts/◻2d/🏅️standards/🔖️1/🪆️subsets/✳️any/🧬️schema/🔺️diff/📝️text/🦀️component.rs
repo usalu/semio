@@ -1,10 +1,9 @@
 //! 🔺️ Fem2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::fem2d::schema::diff::*;
 
 use crate::artifacts::fem2d::schema::diff::{Fem2dNodesDelta, Fem2dElementsDelta, Fem2dRegionsDelta, Fem2dMaterialsDelta, Fem2dSectionsDelta, Fem2dSupportsDelta, Fem2dLoadCasesDelta, Fem2dCombinationsDelta, Fem2dDiff};
 use crate::artifacts::fem2d::schema::Fem2dArtifact;
-use crate::artifacts::fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport, Fem2dSnapshot, FemRegion, element_id};
+use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport, Fem2dSnapshot, FemRegion, element_id};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -27,10 +26,6 @@ impl HasId for FemSupport { fn id(&self) -> &str { &self.id } }
 impl HasId for FemLoadCase { fn id(&self) -> &str { &self.id } }
 impl HasId for FemCombination { fn id(&self) -> &str { &self.id } }
 impl HasId for FemRegion { fn id(&self) -> &str { &self.id } }
-
-pub(crate) fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
-    items.iter().position(|item| item.id() == id)
-}
 
 fn apply_delta<T: HasId + Clone, P>(
     items: &[T],

@@ -1,10 +1,6 @@
 //! 🌡️ DIN 4108 app — document entities (constitutional: general).
 
-pub use crate::artifacts::din4108::schema::diff::Din4108Diff;
-pub use crate::artifacts::din4108::schema::mutations::Din4108Mutation;
-pub use crate::artifacts::din4108::schema::snapshot::Din4108Snapshot;
 
-use crate::document::ClimateZoneDe;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types

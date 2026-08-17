@@ -16,8 +16,8 @@ use infinite_canvas as canvas;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
-use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
+use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -205,7 +205,7 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
-fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
+fn graph_action(controller_id: &str, _surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
@@ -458,7 +458,7 @@ pub fn paint_node_graph(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
 
-fn note_widget_hit_at_screen(host: &flow::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+fn note_widget_hit_at_screen(host: &FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
     use flow::dag::DagNodeKind;
     let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
     let node = host.dag.fixture.nodes.iter().find(|node| matches!(node.kind, DagNodeKind::Note { .. }) && world_x >= node.x && world_x <= node.x + node.width && world_y >= node.y && world_y <= node.y + node.height)?;
@@ -877,7 +877,7 @@ fn label_chrome_from_graph(host: &GraphHost) -> LabelInteractionChrome {
 }
 
 fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w: f32, max_h: f32) -> f32 {
-    let mut px = target_px.max(4.0).round();
+    let px = target_px.max(4.0).round();
     let (w, h) = atlas.measure_text(text, px);
     if w <= max_w && h * 1.2 <= max_h {
         return px;
@@ -899,7 +899,7 @@ fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w:
 }
 
 fn clamp_port_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_w: f32, max_h: f32) -> f32 {
-    let mut px = target_px.max(8.0).round();
+    let px = target_px.max(8.0).round();
     let (w, _) = atlas.measure_text(text, px);
     if w <= max_w && px * 1.25 <= max_h {
         return px;
@@ -1805,7 +1805,7 @@ mod board2d_engine_tests {
 }
 
 //#region TextEditor
-pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Vec<ActionDescriptor> {
+pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modifiers: &PointerModifiers) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.surface_id) else {
@@ -1815,12 +1815,12 @@ pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: ui_wgpu::wgpu::K
             return Vec::new();
         };
         match key {
-            ui_wgpu::wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+            KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
                 host.insert_text(&ch.to_string());
             }
-            ui_wgpu::wgpu::KeyAction::Backspace => host.backspace(),
-            ui_wgpu::wgpu::KeyAction::Delete => host.delete_forward(),
-            ui_wgpu::wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+            KeyAction::Backspace => host.backspace(),
+            KeyAction::Delete => host.delete_forward(),
+            KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
                 host.select_all();
             }
             _ => return Vec::new(),

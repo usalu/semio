@@ -20,15 +20,15 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfNumberOfContactsInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
     unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 
-pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
+pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
     estimate(pair.adjacent, GltfUnit::Unitless, pair.sample_count, None)
 }
 
-pub fn from_assembly(part_count: usize, contacts: u64, sample_count: usize, topology: Topology) -> GltfMeasure<u64> {
+pub(crate) fn from_assembly(part_count: usize, contacts: u64, sample_count: usize, topology: Topology) -> GltfMeasure<u64> {
     if part_count <= 1 {
         exact(0, GltfUnit::Unitless, sample_count, Some(topology))
     } else {

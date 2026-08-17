@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.en1995")]
 pub struct En1995Snapshot {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub m_ed_knm: f64,
     #[state(artifact)]

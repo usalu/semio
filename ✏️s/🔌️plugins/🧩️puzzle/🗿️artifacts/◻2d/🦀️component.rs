@@ -9,9 +9,6 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, to `✏️editor/⚙️engine` under this artifact's own
 //! `✏️editor` surface).
 
-pub use crate::artifacts::puzzle2d::schema::diff::Puzzle2dDiff;
-pub use crate::artifacts::puzzle2d::schema::mutations::Puzzle2dMutation;
-pub use crate::artifacts::puzzle2d::schema::snapshot::Puzzle2dSnapshot;
 
 use serde::{Deserialize, Serialize};
 

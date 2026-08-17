@@ -34,7 +34,7 @@ pub struct En1997Snapshot {
     #[state(artifact)]
     pub design_approach: String,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub settlement_limit_mm: f64,
     #[state(artifact)]

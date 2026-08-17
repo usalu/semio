@@ -138,10 +138,10 @@ fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Va
 /// `crate::model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
 /// `crate::artifacts::fem2d::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
-pub fn fem2d_io() -> semio_framework_plugin::AppIo {
-    semio_framework_plugin::AppIo {
+pub fn fem2d_io() -> AppIo {
+    AppIo {
         document_schema: crate::artifacts::fem2d::FEM_2D_SCHEMA.into(),
-        document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![fem2d_geometry_in_port(), fem2d_results_out_port()],
         export_formats: vec![],
         import_formats: vec![],
@@ -156,7 +156,7 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         kind_id: None,
         required: true,
         multiplicity: semio_framework::PortMultiplicity::One,
@@ -170,7 +170,7 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
-        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         kind_id: Some("computation.fem2d".into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::One,

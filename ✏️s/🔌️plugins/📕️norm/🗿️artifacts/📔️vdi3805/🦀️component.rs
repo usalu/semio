@@ -1,10 +1,7 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
-pub use crate::artifacts::vdi3805::schema::diff::Vdi3805Diff;
-pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
 pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 use crate::document::{NormError, QuantityKind};
 use serde::{Deserialize, Serialize};
@@ -1316,55 +1313,55 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     LANGUAGES
         .get_or_init(|| {
             vec![
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "vdi3805.document",
                     extension: Some("vdi3805"),
-                    role: crate::dsl::LanguageRole::Document,
+                    role: dsl::LanguageRole::Document,
                     grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("vdi3805.document"),
+                    hooks: dsl::passthrough_hooks("vdi3805.document"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "vdi3805.op",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Ops,
+                    role: dsl::LanguageRole::Ops,
                     grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("vdi3805.op"),
+                    hooks: dsl::passthrough_hooks("vdi3805.op"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "vdi3805.diff",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Diff,
+                    role: dsl::LanguageRole::Diff,
                     grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
-                    hooks: crate::dsl::passthrough_hooks("vdi3805.diff"),
+                    hooks: dsl::passthrough_hooks("vdi3805.diff"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "vdi3805.pack",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Pack,
+                    role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("vdi3805.pack"),
+                    hooks: dsl::passthrough_hooks("vdi3805.pack"),
                 },
-                crate::dsl::LanguageSpec {
+                dsl::LanguageSpec {
                     id: "vdi3805.spr",
                     extension: None,
-                    role: crate::dsl::LanguageRole::Spr,
+                    role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
                     protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: crate::dsl::passthrough_hooks("vdi3805.spr"),
+                    hooks: dsl::passthrough_hooks("vdi3805.spr"),
                 },
             ]
         })

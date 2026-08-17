@@ -248,13 +248,13 @@ mod tests {
             composition: None,
             conflicts: Vec::new(),
         };
-        let ops_text = crate::os_spr::history::print_ops_text(&log).unwrap();
+        let ops_text = print_ops_text(&log).unwrap();
 
         let compiled = compile_ops(&ops_text, &EncodeOptions::default()).unwrap();
         let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).unwrap();
 
-        assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap(), crate::os_spr::history::parse_ops_text(&ops_text).unwrap());
-        assert_eq!(crate::os_spr::history::parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
+        assert_eq!(parse_ops_text(&decompiled).unwrap(), parse_ops_text(&ops_text).unwrap());
+        assert_eq!(parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
     }
 
     #[test]

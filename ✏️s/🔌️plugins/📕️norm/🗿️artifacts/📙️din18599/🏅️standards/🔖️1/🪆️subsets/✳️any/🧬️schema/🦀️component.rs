@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Artifact {
     #[state(artifact)]
-    pub use_class: crate::artifacts::din18599::UseClass,
+    pub use_class: UseClass,
     #[state(artifact)]
     pub heated_area_m2: f64,
     #[state(artifact)]
@@ -242,8 +242,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Din18599BuilderFacets {
-        construction: derived_construction::Din18599BuilderConstruction,
-        analysis: derived_analysis::Din18599AnalyzerAnalysis,
+        construction: Din18599BuilderConstruction,
+        analysis: Din18599AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Din18599ComposerComposition,
     }
     builder: Din18599Builder,
@@ -264,7 +264,7 @@ use crate::artifacts::din16798::standards::v1::subsets::any::schema::part_3::res
 use crate::artifacts::din18599::BalancingInputs;
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 use crate::artifacts::din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
+use crate::document::{AnnexChoice, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 
 // #region 🔖️Shared
 /// 🧱️ Transmission loss coefficient H_T [W/K].

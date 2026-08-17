@@ -234,8 +234,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec DrawBuilderFacets {
-        construction: derived_construction::DrawBuilderConstruction,
-        analysis: derived_analysis::DrawAnalyzerAnalysis,
+        construction: DrawBuilderConstruction,
+        analysis: DrawAnalyzerAnalysis,
         composition: super::super::io::derived_composition::DrawComposerComposition,
     }
     builder: DrawBuilder,

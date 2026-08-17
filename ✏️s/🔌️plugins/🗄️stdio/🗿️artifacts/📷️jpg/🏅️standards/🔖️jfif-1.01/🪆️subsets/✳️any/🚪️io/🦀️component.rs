@@ -4,7 +4,6 @@
 pub mod derived_composition {
     use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::JpgAnalyzer;
     use crate::artifacts::jpg::JpgSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
@@ -20,7 +19,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_BINARY]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
             // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
             // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
@@ -395,7 +394,7 @@ fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32, dc_ta
 }
 
 /// 🧱 Decodes one 8x8 block into zigzag-order quantized coefficients.
-fn decode_block(br: &mut BitReader, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
+fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
     let mut out = [0i32; 64];
     let sz = br.decode_symbol(dc_table)?;
     let bits = if sz > 0 { br.read_bits(sz)? } else { 0 };

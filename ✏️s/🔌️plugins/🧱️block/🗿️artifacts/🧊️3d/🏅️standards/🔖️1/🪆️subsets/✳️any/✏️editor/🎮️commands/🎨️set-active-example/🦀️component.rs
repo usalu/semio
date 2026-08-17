@@ -8,7 +8,7 @@ pub const BLOCK3D_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-lef
 //#region 🔖️ReplaceDocument
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
-fn replace_document_operations(current: &crate::artifacts::block3d::Block3dSnapshot, next: &crate::artifacts::block3d::Block3dSnapshot) -> Vec<crate::artifacts::block3d::op::Block3dMutation> {
+fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot) -> Vec<Block3dMutation> {
     use crate::artifacts::block3d::mutations as m;
     let mut ops = Vec::new();
 

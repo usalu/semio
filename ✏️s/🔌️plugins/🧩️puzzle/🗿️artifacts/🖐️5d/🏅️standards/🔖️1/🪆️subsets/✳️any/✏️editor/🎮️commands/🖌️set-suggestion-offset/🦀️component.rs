@@ -1,6 +1,6 @@
 //! 🖌️ `set-suggestion-offset` command.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use crate::editor::puzzle5d::PUZZLE5D_SUGGESTION_OFFSET_MAX;
 use crate::editor::puzzle5d::PUZZLE5D_SUGGESTION_OFFSET_MIN;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;

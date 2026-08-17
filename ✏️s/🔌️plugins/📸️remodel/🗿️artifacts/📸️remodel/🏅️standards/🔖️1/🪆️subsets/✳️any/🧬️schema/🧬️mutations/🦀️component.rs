@@ -6,7 +6,6 @@
 use crate::artifacts::remodel::diff::RemodelDiff;
 use crate::artifacts::remodel::RemodelSnapshot;
 use protocol::Mutation as _;
-use protocol::SemanticMutation as _;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations

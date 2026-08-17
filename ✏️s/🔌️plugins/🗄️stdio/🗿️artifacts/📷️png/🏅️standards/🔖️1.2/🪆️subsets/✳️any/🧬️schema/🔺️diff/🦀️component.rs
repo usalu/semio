@@ -1512,7 +1512,7 @@ pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader) -> Result<String, dsl::PackError> {
+pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     let bytes = r.read_bytes(len)?;
     String::from_utf8(bytes.to_vec()).map_err(|e| dsl::PackError::Malformed { what: "png binary utf8 string", offset: 0, detail: e.to_string() })
@@ -1521,7 +1521,7 @@ pub(crate) fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_varint_u64(bytes.len() as u64);
     w.write_bytes(bytes);
 }
-pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader) -> Result<Vec<u8>, dsl::PackError> {
+pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
     let len = r.read_varint_u64()? as usize;
     Ok(r.read_bytes(len)?.to_vec())
 }
@@ -1530,7 +1530,7 @@ pub(crate) fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &PngRgb) {
     w.write_u8(c.g);
     w.write_u8(c.b);
 }
-pub(crate) fn read_bin_rgb(r: &mut dsl::ByteReader) -> Result<PngRgb, dsl::PackError> {
+pub(crate) fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<PngRgb, dsl::PackError> {
     Ok(PngRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
 }
 pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparency) {
@@ -1551,7 +1551,7 @@ pub(crate) fn write_bin_transparency(w: &mut dsl::ByteWriter, t: &PngTransparenc
         }
     }
 }
-pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader) -> Result<PngTransparency, dsl::PackError> {
+pub(crate) fn read_bin_transparency(r: &mut dsl::ByteReader<'_>) -> Result<PngTransparency, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngTransparency::Indexed { alpha: read_bin_blob(r)? }),
         1 => Ok(PngTransparency::Grayscale { gray: r.read_u16_le()? }),
@@ -1569,7 +1569,7 @@ pub(crate) fn write_bin_chromaticities(w: &mut dsl::ByteWriter, c: &PngChromatic
         w.write_u32_le(v);
     }
 }
-pub(crate) fn read_bin_chromaticities(r: &mut dsl::ByteReader) -> Result<PngChromaticities, dsl::PackError> {
+pub(crate) fn read_bin_chromaticities(r: &mut dsl::ByteReader<'_>) -> Result<PngChromaticities, dsl::PackError> {
     Ok(PngChromaticities { white_x: r.read_u32_le()?, white_y: r.read_u32_le()?, red_x: r.read_u32_le()?, red_y: r.read_u32_le()?, green_x: r.read_u32_le()?, green_y: r.read_u32_le()?, blue_x: r.read_u32_le()?, blue_y: r.read_u32_le()? })
 }
 pub(crate) fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDims) {
@@ -1577,7 +1577,7 @@ pub(crate) fn write_bin_physical_dims(w: &mut dsl::ByteWriter, p: &PngPhysicalDi
     w.write_u32_le(p.ppu_y);
     w.write_u8(if p.unit_is_meter { 1 } else { 0 });
 }
-pub(crate) fn read_bin_physical_dims(r: &mut dsl::ByteReader) -> Result<PngPhysicalDims, dsl::PackError> {
+pub(crate) fn read_bin_physical_dims(r: &mut dsl::ByteReader<'_>) -> Result<PngPhysicalDims, dsl::PackError> {
     Ok(PngPhysicalDims { ppu_x: r.read_u32_le()?, ppu_y: r.read_u32_le()?, unit_is_meter: r.read_u8()? != 0 })
 }
 pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
@@ -1588,7 +1588,7 @@ pub(crate) fn write_bin_timestamp(w: &mut dsl::ByteWriter, t: &PngTimestamp) {
     w.write_u8(t.minute);
     w.write_u8(t.second);
 }
-pub(crate) fn read_bin_timestamp(r: &mut dsl::ByteReader) -> Result<PngTimestamp, dsl::PackError> {
+pub(crate) fn read_bin_timestamp(r: &mut dsl::ByteReader<'_>) -> Result<PngTimestamp, dsl::PackError> {
     Ok(PngTimestamp { year: r.read_u16_le()?, month: r.read_u8()?, day: r.read_u8()?, hour: r.read_u8()?, minute: r.read_u8()?, second: r.read_u8()? })
 }
 pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
@@ -1609,7 +1609,7 @@ pub(crate) fn write_bin_background(w: &mut dsl::ByteWriter, b: &PngBackground) {
         }
     }
 }
-pub(crate) fn read_bin_background(r: &mut dsl::ByteReader) -> Result<PngBackground, dsl::PackError> {
+pub(crate) fn read_bin_background(r: &mut dsl::ByteReader<'_>) -> Result<PngBackground, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngBackground::Grayscale { gray: r.read_u16_le()? }),
         1 => {
@@ -1645,14 +1645,14 @@ pub(crate) fn write_bin_text_chunk(w: &mut dsl::ByteWriter, c: &PngTextChunk) {
     write_bin_str(w, &c.language_tag);
     write_bin_str(w, &c.translated_keyword);
 }
-pub(crate) fn read_bin_text_chunk(r: &mut dsl::ByteReader) -> Result<PngTextChunk, dsl::PackError> {
+pub(crate) fn read_bin_text_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunk, dsl::PackError> {
     Ok(PngTextChunk { keyword: read_bin_str(r)?, value: read_bin_str(r)?, compressed: r.read_u8()? != 0, kind: dec_text_kind_u8(r.read_u8()?)?, language_tag: read_bin_str(r)?, translated_keyword: read_bin_str(r)? })
 }
 pub(crate) fn write_bin_chunk(w: &mut dsl::ByteWriter, c: &PngChunk) {
     w.write_bytes(&c.kind);
     write_bin_blob(w, &c.data);
 }
-pub(crate) fn read_bin_chunk(r: &mut dsl::ByteReader) -> Result<PngChunk, dsl::PackError> {
+pub(crate) fn read_bin_chunk(r: &mut dsl::ByteReader<'_>) -> Result<PngChunk, dsl::PackError> {
     let kind_bytes = r.read_bytes(4)?;
     let kind: [u8; 4] = kind_bytes.try_into().map_err(|_| dsl::PackError::Malformed { what: "png chunk kind", offset: 0, detail: "expected 4 bytes".into() })?;
     Ok(PngChunk { kind, data: read_bin_blob(r)? })
@@ -1680,7 +1680,7 @@ pub(crate) fn write_bin_chunk_marker(w: &mut dsl::ByteWriter, m: &PngChunkMarker
         }
     }
 }
-pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader) -> Result<PngChunkMarker, dsl::PackError> {
+pub(crate) fn read_bin_chunk_marker(r: &mut dsl::ByteReader<'_>) -> Result<PngChunkMarker, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(PngChunkMarker::Ihdr),
         1 => Ok(PngChunkMarker::Plte),
@@ -1708,7 +1708,7 @@ pub(crate) fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_
         }
     }
 }
-pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
+pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
@@ -1721,7 +1721,7 @@ pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item:
         write_item(w, item);
     }
 }
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader, mut read_item: impl FnMut(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
+pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -1752,7 +1752,7 @@ pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     write_bin_vec(w, &s.chunk_order, write_bin_chunk_marker);
     write_bin_vec(w, &s.unknown_chunks, write_bin_chunk);
 }
-pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader) -> Result<PngSnapshot, dsl::PackError> {
+pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapshot, dsl::PackError> {
     Ok(PngSnapshot {
         schema: read_bin_str(r)?,
         width: r.read_u32_le()?,
@@ -1818,7 +1818,7 @@ fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
     write_bin_option(w, &d.language_tag, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.translated_keyword, |w, v: &String| write_bin_str(w, v));
 }
-fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader) -> Result<PngTextChunkDiff, dsl::PackError> {
+fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkDiff, dsl::PackError> {
     Ok(PngTextChunkDiff {
         keyword: read_bin_option(r, read_bin_str)?,
         value: read_bin_option(r, read_bin_str)?,
@@ -1926,7 +1926,7 @@ fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_v
         }
     }
 }
-fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader, read_value: impl FnOnce(&mut dsl::ByteReader) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
+fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
     match r.read_u8()? {
         0 => Ok(None),
         1 => Ok(Some(None)),

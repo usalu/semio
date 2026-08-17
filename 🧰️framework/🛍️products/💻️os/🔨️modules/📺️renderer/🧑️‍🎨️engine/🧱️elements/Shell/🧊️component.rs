@@ -7,17 +7,17 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 use crate::dock::{
-    compute_dock_drop_zone, dock_from_window_layout, dock_tab_content_width, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
+    compute_dock_drop_zone, dock_tab_content_width, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
     WindowSilhouette,
 };
 use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
@@ -37,14 +37,13 @@ use semio_framework_os_kernel::os_directory::{
     identity::{actor_id, mint_or_restore, Identity, IdentityEnv, IdentityOutcome, IdentityStatus},
     DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
 };
-use ui_wgpu::wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps,
 };
 use ui_wgpu::wgpu::{
     ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
-    WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -243,7 +242,7 @@ fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&s
 /// sugar (contract §C1 has no directory-schema command kind of its own for it). `None` for an
 /// unrecognized verb, defensive against a foreign/future caller.
 #[cfg(not(target_arch = "wasm32"))]
-fn directory_command_from_action(action_id: &str, args: Option<&serde_json::Value>) -> Option<DirectoryCommand> {
+fn directory_command_from_action(action_id: &str, args: Option<&Value>) -> Option<DirectoryCommand> {
     let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or("").to_string();
     let str_field_or = |key: &str, default: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or(default).to_string();
     let space_kind = |raw: &str| match raw {
@@ -279,7 +278,7 @@ fn fold_directory_events_action(controller_id: &str, events: &[DirectoryEvent]) 
     if events.is_empty() {
         return None;
     }
-    let events_json: Vec<serde_json::Value> = events.iter().filter_map(|event| serde_json::to_value(event).ok()).collect();
+    let events_json: Vec<Value> = events.iter().filter_map(|event| serde_json::to_value(event).ok()).collect();
     let args = optional_json_as_dsl_value(Some(serde_json::json!({ "events": events_json })));
     Some(ActionDescriptor { controller_id: controller_id.to_string(), action: "foldDirectoryEvents".to_string(), args })
 }
@@ -295,7 +294,7 @@ struct OpenArtifactRelayTarget {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn open_artifact_relay_target(args: Option<&serde_json::Value>) -> Option<OpenArtifactRelayTarget> {
+fn open_artifact_relay_target(args: Option<&Value>) -> Option<OpenArtifactRelayTarget> {
     let document_id = args.and_then(|value| value.get("documentId")).and_then(|value| value.as_str())?.to_string();
     let space_id = args.and_then(|value| value.get("spaceId")).and_then(|value| value.as_str()).map(str::to_string);
     Some(OpenArtifactRelayTarget { document_id, space_id })
@@ -979,7 +978,7 @@ pub struct ShellState {
     pub action_panel_expanded: HashMap<String, String>,
     /// @emoji 📝️ Staged action argument values keyed `"{window_id}:{action_id}"` — edits buffer here
     /// and never dispatch until Execute (Architecture Decision 8, P2).
-    pub staged_action_args: HashMap<String, serde_json::Map<String, serde_json::Value>>,
+    pub staged_action_args: HashMap<String, serde_json::Map<String, Value>>,
     pub sync_backbone_uri: Option<String>,
     pub sync_card_kind: Option<String>,
     pub sync_card_draft: String,
@@ -1488,7 +1487,7 @@ impl ShellState {
                 window_id: None,
                 window_instances: Vec::new(),
                 active_tool_id: None,
-                active_utility_by_window_id: std::collections::HashMap::new(),
+                active_utility_by_window_id: HashMap::new(),
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession { plugin_id: semio_s_plugin_space.plugin_id.clone(), instance_id, app: s_app, view_state });
@@ -1511,7 +1510,7 @@ impl ShellState {
                     window_id: None,
                     window_instances: Vec::new(),
                     active_tool_id: None,
-                    active_utility_by_window_id: std::collections::HashMap::new(),
+                    active_utility_by_window_id: HashMap::new(),
                 },
             });
         }
@@ -1682,7 +1681,7 @@ impl ShellState {
                                 window_id: None,
                                 window_instances: Vec::new(),
                                 active_tool_id: None,
-                                active_utility_by_window_id: std::collections::HashMap::new(),
+                                active_utility_by_window_id: HashMap::new(),
                             };
                             self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &body_key, &view_state).await?);
                         }
@@ -2513,7 +2512,7 @@ impl ShellState {
             return;
         }
         self.checkpoint_dispatched = true;
-        let authors: Vec<serde_json::Value> = self.identity.as_ref().map(|identity| vec![serde_json::json!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
+        let authors: Vec<Value> = self.identity.as_ref().map(|identity| vec![serde_json::json!({ "id": identity.user_id, "name": identity.display_name })]).unwrap_or_default();
         let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": message, "authors": authors }) };
         // 🧱️ `Box::pin` breaks a real call-graph cycle (`dispatch_action` → `handle_sync_action` →
         // `attach_sync_backbone` → `checkpoint_before_detach` → here → `dispatch_action` again) that
@@ -2560,7 +2559,7 @@ impl ShellState {
     async fn touch_space_index_artifact(&mut self, space_id: &str, artifact_id: &str) {
         let now_ms = chrome_now_ms();
         let actor = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| self.shell_session_id.clone());
-        let arguments: BTreeMap<String, serde_json::Value> = BTreeMap::from([("id".to_string(), serde_json::json!(artifact_id)), ("nowMs".to_string(), serde_json::json!(now_ms)), ("actor".to_string(), serde_json::json!(actor))]);
+        let arguments: BTreeMap<String, Value> = BTreeMap::from([("id".to_string(), serde_json::json!(artifact_id)), ("nowMs".to_string(), serde_json::json!(now_ms)), ("actor".to_string(), serde_json::json!(actor))]);
         // 🐚️ Reuse the live session outright when it's already this exact space's own index document.
         // Calls `program.handle_command` DIRECTLY rather than `self.dispatch_command` (which would
         // recurse back into `observe_invocation_history` → `touch_space_index_artifact` — `rustc`
@@ -3097,7 +3096,7 @@ impl ShellState {
     /// as the React shell's own documented gap until lane 3-B's opening relay carries a real
     /// `schema` field; the `s.space` mapping is the one this lane knows, mirroring `📓️w2-c-report.md`).
     #[cfg(not(target_arch = "wasm32"))]
-    async fn handle_open_artifact_relay(&mut self, args: Option<&serde_json::Value>) {
+    async fn handle_open_artifact_relay(&mut self, args: Option<&Value>) {
         let Some(target) = open_artifact_relay_target(args) else {
             return;
         };
@@ -3304,7 +3303,7 @@ impl ShellState {
             let batch = std::mem::take(&mut pending);
             let mut follow_up_operations: Vec<String> = Vec::new();
             for operation_json in batch {
-                let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+                let operation: Value = serde_json::from_str(&operation_json).unwrap_or(Value::Null);
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
                     // 🔗️ Document sync now flows through the `framework/sync` `ArtifactHost` actor + the
                     // program store's `ChannelBackbone` (see `attach_sync_backbone`), not a CRUD envelope
@@ -3338,10 +3337,10 @@ impl ShellState {
                             let opened = request_file_open(accept, read_as, multiple);
                             let total = opened.len();
                             for (index, contents) in opened.into_iter().enumerate() {
-                                let payload = serde_json::from_str::<serde_json::Value>(&contents).unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
+                                let payload = serde_json::from_str::<Value>(&contents).unwrap_or_else(|_| Value::String(contents.clone()));
                                 let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
                                 if let Some(obj) = args.as_object_mut() {
-                                    obj.insert("json".into(), serde_json::Value::String(contents));
+                                    obj.insert("json".into(), Value::String(contents));
                                     obj.insert("payload".into(), payload);
                                     if multiple {
                                         obj.insert("index".into(), serde_json::json!(index));
@@ -3476,7 +3475,7 @@ impl ShellState {
             window_id: None,
             window_instances: Vec::new(),
             active_tool_id: None,
-            active_utility_by_window_id: std::collections::HashMap::new(),
+            active_utility_by_window_id: HashMap::new(),
         });
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         if app_id == cfg.landing_app_id {
@@ -3510,7 +3509,7 @@ impl ShellState {
             window_id: None,
             window_instances: Vec::new(),
             active_tool_id: None,
-            active_utility_by_window_id: std::collections::HashMap::new(),
+            active_utility_by_window_id: HashMap::new(),
         };
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
@@ -3620,8 +3619,8 @@ thread_local! {
     /// `pub fn window_has_focus(window_id: &str) -> bool` reading `UI_ENGINE` directly (mirrors
     /// `ui_wgpu::wgpu::engine::Ui::window_has_focus`, added this same pass) — flagged as a wiring request
     /// for whoever next owns that region, not worked around by touching it.
-    static CONTENT_FOCUS: std::cell::RefCell<std::collections::HashMap<String, bool>> =
-        std::cell::RefCell::new(std::collections::HashMap::new());
+    static CONTENT_FOCUS: std::cell::RefCell<HashMap<String, bool>> =
+        std::cell::RefCell::new(HashMap::new());
 }
 
 /// 🎯️ Best-effort content-focus lookup — see `CONTENT_FOCUS`'s own doc comment for the documented
@@ -3648,7 +3647,7 @@ fn note_content_focus_commands(commands: &[ui_wgpu::wgpu::UiCommand]) {
 /// inserted as text); a plain `Char` routes as `TextInput`. `Space` has no coherent press/release
 /// `UiEvent` (content has no pan-mode concept) and is already fully handled earlier in
 /// `AppRuntime::handle_key`, so it never reaches here.
-fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Option<ui_wgpu::wgpu::UiEvent> {
+fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ui_wgpu::wgpu::UiEvent> {
     let event_modifiers = ui_wgpu::wgpu::EventModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta };
     match action {
         ui_wgpu::wgpu::KeyAction::Char(ch) => {
@@ -4200,14 +4199,14 @@ impl ShellState {
                 let parts: Vec<&str> = id.trim_start_matches("shell.action.argtoggle::").split("::").collect();
                 if let [window_id, action_id, arg_id] = parts.as_slice() {
                     let current = self.staged_map_for(window_id, action_id).get(*arg_id).and_then(|value| value.as_bool()).or_else(|| self.arg_default(window_id, action_id, arg_id).and_then(|value| value.as_bool())).unwrap_or(false);
-                    self.stage_arg(window_id, action_id, arg_id, serde_json::Value::Bool(!current));
+                    self.stage_arg(window_id, action_id, arg_id, Value::Bool(!current));
                 }
                 return Ok(true);
             }
             id if id.starts_with("shell.action.argselect::") => {
                 let parts: Vec<&str> = id.trim_start_matches("shell.action.argselect::").split("::").collect();
                 if let [window_id, action_id, arg_id, value] = parts.as_slice() {
-                    self.stage_arg(window_id, action_id, arg_id, serde_json::Value::String((*value).to_string()));
+                    self.stage_arg(window_id, action_id, arg_id, Value::String((*value).to_string()));
                 }
                 return Ok(true);
             }
@@ -4608,15 +4607,15 @@ impl ShellState {
         let is_de = self.locale_id == "de";
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
-            let shortcut_by_action: std::collections::HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
+            let shortcut_by_action: HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
             // 🖱️ `viewState` deliberately omitted — `ui_wgpu::wgpu::ContextMenuRequest` never carries it (see
             // that type's own doc comment); `selection`/`text` are the typed slices plugins actually need.
             // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the opaque per-app
             // `ViewModel.selectionJson` this used to read is deleted — the framework now owns selection
             // via `InteractionState`/`PresenceInteraction`, not yet threaded into this request. Empty
             // until a follow-up wires the active domain's `DomainSelection` through here.
-            let selection: Vec<serde_json::Value> = Vec::new();
-            let text: Option<serde_json::Value> = None;
+            let selection: Vec<Value> = Vec::new();
+            let text: Option<Value> = None;
             let request = serde_json::json!({
                 "menu": { "id": kind.clone() },
                 "surface": {
@@ -4953,7 +4952,7 @@ impl ShellState {
         Ok(())
     }
 
-    pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) {
+    pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
         if action == ui_wgpu::wgpu::KeyAction::Escape {
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
                 self.restore_dock_drag_snapshot();
@@ -5197,7 +5196,7 @@ impl ShellState {
         }
     }
 
-    pub async fn handle_keyboard_async(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    pub async fn handle_keyboard_async(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
         if self.context_menu.is_some() {
             match self.context_menu_handle_key(action.clone()) {
                 ContextMenuKeyOutcome::Ignored => {}
@@ -5298,7 +5297,7 @@ impl ShellState {
     }
 
     /// ⌨️ The app keybinding matching the current key event, if any.
-    fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> Option<ActionDescriptor> {
+    fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ActionDescriptor> {
         let session = self.session.as_ref()?;
         session.app.keybindings.iter().find(|binding| key_event_matches_chord(action, modifiers, &binding.keys)).map(|binding| binding.action.clone())
     }
@@ -6032,7 +6031,7 @@ where
 /// {@link semio_framework::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
 /// order, plus any app utility referenced by no window kind (an "orphan" appearing on every window — the
 /// scoping fallback that prevents blank utility bars mid-migration, Architecture Decision 8).
-pub(crate) fn resolve_window_utilities<'a>(app: &'a semio_framework::AppDefinition, window_kind: &semio_framework::WindowKindDefinition) -> Vec<&'a semio_framework::UtilityDefinition> {
+pub(crate) fn resolve_window_utilities<'a>(app: &'a AppDefinition, window_kind: &semio_framework::WindowKindDefinition) -> Vec<&'a semio_framework::UtilityDefinition> {
     use std::collections::HashSet;
     let referenced: HashSet<&str> = app.window_kinds.iter().flat_map(|window| window.utilities.iter().map(|utility_ref| utility_ref.as_str())).collect();
     let mut resolved: Vec<&'a semio_framework::UtilityDefinition> = Vec::new();
@@ -6054,13 +6053,13 @@ pub(crate) fn resolve_window_utilities<'a>(app: &'a semio_framework::AppDefiniti
 
 /// 📇️ The first window kind whose resolved actions include `action_id` — the window the palette/keybinding
 /// redirect focuses to open an arg-carrying action's form (Architecture Decision 8, P3/P4).
-pub(crate) fn action_host_window_id(app: &semio_framework::AppDefinition, action_id: &str) -> Option<String> {
+pub(crate) fn action_host_window_id(app: &AppDefinition, action_id: &str) -> Option<String> {
     app.window_kinds.iter().find(|kind| semio_framework::resolve_window_actions(app, kind).iter().any(|action| action.id == action_id)).map(|kind| kind.id.clone())
 }
 
 /// 🪟️ Resolves an action only from its addressed window kind owner.
 pub(crate) fn window_action_definition<'a>(
-    app: &'a semio_framework::AppDefinition,
+    app: &'a AppDefinition,
     window_kind_id: &str,
     action_id: &str,
 ) -> Option<&'a semio_framework::ActionDefinition> {
@@ -6144,7 +6143,7 @@ fn format_keybinding_shortcut(keys: &str) -> String {
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
 /// over app-declared keybindings (P4 — "reserved shell chords still win").
-pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> bool {
+pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
     if matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta) {
         return true;
     }
@@ -6192,7 +6191,7 @@ fn command_host_platform() -> semio_framework::manifest::Platform {
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
-pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, chord: &str) -> bool {
+pub(crate) fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
     let mut want_shift = false;
     let mut want_alt = false;
@@ -6305,7 +6304,7 @@ impl ShellState {
 
     /// 🚦️ Whether window-scoped actions stay enabled: `true` when no utility is active or the active utility
     /// declares `allows_actions_while_active` (P5 — replaces the old `UTILITY_ID_PREFIXES` whitelist).
-    pub(crate) fn actions_enabled_for_window(&self, app: &semio_framework::AppDefinition, window_kind_id: &str) -> bool {
+    pub(crate) fn actions_enabled_for_window(&self, app: &AppDefinition, window_kind_id: &str) -> bool {
         match self.active_utility_for_window(window_kind_id) {
             None => true,
             Some(utility_id) => app.utilities.iter().find(|utility| utility.id == utility_id).map(|utility| utility.allows_actions_while_active).unwrap_or(true),
@@ -6318,11 +6317,11 @@ impl ShellState {
         format!("{window_id}:{action_id}")
     }
 
-    pub(crate) fn stage_arg(&mut self, window_id: &str, action_id: &str, arg_id: &str, value: serde_json::Value) {
+    pub(crate) fn stage_arg(&mut self, window_id: &str, action_id: &str, arg_id: &str, value: Value) {
         self.staged_action_args.entry(Self::staged_key(window_id, action_id)).or_default().insert(arg_id.to_string(), value);
     }
 
-    pub(crate) fn staged_map_for(&self, window_id: &str, action_id: &str) -> serde_json::Map<String, serde_json::Value> {
+    pub(crate) fn staged_map_for(&self, window_id: &str, action_id: &str) -> serde_json::Map<String, Value> {
         self.staged_action_args.get(&Self::staged_key(window_id, action_id)).cloned().unwrap_or_default()
     }
 
@@ -6348,7 +6347,7 @@ impl ShellState {
         let (window_id, action_id, arg_id) = (window_id.to_string(), action_id.to_string(), arg_id.to_string());
         if is_vec3 {
             let axis: usize = parts.get(3).and_then(|token| token.parse().ok()).unwrap_or(0);
-            let mut current: Vec<serde_json::Value> = self
+            let mut current: Vec<Value> = self
                 .staged_map_for(&window_id, &action_id)
                 .get(&arg_id)
                 .and_then(|value| value.as_array().cloned())
@@ -6360,7 +6359,7 @@ impl ShellState {
             if axis < 3 {
                 current[axis] = serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0));
             }
-            self.stage_arg(&window_id, &action_id, &arg_id, serde_json::Value::Array(current));
+            self.stage_arg(&window_id, &action_id, &arg_id, Value::Array(current));
             return true;
         }
         let control = self.session.as_ref().and_then(|session| window_action_definition(&session.app, &window_id, &action_id)).and_then(|action| action.args.iter().find(|arg| arg.id == arg_id)).map(|arg| arg.control.clone());
@@ -6368,7 +6367,7 @@ impl ShellState {
             Some(ActionArgControl::Number { .. }) | Some(ActionArgControl::Slider { .. }) => {
                 serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0))
             }
-            _ => serde_json::Value::String(buffer.to_string()),
+            _ => Value::String(buffer.to_string()),
         };
         self.stage_arg(&window_id, &action_id, &arg_id, value);
         true
@@ -6396,9 +6395,9 @@ impl ShellState {
             return Some(fmt_num(number));
         }
         Some(match effective {
-            Some(serde_json::Value::String(text)) => text,
-            Some(serde_json::Value::Number(num)) => num.to_string(),
-            Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+            Some(Value::String(text)) => text,
+            Some(Value::Number(num)) => num.to_string(),
+            Some(Value::Bool(flag)) => flag.to_string(),
             Some(other) => other.to_string(),
             None => String::new(),
         })
@@ -6407,11 +6406,11 @@ impl ShellState {
     /// 🧮️ Validated effective args for execution: `None` when a required arg is still unset — the P2
     /// gate that keeps arg-carrying actions from firing partially (delegates to the core-side pure
     /// {@link semio_framework::missing_required_args}).
-    pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, serde_json::Value>) -> Option<serde_json::Map<String, serde_json::Value>> {
-        let staged_dsl = semio_framework::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
+    pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
+        let staged_dsl = semio_framework::to_dsl_value(&Value::Object(staged.clone())).ok()?;
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
         if semio_framework::missing_required_args(defs, &effective).is_empty() {
-            semio_framework::from_dsl_value::<serde_json::Value>(effective).ok().and_then(|value| value.as_object().cloned())
+            semio_framework::from_dsl_value::<Value>(effective).ok().and_then(|value| value.as_object().cloned())
         } else {
             None
         }
@@ -6434,7 +6433,7 @@ impl ShellState {
         let Some(effective) = Self::resolved_execute_args(&action.args, &staged) else {
             return Ok(());
         };
-        let args = semio_framework::optional_json_to_dsl(if effective.is_empty() { None } else { Some(serde_json::Value::Object(effective)) });
+        let args = semio_framework::optional_json_to_dsl(if effective.is_empty() { None } else { Some(Value::Object(effective)) });
         self.dispatch_action(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id.to_string(), args }).await
     }
     // #endregion
@@ -6556,7 +6555,7 @@ impl ShellState {
                         let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
                         let invocation = semio_framework::manifest::CommandInvocation {
                             address: address.clone(),
-                            arguments: BTreeMap::from([(arg.id.clone(), serde_json::Value::String(option.value.clone()))]),
+                            arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]),
                         };
                         items.push(SearchPaletteItem {
                             id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
@@ -6658,7 +6657,7 @@ impl ShellState {
     /// ever sees it — see the plugin crate's universal command-recording mechanism). `detail` is the
     /// caller-supplied JSON payload (e.g. `{"value": ...}`/`{"windowId": ...}`), left out of `args`
     /// entirely when `None` rather than serialized as `null`.
-    fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<serde_json::Value>) -> ActionDescriptor {
+    fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<Value>) -> ActionDescriptor {
         let mut args = serde_json::json!({ "commandId": command_id, "label": label });
         if let Some(detail) = detail {
             args["detail"] = detail;
@@ -6688,7 +6687,7 @@ impl ShellState {
     /// any control id `shell_command_for_control` doesn't recognize, and without an active session
     /// (nothing to log a shell command against). Not itself inside `dispatch_action`, so a plain
     /// `.await` (no `Box::pin`) suffices here.
-    async fn note_control_command(&mut self, control_id: &str, detail: Option<serde_json::Value>) -> Result<(), String> {
+    async fn note_control_command(&mut self, control_id: &str, detail: Option<Value>) -> Result<(), String> {
         let Some((command_id, label)) = Self::shell_command_for_control(control_id, self.locale_id == "de") else {
             return Ok(());
         };
@@ -6841,7 +6840,7 @@ pub(crate) fn resolve_commands(
     os_commands: Vec<semio_framework::CommandDefinition>,
     plugin_manifest: Option<&semio_framework::PluginManifest>,
     plugin_id: &str,
-    app: &semio_framework::AppDefinition,
+    app: &AppDefinition,
     active_mode_id: &str,
 ) -> Vec<ResolvedCommand> {
     let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
@@ -7726,7 +7725,7 @@ pub enum TutorialPendingDocOp {
     /// the only "history action" mechanism reachable from here without inventing a second one.
     HistoryAction {
         action_id: String,
-        args: Option<serde_json::Value>,
+        args: Option<Value>,
     },
 }
 
@@ -10201,7 +10200,7 @@ impl ShellState {
         }
     }
 
-    fn window_engagement_chrome_visible(engagement: &ui_wgpu::wgpu::WindowEngagement, window_id: &str, engagement_inputs: &HashMap<String, String>, activated: bool) -> bool {
+    fn window_engagement_chrome_visible(engagement: &WindowEngagement, window_id: &str, engagement_inputs: &HashMap<String, String>, activated: bool) -> bool {
         if engagement.session_active.unwrap_or(false) {
             return true;
         }
@@ -10353,7 +10352,7 @@ impl ShellState {
         gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> f32 {
         use ui_wgpu::wgpu::component::layout::MeasureSelectItem;
-        use ui_wgpu::wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+        use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
         let mut y = bounds.y;
         match measure {
@@ -10646,7 +10645,7 @@ impl ShellState {
         theme: &Theme,
         content: &Rect,
         window_id: &str,
-        app: &semio_framework::AppDefinition,
+        app: &AppDefinition,
         kind: &semio_framework::WindowKindDefinition,
     ) -> Option<(Rect, String)> {
         let actions: Vec<semio_framework::ActionDefinition> = semio_framework::resolve_window_actions(app, kind).into_iter().cloned().collect();
@@ -10736,11 +10735,11 @@ impl ShellState {
     }
 
     /// 📝️ The effective value of one arg (staged if present, else the declared default).
-    fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<serde_json::Value> {
+    fn effective_arg_value(&self, window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef) -> Option<Value> {
         self.staged_action_args.get(&Self::staged_key(window_id, action_id)).and_then(|map| map.get(&arg.id).cloned()).or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 
-    fn arg_default(&self, window_kind_id: &str, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
+    fn arg_default(&self, window_kind_id: &str, action_id: &str, arg_id: &str) -> Option<Value> {
         window_action_definition(&self.session.as_ref()?.app, window_kind_id, action_id)?.args.iter().find(|arg| arg.id == arg_id)?.default.as_ref().map(dsl_value_as_json)
     }
 
@@ -10867,9 +10866,9 @@ impl ShellState {
             }
         }
         match self.effective_arg_value(window_id, action_id, arg) {
-            Some(serde_json::Value::String(text)) => text,
-            Some(serde_json::Value::Number(num)) => num.to_string(),
-            Some(serde_json::Value::Bool(flag)) => flag.to_string(),
+            Some(Value::String(text)) => text,
+            Some(Value::Number(num)) => num.to_string(),
+            Some(Value::Bool(flag)) => flag.to_string(),
             Some(other) => other.to_string(),
             None => String::new(),
         }
@@ -11172,7 +11171,7 @@ thread_local! {
     static PREFS_STORE: std::cell::RefCell<FilePrefsStore> = std::cell::RefCell::new(FilePrefsStore::new());
 }
 
-fn empty_os_shell_config() -> serde_json::Value {
+fn empty_os_shell_config() -> Value {
     serde_json::json!({
         "version": 1,
         "preferences": {},
@@ -11185,15 +11184,15 @@ fn empty_os_shell_config() -> serde_json::Value {
 
 fn prefs_get_from(store: &impl PrefsStore, key: &str) -> Option<String> {
     let raw = store.get(OS_SHELL_CONFIG_STORAGE_KEY)?;
-    serde_json::from_str::<serde_json::Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
+    serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
 }
 
 fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
-    let mut config = store.get(OS_SHELL_CONFIG_STORAGE_KEY).and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok()).filter(|config| config.get("version").and_then(serde_json::Value::as_u64) == Some(1)).unwrap_or_else(empty_os_shell_config);
-    if !config.get("preferences").is_some_and(serde_json::Value::is_object) {
+    let mut config = store.get(OS_SHELL_CONFIG_STORAGE_KEY).and_then(|raw| serde_json::from_str::<Value>(&raw).ok()).filter(|config| config.get("version").and_then(Value::as_u64) == Some(1)).unwrap_or_else(empty_os_shell_config);
+    if !config.get("preferences").is_some_and(Value::is_object) {
         config["preferences"] = serde_json::json!({});
     }
-    config["preferences"][key] = serde_json::Value::String(value.to_string());
+    config["preferences"][key] = Value::String(value.to_string());
     if let Ok(raw) = serde_json::to_string(&config) {
         store.set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
     }
@@ -11283,7 +11282,7 @@ fn load_chrome_prefs() -> ChromePrefsState {
     let ui_layout = if prefs_get(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") { "tablet".to_string() } else { "desktop".to_string() };
     let theme_id = prefs_get(UI_CHROME_THEME_ID_STORAGE_KEY).unwrap_or_else(|| "semio".to_string());
     let custom_themes =
-        prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, serde_json::Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
+        prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
     let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
     ChromePrefsState { ui_layout, theme_id, custom_themes, draft_theme: None, worker_count }
 }
@@ -11624,7 +11623,7 @@ thread_local! {
 
 fn persist_custom_themes() {
     let themes = with_chrome_prefs(|prefs| prefs.custom_themes.clone());
-    let as_values: HashMap<String, serde_json::Value> = themes.into_iter().map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null))).collect();
+    let as_values: HashMap<String, Value> = themes.into_iter().map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(Value::Null))).collect();
     if let Ok(json) = serde_json::to_string(&as_values) {
         prefs_set(UI_CUSTOM_THEMES_STORAGE_KEY, &json);
     }
@@ -12482,12 +12481,12 @@ fn decode_data_url(data_url: &str) -> Option<Vec<u8>> {
 /// 📦️ Builds the single `fallback_action` `ActionDescriptor` — raw `bytes` re-encoded as a data URL
 /// merged into `base_args`, same shape on every failure path (`ffmpeg` missing, spawn/scratch-dir I/O
 /// failure, no source bytes at all) so the plugin's fallback handler only needs to handle one shape.
-fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &serde_json::Value) -> ActionDescriptor {
+fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes: &[u8], name: &str, base_args: &Value) -> ActionDescriptor {
     use base64::Engine;
     let mut args = base_args.clone();
     if let Some(obj) = args.as_object_mut() {
-        obj.insert("payload".into(), serde_json::Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))));
-        obj.insert("name".into(), serde_json::Value::String(name.to_string()));
+        obj.insert("payload".into(), Value::String(format!("data:application/octet-stream;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes))));
+        obj.insert("name".into(), Value::String(name.to_string()));
     }
     ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -12541,7 +12540,7 @@ fn request_media_frames(
     max_long_edge_px: u32,
     fps_hint: f64,
     payload: Option<&str>,
-    args: Option<serde_json::Value>,
+    args: Option<Value>,
 ) -> Vec<ActionDescriptor> {
     use base64::Engine;
     let base_args = args.unwrap_or_else(|| serde_json::json!({}));
@@ -12595,8 +12594,8 @@ fn request_media_frames(
         };
         let mut frame_args = base_args.clone();
         if let Some(obj) = frame_args.as_object_mut() {
-            obj.insert("payload".into(), serde_json::Value::String(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(&jpeg_bytes))));
-            obj.insert("name".into(), serde_json::Value::String(name.clone()));
+            obj.insert("payload".into(), Value::String(format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD.encode(&jpeg_bytes))));
+            obj.insert("name".into(), Value::String(name.clone()));
             obj.insert("frameIndex".into(), serde_json::json!(index));
             obj.insert("timestampMs".into(), serde_json::json!(approx_sampled_timestamp_ms(index as u32, sample_stride, fps_hint)));
             obj.insert("index".into(), serde_json::json!(index));
@@ -12606,7 +12605,7 @@ fn request_media_frames(
     }
     let mut done_args = base_args;
     if let Some(obj) = done_args.as_object_mut() {
-        obj.insert("name".into(), serde_json::Value::String(name));
+        obj.insert("name".into(), Value::String(name));
         obj.insert("frameCount".into(), serde_json::json!(total));
         obj.insert("sampledCount".into(), serde_json::json!(total));
     }

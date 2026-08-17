@@ -1,6 +1,6 @@
 //! 🖌️ `register-brush-mesh` command.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 
 /// 🧊️ Real GLB geometry the browser round-tripped for one mesh url — installed into the collision

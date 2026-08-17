@@ -2,7 +2,7 @@
 
 use crate::artifacts::en1996::En1996Snapshot;
 use crate::artifacts::en1996::MasonryClass;
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -31,9 +31,9 @@ pub struct En1996Artifact {
     #[state(artifact)]
     pub f_vk_mpa: f64,
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
-    pub masonry_class: crate::artifacts::en1996::MasonryClass,
+    pub masonry_class: MasonryClass,
     #[state(artifact)]
     pub design_situation: crate::document::DesignSituation,
     #[state(artifact)]
@@ -69,14 +69,14 @@ impl Default for En1996Artifact {
 }
 
 impl From<En1996Snapshot> for En1996Artifact {
-    fn from(snapshot: crate::artifacts::en1996::En1996Snapshot) -> Self {
+    fn from(snapshot: En1996Snapshot) -> Self {
         Self::from_snapshot(snapshot)
     }
 }
 
 impl En1996Artifact {
-    pub fn to_snapshot(&self) -> crate::artifacts::en1996::En1996Snapshot {
-        crate::artifacts::en1996::En1996Snapshot {
+    pub fn to_snapshot(&self) -> En1996Snapshot {
+        En1996Snapshot {
             m_ed_knm: self.m_ed_knm.clone(),
             n_ed_kn: self.n_ed_kn.clone(),
             v_ed_kn: self.v_ed_kn.clone(),
@@ -102,7 +102,7 @@ impl En1996Artifact {
         }
     }
 
-    pub fn from_snapshot(snapshot: crate::artifacts::en1996::En1996Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1996Snapshot) -> Self {
         Self {
             m_ed_knm: snapshot.m_ed_knm,
             n_ed_kn: snapshot.n_ed_kn,
@@ -130,7 +130,7 @@ impl En1996Artifact {
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1996::En1996Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: En1996Snapshot) {
         self.m_ed_knm = snapshot.m_ed_knm;
         self.n_ed_kn = snapshot.n_ed_kn;
         self.v_ed_kn = snapshot.v_ed_kn;
@@ -303,8 +303,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec En1996BuilderFacets {
-        construction: derived_construction::En1996BuilderConstruction,
-        analysis: derived_analysis::En1996AnalyzerAnalysis,
+        construction: En1996BuilderConstruction,
+        analysis: En1996AnalyzerAnalysis,
         composition: super::super::io::derived_composition::En1996ComposerComposition,
     }
     builder: En1996Builder,

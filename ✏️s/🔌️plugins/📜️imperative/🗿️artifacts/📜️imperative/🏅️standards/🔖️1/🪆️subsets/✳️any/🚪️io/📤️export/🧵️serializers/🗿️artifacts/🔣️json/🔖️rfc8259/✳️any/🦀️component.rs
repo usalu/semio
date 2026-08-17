@@ -1,6 +1,6 @@
 //! imperative -> json
 use crate::artifacts::imperative::ImperativeSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_pretty};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_pretty;
 use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

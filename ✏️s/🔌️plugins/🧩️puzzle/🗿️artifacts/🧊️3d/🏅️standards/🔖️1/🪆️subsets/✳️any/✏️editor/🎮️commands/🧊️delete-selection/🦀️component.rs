@@ -1,7 +1,5 @@
 //! 🧊️ `delete-selection` command.
 
-use crate::editor::puzzle3d::panels::inspection;
-use serde_json::Value;
 use std::collections::HashSet;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 

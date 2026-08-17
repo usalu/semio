@@ -2906,29 +2906,6 @@ pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
 // #endregion 🔖️H264Enc
 
 // #region 🔖️Mux
-/// 📦️ Minimal ISO-BMFF `VisualSampleEntry` box for a given fourcc — stdio's mp4 engine keeps
-/// `Mp4Codec::Other`'s sample-entry box fully caller-supplied (`raw`, see its own doc comment), so
-/// this plugin still needs its own tiny box-builder for the non-AVC fourccs it produces (`mjpg` for
-/// MJPEG-in-MP4 muxing) or synthesizes in tests (`hvc1` for an unsupported-codec provenance test).
-fn visual_sample_entry_box(fourcc: &[u8; 4], width: u32, height: u32) -> Vec<u8> {
-    let mut payload = vec![0u8; 8]; // reserved + data_reference_index
-    payload.extend_from_slice(&[0u8; 16]); // pre_defined/reserved/pre_defined[3]
-    payload.extend_from_slice(&(width as u16).to_be_bytes());
-    payload.extend_from_slice(&(height as u16).to_be_bytes());
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes()); // horizresolution, 72 dpi
-    payload.extend_from_slice(&0x0048_0000u32.to_be_bytes()); // vertresolution, 72 dpi
-    payload.extend_from_slice(&[0u8; 4]); // reserved
-    payload.extend_from_slice(&[0, 1]); // frame_count
-    payload.extend_from_slice(&[0u8; 32]); // compressorname
-    payload.extend_from_slice(&[0, 0x18]); // depth = 24
-    payload.extend_from_slice(&[0xFF, 0xFF]); // pre_defined
-    let mut out = Vec::with_capacity(8 + payload.len());
-    out.extend_from_slice(&((payload.len() + 8) as u32).to_be_bytes());
-    out.extend_from_slice(fourcc);
-    out.extend_from_slice(&payload);
-    out
-}
-
 /// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4 via stdio's real
 /// `mp4::engine::encode_mp4`, fixture-synthesis only (no `avcC`, timescale fixed at milliseconds).
 /// Dimensions come from decoding `frames[0]`.

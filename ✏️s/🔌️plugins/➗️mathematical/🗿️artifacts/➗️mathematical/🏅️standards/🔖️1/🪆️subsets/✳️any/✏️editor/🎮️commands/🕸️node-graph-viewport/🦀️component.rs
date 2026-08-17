@@ -2,8 +2,7 @@
 
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use crate::artifacts::mathematical::op::MathematicalMutation;
-use crate::artifacts::mathematical::schema::mutations::replace_graph::mutation::ReplaceGraph;
-use crate::artifacts::mathematical::{MathematicalCamera, MathematicalEdge, MathematicalNode, MathematicalSnapshot};
+use crate::artifacts::mathematical::{MathematicalCamera, MathematicalSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 

@@ -22,7 +22,7 @@ pub fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnap
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn request_invite_member_opens_the_dialog() {

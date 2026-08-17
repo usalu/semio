@@ -37,7 +37,7 @@ pub use infinite_board_port_directed_normal::{self as graph, *};
 #[derive(Clone, Debug, Default)]
 pub struct Puzzle2dExtension;
 
-impl canvas::CanvasExtension for Puzzle2dExtension {
+impl CanvasExtension for Puzzle2dExtension {
     fn extension_id(&self) -> &str {
         "puzzle.2d"
     }

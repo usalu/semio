@@ -24,7 +24,7 @@ pub fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapshot>, _
 mod tests {
     use super::*;
     use crate::editor::space_index::{testkit, SpaceIndexCommand};
-    use semio_framework_plugin::PluginApp;
+    
 
     #[test]
     fn set_visibility_relays_the_directory_command() {

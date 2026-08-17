@@ -11,7 +11,7 @@ impl GltfInferenceLeaf for GltfAspectRatiosInference {
 pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfAspectRatiosInference::DESCRIPTOR
 }
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfVec3> {
     let mut extent = context.oriented_extent;
     extent.sort_by(|left, right| right.total_cmp(left));
     exact(

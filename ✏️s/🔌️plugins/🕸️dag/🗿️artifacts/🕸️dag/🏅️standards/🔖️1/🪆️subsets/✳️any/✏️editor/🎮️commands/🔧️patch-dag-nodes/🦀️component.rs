@@ -1,7 +1,6 @@
 //! 🔧️ 🔧️ DAG play app commands command — `patch-dag-nodes`.
 
-use crate::artifacts::dag::schema;
-use crate::artifacts::dag::mutations::{change_node_name, create_node, rename_node, replace_node_kind, resize_node};
+use crate::artifacts::dag::mutations::{change_node_name, replace_node_kind, resize_node};
 use crate::artifacts::dag::op::DagMutation;
 use crate::artifacts::dag::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};

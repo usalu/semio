@@ -27,7 +27,7 @@ pub mod derived_composition {
             &[DIALECT_ANY, DIALECT_SELF, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = StepAnyComposer::compose(sources)?;
             let mut snapshot = inner.snapshot;
             let mut doc = snapshot.to_part21_document();

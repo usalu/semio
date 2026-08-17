@@ -1,11 +1,6 @@
 //! 🌬️ DIN EN 16798 app — document entities (constitutional: general).
 
-pub use crate::artifacts::din16798::schema::diff::Din16798Diff;
-pub use crate::artifacts::din16798::schema::mutations::Din16798Mutation;
-pub use crate::artifacts::din16798::schema::snapshot::Din16798Snapshot;
 
-use crate::document::AnnexChoice;
-use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
 

@@ -1,6 +1,6 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
-use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, Block3dSnapshot, BLOCK_3D_SCHEMA};
+use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, Block3dSnapshot};
 use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
@@ -247,8 +247,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Block3dBuilderFacets {
-        construction: derived_construction::Block3dBuilderConstruction,
-        analysis: derived_analysis::Block3dAnalyzerAnalysis,
+        construction: Block3dBuilderConstruction,
+        analysis: Block3dAnalyzerAnalysis,
         composition: super::super::io::derived_composition::Block3dComposerComposition,
     }
     builder: Block3dBuilder,

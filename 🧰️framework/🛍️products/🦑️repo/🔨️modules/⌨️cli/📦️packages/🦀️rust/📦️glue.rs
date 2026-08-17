@@ -860,7 +860,6 @@ pub mod tui_dashboard {
     struct Session {
         child: Child,
         rx: Receiver<String>,
-        variant: String,
     }
 
     fn spawn_session(root: &Path, verb: &str, variant: &str, row: &PlaygroundEntry) -> std::io::Result<Session> {
@@ -886,7 +885,7 @@ pub mod tui_dashboard {
                 }
             });
         }
-        Ok(Session { child, rx, variant: variant.to_string() })
+        Ok(Session { child, rx })
     }
 
     impl Session {

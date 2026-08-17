@@ -1,6 +1,6 @@
 //! 🖌️ `engagement-control-select` command.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 
 /// 🎚️ The brush placement picker's select — its option values are `puzzle5d.brush.candidate.<index>`.

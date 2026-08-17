@@ -18,7 +18,7 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     dec_box_bin, dec_objref_bin, dec_path_bin, dec_pdf_info_bin, dec_pdf_object_bin, dec_pdf_page_bin, dec_pdf_snapshot_bin, enc_box_bin, enc_objref_bin, enc_path_bin, enc_pdf_info_bin, enc_pdf_object_bin, enc_pdf_page_bin, enc_pdf_snapshot_bin,
     read_str_lp, write_str_lp,
 };
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot, PdfStreamFilter};
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};

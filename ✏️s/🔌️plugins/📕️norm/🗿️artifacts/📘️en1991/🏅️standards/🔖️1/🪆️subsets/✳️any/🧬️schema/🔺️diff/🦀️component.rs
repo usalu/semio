@@ -1,6 +1,5 @@
 //! 🧬️ En1991 diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::en1991::part_1_2::FireCurve;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,6 @@
 //! 🌐️ `set-snap-enabled` command.
 
-use crate::editor::puzzle3d::{puzzle3d_absolute_or_delta, Puzzle3dActionCtx};
+use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use serde_json::Value;
 
 pub fn set_snap_enabled(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {

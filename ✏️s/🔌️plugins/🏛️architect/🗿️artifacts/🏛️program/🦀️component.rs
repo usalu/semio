@@ -4,7 +4,6 @@
 //! Domain row types live under `🧬️schema/🗄️registers`; shared entity primitives under
 //! `🧬️schema/🧱️kernel`. The persisted snapshot type is `ProgramSnapshot`.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 pub use crate::artifacts::program::kernel::*;
 pub use crate::artifacts::program::registers::*;

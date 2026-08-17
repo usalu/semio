@@ -1,8 +1,5 @@
 //! 📐️ FEM 2D artifact — document entities (constitutional: general).
 
-pub use crate::artifacts::fem2d::schema::diff::Fem2dDiff;
-pub use crate::artifacts::fem2d::schema::mutations::Fem2dMutation;
-pub use crate::artifacts::fem2d::schema::snapshot::Fem2dSnapshot;
 
 use crate::model::Dof;
 use serde::{Deserialize, Serialize};

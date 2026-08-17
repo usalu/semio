@@ -14,7 +14,6 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_schema as schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<RemodelMutation, RemodelConfigMutation>, Fault>`, the exact signature
@@ -693,7 +692,7 @@ pub mod artifacts {
         pub mod op { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::mutations::text::*; }
         pub mod dsl { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::snapshot::text::*; }
         pub mod spr { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::mutations::binary::*; }
-        pub mod diff { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::*; pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::text::*; pub mod schema { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::text::*; } }
+        pub mod diff { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::*;  pub mod schema { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::*; } pub mod text { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::diff::text::*; } }
         pub mod mutations { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::mutations::*; }
         pub mod snapshot { pub mod schema { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::snapshot::*; } pub mod pack { pub use crate::artifacts::remodel::standards::v1::subsets::any::schema::snapshot::binary::*; } }
 

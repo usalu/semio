@@ -19,15 +19,15 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOverlapVolumeInference::DESCRIPTOR
 }
 
-pub fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
+pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
 }
 
-pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
+pub(crate) fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
     pair.overlap.map(|(volume, samples)| estimate(volume, GltfUnit::CubicMetre, samples, None)).unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
 }
 
-pub fn from_assembly(volume: f64, complete: bool, pair_count: usize, sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
+pub(crate) fn from_assembly(volume: f64, complete: bool, pair_count: usize, sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
     (pair_count > 0 && complete).then(|| estimate(volume, GltfUnit::CubicMetre, sample_count, Some(topology)))
 }
 

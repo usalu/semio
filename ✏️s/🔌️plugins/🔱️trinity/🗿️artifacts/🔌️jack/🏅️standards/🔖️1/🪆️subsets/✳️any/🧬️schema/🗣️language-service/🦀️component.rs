@@ -1,8 +1,8 @@
 //! 🗣️ Trinity jack language service — parse, complete, lint, hover.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue, port_key};
-use crate::lexer::{lex, lex_spanned, tokenize, Token, TokenClass, TokenSpan, SpannedToken};
+use crate::artifacts::jack::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
+use crate::lexer::{lex, lex_spanned, Token, SpannedToken};
 use graph::dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;
 
@@ -115,10 +115,8 @@ pub mod queryable {
 }
 
 pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
-use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, QueryResult, QueryResultKind, ReturnItem};
+use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, ReturnItem};
 use graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 // #region 🔖️Language
 fn completion_prefix(source: &str, cursor: usize) -> String {

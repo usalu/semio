@@ -1,7 +1,7 @@
 //! 🧺️ 🧺️ Sourcing curate app commands command — `curate-add`.
 
 use crate::editor::sourcing::config::{SourcingCurateConfig, SourcingCurateConfigMutation};
-use crate::artifacts::curate::schema::{curation_decision_for_delta, curation_decision_for_set, CurationDecision};
+use crate::artifacts::curate::schema::{curation_decision_for_delta, CurationDecision};
 use crate::artifacts::curate::op::SourcingMutation;
 use crate::artifacts::curate::CurateSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
@@ -104,7 +104,7 @@ mod tests {
         let mut app = new_app();
         let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
         assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 0);
-        let result = crate::editor::sourcing::testkit::dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id }));
+        let result = dispatch(&mut app, SourcingCurateCommand::CurateRemove(curate_remove::CurateRemove { object_id }));
         assert!(result.mutations.is_empty(), "removing an already-uncurated object is a no-op");
     }
 }

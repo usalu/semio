@@ -15,9 +15,6 @@ pub const VCS_DOCUMENT_SCHEMA: &str = "vcs.vcs";
 /// surface id is `s.vcs.vcs@1/*#editor` / `s.vcs.vcs@1/*#viewer` (contract §1 grammar).
 pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard: StandardId("1"), subset: SubsetId::ANY };
 //#endregion 🔖️Dialect
-pub use crate::artifacts::vcs::diff::schema::VcsDiff;
-pub use crate::artifacts::vcs::mutations::VcsDemoMutation;
-pub use crate::artifacts::vcs::snapshot::schema::VcsSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the editor manifest by

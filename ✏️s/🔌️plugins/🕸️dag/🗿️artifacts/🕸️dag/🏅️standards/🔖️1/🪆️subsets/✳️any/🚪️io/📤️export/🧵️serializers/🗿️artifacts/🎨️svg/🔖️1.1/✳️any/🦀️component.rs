@@ -1,6 +1,6 @@
 //! Serialize dag to stdio.svg.
 use crate::artifacts::dag::DagSnapshot;
-use semio_s_plugin_stdio::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
 
 pub fn register() {}
 

@@ -27,7 +27,7 @@ pub mod derived_composition {
             &[DIALECT_ANY, DIALECT_BASIC, DEP_XML]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = SvgAnyComposer::compose(sources)?;
             let mut snapshot = inner.snapshot;
             if let Some(root) = snapshot.doc.root.as_mut() {

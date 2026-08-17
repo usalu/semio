@@ -6,7 +6,6 @@
 pub mod derived_composition {
     use crate::artifacts::binary::standards::v_raw::subsets::any::schema::BinaryAnalyzer;
     use crate::artifacts::binary::BinarySnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -22,7 +21,7 @@ pub mod derived_composition {
             &[DIALECT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT)
@@ -73,7 +72,7 @@ pub mod io_registry {
 /// left reachable at its old `crate::artifacts::binary::engine::register()` path via a pure
 /// re-export shim in `📦️glue.rs`.
 pub fn register() {
-    semio_framework_plugin::register_composer_entries(io_registry::entries());
+    let _ = semio_framework_plugin::register_composer_entries(io_registry::entries());
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();

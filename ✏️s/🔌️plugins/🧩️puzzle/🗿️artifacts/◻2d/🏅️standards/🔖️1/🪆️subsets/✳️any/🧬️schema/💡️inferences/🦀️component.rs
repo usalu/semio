@@ -130,8 +130,8 @@ mod tests {
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
-use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
-use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dNodeAnchor};
+use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
+use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 fn round_f(v: f64) -> f64 {
@@ -150,8 +150,8 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
     let node_map: HashMap<&str, &Puzzle2dNode> = snapshot.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut adjacency: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     for (index, edge) in snapshot.edges.iter().enumerate() {
-        let Some((source_id, _)) = parse_endpoint(&edge.source).or_else(|| Some((edge.source.as_str(), ""))) else { continue };
-        let Some((target_id, _)) = parse_endpoint(&edge.target).or_else(|| Some((edge.target.as_str(), ""))) else { continue };
+        let Some((_source_id, _)) = parse_endpoint(&edge.source).or_else(|| Some((edge.source.as_str(), ""))) else { continue };
+        let Some((_target_id, _)) = parse_endpoint(&edge.target).or_else(|| Some((edge.target.as_str(), ""))) else { continue };
         // Edges may be bare node ids or node:handle.
         let source_id = edge.source.split(':').next().unwrap_or(edge.source.as_str());
         let target_id = edge.target.split(':').next().unwrap_or(edge.target.as_str());
