@@ -1,0 +1,17 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript
+
+ ✓ |@semio-tech/hub-admin| ../../🧱️elements/📚️I18n/🟦️component.tsx > admin i18n > has an identical key set in en and de 1ms
+ ✓ |@semio-tech/hub-admin| ../../🧱️elements/📚️I18n/🟦️component.tsx > admin i18n > covers every admin.* namespace the app renders 0ms
+ ✓ |@semio-tech/hub-admin| ../../🧱️elements/📚️I18n/🟦️component.tsx > admin i18n > substitutes {placeholder} vars 0ms
+stderr | 🧪️admin.test.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ✓ |@semio-tech/hub-admin| 🧪️admin.test.tsx > SpacesPage > renders rows from a mocked admin client 51ms
+ ✓ |@semio-tech/hub-admin| 🧪️admin.test.tsx > ConnectionsPage > updates live on a pushed connection message 64ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)
+   Start at  01:19:52
+   Duration  4.66s (transform 1.63s, setup 172ms, import 4.05s, tests 119ms, environment 556ms)
+

@@ -15,7 +15,7 @@ pub struct ChangeWallHeightM {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallHeightM {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "wall-height-m", kind: "change-wall-height-m", record: "ChangedWallHeightM" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_wall_height_m::diff::diff(self, base)
     }
 

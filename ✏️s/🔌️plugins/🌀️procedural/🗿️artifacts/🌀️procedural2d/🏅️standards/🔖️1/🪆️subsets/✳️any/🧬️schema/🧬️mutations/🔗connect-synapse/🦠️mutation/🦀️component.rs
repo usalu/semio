@@ -26,7 +26,7 @@ pub fn connect_synapse(index: usize, synapse: SynapseSpec) -> Procedural2dMutati
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ConnectSynapse {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

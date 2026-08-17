@@ -5,7 +5,13 @@ use crate::artifacts::din16798::mutations::change_air_speed_m_s::mutation::Chang
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeAirSpeedMS, _base: &Din16798Snapshot) -> Din16798Diff {
-    Din16798Diff { air_speed_m_s: Some(payload.new_air_speed_m_s.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeAirSpeedMS, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    if !payload.new_air_speed_m_s.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Air speed must be a finite number, got {}.", payload.new_air_speed_m_s), Vec::<String>::new());
+    }
+    if base.air_speed_m_s == payload.new_air_speed_m_s {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Air speed is already {}.", payload.new_air_speed_m_s));
+    }
+    protocol::MutationOutcome::new(Din16798Diff { air_speed_m_s: Some(payload.new_air_speed_m_s.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

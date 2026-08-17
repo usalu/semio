@@ -15,7 +15,7 @@ pub struct ChangeStructuralSystem {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeStructuralSystem {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "structural-system", kind: "change-structural-system", record: "ChangedStructuralSystem" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_structural_system::diff::diff(self, base)
     }
 

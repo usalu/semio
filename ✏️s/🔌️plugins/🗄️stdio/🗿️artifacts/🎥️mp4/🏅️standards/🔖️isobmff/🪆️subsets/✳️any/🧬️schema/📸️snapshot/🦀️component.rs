@@ -3,7 +3,6 @@
 //! (`avcC` SPS/PPS) and logical sample-to-chunk grouping. Native bytes are materialized only by
 //! the ordinary ISO-BMFF writer.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::io as engine;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -404,15 +403,15 @@ mod tests {
     fn exact_fixture_survives_pack_and_dsl_codecs() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let snapshot = engine::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        let snapshot = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
         let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
         let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode pack");
-        assert_eq!(engine::encode_mp4(&from_pack), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&from_pack), bytes);
 
         let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
         let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse dsl");
-        assert_eq!(engine::encode_mp4(&from_dsl), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&from_dsl), bytes);
     }
 }
 //#endregion 🔖️Tests

@@ -9,12 +9,12 @@ pub fn diff(payload: &super::mutation::CreateNode, base: &Puzzle2dSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "node"), vec![payload.node.id.clone()]);
     }
     let mut delta = Puzzle2dNodesDelta { added: vec![payload.node.clone()], ..Default::default() };
-    protocol::MutationOutcome::new(if let Some(index) = payload.index {
+    if let Some(index) = payload.index {
         let mut order: Vec<String> = base.nodes.iter().map(|entry| entry.id.clone()).collect();
         let at = index.min(order.len());
         order.insert(at, payload.node.id.clone());
         delta.reordered = Some(order);
     }
-    Puzzle2dDiff { nodes: Some(delta), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle2dDiff { nodes: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

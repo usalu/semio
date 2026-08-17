@@ -23,7 +23,7 @@ pub fn create_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateRigExtrinsic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "rig-extrinsic", kind: "create-rig-extrinsic", record: "CreatedRigExtrinsic" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

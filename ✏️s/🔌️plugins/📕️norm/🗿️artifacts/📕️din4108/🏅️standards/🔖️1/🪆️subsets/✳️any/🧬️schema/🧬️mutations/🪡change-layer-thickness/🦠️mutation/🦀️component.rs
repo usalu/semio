@@ -14,7 +14,7 @@ pub struct ChangeLayerThickness {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerThickness {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "layer-thickness", kind: "change-layer-thickness", record: "ChangedLayerThickness" };
 
-    fn diff(&self, base: &Din4108Snapshot) -> <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

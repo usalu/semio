@@ -13,7 +13,7 @@ pub struct RenameLayout {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for RenameLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "layout", kind: "rename-layout", record: "RenamedLayout" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_rename_layout(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

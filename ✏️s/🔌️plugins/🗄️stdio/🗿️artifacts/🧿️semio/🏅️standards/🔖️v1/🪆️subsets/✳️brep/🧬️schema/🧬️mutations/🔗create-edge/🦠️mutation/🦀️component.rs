@@ -17,7 +17,7 @@ pub struct CreateEdge {
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateEdge {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "edge", kind: "create-edge", record: "CreatedEdge" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {

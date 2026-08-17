@@ -21,7 +21,7 @@ pub fn delete_rig_extrinsic(camera_id: String) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteRigExtrinsic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "rig-extrinsic", kind: "delete-rig-extrinsic", record: "DeletedRigExtrinsic" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

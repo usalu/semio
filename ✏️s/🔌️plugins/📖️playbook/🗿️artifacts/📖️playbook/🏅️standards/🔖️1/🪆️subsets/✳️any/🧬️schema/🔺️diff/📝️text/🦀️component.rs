@@ -16,69 +16,72 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl PlaybookDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> PlaybookArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(version) = &self.version {
-            next.version = version.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(document) = &self.document {
-            next.document = document.clone();
-        }
-        if let Some(flow) = &self.flow {
-            next.flow = flow.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(version) = &self.version {
+                next.version = version.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(document) = &self.document {
+                next.document = document.clone();
+            }
+            if let Some(flow) = &self.flow {
+                next.flow = flow.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.contributions_json {
+                next.contributions_json = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
-    fn apply(&self, snapshot: &PlaybookSnapshot) -> PlaybookSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(version) = &self.version {
-            next.version = version.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(document) = &self.document {
-            next.document = document.clone();
-        }
-        if let Some(flow) = &self.flow {
-            next.flow = flow.clone();
-        }
-        next
+    fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(version) = &self.version {
+                next.version = version.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(document) = &self.document {
+                next.document = document.clone();
+            }
+            if let Some(flow) = &self.flow {
+                next.flow = flow.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

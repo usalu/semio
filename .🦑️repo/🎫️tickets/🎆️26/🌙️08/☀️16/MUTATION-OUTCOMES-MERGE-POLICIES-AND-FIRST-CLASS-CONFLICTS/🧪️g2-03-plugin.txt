@@ -1,0 +1,1659 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19
+     |
+4256 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4257 | | where
+4258 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4259 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4445 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+warning: unused imports: `FaultCode`, `FaultScope`, `Severity`, and `TextSpan`
+ --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:7:23
+  |
+7 | use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+  |                       ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `is_left` and `is_right` are never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1463:8
+     |
+1462 | impl IntroductionPointerButton {
+     | ------------------------------ methods in this implementation
+1463 |     fn is_left(&self) -> bool {
+     |        ^^^^^^^
+...
+1467 |     fn is_right(&self) -> bool {
+     |        ^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `introduction_orbit_modifiers_is_default` is never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1472:4
+     |
+1472 | fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]) -> bool {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework` to apply 1 suggestion)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unused imports: `ChildGenesis`, `GroupReceipt`, `OwnerRef`, and `SpaceConflict`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:350:164
+    |
+350 | ...story_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildGenesis, C...
+    |                                                                                                                                                       ^^^^^^^^^^^^
+351 | ...a, GroupReceipt, HistoryColumn, HistoryLane, Mutation, MutationDiff, OwnerRef, SpaceConflict, SpaceMember,
+    |       ^^^^^^^^^^^^                                                      ^^^^^^^^  ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:408:24
+    |
+408 |         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+408 -         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+408 +         let mut nodes: BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:408:85
+    |
+408 |         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+408 -         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+408 +         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = BTreeMap::new();
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:687:31
+    |
+687 |         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+687 |         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                                            ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:696:22
+    |
+696 |         C::Snapshot: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+696 -         C::Snapshot: store::ArtifactPack,
+696 +         C::Snapshot: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:700:26
+    |
+700 |             C::Snapshot: store::ArtifactPack,
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+700 -             C::Snapshot: store::ArtifactPack,
+700 +             C::Snapshot: ArtifactPack,
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:702:36
+    |
+702 |             let typed_sources: Vec<ComposeSource> = sources
+    |                                    ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+702 |             let typed_sources: Vec<ComposeSource<'_>> = sources
+    |                                                 ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:713:25
+    |
+713 |             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+713 -             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+713 +             let bytes = ArtifactPack::encode_pack(&composed.snapshot);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:729:18
+    |
+729 |         D::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+729 -         D::From: store::ArtifactPack,
+729 +         D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:730:18
+    |
+730 |         D::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+730 -         D::Into: store::ArtifactPack,
+730 +         D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:734:22
+    |
+734 |             D::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+734 -             D::From: store::ArtifactPack,
+734 +             D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:735:22
+    |
+735 |             D::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+735 -             D::Into: store::ArtifactPack,
+735 +             D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:750:17
+    |
+750 | ...   <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed ...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+750 -                 <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+750 +                 <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:752:25
+    |
+752 |             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+752 -             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+752 +             let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:763:18
+    |
+763 |         S::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+763 -         S::From: store::ArtifactPack,
+763 +         S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:764:18
+    |
+764 |         S::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+764 -         S::Into: store::ArtifactPack,
+764 +         S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:768:22
+    |
+768 |             S::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+768 -             S::From: store::ArtifactPack,
+768 +             S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:769:22
+    |
+769 |             S::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+769 -             S::Into: store::ArtifactPack,
+769 +             S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:783:24
+    |
+783 | ...   let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{...
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+783 -             let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+783 +             let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:785:25
+    |
+785 |             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+785 -             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+785 +             let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:800:24
+    |
+800 |         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+800 -         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+800 +         type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:838:33
+    |
+838 |         fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+    |                                 ^^^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+838 |         fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
+    |                                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:850:27
+    |
+850 |         fn sniff(source: &AnalyzeSource) -> IoConfidence;
+    |                           ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+850 |         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:851:31
+    |
+851 |         fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+851 |         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+    |                                            ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:926:24
+    |
+926 |         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+926 -         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+926 +         type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:927:20
+    |
+927 |         type Diff: protocol::MutationDiff<Self::Snapshot>;
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+927 -         type Diff: protocol::MutationDiff<Self::Snapshot>;
+927 +         type Diff: MutationDiff<Self::Snapshot>;
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1568:77
+     |
+1568 |     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::Once...
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1568 -     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
+1568 +     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1569:80
+     |
+1569 |     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::O...
+     |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1569 -     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
+1569 +     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1571:66
+     |
+1571 |     fn active_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+     |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1571 -     fn active_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+1571 +     fn active_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1572:73
+     |
+1572 |         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1572 -         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+1572 +         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1575:69
+     |
+1575 |     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1575 -     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+1575 +     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1576:76
+     |
+1576 |         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+     |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1576 -         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+1576 +         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1638:31
+     |
+1638 |         let mut identifiers = std::collections::BTreeSet::new();
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1638 -         let mut identifiers = std::collections::BTreeSet::new();
+1638 +         let mut identifiers = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2430:23
+     |
+2430 |         capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2430 -         capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+2430 +         capabilities: BTreeMap<ArtifactIdentity, ArtifactCapability>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2441:44
+     |
+2441 |             Self { identity, capabilities: std::collections::BTreeMap::new() }
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2441 -             Self { identity, capabilities: std::collections::BTreeMap::new() }
+2441 +             Self { identity, capabilities: BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2606:30
+     |
+2606 |             let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2606 -             let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+2606 +             let mut claims = BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2694:22
+     |
+2694 |         definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2694 -         definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+2694 +         definitions: BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2695:17
+     |
+2695 |         claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+2695 +         claims: BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2707:33
+     |
+2707 |             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2707 -             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+2707 +             Self { definitions: BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2707:76
+     |
+2707 |             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2707 -             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+2707 +             Self { definitions: std::collections::BTreeMap::new(), claims: BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2967:86
+     |
+2967 | ...   ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coo...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2967 -                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
+2967 +                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2999:86
+     |
+2999 | ...   ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_co...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2999 -                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+2999 +                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3192:171
+     |
+3192 | ...::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate())?]));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3192 -             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate())?]));
+3192 +             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate())?]));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3206:87
+     |
+3206 | ...   vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect)....
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3206 -                 vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate())?],
+3206 +                 vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate())?],
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3323:28
+     |
+3323 |         pub artifact_kind: semio_framework::ArtifactKindSpec,
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3323 -         pub artifact_kind: semio_framework::ArtifactKindSpec,
+3323 +         pub artifact_kind: ArtifactKindSpec,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3334:24
+     |
+3334 |         artifact_kind: semio_framework::ArtifactKindSpec,
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3334 -         artifact_kind: semio_framework::ArtifactKindSpec,
+3334 +         artifact_kind: ArtifactKindSpec,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3348:70
+     |
+3348 | ...   pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<S...
+     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3348 -         pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+3348 +         pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3362:71
+     |
+3362 | ...   pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<...
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3362 -         pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+3362 +         pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3404:93
+     |
+3404 | ...   pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> R...
+     |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3404 -         pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+3404 +         pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6456:39
+     |
+6456 |                 let (near, mut far) = store::MemoryBackbone::pair("mem://txn", "mem://txn");
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6456 -                 let (near, mut far) = store::MemoryBackbone::pair("mem://txn", "mem://txn");
+6456 +                 let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6461:28
+     |
+6461 |                     if let store::BackboneMessage::Mutations { envelopes: operations } = message {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6461 -                     if let store::BackboneMessage::Mutations { envelopes: operations } = message {
+6461 +                     if let BackboneMessage::Mutations { envelopes: operations } = message {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6861:13
+     |
+6861 | ...   semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into()...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6861 -             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+6861 +             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6861:161
+     |
+6861 | ...), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6861 -             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+6861 +             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7307:42
+     |
+7307 |         fn minimal_tutorial(id: &str) -> semio_framework::TutorialDefinition {
+     |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7307 -         fn minimal_tutorial(id: &str) -> semio_framework::TutorialDefinition {
+7307 +         fn minimal_tutorial(id: &str) -> TutorialDefinition {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7607:13
+     |
+7607 | ...   semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".int...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7607 -             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+7607 +             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7607:164
+     |
+7607 | ...), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7607 -             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
+7607 +             semio_framework::surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.example-source.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:8151:38
+     |
+8151 |     pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+8151 -     pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+8151 +     pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9199:61
+     |
+9199 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9199 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+9199 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9227:119
+     |
+9227 | ...: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9227 -         fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+9227 +         fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9230:120
+     |
+9230 | ...: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9230 -         fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
+9230 +         fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10219:64
+      |
+10219 | ...   pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clon...
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10219 -                     pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+10219 +                     pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10268:45
+      |
+10268 |         pub(crate) fn test_store(&self) -> &store::ArtifactStore<A::Snapshot, A::Mutation> {
+      |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10268 -         pub(crate) fn test_store(&self) -> &store::ArtifactStore<A::Snapshot, A::Mutation> {
+10268 +         pub(crate) fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10274:57
+      |
+10274 |         pub(crate) fn test_store_mut(&mut self) -> &mut store::ArtifactStore<A::Snapshot, A::Mutation> {
+      |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10274 -         pub(crate) fn test_store_mut(&mut self) -> &mut store::ArtifactStore<A::Snapshot, A::Mutation> {
+10274 +         pub(crate) fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11170:31
+      |
+11170 |             let mut domains = std::collections::BTreeMap::new();
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11170 -             let mut domains = std::collections::BTreeMap::new();
+11170 +             let mut domains = BTreeMap::new();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11194:97
+      |
+11194 | ...   let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), acti...
+      |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11194 -             let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+11194 +             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12910:61
+      |
+12910 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                             ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12910 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+12910 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13043:61
+      |
+13043 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                             ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13043 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13043 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13200:60
+      |
+13200 |         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13200 -         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13200 +         fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13339:60
+      |
+13339 |         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13339 -         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13339 +         fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13576:41
+      |
+13576 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13576 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+13576 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13576:96
+      |
+13576 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13576 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+13576 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13861:14
+      |
+13861 |         impl store::ArtifactPack for WireTestSnapshot {
+      |              ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13861 -         impl store::ArtifactPack for WireTestSnapshot {
+13861 +         impl ArtifactPack for WireTestSnapshot {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13898:14
+      |
+13898 |         impl protocol::OpBinary for WireTestOp {
+      |              ^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13898 -         impl protocol::OpBinary for WireTestOp {
+13898 +         impl OpBinary for WireTestOp {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15501:14
+      |
+15501 |         impl store::ArtifactPack for TestSnapshot {
+      |              ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15501 -         impl store::ArtifactPack for TestSnapshot {
+15501 +         impl ArtifactPack for TestSnapshot {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15547:25
+      |
+15547 |             let bytes = store::ArtifactPack::encode_pack(&seed);
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15547 -             let bytes = store::ArtifactPack::encode_pack(&seed);
+15547 +             let bytes = ArtifactPack::encode_pack(&seed);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15551:54
+      |
+15551 |                 IoPayload::Binary(out) => assert_eq!(<TestSnapshot as store::ArtifactPack>::decode_pack(&out).unwrap(), seed),
+      |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15551 -                 IoPayload::Binary(out) => assert_eq!(<TestSnapshot as store::ArtifactPack>::decode_pack(&out).unwrap(), seed),
+15551 +                 IoPayload::Binary(out) => assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&out).unwrap(), seed),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15701:14
+      |
+15701 |         impl store::ArtifactPack for TestConfig {
+      |              ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15701 -         impl store::ArtifactPack for TestConfig {
+15701 +         impl ArtifactPack for TestConfig {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16329:42
+      |
+16329 | ...   let restored: TestSnapshot = <TestSnapshot as store::ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child ...
+      |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+16329 -             let restored: TestSnapshot = <TestSnapshot as store::ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child pack")).expect("decode child");
+16329 +             let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().expect("child pack")).expect("decode child");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16560:41
+      |
+16560 |                 assert_eq!(action.kind, semio_framework::ActionKind::Clipboard);
+      |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+16560 -                 assert_eq!(action.kind, semio_framework::ActionKind::Clipboard);
+16560 +                 assert_eq!(action.kind, ActionKind::Clipboard);
+      |
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18714:5
+      |
+18714 | /     /// 🧬️ Smoke-tests the macro's own `children: $ty` grammar (not just the underlying
+18715 | |     /// `DerivedArtifactComposer` mechanism above) — proves `derive_artifact_facets!` actually parses
+18716 | |     /// and wires the optional field end to end.
+      | |_____-------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+      = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18602:51
+      |
+18602 |         fn from_text(_text: &str) -> Result<Self, store::TextError> {
+      |                                                   ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18602 -         fn from_text(_text: &str) -> Result<Self, store::TextError> {
+18602 +         fn from_text(_text: &str) -> Result<Self, TextError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18616:54
+      |
+18616 |         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+      |                                                      ^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18616 -         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
+18616 +         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18885:209
+      |
+18885 | ...ed validator smoke".into(), expected: None, scope: dsl::FaultScope::default() }]
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18885 -             vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: dsl::FaultScope::default() }]
+18885 +             vec![Diagnostic { code: FaultCode::new("test.subset-macro.ok"), severity: Severity::Info, span: TextSpan::at(1, 1), message: "subset! macro derived validator smoke".into(), expected: None, scope: FaultScope::default() }]
+      |
+
+warning: unused import: `ChildStoreFactory`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:350:178
+    |
+350 | ...ifactPack, ArtifactStore, ChildDispatch, ChildGenesis, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
+    |                                                           ^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12167:34
+      |
+12167 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+      |
+      = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11610:38
+      |
+11610 |                 let VcsArtifactApp { app, cache, children, presence_store, transient_store, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11666:38
+      |
+11666 |                 let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12083:38
+      |
+12083 |                 let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11510:42
+      |
+11510 |                     let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12117:34
+      |
+12117 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12128:34
+      |
+12128 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12142:34
+      |
+12142 |             let VcsArtifactApp { app, cache, registry, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12152:34
+      |
+12152 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5802:17
+     |
+5802 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: type `TransactionProposalDraft` is more private than the item `component::app::PluginApp::take_pending_transaction_proposal`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9455:9
+     |
+9455 |         fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft>;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `component::app::PluginApp::take_pending_transaction_proposal` is reachable at visibility `pub`
+     |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9949:5
+     |
+9949 |     pub(crate) struct TransactionProposalDraft {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `TransactionProposalDraft` is more private than the item `<VcsArtifactApp<A> as component::app::PluginApp>::take_pending_transaction_proposal`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11784:9
+      |
+11784 |         fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `<VcsArtifactApp<A> as component::app::PluginApp>::take_pending_transaction_proposal` is reachable at visibility `pub`
+      |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9949:5
+      |
+ 9949 |     pub(crate) struct TransactionProposalDraft {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `TransactionProposalDraft` is more private than the item `component::app::testkit::assert_proposes_transaction`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5912:9
+     |
+5912 | ...   pub fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command) -> super::TransactionProposalDraft {
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function `component::app::testkit::assert_proposes_transaction` is reachable at visibility `pub`
+     |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9949:5
+     |
+9949 |     pub(crate) struct TransactionProposalDraft {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `ChildrenMacroBuilder` is never constructed
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18724:18
+      |
+18724 |         builder: ChildrenMacroBuilder,
+      |                  ^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+      = note: this warning originates in the macro `derive_artifact_facets` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: struct `ChildrenMacroAnalyzer` is never constructed
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18725:19
+      |
+18725 |         analyzer: ChildrenMacroAnalyzer,
+      |                   ^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: this warning originates in the macro `derive_artifact_facets` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated functions `sniff` and `analyze` are never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18525:20
+      |
+18524 |           impl $analyzer {
+      |           -------------- associated functions in this implementation
+18525 |               pub fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::snif...
+      |                      ^^^^^
+18526 |               pub fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts...
+      |                      ^^^^^^^
+...
+18717 | /     derive_artifact_facets! {
+18718 | |         spec ChildrenMacroSpec {
+18719 | |             construction: ChildrenTestConstruction,
+18720 | |             analysis: ChildrenTestAnalysis,
+...     |
+18726 | |         composer: ChildrenMacroComposer,
+18727 | |     }
+      | |_____- in this macro invocation
+      |
+      = note: this warning originates in the macro `derive_artifact_facets` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated function `compose` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18544:20
+      |
+18543 |           impl $composer {
+      |           -------------- associated function in this implementation
+18544 |               pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactCompos...
+      |                      ^^^^^^^
+...
+18717 | /     derive_artifact_facets! {
+18718 | |         spec ChildrenMacroSpec {
+18719 | |             construction: ChildrenTestConstruction,
+18720 | |             analysis: ChildrenTestAnalysis,
+...     |
+18726 | |         composer: ChildrenMacroComposer,
+18727 | |     }
+      | |_____- in this macro invocation
+      |
+      = note: this warning originates in the macro `derive_artifact_facets` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused `Result` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18889:5
+      |
+18889 | /     subset! {
+18890 | |         pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+18891 | |             validator: MacroDerivedValidator,
+18892 | |         }
+18893 | |     }
+      | |_____^
+      |
+      = note: this `Result` may be an `Err` variant, which should be handled
+      = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+      |
+18889 |     let _ = subset! {
+      |     +++++++
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2812:9
+     |
+2794 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2812 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2813 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3822:9
+     |
+3820 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3821 |         definitions: ArtifactDefinitionRegistry,
+3822 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3823 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3824 |         inference_services: ArtifactInferenceServiceRegistry,
+3825 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3826 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: methods `has_window_action`, `has_app_command`, and `has_mode_command` are never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9648:12
+     |
+9633 |     impl AppActionRegistry {
+     |     ---------------------- methods in this implementation
+...
+9648 |         fn has_window_action(&self, window_kind_id: &str, action_id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^^
+...
+9664 |         fn has_app_command(&self, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^
+...
+9672 |         fn has_mode_command(&self, mode_id: &str, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: unused return value of `semio_framework::register_subset_validator` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18889:5
+      |
+18889 | /     subset! {
+18890 | |         pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+18891 | |             validator: MacroDerivedValidator,
+18892 | |         }
+18893 | |     }
+      | |_____^
+      |
+help: use `let _ = ...` to ignore the resulting value
+      |
+18889 |     let _ = subset! {
+      |     +++++++
+
+warning: `semio-framework-plugin` (lib test) generated 108 warnings (run `cargo fix --lib -p semio-framework-plugin --tests` to apply 89 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 16.76s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_plugin-602c8bb3b4e9b695)
+
+running 220 tests
+test component::app::app_builder_tests::build_definition_accepts_declared_terminology_document ... ok
+test component::app::app_builder_tests::build_definition_accepts_app_and_mode_scope_commands ... ok
+test component::app::app_builder_tests::build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets ... ok
+test component::app::app_builder_tests::action_args_attaches_declared_arguments ... ok
+test component::app::app_builder_tests::build_definition_auto_injects_history_actions_and_keybindings ... ok
+test component::app::app_builder_tests::build_definition_accepts_introduction_with_declared_window_utility_and_action_targets ... ok
+test component::app::app_builder_tests::build_definition_accepts_and_resolves_mode_tools ... ok
+test component::app::app_builder_tests::build_definition_accepts_valid_manifest ... ok
+test component::app::app_builder_tests::build_definition_auto_injects_clipboard_actions_and_keybindings ... ok
+test component::app::app_builder_tests::build_definition_derives_command_owner_from_structural_containment ... ok
+test component::app::app_builder_tests::build_definition_carries_window_interactions_and_injects_framework_actions ... ok
+test component::app::app_builder_tests::build_definition_does_not_duplicate_a_manually_declared_history_panel_tab ... ok
+test component::app::app_builder_tests::build_definition_accepts_introduction_step_introducing_escape_hatch_element_id ... ok
+test component::app::app_builder_tests::build_definition_does_not_duplicate_manually_declared_history_keybinding ... ok
+test component::app::app_builder_tests::build_definition_auto_injects_the_history_panel_tab_and_filter_action ... ok
+test component::app::app_builder_tests::build_definition_rejects_dialog_select_arg_with_no_options ... ok
+test component::app::app_builder_tests::build_definition_rejects_dialog_cancel_action_referencing_undeclared_action ... ok
+test component::app::app_builder_tests::build_definition_rejects_dialog_duplicate_arg_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_dialog_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_mode_command_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_dialog_submit_action_referencing_undeclared_action ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_action_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_command_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_introduction_step_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_duplicate_tutorial_ids ... ok
+test component::app::app_builder_tests::build_definition_rejects_empty_mode_command_id ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_step_interacting_on_undeclared_utility ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_step_introducing_undeclared_window_kind ... ok
+test component::app::app_builder_tests::build_definition_rejects_layout_with_unknown_window_kind ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_step_introducing_undeclared_panel_tab ... ok
+test component::app::app_builder_tests::build_definition_rejects_keybinding_for_undeclared_action_once_opted_in ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_with_no_steps ... ok
+test component::app::app_builder_tests::build_definition_rejects_mode_tool_ref_to_undeclared_tool ... ok
+test component::app::app_builder_tests::build_definition_rejects_introduction_step_targeting_malformed_element_id ... ok
+test component::app::app_builder_tests::build_definition_rejects_select_arg_with_no_options ... ok
+test component::app::app_builder_tests::build_definition_rejects_terminology_document_for_undeclared_terminology ... ok
+test component::app::app_builder_tests::build_definition_rejects_tool_referenced_by_no_mode ... ok
+test component::app::app_builder_tests::build_definition_rejects_tutorial_event_referencing_undeclared_action ... ok
+test component::app::app_builder_tests::build_definition_rejects_tutorial_failing_structural_validation ... ok
+test component::app::app_builder_tests::build_definition_rejects_tutorial_gesture_targeting_malformed_element_id ... ok
+test component::app::app_builder_tests::build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility ... ok
+test component::app::app_builder_tests::build_definition_rejects_window_kind_utility_referencing_undeclared_utility ... ok
+test component::app::app_builder_tests::build_definition_rejects_window_kind_action_referencing_undeclared_action ... ok
+test component::app::app_builder_tests::catalog_chrome_icons_resolve_to_vendored_icon_names ... ok
+test component::app::app_builder_tests::declaring_dialog_appends_to_definition ... ok
+test component::app::app_builder_tests::declaring_introduction_injects_start_introduction_action ... ok
+test component::app::app_builder_tests::declaring_tutorial_injects_start_tutorial_action ... ok
+test component::app::app_builder_tests::declaring_utilities_injects_set_active_utility_action_and_keybinding ... ok
+test component::app::app_builder_tests::declaring_tools_injects_set_active_tool_action_and_keybinding ... ok
+test component::app::app_builder_tests::dialog_submit_action_may_reference_an_injected_history_action ... ok
+test component::app::app_builder_tests::no_tools_means_no_set_active_tool_action ... ok
+test component::app::app_builder_tests::no_introduction_means_no_start_introduction_action ... ok
+test component::app::app_commands_tests::command_id_matches_declared_row ... ok
+test component::app::app_builder_tests::no_utilities_means_no_set_active_utility_action ... ok
+test component::app::app_builder_tests::no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected ... ok
+test component::app::app_commands_tests::dispatch_forwards_to_the_payload_modules_own_handle ... ok
+test component::app::app_builder_tests::operation_view_and_shell_actions_are_declared_with_their_kind ... ok
+test component::app::app_commands_tests::ctx_is_threaded_through_dispatch_into_every_handler ... ok
+test component::app::app_commands_tests::fieldless_payload_matches_a_unit_variants_wire_form ... ok
+test component::app::app_commands_tests::keyed_rows_separate_the_command_id_from_the_wire_keyword ... ok
+test component::app::artifact_contribution_tests::dependency_gating_rejects_a_contribution_onto_a_non_dependency ... ok
+test component::app::artifact_contribution_tests::id_namespacing_rejects_a_collision_with_an_owner_kind ... ok
+test component::app::app_commands_tests::wire_round_trips_through_dsl_ops_op_text_and_op_binary ... ok
+test component::app::artifact_inference_service_tests::artifact_inference_registry_rejects_any_conflicting_duplicate ... ok
+test component::app::artifact_inference_service_tests::artifact_inference_registry_is_order_independent_and_idempotent ... ok
+test component::app::artifact_contribution_tests::mutation_roster_entries_are_deterministic_across_repeated_calls ... ok
+test component::app::example_source_tests::example_delegates_to_example_source ... ok
+test component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically ... FAILED
+test component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite ... FAILED
+test component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit ... FAILED
+test component::app::artifact_inference_wire_tests::request_rejects_unknown_wire_version_before_registry_lookup ... ok
+test component::app::artifact_inference_wire_tests::wire_execution_observes_midflight_cancellation ... ok
+test component::app::artifact_inference_wire_tests::wire_execution_preserves_every_echoed_request_fact ... ok
+test component::app::form_kit_tests::form_panel_builder_from_dictionary_routes_entries_into_field_rows ... ok
+test component::app::panel_kit_tests::selection_ids_reads_the_ids_array_arg ... ok
+test component::app::panel_kit_tests::panel_tree_builder_produces_a_namespaced_tree_with_placeholder ... ok
+test component::app::form_kit_tests::form_panel_builder_wraps_a_field_control_and_submit_button ... ok
+test component::app::form_kit_tests::entity_detail_builds_a_stack_with_header_key_value_and_actions ... ok
+test component::app::example_source_tests::example_source_converts_into_example_definition_and_registers_on_app ... ok
+test component::app::panel_kit_tests::tree_item_builds_a_bare_item ... ok
+test component::app::panel_kit_tests::tree_item_with_action_draggable_maps_json_object_to_string_drag_data ... ok
+test component::app::terminology_tests::resolve_labels_is_exhaustive_over_all_four_cells ... ok
+test component::app::testkit::surface_testkit_tests::editor_and_viewer_share_one_dialect ... ok
+test component::app::testkit::surface_testkit_tests::viewer_rejects_every_contract_mutating_verb ... ok
+test component::app::testkit::surface_testkit_tests::editor_fixture_still_mutates_normally ... ok
+test component::app::testkit::testkit_tests::meta_carries_actor_and_local_instance_id ... ok
+test component::app::testkit::testkit_tests::assert_ingest_idempotent_does_not_double_apply ... ok
+test component::app::testkit::testkit_tests::assert_undo_redo_round_trip_passes_for_a_real_operation ... ok
+test component::app::testkit::testkit_tests::new_app_constructs_a_registry_less_wrapper ... ok
+test component::app::testkit::transaction_testkit_tests::a_mutating_command_while_pending_is_rejected_but_reads_still_work ... ok
+test component::app::testkit::surface_testkit_tests::new_viewer_constructs_a_registry_less_wrapper ... ok
+test component::app::testkit::testkit_tests::assert_two_instances_converge_on_disjoint_edits ... FAILED
+test component::app::testkit::surface_testkit_tests::viewer_never_mutates_the_document_or_draft_store ... ok
+test component::app::testkit::transaction_testkit_tests::commit_produces_exactly_one_edit_with_group_id_and_origin ... ok
+test component::app::testkit::transaction_testkit_tests::dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying ... ok
+test component::app::testkit::transaction_testkit_tests::generation_mismatch_is_rejected_with_the_frozen_code ... ok
+test component::app::testkit::transaction_testkit_tests::plain_command_still_applies_normally ... ok
+test component::app::testkit::transaction_testkit_tests::second_prepare_while_pending_is_rejected_instance_busy ... ok
+test component::app::window_kits_tests::document_kit_renders_one_child_per_page ... ok
+test component::app::testkit::transaction_testkit_tests::undo_and_redo_by_group ... ok
+test component::app::window_kits_tests::en_de_labels_differ_except_text ... ok
+test component::app::testkit::transaction_testkit_tests::rollback_leaves_state_untouched ... ok
+test component::app::window_kits_tests::editable_variants_declare_exactly_their_frozen_command_id ... ok
+test component::app::window_kits_tests::image_kit_renders_data_uri_from_base64 ... ok
+test component::app::window_kits_tests::kind_ids_match_the_frozen_table ... ok
+test component::app::window_kits_tests::media_kit_renders_duration_and_position ... ok
+test component::app::window_kits_tests::mesh_kit_renders_world3d_component_scene ... ok
+test component::app::window_kits_tests::table_kit_renders_columns_and_rows_json ... ok
+test component::app::window_kits_tests::text_kit_read_only_stamps_settings_json ... ok
+test component::app::window_kits_tests::text_kit_renders_buffer_into_component_scene ... ok
+test component::app::window_kits_tests::window_kind_ids_and_labels_are_non_empty_and_id_matches_definition ... ok
+test component::app::window_kits_tests::tree_kit_renders_nested_items ... ok
+test component::builder::plugin_builder_dependency_tests::flow_extension_descriptors_are_idempotent_and_conflict_rejecting ... ok
+test component::builder::plugin_builder_dependency_tests::a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest ... ok
+test component::builder::plugin_builder_dependency_tests::host_media_conflicts_reject_the_whole_candidate_before_execution ... ok
+test component::builder::plugin_builder_dependency_tests::dependency_gating_rejects_a_contribution_onto_a_non_dependency ... ok
+test component::derived_artifact_children_tests::derive_artifact_facets_children_arm_wires_the_macro_generated_composer ... ok
+test component::builder::plugin_builder_dependency_tests::host_media_contributions_are_idempotent_and_execute_only_at_runtime ... ok
+test component::derived_artifact_children_tests::derived_composer_compose_routes_matching_sources_through_compose_from_children ... ok
+test component::derived_artifact_children_tests::derived_composer_reads_defaults_to_composition_reads_for_a_leaf_with_no_children ... ok
+test component::derived_artifact_children_tests::derived_composer_reads_includes_child_slot_dialects ... ok
+test component::engagement::tests::engagement_token_matches_full_token_only ... ok
+test component::engagement::tests::strip_engagement_prefix_accepts_normalized_and_raw_forms ... ok
+test component::engagement::tests::strip_engagement_prefix_rejects_non_matching_commands ... ok
+test component::engagement::tests::strip_engagement_prefix_preserves_decimal_points ... ok
+test component::plugin_runtime::contributed_mutation_wire_tests::artifact_mutation_plan_rejects_a_mismatched_artifact_kind ... ok
+test component::plugin_runtime::contributed_mutation_wire_tests::artifact_mutation_plan_rejects_an_unregistered_mutation_id ... ok
+test component::plugin_runtime::contributed_mutation_wire_tests::artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan ... ok
+test component::plugin_runtime::extension_bundle_dependency_tests::extends_matching_the_first_dependency_is_accepted_regardless_of_call_order ... ok
+test component::plugin_runtime::extension_bundle_dependency_tests::extends_mismatching_the_first_dependency_panics ... ok
+test component::plugin_runtime::extension_bundle_dependency_tests::extends_set_before_a_mismatching_dependency_also_panics ... ok
+test component::plugin_runtime::opening_command_relay_tests::open_artifact_relays_an_exactly_matched_surface ... ok
+test component::plugin_runtime::opening_command_relay_tests::opening_relays_reject_invalid_or_inconsistent_addresses ... ok
+test component::plugin_runtime::opening_command_relay_tests::default_app_commands_relay_the_validated_wire_coordinates ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::a_coalesced_gesture_appends_exactly_one_command_log_entry ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames ... FAILED
+test component::plugin_runtime::plugin_builder_contract_tests::a_command_reaches_both_ephemeral_lanes_without_touching_history ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::action_definition_with_category_sets_the_ribbon_taxonomy_field ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::action_emit_amend_coalesces_while_commit_does_not ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::amend_dispatch_reports_only_this_dispatch_new_operations ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::an_op_less_view_action_is_logged_with_edit_id_none_and_count_one ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::build_definition_rejects_transitive_flat_interaction ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::an_operation_action_appends_one_command_log_entry_linked_to_its_edit ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::an_operation_kind_action_with_zero_operations_still_logs_one_entry ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::attach_detach_reattach_resumes_backbone_convergence ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::clear_selection_and_select_all_apply_across_every_declared_domain ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::copy_emits_clipboard_write_effect_with_no_operations ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::created_children_survive_absorb_into_the_child_store_map ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::copy_on_empty_selection_is_a_benign_no_operation ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::cut_removes_label_and_emits_clipboard_write_as_one_undo_unit ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::coalesced_operations_amend_a_single_edit ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::command_op_records_history_exactly_like_an_operation_action ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::context_menu_wire_request_without_view_state_still_parses ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::consecutive_identical_view_dispatches_are_distinct_history_entries ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::copy_cut_paste_are_registered_as_clipboard_kind_actions ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::context_menu_resolves_labels_from_the_registry_and_respects_guards ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::history_delivery_does_not_widen_a_none_ui_scope ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::history_delivery_preserves_partial_ui_scope ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::history_actions_round_trip_through_the_store ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::document_round_trips_through_serialization ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::ingested_remote_edits_are_backfilled_into_the_command_log ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::interaction_select_replace_persists_through_the_interaction_store ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::menu_group_produces_a_group_row_keyed_by_category ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::manifest_command_dispatch_validates_structural_app_ownership ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::manifest_mode_command_requires_the_active_structural_owner ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::ingest_operations_is_idempotent ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::note_shell_command_is_intercepted_before_the_app_and_records_each_repeat ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::interaction_verbs_are_recorded_under_the_interaction_action_kind ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads ... FAILED
+test component::plugin_runtime::plugin_builder_contract_tests::operation_action_emits_kernel_op_with_true_inverse ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::paste_materializes_fragment_at_original_anchor ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::paste_with_no_fragment_arg_is_a_benign_no_operation ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::operation_command_emits_kernel_op_with_true_inverse ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::paste_with_non_original_anchor_reaches_the_app_placement ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::plugin_builder_builds_bundle_from_fluent_spec ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::plugin_command_handler_is_program_owned_across_app_instances ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::plugin_builder_wires_app_factory_for_create_app ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::registry_less_construction_skips_enforcement ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::revert_to_command_restores_the_snapshot_and_appends_one_entry ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::scope_upgrade_full_stays_full ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::selection_count_phrase_formats_mixed_selection ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::set_history_command_filter_emits_no_operations_and_updates_the_view ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::set_history_command_filter_is_never_logged ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::shell_action_emits_host_effect_without_operations ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::test_app_id_matches_its_own_dialect ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::set_active_utility_carries_its_value_directly_and_emits_no_operations ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::serializer_entry_of_and_deserializer_entry_of_erase_correctly ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::set_selection_mode_and_set_interaction_granularity_persist_immediately ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::ui_history_panel_filters_rows_and_gates_the_backwards_action ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::the_child_content_view_never_goes_stale_across_undo_and_redo ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::ui_tree_stamping_replaces_app_supplied_presence_from_interaction_state ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::view_action_emits_no_operations ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::undo_on_empty_history_is_a_benign_no_operation ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::view_action_emitting_ops_is_rejected ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::undo_and_redo_append_entries_and_never_shrink_the_log ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::view_dispatches_remain_distinct_across_interleaved_entries ... ok
+test component::subset_macro_tests::__subset_registration::conformance::subset_macro_derived_dialect_is_non_any ... ok
+test component::subset_macro_tests::__subset_registration::conformance::subset_macro_derived_validator_registers ... ok
+test component::subset_macro_tests::subset_macro_derived_kind_and_dialect ... ok
+test component::plugin_runtime::plugin_builder_contract_tests::validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it ... ok
+test component::subset_macro_tests::subset_macro_derived_register_is_idempotent ... ok
+test component::world3d_host::tests::apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall ... ok
+test component::world3d_host::tests::merge_world_selection_ids_supports_add_toggle_invertive_and_remove ... ok
+test component::world3d_host::tests::projection_spec_json_projects_only_active_kind_fields ... ok
+test component::world3d_host::tests::projection_measures_tree_matches_the_requested_taxonomy ... ok
+test component::world3d_host::tests::isometric_pose_matches_the_classic_35_264_45_direction ... ok
+test component::world3d_host::tests::selection_set_membership_is_constant_time ... ok
+
+failures:
+
+---- component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically' (19315098) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4413:42:
+called `Result::unwrap()` on an `Err` value: ArtifactDefinitionError { code: "artifact-definition.category-identity", message: "s.stdio.ifc.first-0 does not use the canonical resource identity grammar" }
+
+---- component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite' (19315095) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4430:102:
+called `Result::unwrap()` on an `Err` value: ArtifactDefinitionError { code: "artifact-definition.category-identity", message: "s.stdio.ifc.localized does not use the canonical localization identity grammar" }
+
+---- component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit stdout ----
+
+thread 'component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit' (19315097) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4397:13:
+assertion failed: definition.validate().is_ok()
+
+---- component::app::testkit::testkit_tests::assert_two_instances_converge_on_disjoint_edits stdout ----
+
+thread 'component::app::testkit::testkit_tests::assert_two_instances_converge_on_disjoint_edits' (19315159) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5852:82:
+pump b: Fault { origin: Module, code: FaultCode("module.vcs"), severity: Error, message: "validation failed: change change-ff0d4578eb0afb68 has an invalid edit reference edit-fab41a62d5391cd9", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }
+
+---- component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames stdout ----
+
+thread 'component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames' (19315252) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16301:180:
+register child factory: Conflict { kind: "s.test.child" }
+
+---- component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads stdout ----
+
+thread 'component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads' (19315393) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16177:80:
+seed valid open degraded conflict: ValidationFailed("history repeats or omits conflict identity test-degraded-conflict")
+
+
+failures:
+    component::app::artifact_definition_contract_tests::identities_and_locales_are_explicit_and_conflicts_do_not_overwrite
+    component::app::artifact_definition_contract_tests::plural_definition_carries_every_artifact_capability_without_a_dispatch_edit
+    component::app::artifact_definition_contract_tests::registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically
+    component::app::testkit::testkit_tests::assert_two_instances_converge_on_disjoint_edits
+    component::plugin_runtime::plugin_builder_contract_tests::a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames
+    component::plugin_runtime::plugin_builder_contract_tests::merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads
+
+test result: FAILED. 214 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p semio-framework-plugin --lib`

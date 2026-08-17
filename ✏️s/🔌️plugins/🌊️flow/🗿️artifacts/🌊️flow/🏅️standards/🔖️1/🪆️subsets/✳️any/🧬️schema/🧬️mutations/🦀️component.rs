@@ -38,8 +38,11 @@ pub type FlowEnvelope = ArtifactEnvelope<FlowSnapshot, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowSnapshot, FlowMutation>;
 
 /// 🌈️ Applies a mutation onto a snapshot in place.
-pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) {
-    *snapshot = <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, snapshot).apply(snapshot);
+pub fn apply_flow_mutation(snapshot: &mut FlowSnapshot, mutation: &FlowMutation) -> protocol::MutationApplyResult<()> {
+    let next = <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
+
+    *snapshot = next;
+    Ok(())
 }
 
 /// ↩️ Inverse mutations for undo.
@@ -179,3 +182,183 @@ impl protocol::OpText for FlowMutation {
     }
 }
 //#endregion 🔹WireCodecs
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::artifacts::flow::schema::mutations::connect_widgets::mutation::ConnectWidgets;
+    use crate::artifacts::flow::schema::mutations::create_widget::mutation::CreateWidget;
+    use crate::artifacts::flow::schema::mutations::delete_widget::mutation::DeleteWidget;
+    use crate::artifacts::flow::schema::mutations::disconnect_widgets::mutation::DisconnectWidgets;
+    use crate::artifacts::flow::schema::mutations::move_widgets::mutation::MoveWidgets;
+    use crate::artifacts::flow::schema::mutations::replace_widget::mutation::ReplaceWidget;
+    use crate::artifacts::flow::schema::mutations::reorder_synapses::mutation::ReorderSynapses;
+    use crate::artifacts::flow::schema::mutations::reorder_widgets::mutation::ReorderWidgets;
+    use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::mutation::UpdateSynapseEndpoints;
+    use flow::{FlowLayoutEntry, Widget, WidgetLayout};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+
+    fn widget_note(id: &str) -> Widget {
+        Widget::InputNote { id: id.into(), text: String::new() }
+    }
+    fn widget_slider(id: &str) -> Widget {
+        Widget::InputSlider { id: id.into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }
+    }
+
+    fn apply(base: &FlowSnapshot, mutation: &FlowMutation) -> FlowSnapshot {
+        <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, base).diff().apply(base).expect("valid mutation diff")
+    }
+
+    fn base_with_two_widgets() -> FlowSnapshot {
+        let base = apply(&FlowSnapshot::default(), &FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }));
+        apply(&base, &FlowMutation::CreateWidget(CreateWidget { index: 1, widget: widget_slider("w2") }))
+    }
+
+    fn base_with_synapse() -> FlowSnapshot {
+        let base = base_with_two_widgets();
+        apply(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "s1".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }))
+    }
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
+    /// (create/delete/connect/disconnect/move/replace/reorder/update).
+    #[test]
+    fn create_widget_duplicate_id_is_fatal() {
+        let base = base_with_two_widgets();
+        let outcome = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn delete_widget_missing_target_is_error() {
+        let base = FlowSnapshot::default();
+        assert_missing_target_is_error(&base, &FlowMutation::DeleteWidget(DeleteWidget { id: "ghost".into() }));
+    }
+
+    #[test]
+    fn delete_widget_cascades_severed_synapses() {
+        let base = base_with_synapse();
+        let outcome = FlowMutation::DeleteWidget(DeleteWidget { id: "w1".into() }).diff(&base);
+        assert!(outcome.messages().iter().any(|message| message.level == protocol::Severity::Info && message.code.0 == "mutation.cascade"), "deleting a widget that severs a synapse must carry an Info mutation.cascade message, got {:?}", outcome.messages());
+        assert!(outcome.diff().apply(&base).is_ok());
+    }
+
+    #[test]
+    fn connect_widgets_missing_endpoint_is_error() {
+        let base = base_with_two_widgets();
+        assert_missing_target_is_error(&base, &FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "edge-99".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+    }
+
+    #[test]
+    fn connect_widgets_duplicate_id_is_fatal() {
+        let base = base_with_synapse();
+        let outcome = FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "s1".into(), from: "w2".into(), from_port: "out".into(), to: "w1".into(), to_port: "in".into() }).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn connect_widgets_parallel_is_no_op() {
+        let base = base_with_synapse();
+        let outcome = FlowMutation::ConnectWidgets(ConnectWidgets { index: 1, id: "s2".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+        assert_eq!(outcome.diff(), &FlowDiff::default());
+    }
+
+    #[test]
+    fn disconnect_widgets_missing_target_is_error() {
+        let base = base_with_two_widgets();
+        assert_missing_target_is_error(&base, &FlowMutation::DisconnectWidgets(DisconnectWidgets { id: "ghost".into() }));
+    }
+
+    #[test]
+    fn move_widgets_missing_target_is_error() {
+        let base = base_with_two_widgets();
+        assert_missing_target_is_error(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "ghost".into(), layout: Some(WidgetLayout { x: 1.0, y: 1.0 }) }] }));
+    }
+
+    #[test]
+    fn move_widgets_non_finite_is_fatal() {
+        let base = base_with_two_widgets();
+        let outcome = FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: f64::NAN, y: 0.0 }) }] }).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn move_widgets_unchanged_is_no_op() {
+        let base = base_with_two_widgets();
+        let moved = apply(&base, &FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 5.0, y: 5.0 }) }] }));
+        let outcome = FlowMutation::MoveWidgets(MoveWidgets { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 5.0, y: 5.0 }) }] }).diff(&moved);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+
+    #[test]
+    fn replace_widget_missing_target_is_error() {
+        let base = base_with_two_widgets();
+        assert_missing_target_is_error(&base, &FlowMutation::ReplaceWidget(ReplaceWidget { id: "ghost".into(), widget: widget_note("ghost") }));
+    }
+
+    #[test]
+    fn replace_widget_unchanged_is_no_op() {
+        let base = base_with_two_widgets();
+        let outcome = FlowMutation::ReplaceWidget(ReplaceWidget { id: "w1".into(), widget: widget_note("w1") }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+
+    #[test]
+    fn reorder_widgets_missing_target_is_error() {
+        let base = base_with_two_widgets();
+        assert_missing_target_is_error(&base, &FlowMutation::ReorderWidgets(ReorderWidgets { id: "ghost".into(), to_index: 0 }));
+    }
+
+    #[test]
+    fn reorder_widgets_already_current_is_no_op() {
+        let base = base_with_two_widgets();
+        let outcome = FlowMutation::ReorderWidgets(ReorderWidgets { id: "w1".into(), to_index: 0 }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+
+    #[test]
+    fn reorder_synapses_missing_target_is_error() {
+        let base = base_with_synapse();
+        assert_missing_target_is_error(&base, &FlowMutation::ReorderSynapses(ReorderSynapses { id: "ghost".into(), to_index: 0 }));
+    }
+
+    #[test]
+    fn reorder_synapses_already_current_is_no_op() {
+        let base = base_with_synapse();
+        let outcome = FlowMutation::ReorderSynapses(ReorderSynapses { id: "s1".into(), to_index: 0 }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+
+    #[test]
+    fn update_synapse_endpoints_missing_target_is_error() {
+        let base = base_with_synapse();
+        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "ghost".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+    }
+
+    #[test]
+    fn update_synapse_endpoints_missing_endpoint_is_error() {
+        let base = base_with_synapse();
+        assert_missing_target_is_error(&base, &FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "ghost".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }));
+    }
+
+    #[test]
+    fn update_synapse_endpoints_unchanged_is_no_op() {
+        let base = base_with_synapse();
+        let outcome = FlowMutation::UpdateSynapseEndpoints(UpdateSynapseEndpoints { id: "s1".into(), from: "w1".into(), from_port: "out".into(), to: "w2".into(), to_port: "in".into() }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+    }
+    //#endregion 🔖️OutcomeLaws
+}
+//#endregion 🧪️Tests

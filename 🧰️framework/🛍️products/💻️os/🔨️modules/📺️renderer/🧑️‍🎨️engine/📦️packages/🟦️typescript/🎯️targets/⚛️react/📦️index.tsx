@@ -712,11 +712,13 @@ import {
   type ShellAction,
   shellReducer,
   selectUiDevice,
+  selectOpenConflicts,
+  selectQuarantinedConflicts,
   initialShellState,
   type ActionPaneState,
   type ExtraWindowInstance,
 } from "../../../../🧱️elements/Shell/🟦️component.tsx";
-export { actionStageKey, type CommandPanelState, type ShellState, type ShellAction, shellReducer, selectUiDevice, initialShellState };
+export { actionStageKey, type CommandPanelState, type ShellState, type ShellAction, shellReducer, selectUiDevice, selectOpenConflicts, selectQuarantinedConflicts, initialShellState };
 //#endregion 🧮️ShellStore
 
 //#region ShellHelpers
@@ -801,8 +803,19 @@ import {
   buildActiveUtilityByWindowId,
   buildUiRefreshRequest,
   applyUiRefreshResponseToCache,
+  AUTO_CHECKIN_IDLE_MS,
+  AUTO_CHECKIN_EDIT_THRESHOLD,
+  AutoCheckinScheduler,
+  canCheckIn,
+  checkinActionText,
+  checkinMessagePlaceholderText,
+  checkinSubmitText,
+  checkinCancelText,
+  type SyncPillState,
+  computeSyncPillState,
+  syncPillText,
 } from "../../../../🧱️elements/ShellHelpers/🟦️component.tsx";
-export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache };
+export { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, runRequestMediaFrames, type SpaceShellPath, type ShellRoute, parseShellRoute, parseSpaceShellPath, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, studioPanelFocusingSpawned, viewStateWithSpacePanel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, resolveUtilities, resolveUtilityNodes, type SelectionUtilityOptions, spawnedWindowChromeForKind, uiNodeToTreePanelConfig, synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, shellTerminologyLabel, driverDisplayLabel, DEFAULT_PANEL_WIDTH_PX, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, type RevealCutoffStore, createRevealCutoffStore, worldRevealCutoffStore, PUZZLE3D_FILL_REVEAL_GROUP_ID, reconcileCommittedRevealCutoffs, isRevealCutoffHidden, createInFlightSkippingInterval, createCoalescingActionDispatcher, registeredPuzzle3dBrushMeshes, windowMeasureTreeContainsId, renderWindowMeasuresTree, renderStagedArgControl, actionRequiresStagedForm, isEditableEventTarget, keyboardEventMatchesChord, type KeybindingIntent, resolveKeybindingIntent, resolveUtilityActivation, actionCategoryId, actionCategories, buildActionCategoryTree, type WindowActionPaneProps, WindowActionPane, type ResolvedCommand, commandAddressKey, resolveCommands, commandCategories, buildOsCommands, dispatchOsCommand, buildCommandCategoryTree, buildCommandCategoryTabs, buildToolTabs, toolIdFromPanelTabId, preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, checkinActionText, checkinMessagePlaceholderText, checkinSubmitText, checkinCancelText, type SyncPillState, computeSyncPillState, syncPillText };
 //#endregion ShellHelpers
 
 //#region Boot
@@ -824,8 +837,11 @@ import {
   TutorialRecorder,
   type FrameworkOsShellProps,
   FrameworkOsShell,
+  shellActorId,
+  canonicalSurfaceId,
+  directoryCommandFromAction,
 } from "../../../../🧱️elements/ShellHost/🟦️component.tsx";
-export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell };
+export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionId, useMapContextMenuSpecs, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, directoryCommandFromAction };
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
@@ -1274,3 +1290,75 @@ export { DiffViewHost };
 import { EventFeedHost } from "../../../../🧱️elements/EventFeedHost/🟦️component.tsx";
 export { EventFeedHost };
 //#endregion 🔖️EventFeedHost
+
+//#region 🔖️SpacesI18n
+/** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — `ui.home.*`/`ui.space.*`/
+ * `ui.presence.*`/`ui.checkin.*`/`ui.identity.*` chrome vocabulary consumed by `ShellHost`'s identity
+ * bootstrap, directory-lane, and routing regions. This is new domain-neutral-looking chrome text, so
+ * it would normally register into `uiChromeTranslationBundles` — but that dictionary lives in
+ * `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx`, outside this
+ * ticket's lease. Mirrors `ShellHelpers`' own `SurfaceRoleLabels` workaround for the identical
+ * situation: a local `{en, de}` pair table resolved directly off a locale, English declared first,
+ * no default language (CLAUDE.md). Appended only — never reorders or edits any key above this
+ * region. */
+export type SpacesUiLabelKey =
+  | "ui.home.title"
+  | "ui.home.createSpace"
+  | "ui.home.emptyState"
+  | "ui.space.title"
+  | "ui.space.studio"
+  | "ui.space.createArtifact"
+  | "ui.space.share"
+  | "ui.presence.online"
+  | "ui.presence.offline"
+  | "ui.presence.peers"
+  | "ui.checkin.action"
+  | "ui.checkin.pending"
+  | "ui.checkin.auto"
+  | "ui.identity.signIn"
+  | "ui.identity.signOut"
+  | "ui.identity.offline"
+  | "ui.identity.connecting"
+  | "ui.sync.status.persisted"
+  | "ui.sync.status.pending"
+  | "ui.sync.status.remote"
+  | "ui.sync.status.remote.connected"
+  | "ui.sync.status.remote.connecting"
+  | "ui.sync.status.remote.backoff"
+  | "ui.sync.status.remote.detached";
+
+const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string; readonly de: string }>> = {
+  "ui.home.title": { en: "Spaces", de: "Spaces" },
+  "ui.home.createSpace": { en: "Create Space", de: "Space erstellen" },
+  "ui.home.emptyState": { en: "No spaces yet", de: "Noch keine Spaces" },
+  "ui.space.title": { en: "Space", de: "Space" },
+  "ui.space.studio": { en: "Studio", de: "Studio" },
+  "ui.space.createArtifact": { en: "Create Artifact", de: "Artefakt erstellen" },
+  "ui.space.share": { en: "Share", de: "Teilen" },
+  "ui.presence.online": { en: "Online", de: "Online" },
+  "ui.presence.offline": { en: "Offline", de: "Offline" },
+  "ui.presence.peers": { en: "Peers", de: "Teilnehmer" },
+  "ui.checkin.action": { en: "Check In", de: "Einchecken" },
+  "ui.checkin.pending": { en: "Uncommitted changes", de: "Nicht übernommene Änderungen" },
+  "ui.checkin.auto": { en: "Auto check-in", de: "Automatisches Einchecken" },
+  "ui.identity.signIn": { en: "Sign In", de: "Anmelden" },
+  "ui.identity.signOut": { en: "Sign Out", de: "Abmelden" },
+  "ui.identity.offline": { en: "Working offline", de: "Offline arbeiten" },
+  "ui.identity.connecting": { en: "Connecting…", de: "Verbindung wird hergestellt…" },
+  "ui.sync.status.persisted": { en: "Persisted", de: "Gespeichert" },
+  "ui.sync.status.pending": { en: "Pending", de: "Ausstehend" },
+  "ui.sync.status.remote": { en: "Remote", de: "Remote" },
+  "ui.sync.status.remote.connected": { en: "connected", de: "verbunden" },
+  "ui.sync.status.remote.connecting": { en: "connecting", de: "verbindet" },
+  "ui.sync.status.remote.backoff": { en: "backoff", de: "erneuter Versuch" },
+  "ui.sync.status.remote.detached": { en: "detached", de: "getrennt" },
+};
+
+/** 📇️ Resolves one of {@link SpacesUiLabelKey}'s frozen bilingual pairs — `locale` accepts any
+ * string (a live `UiLocale`/`ShellLocale` value) and falls back to English for anything but `"de"`,
+ * matching `ShellHelpers.frozenLabelText`'s own fallback rule. */
+export function spacesUiLabel(key: SpacesUiLabelKey, locale: string = "en"): string {
+  const pair = SPACES_UI_LABELS[key];
+  return locale === "de" ? pair.de : pair.en;
+}
+//#endregion 🔖️SpacesI18n

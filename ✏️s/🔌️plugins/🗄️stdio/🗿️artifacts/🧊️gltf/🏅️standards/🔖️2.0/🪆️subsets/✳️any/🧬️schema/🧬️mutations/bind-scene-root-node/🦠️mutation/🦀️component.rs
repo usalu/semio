@@ -5,7 +5,7 @@ use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.bind-scene-root-node.v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfBindSceneRootNodePayload {
     pub scene: usize,
     pub node: usize,

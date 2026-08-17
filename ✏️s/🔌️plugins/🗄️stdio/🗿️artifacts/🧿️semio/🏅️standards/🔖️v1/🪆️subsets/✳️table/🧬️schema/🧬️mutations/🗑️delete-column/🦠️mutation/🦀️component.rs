@@ -14,7 +14,7 @@ pub struct DeleteColumn {
 impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for DeleteColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "column", kind: "delete-column", record: "DeletedColumn" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {

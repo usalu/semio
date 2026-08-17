@@ -22,7 +22,7 @@ pub struct ReplaceFill {
 impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for ReplaceFill {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "fill", kind: "replace-fill", record: "ReplacedFill" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> <SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {

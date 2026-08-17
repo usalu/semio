@@ -1946,7 +1946,7 @@ fn dwg_skip_r2010_graphic(reader: &mut DwgBitReader<'_>) -> Result<(), String> {
     Ok(())
 }
 
-fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCommon, String> {
+fn dwg_decode_r2010_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCommon, String> {
     dwg_skip_r2010_graphic(reader)?;
     let entmode = reader.read_bb()?;
     let num_reactors = reader.read_bl()?;
@@ -1970,7 +1970,7 @@ fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgEntityCo
     Ok(DwgEntityCommon { entmode, num_reactors, xdic_missing, color_book: encoded_color & 0x4000 != 0, ltype_flags, plotstyle_flags, material_flags, color })
 }
 
-fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>, common: &DwgEntityCommon) -> Result<u64, String> {
+fn dwg_decode_r2010_entity_handles(reader: &mut DwgBitReader<'_>, common: &DwgEntityCommon) -> Result<u64, String> {
     if common.entmode == 0 {
         reader.read_handle()?;
     }
@@ -2123,10 +2123,10 @@ fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u64, usi
     object_map.push((handle, offset));
 }
 
-fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+fn dwg_decode_r2010_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
     match object_type {
         DWG_TYPE_LINE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let z_is_zero = reader.read_b()?;
             let start_x = reader.read_rd()?;
             let end_x = reader.read_dd(start_x)?;
@@ -2140,60 +2140,60 @@ fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &
             };
             let _thickness = reader.read_bt()?;
             let _extrusion = reader.read_be()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Line { start: [start_x, start_y, start_z], end: [end_x, end_y, end_z] })))
         }
         DWG_TYPE_POINT => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let at = reader.read_3bd()?;
             let _thickness = reader.read_bt()?;
             let _extrusion = reader.read_be()?;
             let _x_axis_angle = reader.read_bd()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Point { at })))
         }
         DWG_TYPE_CIRCLE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let radius = reader.read_bd()?;
             let _thickness = reader.read_bt()?;
             let normal = reader.read_be()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Circle { center, radius, normal })))
         }
         DWG_TYPE_ARC => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let radius = reader.read_bd()?;
             let _thickness = reader.read_bt()?;
             let normal = reader.read_be()?;
             let start_angle = reader.read_bd()?;
             let end_angle = reader.read_bd()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Arc { center, radius, start_angle, end_angle, normal })))
         }
         DWG_TYPE_ELLIPSE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let center = reader.read_3bd()?;
             let major_axis = reader.read_3bd()?;
             let normal = reader.read_3bd()?;
             let ratio = reader.read_bd()?;
             let start_param = reader.read_bd()?;
             let end_param = reader.read_bd()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal })))
         }
         DWG_TYPE_TEXT => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let at = reader.read_3bd()?;
             let height = reader.read_bd()?;
             let rotation = reader.read_bd()?;
             let content = reader.read_t()?;
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Text { at, height, rotation, content })))
         }
         DWG_TYPE_FACE3D => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let has_no_flags = reader.read_b()?;
             let z_is_zero = reader.read_b()?;
             let first = [reader.read_rd()?, reader.read_rd()?, if z_is_zero { 0.0 } else { reader.read_rd()? }];
@@ -2204,11 +2204,11 @@ fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &
             if !has_no_flags {
                 let _invisible_edges = reader.read_bs()?;
             }
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Face3d { corners })))
         }
         DWG_TYPE_LWPOLYLINE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let flags = reader.read_bs()?;
             if flags & 4 != 0 {
                 let _constant_width = reader.read_bd()?;
@@ -2243,11 +2243,11 @@ fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &
                 reader.read_bd()?;
                 reader.read_bd()?;
             }
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::LwPolyline { closed: flags & 512 != 0, elevation, vertices, bulges })))
         }
         DWG_TYPE_SPLINE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let degree = reader.read_bl()?;
             let cp_count = reader.read_bl()? as usize;
             let mut control_points = Vec::with_capacity(cp_count);
@@ -2264,22 +2264,22 @@ fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &
             for _ in 0..weight_count {
                 weights.push(reader.read_rd()?);
             }
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Spline { degree, control_points, knots, weights })))
         }
         DWG_TYPE_POLYLINE3D => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let closed = reader.read_b()?;
             let count = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(count);
             for _ in 0..count {
                 vertices.push(reader.read_3bd()?);
             }
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::Polyline3d { closed, vertices })))
         }
         DWG_TYPE_POLYLINE_PFACE => {
-            let common = dwg_decode_entity_common(reader)?;
+            let common = dwg_decode_r2010_entity_common(reader)?;
             let vcount = reader.read_bl()? as usize;
             let mut vertices = Vec::with_capacity(vcount);
             for _ in 0..vcount {
@@ -2296,12 +2296,111 @@ fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &
                 }
                 faces.push(face);
             }
-            let layer_handle = dwg_decode_entity_handles(handles, &common)?;
+            let layer_handle = dwg_decode_r2010_entity_handles(handles, &common)?;
             Ok(Some((layer_handle, common.color, DwgGeometry::PolyfaceMesh { vertices, faces })))
         }
         _ => Ok(None),
     }
 }
+
+//#region SemioEntityDecode
+fn dwg_decode_semio_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+    let _entity_mode = reader.read_bb()?;
+    let _reactor_count = reader.read_bl()?;
+    let _no_links = reader.read_b()?;
+    let color = DwgColor::from_bs(reader.read_bs()?);
+    let _linetype_scale = reader.read_bd()?;
+    let _linetype_flags = reader.read_bb()?;
+    let _plot_style_flags = reader.read_bb()?;
+    let _invisibility = reader.read_bs()?;
+    let _lineweight = reader.read_rc()?;
+    Ok(color)
+}
+
+fn dwg_decode_semio_entity_handles(handles: &mut DwgBitReader<'_>) -> Result<u64, String> {
+    let (_owner_code, _owner_handle) = handles.read_handle()?;
+    let (_layer_code, layer_handle) = handles.read_handle()?;
+    Ok(layer_handle)
+}
+
+fn dwg_decode_semio_entity(object_type: u16, reader: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+    let color = match object_type {
+        DWG_TYPE_LINE | DWG_TYPE_POINT | DWG_TYPE_CIRCLE | DWG_TYPE_ARC | DWG_TYPE_ELLIPSE | DWG_TYPE_LWPOLYLINE | DWG_TYPE_SPLINE | DWG_TYPE_TEXT | DWG_TYPE_FACE3D | DWG_TYPE_POLYLINE3D | DWG_TYPE_POLYLINE_PFACE => {
+            dwg_decode_semio_entity_common(reader)?
+        }
+        _ => return Ok(None),
+    };
+    let geometry = match object_type {
+        DWG_TYPE_LINE => DwgGeometry::Line { start: reader.read_3bd()?, end: reader.read_3bd()? },
+        DWG_TYPE_POINT => DwgGeometry::Point { at: reader.read_3bd()? },
+        DWG_TYPE_CIRCLE => DwgGeometry::Circle { center: reader.read_3bd()?, radius: reader.read_bd()?, normal: reader.read_be()? },
+        DWG_TYPE_ARC => DwgGeometry::Arc { center: reader.read_3bd()?, radius: reader.read_bd()?, start_angle: reader.read_bd()?, end_angle: reader.read_bd()?, normal: reader.read_be()? },
+        DWG_TYPE_ELLIPSE => DwgGeometry::Ellipse { center: reader.read_3bd()?, major_axis: reader.read_3bd()?, normal: reader.read_be()?, ratio: reader.read_bd()?, start_param: reader.read_bd()?, end_param: reader.read_bd()? },
+        DWG_TYPE_TEXT => DwgGeometry::Text { at: reader.read_3bd()?, height: reader.read_bd()?, rotation: reader.read_bd()?, content: reader.read_t()? },
+        DWG_TYPE_FACE3D => DwgGeometry::Face3d { corners: [reader.read_3bd()?, reader.read_3bd()?, reader.read_3bd()?, reader.read_3bd()?] },
+        DWG_TYPE_LWPOLYLINE => {
+            let closed = reader.read_b()?;
+            let elevation = reader.read_bd()?;
+            let count = reader.read_bl()? as usize;
+            let mut vertices = Vec::with_capacity(count);
+            let mut bulges = Vec::with_capacity(count);
+            for _ in 0..count {
+                vertices.push(reader.read_2rd()?);
+                bulges.push(reader.read_bd()?);
+            }
+            DwgGeometry::LwPolyline { closed, elevation, vertices, bulges }
+        }
+        DWG_TYPE_SPLINE => {
+            let degree = reader.read_bl()?;
+            let control_point_count = reader.read_bl()? as usize;
+            let mut control_points = Vec::with_capacity(control_point_count);
+            for _ in 0..control_point_count {
+                control_points.push(reader.read_3bd()?);
+            }
+            let knot_count = reader.read_bl()? as usize;
+            let mut knots = Vec::with_capacity(knot_count);
+            for _ in 0..knot_count {
+                knots.push(reader.read_rd()?);
+            }
+            let weight_count = reader.read_bl()? as usize;
+            let mut weights = Vec::with_capacity(weight_count);
+            for _ in 0..weight_count {
+                weights.push(reader.read_rd()?);
+            }
+            DwgGeometry::Spline { degree, control_points, knots, weights }
+        }
+        DWG_TYPE_POLYLINE3D => {
+            let closed = reader.read_b()?;
+            let count = reader.read_bl()? as usize;
+            let mut vertices = Vec::with_capacity(count);
+            for _ in 0..count {
+                vertices.push(reader.read_3bd()?);
+            }
+            DwgGeometry::Polyline3d { closed, vertices }
+        }
+        DWG_TYPE_POLYLINE_PFACE => {
+            let vertex_count = reader.read_bl()? as usize;
+            let mut vertices = Vec::with_capacity(vertex_count);
+            for _ in 0..vertex_count {
+                vertices.push(reader.read_3bd()?);
+            }
+            let face_count = reader.read_bl()? as usize;
+            let mut faces = Vec::with_capacity(face_count);
+            for _ in 0..face_count {
+                let mut face = [0i32; 4];
+                for index in &mut face {
+                    let magnitude = reader.read_bl()? as i32;
+                    *index = if reader.read_b()? { -magnitude } else { magnitude };
+                }
+                faces.push(face);
+            }
+            DwgGeometry::PolyfaceMesh { vertices, faces }
+        }
+        _ => unreachable!(),
+    };
+    Ok(Some((dwg_decode_semio_entity_handles(handles)?, color, geometry)))
+}
+//#endregion SemioEntityDecode
 //#endregion DwgObjects
 
 //#region DwgWrite
@@ -7650,6 +7749,7 @@ fn encode_r2010_object_frame(object: &crate::artifacts::dwg::schema::snapshot::D
             DwgEntityBody::Insert(_) => encode_r2010_insert_frame(object),
             DwgEntityBody::DimensionLinear(_) => encode_r2010_dimension_linear_frame(object),
             DwgEntityBody::Viewport(_) => encode_r2010_viewport_frame(object),
+            DwgEntityBody::Geometry(_) => Err(format!("R2010 entity materializer does not encode typed {} objects", object.class_name)),
         },
         DwgLogicalObjectBody::AssociativeDependency(_) => encode_r2010_associative_dependency_frame(object),
         DwgLogicalObjectBody::AssociativeValueDependency(_) => encode_r2010_associative_value_dependency_frame(object),
@@ -8911,7 +9011,7 @@ fn decode_r2004_object_records(bytes: &[u8], classes: &[crate::artifacts::dwg::D
         } else if matches!(type_code, 533 | 534 | 535 | 536 | 537) || matches!(object.class_name.as_str(), "BLOCKALIGNMENTPARAMETER" | "BLOCKALIGNMENTGRIP" | "BLOCKSTRETCHACTION" | "BLOCKSCALEACTION" | "BLOCKFLIPACTION") {
             use crate::artifacts::dwg::schema::snapshot::{
                 DwgBlockActionConnection, DwgBlockActionCoordinateMode, DwgBlockActionWithBasePoint, DwgBlockAlignmentGrip, DwgBlockAlignmentParameter, DwgBlockFlipAction, DwgBlockScaleAction, DwgBlockScaleMode, DwgBlockStretchAction,
-                DwgLogicalObjectBody, DwgNamedEvaluationNodeReference, DwgStretchSelection, DwgStretchSelector,
+                DwgLogicalObjectBody, DwgStretchSelection, DwgStretchSelector,
             };
             let strings = strings.as_mut().ok_or_else(|| format!("{} {handle:#x} string stream missing", object.class_name))?;
             object.body = Some(match type_code {
@@ -11075,7 +11175,7 @@ pub(crate) fn verify_r2004_line_frames(bytes: &[u8], classes: &[crate::artifacts
             let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
             let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
             let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
+            let _encoded_payload_size = encoded_frame.read_ms()? as usize;
             let encoded_handle_bits = encoded_frame.read_umc()? as usize;
             let from = first.saturating_sub(4);
             return Err(format!(
@@ -11114,7 +11214,7 @@ fn verify_r2004_entity_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::Dw
             let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
             let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
             let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
+            let _encoded_payload_size = encoded_frame.read_ms()? as usize;
             let encoded_handle_bits = encoded_frame.read_umc()? as usize;
             let from = first.saturating_sub(4);
             return Err(format!(
@@ -11787,50 +11887,60 @@ fn dwg_from_r2004_sections(sections: &[DwgRawSection]) -> Result<DwgDrawing, Str
     let mut pending_entities = Vec::new();
     for (handle, address) in handle_map {
         if address >= object_data.len() {
-            continue;
+            return Err(format!("R2004 object {handle:#x} address {address:#x} is out of bounds"));
         }
         let mut sizer = DwgBitReader::new(&object_data[address..]);
-        let payload_len = match sizer.read_ms() {
-            Ok(value) => value as usize,
-            Err(_) => continue,
-        };
-        let handle_stream_bits = match sizer.read_umc() {
-            Ok(value) => value as usize,
-            Err(_) => continue,
-        };
+        let payload_len = sizer.read_ms().map_err(|error| format!("R2004 object {handle:#x} size: {error}"))? as usize;
+        let handle_stream_bits = sizer.read_umc().map_err(|error| format!("R2004 object {handle:#x} handle-stream size: {error}"))? as usize;
         sizer.pad_to_byte();
-        let payload_start = address + sizer.byte_pos;
-        let Some(payload) = object_data.get(payload_start..payload_start.saturating_add(payload_len)) else {
-            continue;
-        };
-        if handle_stream_bits > payload_len.saturating_mul(8) {
-            continue;
+        let payload_start = address.checked_add(sizer.byte_pos).ok_or_else(|| format!("R2004 object {handle:#x} payload address overflow"))?;
+        let payload_end = payload_start.checked_add(payload_len).ok_or_else(|| format!("R2004 object {handle:#x} payload length overflow"))?;
+        let payload = object_data.get(payload_start..payload_end).ok_or_else(|| format!("R2004 object {handle:#x} payload is truncated"))?;
+        let payload_bits = payload_len.checked_mul(8).ok_or_else(|| format!("R2004 object {handle:#x} payload bit size overflow"))?;
+        if handle_stream_bits > payload_bits {
+            return Err(format!("R2004 object {handle:#x} handle stream exceeds its payload"));
         }
         let mut reader = DwgBitReader::new(payload);
-        let Ok(mut handle_reader) = DwgBitReader::at_bit(payload, payload_len * 8 - handle_stream_bits) else {
-            continue;
-        };
-        let Ok(object_type) = reader.read_bot() else { continue };
-        let Ok((_, object_handle)) = reader.read_handle() else { continue };
-        if object_handle != handle || decode_r2010_eed(&mut reader, handle).is_err() {
+        let data_end_bit = payload_bits - handle_stream_bits;
+        let mut handle_reader = DwgBitReader::at_bit(payload, data_end_bit).map_err(|error| format!("R2004 object {handle:#x} handle stream: {error}"))?;
+        let object_type = reader.read_bot().map_err(|error| format!("R2004 object {handle:#x} type: {error}"))?;
+        let (_, object_handle) = reader.read_handle().map_err(|error| format!("R2004 object {handle:#x} identity: {error}"))?;
+        if object_handle != handle {
+            return Err(format!("R2004 object map handle {handle:#x} does not match encoded handle {object_handle:#x}"));
+        }
+        let known_entity =
+            matches!(object_type, DWG_TYPE_LINE | DWG_TYPE_POINT | DWG_TYPE_CIRCLE | DWG_TYPE_ARC | DWG_TYPE_ELLIPSE | DWG_TYPE_LWPOLYLINE | DWG_TYPE_SPLINE | DWG_TYPE_TEXT | DWG_TYPE_FACE3D | DWG_TYPE_POLYLINE3D | DWG_TYPE_POLYLINE_PFACE);
+        if object_type != DWG_TYPE_LAYER && !known_entity {
             continue;
         }
+        decode_r2010_eed(&mut reader, handle).map_err(|error| format!("R2004 object {handle:#x} extended entity data: {error}"))?;
         if object_type == DWG_TYPE_LAYER {
-            let data_end_bit = payload_len * 8 - handle_stream_bits;
-            if let Ok((mut strings, _)) = r2010_string_stream(payload, data_end_bit) {
-                if let Ok(layer) = dwg_decode_r2010_layer(&mut reader, &mut strings) {
-                    layer_handle_index.insert(handle, layers.len());
-                    layers.push(layer);
-                }
+            let (mut strings, _) = r2010_string_stream(payload, data_end_bit).map_err(|error| format!("R2004 layer {handle:#x} string stream: {error}"))?;
+            let layer = dwg_decode_r2010_layer(&mut reader, &mut strings).map_err(|error| format!("R2004 layer {handle:#x}: {error}"))?;
+            if layer_handle_index.insert(handle, layers.len()).is_some() {
+                return Err(format!("R2004 object map repeats layer handle {handle:#x}"));
             }
-        } else if let Ok(Some((layer_handle, color, geometry))) = dwg_decode_entity(object_type, &mut reader, &mut handle_reader) {
-            pending_entities.push((layer_handle, color, geometry));
+            layers.push(layer);
+        } else {
+            let entity = dwg_decode_r2010_entity(object_type, &mut reader, &mut handle_reader)
+                .map_err(|error| format!("R2004 entity {handle:#x} type {object_type}: {error}"))?
+                .ok_or_else(|| format!("R2004 entity {handle:#x} type {object_type} was classified as known but has no decoder"))?;
+            pending_entities.push(entity);
         }
     }
     if layers.is_empty() {
+        if !pending_entities.is_empty() {
+            return Err("R2004 entities reference layers but the object map contains no layer records".to_string());
+        }
         layers.push(DwgLayer::default());
     }
-    let entities = pending_entities.into_iter().map(|(layer_handle, color, geometry)| DwgEntity { layer: layer_handle_index.get(&layer_handle).copied().unwrap_or(0), color, geometry }).collect();
+    let entities = pending_entities
+        .into_iter()
+        .map(|(layer_handle, color, geometry)| {
+            let layer = layer_handle_index.get(&layer_handle).copied().ok_or_else(|| format!("R2004 entity references missing layer handle {layer_handle:#x}"))?;
+            Ok(DwgEntity { layer, color, geometry })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
     let mut drawing = DwgDrawing { layers, entities, extmin: [0.0; 3], extmax: [0.0; 3] };
     drawing.recompute_extents();
     Ok(drawing)
@@ -11841,7 +11951,7 @@ pub(crate) fn decode_r2004_drawing(bytes: &[u8]) -> Result<DwgDrawing, String> {
     dwg_from_r2004_sections(&sections)
 }
 
-/// 📐️ Parses a semio DWG (AC1015-flavored) byte stream, tolerating and skipping unrecognized or malformed objects.
+/// 📐️ Parses a semio DWG (AC1015-flavored) byte stream, skipping only unrecognized object types.
 pub fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
     if bytes.len() < 6 || &bytes[0..6] != b"AC1015" {
         let found = String::from_utf8_lossy(bytes.get(0..6).unwrap_or(b"??????")).to_string();
@@ -11853,7 +11963,10 @@ pub fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
     let section_count = u32::from_le_bytes(bytes[6..10].try_into().unwrap()) as usize;
     let mut cursor = 10usize;
     let mut locators: Vec<(u8, usize, usize)> = Vec::new();
-    for _ in 0..section_count.min(16) {
+    if section_count > 16 {
+        return Err(format!("dwg section count {section_count} exceeds the structural limit of 16"));
+    }
+    for _ in 0..section_count {
         if cursor + 9 > bytes.len() {
             return Err("dwg section locator truncated".to_string());
         }
@@ -11874,7 +11987,7 @@ pub fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
     let mut pos = 4usize;
     for _ in 0..count {
         if pos + 16 > map_bytes.len() {
-            break;
+            return Err(format!("dwg object map declares {count} entries but ends after {}", entries.len()));
         }
         let handle = u64::from_le_bytes(map_bytes[pos..pos + 8].try_into().unwrap());
         let address = u64::from_le_bytes(map_bytes[pos + 8..pos + 16].try_into().unwrap()) as usize;
@@ -11888,55 +12001,60 @@ pub fn dwg_from_bytes(bytes: &[u8]) -> Result<DwgDrawing, String> {
 
     for (handle, address) in &entries {
         if *address >= bytes.len() {
-            continue;
+            return Err(format!("dwg object {handle:#x} address {address:#x} is out of bounds"));
         }
         let mut sizer = DwgBitReader::new(&bytes[*address..]);
-        let payload_len = match sizer.read_ms() {
-            Ok(v) => v as usize,
-            Err(_) => continue,
-        };
+        let payload_len = sizer.read_ms().map_err(|error| format!("dwg object {handle:#x} size: {error}"))? as usize;
         sizer.pad_to_byte();
-        let payload_start = address + sizer.byte_pos;
-        if payload_start + payload_len > bytes.len() {
-            continue;
+        let payload_start = address.checked_add(sizer.byte_pos).ok_or_else(|| format!("dwg object {handle:#x} payload address overflow"))?;
+        let payload_end = payload_start.checked_add(payload_len).ok_or_else(|| format!("dwg object {handle:#x} payload length overflow"))?;
+        if payload_end > bytes.len() {
+            return Err(format!("dwg object {handle:#x} payload is truncated"));
         }
-        let payload = &bytes[payload_start..payload_start + payload_len];
+        let payload = &bytes[payload_start..payload_end];
         let mut reader = DwgBitReader::new(payload);
-        let object_type = match reader.read_bs() {
-            Ok(v) => v,
-            Err(_) => continue,
-        };
-        let bitsize = match reader.read_rl() {
-            Ok(v) => v,
-            Err(_) => continue,
-        };
-        if reader.read_handle().is_err() {
-            continue;
+        let object_type = reader.read_bs().map_err(|error| format!("dwg object {handle:#x} type: {error}"))?;
+        let bitsize = reader.read_rl().map_err(|error| format!("dwg object {handle:#x} data size: {error}"))?;
+        let (_, encoded_handle) = reader.read_handle().map_err(|error| format!("dwg object {handle:#x} identity: {error}"))?;
+        if encoded_handle != *handle {
+            return Err(format!("dwg object map handle {handle:#x} does not match encoded handle {encoded_handle:#x}"));
         }
         reader.pad_to_byte();
-        let data_start_bit = reader.byte_pos.saturating_mul(8);
-        let Ok(mut handle_reader) = DwgBitReader::at_bit(payload, data_start_bit.saturating_add(bitsize as usize)) else {
-            continue;
-        };
+        let data_start_bit = reader.byte_pos.checked_mul(8).ok_or_else(|| format!("dwg object {handle:#x} data offset overflow"))?;
+        let body_storage_bits = (bitsize as usize).checked_add(7).map(|value| value / 8 * 8).ok_or_else(|| format!("dwg object {handle:#x} data size overflow"))?;
+        let handle_start_bit = data_start_bit.checked_add(body_storage_bits).ok_or_else(|| format!("dwg object {handle:#x} handle-stream offset overflow"))?;
+        let mut handle_reader = DwgBitReader::at_bit(payload, handle_start_bit).map_err(|error| format!("dwg object {handle:#x} handle stream: {error}"))?;
 
         if object_type == DWG_TYPE_LAYER {
-            if let (Ok(name), Ok(color)) = (reader.read_t(), reader.read_rc()) {
-                layer_handle_index.insert(*handle, layers.len());
-                layers.push(DwgLayer { name, color });
+            let name = reader.read_t().map_err(|error| format!("dwg layer {handle:#x} name: {error}"))?;
+            let color = reader.read_rc().map_err(|error| format!("dwg layer {handle:#x} color: {error}"))?;
+            if layer_handle_index.insert(*handle, layers.len()).is_some() {
+                return Err(format!("dwg object map repeats layer handle {handle:#x}"));
             }
+            layers.push(DwgLayer { name, color });
             continue;
         }
 
-        if let Ok(Some((layer_handle, color, geometry))) = dwg_decode_entity(object_type, &mut reader, &mut handle_reader) {
-            pending_entities.push((layer_handle, color, geometry));
+        match dwg_decode_semio_entity(object_type, &mut reader, &mut handle_reader).map_err(|error| format!("dwg entity {handle:#x} type {object_type}: {error}"))? {
+            Some((layer_handle, color, geometry)) => pending_entities.push((layer_handle, color, geometry)),
+            None => continue,
         }
     }
 
     if layers.is_empty() {
+        if !pending_entities.is_empty() {
+            return Err("dwg entities reference layers but the object map contains no layer records".to_string());
+        }
         layers.push(DwgLayer::default());
     }
 
-    let entities = pending_entities.into_iter().map(|(layer_handle, color, geometry)| DwgEntity { layer: layer_handle_index.get(&layer_handle).copied().unwrap_or(0), color, geometry }).collect();
+    let entities = pending_entities
+        .into_iter()
+        .map(|(layer_handle, color, geometry)| {
+            let layer = layer_handle_index.get(&layer_handle).copied().ok_or_else(|| format!("dwg entity references missing layer handle {layer_handle:#x}"))?;
+            Ok(DwgEntity { layer, color, geometry })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
 
     let mut drawing = DwgDrawing { layers, entities, extmin: [0.0; 3], extmax: [0.0; 3] };
     drawing.recompute_extents();
@@ -12175,11 +12293,11 @@ mod tests {
 
     #[test]
     fn codec_round_trip() {
-        let stub = b"AC1024\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-        let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(stub).expect("decode stub");
+        let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
+        let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
-        assert_eq!(parsed.version, "AC1024");
+        assert_eq!(parsed.version, "AC1015");
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap);
@@ -12335,7 +12453,7 @@ mod tests {
         let map_size = u32::from_le_bytes(bytes[map_locator_pos + 5..map_locator_pos + 9].try_into().unwrap());
         let mut new_entry = Vec::new();
         new_entry.extend_from_slice(&0x9999u64.to_le_bytes());
-        new_entry.extend_from_slice(&(bogus_offset as u64).to_le_bytes());
+        new_entry.extend_from_slice(&((bogus_offset + 16) as u64).to_le_bytes());
         let insert_at = map_offset as usize + 4;
         for (i, b) in new_entry.iter().enumerate() {
             bytes.insert(insert_at + i, *b);
@@ -12561,11 +12679,11 @@ mod tests {
 
         let self_diff = DwgDiff::between(&snapshot, &snapshot);
         assert!(self_diff.is_empty());
-        assert_eq!(encode_dwg(&self_diff.apply(&snapshot)).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
+        assert_eq!(encode_dwg(&self_diff.apply(&snapshot).expect("self-diff must apply")).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
 
         let mut no_op_snapshot = snapshot.clone();
         let no_op_diff = apply_dwg_mutation(&mut no_op_snapshot, &DwgMutation::NoMutation);
-        assert!(no_op_diff.is_empty());
+        assert!(no_op_diff.diff().is_empty());
         assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), ARCHITECTURAL_FIXTURE);
 
         let set_snapshot = DwgMutation::SetSnapshot { snapshot: snapshot.clone() };
@@ -12584,12 +12702,12 @@ mod tests {
         assert_eq!(DwgDiff::parse_diff(&diff_text).expect("diff text decode"), persisted_diff);
         let diff_binary = persisted_diff.encode_diff().expect("diff binary encode");
         let decoded_diff = DwgDiff::decode_diff(&diff_binary).expect("diff binary decode");
-        let from_persisted_diff = decoded_diff.apply(&DwgSnapshot::default());
+        let from_persisted_diff = decoded_diff.apply(&DwgSnapshot::default()).expect("persisted diff must apply");
         assert_eq!(encode_dwg(&from_persisted_diff).expect("diff export"), ARCHITECTURAL_FIXTURE);
 
         let mut absorbed = persisted_diff.clone();
         absorbed.absorb(DwgDiff::between(&snapshot, &snapshot));
-        assert_eq!(encode_dwg(&absorbed.apply(&DwgSnapshot::default())).expect("absorbed export"), ARCHITECTURAL_FIXTURE,);
+        assert_eq!(encode_dwg(&absorbed.apply(&DwgSnapshot::default()).expect("absorbed diff must apply")).expect("absorbed export"), ARCHITECTURAL_FIXTURE,);
 
         let header_mutation = DwgMutation::SetVersionInfo { version: "AC1024".into(), maintenance_version: snapshot.maintenance_version.wrapping_add(1), codepage: 1252 };
         let mut header_snapshot = snapshot.clone();

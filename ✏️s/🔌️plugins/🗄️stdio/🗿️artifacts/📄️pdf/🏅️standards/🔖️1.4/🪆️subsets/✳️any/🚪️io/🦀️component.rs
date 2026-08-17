@@ -8,7 +8,6 @@
 
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::{
     diff::PdfDiff,
-    mutations::PdfMutation,
     snapshot::{PageDoc, PdfSnapshot},
 };
 use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;

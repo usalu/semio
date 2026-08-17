@@ -3,7 +3,7 @@
 use crate::artifacts::dwg::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
 use crate::artifacts::dwg::DwgSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -58,8 +58,8 @@ pub struct DwgDiff {
 }
 
 impl MutationDiff<DwgSnapshot> for DwgDiff {
-    fn apply(&self, base: &DwgSnapshot) -> DwgSnapshot {
-        DwgSnapshot {
+    fn apply(&self, base: &DwgSnapshot) -> MutationApplyResult<DwgSnapshot> {
+        Ok(DwgSnapshot {
             schema: base.schema.clone(),
             version: self.version.clone().unwrap_or_else(|| base.version.clone()),
             maintenance_version: self.maintenance_version.unwrap_or(base.maintenance_version),
@@ -75,7 +75,7 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
             revision_history: self.revision_history.clone().unwrap_or_else(|| base.revision_history.clone()),
             preview: self.preview.clone().unwrap_or_else(|| base.preview.clone()),
             application_history: self.application_history.clone().unwrap_or_else(|| base.application_history.clone()),
-        }
+        })
     }
 
     /// ➕️ Coalesces sequential field replacements with last-write-wins semantics.
@@ -129,7 +129,7 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
     /// `self.apply(base)` back to `base`.
     fn inverse(&self, base: &DwgSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 

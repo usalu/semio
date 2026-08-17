@@ -444,8 +444,8 @@ mod tests {
         delta: i64,
     }
     impl crate::os_spr::command::MutationDiff<i64> for CausalAddDiff {
-        fn apply(&self, base: &i64) -> i64 {
-            base + self.delta
+        fn apply(&self, base: &i64) -> crate::os_spr::command::MutationApplyResult<i64> {
+            Ok(base + self.delta)
         }
         fn absorb(&mut self, other: Self) {
             self.delta += other.delta;

@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 import { SceneSkeleton } from "../🎬️Scene/🟦️component.tsx";
-import { LoadingRow } from "../🎛️Chrome/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🦴️Skeletons
@@ -19,6 +19,12 @@ export const skeletonPulseClass = "animate-pulse rounded bg-muted-foreground/20 
 
 /** @emoji 🦴 One rectangular skeleton block. */
 export const SkeletonBlock: React.FC<{ className?: string }> = ({ className = "" }) => <div className={cn(skeletonPulseClass, className)} aria-hidden />;
+
+const SkeletonLoadingRow: React.FC<{ readonly name: string }> = ({ name }) => (
+  <div className={cn("flex items-center gap-single p-single opacity-50 pointer-events-none", loadingBorderClass)}>
+    <span className="flex-1 truncate">{name}</span>
+  </div>
+);
 
 export type ElementSkeletonKind =
   | "text"
@@ -115,9 +121,9 @@ export const WindowBodySkeleton: React.FC<{ className?: string }> = ({ className
 /** @emoji 🦴 Panel tree placeholder while a tab body is refreshing. */
 export const PanelTreeSkeleton: React.FC<{ className?: string }> = ({ className = "" }) => (
   <div className={cn("flex flex-col gap-single p-single w-full", className)} role="status" aria-busy="true">
-    <LoadingRow name="…" />
-    <LoadingRow name="…" />
-    <LoadingRow name="…" />
+    <SkeletonLoadingRow name="…" />
+    <SkeletonLoadingRow name="…" />
+    <SkeletonLoadingRow name="…" />
   </div>
 );
 

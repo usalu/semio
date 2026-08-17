@@ -1,6 +1,6 @@
 //! 🎪 `stdio.md` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::md::schema::diff::MdDiff;
 pub use crate::artifacts::md::schema::mutations::MdMutation;
@@ -12,6 +12,15 @@ pub const STDIO_MD_DOCUMENT_SCHEMA: &str = "stdio.md";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const MD_ARTIFACT_SCHEMA_ID: &str = "s.stdio.md";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

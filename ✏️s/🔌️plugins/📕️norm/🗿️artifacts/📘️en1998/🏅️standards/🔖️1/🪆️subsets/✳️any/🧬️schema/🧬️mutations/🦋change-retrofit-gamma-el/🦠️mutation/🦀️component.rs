@@ -15,7 +15,7 @@ pub struct ChangeRetrofitGammaEl {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitGammaEl {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-gamma-el", kind: "change-retrofit-gamma-el", record: "ChangedRetrofitGammaEl" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_gamma_el::diff::diff(self, base)
     }
 

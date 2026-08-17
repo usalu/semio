@@ -1,5 +1,5 @@
 //! 🗑️ `delete-nodes` — plural/bulk delete, the real multi-select gesture behind the node-graph
-//! canvas's `deleteSelection` edit op (`🎛️apps/➗️mathematical/🎮️commands/🕸️set-algorithm/component.rs`) —
+//! canvas's `deleteSelection` edit op (`✏️editor/🎮️commands/🕸️set-algorithm/component.rs`) —
 //! a separate mutation per taxonomy's "Bulk/plural mutations" rule, never a bare `Vec` bolted onto
 //! the singular `delete-node`.
 

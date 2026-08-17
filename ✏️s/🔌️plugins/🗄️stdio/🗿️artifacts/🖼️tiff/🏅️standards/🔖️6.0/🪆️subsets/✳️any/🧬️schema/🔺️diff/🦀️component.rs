@@ -10,7 +10,7 @@
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -365,7 +365,10 @@ pub struct TiffDiff {
 }
 
 impl MutationDiff<TiffSnapshot> for TiffDiff {
-    fn apply(&self, base: &TiffSnapshot) -> TiffSnapshot {
+    fn apply(&self, base: &TiffSnapshot) -> MutationApplyResult<TiffSnapshot> {
+        if let Some(ifds) = &self.ifds {
+            validate_tiff_ifds(&base.ifds, ifds)?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.byte_order {
             next.byte_order = v;
@@ -376,7 +379,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
         if let Some(v) = &self.pixels {
             next.pixels = v.clone();
         }
-        next
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). `byte_order`/
@@ -393,11 +396,56 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
     }
 }
 
+fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF IFD removal is missing or duplicated").at(["ifds", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF IFD modification is missing, duplicated, or removed").at(["ifds", "modified"]));
+        }
+        validate_tiff_tags(&base[entry.index].entries, &entry.diff)?;
+    }
+    let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "TIFF IFD addition index is invalid or duplicated").at(["ifds", "added"]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyResult<()> {
+    let base_tags: std::collections::HashSet<u16> = base.iter().map(|tag| tag.tag).collect();
+    let removed: std::collections::HashSet<u16> = diff.removed.iter().copied().collect();
+    if removed.len() != diff.removed.len() || diff.removed.iter().any(|tag| !base_tags.contains(tag)) {
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "TIFF tag removal is missing or duplicated").at(["entries", "removed"]));
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if !base_tags.contains(&entry.tag) || !modified.insert(entry.tag) || removed.contains(&entry.tag) || entry.kind != entry.values.kind() {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF tag modification is missing, duplicated, or removed").at(["entries", "modified"]));
+        }
+    }
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if base_tags.contains(&entry.tag) || !added.insert(entry.tag) || entry.kind != entry.values.kind() {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "TIFF tag addition conflicts with the target state or has an invalid value kind").at(["entries", "added"]));
+        }
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta
     /// from `self.apply(base)` back to `base`.
     fn inverse(&self, base: &TiffSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 

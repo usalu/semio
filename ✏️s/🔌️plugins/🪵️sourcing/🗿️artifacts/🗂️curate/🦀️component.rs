@@ -1,7 +1,7 @@
 //! 🗂️ Sourcing curate artifact — the document entities this plugin's curate app edits: a catalogue of
 //! object kinds (parametric geometry + typology + availability) and a curated selection.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +11,15 @@ pub use crate::artifacts::curate::schema::diff::CurateDiff;
 
 pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
 pub use crate::artifacts::curate::schema::snapshot::CurateSnapshot;
+
+/// 🪪️ This artifact's canonical `Dialect` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,
+/// contract §1/§7.4) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module. `artifact_kind
+/// = "s.sourcing.curate"` matches the id `definition()`'s own `"s.curate.schema.artifact"` capability
+/// row descriptor below; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is
+/// `s.sourcing.curate@1/*#editor` / `s.sourcing.curate@1/*#viewer`, exactly the contract §1 grammar.
+pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curate", standard: StandardId("1"), subset: SubsetId::ANY };
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
@@ -244,7 +253,7 @@ pub fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::curate::create_sourcing_curate_app`'s `🔖️Manifest` region.
+/// `crate::editor::sourcing::create_sourcing_curate_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "catalogue.sourcing".into(),
@@ -268,7 +277,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// the old side-effecting `register()`, which called four different global registries directly from
 /// a plugin `.setup()` callback (a fifth, `crate::artifacts::curate::io_registry::register()`, was a
 /// pure duplicate of what `.composers(...)` now does and was deleted rather than ported — see the
-/// mechanism report's `register_all` composer-registration step). `crate::apps::curate::config::
+/// mechanism report's `register_all` composer-registration step). `crate::editor::sourcing::config::
 /// schema::register_app_schema()` is the one exception, still called from `🪵️sourcing/🦀️component.rs`'s
 /// own `.setup()`: it registers the `SourcingCurateApp` CONFIG/PRESENCE schema, an app-scope concern
 /// `ArtifactDeclaration` deliberately has no field for (see that struct's own doc). Relocated from
@@ -315,7 +324,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::curate_artifact_inference_descriptor()])
         .composers(crate::artifacts::curate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::curate::SourcingCurateApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurateApp>>()
         .try_build()
 }
 

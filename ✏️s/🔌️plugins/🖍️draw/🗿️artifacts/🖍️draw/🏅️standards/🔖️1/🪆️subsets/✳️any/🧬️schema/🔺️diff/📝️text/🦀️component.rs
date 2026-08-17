@@ -20,107 +20,258 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl DrawDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> DrawArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(delta) = &self.layers {
-            next.layers = apply_layers_delta(&next.layers, delta);
-        }
-        if let Some(assets) = &self.assets {
-            for (key, value) in &assets.entries {
-                match value {
-                    Some(asset) => {
-                        next.assets.insert(key.clone(), asset.clone());
-                    }
-                    None => {
-                        next.assets.remove(key);
-                    }
-                }
+    pub fn apply_to_artifact(&self, artifact: &DrawArtifact) -> protocol::MutationApplyResult<DrawArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
             }
-        }
-        if let Some(artboard) = &self.artboard {
-            next.artboard = artboard.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = self.camera_x {
-            next.camera_x = value;
-        }
-        if let Some(value) = self.camera_y {
-            next.camera_y = value;
-        }
-        if let Some(value) = self.camera_zoom {
-            next.camera_zoom = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.hovered_id {
-            next.hovered_id = value.clone();
-        }
-        next
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(delta) = &self.layers {
+                next.layers = apply_layers_delta(&next.layers, delta)
+                    .map_err(|error| error.under(["layers"]))?;
+            }
+            if let Some(assets) = &self.assets {
+                apply_assets_delta(&mut next.assets, assets)
+                    .map_err(|error| error.under(["assets"]))?;
+            }
+            if let Some(artboard) = &self.artboard {
+                next.artboard = artboard.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.hovered_id {
+                next.hovered_id = value.clone();
+            }
+            next
+        })
     }
 }
 
 /// 🧩 Applies an identified-collection delta to a layer tree (root + nested removes/patches).
-pub fn apply_layers_delta(layers: &[DrawLayerNode], delta: &DrawLayersDelta) -> Vec<DrawLayerNode> {
+pub fn apply_layers_delta(
+    layers: &[DrawLayerNode],
+    delta: &DrawLayersDelta,
+) -> protocol::MutationApplyResult<Vec<DrawLayerNode>> {
+    for (index, id) in delta.removed.iter().enumerate() {
+        if !contains_layer(layers, id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed layer does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if delta.removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "layer is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        if !contains_layer(layers, &entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched layer does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.removed.contains(&entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "layer cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.patched[..index]
+            .iter()
+            .any(|prior| prior.id == entry.id)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "layer is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
     let mut next = layers.to_vec();
     for id in &delta.removed {
         remove_layer_from_tree(&mut next, id);
     }
-    for item in &delta.added {
+    for (position, item) in delta.added.iter().enumerate() {
+        if contains_layer(&next, crate::artifacts::draw::schema::layer_id(&item.layer)) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added layer identity already exists",
+            )
+            .at(["added".to_string(), position.to_string()]));
+        }
+        let container_len = layer_container_len(&next, item.parent_id.as_deref()).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "added layer parent group does not exist",
+            )
+            .at(["added".to_string(), position.to_string(), "parentId".to_string()])
+        })?;
+        if item.index > container_len {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                format!("layer insertion index {} exceeds length {container_len}", item.index),
+            )
+            .at(["added".to_string(), position.to_string(), "index".to_string()]));
+        }
         insert_layer(&mut next, item.parent_id.as_deref(), item.index, item.layer.clone());
     }
-    for entry in &delta.patched {
-        apply_layer_patch_entry(&mut next, entry);
+    for (index, entry) in delta.patched.iter().enumerate() {
+        apply_layer_patch_entry(&mut next, entry)
+            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
     if let Some(order) = &delta.reordered {
+        if order.len() != next.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id)
+                    || !next.iter().any(|layer| crate::artifacts::draw::schema::layer_id(layer) == id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "root layer reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
         let mut by_id: std::collections::BTreeMap<_, _> = next
             .into_iter()
             .map(|layer| (crate::artifacts::draw::schema::layer_id(&layer).to_string(), layer))
             .collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(layer) = by_id.remove(id) {
-                ordered.push(layer);
-            }
+            ordered.push(by_id.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered root layer does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        ordered.extend(by_id.into_values());
         next = ordered;
     }
-    next
+    validate_unique_layer_ids(&next)?;
+    Ok(next)
 }
 
-fn apply_layer_patch_entry(layers: &mut Vec<DrawLayerNode>, entry: &DrawLayerPatchEntry) {
-    update_layer_in_tree(layers, &entry.id, &mut |layer| {
-        apply_layer_patch(layer, &entry.patch);
-    });
+fn contains_layer(layers: &[DrawLayerNode], id: &str) -> bool {
+    layers.iter().any(|layer| {
+        crate::artifacts::draw::schema::layer_id(layer) == id
+            || matches!(layer, DrawLayerNode::Group(group) if contains_layer(&group.children, id))
+    })
 }
 
-fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) {
-    if let Some(layer_json) = &patch.layer_json {
-        if let Ok(replacement) = serde_json::from_str::<DrawLayerNode>(layer_json) {
-            *layer = replacement;
-            return;
+fn validate_unique_layer_ids(layers: &[DrawLayerNode]) -> protocol::MutationApplyResult<()> {
+    fn visit<'a>(
+        layers: &'a [DrawLayerNode],
+        ids: &mut std::collections::BTreeSet<&'a str>,
+    ) -> bool {
+        for layer in layers {
+            if !ids.insert(crate::artifacts::draw::schema::layer_id(layer)) {
+                return false;
+            }
+            if let DrawLayerNode::Group(group) = layer {
+                if !visit(&group.children, ids) {
+                    return false;
+                }
+            }
         }
+        true
+    }
+    if !visit(layers, &mut std::collections::BTreeSet::new()) {
+        return Err(protocol::MutationApplyError::new(
+            "mutation.apply.duplicate-target",
+            "resulting layer tree contains duplicate identities",
+        )
+        .at(["identities"]));
+    }
+    Ok(())
+}
+
+fn layer_container_len(layers: &[DrawLayerNode], parent_id: Option<&str>) -> Option<usize> {
+    match parent_id {
+        None => Some(layers.len()),
+        Some(parent_id) => layers.iter().find_map(|layer| match layer {
+            DrawLayerNode::Group(group) if group.base.id == parent_id => Some(group.children.len()),
+            DrawLayerNode::Group(group) => layer_container_len(&group.children, Some(parent_id)),
+            _ => None,
+        }),
+    }
+}
+
+fn apply_layer_patch_entry(
+    layers: &mut Vec<DrawLayerNode>,
+    entry: &DrawLayerPatchEntry,
+) -> protocol::MutationApplyResult<()> {
+    let mut result = Ok(());
+    if !update_layer_in_tree(layers, &entry.id, &mut |layer| {
+        result = apply_layer_patch(layer, &entry.patch);
+    }) {
+        return Err(protocol::MutationApplyError::new(
+            "mutation.apply.missing-target",
+            "patched layer does not exist after structural edits",
+        )
+        .at([&entry.id]));
+    }
+    result
+}
+
+fn apply_layer_patch(
+    layer: &mut DrawLayerNode,
+    patch: &DrawLayerPatch,
+) -> protocol::MutationApplyResult<()> {
+    if let Some(layer_json) = &patch.layer_json {
+        let replacement = serde_json::from_str::<DrawLayerNode>(layer_json).map_err(|error| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-value",
+                format!("layer patch is not valid JSON: {error}"),
+            )
+            .at(["layerJson"])
+        })?;
+        if crate::artifacts::draw::schema::layer_id(&replacement)
+            != crate::artifacts::draw::schema::layer_id(layer)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-target",
+                "layer patch cannot change the target identity",
+            )
+            .at(["layerJson"]));
+        }
+        *layer = replacement;
+        return Ok(());
     }
     let base = layer_base_mut(layer);
     if let Some(visible) = patch.visible {
@@ -139,66 +290,119 @@ fn apply_layer_patch(layer: &mut DrawLayerNode, patch: &DrawLayerPatch) {
         base.blend_mode = blend_mode.clone();
     }
     if let Some(transform_json) = &patch.transform_json {
-        if let Ok(transform) = serde_json::from_str(transform_json) {
-            base.transform = transform;
-        }
+        base.transform = serde_json::from_str(transform_json).map_err(|error| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-value",
+                format!("transform is not valid JSON: {error}"),
+            )
+            .at(["transformJson"])
+        })?;
     }
     if let Some(fill_json) = &patch.fill_json {
-        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).ok().flatten();
+        base.attributes.fill = serde_json::from_str::<Option<FillStyle>>(fill_json).map_err(|error| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-value",
+                format!("fill is not valid JSON: {error}"),
+            )
+            .at(["fillJson"])
+        })?;
     }
     if let Some(stroke_json) = &patch.stroke_json {
-        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).ok().flatten();
+        base.attributes.stroke = serde_json::from_str::<Option<StrokeStyle>>(stroke_json).map_err(|error| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-value",
+                format!("stroke is not valid JSON: {error}"),
+            )
+            .at(["strokeJson"])
+        })?;
     }
     if let Some(operation) = &patch.boolean_operation {
-        if let DrawLayerNode::Boolean(boolean) = layer {
-            boolean.operation = operation.clone();
-        }
+        let DrawLayerNode::Boolean(boolean) = layer else {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-target",
+                "boolean operation patch requires a boolean layer",
+            )
+            .at(["booleanOperation"]));
+        };
+        boolean.operation = operation.clone();
     }
     if let Some(params_json) = &patch.trace_params_json {
-        if let DrawLayerNode::Trace(trace) = layer {
-            if let Ok(params) = serde_json::from_str(params_json) {
-                trace.params = params;
+        let DrawLayerNode::Trace(trace) = layer else {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-target",
+                "trace parameters patch requires a trace layer",
+            )
+            .at(["traceParamsJson"]));
+        };
+        trace.params = serde_json::from_str(params_json).map_err(|error| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-value",
+                format!("trace parameters are not valid JSON: {error}"),
+            )
+            .at(["traceParamsJson"])
+        })?;
+    }
+    Ok(())
+}
+
+fn apply_assets_delta(
+    assets: &mut std::collections::BTreeMap<String, crate::artifacts::draw::DrawImageAsset>,
+    delta: &DrawAssetsDelta,
+) -> protocol::MutationApplyResult<()> {
+    for (key, value) in &delta.entries {
+        if value.is_none() && !assets.contains_key(key) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed asset does not exist",
+            )
+            .at([key.as_str()]));
+        }
+    }
+    let mut candidate = assets.clone();
+    for (key, value) in &delta.entries {
+        match value {
+            Some(asset) => {
+                candidate.insert(key.clone(), asset.clone());
+            }
+            None => {
+                candidate.remove(key);
             }
         }
     }
+    *assets = candidate;
+    Ok(())
 }
 
 impl MutationDiff<DrawSnapshot> for DrawDiff {
-    fn apply(&self, snapshot: &DrawSnapshot) -> DrawSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(delta) = &self.layers {
-            next.layers = apply_layers_delta(&next.layers, delta);
-        }
-        if let Some(assets) = &self.assets {
-            for (key, value) in &assets.entries {
-                match value {
-                    Some(asset) => {
-                        next.assets.insert(key.clone(), asset.clone());
-                    }
-                    None => {
-                        next.assets.remove(key);
-                    }
-                }
+    fn apply(&self, snapshot: &DrawSnapshot) -> protocol::MutationApplyResult<DrawSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
             }
-        }
-        if let Some(artboard) = &self.artboard {
-            next.artboard = artboard.clone();
-        }
-        next
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(delta) = &self.layers {
+                next.layers = apply_layers_delta(&next.layers, delta)
+                    .map_err(|error| error.under(["layers"]))?;
+            }
+            if let Some(assets) = &self.assets {
+                apply_assets_delta(&mut next.assets, assets)
+                    .map_err(|error| error.under(["assets"]))?;
+            }
+            if let Some(artboard) = &self.artboard {
+                next.artboard = artboard.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

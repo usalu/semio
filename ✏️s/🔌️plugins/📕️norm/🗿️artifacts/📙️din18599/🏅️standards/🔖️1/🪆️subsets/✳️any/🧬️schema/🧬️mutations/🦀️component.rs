@@ -117,10 +117,14 @@ mod tests {
     }
 
     fn round_trip(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Din18599Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -149,7 +153,9 @@ mod tests {
         let target = Din18599Snapshot::default();
         let mut projected = base.clone();
         for mutation in Din18599Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation);
+            projected = vcs::apply_mutation(&projected, &mutation)
+                .expect("snapshot mutation applies")
+                .0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
@@ -166,8 +172,8 @@ mod tests {
             new_climate: crate::artifacts::din18599::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
         });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -175,8 +181,8 @@ mod tests {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeUseClass(change_use_class::mutation::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -184,8 +190,8 @@ mod tests {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::mutation::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din18599Mutation::ChangeOccupants(change_occupants::mutation::ChangeOccupants { new_occupants: 5 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din18599Mutation::ChangeOccupants(change_occupants::mutation::ChangeOccupants { new_occupants: 5 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

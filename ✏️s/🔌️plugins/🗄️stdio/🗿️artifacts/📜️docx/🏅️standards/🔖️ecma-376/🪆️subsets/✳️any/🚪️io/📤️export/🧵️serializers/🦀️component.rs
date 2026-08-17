@@ -170,6 +170,6 @@ pub fn sync_main_part(snap: &mut DocxSnapshot) {
 pub fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, DocxError> {
     let mut synced = snap.clone();
     sync_main_part(&mut synced);
-    Ok(opc::encode_opc(&synced.opc)?)
+    Ok(opc::encode_opc_with_package_order(&synced.opc)?)
 }
 //#endregion 🔖️Codec

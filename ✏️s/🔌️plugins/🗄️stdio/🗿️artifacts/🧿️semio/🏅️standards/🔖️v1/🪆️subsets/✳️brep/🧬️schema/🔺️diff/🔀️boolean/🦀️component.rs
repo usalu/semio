@@ -81,7 +81,7 @@ pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, nor
         }
     }
     // Also sample edge intersections with the plane.
-    let mut edge_ids = std::collections::HashSet::new();
+    let mut edge_ids = HashSet::new();
     for face in body.solid_faces(solid) {
         for loop_id in body.face_loops(face) {
             for cid in body.loop_coedges(loop_id) {
@@ -554,7 +554,7 @@ mod tests {
                 Pnt3::new(o.x + scale, o.y + scale, o.z + scale),
                 Pnt3::new(o.x, o.y + scale, o.z + scale),
             ];
-            let b = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_convex_hull(&mut body, &corners, &mut rec).unwrap();
+            let b = make_convex_hull(&mut body, &corners, &mut rec).unwrap();
             let u0 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
             let u1 = boolean_solid(&mut body, a, b, BooleanOp::Unite, 1e-6, &mut rec).unwrap();
             assert_eq!(body.solid_faces(u0).len(), body.solid_faces(u1).len());
@@ -577,7 +577,7 @@ mod tests {
             let o = Pnt3::new(ox, ox * 0.5, 0.0);
             let corners =
                 [o, Pnt3::new(o.x + w, o.y, o.z), Pnt3::new(o.x + w, o.y + w, o.z), Pnt3::new(o.x, o.y + w, o.z), Pnt3::new(o.x, o.y, o.z + w), Pnt3::new(o.x + w, o.y, o.z + w), Pnt3::new(o.x + w, o.y + w, o.z + w), Pnt3::new(o.x, o.y + w, o.z + w)];
-            let b = crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_convex_hull(&mut body, &corners, &mut rec).unwrap();
+            let b = make_convex_hull(&mut body, &corners, &mut rec).unwrap();
             if let Ok(inter) = boolean_solid(&mut body, a, b, BooleanOp::Intersect, 1e-6, &mut rec) {
                 assert!(solid_volume(&body, inter, 1e-3).unwrap() >= -1e-9);
             }

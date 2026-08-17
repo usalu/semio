@@ -13,7 +13,7 @@
 
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -156,7 +156,10 @@ pub fn diff_at_path(path: &[usize], leaf: HtmlNodeDiff) -> HtmlDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<HtmlSnapshot> for HtmlDiff {
-    fn apply(&self, base: &HtmlSnapshot) -> HtmlSnapshot {
+    fn apply(&self, base: &HtmlSnapshot) -> MutationApplyResult<HtmlSnapshot> {
+        if let Some(root) = &self.root {
+            validate_html_node(&base.root, root)?;
+        }
         let mut next = base.clone();
         if let Some(doctype) = &self.doctype {
             next.doctype = doctype.clone();
@@ -164,7 +167,7 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
         if let Some(node_diff) = &self.root {
             next.root = apply_node_diff(&base.root, node_diff);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -177,6 +180,75 @@ impl MutationDiff<HtmlSnapshot> for HtmlDiff {
             (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
         };
     }
+}
+
+fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResult<()> {
+    match diff {
+        HtmlNodeDiff::Replace { .. } => Ok(()),
+        HtmlNodeDiff::Text { .. } if matches!(base, HtmlNode::Text { .. }) => Ok(()),
+        HtmlNodeDiff::Comment { .. } if matches!(base, HtmlNode::Comment { .. }) => Ok(()),
+        HtmlNodeDiff::RawText { .. } if matches!(base, HtmlNode::RawText { .. }) => Ok(()),
+        HtmlNodeDiff::Element(element) => {
+            let HtmlNode::Element { attributes, children, .. } = base else {
+                return Err(MutationApplyError::new("mutation.apply.conflicting-target", "element diff targets a non-element node").at(["root"]));
+            };
+            if let Some(attrs) = &element.attributes {
+                validate_html_attributes(attributes, attrs)?;
+            }
+            if let Some(children_diff) = &element.children {
+                validate_html_children(children, children_diff)?;
+            }
+            Ok(())
+        }
+        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "node diff kind does not match its target").at(["root"])),
+    }
+}
+
+fn validate_html_attributes(base: &[HtmlAttr], diff: &HtmlAttributesDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for name in &diff.removed {
+        if base.iter().all(|attr| &attr.name != name) || !removed.insert(name) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed attribute does not exist or is duplicated").at(["attributes", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if base.iter().all(|attr| attr.name != entry.name) || !modified.insert(&entry.name) || removed.contains(&entry.name) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified attribute is missing, duplicated, or removed").at(["attributes", "modified"]));
+        }
+    }
+    let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added_names = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added_names.insert(&entry.name) || base.iter().any(|attr| attr.name == entry.name) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added attribute identity conflicts with the target state").at(["attributes", "added"]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed child is missing or duplicated").at(["children", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified child is missing, duplicated, or removed").at(["children", "modified"]));
+        }
+        validate_html_node(&base[entry.index], &entry.diff)?;
+    }
+    let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut indexes = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !indexes.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added child index is invalid or duplicated").at(["children", "added"]));
+        }
+    }
+    Ok(())
 }
 
 fn apply_node_diff(node: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNode {

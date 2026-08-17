@@ -313,80 +313,80 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod writer {
-        #[path = "../../🎛️apps/✒️writer/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/✒️writer/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/✒️writer/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/✒️writer/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/✒️writer/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/✒️writer/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/✒️writer/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️text-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️text-edit/🦀️component.rs"]
             pub mod text_edit;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️set-text/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️set-text/🦀️component.rs"]
             pub mod set_text;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️set-snapshot/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️set-snapshot/🦀️component.rs"]
             pub mod set_snapshot;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️open-document/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️open-document/🦀️component.rs"]
             pub mod open_document;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️set-snapshot-json/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️set-snapshot-json/🦀️component.rs"]
             pub mod set_snapshot_json;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️set-fixture-json/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️set-fixture-json/🦀️component.rs"]
             pub mod set_fixture_json;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️format-document/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️format-document/🦀️component.rs"]
             pub mod format_document;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/✍️commit-rename/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✍️commit-rename/🦀️component.rs"]
             pub mod commit_rename;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🎥️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️component.rs"]
             pub mod set_camera;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🔍️request-completions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️request-completions/🦀️component.rs"]
             pub mod request_completions;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🔍️lint-document/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️lint-document/🦀️component.rs"]
             pub mod lint_document;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗂️set-editor-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️set-editor-selection/🦀️component.rs"]
             pub mod set_editor_selection;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️toggle-line-numbers/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️toggle-line-numbers/🦀️component.rs"]
             pub mod toggle_line_numbers;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️set-font-px/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-font-px/🦀️component.rs"]
             pub mod set_font_px;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️set-line-height/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-line-height/🦀️component.rs"]
             pub mod set_line_height;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/⚙️set-tab-size/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-tab-size/🦀️component.rs"]
             pub mod set_tab_size;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/💬️engagement-input/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement-input/🦀️component.rs"]
             pub mod engagement_input;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/💬️engagement-submit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement-submit/🦀️component.rs"]
             pub mod engagement_submit;
-            #[path = "../../🎛️apps/✒️writer/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -394,7 +394,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -402,19 +402,19 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod main {
-                        #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/🔤️font-size/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/🔤️font-size/🦀️component.rs"]
                             pub mod font_size;
-                            #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/📏️line-height/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/📏️line-height/🦀️component.rs"]
                             pub mod line_height;
-                            #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/⇥️tab-size/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/⇥️tab-size/🦀️component.rs"]
                             pub mod tab_size;
-                            #[path = "../../🎛️apps/✒️writer/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/🔢️line-numbers/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️options/🔢️line-numbers/🦀️component.rs"]
                             pub mod line_numbers;
                         }
                     }
@@ -424,22 +424,55 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/✒️writer/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/✒️writer/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/✒️writer/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod writer {
+        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod main {
+                        #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/✒️main/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🌉️WasmBridge
 /// 🌉️ `WriterHost` (all targets) plus `WriterSession`/`WriterArtifactVcs` (wasm32 only) — see
-/// `apps::writer::wasm` for the individual `cfg` gates; this re-export just surfaces them at the crate
-/// root, matching the old bundle crate's `📦️glue.rs` surface.
-pub use apps::writer::wasm::*;
+/// `editor::writer::wasm` for the individual `cfg` gates; this re-export just surfaces them at the
+/// crate root, matching the old bundle crate's `📦️glue.rs` surface. Wasm bridge lives under the
+/// editor module (never the viewer): it is the two-way document VCS bridge, editor-only by nature.
+pub use editor::writer::wasm::*;
 //#endregion 🌉️WasmBridge
 
 //#region 🔖️Plugin
@@ -452,7 +485,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_writer_demo;
-    #[path = "../../🎛️apps/✒️writer/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_writer_demo_session;
 }
 //#endregion 📚️Examples

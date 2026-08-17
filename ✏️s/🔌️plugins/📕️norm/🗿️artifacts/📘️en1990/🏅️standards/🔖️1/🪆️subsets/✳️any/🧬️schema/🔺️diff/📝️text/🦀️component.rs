@@ -13,57 +13,60 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1990Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1990Artifact) -> En1990Artifact {
-        let mut next = artifact.clone();
-        if let Some(value) = &self.g_k {
-            next.g_k = value.clone();
-        }
-        if let Some(child) = &self.q_k {
-            next.q_k = child.clone();
-        }
-        if let Some(value) = &self.resistance_kn {
-            next.resistance_kn = value.clone();
-        }
-        if let Some(value) = &self.consequence_class {
-            next.consequence_class = value.clone();
-        }
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.seismic_a_ed_kn {
-            next.seismic_a_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.selected_check_index {
-            next.selected_check_index = *value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &En1990Artifact) -> protocol::MutationApplyResult<En1990Artifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(value) = &self.g_k {
+                next.g_k = value.clone();
+            }
+            if let Some(child) = &self.q_k {
+                next.q_k = child.clone();
+            }
+            if let Some(value) = &self.resistance_kn {
+                next.resistance_kn = value.clone();
+            }
+            if let Some(value) = &self.consequence_class {
+                next.consequence_class = value.clone();
+            }
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.seismic_a_ed_kn {
+                next.seismic_a_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.selected_check_index {
+                next.selected_check_index = *value;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<En1990Snapshot> for En1990Diff {
-    fn apply(&self, snapshot: &En1990Snapshot) -> En1990Snapshot {
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.g_k {
-            next.g_k = value.clone();
-        }
-        if let Some(child) = &self.q_k {
-            next.q_k = child.clone();
-        }
-        if let Some(value) = &self.resistance_kn {
-            next.resistance_kn = value.clone();
-        }
-        if let Some(value) = &self.consequence_class {
-            next.consequence_class = value.clone();
-        }
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.seismic_a_ed_kn {
-            next.seismic_a_ed_kn = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &En1990Snapshot) -> protocol::MutationApplyResult<En1990Snapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.g_k {
+                next.g_k = value.clone();
+            }
+            if let Some(child) = &self.q_k {
+                next.q_k = child.clone();
+            }
+            if let Some(value) = &self.resistance_kn {
+                next.resistance_kn = value.clone();
+            }
+            if let Some(value) = &self.consequence_class {
+                next.consequence_class = value.clone();
+            }
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.seismic_a_ed_kn {
+                next.seismic_a_ed_kn = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {

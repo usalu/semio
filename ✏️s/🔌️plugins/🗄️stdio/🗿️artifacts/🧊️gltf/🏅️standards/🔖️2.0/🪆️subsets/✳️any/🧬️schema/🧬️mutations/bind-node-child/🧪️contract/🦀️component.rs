@@ -1,5 +1,4 @@
-//! 🧪️ Rust executor for the shared bind-node-child vector.
-//!
+//! 🧪️ Rust executor for the shared bind-node-child vectors.
 #[cfg(test)]
 mod tests {
     use crate::artifacts::gltf::schema::mutations::bind_node_child::{diff, inverse, mutation};
@@ -7,36 +6,65 @@ mod tests {
     use serde::Deserialize;
 
     #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Rejected {
+        index: mutation::GltfBindNodeChildPayload,
+        reference: mutation::GltfBindNodeChildPayload,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Wire {
+        malformed_payload: String,
+        mutation: String,
+        diff: String,
+        inverse: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
     struct Vector {
         base: GltfSnapshot,
         mutation: mutation::GltfBindNodeChildPayload,
         diff: diff::GltfBindNodeChildDiff,
         inverse: inverse::GltfBindNodeChildInverse,
         after: GltfSnapshot,
+        stale_diff: GltfSnapshot,
+        stale_inverse: GltfSnapshot,
+        rejected: Rejected,
+        wire: Wire,
     }
-
     #[derive(Deserialize)]
     struct Contract {
         vectors: Vec<Vector>,
     }
 
     #[test]
-    fn canonical_vector_plans_applies_replays_and_undoes_the_exact_edge() {
+    fn canonical_vector_enforces_forward_inverse_reference_stale_and_wire_laws() {
         let contract: Contract = serde_json::from_str(include_str!("🔣️component.json")).unwrap();
         let vector = &contract.vectors[0];
+        assert_eq!(serde_json::to_string(&vector.mutation).unwrap(), vector.wire.mutation);
+        assert_eq!(serde_json::to_string(&vector.diff).unwrap(), vector.wire.diff);
+        assert_eq!(serde_json::to_string(&vector.inverse).unwrap(), vector.wire.inverse);
+        assert!(serde_json::from_str::<mutation::GltfBindNodeChildPayload>(&vector.wire.malformed_payload).is_err());
+        assert!((super::super::DESCRIPTOR.plan)(vector.wire.malformed_payload.as_bytes(), &vector.base).is_err());
+        assert_eq!(mutation::validate(&vector.rejected.index, &vector.base).unwrap_err().code, "gltf.mutation.index-out-of-range");
+        assert_eq!(mutation::validate(&vector.rejected.reference, &vector.base).unwrap_err().code, "gltf.mutation.index-out-of-range");
         let planned = diff::derive(&vector.mutation, &vector.base).unwrap();
         let inverted = inverse::derive(&vector.mutation, &vector.base).unwrap();
         assert_eq!(planned, vector.diff);
         assert_eq!(inverted, vector.inverse);
         let forward = mutation::apply(&vector.mutation, &vector.base).unwrap();
         let applied = diff::apply(&vector.base, &planned).unwrap();
+        assert_eq!(forward, vector.after);
+        assert_eq!(applied, vector.after);
+        let inverse_plan = (super::super::DESCRIPTOR.plan_inverse)(vector.wire.inverse.as_bytes(), &applied).unwrap();
+        assert_eq!(inverse_plan.diff_payload, vector.wire.inverse.as_bytes());
+        assert!(inverse_plan.inverse_payload.is_empty());
         let mut forged_diff = planned.clone();
         forged_diff.touched_paths = vec!["document/forged".into()];
         let mut forged_inverse = inverted.clone();
         forged_inverse.touched_paths = vec!["document/forged".into()];
-        assert_eq!(forward, vector.after);
-        assert_eq!(applied, vector.after);
-        assert_eq!(diff::apply(&vector.base, &planned).unwrap(), applied);
+        assert_eq!(diff::apply(&vector.stale_diff, &planned).unwrap_err().code, "gltf.mutation.stale-diff");
+        assert_eq!(inverse::apply(&vector.stale_inverse, &inverted).unwrap_err().code, "gltf.mutation.stale-inverse");
         assert!(diff::apply(&vector.base, &forged_diff).is_err());
         assert!(inverse::apply(&applied, &forged_inverse).is_err());
         assert!(inverse::apply(&vector.base, &inverted).is_err());

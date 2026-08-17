@@ -7,3 +7,11 @@ export const gltfBoundaryLoopsInference = {
 } as const;
 export type GltfBoundaryLoopsInference = typeof gltfBoundaryLoopsInference;
 
+import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️component.ts';
+
+export const inferGltfBoundaryLoops = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
+  const value = context.topology?.boundaryLoops;
+  return context.valid && value !== undefined ? exact(context, value, 'unitless') : unavailable(context, 'unitless');
+};
+
+export const unavailableGltfBoundaryLoops = (context: GltfTsGeometryContext): GltfTsMeasure<number> => unavailable(context, 'unitless');

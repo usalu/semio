@@ -12,8 +12,9 @@ import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMo
 import * as dagre from "dagre";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { surfaceClass, loadingBorderClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️component.tsx";
 import { queryElement } from "../🖱️ContextMenu/🟦️component.tsx";
 // #endregion 🔌️Adapters

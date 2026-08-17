@@ -1,0 +1,2 @@
+[verify mutation-outcome-law] passed.
+EXIT:0

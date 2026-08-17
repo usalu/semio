@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
+import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
@@ -232,22 +232,6 @@ export const Mobile: Story = {
 };
 
 // #endregion 🪨️Layout
-
-// 🔷️#region 🌈️Page
-export const PageDefault: Story = {
-  args: { canvas: null },
-  render: () => (
-    <div className="h-[400px] w-[600px] border">
-      <Page frontmatter={{ title: "Getting Started", description: "Learn how to use compose to design modular architecture." }}>
-        <h2>Introduction</h2>
-        <p>Compose is a platform for kit-of-parts architecture. It helps you model, design and collaborate on modular buildings.</p>
-        <h2>Prerequisites</h2>
-        <p>You need a modern web browser and basic understanding of architectural concepts.</p>
-      </Page>
-    </div>
-  ),
-};
-// #endregion 🌈️Page
 
 // 💻️#region 🧭️Panel
 export const PanelDefault: Story = {

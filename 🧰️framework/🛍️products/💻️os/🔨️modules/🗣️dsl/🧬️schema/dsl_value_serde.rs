@@ -213,7 +213,10 @@ impl ser::SerializeTupleVariant for TupleVariantSerializer {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("fields".to_owned(), DslValue::Array(self.vec))]))
+        // 🏷️ Same `{kind, value}` tagging as newtype/struct variants (see
+        // `EnumAccessTagged::variant_seed` below, which only ever looks for "value") — a
+        // variant-specific "fields" key here would silently starve `tuple_variant` on decode.
+        Ok(DslValue::object([("kind".to_owned(), DslValue::String(self.variant.to_owned())), ("value".to_owned(), DslValue::Array(self.vec))]))
     }
 }
 
@@ -340,9 +343,19 @@ impl<'de> de::Deserializer<'de> for &mut ValueDeserializer {
         }
     }
 
+    /// @emoji 🎁️ Newtype structs are transparent single-field wrappers (`serialize_newtype_struct`
+    /// never wraps the inner value in any envelope), so the inverse must hand the visitor the very
+    /// same `DslValue` back via `visit_newtype_struct`, not re-dispatch on its runtime shape through
+    /// `deserialize_any` — the derived `Visitor` for a newtype struct only implements
+    /// `visit_newtype_struct`/`visit_seq`, never the scalar `visit_*` methods, so blanket-forwarding
+    /// this one broke every newtype wrapping a scalar (bool/number/string).
+    fn deserialize_newtype_struct<V: Visitor<'de>>(self, _name: &'static str, visitor: V) -> Result<V::Value, Self::Error> {
+        visitor.visit_newtype_struct(self)
+    }
+
     serde::forward_to_deserialize_any! {
         bool i8 i16 i32 i64 u8 u16 u32 u64 f32 f64 char str string
-        bytes byte_buf unit unit_struct newtype_struct seq tuple
+        bytes byte_buf unit unit_struct seq tuple
         tuple_struct map struct identifier ignored_any
     }
 }
@@ -651,3 +664,53 @@ impl<'de> de::Deserialize<'de> for DslValue {
         deserializer.deserialize_any(DslValueSeed)
     }
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+
+    fn round_trip<T>(value: T) -> T
+    where
+        T: Serialize + serde::de::DeserializeOwned,
+    {
+        let encoded = value.serialize(ValueSerializer).expect("encode into DslValue");
+        T::deserialize(&mut ValueDeserializer::new(encoded)).expect("decode from DslValue")
+    }
+
+    /// @emoji 🎁️ A newtype struct wrapping a scalar must round-trip: `deserialize_newtype_struct`
+    /// used to blanket-forward to `deserialize_any`, which called `visit_u64`/`visit_i64` directly
+    /// on the derived newtype visitor — a visitor that only implements `visit_newtype_struct` — and
+    /// panicked with "invalid type: integer …, expected tuple struct …".
+    #[test]
+    fn newtype_struct_wrapping_scalar_round_trips() {
+        #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+        struct Counter(i64);
+
+        assert_eq!(round_trip(Counter(15)), Counter(15));
+        assert_eq!(round_trip(Counter(-3)), Counter(-3));
+    }
+
+    #[test]
+    fn newtype_struct_wrapping_string_round_trips() {
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        struct Label(String);
+
+        assert_eq!(round_trip(Label("hub".to_owned())), Label("hub".to_owned()));
+    }
+
+    /// @emoji 🏷️ `TupleVariantSerializer` used to tag its payload "fields" while
+    /// `EnumAccessTagged::variant_seed` only ever looked for "value" (the key newtype/struct
+    /// variants use) — every tuple enum variant with 2+ fields silently decoded to an empty seq,
+    /// dropping every field instead of erroring.
+    #[test]
+    fn tuple_enum_variant_round_trips() {
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        enum E {
+            Pair(i64, i64),
+        }
+        assert_eq!(round_trip(E::Pair(1, 2)), E::Pair(1, 2));
+    }
+}
+//#endregion 🧪️Tests

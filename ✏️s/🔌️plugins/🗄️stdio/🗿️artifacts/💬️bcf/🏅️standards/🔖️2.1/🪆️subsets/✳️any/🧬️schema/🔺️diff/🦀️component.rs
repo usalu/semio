@@ -13,7 +13,7 @@
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
 use crate::artifacts::bcf::BcfSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -94,6 +94,42 @@ where
     for item in &diff.added {
         items.push(item.clone());
     }
+}
+
+fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
+where
+    K: PartialEq + Clone,
+    T: Clone,
+{
+    let keys: Vec<K> = items.iter().map(&key_of).collect();
+    for (position, key) in diff.removed.iter().enumerate() {
+        if !keys.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
+        }
+        if diff.removed[..position].contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
+        }
+    }
+    for (position, modified) in diff.modified.iter().enumerate() {
+        if !keys.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
+        }
+        if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
+        }
+    }
+    let mut added_keys = Vec::new();
+    for item in &diff.added {
+        let key = key_of(item);
+        if keys.contains(&key) || added_keys.contains(&key) || diff.removed.contains(&key) || diff.modified.iter().any(|modified| modified.key == key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").at(["added"]));
+        }
+        added_keys.push(key);
+    }
+    Ok(())
 }
 
 fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
@@ -282,7 +318,8 @@ pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfView
 
 //#region 🔖️Apply
 impl MutationDiff<BcfSnapshot> for BcfDiff {
-    fn apply(&self, base: &BcfSnapshot) -> BcfSnapshot {
+    fn apply(&self, base: &BcfSnapshot) -> MutationApplyResult<BcfSnapshot> {
+        validate_bcf_diff(self, base)?;
         let mut next = base.clone();
         if let Some(v) = &self.version {
             next.version = v.clone();
@@ -293,7 +330,7 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         if let Some(pd) = &self.parts {
             apply_named(&mut next.parts, pd, |p| p.name.clone(), apply_part);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -311,6 +348,31 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
             (Some(a), Some(b)) => Some(absorb_named(a, b, |p| p.name.clone(), absorb_part_diff, apply_part)),
         };
     }
+}
+
+fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
+    if let Some(topics) = &diff.topics {
+        validate_named(&base.topics, topics, |topic| topic.guid.clone())?;
+        for modified in &topics.modified {
+            if let Some(topic) = base.topics.iter().find(|topic| topic.guid == modified.key) {
+                validate_topic_diff(topic, &modified.diff)?;
+            }
+        }
+    }
+    if let Some(parts) = &diff.parts {
+        validate_named(&base.parts, parts, |part| part.name.clone())?;
+    }
+    Ok(())
+}
+
+fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
+    if let Some(comments) = &diff.comments {
+        validate_named(&base.comments, comments, |comment| comment.guid.clone())?;
+    }
+    if let Some(viewpoints) = &diff.viewpoints {
+        validate_named(&base.viewpoints, viewpoints, |viewpoint| viewpoint.guid.clone())?;
+    }
+    Ok(())
 }
 
 fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {

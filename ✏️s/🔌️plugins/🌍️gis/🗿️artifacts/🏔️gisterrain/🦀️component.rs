@@ -12,6 +12,14 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema
 /// editable/undoable property is vertical exaggeration (a genuinely useful terrain control).
 
 pub const GIS_3D_TERRAIN_SCHEMA: &str = "gis.terrain";
+
+/// 🪪️ The canonical surface dialect for `s.gis.gisterrain@1/*` (contract §1 grammar) — lives at the
+/// ARTIFACT root, not under `✏️editor`/`👁️viewer`, so a viewer file can read it without ever
+/// importing through the sibling `editor` module. `artifact_kind` is the 3-part schema id this
+/// file's own `definition()` claims (`s.gis.gisterrain`), NOT the 2-part `ArtifactIdentity::parse("s.gisterrain")`
+/// string above and NOT the module-private `🚪️io/🦀️component.rs` `GISTERRAIN_DIALECT` (an older,
+/// unrelated io/composer const with a different 2-part `artifact_kind` — different file, no collision).
+pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gisterrain", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔹Constants
 
 //#region 🔹Types
@@ -180,7 +188,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::gisterrain::schema::gisterrain_artifact_schema_descriptor())
         .inferences([crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::gisterrain_artifact_inference_descriptor()])
         .composers(crate::artifacts::gisterrain::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::gis3d::Gis3dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::gis3d::Gis3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Register

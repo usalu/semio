@@ -12,7 +12,6 @@ use crate::artifacts::ifc::schema::diff::{
 };
 use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 use crate::artifacts::ifc::IfcSnapshot;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -90,52 +89,17 @@ pub enum IfcMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Every entity/arg-targeted variant is a graceful no-op when
-/// `id`/`index` doesn't exist (a stale reference from a concurrent edit degrades gracefully, never panics).
-pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> IfcDiff {
-    let __diff = <IfcMutation as protocol::Mutation<IfcSnapshot>>::diff(mutation, snapshot);
-    fn find_mut<'a>(snapshot: &'a mut IfcSnapshot, id: u64) -> Option<&'a mut IfcEntity> {
-        snapshot.entities.iter_mut().find(|e| e.id == id)
+/// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
+/// snapshot when an entity or argument target is missing or out of range.
+pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
+    let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-    match mutation {
-        IfcMutation::NoMutation => {}
-        IfcMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        IfcMutation::SetFileDescription { values } => snapshot.header.file_description = values.clone(),
-        IfcMutation::SetFileName { values } => snapshot.header.file_name = values.clone(),
-        IfcMutation::SetFileSchema { values } => snapshot.header.file_schema = values.clone(),
-        IfcMutation::InsertEntity { index, entity } => {
-            let at = (*index).min(snapshot.entities.len());
-            snapshot.entities.insert(at, entity.clone());
-        }
-        IfcMutation::RemoveEntity { id } => snapshot.entities.retain(|e| &e.id != id),
-        IfcMutation::SetEntityName { id, name } => {
-            if let Some(e) = find_mut(snapshot, *id) {
-                e.name = name.clone();
-            }
-        }
-        IfcMutation::SetEntityArg { id, index, value } => {
-            if let Some(e) = find_mut(snapshot, *id) {
-                if let Some(slot) = e.args.get_mut(*index) {
-                    *slot = value.clone();
-                }
-            }
-        }
-        IfcMutation::InsertEntityArg { id, index, value } => {
-            if let Some(e) = find_mut(snapshot, *id) {
-                let at = (*index).min(e.args.len());
-                e.args.insert(at, value.clone());
-            }
-        }
-        IfcMutation::RemoveEntityArg { id, index } => {
-            if let Some(e) = find_mut(snapshot, *id) {
-                if *index < e.args.len() {
-                    e.args.remove(*index);
-                }
-            }
-        }
-    }
-
-    __diff
 }
 //#endregion 🔖️Apply
 
@@ -143,8 +107,8 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
 impl Mutation<IfcSnapshot> for IfcMutation {
     type Diff = IfcDiff;
 
-    fn diff(&self, base: &IfcSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             IfcMutation::NoMutation => IfcDiff::default(),
             IfcMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             IfcMutation::SetFileDescription { values } => diff::diff_set_file_description(values.clone()),
@@ -156,7 +120,7 @@ impl Mutation<IfcSnapshot> for IfcMutation {
             IfcMutation::SetEntityArg { id, index, value } => diff::diff_set_entity_arg(*id, *index, value.clone()),
             IfcMutation::InsertEntityArg { id, index, value } => diff::diff_insert_entity_arg(*id, *index, value.clone()),
             IfcMutation::RemoveEntityArg { id, index } => diff::diff_remove_entity_arg(*id, *index),
-        }
+        })
     }
 
     /// ↩️ Handcrafted, key-aware mutation-level inverses. Entity/arg-targeted variants look the
@@ -257,7 +221,7 @@ fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     }
 }
 
-impl protocol::OpText for IfcMutation {
+impl OpText for IfcMutation {
     fn print_op(&self) -> String {
         print_ifc_mutation(self)
     }
@@ -304,7 +268,7 @@ fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapsho
 /// uses. Every field is real (`id`/`index` varints, `IfcEntity`/`IfcValue` field-by-field via the
 /// reused diff-sibling primitives) — the only place the recursion bottoms out through a fully
 /// spec-expressible per-variant tag (`enc_ifc_value_bin`), never an opaque byte-chain fallback.
-impl protocol::OpBinary for IfcMutation {
+impl OpBinary for IfcMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             IfcMutation::NoMutation => 0,
@@ -462,6 +426,16 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
+    #[test]
+    fn missing_entity_target_is_rejected_before_mutation() {
+        let base = IfcSnapshot::default();
+        let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
+        let error = diff.apply(&base).expect_err("missing entity target must be rejected");
+        assert_eq!(error.code, "invalid-remove-target");
+        assert_eq!(error.target, vec!["entities", "1"]);
+        assert_eq!(base, IfcSnapshot::default());
+    }
+
     //#region Fixtures
     fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
         IfcEntity { id, name: name.into(), args, complex: vec![] }
@@ -486,7 +460,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_ifc_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[test]
@@ -505,9 +479,6 @@ mod tests {
         assert_mutation_diff_law(&base, IfcMutation::SetEntityArg { id: 6, index: 2, value: IfcValue::String("Wall-02".into()) });
         assert_mutation_diff_law(&base, IfcMutation::InsertEntityArg { id: 6, index: 1, value: IfcValue::Derived });
         assert_mutation_diff_law(&base, IfcMutation::RemoveEntityArg { id: 6, index: 0 });
-        // Out-of-range id/index: graceful no-op, still law-compliant.
-        assert_mutation_diff_law(&base, IfcMutation::SetEntityName { id: 404, name: "X".into() });
-        assert_mutation_diff_law(&base, IfcMutation::SetEntityArg { id: 6, index: 99, value: IfcValue::Unset });
     }
     //#endregion 🔖️mutation_diff_law
 
@@ -534,9 +505,9 @@ mod tests {
             assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
             let d = m.diff(&base);
-            let mutated = d.apply(&base);
-            let inv_d = d.inverse(&base);
-            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+            let mutated = d.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.diff().inverse(&base);
+            assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
     //#endregion 🔖️inverse_law
@@ -544,13 +515,13 @@ mod tests {
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.apply(base);
+        let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.apply(&mid);
+        let sequential = d2.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.clone();
-        merged.absorb(d2.clone());
-        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
+        assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
     #[test]
@@ -584,22 +555,22 @@ mod tests {
     fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = IfcMutation::SetFileDescription { values: vec![IfcValue::String("one".into())] }.diff(&base);
-        let mid1 = d1.apply(&base);
+        let mid1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = IfcMutation::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![]) }.diff(&mid1);
-        let mid2 = d2.apply(&mid1);
+        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
         let d3 = IfcMutation::SetEntityName { id: 100, name: "IFCBUILDING".into() }.diff(&mid2);
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
-        assert_eq!(left.apply(&base), d3.apply(&mid2), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -614,9 +585,9 @@ mod tests {
         b.entities.push(entity(200, "IFCBUILDINGSTOREY", vec![IfcValue::Real(3.0)])); // add id 200
 
         let d = IfcDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let d_rev = IfcDiff::between(&b, &a);
-        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️between_roundtrip_law
@@ -684,9 +655,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = IfcDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let backward = IfcDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         assert!(forward.file_description.is_some(), "file_description must be diffed");
@@ -715,13 +686,15 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     #[test]
-    fn out_of_range_entity_mutation_is_noop_not_panic() {
+    fn out_of_range_entity_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_ifc_mutation(&mut snap, &IfcMutation::SetEntityName { id: 404, name: "X".into() });
+        let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::SetEntityName { id: 404, name: "X".into() });
         assert_eq!(snap, base);
-        apply_ifc_mutation(&mut snap, &IfcMutation::RemoveEntityArg { id: 404, index: 0 });
+        assert_eq!(outcome.messages()[0].target, vec!["entities", "404"]);
+        let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::RemoveEntityArg { id: 404, index: 0 });
         assert_eq!(snap, base);
+        assert_eq!(outcome.messages()[0].target, vec!["entities", "404"]);
     }
 
     //#region 🔖️op_text_binary_roundtrip_law

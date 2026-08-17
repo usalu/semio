@@ -15,7 +15,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .version("0.1.0")
         .artifact(crate::artifacts::imperative::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::imperative::ImperativePlayApp>(crate::editor::imperative::create_imperative_app())
+        .editor_mutation_roster::<crate::editor::imperative::ImperativePlayApp>()
         .viewer::<crate::viewer::imperative::ImperativeViewer>(crate::viewer::imperative::create_imperative_viewer())
+        .viewer_mutation_roster::<crate::viewer::imperative::ImperativeViewer>()
         .try_build()
 }
 

@@ -5,7 +5,13 @@ use crate::artifacts::din16798::mutations::change_h_ve_w_k::mutation::ChangeHVeW
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeHVeWK, _base: &Din16798Snapshot) -> Din16798Diff {
-    Din16798Diff { h_ve_w_k: Some(payload.new_h_ve_w_k.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeHVeWK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    if !payload.new_h_ve_w_k.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Ventilation heat transfer coefficient must be a finite number, got {}.", payload.new_h_ve_w_k), Vec::<String>::new());
+    }
+    if base.h_ve_w_k == payload.new_h_ve_w_k {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Ventilation heat transfer coefficient is already {}.", payload.new_h_ve_w_k));
+    }
+    protocol::MutationOutcome::new(Din16798Diff { h_ve_w_k: Some(payload.new_h_ve_w_k.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

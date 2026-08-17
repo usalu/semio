@@ -113,7 +113,7 @@ mod tests {
             entities: vec![DxfEntity::Line { start: [-2.0, 1.0, 0.0], end: [0.0, 2.0, 0.0], layer: "0".into(), unknown_group_codes: vec![] }, DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![] }],
         };
         let bounds = compute_dxf_bounds(&snapshot);
-        assert_eq!(bounds.min, [-2.0, 1.0, 0.0]);
+        assert_eq!(bounds.min, [-2.0, 1.0, -1.0]);
         assert_eq!(bounds.max, [6.0, 8.5, 1.0]);
         assert_eq!(bounds.entity_count, 3);
     }

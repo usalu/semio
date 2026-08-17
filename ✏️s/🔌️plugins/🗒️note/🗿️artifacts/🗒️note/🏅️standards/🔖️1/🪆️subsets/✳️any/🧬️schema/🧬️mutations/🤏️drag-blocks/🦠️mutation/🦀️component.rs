@@ -24,7 +24,7 @@ pub fn drag_blocks(ids: Vec<String>, dx: f64, dy: f64) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "blocks", kind: "drag-blocks", record: "DraggedBlocks" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

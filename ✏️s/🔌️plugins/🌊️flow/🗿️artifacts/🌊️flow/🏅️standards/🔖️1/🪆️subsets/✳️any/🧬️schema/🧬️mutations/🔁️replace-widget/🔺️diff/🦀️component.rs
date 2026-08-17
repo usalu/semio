@@ -6,10 +6,14 @@ use protocol::Identified;
 
 use super::mutation::ReplaceWidget;
 
-pub fn diff(payload: &ReplaceWidget, base: &FlowSnapshot) -> FlowDiff {
+pub fn diff(payload: &ReplaceWidget, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
-    if let Some(widget) = scene.widgets.iter_mut().find(|widget| widget.id() == &payload.id) {
-        *widget = payload.widget.clone();
+    let Some(widget) = scene.widgets.iter_mut().find(|widget| widget.id() == &payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if *widget == payload.widget {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Widget \"{}\" already matches the requested value.", payload.id));
     }
-    diff_replace_content(scene.widgets, scene.synapses, scene.layout)
+    *widget = payload.widget.clone();
+    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
 }

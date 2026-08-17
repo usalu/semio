@@ -7,12 +7,13 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵️Tree/🟦️component.tsx";
-import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { ChevronDownIcon } from "../🔣️Icons/🟦️component.tsx";
@@ -361,7 +362,6 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
  * Input holds the data fields for a Input record.
  **/
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
-  const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const scalarInputValue = (value: string | number | readonly string[] | undefined): string | number => {
     if (typeof value === "number") return value;
@@ -410,7 +410,6 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (lazy) {
       setIsEditing(true);
-      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -426,7 +425,6 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         return;
       }
       onLazyChange?.(localValue);
-      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -438,13 +436,11 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         setIsEditing(false);
         skipLazyBlurCommitRef.current = true;
         onLazyChange?.(localValue);
-        transaction?.finalize?.();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
-        transaction?.abort?.();
         (e.target as HTMLInputElement).blur();
       }
     }

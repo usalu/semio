@@ -7,10 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Orb } from "../../🧱️elements/🔮️Orb/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { type ElementProps, useTransaction } from "../🐹️ElementProps/🟦️component.tsx";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { Label } from "../🏷️Label/🟦️component.tsx";
 import { usePanelGhost } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { createDOMEventBinding } from "../🖱️ContextMenu/🟦️component.tsx";
@@ -38,8 +37,53 @@ interface RingProps extends ElementProps {
   className?: string;
 }
 
+// #region 🔮️RingMarker
+/** @emoji 🔮️ Private circular position marker for a Ring. */
+interface RingMarkerProps {
+  id: string;
+  t: number;
+  disabled?: boolean;
+  selected?: boolean;
+  hovered?: boolean;
+  dragging?: boolean;
+  radius?: number;
+  onPointerDown?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerMove?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerUp?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerEnter?: (e: React.PointerEvent<SVGCircleElement>) => void;
+  onPointerLeave?: (e: React.PointerEvent<SVGCircleElement>) => void;
+}
+
+function RingMarker({ id, t, disabled = false, selected = false, hovered = false, radius = 40, dragging = false, onPointerDown, onPointerMove, onPointerUp, onPointerEnter, onPointerLeave }: RingMarkerProps) {
+  const angle = t * 2 * Math.PI - Math.PI / 2;
+  const cx = Math.cos(angle) * radius;
+  const cy = Math.sin(angle) * radius;
+  const orbRadius = selected ? 7 : 5;
+  return (
+    <circle
+      data-slot="orb"
+      data-orb-id={id}
+      cx={cx}
+      cy={cy}
+      r={orbRadius}
+      className={cn(
+        dragging ? "" : "transition-all duration-150",
+        disabled ? "fill-muted-foreground/40 cursor-not-allowed" : "fill-foreground cursor-grab active:cursor-grabbing",
+        selected && !disabled && "fill-accent stroke-accent-foreground stroke-1",
+        hovered && !disabled && !selected && "fill-accent-foreground",
+      )}
+      style={{ pointerEvents: disabled ? "none" : "auto" }}
+      onPointerDown={disabled ? undefined : onPointerDown}
+      onPointerMove={disabled ? undefined : onPointerMove}
+      onPointerUp={disabled ? undefined : onPointerUp}
+      onPointerEnter={disabled ? undefined : onPointerEnter}
+      onPointerLeave={disabled ? undefined : onPointerLeave}
+    />
+  );
+}
+// #endregion 🔮️RingMarker
+
 function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onOrbHoverChange, showLabel, className }: RingProps) {
-  const transaction = useTransaction();
   const panelGhost = usePanelGhost();
   const svgRef = reactHostPort.useRef<SVGSVGElement>(null);
   const [draggingOrbId, setDraggingOrbId] = reactHostPort.useState<string | null>(null);
@@ -69,10 +113,9 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       setLocalT(t);
       dragStartT.current = t;
       pendingT.current = null;
-      transaction?.start?.();
       onOrbSelect?.(orbId);
     },
-    [onOrbSelect, panelGhost, transaction],
+    [onOrbSelect, panelGhost],
   );
   const flushPendingChange = reactHostPort.useCallback(
     (orbId: string) => {
@@ -107,7 +150,6 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       onOrbChange?.(draggingOrbId, dragStartT.current, newT);
       setDraggingOrbId(null);
       panelGhost?.end();
-      transaction?.finalize?.();
     };
     const onCancel = () => {
       if (rafId.current) {
@@ -117,14 +159,13 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       setLocalT(null);
       setDraggingOrbId(null);
       panelGhost?.end();
-      transaction?.abort?.();
     };
     const bindings = createDOMEventBinding();
     bindings.listen(window, "pointermove", onMove);
     bindings.listen(window, "pointerup", onUp);
     bindings.listen(window, "pointercancel", onCancel);
     return () => bindings.dispose();
-  }, [angleFromEvent, draggingOrbId, flushPendingChange, onOrbChange, panelGhost, transaction]);
+  }, [angleFromEvent, draggingOrbId, flushPendingChange, onOrbChange, panelGhost]);
   reactHostPort.useEffect(() => {
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -145,7 +186,7 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
     >
       <circle data-slot="ring-track" cx={0} cy={0} r={radius} className="fill-none stroke-muted-foreground/30 stroke-[length:var(--stroke-default)]" />
       {orbs.map((orb) => (
-        <Orb
+        <RingMarker
           key={orb.id}
           id={orb.id}
           t={draggingOrbId === orb.id && localT !== null ? localT : orb.t}

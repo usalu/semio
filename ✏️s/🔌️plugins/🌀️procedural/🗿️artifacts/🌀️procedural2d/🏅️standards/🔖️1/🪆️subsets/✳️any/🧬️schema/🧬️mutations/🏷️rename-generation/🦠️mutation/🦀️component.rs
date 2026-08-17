@@ -22,7 +22,7 @@ pub fn rename_generation(id: String, name: String) -> Procedural2dMutation {
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for RenameGeneration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "generation", kind: "rename-generation", record: "RenamedGeneration" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

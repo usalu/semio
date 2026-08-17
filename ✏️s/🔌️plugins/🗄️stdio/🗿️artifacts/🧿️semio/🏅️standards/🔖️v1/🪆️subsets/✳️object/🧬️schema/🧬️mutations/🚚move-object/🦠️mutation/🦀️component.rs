@@ -14,7 +14,7 @@ pub struct MoveObject {
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for MoveObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "object", kind: "move-object", record: "MovedObject" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> <SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {

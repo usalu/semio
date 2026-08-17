@@ -1,0 +1,29 @@
+[framework/os/host/rs] wasm-pack build --dev --target web --out-dir pkg --out-name semio_framework_os --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+   Compiling web-sys v0.3.103
+   Compiling getrandom v0.3.4
+   Compiling uuid v1.23.4
+   Compiling slotmap v1.1.1
+   Compiling ttf-parser v0.25.1
+   Compiling tiny-skia-path v0.11.4
+   Compiling kurbo v0.11.3
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling rgb v0.8.53
+error: The "wasm_js" backend requires the `wasm_js` feature for `getrandom`. For more information see: https://docs.rs/getrandom/0.3.4/#webassembly-support
+  --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.3.4/src/backends.rs:40:17
+   |
+40 | /                 compile_error!(concat!(
+41 | |                     "The \"wasm_js\" backend requires the `wasm_js` feature \
+42 | |                     for `getrandom`. For more information see: \
+43 | |                     https://docs.rs/getrandom/", env!("CARGO_PKG_VERSION"), "/#webassembly-support"
+44 | |                 ));
+   | |__________________^
+
+
+error: could not compile `getrandom` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+Error: `cargo build` failed, see the output above for details
+Caused by: `cargo build` failed, see the output above for details
+[framework/os/host/rs] wasm build failed
+EXIT:1

@@ -13,147 +13,150 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1995Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1995Artifact) -> En1995Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.m_ed_knm {
-            next.m_ed_knm = value.clone();
-        }
-        if let Some(value) = &self.n_ed_kn {
-            next.n_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.v_ed_kn {
-            next.v_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.w_mm3 {
-            next.w_mm3 = value.clone();
-        }
-        if let Some(value) = &self.a_mm2 {
-            next.a_mm2 = value.clone();
-        }
-        if let Some(value) = &self.b_mm {
-            next.b_mm = value.clone();
-        }
-        if let Some(value) = &self.h_mm {
-            next.h_mm = value.clone();
-        }
-        if let Some(value) = &self.f_m_k {
-            next.f_m_k = value.clone();
-        }
-        if let Some(value) = &self.f_c_0_k {
-            next.f_c_0_k = value.clone();
-        }
-        if let Some(value) = &self.service_class {
-            next.service_class = value.clone();
-        }
-        if let Some(value) = &self.load_duration {
-            next.load_duration = value.clone();
-        }
-        if let Some(value) = &self.m_crit_knm {
-            next.m_crit_knm = value.clone();
-        }
-        if let Some(value) = &self.f_ed_kn {
-            next.f_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.a_ef_mm2 {
-            next.a_ef_mm2 = value.clone();
-        }
-        if let Some(value) = &self.f_v_k {
-            next.f_v_k = value.clone();
-        }
-        if let Some(value) = &self.fire_duration_min {
-            next.fire_duration_min = value.clone();
-        }
-        if let Some(value) = &self.section_depth_mm {
-            next.section_depth_mm = value.clone();
-        }
-        if let Some(value) = &self.a_vert_m_s2 {
-            next.a_vert_m_s2 = value.clone();
-        }
-        if let Some(value) = &self.n_cycles_bridge {
-            next.n_cycles_bridge = value.clone();
-        }
-        if let Some(value) = &self.selected_check_index {
-            next.selected_check_index = *value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &En1995Artifact) -> protocol::MutationApplyResult<En1995Artifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.m_ed_knm {
+                next.m_ed_knm = value.clone();
+            }
+            if let Some(value) = &self.n_ed_kn {
+                next.n_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.v_ed_kn {
+                next.v_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.w_mm3 {
+                next.w_mm3 = value.clone();
+            }
+            if let Some(value) = &self.a_mm2 {
+                next.a_mm2 = value.clone();
+            }
+            if let Some(value) = &self.b_mm {
+                next.b_mm = value.clone();
+            }
+            if let Some(value) = &self.h_mm {
+                next.h_mm = value.clone();
+            }
+            if let Some(value) = &self.f_m_k {
+                next.f_m_k = value.clone();
+            }
+            if let Some(value) = &self.f_c_0_k {
+                next.f_c_0_k = value.clone();
+            }
+            if let Some(value) = &self.service_class {
+                next.service_class = value.clone();
+            }
+            if let Some(value) = &self.load_duration {
+                next.load_duration = value.clone();
+            }
+            if let Some(value) = &self.m_crit_knm {
+                next.m_crit_knm = value.clone();
+            }
+            if let Some(value) = &self.f_ed_kn {
+                next.f_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.a_ef_mm2 {
+                next.a_ef_mm2 = value.clone();
+            }
+            if let Some(value) = &self.f_v_k {
+                next.f_v_k = value.clone();
+            }
+            if let Some(value) = &self.fire_duration_min {
+                next.fire_duration_min = value.clone();
+            }
+            if let Some(value) = &self.section_depth_mm {
+                next.section_depth_mm = value.clone();
+            }
+            if let Some(value) = &self.a_vert_m_s2 {
+                next.a_vert_m_s2 = value.clone();
+            }
+            if let Some(value) = &self.n_cycles_bridge {
+                next.n_cycles_bridge = value.clone();
+            }
+            if let Some(value) = &self.selected_check_index {
+                next.selected_check_index = *value;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<En1995Snapshot> for En1995Diff {
-    fn apply(&self, snapshot: &En1995Snapshot) -> En1995Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.m_ed_knm {
-            next.m_ed_knm = value.clone();
-        }
-        if let Some(value) = &self.n_ed_kn {
-            next.n_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.v_ed_kn {
-            next.v_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.w_mm3 {
-            next.w_mm3 = value.clone();
-        }
-        if let Some(value) = &self.a_mm2 {
-            next.a_mm2 = value.clone();
-        }
-        if let Some(value) = &self.b_mm {
-            next.b_mm = value.clone();
-        }
-        if let Some(value) = &self.h_mm {
-            next.h_mm = value.clone();
-        }
-        if let Some(value) = &self.f_m_k {
-            next.f_m_k = value.clone();
-        }
-        if let Some(value) = &self.f_c_0_k {
-            next.f_c_0_k = value.clone();
-        }
-        if let Some(value) = &self.service_class {
-            next.service_class = value.clone();
-        }
-        if let Some(value) = &self.load_duration {
-            next.load_duration = value.clone();
-        }
-        if let Some(value) = &self.m_crit_knm {
-            next.m_crit_knm = value.clone();
-        }
-        if let Some(value) = &self.f_ed_kn {
-            next.f_ed_kn = value.clone();
-        }
-        if let Some(value) = &self.a_ef_mm2 {
-            next.a_ef_mm2 = value.clone();
-        }
-        if let Some(value) = &self.f_v_k {
-            next.f_v_k = value.clone();
-        }
-        if let Some(value) = &self.fire_duration_min {
-            next.fire_duration_min = value.clone();
-        }
-        if let Some(value) = &self.section_depth_mm {
-            next.section_depth_mm = value.clone();
-        }
-        if let Some(value) = &self.a_vert_m_s2 {
-            next.a_vert_m_s2 = value.clone();
-        }
-        if let Some(value) = &self.n_cycles_bridge {
-            next.n_cycles_bridge = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &En1995Snapshot) -> protocol::MutationApplyResult<En1995Snapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.m_ed_knm {
+                next.m_ed_knm = value.clone();
+            }
+            if let Some(value) = &self.n_ed_kn {
+                next.n_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.v_ed_kn {
+                next.v_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.w_mm3 {
+                next.w_mm3 = value.clone();
+            }
+            if let Some(value) = &self.a_mm2 {
+                next.a_mm2 = value.clone();
+            }
+            if let Some(value) = &self.b_mm {
+                next.b_mm = value.clone();
+            }
+            if let Some(value) = &self.h_mm {
+                next.h_mm = value.clone();
+            }
+            if let Some(value) = &self.f_m_k {
+                next.f_m_k = value.clone();
+            }
+            if let Some(value) = &self.f_c_0_k {
+                next.f_c_0_k = value.clone();
+            }
+            if let Some(value) = &self.service_class {
+                next.service_class = value.clone();
+            }
+            if let Some(value) = &self.load_duration {
+                next.load_duration = value.clone();
+            }
+            if let Some(value) = &self.m_crit_knm {
+                next.m_crit_knm = value.clone();
+            }
+            if let Some(value) = &self.f_ed_kn {
+                next.f_ed_kn = value.clone();
+            }
+            if let Some(value) = &self.a_ef_mm2 {
+                next.a_ef_mm2 = value.clone();
+            }
+            if let Some(value) = &self.f_v_k {
+                next.f_v_k = value.clone();
+            }
+            if let Some(value) = &self.fire_duration_min {
+                next.fire_duration_min = value.clone();
+            }
+            if let Some(value) = &self.section_depth_mm {
+                next.section_depth_mm = value.clone();
+            }
+            if let Some(value) = &self.a_vert_m_s2 {
+                next.a_vert_m_s2 = value.clone();
+            }
+            if let Some(value) = &self.n_cycles_bridge {
+                next.n_cycles_bridge = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -208,10 +211,10 @@ mod tests {
     fn change_mutation_diff_updates_only_its_field() {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeMEdKnm(crate::artifacts::en1995::mutations::change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 25.0 });
-        let diff = mutation.diff(&base);
+        let outcome = mutation.diff(&base);
         let mut expected = base.clone();
         expected.m_ed_knm = 25.0;
-        assert_eq!(diff.apply(&base), expected);
+        assert_eq!(outcome.diff().apply(&base).expect("valid mutation diff"), expected);
     }
 }
 //#endregion 🧪️Tests

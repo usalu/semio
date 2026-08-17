@@ -218,7 +218,7 @@ pub fn convert_to_nurbs(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -
             surface_done.insert(surface_id);
         }
     }
-    let mut edge_curves: Vec<(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::EdgeId, Curve3Id)> = Vec::new();
+    let mut edge_curves: Vec<(EdgeId, Curve3Id)> = Vec::new();
     for fid in &face_ids {
         for coedge_id in body.face_coedges(*fid) {
             let edge_id = body.coedges.get(coedge_id).expect("coedge").edge;
@@ -312,7 +312,7 @@ mod tests {
         let mut rec = OpRecorder::new();
         let tol = Tol::DEFAULT;
         let frame = Frame3::from_normal(p0, normal).expect("plane frame");
-        let surface = body.surfaces.insert(crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface::Plane { frame });
+        let surface = body.surfaces.insert(Surface::Plane { frame });
         let v0 = make_vertex(body, p0, tol, &mut rec);
         let v1 = make_vertex(body, p1, tol, &mut rec);
         let v2 = make_vertex(body, p2, tol, &mut rec);
@@ -333,7 +333,7 @@ mod tests {
     }
 
     fn unique_edges_on_solid(body: &Body, solid: SolidId) -> usize {
-        let mut edges = std::collections::HashSet::new();
+        let mut edges = HashSet::new();
         for fid in body.solid_faces(solid) {
             for cid in body.face_coedges(fid) {
                 let e = body.coedges.get(cid).unwrap().edge;

@@ -9,7 +9,7 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot
 pub mod derived_composition {
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
     use crate::artifacts::epw::standards::energyplus::subsets::any::schema::EpwAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") };
 

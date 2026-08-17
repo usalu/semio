@@ -15,7 +15,7 @@ pub struct ChangeEerActual {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeEerActual {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "eer-actual", kind: "change-eer-actual", record: "ChangedEerActual" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_eer_actual::diff::diff(self, base)
     }
 

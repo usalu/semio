@@ -1,0 +1,66 @@
+W3 lane — fem2d ◻2d/** — MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS
+Scope: ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/*/🔺️diff/🦀️component.rs (25 leaves) + facet root 🧬️mutations/🦀️component.rs OutcomeLaws region.
+
+Pre-check: 🦠️mutation leaves and ✏️editor/🎚️config, ✏️editor/👥️presence already converted (verified, not touched). No `fn validate` overrides found anywhere under ◻2d/**.
+
+=== 25 leaves converted ===
+CREATE family (Fatal mutation.duplicate-id + Error mutation.target-missing on required foreign refs):
+1. create-node — duplicate-id only (no foreign refs: x/y are coords).
+2. create-material — duplicate-id only (no foreign refs).
+3. create-section — duplicate-id only (no foreign refs).
+4. create-support — duplicate-id + Error target-missing on support.node_id -> base.nodes.
+5. create-region — duplicate-id + Error target-missing on region.material_id -> base.materials.
+6. create-element — duplicate-id (via element_id helper) + Error target-missing on start/end -> base.nodes, material_id -> base.materials, section_id -> base.sections (checked in that order, first failure wins).
+7. create-load-case — duplicate-id + Error target-missing per load in load_case.loads: Nodal.node_id -> base.nodes, MemberUdl.element_id -> base.elements, Area.region_id -> base.regions.
+8. create-combination — duplicate-id + Error target-missing per term: term.case_id must exist in base.load_cases OR base.combinations (terms may reference a nested combination per the type's own doc comment).
+
+DELETE family (Error mutation.target-missing if id absent, no cascade widening — none of these cascaded before, none do now):
+9. delete-node, 10. delete-element (via element_id), 11. delete-material, 12. delete-section, 13. delete-support, 14. delete-region, 15. delete-load-case, 16. delete-combination.
+
+REPLACE family (Error mutation.target-missing if id absent; Warning mutation.no-op with empty diff if new value == existing, PartialEq):
+17. replace-element (element_id-based lookup, compares &FemElement via as_ref()), 18. replace-material, 19. replace-section, 20. replace-support, 21. replace-region.
+
+Other families:
+22. add-load — Error target-missing (referencing case_id) if owning case absent; Warning no-op if a load with the same id already exists in that case's loads (idempotent).
+23. remove-load — Error target-missing if case_id absent, else if load_id absent from that case's loads (message names whichever id is actually missing).
+24. change-load-case-self-weight — Error target-missing if case_id absent; Warning no-op if new_self_weight already equals case's current self_weight.
+25. update-analysis-settings — singleton, no target-missing check; Warning no-op if payload.settings == base.analysis (PartialEq).
+
+No deviations from the worker brief's verb-family table. No 8th code invented — only mutation.target-missing, mutation.no-op, mutation.duplicate-id used (fatal/error/warn per the frozen 7-code table); mutation.cascade/mutation.partial/mutation.clamped/mutation.invariant not applicable to any of these 25 leaves (none of them cascade, clamp, partial-survive, or violate a structural invariant beyond duplicate-id).
+
+=== Facet root test file ===
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs
+Added //#region 🔖️OutcomeLaws (mirrors dag's shape) with 7 tests: create_node_duplicate_id_is_fatal (Fatal, assert_fatal_never_applies), create_support_missing_node_is_error (create family's target-missing representative — a required foreign ref, per brief's own create-support example), delete_node_missing_target_is_error, replace_material_missing_target_is_error, add_load_missing_target_is_error, remove_load_missing_target_is_error, change_load_case_self_weight_missing_target_is_error. All via fully-qualified protocol::testkit::{assert_missing_target_is_error, assert_fatal_never_applies} — no new import needed.
+Checked missing_target_inverse_and_diff_are_no_ops (~line 260) and every other .diff(&base) call site in this file: all already use the .diff(&base).diff() outcome-unwrap pattern (the top-level Fem2dMutation::diff via #[derive(dsl::Mutations)] already returns MutationOutcome — landed independently of this lane's leaf work), so no call-site fixes were needed.
+
+=== cargo check ===
+First run: `cargo check -p semio-s-plugin-fem` — Finished, 0 errors (89 warnings, all pre-existing/unrelated: dead_code in 🧊️3d and 🚪️io json (de)serializers, unused imports in fem3d editor commands, unnecessary-qualification style lints — none in files this lane touched).
+Second run (moments later): failed with 197 errors, entirely inside semio-s-plugin-stdio's 🧿️semio/animation subset (OpText/OpBinary/DiffCodec trait-bound errors on SemioAnimationMutation) — a dependency crate, not touched by this lane, whose legacy-enum wrapping is FULL-STDIO's charter per 📋️contract-freeze.md. This is concurrent sibling-lane churn (per project memory: repo-wide cargo failures mid-session are often another session's in-progress refactor), not a regression from this lane's 25-file + 1-region change. Not chased further per brief instructions (report file-level completeness, coordinator runs the authoritative final check).
+
+Files touched (25 diff leaves + 1 facet test file, all inside ◻2d/**, none outside the lease):
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱⚪️create-node/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑⚪️delete-node/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🧩️create-element/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑🧩️delete-element/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁🧩️replace-element/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🧱️create-material/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑🧱️delete-material/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁🧱️replace-material/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-section/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑📐️delete-section/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁📐️replace-section/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🛡️create-support/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-support/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-support/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🗺️create-region/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑🗺️delete-region/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁🗺️replace-region/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱📋️create-load-case/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑📋️delete-load-case/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-load/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-load/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖change-load-case-self-weight/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱🔗️create-combination/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑🔗️delete-combination/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛update-analysis-settings/🔺️diff/🦀️component.rs
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs (OutcomeLaws region added)

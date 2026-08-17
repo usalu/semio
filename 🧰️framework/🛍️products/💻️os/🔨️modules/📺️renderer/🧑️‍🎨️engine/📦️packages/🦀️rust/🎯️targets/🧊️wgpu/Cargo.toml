@@ -52,8 +52,15 @@ required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
-tokio = { version = "1", features = ["sync"], default-features = false }
+# 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D): `ureq`
+# added alongside the pre-existing `sync` so `os_directory::client::native::NativeDirectoryTransport`
+# (gated `all(feature = "ureq", feature = "sync", not(wasm32))`) compiles — both features already
+# exist on this crate, no new dependency. `tokio`'s own `rt`/`net`/`time` are unified in from the
+# kernel crate's own `sync` feature (`tokio-tungstenite`'s WS transport needs a real reactor), listed
+# explicitly here too so this crate's own directory-stream background thread doesn't rely on that
+# unification being implicit.
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
 ureq = "2.12.1"
 rfd = "0.15.4"
 

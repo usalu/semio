@@ -207,6 +207,6 @@ pub fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
 pub fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
     let mut opc = snap.opc.clone();
     regenerate_workbook_parts(&mut opc, &snap.workbook);
-    Ok(crate::artifacts::zip::opc::encode_opc(&opc)?)
+    Ok(crate::artifacts::zip::opc::encode_opc_with_package_order(&opc)?)
 }
 //#endregion 🔖️Codec

@@ -200,10 +200,13 @@ mod tests {
     }
 
     fn round_trip(base: &En1992Snapshot, mutation: &En1992Mutation) -> En1992Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -236,8 +239,8 @@ mod tests {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::mutation::ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -245,8 +248,8 @@ mod tests {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 150.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1992Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 95.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1992Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 95.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -254,10 +257,44 @@ mod tests {
         let base = En1992Snapshot::default();
         let mutation = En1992Mutation::ChangeUseFem(change_use_fem::mutation::ChangeUseFem { new_use_fem: true });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::mutation::ChangeAnchorCracked { new_anchor_cracked: true }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::mutation::ChangeAnchorCracked { new_anchor_cracked: true }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// this facet is entirely one verb family (root-scoped `change-<field>`), so one representative
+    /// Fatal/no-op/determinism check per structurally distinct field type stands in for "one per
+    /// verb family". `assert_missing_target_is_error` does not apply — every field is a document-root
+    /// scalar that always exists, never an id-keyed/addressable target. `assert_outcome_policy_matrix`
+    /// is not landed under that literal name yet (only the differently-shaped `assert_policy_matrix`
+    /// exists) — flagged for the coordinator/lane 1-D, not improvised around.
+    #[test]
+    fn change_m_ed_knm_non_finite_is_fatal() {
+        let base = En1992Snapshot::default();
+        let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
+        let outcome = mutation.diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_annex_same_value_is_no_op() {
+        let base = En1992Snapshot::default();
+        let mutation = En1992Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: base.annex });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert_eq!(outcome.diff(), &En1992Diff::default());
+    }
+
+    #[test]
+    fn change_m_ed_knm_is_deterministic() {
+        let base = En1992Snapshot::default();
+        let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 150.0 });
+        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

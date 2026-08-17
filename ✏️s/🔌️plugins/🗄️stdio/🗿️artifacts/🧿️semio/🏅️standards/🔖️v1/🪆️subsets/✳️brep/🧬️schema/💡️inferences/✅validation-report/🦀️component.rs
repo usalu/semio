@@ -226,7 +226,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     fn valid_snapshot() -> SemioBrepSnapshot {
         let mut s = SemioBrepSnapshot::default();

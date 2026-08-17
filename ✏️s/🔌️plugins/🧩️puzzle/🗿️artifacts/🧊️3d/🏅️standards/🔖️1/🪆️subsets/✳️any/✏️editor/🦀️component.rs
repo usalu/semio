@@ -4639,7 +4639,7 @@ mod tests {
 
         let mut next_projection = projection.0.clone();
         for operation in &emit.artifact_mutations {
-            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection);
+            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection).expect("valid mutation diff");
         }
 
         let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
@@ -4678,7 +4678,7 @@ mod tests {
             let doc = ArtifactView::new(&doc_projection, &history);
             let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
-                current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current);
+                current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current).expect("valid mutation diff");
             }
         }
 

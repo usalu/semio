@@ -444,6 +444,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.cad.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.cad.schema.artifact", "schema", "s.cad.cad", &[("schema", "s.cad.cad")], None),
         ("s.cad.inference.artifact", "inference", "s.cad.cad.inference", &[("schema", "s.cad.cad.inference")], None),
+        ("s.cad.composer.native", "composer", "s.cad@1/*", &[("dialect", "s.cad@1/*")], None),
         ("s.cad.composer.ifc", "composer", "s.stdio.ifc@4/*", &[("dialect", "s.stdio.ifc@4/*")], None),
         ("s.cad.composer.step", "composer", "s.stdio.step@ap214/*", &[("dialect", "s.stdio.step@ap214/*")], None),
         ("s.cad.composer.png", "composer", "s.stdio.png@1.2/*", &[("dialect", "s.stdio.png@1.2/*")], None),
@@ -457,7 +458,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.cad.grammar.diff", "grammar", "cad.diff", &[("grammar", "cad.diff")], None),
         ("s.cad.grammar.pack", "grammar", "cad.pack", &[("grammar", "cad.pack")], None),
         ("s.cad.grammar.spr", "grammar", "cad.spr", &[("grammar", "cad.spr")], None),
-        ("s.cad.codec.document.v1", "codec", "cad.document:cad", &[("codec", "cad.document"), ("extension", "cad")], None),
+        ("s.cad.codec.document.v1", "codec", "cad.scene:cad", &[("codec", "cad.scene"), ("extension", "cad")], None),
         ("s.cad.localization.en", "localization", "CAD", &[], Some(("en", "CAD"))),
         ("s.cad.localization.de", "localization", "CAD-Modellierung", &[], Some(("de", "CAD-Modellierung"))),
     ];

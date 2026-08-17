@@ -1,0 +1,29 @@
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > folds the golden fixture into the expected projection (parity with the Rust twin) 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > is idempotent on replay 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > replays then goes live with no gap and no duplicate 1ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > reconnects resuming from the last seen seq, with exponential backoff 2ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > never throws into the caller on a malformed frame 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > folds the golden fixture into the expected projection (parity with the Rust twin) 2ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > is idempotent on replay 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > replays then goes live with no gap and no duplicate 2ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > reconnects resuming from the last seen seq, with exponential backoff 3ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > DirectoryClient.stream > never throws into the caller on a malformed frame 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > identityActorConfig binds the folder lane under `${dataDir}/os` when given a dataDir, else local-only 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > identityActorConfig binds the folder lane under `${dataDir}/os` when given a dataDir, else local-only 0ms
+stderr | ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal
+[backbone-worker] directory command unreachable, queued for retry r1 Error: network unreachable
+    at DirectoryClient.postJson (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3903:28)
+    at DirectoryClient.command (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3937:17)
+stderr | ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal
+[backbone-worker] directory command unreachable, queued for retry r1 Error: network unreachable
+    at DirectoryClient.postJson (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3903:28)
+    at DirectoryClient.command (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/ð¦ï¸component.ts:3937:17)
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last 130ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal 17ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last 120ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > identity config facet > foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events 0ms
+ ✓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker directory lane > queues a directory command while the hub is unreachable, then flushes it in order on the next live signal 18ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed | 2 passed (4)
+      Tests  2 failed | 334 passed (336)

@@ -5,7 +5,13 @@ use crate::artifacts::en1999::mutations::change_sigma_ed_shell_mpa::mutation::Ch
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeSigmaEdShellMpa, _base: &En1999Snapshot) -> En1999Diff {
-    En1999Diff { sigma_ed_shell_mpa: Some(payload.new_sigma_ed_shell_mpa.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeSigmaEdShellMpa, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    if !payload.new_sigma_ed_shell_mpa.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shell design stress [MPa] must be a finite number, got {}.", payload.new_sigma_ed_shell_mpa), Vec::<String>::new());
+    }
+    if base.sigma_ed_shell_mpa == payload.new_sigma_ed_shell_mpa {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shell design stress [MPa] is already {}.", payload.new_sigma_ed_shell_mpa));
+    }
+    protocol::MutationOutcome::new(En1999Diff { sigma_ed_shell_mpa: Some(payload.new_sigma_ed_shell_mpa.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

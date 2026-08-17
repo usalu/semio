@@ -1,0 +1,6 @@
+### note check @ 2026-08-17T01:01:40+02:00
+error[E0560]: struct `SvgSnapshot` has no field named `lexical`
+error[E0609]: no field `bytes` on type `&DwgSnapshot`
+error[E0560]: struct `SvgSnapshot` has no field named `lexical`
+error[E0308]: mismatched types
+error: could not compile `semio-s-plugin-note` (lib) due to 4 previous errors; 32 warnings emitted

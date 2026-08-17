@@ -1,0 +1,209 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4137:13)
+    at Object.react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:35) {
+  [stack]: [Getter/Setter],
+  [message]: 'boom'
+}
+
+The above error occurred in the <FaultyChild> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ShellFaultBoundary.
+
+[DEBUG] shell fault test Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4137:13)
+    at Object.react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+    at beginWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:35) 
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3519:13)
+    at ShellFaultBoundary (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:538:5)
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/framework-renderer-react| 🧪️index.test.ts (331 tests | 9 failed) 735ms
+     × adaptPluginHandle.handleAction round-trips an action with effects, uiScope, and historyPatch 13ms
+     × renders selectable builder cards with selection ring 2ms
+     × interprets virtual file system component scenes 2ms
+     × isolates render faults in ShellFaultBoundary 27ms
+     × resolveWindowActions surfaces only panel-eligible definitions owned by the window 1ms
+     × commandCategories orders and dedupes categories by first appearance 1ms
+     × ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out 1ms
+     × mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text 3ms
+     × buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework plugin runtime > adaptPluginHandle.handleAction round-trips an action with effects, uiScope, and historyPatch
+TypeError: Cannot read properties of undefined (reading 'length')
+ ❯ writeBytes ../../../../../../../ð¦ï¸component.ts:504:29
+ ❯ encodeAppFrame ../../../../../../../ð¦ï¸component.ts:2171:5
+ ❯ Object.exchange ð§ªï¸index.test.ts:1161:11
+ ❯ AppChannelClient.exchangeOne ../../../../../../../ð¦ï¸component.ts:2545:39
+ ❯ AppChannelClient.command ../../../../../../../ð¦ï¸component.ts:2566:17
+ ❯ performInvocation ../../../../🧱️elements/PluginRuntime/ð¦ï¸component.tsx:215:31
+ ❯ Object.handleAction ../../../../🧱️elements/PluginRuntime/ð¦ï¸component.tsx:393:58
+ ❯ ð§ªï¸index.test.ts:1170:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > declarative forms parity > renders selectable builder cards with selection ring
+AssertionError: expected '<div class="relative flex min-h-0 min…' to contain 'ring-primary'
+
+Expected: "ring-primary"
+Received: "<div class="relative flex min-h-0 min-w-0 flex-1 flex-col gap-double p-double semio-ui-stack semio-ui-stack--vertical border-element border cursor-pointer rounded-md" data-ui-path="stack[0]#forms-blueprint.card.q1" role="button"><div class="flex-auto"><p class="text-foreground text-sm" data-ui-path="stack[0]#forms-blueprint.card.q1/text[0]">text · q1</p></div></div>"
+
+ ❯ ð§ªï¸index.test.ts:1642:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework renderer hosts > interprets virtual file system component scenes
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:11
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:13
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:11
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:11
+ ❯ renderNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6905:18
+ ❯ renderChildrenArray ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6674:11
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6441:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: Invalid Chai property: toHaveTextContent
+ ❯ ð§ªï¸index.test.ts:4146:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveWindowActions surfaces only panel-eligible definitions owned by the window
+AssertionError: expected [ 'extrude', 'undo', …(1) ] to deeply equal [ 'extrude' ]
+
+- Expected
++ Received
+
+  [
+    "extrude",
++   "undo",
++   "setActiveUtility",
+  ]
+
+ ❯ ð§ªï¸index.test.ts:4564:49
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > commandCategories orders and dedupes categories by first appearance
+AssertionError: expected [ { id: 'appearance', …(1) }, …(2) ] to deeply equal [ { id: 'appearance', …(1) }, …(2) ]
+
+- Expected
++ Received
+
+@@ -3,11 +3,11 @@
+      "id": "appearance",
+      "label": "Appearance",
+    },
+    {
+      "id": "document",
+-     "label": "Artifact",
++     "label": "Document",
+    },
+    {
+      "id": "view",
+      "label": "View",
+    },
+
+ ❯ ð§ªï¸index.test.ts:4644:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️bmwsb.png"
+
+ ❯ ð§ªï¸index.test.ts:4950:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️luh.png"
+
+ ❯ ð§ªï¸index.test.ts:4985:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(3) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "kind": "os",
++     "commandId": "os.resetDock",
++     "owner": "os",
+    },
+-   "os.resetDock",
+    undefined,
+  ]
+
+
+Number of calls: 1
+
+ ❯ ð§ªï¸index.test.ts:5095:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+TypeError: 'postMessage' requires 2 arguments: 'message' and 'targetOrigin'
+ ❯ window.postMessage ../../../../../../../../../../node_modules/jsdom/lib/jsdom/browser/Window.js:787:13
+ ❯ post ../../../../../../../ð¦ï¸backbone-worker.ts:109:16
+ ❯ ../../../../../../../ð¦ï¸backbone-worker.ts:70:8
+ ❯ processTicksAndRejections node:internal/process/task_queues:104:5
+
+This error originated in "🧪️index.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 322 passed (331)
+     Errors  1 error
+   Start at  03:22:23
+   Duration  5.31s (transform 2.05s, setup 0ms, import 4.19s, tests 735ms, environment 234ms)
+

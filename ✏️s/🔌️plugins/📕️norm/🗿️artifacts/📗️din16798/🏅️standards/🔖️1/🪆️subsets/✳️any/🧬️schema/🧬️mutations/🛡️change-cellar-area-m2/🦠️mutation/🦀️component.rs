@@ -15,7 +15,7 @@ pub struct ChangeCellarAreaM2 {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCellarAreaM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cellar-area-m2", kind: "change-cellar-area-m2", record: "ChangedCellarAreaM2" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_cellar_area_m2::diff::diff(self, base)
     }
 

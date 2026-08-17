@@ -7817,7 +7817,7 @@ pub mod vcs {
         #[cfg(test)]
         use semio_framework_os_kernel::os_store::ArtifactCommand as ArtifactVcsCommand;
         use semio_framework_os_kernel::os_store::{create_document_envelope as create_document_vcs_envelope, materialize_document_snapshot as materialize_document_projection, ArtifactEnvelope as ArtifactVcsEnvelope, ArtifactStore as ArtifactVcsStore};
-        use semio_framework_os_kernel::os_spr::{Mutation as VcsOperation, MutationDiff as OperationDiff, OpText, OpBinary};
+        use semio_framework_os_kernel::os_spr::{Mutation as VcsOperation, MutationApplyResult, MutationDiff as OperationDiff, MutationOutcome, OpText, OpBinary};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7828,8 +7828,8 @@ pub mod vcs {
         pub struct ComposeKitDiff(pub Value);
 
         impl OperationDiff<KitSnapshot> for ComposeKitDiff {
-            fn apply(&self, projection: &KitSnapshot) -> KitSnapshot {
-                block_on(async {
+            fn apply(&self, projection: &KitSnapshot) -> MutationApplyResult<KitSnapshot> {
+                Ok(block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
                         .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
@@ -7838,7 +7838,7 @@ pub mod vcs {
                         let _ = kit.apply_diff(&crate::operation::KitDiff(diff)).await;
                     }
                     KitSnapshot(crate::kit_backbone::initial_kit_projection_value(&kit).await)
-                })
+                }))
             }
 
             fn absorb(&mut self, other: Self) {
@@ -7871,8 +7871,13 @@ pub mod vcs {
 
         impl semio_framework_os_kernel::os_spr::Mutation<KitSnapshot> for ComposeWireOperation {
             type Diff = ComposeKitDiff;
-            fn diff(&self, projection: &KitSnapshot) -> Self::Diff {
-                block_on(async {
+            /// 🧮️ Mechanical wrap only: `kind`/`input` are an untyped wire operation resolved at
+            /// runtime through `crate::operation::Operation`, which owns its own error channel
+            /// (`ComposeError` via `to_diff`) and predates the `📋️contract-freeze.md` §C2 message
+            /// vocabulary — there is no per-verb detail to surface as a `MutationMessage` at this
+            /// bridge layer without duplicating `Operation`'s own validation.
+            fn diff(&self, projection: &KitSnapshot) -> MutationOutcome<Self::Diff> {
+                MutationOutcome::new(block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
                         .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
@@ -7882,7 +7887,7 @@ pub mod vcs {
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
                     let diff = operation.to_diff(&kit).await.expect("VcsOperation::diff returns a bare value, not Result: a resolved operation that fails to diff has no propagation path");
                     ComposeKitDiff(crate::kit_backbone::canonical_kit_diff_to_wire_json(&diff.0))
-                })
+                }))
             }
             fn inverse(&self, projection: &KitSnapshot) -> Vec<Self> {
                 block_on(async {

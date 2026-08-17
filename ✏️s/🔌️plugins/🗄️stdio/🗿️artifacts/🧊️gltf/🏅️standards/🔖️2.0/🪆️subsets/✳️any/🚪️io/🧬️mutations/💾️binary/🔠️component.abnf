@@ -1,6 +1,4 @@
-; 🚪 Structured mutation transport OpBinary frame. Format=1; tag is frozen 0..27; payload is tag-specific.
-document = %x01 tag payload
-tag = %x00-1B
-payload = *OCTET
-; tags 0..23 retain their original meanings; 18/20 couple buffer metadata and bytes.
-; 24=TransformNode, 25=ReparentNode, 26=BindNodeMesh, 27=BindPrimitiveMaterial.
+; 🚪 Generic mutation envelope: format, marker, phase, canonical descriptor id/version, UTF-8 payload.
+document = %x01 %x47 phase varint *OCTET
+phase = %x01 / %x03
+varint = 1*5OCTET

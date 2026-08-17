@@ -8,8 +8,7 @@
 //! `crate::artifacts::bcf::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
 use crate::artifacts::bcf::{
-    schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility},
-    BcfMutation, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
+    schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility}, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
 };
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;
@@ -493,7 +492,7 @@ pub fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
 mod tests {
     use super::*;
     use crate::artifacts::bcf::schema::diff::BcfDiff;
-    use crate::artifacts::bcf::schema::mutations::apply_bcf_mutation;
+    use crate::artifacts::bcf::schema::mutations::{apply_bcf_mutation, BcfMutation};
     use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -626,7 +625,7 @@ mod tests {
 
     //#region 🧪️Law1_MutationDiffLaw
     /// ⚖️ Law 1 — `mutation_diff_law`: for every mutation variant, applying via
-    /// `apply_bcf_mutation` matches `m.diff(base).apply(base)`, and the returned diff equals
+    /// `apply_bcf_mutation` matches `m.diff(base).diff().apply(base)`, and the returned diff equals
     /// `m.diff(base)`.
     #[test]
     fn mutation_diff_law() {
@@ -650,14 +649,14 @@ mod tests {
             let returned = apply_bcf_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(snap, expected_diff.apply(&base), "apply mismatch for {m:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply mismatch for {m:?}");
         }
     }
     //#endregion
 
     //#region 🧪️Law2_InverseLaw
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
-    /// round-trips (diff-level `d.inverse(base).apply(&d.apply(base)) == base`).
+    /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
     #[test]
     fn inverse_law() {
         let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
@@ -685,9 +684,9 @@ mod tests {
             }
 
             let d = m.diff(&base);
-            let after = d.apply(&base);
-            let d_inv = d.inverse(&base);
-            assert_eq!(d_inv.apply(&after), base, "diff-level inverse mismatch for {m:?}");
+            let after = d.diff().apply(&base).expect("diff must apply to base");
+            let d_inv = d.diff().inverse(&base);
+            assert_eq!(d_inv.apply(&after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
         }
     }
     //#endregion
@@ -704,7 +703,7 @@ mod tests {
         // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
         // no interaction), net effect must match sequential application.
         let d1 = BcfMutation::InsertTopic { topic: sample_topic("t2") }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::RemoveTopic { guid: "t1".into() }.diff(&mid);
         assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
@@ -712,7 +711,7 @@ mod tests {
         // patch into the carried `added` payload, not become a dangling `modified` entry.
         let comment = sample_comment("c9", None);
         let d1 = BcfMutation::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }.diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -725,7 +724,7 @@ mod tests {
         // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
         // annihilate to a plain removal, not a dangling modify+remove pair.
         let d1 = BcfMutation::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }.diff(&mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
         let topics_diff = absorbed.topics.as_ref().expect("topics diff");
@@ -736,28 +735,29 @@ mod tests {
 
         // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let d1 = BcfMutation::SetVersion { version: "2.2".into() }.diff(&base);
-        let mid1 = d1.apply(&base);
+        let mid1 = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = BcfMutation::InsertTopic { topic: sample_topic("t3") }.diff(&mid1);
-        let mid2 = d2.apply(&mid1);
+        let mid2 = d2.diff().apply(&mid1).expect("d2 must apply to mid1");
         let d3 = BcfMutation::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }.diff(&mid2);
 
-        let mut left = d1.clone();
-        protocol::MutationDiff::absorb(&mut left, d2.clone());
-        protocol::MutationDiff::absorb(&mut left, d3.clone());
+        let mut left = d1.diff().clone();
+        MutationDiff::absorb(&mut left, d2.diff().clone());
+        MutationDiff::absorb(&mut left, d3.diff().clone());
 
-        let mut d2_d3 = d2;
-        protocol::MutationDiff::absorb(&mut d2_d3, d3);
-        let mut right = d1;
-        protocol::MutationDiff::absorb(&mut right, d2_d3);
+        let mut d2_d3 = d2.diff().clone();
+        MutationDiff::absorb(&mut d2_d3, d3.diff().clone());
+        let mut right = d1.diff().clone();
+        MutationDiff::absorb(&mut right, d2_d3);
 
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must be associative");
     }
 
-    fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: BcfDiff, d2: BcfDiff) -> BcfDiff {
-        let sequential = d2.apply(&d1.apply(base));
-        let mut absorbed = d1;
-        protocol::MutationDiff::absorb(&mut absorbed, d2);
-        assert_eq!(absorbed.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+    fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
+        let mid = d1.diff().apply(base).expect("d1 must apply to base");
+        let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
+        let mut absorbed = d1.diff().clone();
+        MutationDiff::absorb(&mut absorbed, d2.diff().clone());
+        assert_eq!(absorbed.apply(base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
         absorbed
     }
     //#endregion
@@ -775,9 +775,9 @@ mod tests {
         b.parts.push(BcfRawPart { name: "extra.txt".into(), data: b"stray".to_vec() });
 
         let d = BcfDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("d must apply to a"), b);
         let d_back = BcfDiff::between(&b, &a);
-        assert_eq!(d_back.apply(&b), a);
+        assert_eq!(d_back.apply(&b).expect("d_back must apply to b"), a);
         assert!(BcfDiff::between(&a, &a).is_empty());
     }
     //#endregion
@@ -894,9 +894,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = BcfDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("forward must apply to a"), b, "between(a,b).apply(a) must equal b");
         let backward = BcfDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("backward must apply to b"), a, "between(b,a).apply(b) must equal a");
         assert!(BcfDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Every top-level field patched.

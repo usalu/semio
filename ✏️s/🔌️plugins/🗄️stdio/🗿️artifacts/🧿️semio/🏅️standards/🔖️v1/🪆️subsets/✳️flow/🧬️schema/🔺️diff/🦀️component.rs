@@ -339,15 +339,17 @@ fn diff_edges(old: &[FlowEdge], new: &[FlowEdge]) -> Option<FlowEdgesDiff> {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
-    fn apply(&self, base: &SemioFlowSnapshot) -> SemioFlowSnapshot {
+    fn apply(&self, base: &SemioFlowSnapshot) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |item| item.id.clone(), ["nodes"])?;
             apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
         }
         if let Some(d) = &self.edges {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -767,11 +769,11 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
+        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
 
         let sample = base_snapshot();
-        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&sample, &sample), &sample).expect("apply must succeed for a well-formed fixture"), sample);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -785,7 +787,7 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).expect("apply must succeed for a well-formed fixture"), b);
         assert!(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &a).is_empty());
 
         let nodes_diff = diff_ab.nodes.as_ref().expect("nodes diff present");
@@ -811,16 +813,16 @@ mod tests {
         assert!(keep_edge_diff.kind.is_some(), "edge.kind not exercised");
 
         let diff_ba = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).expect("apply must succeed for a well-formed fixture"), a);
     }
     //#endregion 🔖️FieldSweep
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff, d2: &SemioFlowDiff) -> SemioFlowDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -831,7 +833,7 @@ mod tests {
         {
             let base = base_snapshot();
             let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-            let _mid = MutationDiff::apply(&d1, &base);
+            let _mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
             let d2 = diff_remove_node("n2");
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let nd = absorbed.nodes.as_ref().unwrap();
@@ -844,7 +846,7 @@ mod tests {
         {
             let base = base_snapshot();
             let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
             let d2 = diff_insert_node(node("g", "new", "G", vec![], 2.0, 2.0));
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let nd = absorbed.nodes.as_ref().unwrap();
@@ -856,7 +858,7 @@ mod tests {
         {
             let base = base_snapshot();
             let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
             let d2 = diff_set_node_kind("f", "patched");
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let nd = absorbed.nodes.as_ref().unwrap();
@@ -870,7 +872,7 @@ mod tests {
         {
             let base = base_snapshot();
             let d1 = diff_set_node_kind("n2", "patched");
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
             let d2 = diff_remove_node("n2");
             let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
             let nd = absorbed.nodes.as_ref().unwrap();
@@ -883,11 +885,11 @@ mod tests {
         {
             let base = base_snapshot();
             let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
             let d2 = diff_insert_node(node("g", "new", "G", vec![], 2.0, 2.0));
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
             let d3 = diff_remove_node("n2");
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(&d3, &mid2).expect("apply must succeed for a well-formed fixture");
 
             let mut left = d1.clone();
             MutationDiff::absorb(&mut left, d2.clone());
@@ -898,8 +900,8 @@ mod tests {
             let mut right = d1.clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw

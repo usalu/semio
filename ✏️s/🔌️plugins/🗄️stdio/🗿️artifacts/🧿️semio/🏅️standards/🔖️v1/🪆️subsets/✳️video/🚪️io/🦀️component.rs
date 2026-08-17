@@ -231,7 +231,7 @@ pub mod derived_composition {
         /// this ticket's `✳️video/`-only edit scope anyway) — same home flow's/mesh's/image's own
         /// waves establish.
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::video::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

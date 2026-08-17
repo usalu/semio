@@ -58,10 +58,9 @@ pub enum SemioAudioMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range channel/tag indices are no-ops rather than
 /// panics — a stale index (e.g. from a concurrent edit) degrades gracefully.
-pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> SemioAudioDiff {
-    let __diff = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&__diff, snapshot);
-    __diff
+pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
+    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -69,8 +68,8 @@ pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &
 impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
     type Diff = SemioAudioDiff;
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioAudioMutation::NoMutation => SemioAudioDiff::default(),
             SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             SemioAudioMutation::SetSampleRate { sample_rate } => SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() },
@@ -89,7 +88,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
                 Some(t) => SemioAudioDiff { tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }), ..Default::default() },
                 None => SemioAudioDiff::default(),
             },
-        }
+        })
     }
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
@@ -176,7 +175,7 @@ fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
     }
 }
 
-impl protocol::OpText for SemioAudioMutation {
+impl OpText for SemioAudioMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_audio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -219,7 +218,7 @@ fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
 /// [`OP_KEYWORDS`]) are two REAL fixed fields; the variant's own argument payload follows as one
 /// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_audio_mutation`/
 /// `parse_audio_mutation` text codec rather than re-deriving a second independent encoding.
-impl protocol::OpBinary for SemioAudioMutation {
+impl OpBinary for SemioAudioMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
@@ -291,12 +290,12 @@ mod tests {
 
     fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
         let diff = mutation.diff(base);
-        let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, base);
+        let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
             let inv_diff = inv.diff(&restored);
-            restored = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&inv_diff, &restored);
+            restored = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
@@ -326,7 +325,7 @@ mod tests {
             let returned_diff = apply_semio_audio_mutation(&mut snap, &mutation);
             let expected_diff = mutation.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-            assert_eq!(snap, <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&expected_diff, &base), "apply_semio_audio_mutation must match diff.apply(base) for {mutation:?}");
+            assert_eq!(snap, <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}");
         }
     }
 

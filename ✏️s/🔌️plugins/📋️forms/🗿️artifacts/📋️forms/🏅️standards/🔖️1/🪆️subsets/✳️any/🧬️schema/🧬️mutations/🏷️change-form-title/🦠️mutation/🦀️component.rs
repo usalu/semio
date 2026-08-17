@@ -17,8 +17,8 @@ pub struct ChangeFormTitle {
 impl MutationKind<FormsSnapshot, FormMutation> for ChangeFormTitle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "form-title", kind: "change-form-title", record: "ChangedFormTitle" };
 
-    fn diff(&self, _base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
-        super::diff::diff_change_form_title(self)
+    fn diff(&self, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
+        super::diff::diff_change_form_title(self, base)
     }
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_change_form_title(self, base)

@@ -16,7 +16,7 @@ pub struct ReplaceSurface {
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceSurface {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "surface", kind: "replace-surface", record: "ReplacedSurface" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {

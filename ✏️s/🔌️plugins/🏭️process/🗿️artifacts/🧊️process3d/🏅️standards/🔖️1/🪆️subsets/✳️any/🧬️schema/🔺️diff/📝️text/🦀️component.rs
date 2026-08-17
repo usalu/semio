@@ -20,102 +20,105 @@ use protocol::MutationDiff;
 //#region 🔖️Apply
 impl Process3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> Process3dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(workshop) = &self.workshop {
-            next.workshop = workshop.clone();
-        }
-        if let Some(value) = &self.stock_id {
-            next.stock_id = value.clone();
-        }
-        if let Some(value) = &self.stock_label {
-            next.stock_label = value.clone();
-        }
-        if let Some(value) = &self.stock_pose {
-            next.stock_pose = value.clone();
-        }
-        if let Some(value) = &self.stock_solid {
-            next.stock_solid = value.clone();
-        }
-        if let Some(value) = &self.steps {
-            next.steps = value.clone();
-        }
-        if let Some(value) = &self.tool_solids {
-            next.tool_solids = value.values.clone();
-        }
-        if let Some(value) = &self.resolved_up_to {
-            next.resolved_up_to = *value;
-        }
-        if let Some(value) = &self.selected_id {
-            next.selected_id = value.clone();
-        }
-        if let Some(value) = &self.selected_face_id {
-            next.selected_face_id = *value;
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = &self.selection_method {
-            next.selection_method = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = self.camera_position_x { next.camera_position_x = value; }
-        if let Some(value) = self.camera_position_y { next.camera_position_y = value; }
-        if let Some(value) = self.camera_position_z { next.camera_position_z = value; }
-        if let Some(value) = self.camera_target_x { next.camera_target_x = value; }
-        if let Some(value) = self.camera_target_y { next.camera_target_y = value; }
-        if let Some(value) = self.camera_target_z { next.camera_target_z = value; }
-        if let Some(value) = self.camera_fov { next.camera_fov = value; }
-        if let Some(value) = self.sun_enabled { next.sun_enabled = value; }
-        if let Some(value) = self.sun_azimuth { next.sun_azimuth = value; }
-        if let Some(value) = self.sun_elevation { next.sun_elevation = value; }
-        if let Some(value) = self.sun_intensity { next.sun_intensity = value; }
-        if let Some(value) = &self.sun_color { next.sun_color = value.clone(); }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
-        if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
-        if let Some(value) = &self.hovered_id { next.hovered_id = value.clone(); }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Process3dArtifact) -> protocol::MutationApplyResult<Process3dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(workshop) = &self.workshop {
+                next.workshop = workshop.clone();
+            }
+            if let Some(value) = &self.stock_id {
+                next.stock_id = value.clone();
+            }
+            if let Some(value) = &self.stock_label {
+                next.stock_label = value.clone();
+            }
+            if let Some(value) = &self.stock_pose {
+                next.stock_pose = value.clone();
+            }
+            if let Some(value) = &self.stock_solid {
+                next.stock_solid = value.clone();
+            }
+            if let Some(value) = &self.steps {
+                next.steps = value.clone();
+            }
+            if let Some(value) = &self.tool_solids {
+                next.tool_solids = value.values.clone();
+            }
+            if let Some(value) = &self.resolved_up_to {
+                next.resolved_up_to = *value;
+            }
+            if let Some(value) = &self.selected_id {
+                next.selected_id = value.clone();
+            }
+            if let Some(value) = &self.selected_face_id {
+                next.selected_face_id = *value;
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = &self.selection_method {
+                next.selection_method = value.clone();
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = self.camera_position_x { next.camera_position_x = value; }
+            if let Some(value) = self.camera_position_y { next.camera_position_y = value; }
+            if let Some(value) = self.camera_position_z { next.camera_position_z = value; }
+            if let Some(value) = self.camera_target_x { next.camera_target_x = value; }
+            if let Some(value) = self.camera_target_y { next.camera_target_y = value; }
+            if let Some(value) = self.camera_target_z { next.camera_target_z = value; }
+            if let Some(value) = self.camera_fov { next.camera_fov = value; }
+            if let Some(value) = self.sun_enabled { next.sun_enabled = value; }
+            if let Some(value) = self.sun_azimuth { next.sun_azimuth = value; }
+            if let Some(value) = self.sun_elevation { next.sun_elevation = value; }
+            if let Some(value) = self.sun_intensity { next.sun_intensity = value; }
+            if let Some(value) = &self.sun_color { next.sun_color = value.clone(); }
+            if let Some(value) = &self.locale { next.locale = value.clone(); }
+            if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
+            if let Some(value) = &self.hovered_id { next.hovered_id = value.clone(); }
+            next
+        })
     }
 }
 
 impl MutationDiff<Process3dSnapshot> for Process3dDiff {
-    fn apply(&self, snapshot: &Process3dSnapshot) -> Process3dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(workshop) = &self.workshop {
-            next.workshop = workshop.clone();
-        }
-        if let Some(value) = &self.stock_id {
-            next.stock_id = value.clone();
-        }
-        if let Some(value) = &self.stock_label {
-            next.stock_label = value.clone();
-        }
-        if let Some(value) = &self.stock_pose {
-            next.stock_pose = value.clone();
-        }
-        if let Some(value) = &self.stock_solid {
-            next.stock_solid = value.clone();
-        }
-        if let Some(value) = &self.steps {
-            next.steps = value.clone();
-        }
-        if let Some(value) = &self.tool_solids {
-            next.tool_solids = value.values.clone();
-        }
-        if let Some(value) = &self.resolved_up_to {
-            next.resolved_up_to = *value;
-        }
-        next
+    fn apply(&self, snapshot: &Process3dSnapshot) -> protocol::MutationApplyResult<Process3dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(workshop) = &self.workshop {
+                next.workshop = workshop.clone();
+            }
+            if let Some(value) = &self.stock_id {
+                next.stock_id = value.clone();
+            }
+            if let Some(value) = &self.stock_label {
+                next.stock_label = value.clone();
+            }
+            if let Some(value) = &self.stock_pose {
+                next.stock_pose = value.clone();
+            }
+            if let Some(value) = &self.stock_solid {
+                next.stock_solid = value.clone();
+            }
+            if let Some(value) = &self.steps {
+                next.steps = value.clone();
+            }
+            if let Some(value) = &self.tool_solids {
+                next.tool_solids = value.values.clone();
+            }
+            if let Some(value) = &self.resolved_up_to {
+                next.resolved_up_to = *value;
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -184,7 +187,7 @@ mod tests {
             ..Default::default()
         };
         diff.absorb(diff_set_snapshot(&replacement));
-        assert_eq!(diff.apply(&base), replacement);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 
     #[test]
@@ -193,7 +196,7 @@ mod tests {
         let new_content = crate::artifacts::process3d::brep_snapshot_for_working_solid(&crate::artifacts::process3d::WorkingSolid::Sphere { radius: 0.5 });
         let new_handle = crate::artifacts::process3d::brep_child_handle("stock", &new_content);
         let diff = Process3dDiff { stock_solid: Some(new_handle.clone()), ..Default::default() };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(next.stock_solid, new_handle);
     }
 }

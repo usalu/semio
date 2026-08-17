@@ -149,8 +149,11 @@ pub type Procedural2dStore = ArtifactStore<Procedural2dSnapshot, Procedural2dMut
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant, so it never needs edits
 /// when the semantic vocabulary grows.
-pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_procedural2d_mutation(projection: &mut Procedural2dSnapshot, mutation: &Procedural2dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
@@ -169,10 +172,12 @@ mod tests {
     use vcs::apply_mutation;
 
     fn round_trip(projection: &Procedural2dSnapshot, mutation: &Procedural2dMutation) -> Procedural2dSnapshot {
-        let forward = apply_mutation(projection, mutation);
+        let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
-            restored = apply_mutation(&restored, &back);
+            restored = apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, projection, "inverse() must restore the pre-mutation document");
         forward
@@ -360,7 +365,7 @@ mod tests {
         let mut base = empty_procedural2d_snapshot();
         base.generation.generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() });
         let d1 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(1)).diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_generation_value("generation-1".into(), "q1".into(), serde_json::json!(2)).diff(&mid);
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

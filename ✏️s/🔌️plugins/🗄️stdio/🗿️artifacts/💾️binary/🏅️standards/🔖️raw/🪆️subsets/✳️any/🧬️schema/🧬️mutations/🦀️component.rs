@@ -4,7 +4,6 @@
 use crate::artifacts::binary::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
 use crate::artifacts::binary::BinarySnapshot;
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -43,10 +42,15 @@ pub enum BinaryMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source.
-pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> BinaryDiff {
-    let d = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
-    *snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&d, snapshot);
-    d
+pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMutation) -> protocol::MutationOutcome<BinaryDiff> {
+    let outcome = <BinaryMutation as Mutation<BinarySnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -54,8 +58,8 @@ pub fn apply_binary_mutation(snapshot: &mut BinarySnapshot, mutation: &BinaryMut
 impl Mutation<BinarySnapshot> for BinaryMutation {
     type Diff = BinaryDiff;
 
-    fn diff(&self, base: &BinarySnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             BinaryMutation::NoMutation => BinaryDiff::default(),
             BinaryMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BinaryMutation::Splice { offset, remove_len, insert } => BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: *remove_len, insert: insert.clone() }] },
@@ -67,7 +71,7 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
                     BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: base.bytes.len() - offset, insert: vec![] }] }
                 }
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &BinarySnapshot) -> Vec<Self> {
@@ -101,7 +105,7 @@ impl Mutation<BinarySnapshot> for BinaryMutation {
 /// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
 /// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl` for the framework-side
 /// precedent this copies verbatim).
-impl protocol::OpText for BinaryMutation {
+impl OpText for BinaryMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -124,7 +128,7 @@ impl protocol::OpText for BinaryMutation {
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
 /// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
 /// type. Zero per-artifact logic.
-impl protocol::OpBinary for BinaryMutation {
+impl OpBinary for BinaryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -168,7 +172,7 @@ mod tests {
             let returned = apply_binary_mutation(&mut via_apply, &m);
             let expected_diff = m.diff(&b);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(via_apply, expected_diff.apply(&b), "apply mismatch for {m:?}");
+            assert_eq!(via_apply, expected_diff.diff().apply(&b).unwrap(), "apply mismatch for {m:?}");
         }
     }
 
@@ -185,9 +189,9 @@ mod tests {
         }
         for m in demo_mutation_cases() {
             let d = m.diff(&b);
-            let next = d.apply(&b);
-            let inv = d.inverse(&b);
-            assert_eq!(inv.apply(&next), b, "diff-level inverse round-trip failed for {m:?}");
+            let next = d.diff().apply(&b).unwrap();
+            let inv = d.diff().inverse(&b);
+            assert_eq!(inv.apply(&next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
         }
     }
 
@@ -197,13 +201,13 @@ mod tests {
         let variants = demo_mutation_cases();
         for m1 in &variants {
             let d1 = m1.diff(&b);
-            let mid = d1.apply(&b);
+            let mid = d1.diff().apply(&b).unwrap();
             for m2 in &variants {
                 let d2 = m2.diff(&mid);
-                let after = d2.apply(&mid);
-                let mut merged = d1.clone();
-                merged.absorb(d2.clone());
-                assert_eq!(merged.apply(&b), after, "absorb({m1:?}, {m2:?}) mismatch");
+                let after = d2.diff().apply(&mid).unwrap();
+                let mut merged = d1.diff().clone();
+                merged.absorb(d2.diff().clone());
+                assert_eq!(merged.apply(&b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
             }
         }
     }

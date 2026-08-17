@@ -13,7 +13,7 @@ pub struct DeleteMaterial {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for DeleteMaterial {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "material", kind: "delete-material", record: "DeletedMaterial" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {

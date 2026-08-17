@@ -24,7 +24,7 @@ pub fn replace_dense(dense: Option<DenseCloud>) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceDense {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "dense", kind: "replace-dense", record: "ReplacedDense" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

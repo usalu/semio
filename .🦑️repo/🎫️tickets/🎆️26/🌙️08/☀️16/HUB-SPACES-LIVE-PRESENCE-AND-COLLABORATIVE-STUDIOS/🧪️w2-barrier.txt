@@ -1,0 +1,37 @@
+### @ 2026-08-17T02:39:26+02:00
+--- space plugin tests:
+test viewer::space_index::modes::view::windows::main::component::tests::render_produces_a_node_for_the_default_document ... ok
+test engine::space::commands::set_active_example::tests::open_studio_demo_explicit_loads_demo_fixture ... ok
+test engine::space::panels::inspection::tests::inspector_tree_exposes_label_field ... ok
+test engine::space::component::tests::space_declares_expected_actions_and_examples ... ok
+test engine::space::component::tests::space_window_kind_actions_scope_editing_to_workflow ... ok
+test engine::space::component::tests::space_manifest_uses_studio_app_id ... ok
+test engine::space::component::tests::space_workflow_context_menu_stays_within_budget_with_destructive_tail ... ok
+test viewer::home::component::tests::renders_the_main_body_key_for_the_default_snapshot ... ok
+test viewer::home::modes::view::windows::main::component::tests::render_with_a_folded_space_renders_a_table_row ... ok
+
+failures:
+
+---- engine::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone stdout ----
+
+thread 'engine::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone' (20573200) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5852:82:
+pump b: Fault { origin: Module, code: FaultCode("module.vcs"), severity: Error, message: "validation failed: change change-b052db4007cd5fd3 has an invalid edit reference edit-3486f95a59709941", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    engine::space::component::tests::two_instances_converge_on_disjoint_edits_via_backbone
+
+test result: FAILED. 198 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p semio-s-plugin-space --lib`
+--- hub:
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+--- wgpu renderer:
+error[E0277]: the trait bound `Puzzle2dMutation: SemanticMutation<Puzzle2dPlaySnapshot>` is not satisfied
+error[E0277]: the trait bound `Puzzle3dMutation: SemanticMutation<Puzzle3dPlaySnapshot>` is not satisfied
+error[E0277]: the trait bound `Puzzle5dMutation: SemanticMutation<Puzzle5dPlaySnapshot>` is not satisfied
+error: could not compile `semio-s-plugin-puzzle` (lib) due to 3 previous errors; 266 warnings emitted
+--- puzzle (peer blocker?):
+4

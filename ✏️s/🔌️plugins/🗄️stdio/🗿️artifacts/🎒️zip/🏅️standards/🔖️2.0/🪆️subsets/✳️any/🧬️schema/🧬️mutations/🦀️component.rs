@@ -39,40 +39,22 @@ pub enum ZipMutation {
 //#endregion 🔖️Model
 
 //#region 🔖️Algebra
-pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> ZipDiff {
-    let diff = mutation.diff(snapshot);
-    match mutation {
-        ZipMutation::NoMutation => {}
-        ZipMutation::SetSnapshot { snapshot: next } => {
-            *snapshot = next.clone();
-            snapshot.entries.sort_by(|left, right| left.name.cmp(&right.name));
+pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
+    let outcome = mutation.diff(snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
         }
-        ZipMutation::SetArchiveComment { comment } => snapshot.comment = comment.clone(),
-        ZipMutation::AddEntry { entry } => {
-            snapshot.entries.push(entry.clone());
-            snapshot.entries.sort_by(|left, right| left.name.cmp(&right.name));
-        }
-        ZipMutation::RemoveEntry { name } => snapshot.entries.retain(|entry| entry.name != *name),
-        ZipMutation::RenameEntry { name, new_name } => {
-            if let Some(entry) = snapshot.entries.iter_mut().find(|entry| entry.name == *name) {
-                entry.name = new_name.clone();
-            }
-            snapshot.entries.sort_by(|left, right| left.name.cmp(&right.name));
-        }
-        ZipMutation::SetEntryData { name, data } => {
-            if let Some(entry) = snapshot.entries.iter_mut().find(|entry| entry.name == *name) {
-                entry.data = data.clone();
-            }
-        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-    diff
 }
 
 impl Mutation<ZipSnapshot> for ZipMutation {
     type Diff = ZipDiff;
 
-    fn diff(&self, base: &ZipSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             Self::NoMutation => ZipDiff::default(),
             Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             Self::SetArchiveComment { comment } => diff::diff_set_archive_comment(comment),
@@ -80,7 +62,7 @@ impl Mutation<ZipSnapshot> for ZipMutation {
             Self::RemoveEntry { name } => diff::diff_remove_entry(name),
             Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
             Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
-        }
+        })
     }
 
     fn inverse(&self, base: &ZipSnapshot) -> Vec<Self> {
@@ -165,7 +147,7 @@ mod tests {
             assert_eq!(ZipMutation::parse_op(&text).expect("text operation"), mutation);
             let bytes = mutation.encode_op().expect("binary operation");
             assert_eq!(ZipMutation::decode_op(&bytes).expect("binary operation"), mutation);
-            assert_eq!(mutation.diff(&base).apply(&base), {
+            assert_eq!(mutation.diff(&base).diff().apply(&base).unwrap(), {
                 let mut next = base.clone();
                 apply_zip_mutation(&mut next, &mutation);
                 next

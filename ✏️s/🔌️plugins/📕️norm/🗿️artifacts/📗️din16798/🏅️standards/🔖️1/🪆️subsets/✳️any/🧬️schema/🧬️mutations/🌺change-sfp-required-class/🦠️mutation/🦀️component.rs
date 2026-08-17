@@ -15,7 +15,7 @@ pub struct ChangeSfpRequiredClass {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeSfpRequiredClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "sfp-required-class", kind: "change-sfp-required-class", record: "ChangedSfpRequiredClass" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_sfp_required_class::diff::diff(self, base)
     }
 

@@ -28,14 +28,13 @@
 //! (`hex_encode`/`split_top_level`/`encode_option`/…) verbatim per artifact convention; `f64` fields
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
 use crate::artifacts::obj::ObjSnapshot;
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -56,23 +55,17 @@ trait ObjIndexElem: Clone + PartialEq {
 fn generic_apply<T: ObjIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (idx, d) in modified {
-        if let Some(it) = items.get_mut(*idx) {
-            T::diff_apply(d, it);
-        }
+        T::diff_apply(d, &mut items[*idx]);
     }
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
     for idx in removed_desc {
-        if idx < items.len() {
-            items.remove(idx);
-        }
+        items.remove(idx);
     }
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
-        let at = (*idx).min(items.len());
-        items.insert(at, item.clone());
+        items.insert(*idx, item.clone());
     }
     items
 }
@@ -680,8 +673,10 @@ impl ObjGroupsDiff {
 fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[(String, ObjGroupDiff)], added: &[(usize, T)], name_of: impl Fn(&T) -> &str, patch: impl Fn(&mut T, &ObjGroupDiff)) -> Vec<T> {
     let mut items = base.to_vec();
     for (name, d) in modified {
-        if let Some(it) = items.iter_mut().find(|it| name_of(it) == name) {
-            patch(it, d);
+        for item in &mut items {
+            if name_of(item) == name {
+                patch(item, d);
+            }
         }
     }
     let removed_set: HashSet<&str> = removed.iter().map(String::as_str).collect();
@@ -689,8 +684,7 @@ fn apply_named_membership<T: Clone>(base: &[T], removed: &[String], modified: &[
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
-        let at = (*idx).min(items.len());
-        items.insert(at, item.clone());
+        items.insert(*idx, item.clone());
     }
     items
 }
@@ -817,47 +811,153 @@ pub struct ObjDiff {
     pub unknown_statements: Option<Vec<ObjUnknownStatement>>,
 }
 
-impl MutationDiff<ObjSnapshot> for ObjDiff {
-    fn apply(&self, base: &ObjSnapshot) -> ObjSnapshot {
-        ObjSnapshot {
-            schema: base.schema.clone(),
-            vertices: match &self.vertices {
-                Some(d) => d.apply(&base.vertices),
-                None => base.vertices.clone(),
-            },
-            texcoords: match &self.texcoords {
-                Some(d) => d.apply(&base.texcoords),
-                None => base.texcoords.clone(),
-            },
-            normals: match &self.normals {
-                Some(d) => d.apply(&base.normals),
-                None => base.normals.clone(),
-            },
-            faces: match &self.faces {
-                Some(d) => d.apply(&base.faces),
-                None => base.faces.clone(),
-            },
-            groups: match &self.groups {
-                Some(d) => {
-                    let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
-                    let added: Vec<(usize, ObjGroup)> = d.added.iter().map(|a| (a.index, a.group.clone())).collect();
-                    apply_named_membership(&base.groups, &d.removed, &modified, &added, |g| g.name.as_str(), apply_group_diff)
-                }
-                None => base.groups.clone(),
-            },
-            objects: match &self.objects {
-                Some(d) => {
-                    let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
-                    let added: Vec<(usize, ObjObject)> = d.added.iter().map(|a| (a.index, a.object.clone())).collect();
-                    apply_named_membership(&base.objects, &d.removed, &modified, &added, |o| o.name.as_str(), apply_group_diff)
-                }
-                None => base.objects.clone(),
-            },
-            mtllib: self.mtllib.clone().unwrap_or_else(|| base.mtllib.clone()),
-            usemtl: self.usemtl.clone().unwrap_or_else(|| base.usemtl.clone()),
-            smoothing_groups: self.smoothing_groups.clone().unwrap_or_else(|| base.smoothing_groups.clone()),
-            unknown_statements: self.unknown_statements.clone().unwrap_or_else(|| base.unknown_statements.clone()),
+fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
+    let mut removed = BTreeSet::new();
+    for &index in removed_indices {
+        if index >= base_len || !removed.insert(index) {
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
         }
+    }
+    let mut modified = BTreeSet::new();
+    for index in modified_indices {
+        if index >= base_len || removed.contains(&index) || !modified.insert(index) {
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
+        }
+    }
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = added_indices.into_iter().collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        if index > length || previous == Some(index) {
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn validate_named_targets<'a>(
+    base_names: impl IntoIterator<Item = &'a str>,
+    removed_names: impl IntoIterator<Item = &'a str>,
+    modified_names: impl IntoIterator<Item = &'a str>,
+    added: impl IntoIterator<Item = (usize, &'a str)>,
+    target: &str,
+) -> MutationApplyResult<()> {
+    let mut base = BTreeSet::new();
+    for name in base_names {
+        if !base.insert(name) {
+            return Err(MutationApplyError::new("duplicate-base-target", "base names must be unique").at([target, name]));
+        }
+    }
+    let mut removed = BTreeSet::new();
+    for name in removed_names {
+        if !base.contains(name) || !removed.insert(name) {
+            return Err(MutationApplyError::new("invalid-remove-target", "removal target must exist exactly once").at([target, name]));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for name in modified_names {
+        if !base.contains(name) || removed.contains(name) || !modified.insert(name) {
+            return Err(MutationApplyError::new("invalid-modify-target", "modification target must exist exactly once and remain present").at([target, name]));
+        }
+    }
+    let mut length = base.len() - removed.len();
+    let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
+    additions.sort_by_key(|(index, _)| *index);
+    let mut added_names = BTreeSet::new();
+    let mut previous = None;
+    for (index, name) in additions {
+        if base.contains(name) || !added_names.insert(name) || index > length || previous == Some(index) {
+            return Err(MutationApplyError::new("invalid-add-target", "addition name and position must be unique and valid").at([target, name]));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn validate_obj_diff(diff: &ObjDiff, base: &ObjSnapshot) -> MutationApplyResult<()> {
+    if let Some(value) = &diff.vertices {
+        validate_indexed_targets(base.vertices.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), "vertices")?;
+    }
+    if let Some(value) = &diff.texcoords {
+        validate_indexed_targets(base.texcoords.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), "texcoords")?;
+    }
+    if let Some(value) = &diff.normals {
+        validate_indexed_targets(base.normals.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), "normals")?;
+    }
+    if let Some(value) = &diff.faces {
+        validate_indexed_targets(base.faces.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), "faces")?;
+    }
+    if let Some(value) = &diff.groups {
+        validate_named_targets(
+            base.groups.iter().map(|entry| entry.name.as_str()),
+            value.removed.iter().map(String::as_str),
+            value.modified.iter().map(|entry| entry.name.as_str()),
+            value.added.iter().map(|entry| (entry.index, entry.group.name.as_str())),
+            "groups",
+        )?;
+    }
+    if let Some(value) = &diff.objects {
+        validate_named_targets(
+            base.objects.iter().map(|entry| entry.name.as_str()),
+            value.removed.iter().map(String::as_str),
+            value.modified.iter().map(|entry| entry.name.as_str()),
+            value.added.iter().map(|entry| (entry.index, entry.object.name.as_str())),
+            "objects",
+        )?;
+    }
+    Ok(())
+}
+
+fn apply_obj_diff_unchecked(diff: &ObjDiff, base: &ObjSnapshot) -> ObjSnapshot {
+    ObjSnapshot {
+        schema: base.schema.clone(),
+        vertices: match &diff.vertices {
+            Some(d) => d.apply(&base.vertices),
+            None => base.vertices.clone(),
+        },
+        texcoords: match &diff.texcoords {
+            Some(d) => d.apply(&base.texcoords),
+            None => base.texcoords.clone(),
+        },
+        normals: match &diff.normals {
+            Some(d) => d.apply(&base.normals),
+            None => base.normals.clone(),
+        },
+        faces: match &diff.faces {
+            Some(d) => d.apply(&base.faces),
+            None => base.faces.clone(),
+        },
+        groups: match &diff.groups {
+            Some(d) => {
+                let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+                let added: Vec<(usize, ObjGroup)> = d.added.iter().map(|a| (a.index, a.group.clone())).collect();
+                apply_named_membership(&base.groups, &d.removed, &modified, &added, |g| g.name.as_str(), apply_group_diff)
+            }
+            None => base.groups.clone(),
+        },
+        objects: match &diff.objects {
+            Some(d) => {
+                let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+                let added: Vec<(usize, ObjObject)> = d.added.iter().map(|a| (a.index, a.object.clone())).collect();
+                apply_named_membership(&base.objects, &d.removed, &modified, &added, |o| o.name.as_str(), apply_group_diff)
+            }
+            None => base.objects.clone(),
+        },
+        mtllib: diff.mtllib.clone().unwrap_or_else(|| base.mtllib.clone()),
+        usemtl: diff.usemtl.clone().unwrap_or_else(|| base.usemtl.clone()),
+        smoothing_groups: diff.smoothing_groups.clone().unwrap_or_else(|| base.smoothing_groups.clone()),
+        unknown_statements: diff.unknown_statements.clone().unwrap_or_else(|| base.unknown_statements.clone()),
+    }
+}
+
+impl MutationDiff<ObjSnapshot> for ObjDiff {
+    fn apply(&self, base: &ObjSnapshot) -> MutationApplyResult<ObjSnapshot> {
+        validate_obj_diff(self, base)?;
+        Ok(apply_obj_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Index-keyed
@@ -926,7 +1026,7 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
 impl DiffAlgebra<ObjSnapshot> for ObjDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
     fn inverse(&self, base: &ObjSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = apply_obj_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 
@@ -1906,7 +2006,7 @@ fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for ObjDiff {
+impl DiffCodec for ObjDiff {
     fn print_diff(&self) -> String {
         print_obj_diff(self)
     }
@@ -2174,6 +2274,16 @@ pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn invalid_collection_targets_are_rejected_before_mutation() {
+        let base = ObjSnapshot::default();
+        let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
+        let error = diff.apply(&base).expect_err("missing vertex target must be rejected");
+        assert_eq!(error.code, "invalid-remove-index");
+        assert_eq!(error.target, vec!["vertices", "0"]);
+        assert_eq!(base, ObjSnapshot::default());
+    }
 
     /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `ObjDiff` text/binary grammar —
     /// exercises every scalar, both tri-states (`mtllib` at the top level, `texcoords[1].w`

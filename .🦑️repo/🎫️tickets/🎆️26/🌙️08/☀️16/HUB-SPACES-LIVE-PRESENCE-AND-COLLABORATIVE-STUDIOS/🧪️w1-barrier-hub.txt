@@ -1,0 +1,78 @@
+### hub check @ 2026-08-17T00:51:19+02:00
+98 + fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:111:28
+    |
+111 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+111 -     pub state_hash: Option<pack::ContentHash>,
+111 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db` to apply 47 suggestions)
+    Checking semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 2.46s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 8`
+### hub lib tests
+create-space: Backend("FOREIGN KEY constraint failed")
+
+---- directory::tests::invite_create_redeem_revoke_round_trip stdout ----
+
+thread 'directory::tests::invite_create_redeem_revoke_round_trip' (20028888) panicked at 🌎️hub/📦️packages/🦀️rust/../../📇️directory/🦀️component.rs:628:185:
+create-space: Backend("FOREIGN KEY constraint failed")
+
+---- directory::tests::command_naming_a_deleted_space_is_not_found stdout ----
+
+thread 'directory::tests::command_naming_a_deleted_space_is_not_found' (20028886) panicked at 🌎️hub/📦️packages/🦀️rust/../../📇️directory/🦀️component.rs:628:185:
+create-space: Backend("FOREIGN KEY constraint failed")
+
+---- directory::tests::owner_membership_can_never_be_removed stdout ----
+
+thread 'directory::tests::owner_membership_can_never_be_removed' (20028889) panicked at 🌎️hub/📦️packages/🦀️rust/../../📇️directory/🦀️component.rs:628:185:
+create-space: Backend("FOREIGN KEY constraint failed")
+
+---- directory::tests::atelier_rejects_a_second_distinct_author stdout ----
+
+thread 'directory::tests::atelier_rejects_a_second_distinct_author' (20028885) panicked at 🌎️hub/📦️packages/🦀️rust/../../📇️directory/🦀️component.rs:628:185:
+create-space: Backend("FOREIGN KEY constraint failed")
+
+---- directory::tests::upsert_member_with_unknown_email_creates_the_user_first stdout ----
+
+thread 'directory::tests::upsert_member_with_unknown_email_creates_the_user_first' (20028890) panicked at 🌎️hub/📦️packages/🦀️rust/../../📇️directory/🦀️component.rs:628:185:
+create-space: Backend("FOREIGN KEY constraint failed")
+
+
+failures:
+    directory::tests::archive_space_demotes_every_author_to_spectator
+    directory::tests::atelier_rejects_a_second_distinct_author
+    directory::tests::command_naming_a_deleted_space_is_not_found
+    directory::tests::event_log_replay_matches_projections
+    directory::tests::invite_create_redeem_revoke_round_trip
+    directory::tests::owner_membership_can_never_be_removed
+    directory::tests::upsert_member_with_unknown_email_creates_the_user_first
+
+test result: FAILED. 4 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p semio-hub --lib`
+### hub bin tests
+test tests::public_visibility_grants_anonymous_spectator_fallback ... ok
+test tests::directory_ws_replays_then_streams_live ... ok
+test tests::blob_put_get_head_round_trip ... ok
+test tests::connection_events_reach_admin_stream ... ok
+test tests::share_token_gates_ws_access ... ok
+test tests::document_status_reports_frontier_and_lazily_mints ... ok
+test tests::admin_api_lists_spaces_users_connections_and_kicks ... ok
+test tests::presence_roster_is_scoped_per_surface ... ok
+test tests::security_gate_rejects_spectator_writes_and_allows_author_writes ... ok
+test tests::ws_duplex_fan_out ... ok
+test tests::reconnect_replays_missing_commands_via_bootstrap_tail ... ok
+test tests::space_scoped_documents_are_isolated ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.30s
+

@@ -105,7 +105,12 @@ export default defineConfig({
   plugins: [
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "semio · os",
-      entry: "./🟦️component.ts",
+      // 🌐️ MUST be root-relative (`/…`), not `./…`: `semioHostHtmlString` renders this into a `<script
+      // src>` on every request via `transformIndexHtml` (`🟦️vite-elements-assets.ts`), including SPA
+      // deep-link fallbacks like `/spaces/{id}` — a `./`-relative entry resolves against the CURRENT
+      // path there, 404ing on any nested route (26/08/16 HUB-SPACES lane 4-I: this is why user2's hard
+      // navigation to `/spaces/{id}` never rendered — the browser requested `/spaces/🟦️component.ts`).
+      entry: "/🟦️component.ts",
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
@@ -144,5 +149,11 @@ export default defineConfig({
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? DEFAULT_HOST_VARIANT),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
+    // 👥️ Hub identity passthrough for collaborative dev sessions (contract freeze §C0/§C3) — unset for
+    // the plain single-user `s` launcher, populated for the `s` `users` launchers (`S_HUB_URL`/`S_USER`/
+    // `S_DATA_DIR` env, see `.vscode/🧩️launch.seed.jsonc`'s `devLaunchers.s.users`).
+    "import.meta.env.VITE_S_HUB_URL": JSON.stringify(process.env.S_HUB_URL ?? ""),
+    "import.meta.env.VITE_S_USER": JSON.stringify(process.env.S_USER ?? ""),
+    "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
   },
 });

@@ -12,19 +12,20 @@ import { cva } from "class-variance-authority";
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-// 🧱️core: cn imported directly from 🫀️core/ClassNames, NOT via the barrel — this component calls
+// 🧱️core: cn imported directly from its presentation module, NOT via the barrel — this component calls
 // cn(...) at module top level (inside a top-level cva(cn(...)) call), which requires a non-circular
-// import (see 🧱️elements/🏷️ClassNames/🟦️component.tsx's header comment for why the barrel import
-// caused a real bug).
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+// import because the barrel imports this component.
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
-import { interactiveHoverClass, interactiveActiveFillClass, menuListItemClassName, formControlFocusBorderClass, borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
-import { chromeControlItemBaseClass } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction } from "../🐹️ElementProps/🟦️component.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️component.ts";
+import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { chromeControlGroupShellClass, chromeControlItemBaseClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
+import { loadingBorderElementClass, waitingBorderElementClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
 import { useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
-import { chromeControlGroupShellClass, loadingBorderElementClass, waitingBorderElementClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -142,18 +143,15 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
  * ActionDropdown holds the data fields for a ActionDropdown record.
  **/
 function ActionDropdown({ className, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
-  const transaction = useTransaction();
   const [open, setOpen] = reactHostPort.useState(false);
   const level = useLevel();
 
   const selectedOption = options.find((option) => option.value === value);
 
   const handleOpenChange = (isOpen: boolean) => {
-    const start = startTransaction ?? transaction?.start;
-    const finalize = finalizeTransaction ?? transaction?.finalize;
-    if (isOpen && start) start();
+    if (isOpen) startTransaction?.();
     setOpen(isOpen);
-    if (!isOpen && finalize) finalize();
+    if (!isOpen) finalizeTransaction?.();
   };
 
   const handleSelect = (optionValue: string) => {

@@ -14,7 +14,7 @@ pub struct EditStory {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "story", kind: "edit-story", record: "EditedStory" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_edit_story(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

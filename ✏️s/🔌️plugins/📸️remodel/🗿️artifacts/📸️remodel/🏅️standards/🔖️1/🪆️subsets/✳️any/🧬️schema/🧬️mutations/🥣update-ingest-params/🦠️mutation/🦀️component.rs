@@ -23,7 +23,7 @@ pub fn update_ingest_params(params: IngestParams) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateIngestParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "ingest-params", kind: "update-ingest-params", record: "UpdatedIngestParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

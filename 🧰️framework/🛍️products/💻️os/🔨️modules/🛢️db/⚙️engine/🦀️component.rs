@@ -6,13 +6,13 @@
 //! (`## db crate family`, `db_engine` row + "Stable API" block).
 //!
 //! 🎯️ Design choice (compatibility surface): `db_artifact` (a concurrent sibling session) commits
-//! explicitly, in its own module doc, to keeping the `AuthzHook`/`AllowAll` seam, its local
-//! `ConflictRecord{command_id, conflicting_with, path}` shape, single-field `SubmitOptions
-//! {durability}` (with `Default`), and 4-field `ArtifactEngineConfig{limits, authz,
-//! version_graph: Option<..>, preview_ttl_ms}` byte-for-byte stable specifically because THIS crate
-//! constructs every one of those verbatim — so this crate is written directly against that exact
-//! surface (verified against `db/document/rs/lib.rs` at the time of writing) rather than any richer,
-//! transiently-observed intermediate revision of it.
+//! explicitly, in its own module doc, to keeping the `AuthzHook`/`AllowAll` seam and its local
+//! `ConflictRecord{command_id, conflicting_with, path}` shape byte-for-byte stable specifically
+//! because THIS crate constructs every one of those verbatim. `SubmitOptions{durability, policy}`
+//! and `CommandReceipt{.., messages}` both gained a field under
+//! `MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C9 — every construction site below
+//! and `to_engine_receipt`'s field-for-field bridge were updated in lockstep (never a `..Default`
+//! spread over a frozen-shape struct, so a future field addition here fails loud, not silent).
 //!
 //! 🎯️ Design choice (scope): per this wave's instructions, this crate makes `Database::open_at`
 //! (zero-touch `FsStorage`) and a full submit → durable → query round trip over a REAL
@@ -109,10 +109,11 @@ pub struct CommandReceipt {
     pub durability: DurabilityClass,
     pub conflicts: Vec<db_artifact::ConflictRecord>,
     pub state_hash: Option<pack::ContentHash>,
+    pub messages: Vec<protocol::MutationMessage>,
 }
 
 fn to_engine_receipt(receipt: db_artifact::CommandReceipt, document: protocol::ArtifactId) -> CommandReceipt {
-    CommandReceipt { command_id: receipt.command_id, frontier: to_engine_frontier(&receipt.frontier, document), durability: receipt.durability, conflicts: receipt.conflicts, state_hash: receipt.state_hash }
+    CommandReceipt { command_id: receipt.command_id, frontier: to_engine_frontier(&receipt.frontier, document), durability: receipt.durability, conflicts: receipt.conflicts, state_hash: receipt.state_hash, messages: receipt.messages }
 }
 //#endregion 🔖️Receipt
 
@@ -323,11 +324,11 @@ pub mod vcs_integration {
     }
 
     impl protocol::MutationDiff<HashProjection> for HashDiff {
-        fn apply(&self, base: &HashProjection) -> HashProjection {
-            match self.hash {
+        fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
+            Ok(match self.hash {
                 Some(hash) => HashProjection { latest_hash: hash },
                 None => base.clone(),
-            }
+            })
         }
 
         fn absorb(&mut self, other: HashDiff) {
@@ -347,8 +348,8 @@ pub mod vcs_integration {
     impl protocol::Mutation<HashProjection> for HashMutation {
         type Diff = HashDiff;
 
-        fn diff(&self, _base: &HashProjection) -> HashDiff {
-            HashDiff { hash: Some(self.hash) }
+        fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
+            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
         }
 
         /// @emoji ↩️ The true inverse: an operation that would restore `base`'s hash — not a
@@ -1049,8 +1050,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1109,7 +1110,7 @@ mod tests {
         let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
 
         let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
-        let receipt = db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
+        let receipt = db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.document, document);
         assert_eq!(receipt.frontier.head_seq, 1);
@@ -1117,7 +1118,7 @@ mod tests {
         assert!(receipt.state_hash.is_some());
 
         let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = serde_json::from_slice(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
         assert_eq!(value, serde_json::json!("hello"));
 
         let frontier = handle.frontier().unwrap();
@@ -1139,7 +1140,7 @@ mod tests {
             let database = Database::open_at(&root, Profile::Test).unwrap();
             let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
             let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("count", serde_json::json!(1))])]).unwrap();
-            db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
+            db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
             database.shutdown(std::time::Duration::from_secs(1)).unwrap();
         }
 
@@ -1148,7 +1149,7 @@ mod tests {
 
         let handle = reopened.document(&document).unwrap();
         let queried = handle.query(Query::Get { path: "count".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = serde_json::from_slice(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
         assert_eq!(value, serde_json::json!(1), "the document's committed state must have survived the reopen via WAL replay");
         assert_eq!(handle.frontier().unwrap().head_seq, 1);
     }

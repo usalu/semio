@@ -15,7 +15,7 @@ pub struct ChangeFanQVM3S {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanQVM3S {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fan-qvm3-s", kind: "change-fan-qvm3-s", record: "ChangedFanQVM3S" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_fan_q_v_m3_s::diff::diff(self, base)
     }
 

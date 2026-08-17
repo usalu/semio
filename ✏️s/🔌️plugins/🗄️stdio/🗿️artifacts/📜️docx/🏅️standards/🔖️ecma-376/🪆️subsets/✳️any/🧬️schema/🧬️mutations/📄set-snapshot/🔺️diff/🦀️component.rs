@@ -4,6 +4,9 @@ use crate::artifacts::docx::schema::diff::{diff_set_snapshot, DocxDiff};
 use crate::artifacts::docx::DocxSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot: the sparse field-by-field delta from `base` to `snapshot`.
-pub fn diff(base: &DocxSnapshot, snapshot: &DocxSnapshot) -> DocxDiff {
-    diff_set_snapshot(base, snapshot)
+pub fn diff(base: &DocxSnapshot, snapshot: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+    if base == snapshot {
+        return protocol::MutationOutcome::new(DocxDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+    }
+    protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

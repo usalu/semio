@@ -68,9 +68,6 @@ export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
   "sync",
 ];
 
-/** @emoji 🪁️ i18n key for a ribbon collection toggle. */
-export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
-
 export type UiRibbonParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
 
 type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
@@ -472,6 +469,59 @@ export type UiTranslationSchema = {
       readonly event: UiLabelValue;
       readonly editor: UiLabelValue;
       readonly map: UiLabelValue;
+    };
+    /** ⚖️ Mutation-outcome vocabulary (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-
+     * AND-FIRST-CLASS-CONFLICTS` §C2/§C3/§C9) — `level.*` mirrors `Severity`, `code.*` the frozen
+     * seven `mutation.*` codes (UI localizes by code, never by parsing the English `message` prose),
+     * `policy.*` the three `MergePolicy` choices plus the settings row's own label, `rejected.*` the
+     * `ShellHost` toast for a rejected local dispatch. */
+    readonly mutation: {
+      readonly level: {
+        readonly info: UiLabelValue;
+        readonly warning: UiLabelValue;
+        readonly error: UiLabelValue;
+        readonly fatal: UiLabelValue;
+      };
+      readonly code: {
+        readonly targetMissing: UiLabelValue;
+        readonly noOp: UiLabelValue;
+        readonly partial: UiLabelValue;
+        readonly clamped: UiLabelValue;
+        readonly duplicateId: UiLabelValue;
+        readonly invariant: UiLabelValue;
+        readonly cascade: UiLabelValue;
+      };
+      readonly policy: {
+        readonly laissezFaire: { readonly label: UiLabelValue; readonly description: UiLabelValue };
+        readonly normal: { readonly label: UiLabelValue; readonly description: UiLabelValue };
+        readonly vigilant: { readonly label: UiLabelValue; readonly description: UiLabelValue };
+        readonly setting: { readonly label: UiLabelValue };
+      };
+      readonly rejected: {
+        readonly title: UiLabelValue;
+        readonly body: UiLabelValue;
+      };
+    };
+    /** ⚔️ First-class conflict vocabulary (contract freeze §C5/§C9) — the `ChromePanels` Conflicts
+     * panel's own chrome strings; per-conflict `MutationMessage`s reuse `ui.mutation.*` above. */
+    readonly conflict: {
+      readonly panel: UiLabelValue;
+      readonly accept: UiLabelValue;
+      readonly discard: UiLabelValue;
+      readonly quarantined: UiLabelValue;
+      readonly degraded: UiLabelValue;
+    };
+    /** 👥️ `PresenceBar` roster chrome (ticket `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`
+     * lane 2-F) — the `(space, document, surface)` peer list's own aria strings; per-peer display names are
+     * runtime data, never a translation key. */
+    readonly presence: {
+      readonly roster: UiLabelValue;
+      readonly empty: UiLabelValue;
+      readonly overflow: UiLabelValue;
+      readonly role: {
+        readonly author: UiLabelValue;
+        readonly spectator: UiLabelValue;
+      };
     };
   };
   readonly settings: {

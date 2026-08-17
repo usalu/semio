@@ -21,7 +21,6 @@ use crate::artifacts::stl::schema::diff::{self, StlDiff};
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{DiffCodec, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -62,37 +61,17 @@ pub enum StlMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Every index-targeted variant is a graceful no-op when
-/// `index` is out of range (a stale index from a concurrent edit degrades gracefully, never
-/// panics), per the recipe's "out-of-range keys = graceful no-ops" apply contract.
-pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> StlDiff {
-    let __diff = <StlMutation as protocol::Mutation<StlSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        StlMutation::NoMutation => {}
-        StlMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        StlMutation::SetSolidName { name } => snapshot.solid_name = name.clone(),
-        StlMutation::InsertTriangle { index, triangle } => {
-            let at = (*index).min(snapshot.triangles.len());
-            snapshot.triangles.insert(at, *triangle);
+/// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
+/// snapshot when an index target is missing or out of range.
+pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
+    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
         }
-        StlMutation::RemoveTriangle { index } => {
-            if *index < snapshot.triangles.len() {
-                snapshot.triangles.remove(*index);
-            }
-        }
-        StlMutation::SetTriangleNormal { index, normal } => {
-            if let Some(t) = snapshot.triangles.get_mut(*index) {
-                t.normal = *normal;
-            }
-        }
-        StlMutation::SetTriangleVertices { index, vertices } => {
-            if let Some(t) = snapshot.triangles.get_mut(*index) {
-                t.vertices = *vertices;
-            }
-        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-
-    __diff
 }
 //#endregion 🔖️Apply
 
@@ -100,8 +79,8 @@ pub fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) ->
 impl Mutation<StlSnapshot> for StlMutation {
     type Diff = StlDiff;
 
-    fn diff(&self, base: &StlSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             StlMutation::NoMutation => StlDiff::default(),
             StlMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             StlMutation::SetSolidName { name } => diff::diff_set_solid_name(name),
@@ -109,7 +88,7 @@ impl Mutation<StlSnapshot> for StlMutation {
             StlMutation::RemoveTriangle { index } => diff::diff_remove_triangle(*index),
             StlMutation::SetTriangleNormal { index, normal } => diff::diff_set_triangle_normal(*index, *normal),
             StlMutation::SetTriangleVertices { index, vertices } => diff::diff_set_triangle_vertices(*index, *vertices),
-        }
+        })
     }
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
@@ -196,7 +175,7 @@ fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
     }
 }
 
-impl protocol::OpText for StlMutation {
+impl OpText for StlMutation {
     fn print_op(&self) -> String {
         print_stl_op(self)
     }
@@ -241,7 +220,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, S
 /// layer; only the protocol-dialect file still frames the payload as one opaque trailing chain
 /// (`SetSnapshot`'s `Vec<StlTriangle>` is a variable-length vector-of-records, the same
 /// `protocol-array-of-records` `walk_protocol` gap the sibling diff protocol file documents).
-impl protocol::OpBinary for StlMutation {
+impl OpBinary for StlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         let tag: u8 = match self {
@@ -362,7 +341,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_stl_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_stl_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[test]
@@ -377,10 +356,6 @@ mod tests {
         assert_mutation_diff_law(&base, StlMutation::RemoveTriangle { index: 1 });
         assert_mutation_diff_law(&base, StlMutation::SetTriangleNormal { index: 0, normal: [1.0, 0.0, 0.0] });
         assert_mutation_diff_law(&base, StlMutation::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] });
-        // Out-of-range index: graceful no-op, still law-compliant.
-        assert_mutation_diff_law(&base, StlMutation::RemoveTriangle { index: 999 });
-        assert_mutation_diff_law(&base, StlMutation::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] });
-        assert_mutation_diff_law(&base, StlMutation::InsertTriangle { index: 999, triangle: tri(0.0, 1.0, 0.0, 5.0) });
     }
     //#endregion 🔖️mutation_diff_law
 
@@ -407,9 +382,9 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.apply(&base);
-            let inv_d = d.inverse(&base);
-            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+            let mutated = d.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.diff().inverse(&base);
+            assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
     //#endregion 🔖️inverse_law
@@ -417,13 +392,13 @@ mod tests {
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.apply(base);
+        let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.apply(&mid);
+        let sequential = d2.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.clone();
-        merged.absorb(d2.clone());
-        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
+        assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
     #[test]
@@ -457,24 +432,24 @@ mod tests {
     fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = StlMutation::SetSolidName { name: "one".into() }.diff(&base);
-        let mid1 = d1.apply(&base);
+        let mid1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = StlMutation::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 50.0) }.diff(&mid1);
-        let mid2 = d2.apply(&mid1);
+        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
         let d3 = StlMutation::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }.diff(&mid2);
 
         // (d1∘d2)∘d3
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
-        assert_eq!(left.apply(&base), d3.apply(&mid2), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -489,9 +464,9 @@ mod tests {
         b.triangles.push(tri(0.0, 0.0, -1.0, 30.0)); // add a triangle
 
         let d = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let d_rev = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️between_roundtrip_law
@@ -544,9 +519,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let backward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // solid_name: exercised in both directions (LWW scalar).
@@ -591,10 +566,10 @@ mod tests {
 
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base);
-            d2.apply(&mid)
+            let mid = d1.apply(&base).expect("valid first diff");
+            d2.apply(&mid).expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base), sequential);
+        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
     }
 
     #[test]
@@ -605,10 +580,10 @@ mod tests {
         merged.absorb(d2.clone());
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base);
-            d2.apply(&mid)
+            let mid = d1.apply(&base).expect("valid first diff");
+            d2.apply(&mid).expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base), sequential);
+        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
         assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
     }
 
@@ -625,21 +600,23 @@ mod tests {
 
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base);
-            d2.apply(&mid)
+            let mid = d1.apply(&base).expect("valid first diff");
+            d2.apply(&mid).expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base), sequential);
+        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
     }
     //#endregion 🔖️CanonicalCases
 
     #[test]
-    fn out_of_range_triangle_mutation_is_noop_not_panic() {
+    fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_stl_mutation(&mut snap, &StlMutation::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] });
+        let outcome = apply_stl_mutation(&mut snap, &StlMutation::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] });
         assert_eq!(snap, base);
-        apply_stl_mutation(&mut snap, &StlMutation::RemoveTriangle { index: 999 });
+        assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
+        let outcome = apply_stl_mutation(&mut snap, &StlMutation::RemoveTriangle { index: 999 });
         assert_eq!(snap, base);
+        assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
     }
 
     //#region 🔖️F6RoundtripLaws

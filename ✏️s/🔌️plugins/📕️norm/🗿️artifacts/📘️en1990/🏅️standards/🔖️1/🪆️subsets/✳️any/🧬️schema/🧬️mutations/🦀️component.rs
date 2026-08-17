@@ -107,10 +107,13 @@ mod tests {
     }
 
     fn round_trip(base: &En1990Snapshot, mutation: &En1990Mutation) -> En1990Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -158,11 +161,11 @@ mod tests {
     }
 
     #[test]
-    fn remove_variable_action_of_an_out_of_range_index_has_an_empty_inverse() {
+    fn remove_variable_action_of_an_out_of_range_index_is_rejected() {
         let base = En1990Snapshot::default();
         let remove = En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).apply(&base), base, "an out-of-range remove is a no-op");
+        protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
 
     #[test]
@@ -203,8 +206,8 @@ mod tests {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -212,8 +215,8 @@ mod tests {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 130.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangePermanentAction(change_permanent_action::mutation::ChangePermanentAction { new_g_k: 130.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -221,10 +224,76 @@ mod tests {
         let base = En1990Snapshot::default();
         let mutation = En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 0, new_value: 65.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 1, new_category: "storage".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 1, new_category: "storage".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one check per verb family this facet implements — change/set/update (root scalars + the
+    /// index-addressed `q_k` table), insert (clamped), remove (target-missing), reorder
+    /// (target-missing/no-op). `assert_outcome_policy_matrix` is not landed under that literal name
+    /// yet (only the differently-shaped `assert_policy_matrix` exists) — flagged, not improvised
+    /// around.
+    #[test]
+    fn remove_variable_action_missing_target_is_error() {
+        let base = En1990Snapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::RemoveVariableAction(remove_variable_action::mutation::RemoveVariableAction { index: 99 }));
+    }
+
+    #[test]
+    fn reorder_variable_actions_missing_target_is_error() {
+        let base = En1990Snapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ReorderVariableActions(reorder_variable_actions::mutation::ReorderVariableActions { from: 99, to: 0 }));
+    }
+
+    #[test]
+    fn change_variable_action_category_missing_target_is_error() {
+        let base = En1990Snapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionCategory(change_variable_action_category::mutation::ChangeVariableActionCategory { index: 99, new_category: "x".into() }));
+    }
+
+    #[test]
+    fn change_variable_action_value_missing_target_is_error() {
+        let base = En1990Snapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &En1990Mutation::ChangeVariableActionValue(change_variable_action_value::mutation::ChangeVariableActionValue { index: 99, new_value: 1.0 }));
+    }
+
+    #[test]
+    fn insert_variable_action_out_of_range_index_is_clamped() {
+        let base = En1990Snapshot::default();
+        let mutation = En1990Mutation::InsertVariableAction(insert_variable_action::mutation::InsertVariableAction { index: 999, category: "snow".into(), value: 10.0 });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.clamped"));
+    }
+
+    #[test]
+    fn change_seismic_action_non_finite_is_fatal() {
+        let base = En1990Snapshot::default();
+        let mutation = En1990Mutation::ChangeSeismicAction(change_seismic_action::mutation::ChangeSeismicAction { new_seismic_a_ed_kn: f64::NAN });
+        let outcome = mutation.diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_consequence_class_out_of_domain_is_fatal() {
+        let base = En1990Snapshot::default();
+        let mutation = En1990Mutation::ChangeConsequenceClass(change_consequence_class::mutation::ChangeConsequenceClass { new_consequence_class: 9 });
+        let outcome = mutation.diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_resistance_is_deterministic() {
+        let base = En1990Snapshot::default();
+        let mutation = En1990Mutation::ChangeResistance(change_resistance::mutation::ChangeResistance { new_resistance_kn: 400.0 });
+        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

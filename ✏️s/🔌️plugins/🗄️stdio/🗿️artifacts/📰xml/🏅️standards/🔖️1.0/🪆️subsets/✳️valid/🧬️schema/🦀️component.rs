@@ -41,13 +41,13 @@ pub mod derived_construction {
             Ok(Self(XmlAnyBuilder::from_binary(bytes)?))
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> Self {
-            Self(self.0.absorb(diff))
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard XML 1.0
@@ -256,8 +256,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlValidBuilderFacets {
-        construction: derived_construction::XmlValidBuilderConstruction,
-        analysis: derived_analysis::XmlValidAnalyzerAnalysis,
+        construction: XmlValidBuilderConstruction,
+        analysis: XmlValidAnalyzerAnalysis,
         composition: crate::artifacts::xml::standards::v1_0::subsets::valid::io::derived_composition::XmlValidComposerComposition,
     }
     builder: XmlValidBuilder,

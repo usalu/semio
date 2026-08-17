@@ -118,8 +118,11 @@ pub use super::update_part_2d::mutation::{update_part_2d, UpdatePart2d};
 pub use super::update_part_3d::mutation::{update_part_3d, UpdatePart3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_block5d_mutation(projection: &mut Block5dSnapshot, mutation: &Block5dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5dMutation) -> Vec<Block5dMutation> {
@@ -138,12 +141,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
-        let forward = mutation.diff(base).diff().apply(base);
+        let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).diff().apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -322,7 +325,7 @@ mod tests {
     fn change_part_kind_label_diff_absorb_law() {
         let base = empty_block5d_snapshot();
         let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_part_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -331,7 +334,7 @@ mod tests {
     fn move_grip_2d_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

@@ -5,7 +5,6 @@
 use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{dec_html_node, dec_str, decode_option, enc_html_node, enc_str, encode_option, split_top_level, strip_brackets};
 use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -75,10 +74,15 @@ pub enum HtmlMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation) -> HtmlDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation) -> protocol::MutationOutcome<HtmlDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -116,8 +120,8 @@ fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Op
 impl Mutation<HtmlSnapshot> for HtmlMutation {
     type Diff = HtmlDiff;
 
-    fn diff(&self, base: &HtmlSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             HtmlMutation::NoMutation => HtmlDiff::default(),
             HtmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             HtmlMutation::SetDoctype { doctype } => HtmlDiff { doctype: Some(doctype.clone()), root: None },
@@ -133,7 +137,7 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
             HtmlMutation::SetText { path, text } => diff_at_path(path, HtmlNodeDiff::Text { text: Some(text.clone()) }),
             HtmlMutation::SetComment { path, text } => diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }),
             HtmlMutation::SetRawText { path, text } => diff_at_path(path, HtmlNodeDiff::RawText { parent_kind: None, text: Some(text.clone()) }),
-        }
+        })
     }
 
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<Self> {
@@ -258,7 +262,7 @@ impl OpText for HtmlMutation {
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `HtmlDiff`'s hand-rolled codec.
-impl protocol::OpBinary for HtmlMutation {
+impl OpBinary for HtmlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
@@ -310,7 +314,7 @@ mod tests {
         // Some(Some(v)): modify existing value.
         let m1 = HtmlMutation::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(Some("99".into())) };
         let d1 = Mutation::diff(&m1, &base);
-        let after1 = <HtmlDiff as protocol::MutationDiff<HtmlSnapshot>>::apply(&d1, &base);
+        let after1 = <HtmlDiff as MutationDiff<HtmlSnapshot>>::apply(d1.diff(), &base).unwrap();
         assert_eq!(element_attr(node_at(&after1, &[0, 0]).unwrap(), "width"), Some(&Some("99".to_string())));
         let mut restored1 = after1.clone();
         for inv in Mutation::inverse(&m1, &base) {
@@ -435,7 +439,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_html_mutation(&mut via_apply, &mutation);
@@ -460,9 +464,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -474,10 +478,10 @@ mod tests {
     }
 
     fn assert_absorb_matches_sequential(base: &HtmlSnapshot, d1: &HtmlDiff, d2: &HtmlDiff) -> HtmlDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -493,9 +497,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&HtmlMutation::RemoveNode { parent: vec![], index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -506,9 +510,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             let names: Vec<&str> = triple
@@ -525,9 +529,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 1, node: el("f", vec![], vec![]) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&HtmlMutation::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -537,9 +541,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::SetAttribute { path: vec![1], name: "k".into(), value: Some(Some("v".into())) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&HtmlMutation::RemoveNode { parent: vec![], index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -547,23 +551,23 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("f", vec![], vec![]) }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&HtmlMutation::InsertNode { parent: vec![], index: 2, node: el("g", vec![], vec![]) }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&HtmlMutation::RemoveNode { parent: vec![], index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -573,18 +577,18 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b), &a).unwrap(), b);
+        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         let real = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE html>\n<html><body><div id=\"layer1\"><p>a</p><span>b</span></div></body></html>\n").unwrap();
         let mut mutated = real.clone();
         apply_html_mutation(&mut mutated, &HtmlMutation::SetAttribute { path: vec![0, 0], name: "id".into(), value: Some(Some("root".into())) });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
+        assert_eq!(MutationDiff::apply(&<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -595,9 +599,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
         let diff_ba = <HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
         assert!(<HtmlDiff as DiffAlgebra<HtmlSnapshot>>::between(&a, &a).is_empty());
 
         assert_eq!(diff_ab.doctype, Some(None));

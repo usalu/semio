@@ -5,7 +5,7 @@ use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.bind-node-child.v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfBindNodeChildPayload {
     pub parent: usize,
     pub child: usize,

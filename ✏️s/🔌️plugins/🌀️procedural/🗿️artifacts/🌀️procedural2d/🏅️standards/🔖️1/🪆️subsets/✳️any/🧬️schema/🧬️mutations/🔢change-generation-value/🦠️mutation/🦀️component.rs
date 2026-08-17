@@ -23,7 +23,7 @@ pub fn change_generation_value(id: String, question_id: String, value: serde_jso
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ChangeGenerationValue {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

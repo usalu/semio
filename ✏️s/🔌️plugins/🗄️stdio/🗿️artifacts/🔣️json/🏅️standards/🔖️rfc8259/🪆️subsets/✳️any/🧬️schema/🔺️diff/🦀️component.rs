@@ -6,7 +6,7 @@
 
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated — see s1-spine-report.md) so it's reached via the
 // still-public `os_spr::command` path instead of touching that framework facade file.
@@ -126,12 +126,15 @@ pub struct JsonDiff {
 }
 
 impl MutationDiff<JsonSnapshot> for JsonDiff {
-    fn apply(&self, base: &JsonSnapshot) -> JsonSnapshot {
+    fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
+        if let Some(diff) = &self.value {
+            validate_value_diff(diff, &base.value)?;
+        }
         let mut next = base.clone();
         if let Some(diff) = &self.value {
             next.value = apply_value_diff(diff, &base.value);
         }
-        next
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free, sequential-coalesce absorb (see the module-level `Absorb`
@@ -160,7 +163,7 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     /// `between(mid, base)` is — by the `between_roundtrip_law` — exactly the diff that restores
     /// `base` when applied to `mid`.
     fn inverse(&self, base: &JsonSnapshot) -> Self {
-        let mid = self.apply(base);
+        let mid = apply_json_diff_unchecked(self, base);
         Self::between(&mid, base)
     }
 
@@ -171,6 +174,14 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     fn is_empty(&self) -> bool {
         self.value.is_none()
     }
+}
+
+fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapshot {
+    let mut next = base.clone();
+    if let Some(value) = &diff.value {
+        next.value = apply_value_diff(value, &base.value);
+    }
+    next
 }
 
 /// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
@@ -203,6 +214,99 @@ pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
             JsonValue::Object { members: apply_object_diff(diff, members) }
         }
     }
+}
+
+fn validate_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> MutationApplyResult<()> {
+    match diff {
+        JsonValueDiff::Replace { .. } => Ok(()),
+        JsonValueDiff::Bool { .. } if matches!(base, JsonValue::Bool { .. }) => Ok(()),
+        JsonValueDiff::Number { .. } if matches!(base, JsonValue::Number { .. }) => Ok(()),
+        JsonValueDiff::String { .. } if matches!(base, JsonValue::String { .. }) => Ok(()),
+        JsonValueDiff::Array { diff } => match base {
+            JsonValue::Array { items } => validate_array_diff(diff, items),
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value")),
+        },
+        JsonValueDiff::Object { diff } => match base {
+            JsonValue::Object { members } => validate_object_diff(diff, members),
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "object diff targets a non-object value")),
+        },
+        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a different JSON value kind")),
+    }
+}
+
+fn validate_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> MutationApplyResult<()> {
+    let mut removed = HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "array removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array removal target is repeated"));
+        }
+    }
+    let mut modified = HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "array modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array modification target is repeated"));
+        }
+        validate_value_diff(&entry.diff, &base[entry.index]).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+    }
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "array addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> MutationApplyResult<()> {
+    let keys: Vec<&str> = base.iter().map(|member| member.key.as_str()).collect();
+    for (position, key) in diff.removed.iter().enumerate() {
+        if !keys.contains(&key.as_str()) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object removal target does not exist"));
+        }
+        if diff.removed[..position].contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object removal target is repeated"));
+        }
+    }
+    for (position, modified) in diff.modified.iter().enumerate() {
+        if !keys.contains(&modified.key.as_str()) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist"));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "object modification targets a removed member"));
+        }
+        if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object modification target is repeated"));
+        }
+        let Some(member) = base.iter().find(|member| member.key == modified.key) else {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist"));
+        };
+        validate_value_diff(&modified.diff, &member.value).map_err(|error| error.under(vec!["modified".to_string(), modified.key.clone()]))?;
+    }
+    let final_len = base.len() - diff.removed.len() + diff.added.len();
+    let mut added_keys = HashSet::new();
+    let mut added_indices = HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "object addition is outside the final collection"));
+        }
+        if !added_indices.insert(entry.index) || keys.contains(&entry.key.as_str()) || !added_keys.insert(entry.key.clone()) || diff.removed.contains(&entry.key) || diff.modified.iter().any(|modified| modified.key == entry.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object addition target already exists or conflicts"));
+        }
+    }
+    Ok(())
 }
 
 /// ▶️ Apply semantics (normative): `removed`/`modified` indices refer to BASE state (removals
@@ -1079,8 +1183,8 @@ mod tests {
         let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
         for (a, b) in cases {
             let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-            assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa), sb, "a={a:?} b={b:?}");
-            assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb), sa);
+            assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa).unwrap(), sb, "a={a:?} b={b:?}");
+            assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
         }
     }
 
@@ -1089,8 +1193,8 @@ mod tests {
         let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
         let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
         let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-        assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa), sb);
-        assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb), sa);
+        assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa).unwrap(), sb);
+        assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
     }
 
     #[test]
@@ -1108,10 +1212,10 @@ mod tests {
         let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
         let (sa, sb) = (snap(a), snap(b));
         let d = JsonDiff::between(&sa, &sb);
-        let mid = d.apply(&sa);
+        let mid = d.apply(&sa).unwrap();
         assert_eq!(mid, sb);
         let inv = d.inverse(&sa);
-        assert_eq!(inv.apply(&mid), sa);
+        assert_eq!(inv.apply(&mid).unwrap(), sa);
     }
     //#endregion inverse_law
 
@@ -1136,10 +1240,10 @@ mod tests {
         let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![str_("b"), str_("f"), str_("c")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1156,10 +1260,10 @@ mod tests {
         let base = snap(arr(vec![str_("a"), str_("b")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("g") }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![str_("a"), str_("b"), str_("g"), str_("f")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
@@ -1173,10 +1277,10 @@ mod tests {
         let base = snap(arr(vec![str_("a")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential, base);
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
@@ -1190,10 +1294,10 @@ mod tests {
             modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } } }],
             ..Default::default()
         });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![objv(vec![("x", num("1")), ("y", num("2"))])]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1211,10 +1315,10 @@ mod tests {
         let base = snap(arr(vec![num("1"), num("2")]));
         let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
         let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         assert_eq!(sequential.value, arr(vec![num("2")]));
         match &combined.value {
             Some(JsonValueDiff::Array { diff }) => {
@@ -1244,8 +1348,8 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(right_tail);
 
-        assert_eq!(left.apply(&s0), s3);
-        assert_eq!(right.apply(&s0), s3);
+        assert_eq!(left.apply(&s0).unwrap(), s3);
+        assert_eq!(right.apply(&s0).unwrap(), s3);
         assert_eq!(left, right);
     }
     //#endregion absorb_law canonical cases (array/index-keyed)
@@ -1261,7 +1365,7 @@ mod tests {
         let d2 = JsonDiff::between(&smid, &safter);
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(after));
+        assert_eq!(combined.apply(&sbase).unwrap(), snap(after));
         match &combined.value {
             Some(JsonValueDiff::Object { diff }) => {
                 assert!(diff.modified.is_empty());
@@ -1282,7 +1386,7 @@ mod tests {
         let d2 = JsonDiff::between(&smid, &safter);
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), safter);
+        assert_eq!(combined.apply(&sbase).unwrap(), safter);
         match &combined.value {
             Some(JsonValueDiff::Object { diff }) => {
                 assert_eq!(diff.removed, vec!["a".to_string()]);
@@ -1302,7 +1406,7 @@ mod tests {
         let d2 = JsonDiff::between(&smid, &safter);
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(after));
+        assert_eq!(combined.apply(&sbase).unwrap(), snap(after));
         match &combined.value {
             Some(JsonValueDiff::Object { diff }) => assert_eq!(diff.added.len(), 2),
             other => panic!("expected object diff, got {other:?}"),
@@ -1319,7 +1423,7 @@ mod tests {
         let d2 = JsonDiff::between(&smid, &safter);
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&sbase), snap(base));
+        assert_eq!(combined.apply(&sbase).unwrap(), snap(base));
         assert!(combined.is_empty());
     }
 
@@ -1342,8 +1446,8 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(right_tail);
 
-        assert_eq!(left.apply(&s0), s3);
-        assert_eq!(right.apply(&s0), s3);
+        assert_eq!(left.apply(&s0).unwrap(), s3);
+        assert_eq!(right.apply(&s0).unwrap(), s3);
         assert_eq!(left, right);
     }
     //#endregion absorb_law canonical cases (object/name-keyed)
@@ -1380,8 +1484,8 @@ mod tests {
     #[test]
     fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
-        assert_eq!(JsonDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(JsonDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(JsonDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(JsonDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(JsonDiff::between(&a, &a).is_empty());
     }
 

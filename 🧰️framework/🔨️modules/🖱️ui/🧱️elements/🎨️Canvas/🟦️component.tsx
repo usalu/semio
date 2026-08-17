@@ -14,7 +14,7 @@ import { type IconName } from "@semio-tech/assets";
 // reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️component.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../☑️Select/🟦️component.tsx";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup, type ResizableJoinCornerResizeHandler, type ResizableJoinCornerSpec, type ResizableJoinEdgeSide } from "../↕️Resizable/🟦️component.tsx";
@@ -22,9 +22,11 @@ import { Navbar, type NavbarItem } from "../🔝️Navbar/🟦️component.tsx";
 import { Window, type WindowConfig } from "../🪟️Window/🟦️component.tsx";
 import { type TreeDragAndDropController } from "../🪵️Tree/🟦️component.tsx";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
-import { interactiveHoverClass, interactiveActiveFillClass, glassClass, surfaceClass, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️component.ts";
 import { chromeStatusBorderClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { modeDockTabClassName } from "../🏷️ClassNames/🟦️component.tsx";
+import { modeDockTabClassName } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
 import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️component.tsx";
 import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️component.tsx";
 import { isSurfaceActiveBackgroundPointer, useSurface, useSurfaceActive, LevelProvider, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";

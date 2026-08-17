@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::RemoveNodeHandle, base: &Puzzle2dSnapshot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.clone()]);
     };
     if !node.handles.iter().any(|handle| handle.id == payload.handle_id) {
-        return Puzzle2dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Handle \"{}\" not found on node \"{}\".", payload.handle_id, payload.node_id), vec![payload.handle_id.clone()]);
     }
     let mut next = node.clone();
     next.handles.retain(|handle| handle.id != payload.handle_id);

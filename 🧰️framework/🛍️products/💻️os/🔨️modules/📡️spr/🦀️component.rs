@@ -28,7 +28,8 @@ pub use crate::os_spr::causal::{
 pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, SectionProbe, CHANNEL_VERSION};
 pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, DiffAlgebra,
-    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationMessage, MutationOutcome, MutationUpcaster, Patchable,
+    DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationMessage, MutationOutcome,
+    MutationUpcaster, Patchable,
     SemanticDescriptor, SemanticMutation, APPROVED_VERBS,
     DiffRegions, Inference, InferenceFieldSpec, InferenceSpec, TouchedPaths,
     fold_plan_diff, fold_plan_inverse, plan_foreign_steps, plan_of, CompositeMutationKind, ForeignStep, ForeignTarget, MutationOrigin, PlanError, PlanStep, Planner, MAX_PLAN_DEPTH,

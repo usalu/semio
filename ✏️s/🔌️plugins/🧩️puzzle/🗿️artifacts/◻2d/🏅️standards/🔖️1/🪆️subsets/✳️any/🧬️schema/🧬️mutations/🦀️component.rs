@@ -214,8 +214,11 @@ pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_puzzle2d_mutation(projection: &mut Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzle2dMutation) -> Vec<Puzzle2dMutation> {
@@ -231,12 +234,15 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 // typed `Mutation<Puzzle2dSnapshot>`/`MutationDiff<Puzzle2dSnapshot>` impls stay the single source
 // of truth, so every one of this enum's 26 kinds gets `Value` support for free.
 impl MutationDiff<Value> for Puzzle2dDiff {
-    fn apply(&self, projection: &Value) -> Value {
-        let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
-        let next = MutationDiff::<Puzzle2dSnapshot>::apply(self, &base);
-        serde_json::to_value(next).unwrap_or_else(|_| projection.clone())
+    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+        let base: Puzzle2dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
+        })?;
+        let next = MutationDiff::<Puzzle2dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        serde_json::to_value(next).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
@@ -315,10 +321,10 @@ impl store::ArtifactPack for Puzzle2dPlaySnapshot {
 }
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> Puzzle2dPlaySnapshot {
-        Puzzle2dPlaySnapshot(MutationDiff::<Value>::apply(self, &projection.0))
+    fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
+        MutationDiff::<Value>::apply(self, &projection.0)
+            .map(Puzzle2dPlaySnapshot)
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
     }
@@ -333,6 +339,27 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 
     fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Vec<Puzzle2dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
+    }
+}
+
+/// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
+/// `SemanticMutation<Puzzle2dSnapshot>` impl above never actually reads `Puzzle2dSnapshot` data in
+/// any of the four), so this bridges the same vocabulary onto `Puzzle2dPlaySnapshot` by forwarding
+/// straight through — the `SemanticMutation` twin of the `Mutation<Puzzle2dPlaySnapshot>` bridge
+/// immediately above, needed so `.editor_mutation_roster::<Puzzle2dPlayApp>()` can register this
+/// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
+impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::kinds()
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::semantics(self)
+    }
+    fn label(&self) -> String {
+        <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::label(self)
+    }
+    fn target(&self) -> Vec<String> {
+        <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::target(self)
     }
 }
 //#endregion 🔖️PlaySnapshot
@@ -361,11 +388,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }

@@ -552,7 +552,6 @@
       cursor: var(--cursor-pointer) !important;
     }
 
-    [data-slot="breadcrumb-link"],
     [data-slot="breadcrumb-separator"][class*="cursor-pointer"] {
       cursor: var(--cursor-pointer) !important;
     }
@@ -6237,16 +6236,14 @@
   background-color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] :is([data-slot="breadcrumb"], [data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"], [data-slot="breadcrumb-item"], [data-slot="breadcrumb-separator-control"]),
+[data-slot="navbar"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"]),
 [data-slot="footer"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"]) {
   border-color: var(--border-normal-color) !important;
 }
 
 /* Shell chrome: reinforce level-aware hover on navbar, footer, and toolbar controls. */
 [data-slot="navbar"] [data-level]:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level]:not([data-state="on"]):not(:disabled),
-[data-slot="navbar"] [data-slot="breadcrumb-link"],
-[data-slot="navbar"] [data-slot="breadcrumb-separator-control"] {
+[data-slot="footer"] [data-level]:not([data-state="on"]):not(:disabled) {
   transition:
     color 120ms ease,
     background-color 120ms ease;
@@ -6295,17 +6292,10 @@
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-slot="breadcrumb-link"]:hover,
-[data-slot="navbar"] [data-slot="breadcrumb-separator-control"]:hover {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
 [data-slot="toggle-group"],
 [data-slot="button-group"],
 [data-slot="action-group"],
-[data-slot="app-panel-toggle-group"],
-[data-slot="breadcrumb"] {
+[data-slot="app-panel-toggle-group"] {
   border-color: var(--border-normal-color);
 }
 

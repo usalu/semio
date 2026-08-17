@@ -67,13 +67,16 @@ mod tests {
 }
 //#endregion 🔹Tests
 
-pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &GisTerrainMutation) {
-    let (next, _messages) = vcs::apply_mutation(snapshot, mutation);
-    *snapshot = next;
+pub fn apply_gis_terrain_mutation(
+    snapshot: &mut GisTerrainSnapshot,
+    mutation: &GisTerrainMutation,
+) -> protocol::MutationApplyResult<()> {
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
     // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
     // every mutation so the composed child handle never drifts from what
     // `gis_terrain_mesh_from_snapshot` would actually build (see `GisTerrainSnapshot.mesh`'s doc).
-    *snapshot = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(std::mem::take(snapshot));
+    *snapshot = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
+    Ok(())
 }
 
 pub fn inverse_gis_terrain_mutation(snapshot: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Vec<GisTerrainMutation> {

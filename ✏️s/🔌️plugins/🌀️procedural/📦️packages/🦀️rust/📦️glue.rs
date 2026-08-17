@@ -853,6 +853,10 @@ pub mod artifacts {
 
     #[path = "."]
     pub mod assembly {
+        #[path = "../../🗿️artifacts/🧩️assembly/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
         #[path = "."]
         pub mod standards {
             #[path = "."]
@@ -1105,83 +1109,83 @@ pub(crate) mod wfc_engine {
 }
 //#endregion 🧩️WfcEngine
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod procedural2d {
-        #[path = "../../🎛️apps/◻2d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/◻2d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/◻2d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
             pub mod node_graph_edit;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
             pub mod move_media_node;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️connect-media-ports/🦀️component.rs"]
             pub mod connect_media_ports;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
             pub mod reorganize;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧩️add-widget/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️component.rs"]
             pub mod add_widget;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧩️remove-widget/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
             pub mod remove_widget;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️add-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️add-generation/🦀️component.rs"]
             pub mod add_generation;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️remove-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
             pub mod remove_generation;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️rename-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
             pub mod rename_generation;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
             pub mod update_generation_values;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️select-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-generation/🦀️component.rs"]
             pub mod select_generation;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧬️enter-generate/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️enter-generate/🦀️component.rs"]
             pub mod enter_generate;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️set-show-mode/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️component.rs"]
             pub mod set_show_mode;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-pointer-down/🦀️component.rs"]
             pub mod canvas_pointer_down;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-move/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-pointer-move/🦀️component.rs"]
             pub mod canvas_pointer_move;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️canvas-pointer-up/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-pointer-up/🦀️component.rs"]
             pub mod canvas_pointer_up;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️canvas-wheel/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️canvas-wheel/🦀️component.rs"]
             pub mod canvas_wheel;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧮️set-eval-outputs/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-eval-outputs/🦀️component.rs"]
             pub mod set_eval_outputs;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
             pub mod flow_eval_tick;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -1189,32 +1193,32 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs"]
                     pub mod flow;
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
             }
 
             #[path = "."]
             pub mod generate {
-                #[path = "../../🎛️apps/◻2d/🎭️modes/🧬️generate/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
                     pub mod generations;
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
                     pub mod form;
-                    #[path = "../../🎛️apps/◻2d/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
             }
@@ -1222,109 +1226,109 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/◻2d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/◻2d/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 
     #[path = "."]
     pub mod procedural3d {
-        #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/🧊️3d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/🧊️3d/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🎨️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
             pub mod node_graph_edit;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️move-media-node/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️move-media-node/🦀️component.rs"]
             pub mod move_media_node;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️reorganize/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️reorganize/🦀️component.rs"]
             pub mod reorganize;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🕸️graph-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️graph-pointer-down/🦀️component.rs"]
             pub mod graph_pointer_down;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️delete-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️delete-selection/🦀️component.rs"]
             pub mod delete_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️remove-widget/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️remove-widget/🦀️component.rs"]
             pub mod remove_widget;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️add-widget/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🦀️component.rs"]
             pub mod add_widget;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧩️patch-flow-widgets/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️patch-flow-widgets/🦀️component.rs"]
             pub mod patch_flow_widgets;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧭️translate-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️translate-selection/🦀️component.rs"]
             pub mod translate_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧭️rotate-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️rotate-selection/🦀️component.rs"]
             pub mod rotate_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧭️scale-selection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️scale-selection/🦀️component.rs"]
             pub mod scale_selection;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗂️world-pointer-down/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️world-pointer-down/🦀️component.rs"]
             pub mod world_pointer_down;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️add-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️add-generation/🦀️component.rs"]
             pub mod add_generation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️remove-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️remove-generation/🦀️component.rs"]
             pub mod remove_generation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️rename-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️rename-generation/🦀️component.rs"]
             pub mod rename_generation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️update-generation-values/🦀️component.rs"]
             pub mod update_generation_values;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧬️select-generation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-generation/🦀️component.rs"]
             pub mod select_generation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-lod-mode/🦀️component.rs"]
             pub mod set_lod_mode;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️set-show-mode/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️component.rs"]
             pub mod set_show_mode;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️component.rs"]
             pub mod set_camera;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️component.rs"]
             pub mod set_active_utility;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌞️toggle-sun/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🦀️component.rs"]
             pub mod toggle_sun;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-azimuth/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-azimuth/🦀️component.rs"]
             pub mod set_sun_azimuth;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-elevation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-elevation/🦀️component.rs"]
             pub mod set_sun_elevation;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🌞️set-sun-intensity/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️set-sun-intensity/🦀️component.rs"]
             pub mod set_sun_intensity;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-tick/🦀️component.rs"]
             pub mod flow_eval_tick;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-eval-resolve/🦀️component.rs"]
             pub mod flow_eval_resolve;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🧮️flow-tessellate-resolve/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️flow-tessellate-resolve/🦀️component.rs"]
             pub mod flow_tessellate_resolve;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -1332,32 +1336,32 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🦀️component.rs"]
                     pub mod flow;
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
             }
 
             #[path = "."]
             pub mod generate {
-                #[path = "../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/🗂️generations/🦀️component.rs"]
                     pub mod generations;
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️component.rs"]
                     pub mod form;
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
                 }
             }
@@ -1365,16 +1369,77 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/🧊️3d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
+
+    // 🚧️ assembly's ✏️editor is authored on disk (`🗿️artifacts/🧩️assembly/…/✏️editor/`) but NOT mounted
+    // here: `impl ArtifactEditor for AssemblyEditor` cannot satisfy the trait's own bounds
+    // (`Snapshot: ArtifactDsl + ArtifactPack`, `Mutation: OpText + OpBinary`) until assembly's schema
+    // gains its missing artifact-facet descriptor + JSON-Schema/GraphQL/Protobuf leaves (see
+    // `📓️w2-p5-assembly-notes.md`'s "Blocking gap" — confirmed by a real `cargo check` attempt, not
+    // just the theoretical typestate reading that report already gave). Mount once that lands.
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod procedural2d {
+        #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️component.rs"]
+                    pub mod preview;
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod procedural3d {
+        #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️component.rs"]
+                    pub mod preview;
+                }
+            }
+        }
+    }
+
+    // 🚧️ assembly's 👁️viewer is authored on disk (`🗿️artifacts/🧩️assembly/…/👁️viewer/`) but NOT mounted
+    // here, for the same reason as the sibling ✏️editor block above — see its comment.
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -1401,9 +1466,9 @@ pub mod examples {
     pub mod art_procedural3d_sphere_box_fuse;
     #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️sphere-cut-with-torus/🦀️component.rs"]
     pub mod art_procedural3d_sphere_cut_with_torus;
-    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;
-    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_3d_demo_session;
 }
 //#endregion 📚️Examples

@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
     use crate::artifacts::html::standards::v5::subsets::any::schema::HtmlAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
 

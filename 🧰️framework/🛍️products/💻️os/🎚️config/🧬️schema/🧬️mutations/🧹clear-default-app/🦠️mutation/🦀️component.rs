@@ -25,10 +25,8 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
-    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
-    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
-        MutationOutcome::new(super::diff::diff(self, base))
+        super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

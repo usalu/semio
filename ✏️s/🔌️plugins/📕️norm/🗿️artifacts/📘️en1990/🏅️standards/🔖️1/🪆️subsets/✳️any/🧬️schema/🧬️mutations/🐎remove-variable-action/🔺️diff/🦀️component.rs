@@ -7,11 +7,12 @@ use super::mutation::RemoveVariableAction;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveVariableAction, base: &En1990Snapshot) -> En1990Diff {
+pub fn diff(payload: &RemoveVariableAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     let mut q_k = en1990_qk(base);
-    if payload.index < q_k.len() {
-        q_k.remove(payload.index);
+    if payload.index >= q_k.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Variable action #{} does not exist.", payload.index), [payload.index.to_string()]);
     }
-    En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() }
+    q_k.remove(payload.index);
+    protocol::MutationOutcome::new(En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -88,83 +88,21 @@ pub enum LasMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
-/// ▶️ Applies `mutation` to `snapshot`. Every index-targeted variant is a graceful no-op when
-/// `index` is out of range (a stale index from a concurrent edit degrades gracefully, never
-/// panics). `InsertVlr`/`RemoveVlr`/`InsertPoint`/`RemovePoint` keep `header.number_of_vlrs`/
+/// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
+/// snapshot when an index target is missing or out of range. `InsertVlr`/`RemoveVlr`/
+/// `InsertPoint`/`RemovePoint` keep `header.number_of_vlrs`/
 /// `header.number_of_point_records` in sync with the real collection length (`engine::encode_las`
 /// also independently recomputes both at encode time — see `LasHeader`'s doc comment — so this
 /// sync is a snapshot-level consistency guarantee, not the sole source of correctness).
-pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> LasDiff {
-    let __diff = <LasMutation as protocol::Mutation<LasSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        LasMutation::NoMutation => {}
-        LasMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        LasMutation::SetVersion { major, minor } => {
-            snapshot.header.version_major = *major;
-            snapshot.header.version_minor = *minor;
+pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
+    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
         }
-        LasMutation::SetSystemIdentifier { system_identifier } => {
-            snapshot.header.system_identifier = system_identifier.clone();
-        }
-        LasMutation::SetSoftwareInfo { generating_software } => {
-            snapshot.header.generating_software = generating_software.clone();
-        }
-        LasMutation::SetCreationDate { day_of_year, year } => {
-            snapshot.header.creation_day_of_year = *day_of_year;
-            snapshot.header.creation_year = *year;
-        }
-        LasMutation::SetScaleAndOffset { scale, offset } => {
-            snapshot.header.x_scale = scale.0;
-            snapshot.header.y_scale = scale.1;
-            snapshot.header.z_scale = scale.2;
-            snapshot.header.x_offset = offset.0;
-            snapshot.header.y_offset = offset.1;
-            snapshot.header.z_offset = offset.2;
-        }
-        LasMutation::SetBounds { max, min } => {
-            snapshot.header.max_x = max.0;
-            snapshot.header.max_y = max.1;
-            snapshot.header.max_z = max.2;
-            snapshot.header.min_x = min.0;
-            snapshot.header.min_y = min.1;
-            snapshot.header.min_z = min.2;
-        }
-        LasMutation::SetPointsByReturn { counts } => snapshot.header.points_by_return = *counts,
-        LasMutation::InsertVlr { index, vlr } => {
-            let at = (*index).min(snapshot.vlrs.len());
-            snapshot.vlrs.insert(at, vlr.clone());
-            snapshot.header.number_of_vlrs = snapshot.vlrs.len() as u32;
-        }
-        LasMutation::RemoveVlr { index } => {
-            if *index < snapshot.vlrs.len() {
-                snapshot.vlrs.remove(*index);
-                snapshot.header.number_of_vlrs = snapshot.vlrs.len() as u32;
-            }
-        }
-        LasMutation::SetVlrData { index, data } => {
-            if let Some(v) = snapshot.vlrs.get_mut(*index) {
-                v.data = data.clone();
-            }
-        }
-        LasMutation::InsertPoint { index, point } => {
-            let at = (*index).min(snapshot.points.len());
-            snapshot.points.insert(at, point.clone());
-            snapshot.header.number_of_point_records = snapshot.points.len() as u32;
-        }
-        LasMutation::RemovePoint { index } => {
-            if *index < snapshot.points.len() {
-                snapshot.points.remove(*index);
-                snapshot.header.number_of_point_records = snapshot.points.len() as u32;
-            }
-        }
-        LasMutation::SetPoint { index, point } => {
-            if let Some(p) = snapshot.points.get_mut(*index) {
-                *p = point.clone();
-            }
-        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-
-    __diff
 }
 //#endregion 🔖️Apply
 
@@ -172,8 +110,8 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
 impl Mutation<LasSnapshot> for LasMutation {
     type Diff = LasDiff;
 
-    fn diff(&self, base: &LasSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             LasMutation::NoMutation => LasDiff::default(),
             LasMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             LasMutation::SetVersion { major, minor } => diff::diff_set_version(*major, *minor),
@@ -189,7 +127,7 @@ impl Mutation<LasSnapshot> for LasMutation {
             LasMutation::InsertPoint { index, point } => diff::diff_insert_point(base, *index, point.clone()),
             LasMutation::RemovePoint { index } => diff::diff_remove_point(base, *index),
             LasMutation::SetPoint { index, point } => diff::diff_set_point(base, *index, point.clone()),
-        }
+        })
     }
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
@@ -663,7 +601,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_las_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_las_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[test]
@@ -686,9 +624,6 @@ mod tests {
         assert_mutation_diff_law(&base, LasMutation::InsertPoint { index: 1, point: point(9) });
         assert_mutation_diff_law(&base, LasMutation::RemovePoint { index: 0 });
         assert_mutation_diff_law(&base, LasMutation::SetPoint { index: 0, point: point(42) });
-        // Out-of-range index: graceful no-op, still law-compliant.
-        assert_mutation_diff_law(&base, LasMutation::RemoveVlr { index: 99 });
-        assert_mutation_diff_law(&base, LasMutation::SetPoint { index: 99, point: point(1) });
     }
     //#endregion 🔖️mutation_diff_law
 
@@ -723,9 +658,9 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.apply(&base);
-            let inv_d = d.inverse(&base);
-            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+            let mutated = d.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.diff().inverse(&base);
+            assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
     //#endregion 🔖️inverse_law
@@ -733,13 +668,13 @@ mod tests {
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.apply(base);
+        let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.apply(&mid);
+        let sequential = d2.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.clone();
-        merged.absorb(d2.clone());
-        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
+        assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
     #[test]
@@ -778,24 +713,24 @@ mod tests {
     fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = LasMutation::SetSystemIdentifier { system_identifier: "one".into() }.diff(&base);
-        let mid1 = d1.apply(&base);
+        let mid1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = LasMutation::InsertPoint { index: 0, point: point(9) }.diff(&mid1);
-        let mid2 = d2.apply(&mid1);
+        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
         let d3 = LasMutation::SetPoint { index: 0, point: point(7) }.diff(&mid2);
 
         // (d1∘d2)∘d3
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
-        assert_eq!(left.apply(&base), d3.apply(&mid2), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -813,9 +748,9 @@ mod tests {
         b.points.push(point(50));
 
         let d = LasDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let d_rev = LasDiff::between(&b, &a);
-        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️between_roundtrip_law
@@ -969,9 +904,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = LasDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
         let backward = LasDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Every header scalar must be diffed forward.
@@ -1050,15 +985,18 @@ mod tests {
     //#endregion 🔖️field_sweep
 
     #[test]
-    fn out_of_range_index_mutation_is_noop_not_panic() {
+    fn out_of_range_index_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
-        apply_las_mutation(&mut snap, &LasMutation::RemoveVlr { index: 99 });
+        let outcome = apply_las_mutation(&mut snap, &LasMutation::RemoveVlr { index: 99 });
         assert_eq!(snap, base);
-        apply_las_mutation(&mut snap, &LasMutation::SetPoint { index: 99, point: point(1) });
+        assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
+        let outcome = apply_las_mutation(&mut snap, &LasMutation::SetPoint { index: 99, point: point(1) });
         assert_eq!(snap, base);
-        apply_las_mutation(&mut snap, &LasMutation::SetVlrData { index: 99, data: vec![1] });
+        assert_eq!(outcome.messages()[0].target, vec!["points", "99"]);
+        let outcome = apply_las_mutation(&mut snap, &LasMutation::SetVlrData { index: 99, data: vec![1] });
         assert_eq!(snap, base);
+        assert_eq!(outcome.messages()[0].target, vec!["vlrs", "99"]);
     }
 
     //#region 🔖️op_text_binary_roundtrip_law

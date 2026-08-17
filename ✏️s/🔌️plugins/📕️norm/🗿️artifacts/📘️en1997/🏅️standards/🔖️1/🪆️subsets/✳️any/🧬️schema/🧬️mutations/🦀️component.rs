@@ -146,10 +146,14 @@ mod tests {
     }
 
     fn round_trip(base: &En1997Snapshot, mutation: &En1997Mutation) -> En1997Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -179,7 +183,9 @@ mod tests {
         let _ = &mut target;
         let mut projected = base.clone();
         for mutation in En1997Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation);
+            projected = vcs::apply_mutation(&projected, &mutation)
+                .expect("snapshot mutation applies")
+                .0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
@@ -193,8 +199,8 @@ mod tests {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -202,8 +208,8 @@ mod tests {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 620.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::mutation::ChangePileNProfiles { new_pile_n_profiles: 3 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -211,8 +217,8 @@ mod tests {
         let base = En1997Snapshot::default();
         let mutation = En1997Mutation::ChangeDesignApproach(change_design_approach::mutation::ChangeDesignApproach { new_design_approach: "da2".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1997Mutation::ChangePhiDeg(change_phi_deg::mutation::ChangePhiDeg { new_phi_deg: 32.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

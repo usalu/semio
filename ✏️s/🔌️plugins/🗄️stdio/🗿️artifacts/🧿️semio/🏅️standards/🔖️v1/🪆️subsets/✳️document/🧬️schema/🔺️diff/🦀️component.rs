@@ -1028,18 +1028,21 @@ fn diff_document(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) ->
 }
 
 impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
-    fn apply(&self, base: &SemioDocumentSnapshot) -> SemioDocumentSnapshot {
+    fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;
             apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
         }
         if let Some(id) = &self.images {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |item| item.id.clone(), ["images"])?;
             apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
         }
         if let Some(bd) = &self.blocks {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
             apply_indexed(&mut out.blocks, bd, apply_block);
         }
-        out
+        Ok(out)
     }
 
     fn absorb(&mut self, other: Self) {

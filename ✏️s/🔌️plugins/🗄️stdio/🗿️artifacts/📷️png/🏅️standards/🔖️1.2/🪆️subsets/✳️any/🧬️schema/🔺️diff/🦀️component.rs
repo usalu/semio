@@ -25,7 +25,7 @@
 use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -836,7 +836,19 @@ pub struct PngDiff {
 }
 
 impl MutationDiff<PngSnapshot> for PngDiff {
-    fn apply(&self, base: &PngSnapshot) -> PngSnapshot {
+    fn apply(&self, base: &PngSnapshot) -> MutationApplyResult<PngSnapshot> {
+        if let Some(Some(plte)) = &self.plte {
+            validate_png_triple(base.plte.as_ref().map_or(0, Vec::len), &plte.removed, plte.modified.iter().map(|entry| entry.index), plte.added.iter().map(|entry| entry.index), ["plte"])?;
+        }
+        if let Some(text) = &self.text_chunks {
+            validate_png_triple(base.text_chunks.len(), &text.removed, text.modified.iter().map(|entry| entry.index), text.added.iter().map(|entry| entry.index), ["textChunks"])?;
+        }
+        if let Some(order) = &self.chunk_order {
+            validate_png_triple(base.chunk_order.len(), &order.removed, order.modified.iter().map(|entry| entry.index), order.added.iter().map(|entry| entry.index), ["chunkOrder"])?;
+        }
+        if let Some(unknown) = &self.unknown_chunks {
+            validate_png_triple(base.unknown_chunks.len(), &unknown.removed, unknown.modified.iter().map(|entry| entry.index), unknown.added.iter().map(|entry| entry.index), ["unknownChunks"])?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -889,7 +901,7 @@ impl MutationDiff<PngSnapshot> for PngDiff {
         if let Some(ud) = &self.unknown_chunks {
             next.unknown_chunks = apply_unknown_chunks(&next.unknown_chunks, ud);
         }
-        next
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars
@@ -943,11 +955,42 @@ impl MutationDiff<PngSnapshot> for PngDiff {
     }
 }
 
+fn validate_png_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+where
+    I: IntoIterator<Item = usize>,
+    J: IntoIterator<Item = usize>,
+    K: IntoIterator,
+    K::Item: AsRef<str>,
+{
+    let path: Vec<String> = path.into_iter().map(|part| part.as_ref().to_owned()).collect();
+    let mut removed_set = std::collections::HashSet::new();
+    for &index in removed {
+        if index >= base_len || !removed_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "PNG collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    let mut modified_set = std::collections::HashSet::new();
+    for index in modified {
+        if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "PNG collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
+        }
+    }
+    let added: Vec<usize> = added.into_iter().collect();
+    let final_len = base_len.saturating_sub(removed.len()).saturating_add(added.len());
+    let mut added_set = std::collections::HashSet::new();
+    for index in added {
+        if index > final_len || !added_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "PNG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<PngSnapshot> for PngDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's:
     /// the state delta from `self.apply(base)` back to `base`.
     fn inverse(&self, base: &PngSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 

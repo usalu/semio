@@ -1,6 +1,6 @@
 //! ✒️ Writer artifact — the document entity this plugin's app edits.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -8,6 +8,15 @@ use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
+
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1's canonical surface
+/// coordinate for this artifact — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
+/// viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.writer.writer"` matches `definition()`'s own `"s.writer.schema.artifact"`
+/// capability row (`descriptor(b"s.writer.writer")`/`claim(schema, "s.writer.writer")` below, not
+/// guessed); `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location
+/// — i.e. the canonical surface id is `s.writer.writer@1/*#editor` / `s.writer.writer@1/*#viewer`.
+pub const WRITER_DIALECT: Dialect = Dialect { artifact_kind: "s.writer.writer", standard: StandardId("1"), subset: SubsetId::ANY };
 //#endregion 🔖️Constants
 
 //#region 🔖️Types
@@ -262,7 +271,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::writer::schema::writer_artifact_schema_descriptor())
         .inferences([crate::artifacts::writer::schema::inferences::writer_artifact_inference_descriptor()])
         .composers(crate::artifacts::writer::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::writer::WriterPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::writer::WriterPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

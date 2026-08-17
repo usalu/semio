@@ -5,6 +5,9 @@ use crate::artifacts::step::StepSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — the sparse field-by-field `between(base, snapshot)` (no
 /// full-replace slot exists on `StepDiff` to short-circuit into).
-pub fn diff(base: &StepSnapshot, snapshot: &StepSnapshot) -> StepDiff {
-    diff_set_snapshot(base, snapshot)
+pub fn diff(base: &StepSnapshot, snapshot: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+    if base == snapshot {
+        return protocol::MutationOutcome::new(StepDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+    }
+    protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

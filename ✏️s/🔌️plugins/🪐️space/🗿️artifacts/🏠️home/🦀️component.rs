@@ -10,6 +10,15 @@ pub const S_HOME_DOCUMENT_SCHEMA: &str = "s.home";
 pub use crate::artifacts::home::schema::SHomeArtifact;
 pub use crate::artifacts::home::snapshot::schema::SHomeSnapshot;
 
+//#region 🔖️Dialect
+/// 🪪️ Lives at the ARTIFACT level (not under `editor`/`viewer`) so a viewer file can read it without
+/// ever importing through `editor` — `artifact_kind` matches this subset's own
+/// `#[artifact_schema(id = "s.space.home")]`, `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical surface id: `s.space.home@1/*#editor` /
+/// `s.space.home@1/*#viewer` (contract §1 grammar).
+pub const HOME_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.home", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️ArtifactKind
 /// 🗂️ OS artifact kind for this document.
 pub fn artifact_kind() -> ArtifactKindSpec {
@@ -36,16 +45,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// behaviour) — replaces the old side-effecting `register_artifact_schema()`/
 /// `register_artifact_inference()`/`register_io()` trio (each a lone-call wrapper around one global
 /// registry) plus the root's old `register_pilot_languages()` 5-language block, folded here into one
-/// declarative table. `kind` is `"s.home"`, matching `HOME_DIALECT.artifact_kind`/
-/// `S_HOME_DOCUMENT_SCHEMA` above — NOT `space.shome` (the OS-level `ArtifactKindSpec.id`, a
-/// different namespace) or `s.space.home` (the schema-descriptor id) — see
-/// `ArtifactDeclaration::register_all`'s ownership check, which is enforced against the composer
-/// table's own dialects. Both apps' own config/presence schema (`apps::home::config::schema::
-/// app_schema_descriptor()`/`apps::space::config::schema::app_schema_descriptor()`) is supplied by
+/// declarative table. `kind` is `"s.home"`, matching `S_HOME_DOCUMENT_SCHEMA` above — three genuinely
+/// distinct namespaces, not two: NOT `space.shome` (the OS-level `ArtifactKindSpec.id`) and NOT
+/// `s.space.home` (`HOME_DIALECT.artifact_kind`, the schema-descriptor id, per this subset's own
+/// `#[artifact_schema(id = "s.space.home")]`) — see `ArtifactDeclaration::register_all`'s ownership
+/// check, which is enforced against the composer table's own dialects. The editor's and studio app's
+/// own config/presence schema (`editor::home::config::schema::app_schema_descriptor()`/
+/// `engine::space::config::schema::app_schema_descriptor()`) is supplied by `ArtifactEditor::app_schema()`/
 /// `ArtifactApp::app_schema()` overrides (ticket W1c) — `ArtifactDeclaration`
 /// deliberately has no field for app-scope schema (see that struct's own doc); it is registered by
-/// `.register_document_app::<A>()` instead, keyed off `A` the same way this declaration is keyed off
-/// `kind`.
+/// `.document_codec::<A>()` instead, keyed off `A` the same way this declaration is keyed off `kind`.
 /// 🧾️ Defines s.home's immutable runtime capability leaves.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
@@ -94,7 +103,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::home::schema::home_artifact_schema_descriptor())
         .inferences([crate::artifacts::home::standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
         .composers(crate::artifacts::home::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::home::HomeApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

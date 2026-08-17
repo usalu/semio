@@ -12,7 +12,12 @@
  */
 // #endregion Header
 
-import type { Fault, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
+import type { Conflict, ConflictResolution, DispatchReport, Fault, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
+import { conflictResolutionAsU8, mergePolicyAsU8 } from "@semio-tech/framework";
+/** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
+ * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
+ * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
+import type { DirectoryCommand, DirectoryEvent, DirectoryStreamMessage } from "./🔨️modules/📇️directory/🟦️component.ts";
 
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
@@ -404,7 +409,7 @@ export type WireBootstrap = "None" | { readonly Snapshot: { readonly pack_hash: 
 
 /** ⚖️ How the hub resolved one submitted batch against concurrent history — mirrors Rust
  * `protocol_wire::ApplyOutcome`. */
-export type WireApplyOutcome = "Accepted" | { readonly Transformed: { readonly envelope: WireMutationEnvelope } } | { readonly Rejected: { readonly reason: string } };
+export type WireApplyOutcome = "Accepted" | { readonly Transformed: { readonly envelope: WireMutationEnvelope } } | { readonly Rejected: { readonly reason: string; readonly messages: readonly number[] } };
 
 /** 🪜️ One stage of a submitted batch's lifecycle — mirrors Rust `protocol_wire::AckStage`. */
 export type WireAckStage = "Received" | "Persisted" | { readonly Applied: { readonly outcome: WireApplyOutcome } };
@@ -824,6 +829,7 @@ function encodeApplyOutcome(out: number[], outcome: WireApplyOutcome): void {
   }
   out.push(2);
   writeStr(out, outcome.Rejected.reason);
+  writeBytes(out, outcome.Rejected.messages);
 }
 function decodeApplyOutcome(bytes: Uint8Array, pos: [number]): WireApplyOutcome {
   const tag = bytes[pos[0]];
@@ -831,7 +837,7 @@ function decodeApplyOutcome(bytes: Uint8Array, pos: [number]): WireApplyOutcome 
   pos[0] += 1;
   if (tag === 0) return "Accepted";
   if (tag === 1) return { Transformed: { envelope: decodeEnvelope(bytes, pos) } };
-  if (tag === 2) return { Rejected: { reason: readStr(bytes, pos) } };
+  if (tag === 2) return { Rejected: { reason: readStr(bytes, pos), messages: readBytes(bytes, pos) } };
   throw new Error(`wire apply-outcome tag: unknown tag ${tag}`);
 }
 
@@ -1055,8 +1061,11 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
   return { lane, frame };
 }
 
-/** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
-export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly token?: string };
+/** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. `surface`
+ * (contract-freeze §C0 "Presence scope") travels out of band on the document WS URL's `?surface=`
+ * query param — see `connectHub` in `🟦️backbone-worker.ts`'s `🔖️Hub` region. No `PresencePeer` wire
+ * change: its flag byte is full and the file is peer-leased. */
+export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly token?: string; readonly surface?: string };
 
 /** 🧾️ Everything the worker needs to open one artifact's actor — mirrors `ArtifactActorConfig`. */
 export type ArtifactActorConfig = {
@@ -1091,14 +1100,17 @@ export type ArtifactSyncStatus = {
   readonly remote: RemoteState;
 };
 
-/** ⚠️ A structural sync conflict — loosely typed pending a full mirror of `vcs::SpaceConflict`; the
- * shell only needs enough to render a conflict card / offer "fork alternative" vs "take theirs". */
+/** ⚠️ A structural sync conflict — `ArtifactEvent::Conflict` wraps a `MutationMessage` (contract
+ * freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C10's frozen
+ * diagnostic-bag vocabulary, replacing the deleted transport-level conflict bag it used to carry),
+ * loosely typed here rather than importing the full shape — the shell only needs enough to render a
+ * conflict card / offer "fork alternative" vs "take theirs", and `message` alone already covers that. */
 export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
 
 /** 📮️ The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed` envelope
  * payload (already delivered separately as a `remoteMutations` event by the time this fires) —
  * mirrors Rust `CommandAckOutcome`. */
-export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string };
+export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string; readonly messages: readonly number[] };
 
 /** 📬️ Actor→subscriber events — mirrors Rust `ArtifactEvent`. */
 export type ArtifactEvent =
@@ -1163,11 +1175,27 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
   return parsed as BackboneWorkerResponse;
 }
 
-/** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}). */
-export type BackboneWorkerRequest = ({ readonly kind: "open" } & ArtifactActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: ArtifactActorMsg };
+/** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}).
+ * The `directory-*` kinds (contract-freeze §C6) are the shell's ONLY way to reach the directory hub
+ * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
+ * UI thread; see `🟦️backbone-worker.ts`'s `🔖️Directory` region. */
+export type BackboneWorkerRequest =
+  | ({ readonly kind: "open" } & ArtifactActorConfig)
+  | { readonly kind: "close"; readonly documentId: string }
+  | { readonly kind: "send"; readonly documentId: string; readonly message: ArtifactActorMsg }
+  | { readonly kind: "directory-open"; readonly baseUrl: string; readonly token?: string; readonly since: number }
+  | { readonly kind: "directory-command"; readonly requestId: string; readonly command: DirectoryCommand }
+  | { readonly kind: "directory-close" };
 
-/** 📥️ `🟦️backbone-worker.ts` → main thread messages. */
-export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent } | { readonly kind: "ready" };
+/** 📥️ `🟦️backbone-worker.ts` → main thread messages. `directory-status.pendingCommands` is the
+ * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
+ * reconnect"). */
+export type BackboneWorkerResponse =
+  | { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent }
+  | { readonly kind: "ready" }
+  | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
+  | { readonly kind: "directory-command-result"; readonly requestId: string; readonly ok: boolean; readonly events?: readonly DirectoryEvent[]; readonly error?: string }
+  | { readonly kind: "directory-status"; readonly pendingCommands: number };
 //#endregion 🔖️SyncProtocol
 
 //#region 🔖️WorkflowPlanner
@@ -2400,10 +2428,54 @@ export function faultDisplayMessage(faultBytes: readonly number[], decodePackVal
   return `${code}: ${fault.message}`;
 }
 
+/** @emoji 📥️ Decodes a pack-encoded {@link DispatchReport} from an app-channel wire blob —
+ * `AppFrame::Invocation.messages` (a successful dispatch's report) or `AppFrame::Error.report` (the
+ * rejected dispatch's report, `Fault.code == "mutation.rejected"`). `null` for an empty blob (the
+ * trailing field's zero value before every dispatch path was updated to populate it). */
+export function decodeDispatchReportFromWire(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): DispatchReport | null {
+  if (reportBytes.length === 0) return null;
+  try {
+    return decodePackValue(new Uint8Array(reportBytes)) as DispatchReport;
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 📨️ Decodes an `AppFrame::Error.report` blob into its typed `MutationMessage`s — so a
+ * caller reacting to a rejected dispatch (contract-freeze §C8/§C9) gets structured messages instead
+ * of parsing {@link faultDisplayMessage}'s prose string. Empty array for an empty/undecodable blob. */
+export function faultMessages(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): readonly MutationMessage[] {
+  return decodeDispatchReportFromWire(reportBytes, decodePackValue)?.messages ?? [];
+}
+
+/** @emoji 📥️ Decodes a pack-encoded {@link MergeReport} from an `AppFrame::MergeReport.report`
+ * blob — pushed unsolicited after every `ingest_remote`/`merge_remote_snapshot`/`resolve_conflict`,
+ * alongside `DocumentChanged`. */
+export function decodeMergeReportFromWire(reportBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): MergeReport | null {
+  if (reportBytes.length === 0) return null;
+  try {
+    return decodePackValue(new Uint8Array(reportBytes)) as MergeReport;
+  } catch {
+    return null;
+  }
+}
+
+/** @emoji 📥️ Decodes a pack-encoded {@link Conflict}[] projection from an `AppFrame::
+ * Conflicts.conflicts` blob — pushed unsolicited after every ingest (alongside `DocumentChanged`)
+ * and in reply to `AppCommand::ReadConflicts`. */
+export function decodeConflictsFromWire(conflictsBytes: readonly number[], decodePackValue: (bytes: Uint8Array) => unknown): readonly Conflict[] {
+  if (conflictsBytes.length === 0) return [];
+  try {
+    return decodePackValue(new Uint8Array(conflictsBytes)) as readonly Conflict[];
+  } catch {
+    return [];
+  }
+}
+
 /** 📡️ TS twin of `protocol_channel::CHANNEL_VERSION`. Both constants are pinned against
  * `🧫️fixtures/📡️channel/channel-version.json`, which owns the number — this one sat at 8 while Rust
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session. */
-const APP_CHANNEL_VERSION = 10;
+const APP_CHANNEL_VERSION = 11;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -2592,6 +2664,28 @@ export class AppChannelClient {
     this.captureDocumentFrames(frames);
     return frames;
   }
+
+  //#region 🔖️Merge
+  /** ⚖️ Sets this instance's local merge-policy authority (`os.set-merge-policy`, C6/C9) — a `Done`
+   * reply, never a `MergeReport`/`Conflicts` (those only follow an ingest). */
+  async setMergePolicy(policy: MergePolicy): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ setMergePolicy: { seq: this.nextSeq(), policy: mergePolicyAsU8(policy) } });
+  }
+
+  /** ⚔️ Accepts or discards an `Open` {@link Conflict} (`os.resolve-conflict`) — replays it under
+   * `LaissezFaire` on `accept` (Quarantined) or acks it in place (Degraded); `discard` on a
+   * Quarantined conflict seeds the DAG as already-seen without ever relaying it, on a Degraded
+   * conflict it is rejected (never rewrites shared history, C6 §`resolve_conflict`). Returns the
+   * authoritative `MergeReport` + `Conflicts` frames. */
+  async resolveConflict(conflictId: string, resolution: ConflictResolution): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ resolveConflict: { seq: this.nextSeq(), conflict_id: conflictId, resolution: conflictResolutionAsU8(resolution) } });
+  }
+
+  /** 📖️ Reads the open-conflict projection (`os.read-conflicts`) — one `Conflicts` reply frame. */
+  async readConflicts(): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ readConflicts: { seq: this.nextSeq() } });
+  }
+  //#endregion 🔖️Merge
 
   //#region 🔖️Transaction
   /** 🎫️ `TransactionPrepare`, owner-mutation wire form (contract freeze §2/§5.3): `mutationId` +
@@ -3239,7 +3333,7 @@ if (import.meta.vitest) {
       });
       const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
       const frame = await client.hello({ mode: "edit" });
-      expect(seen).toEqual([{ Hello: { channel_version: 10, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(seen).toEqual([{ Hello: { channel_version: 11, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
       expect(frame).toEqual({ Welcome: { channel_version: 10, instance: 7, manifest: [9, 9] } });
     });
 
@@ -3254,7 +3348,7 @@ if (import.meta.vitest) {
         const cmd = commands[0];
         if (cmd && cmd !== "Bye" && "Command" in cmd) seqsSeen.push(cmd.Command.seq);
         return [
-          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [], ui_scope: [], history_patch: [] } },
+          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } },
           { Effects: { in_reply_to: seqsSeen.at(-1) ?? 0, effects: [] } },
         ];
       });
@@ -3332,6 +3426,109 @@ if (import.meta.vitest) {
       expect(seen[3]).toEqual({ transactionRollback: { seq: 4, txn_id: "txn-1" } });
       expect(seen[4]).toEqual({ transactionUndo: { seq: 5, group_id: "grp-1" } });
       expect(seen[5]).toEqual({ transactionRedo: { seq: 6, group_id: "grp-1" } });
+    });
+
+    /**
+     * 🔗️ Rust↔TS parity for the C8 merge/conflict surface, driven through {@link AppChannelClient}'s
+     * OWN public methods rather than the raw `encodeAppCommand`/`decodeAppFrame` codec functions the
+     * `AppChannelCodec` suite already asserts against the same two files — this is the "does the
+     * CLIENT layer itself send/surface the new commands and frames correctly" half of the parity
+     * story (contract-freeze §C8/§C9, ticket
+     * `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`). Four throwaway
+     * `configure({})` calls burn seq 1-4 so `setMergePolicy`/`resolveConflict`/`readConflicts` land on
+     * the exact seq (5/6/7) the golden vectors were baked against.
+     */
+    it("setMergePolicy()/resolveConflict()/readConflicts() match the shared cross-language merge command vectors, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const commandVectors = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📡️channel", "app-command-merge.json"), "utf8")) as Record<string, string>;
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        return [{ Done: { in_reply_to: 1 } }];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      await client.configure({});
+      await client.configure({});
+      await client.configure({});
+      await client.configure({});
+      await client.setMergePolicy("Normal");
+      await client.resolveConflict("conflict-1", "accept");
+      await client.readConflicts();
+
+      expect(seen[4]).toEqual({ setMergePolicy: { seq: 5, policy: 1 } });
+      expect(seen[5]).toEqual({ resolveConflict: { seq: 6, conflict_id: "conflict-1", resolution: 0 } });
+      expect(seen[6]).toEqual({ readConflicts: { seq: 7 } });
+      expect(hex(encodeAppCommand(seen[4]!)), "AppCommand::SetMergePolicy").toBe(commandVectors.SetMergePolicy);
+      expect(hex(encodeAppCommand(seen[5]!)), "AppCommand::ResolveConflict").toBe(commandVectors.ResolveConflict);
+      expect(hex(encodeAppCommand(seen[6]!)), "AppCommand::ReadConflicts").toBe(commandVectors.ReadConflicts);
+    });
+
+    it("command()/drain() surface unsolicited MergeReport/Conflicts frames and the extended Invocation.messages/Error.report fields verbatim", async () => {
+      const handle = fakeHandle(() => [
+        { Invocation: { in_reply_to: 1, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
+        { MergeReport: { in_reply_to: null, report: [1] } },
+        { Conflicts: { in_reply_to: null, conflicts: [2] } },
+      ]);
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      const frames = await client.drain();
+      expect(frames).toHaveLength(3);
+      const invocation = frames.find((frame): frame is Extract<AppFrameValue, { readonly Invocation: unknown }> => "Invocation" in frame);
+      const mergeReport = frames.find((frame): frame is Extract<AppFrameValue, { readonly MergeReport: unknown }> => "MergeReport" in frame);
+      const conflicts = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
+      expect(invocation?.Invocation.messages).toEqual([9]);
+      expect(mergeReport?.MergeReport.report).toEqual([1]);
+      expect(conflicts?.Conflicts.conflicts).toEqual([2]);
+    });
+
+    /**
+     * 🔗️ Round-trips the frozen TS shapes ({@link DispatchReport}/{@link MergeReport}/{@link
+     * Conflict}) through {@link encodePackValue}/the new `decode*FromWire` helpers — proving the
+     * field-name mapping this lane derived from Rust's `#[serde(rename_all = "camelCase")]`
+     * (`policy`/`worst`/`messages`, `insertionIndex`, `editId`→`edit_id` NOT renamed inside
+     * `ConflictKind`'s struct variants, `MergePolicy`'s bare un-camelCased variant names) actually
+     * decodes the way the wire's `store::pack_rt::encode_wire_value`-backed `encode_wire_serialized`
+     * would produce it, since no live Rust `DispatchReport`/`MergeReport`/`Conflict` pack bytes are
+     * checked into a fixture yet (only the outer `AppFrame` framing is, in `app-frame-merge.json`).
+     */
+    it("faultMessages()/decodeDispatchReportFromWire()/decodeMergeReportFromWire()/decodeConflictsFromWire() decode the frozen TS report shapes", () => {
+      const dispatchReport: DispatchReport = {
+        policy: "Vigilant",
+        worst: "warning",
+        messages: [{ level: "warning", code: "mutation.clamped", message: "value clamped to range" }],
+      };
+      const reportBytes = Array.from(encodePackValue(dispatchReport));
+      expect(decodeDispatchReportFromWire(reportBytes, decodePackValue)).toEqual(dispatchReport);
+      expect(faultMessages(reportBytes, decodePackValue)).toEqual(dispatchReport.messages);
+      expect(faultMessages([], decodePackValue)).toEqual([]);
+
+      const mergeReport: MergeReport = {
+        policy: "Normal",
+        accepted: true,
+        insertionIndex: 3,
+        replayed: [{ edit_id: "e1", messages: [{ level: "info", code: "mutation.cascade", message: "cascaded" }] }],
+        worst: "info",
+        conflict: null,
+      };
+      expect(decodeMergeReportFromWire(Array.from(encodePackValue(mergeReport)), decodePackValue)).toEqual(mergeReport);
+      expect(decodeMergeReportFromWire([], decodePackValue)).toBeNull();
+
+      const conflicts: readonly Conflict[] = [
+        {
+          id: "conflict-abc",
+          kind: { kind: "degraded", edit_ids: ["e1"] },
+          status: "open",
+          messages: [{ level: "error", code: "mutation.target-missing", message: "target missing" }],
+          actors: ["actor-1"],
+          timestamp: { actor: 1, physical_ms: 100, logical: 0 },
+        },
+      ];
+      expect(decodeConflictsFromWire(Array.from(encodePackValue(conflicts)), decodePackValue)).toEqual(conflicts);
+      expect(decodeConflictsFromWire([], decodePackValue)).toEqual([]);
     });
   });
 
@@ -3563,3 +3760,373 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
     .join(",");
 }
 //#endregion StdioFormatKinds
+
+//#region 🔖️Directory
+// 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1 — explicit re-export
+// (CLAUDE.md: no `export *`) of the directory event log schema + pure read model so
+// `@semio-tech/framework-os` consumers get it from the package root. Logic lives in
+// `🔨️modules/📇️directory/🟦️component.ts`; this region only imports/re-exports and, per this
+// package's `🧪️vitest.config.ts` (`include`/`includeSource` list only THIS file and
+// `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
+import { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️component.ts";
+import type { DirectoryEvent, DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️component.ts";
+
+export type {
+  ConnectionView,
+  DirectoryActor,
+  DirectoryActorKind,
+  DirectoryCommand,
+  DirectoryConnectionPhase,
+  DirectoryEvent,
+  DirectoryEventBody,
+  DirectoryReadModel,
+  DirectorySpace,
+  DirectorySpaceKind,
+  DirectorySpaceRole,
+  DirectorySpaceVisibility,
+  DirectoryStreamMessage,
+  DocumentView,
+  Hlc,
+  InviteView,
+  MemberView,
+  SpaceView,
+  UserView,
+} from "./🔨️modules/📇️directory/🟦️component.ts";
+export { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind };
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("@semio-tech/framework-os directory", () => {
+    const loadFixtureEvents = async (): Promise<DirectoryEvent[]> => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const raw = readFileSync(join(here, "🧫️fixtures", "📇️directory", "🧾️events.json"), "utf8");
+      return (JSON.parse(raw) as { events: DirectoryEvent[] }).events;
+    };
+
+    it("folds the golden fixture into the expected projection (parity with the Rust twin)", async () => {
+      const events = await loadFixtureEvents();
+      const model: DirectoryReadModel = foldAll(emptyDirectoryReadModel(), events);
+
+      expect(model.cursor).toBe(16);
+      expect(model.spaces.size).toBe(1);
+      expect(model.spaces.has("sp-atelier-amara")).toBe(false);
+
+      const studio = model.spaces.get("sp-studio-fabrication");
+      expect(studio?.view.name).toBe("Fabrication Studio");
+      expect(studio?.view.visibility).toBe("public");
+      expect(studio?.view.kind).toBe("archive");
+      expect(studio?.view.memberCount).toBe(2);
+
+      const roles = (studio?.members ?? []).map((member) => [member.userId, member.role]).sort();
+      expect(roles).toEqual([
+        ["u-amara", "spectator"],
+        ["u-devon", "spectator"],
+      ]);
+
+      const devon = studio?.members.find((member) => member.userId === "u-devon");
+      expect(devon?.email).toBe("devon@semio.dev");
+    });
+
+    it("is idempotent on replay", async () => {
+      const events = await loadFixtureEvents();
+      const once = foldAll(emptyDirectoryReadModel(), events);
+      const twice = foldAll(once, events);
+      expect(twice).toEqual(once);
+    });
+  });
+}
+
+//#region 🔖️HubBinding
+// 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C2/C6 — the shell's ONLY
+// point of contact with the directory hub's HTTP/WS control plane. Plugin surfaces never talk to
+// the network (contract §C6); `🟦️backbone-worker.ts`'s `🔖️Directory` region is the only caller, so
+// the shell never opens a directory socket on the UI thread. `fetch`/`WebSocket` only — no external
+// HTTP library (CLAUDE.md "no external libraries for runtime purposes").
+import type { DocumentView, InviteView, MemberView, SpaceView } from "./🔨️modules/📇️directory/🟦️component.ts";
+
+/** 🔁️ Reconnect backoff shared by every hub transport this package opens — `connectHub` in
+ * `🟦️backbone-worker.ts` (artifact sync) and {@link DirectoryClient.stream} both import these
+ * (single source of truth; the two used to carry independent copies of the same two numbers). */
+export const HUB_RECONNECT_MIN_MS = 500;
+export const HUB_RECONNECT_MAX_MS = 30_000;
+
+/** 🔌️ A live {@link DirectoryClient.stream} subscription handle. */
+export type DirectoryStream = { readonly close: () => void };
+
+export type DirectoryMintedSession = { readonly token: string; readonly userId: string };
+export type DirectorySessionSummary = { readonly userId: string; readonly email: string; readonly displayName: string; readonly expiresAt: number };
+/** 🏠️ `GET /directory/spaces/{id}` — `invites` is always an array (empty for a non-author, per
+ * contract §C2 "invites(authors only)"), never omitted; mirrors the Rust twin's `SpaceDetail`
+ * (`🔨️modules/📇️directory/🔌️client/🦀️component.rs`, `#[serde(default)]`, not `skip_serializing`). */
+export type DirectorySpaceDetail = SpaceView & { readonly members: readonly MemberView[]; readonly documents: readonly DocumentView[]; readonly invites: readonly InviteView[] };
+export type DirectoryCommandResult = { readonly events: readonly DirectoryEvent[]; readonly result?: unknown };
+
+/** 🚨️ Thrown by every {@link DirectoryClient} REST method on a non-2xx response — `status` lets a
+ * caller (this package's `🟦️backbone-worker.ts` directory lane) distinguish "the hub answered and
+ * rejected this" (surface immediately) from a thrown network error with no `status` at all ("the
+ * hub is unreachable" — queue and retry). */
+export class DirectoryHttpError extends Error {
+  readonly status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/**
+ * 📡️ Typed facade over the directory hub's REST/WS surface (contract-freeze §C2). Constructed per
+ * identity (`baseUrl` + optional bearer `token`, mutated in place by {@link mintSession}), reused for
+ * every call. No client-side caching or optimistic mutation of the read model — the hub log is the
+ * single writer (contract §C6).
+ */
+export class DirectoryClient {
+  private readonly baseUrl: string;
+  private token: string | undefined;
+
+  constructor(baseUrl: string, token?: string) {
+    this.baseUrl = baseUrl.replace(/\/+$/, "");
+    this.token = token;
+  }
+
+  private headers(json: boolean): Record<string, string> {
+    const headers: Record<string, string> = {};
+    if (json) headers["content-type"] = "application/json";
+    if (this.token) headers.authorization = `Bearer ${this.token}`;
+    return headers;
+  }
+
+  private async getJson<T>(path: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, { headers: this.headers(false) });
+    if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET ${path} failed (${response.status})`);
+    return (await response.json()) as T;
+  }
+
+  private async postJson<T>(path: string, body: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, { method: "POST", headers: this.headers(true), body: JSON.stringify(body) });
+    if (!response.ok) throw new DirectoryHttpError(response.status, `directory: POST ${path} failed (${response.status})`);
+    return (await response.json()) as T;
+  }
+
+  /** 🪪️ `POST /auth/sessions` — dev email mint (contract §C2 "unchanged"). Wire response is
+   * `{ token, user_id }` (the hub's `CreateAuthSessionResponse`, never renamed camelCase); this
+   * client normalizes it and remembers the token for subsequent calls. */
+  async mintSession(email: string): Promise<DirectoryMintedSession> {
+    const body = await this.postJson<{ token: string; user_id: string }>("/auth/sessions", { email });
+    this.token = body.token;
+    return { token: body.token, userId: body.user_id };
+  }
+
+  /** 🪪️ `GET /auth/sessions/me` — `null` on 401 (no/expired session, the normal "not signed in"
+   * outcome the boot flow branches on), throws {@link DirectoryHttpError} on any other failure. */
+  async me(): Promise<DirectorySessionSummary | null> {
+    try {
+      return await this.getJson<DirectorySessionSummary>("/auth/sessions/me");
+    } catch (error) {
+      if (error instanceof DirectoryHttpError && error.status === 401) return null;
+      throw error;
+    }
+  }
+
+  async spaces(): Promise<readonly SpaceView[]> {
+    return this.getJson<SpaceView[]>("/directory/spaces");
+  }
+
+  async space(id: string): Promise<DirectorySpaceDetail> {
+    return this.getJson<DirectorySpaceDetail>(`/directory/spaces/${encodeURIComponent(id)}`);
+  }
+
+  async command(command: DirectoryCommand): Promise<DirectoryCommandResult> {
+    return this.postJson<DirectoryCommandResult>("/directory/commands", command);
+  }
+
+  async events(since: number): Promise<readonly DirectoryEvent[]> {
+    return this.getJson<DirectoryEvent[]>(`/directory/events?since=${encodeURIComponent(String(since))}`);
+  }
+
+  /** 🔌️ `GET /directory/ws?token=&since=` — subscribes from `since`, replays gap-free, then goes
+   * live; text (JSON) frames, one {@link DirectoryStreamMessage} each (contract §C2, unlike the
+   * binary `protocol_wire` the artifact sync hub channel speaks). Auto-reconnects with
+   * {@link HUB_RECONNECT_MIN_MS}/{@link HUB_RECONNECT_MAX_MS} exponential backoff, resuming from the
+   * highest `seq`/`headSeq` this subscription has actually observed — never the caller's original
+   * `since` — so a reconnect never replays a gap or a duplicate. Never throws into the caller: a
+   * malformed frame is dropped, a socket error/close only schedules the next attempt. */
+  stream(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryStream {
+    let closed = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectDelayMs = HUB_RECONNECT_MIN_MS;
+    let lastSeq = since;
+
+    const wsUrl = (): string => {
+      const wsBase = this.baseUrl.replace(/^http/, "ws");
+      const query = new URLSearchParams();
+      if (this.token) query.set("token", this.token);
+      query.set("since", String(lastSeq));
+      return `${wsBase}/directory/ws?${query.toString()}`;
+    };
+
+    const scheduleReconnect = (): void => {
+      if (closed) return;
+      reconnectTimer = setTimeout(connect, reconnectDelayMs);
+      reconnectDelayMs = Math.min(reconnectDelayMs * 2, HUB_RECONNECT_MAX_MS);
+    };
+
+    const connect = (): void => {
+      if (closed) return;
+      let ws: WebSocket;
+      try {
+        ws = new WebSocket(wsUrl());
+      } catch {
+        scheduleReconnect();
+        return;
+      }
+      socket = ws;
+      ws.onopen = () => {
+        reconnectDelayMs = HUB_RECONNECT_MIN_MS;
+      };
+      ws.onmessage = (event: unknown) => {
+        try {
+          const data = (event as { data: unknown }).data;
+          const message = JSON.parse(String(data)) as DirectoryStreamMessage;
+          if (message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
+          if (message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
+          onMessage(message);
+        } catch {
+          // 🛟️ malformed frame — dropped, never thrown into the caller.
+        }
+      };
+      ws.onclose = () => {
+        if (socket === ws) socket = null;
+        scheduleReconnect();
+      };
+      ws.onerror = () => {
+        try {
+          ws.close();
+        } catch {
+          // 🛟️ already closing.
+        }
+      };
+    };
+
+    connect();
+
+    return {
+      close: () => {
+        closed = true;
+        if (reconnectTimer != null) clearTimeout(reconnectTimer);
+        socket?.close();
+      },
+    };
+  }
+}
+
+if (import.meta.vitest) {
+  const { describe, expect, it, vi } = import.meta.vitest;
+
+  class FakeDirectoryWebSocket {
+    static instances: FakeDirectoryWebSocket[] = [];
+    readonly url: string;
+    readyState = 0;
+    onopen: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    onclose: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    constructor(url: string) {
+      this.url = url;
+      FakeDirectoryWebSocket.instances.push(this);
+    }
+    send(): void {}
+    close(): void {
+      this.readyState = 3;
+    }
+    triggerOpen(): void {
+      this.readyState = 1;
+      this.onopen?.();
+    }
+    triggerMessage(message: DirectoryStreamMessage): void {
+      this.onmessage?.({ data: JSON.stringify(message) });
+    }
+    triggerClose(): void {
+      this.readyState = 3;
+      this.onclose?.();
+    }
+  }
+
+  function sampleDirectoryEvent(seq: number): DirectoryEvent {
+    return {
+      seq,
+      id: `evt-${seq}`,
+      hlc: { physicalMs: seq, logical: 0 },
+      actor: { kind: "user", id: "u-1" },
+      body: { kind: "space.renamed", spaceId: "sp-1", name: `space ${seq}` },
+      recordedAtMs: seq,
+    };
+  }
+
+  describe("DirectoryClient.stream", () => {
+    it("replays then goes live with no gap and no duplicate", () => {
+      FakeDirectoryWebSocket.instances = [];
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+      const received: DirectoryStreamMessage[] = [];
+      const client = new DirectoryClient("http://hub.test", "tok-1");
+      const handle = client.stream(0, (message) => received.push(message));
+      const socket = FakeDirectoryWebSocket.instances[0]!;
+      expect(socket.url).toBe("ws://hub.test/directory/ws?token=tok-1&since=0");
+      socket.triggerOpen();
+      socket.triggerMessage({ kind: "event", event: sampleDirectoryEvent(1) });
+      socket.triggerMessage({ kind: "event", event: sampleDirectoryEvent(2) });
+      socket.triggerMessage({ kind: "heartbeat", headSeq: 2 });
+      expect(received.map((message) => message.kind)).toEqual(["event", "event", "heartbeat"]);
+      expect(received).toHaveLength(3);
+      handle.close();
+    });
+
+    it("reconnects resuming from the last seen seq, with exponential backoff", () => {
+      vi.useFakeTimers();
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        const client = new DirectoryClient("http://hub.test", "tok-1");
+        const handle = client.stream(0, () => {});
+        const first = FakeDirectoryWebSocket.instances[0]!;
+        first.triggerOpen();
+        first.triggerMessage({ kind: "event", event: sampleDirectoryEvent(7) });
+        first.triggerClose();
+
+        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
+        const second = FakeDirectoryWebSocket.instances[1]!;
+        expect(second.url).toBe("ws://hub.test/directory/ws?token=tok-1&since=7");
+
+        second.triggerClose();
+        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS); // first backoff alone must not fire the doubled delay yet
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
+        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(3);
+
+        handle.close();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("never throws into the caller on a malformed frame", () => {
+      FakeDirectoryWebSocket.instances = [];
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+      const received: DirectoryStreamMessage[] = [];
+      const client = new DirectoryClient("http://hub.test");
+      const handle = client.stream(0, (message) => received.push(message));
+      const socket = FakeDirectoryWebSocket.instances[0]!;
+      expect(() => socket.onmessage?.({ data: "not json" })).not.toThrow();
+      socket.triggerMessage({ kind: "heartbeat", headSeq: 0 });
+      expect(received).toHaveLength(1);
+      handle.close();
+    });
+  });
+}
+//#endregion 🔖️HubBinding
+//#endregion 🔖️Directory

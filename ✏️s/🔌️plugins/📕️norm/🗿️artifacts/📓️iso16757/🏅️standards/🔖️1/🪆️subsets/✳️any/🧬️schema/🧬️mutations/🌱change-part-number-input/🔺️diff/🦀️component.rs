@@ -4,9 +4,12 @@ use super::mutation::ChangePartNumberInput;
 use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangePartNumberInput, base: &Iso16757Snapshot) -> Iso16757Diff {
+pub fn diff(payload: &ChangePartNumberInput, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
+    if base.part_number_inputs.get(&payload.key) == Some(&payload.new_value) {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Part-number input \"{}\" already has this value.", payload.key));
+    }
     let mut inputs = base.part_number_inputs.clone();
     inputs.insert(payload.key.clone(), payload.new_value.clone());
-    Iso16757Diff { part_number_inputs: Some(inputs), ..Default::default() }
+    protocol::MutationOutcome::new(Iso16757Diff { part_number_inputs: Some(inputs), ..Default::default() })
 }
 //#endregion 🔖️Diff

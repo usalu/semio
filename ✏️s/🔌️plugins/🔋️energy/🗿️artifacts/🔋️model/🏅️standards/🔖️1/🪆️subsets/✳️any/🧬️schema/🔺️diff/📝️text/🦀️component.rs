@@ -16,51 +16,54 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl EnergyModelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &EnergyModelArtifact) -> EnergyModelArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(structure) = &self.structure {
-            next.structure = structure.clone();
-        }
-        if let Some(zones) = &self.zones {
-            next.zones = zones.clone();
-        }
-        if let Some(referenced_model) = &self.referenced_model {
-            next.referenced_model = referenced_model.clone();
-        }
-        if let Some(results_json) = &self.results_json {
-            next.results_json = results_json.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &EnergyModelArtifact) -> protocol::MutationApplyResult<EnergyModelArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(structure) = &self.structure {
+                next.structure = structure.clone();
+            }
+            if let Some(zones) = &self.zones {
+                next.zones = zones.clone();
+            }
+            if let Some(referenced_model) = &self.referenced_model {
+                next.referenced_model = referenced_model.clone();
+            }
+            if let Some(results_json) = &self.results_json {
+                next.results_json = results_json.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
-    fn apply(&self, snapshot: &EnergyModelSnapshot) -> EnergyModelSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(structure) = &self.structure {
-            next.structure = structure.clone();
-        }
-        if let Some(zones) = &self.zones {
-            next.zones = zones.clone();
-        }
-        if let Some(referenced_model) = &self.referenced_model {
-            next.referenced_model = referenced_model.clone();
-        }
-        next
+    fn apply(&self, snapshot: &EnergyModelSnapshot) -> protocol::MutationApplyResult<EnergyModelSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(structure) = &self.structure {
+                next.structure = structure.clone();
+            }
+            if let Some(zones) = &self.zones {
+                next.zones = zones.clone();
+            }
+            if let Some(referenced_model) = &self.referenced_model {
+                next.referenced_model = referenced_model.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -118,16 +121,18 @@ mod tests {
     fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = EnergyModelDiff::default();
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 
     #[test]
     fn preview_results_do_not_enter_snapshot() {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let diff = diff_set_results_json("{\"ok\":true}");
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
         let artifact = EnergyModelArtifact::from_snapshot(base);
-        let next = diff.apply_to_artifact(&artifact);
+        let next = diff
+            .apply_to_artifact(&artifact)
+            .expect("valid artifact diff");
         assert_eq!(next.results_json, "{\"ok\":true}");
     }
 
@@ -136,7 +141,7 @@ mod tests {
         let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
         let model = crate::model::Model { name: "Demo".into(), ..crate::model::Model::default() };
         let diff = diff_from_model(&model);
-        let applied = diff.apply(&base);
+        let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(crate::artifacts::model::energy_model(&applied), model);
         assert_eq!(applied.structure.child_id, applied.zones.child_id, "structure/zones must share one scene id");
     }

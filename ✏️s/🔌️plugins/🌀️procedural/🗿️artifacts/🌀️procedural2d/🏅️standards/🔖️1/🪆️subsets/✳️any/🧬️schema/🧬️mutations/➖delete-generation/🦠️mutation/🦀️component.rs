@@ -21,7 +21,7 @@ pub fn delete_generation(id: String) -> Procedural2dMutation {
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for DeleteGeneration {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "generation", kind: "delete-generation", record: "DeletedGeneration" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

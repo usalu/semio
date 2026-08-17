@@ -20,7 +20,7 @@ pub struct UpdateClimate {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for UpdateClimate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "climate", kind: "update-climate", record: "UpdatedClimate" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::update_climate::diff::diff(self, base)
     }
 

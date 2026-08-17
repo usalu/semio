@@ -17,7 +17,7 @@ pub struct AddNodePort {
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddNodePort {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-port", kind: "add-node-port", record: "AddedNodePort" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {

@@ -24,7 +24,7 @@ pub fn delete_widget(id: String) -> Procedural2dMutation {
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for DeleteWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "widget", kind: "delete-widget", record: "DeletedWidget" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

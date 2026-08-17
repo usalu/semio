@@ -13,7 +13,7 @@ pub struct DeleteFace {
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for DeleteFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "face", kind: "delete-face", record: "DeletedFace" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {

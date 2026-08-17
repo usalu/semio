@@ -61,14 +61,15 @@ mod tests {
     fn change_title_op_sets_title() {
         let spec = empty_playbook_snapshot();
         let mutation = change_title_operation(Some("Renamed".into()));
-        let next = apply_playbook_mutation(&spec, &mutation);
+        let next = apply_playbook_mutation(&spec, &mutation).expect("valid mutation diff");
         assert_eq!(next.title.as_deref(), Some("Renamed"));
     }
 
     #[test]
     fn apply_playbook_add_step_roundtrip() {
         let spec = empty_playbook_snapshot();
-        let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()));
+        let next = apply_playbook_mutation(&spec, &add_step_operation(&spec, "step-test".into()))
+            .expect("valid mutation diff");
         assert_eq!(next.steps().len(), 2);
     }
 

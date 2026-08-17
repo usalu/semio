@@ -58,7 +58,7 @@ mod tests {
     fn base_with_source_widget() -> FlowSnapshot {
         let base = FlowSnapshot::default();
         let create = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-1".into(), text: "hello".into() } });
-        create.diff(&base).apply(&base)
+        create.diff(&base).diff().apply(&base).expect("valid mutation diff")
     }
 
     fn sample_payload() -> DuplicateWidget {
@@ -70,12 +70,12 @@ mod tests {
         let base = base_with_source_widget();
         let payload = sample_payload();
 
-        let via_composite = fold_plan_diff(&payload, &base).apply(&base);
+        let via_composite = fold_plan_diff(&payload, &base).diff().apply(&base).expect("valid mutation diff");
 
         let create = FlowMutation::CreateWidget(CreateWidget { index: 1, widget: Widget::InputNote { id: "note-2".into(), text: "hello".into() } });
-        let after_create = create.diff(&base).apply(&base);
+        let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
         let connect = FlowMutation::ConnectWidgets(ConnectWidgets { index: 0, id: "note-1-to-note-2".into(), from: "note-1".into(), from_port: "out".into(), to: "note-2".into(), to_port: "in".into() });
-        let by_hand = connect.diff(&after_create).apply(&after_create);
+        let by_hand = connect.diff(&after_create).diff().apply(&after_create).expect("valid mutation diff");
 
         assert_eq!(via_composite, by_hand);
     }
@@ -85,11 +85,11 @@ mod tests {
         let base = base_with_source_widget();
         let payload = sample_payload();
 
-        let forward = fold_plan_diff(&payload, &base).apply(&base);
+        let forward = fold_plan_diff(&payload, &base).diff().apply(&base).expect("valid mutation diff");
         assert_ne!(forward, base, "the composite must actually change the snapshot");
 
         let inverses = fold_plan_inverse(&payload, &base);
-        let restored = inverses.iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).apply(&snapshot));
+        let restored = inverses.iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).diff().apply(&snapshot).expect("valid mutation diff"));
         assert_eq!(restored, base);
     }
 

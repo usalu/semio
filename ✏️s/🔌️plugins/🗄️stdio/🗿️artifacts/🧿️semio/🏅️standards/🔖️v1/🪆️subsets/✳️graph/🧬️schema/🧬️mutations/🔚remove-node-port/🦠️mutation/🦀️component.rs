@@ -15,7 +15,7 @@ pub struct RemoveNodePort {
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNodePort {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-port", kind: "remove-node-port", record: "RemovedNodePort" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {

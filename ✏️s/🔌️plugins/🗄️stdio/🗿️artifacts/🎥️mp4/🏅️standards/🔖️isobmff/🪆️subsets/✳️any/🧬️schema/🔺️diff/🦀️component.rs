@@ -9,7 +9,7 @@
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
@@ -65,6 +65,42 @@ pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_it
         result.insert(idx, a.item);
     }
     result
+}
+
+fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
+        }
+        validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+    }
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
 }
 
 /// 🧭️ State delta (schema-design.md's `between` matching for index keys): pairwise by position,
@@ -419,13 +455,16 @@ pub struct Mp4Diff {
 }
 
 impl MutationDiff<Mp4Snapshot> for Mp4Diff {
-    fn apply(&self, base: &Mp4Snapshot) -> Mp4Snapshot {
-        Mp4Snapshot {
+    fn apply(&self, base: &Mp4Snapshot) -> MutationApplyResult<Mp4Snapshot> {
+        if let Some(diff) = &self.tracks {
+            validate_indexed(&base.tracks, diff, validate_track_diff)?;
+        }
+        Ok(Mp4Snapshot {
             schema: base.schema.clone(),
             ftyp: self.ftyp.clone().unwrap_or_else(|| base.ftyp.clone()),
             movie: self.movie.clone().unwrap_or_else(|| base.movie.clone()),
             tracks: self.tracks.as_ref().map_or_else(|| base.tracks.clone(), |td| apply_indexed(&base.tracks, td, apply_track_diff)),
-        }
+        })
     }
 
     fn absorb(&mut self, other: Self) {
@@ -443,6 +482,13 @@ impl MutationDiff<Mp4Snapshot> for Mp4Diff {
     }
 }
 
+fn validate_track_diff(base: &Mp4Track, diff: &Mp4TrackDiff) -> MutationApplyResult<()> {
+    if let Some(samples) = &diff.samples {
+        validate_indexed(&base.samples, samples, |_, _| Ok(()))?;
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
     fn between(base: &Mp4Snapshot, other: &Mp4Snapshot) -> Self {
         let tracks_diff = between_indexed(&base.tracks, &other.tracks, between_track, track_diff_is_empty);
@@ -453,7 +499,16 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
         // `d.inverse(base).apply(&d.apply(base)) == base` because `between` itself satisfies
         // `between(a,b).apply(a) == b` (tested directly below) — applying `between(after, base)`
         // to `after` yields `base` by that same law with `a = after, b = base`.
-        let after = self.apply(base);
+        let mut after = base.clone();
+        if let Some(v) = &self.ftyp {
+            after.ftyp = v.clone();
+        }
+        if let Some(v) = &self.movie {
+            after.movie = v.clone();
+        }
+        if let Some(v) = &self.tracks {
+            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff);
+        }
         Self::between(&after, base)
     }
 
@@ -500,8 +555,8 @@ mod tests {
         let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
         assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
         assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
-        assert_eq!(d.apply(&a), b);
-        assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&b, &a).apply(&b), a);
+        assert_eq!(d.apply(&a).unwrap(), b);
+        assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&b, &a).apply(&b).unwrap(), a);
         assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
     }
 
@@ -512,10 +567,10 @@ mod tests {
         b.tracks[0].samples[0].duration = 999;
         b.tracks[0].samples[0].sync = !b.tracks[0].samples[0].sync;
         let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
-        let after = d.apply(&a);
+        let after = d.apply(&a).unwrap();
         assert_eq!(after, b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&after), a);
+        assert_eq!(inv.apply(&after).unwrap(), a);
     }
     //#endregion
 
@@ -613,9 +668,9 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&a), after);
-        assert_eq!(right.apply(&a), after);
-        assert_eq!(left.apply(&a), right.apply(&a), "absorb must be associative");
+        assert_eq!(left.apply(&a).unwrap(), after);
+        assert_eq!(right.apply(&a).unwrap(), after);
+        assert_eq!(left.apply(&a).unwrap(), right.apply(&a).unwrap(), "absorb must be associative");
     }
 
     #[test]
@@ -626,18 +681,18 @@ mod tests {
 
         let empty = Mp4Diff::default();
         assert!(empty.is_empty());
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base)), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).unwrap()), bytes);
 
         let mut changed = base.clone();
         changed.tracks[0].width += 1;
         let diff = Mp4Diff::between(&base, &changed);
-        let after = diff.apply(&base);
+        let after = diff.apply(&base).unwrap();
         let inverse = diff.inverse(&base);
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after)), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after).unwrap()), bytes);
 
         let mut absorbed = diff;
         absorbed.absorb(inverse);
-        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base)), bytes);
+        assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base).unwrap()), bytes);
     }
     //#endregion
 }

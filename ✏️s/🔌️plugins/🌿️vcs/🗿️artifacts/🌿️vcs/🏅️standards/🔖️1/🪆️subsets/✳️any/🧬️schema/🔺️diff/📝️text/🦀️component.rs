@@ -13,17 +13,50 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 pub use crate::artifacts::vcs::schema::diff::*;
 
 //#region 🔖️Apply
-pub fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> Vec<String> {
+pub fn apply_tags_delta(
+    tags: &[String],
+    delta: &VcsTagsDelta,
+) -> protocol::MutationApplyResult<Vec<String>> {
+    for (index, tag) in delta.removed.iter().enumerate() {
+        if !tags.contains(tag) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed tag does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if delta.removed[..index].contains(tag) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "tag is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, tag) in delta.added.iter().enumerate() {
+        if tags.contains(tag) || delta.added[..index].contains(tag) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added tag already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+        if delta.removed.contains(tag) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "tag cannot be removed and added",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
     let mut next = tags.to_vec();
     for tag in &delta.removed {
         next.retain(|e| e != tag);
     }
     for tag in &delta.added {
-        if !next.contains(tag) {
-            next.push(tag.clone());
-        }
+        next.push(tag.clone());
     }
-    next
+    Ok(next)
 }
 
 fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTagsDelta>) {
@@ -40,66 +73,71 @@ fn absorb_tags_delta(target: &mut Option<VcsTagsDelta>, incoming: Option<VcsTags
 
 impl VcsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> VcsArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(counter) = self.counter {
-            next.counter = counter;
-        }
-        if let Some(notes) = &self.notes {
-            next.notes = notes.clone();
-        }
-        if let Some(status) = &self.status {
-            next.status = status.clone();
-        }
-        if let Some(delta) = &self.tags {
-            next.tags = apply_tags_delta(&next.tags, delta);
-        }
-        if let Some(list) = &self.selected_checkpoint_ids {
-            next.selected_checkpoint_ids = list.values.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &VcsArtifact) -> protocol::MutationApplyResult<VcsArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(counter) = self.counter {
+                next.counter = counter;
+            }
+            if let Some(notes) = &self.notes {
+                next.notes = notes.clone();
+            }
+            if let Some(status) = &self.status {
+                next.status = status.clone();
+            }
+            if let Some(delta) = &self.tags {
+                next.tags = apply_tags_delta(&next.tags, delta)
+                    .map_err(|error| error.under(["tags"]))?;
+            }
+            if let Some(list) = &self.selected_checkpoint_ids {
+                next.selected_checkpoint_ids = list.values.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<VcsSnapshot> for VcsDiff {
-    fn apply(&self, snapshot: &VcsSnapshot) -> VcsSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(counter) = self.counter {
-            next.counter = counter;
-        }
-        if let Some(notes) = &self.notes {
-            next.notes = notes.clone();
-        }
-        if let Some(status) = &self.status {
-            next.status = status.clone();
-        }
-        if let Some(delta) = &self.tags {
-            next.tags = apply_tags_delta(&next.tags, delta);
-        }
-        next
+    fn apply(&self, snapshot: &VcsSnapshot) -> protocol::MutationApplyResult<VcsSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(counter) = self.counter {
+                next.counter = counter;
+            }
+            if let Some(notes) = &self.notes {
+                next.notes = notes.clone();
+            }
+            if let Some(status) = &self.status {
+                next.status = status.clone();
+            }
+            if let Some(delta) = &self.tags {
+                next.tags = apply_tags_delta(&next.tags, delta)
+                    .map_err(|error| error.under(["tags"]))?;
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -133,7 +171,7 @@ mod tests {
     fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 }
 //#endregion 🧪️Tests

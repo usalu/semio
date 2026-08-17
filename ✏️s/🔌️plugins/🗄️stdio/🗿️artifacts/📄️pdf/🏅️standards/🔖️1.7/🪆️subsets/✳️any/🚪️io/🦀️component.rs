@@ -16,8 +16,6 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
-use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter, STDIO_PDF17_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
@@ -897,7 +895,7 @@ fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEn
 fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
     let mut entries: HashMap<u32, XrefEntry> = HashMap::new();
     let mut trailer: Vec<PdfDictEntry> = Vec::new();
-    let mut visited = std::collections::HashSet::new();
+    let mut visited = HashSet::new();
     let mut cursor = Some(start_offset);
     let mut any_structured = false;
     while let Some(off) = cursor {
@@ -1678,7 +1676,7 @@ fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
 /// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
 /// `/Rotate` down to `/Page` leaves (requirement #5), extracting each leaf's text (requirement
 /// #6). Cycle-guarded — malformed files sometimes have self-referential kids.
-fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut std::collections::HashSet<u32>, out: &mut Vec<PdfPage>) {
+fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<PdfPage>) {
     if !visited.insert(node_ref.num) {
         return;
     }
@@ -1781,7 +1779,7 @@ pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
                 return Err(PdfEngineError::Unsupported("/Encrypt present on /Root".into()));
             }
             if let Some(pages_ref) = root.dict_get("Pages").and_then(|v| v.as_ref()) {
-                let mut visited = std::collections::HashSet::new();
+                let mut visited = HashSet::new();
                 walk_page_tree(pages_ref, &mut resolve, &Inherited::default(), &mut visited, &mut pages);
             }
         }
@@ -2599,7 +2597,8 @@ mod tests {
 
     #[test]
     fn bachelor_thesis_logical_lifecycle_preserves_original_native_bytes() {
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::apply_pdf_mutation;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::PdfDiff;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::{apply_pdf_mutation, PdfMutation};
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::PdfAnalyzer;
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
@@ -2633,12 +2632,12 @@ mod tests {
         assert_ne!(forward_binary, forward_text.as_bytes(), "diff binary must not be a text envelope");
         let forward = PdfDiff::decode_diff(&forward_binary).expect("diff binary roundtrip");
         let reverse = forward.inverse(&base);
-        let diff_restored = MutationDiff::apply(&reverse, &MutationDiff::apply(&forward, &base));
+        let diff_restored = MutationDiff::apply(&reverse, &MutationDiff::apply(&forward, &base).unwrap()).unwrap();
         assert_eq!(diff_restored, base);
         assert_original("diff inverse native export", encode_pdf(&diff_restored).expect("diff inverse native export"));
         let mut absorbed = forward;
         MutationDiff::absorb(&mut absorbed, reverse);
-        let absorbed = MutationDiff::apply(&absorbed, &base);
+        let absorbed = MutationDiff::apply(&absorbed, &base).unwrap();
         assert_eq!(absorbed, base);
         assert_original("diff absorb native export", encode_pdf(&absorbed).expect("diff absorb native export"));
 
@@ -2706,6 +2705,9 @@ mod tests {
     mod conformance_laws {
         use super::*;
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
+
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
 

@@ -72,7 +72,14 @@ mod tests {
         let config = NormConfig::default();
         let text = crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()));
         let emit = handle(&ReplaceSnapshot { text }, &ArtifactView::new(&projection, &HistoryView::empty()), &ConfigView { snapshot: &config }).expect("handle");
-        let restored = emit.artifact_mutations.iter().fold(Din18599Snapshot::default(), |snapshot, mutation| vcs::apply_mutation(&snapshot, mutation));
+        let restored = emit.artifact_mutations.iter().fold(
+            Din18599Snapshot::default(),
+            |snapshot, mutation| {
+                vcs::apply_mutation(&snapshot, mutation)
+                    .expect("set-snapshot mutation applies")
+                    .0
+            },
+        );
         assert_eq!(restored.h_v, Din18599Snapshot::default().h_v, "h_v must survive the set-snapshot payload with full precision");
     }
 }

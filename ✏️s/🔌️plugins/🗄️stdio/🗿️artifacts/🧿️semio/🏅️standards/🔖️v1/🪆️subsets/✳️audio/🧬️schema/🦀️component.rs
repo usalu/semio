@@ -137,13 +137,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_audio_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
@@ -174,8 +174,8 @@ pub mod derived_construction {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
             let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
             let snapshot_after_mutate = builder.clone().build().expect("build");
-            let rebuilt = SemioAudioBuilderConstruction::empty().absorb(SemioAudioDiff::default()).mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }).0.mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 }).0;
-            let rebuilt = rebuilt.absorb(diff);
+            let rebuilt = SemioAudioBuilderConstruction::empty().absorb(SemioAudioDiff::default()).expect("absorb must succeed for a well-formed fixture").mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }).0.mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 }).0;
+            let rebuilt = rebuilt.absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);
         }
 
@@ -293,8 +293,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SemioAudioBuilderFacets {
-        construction: derived_construction::SemioAudioBuilderConstruction,
-        analysis: derived_analysis::SemioAudioAnalyzerAnalysis,
+        construction: SemioAudioBuilderConstruction,
+        analysis: SemioAudioAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SemioAudioComposerComposition,
     }
     builder: SemioAudioBuilder,

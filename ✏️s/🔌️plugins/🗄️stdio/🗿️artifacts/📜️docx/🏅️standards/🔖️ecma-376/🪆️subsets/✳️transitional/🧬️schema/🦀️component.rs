@@ -72,15 +72,15 @@ pub mod derived_construction {
             Ok(Self { inner: DocxAnyBuilder::from_binary(bytes)? })
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.inner.mutate(mutation);
             self.inner = inner;
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.inner = self.inner.absorb(diff);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.inner = self.inner.absorb(diff)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: re-runs `check_transitional_conformance` unconditionally,
@@ -313,8 +313,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec DocxTransitionalBuilderFacets {
-        construction: derived_construction::DocxTransitionalBuilderConstruction,
-        analysis: derived_analysis::DocxTransitionalAnalyzerAnalysis,
+        construction: DocxTransitionalBuilderConstruction,
+        analysis: DocxTransitionalAnalyzerAnalysis,
         composition: super::io::derived_composition::DocxTransitionalComposerComposition,
     }
     builder: DocxTransitionalBuilder,

@@ -88,7 +88,7 @@ mod tests {
     /// out of the former `⚙️engine`'s own test region (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     mod conformance_laws {
-        use super::*;
+        
         use crate::artifacts::csv::schema::snapshot::{self, CsvField, CsvRecord};
         use crate::artifacts::csv::{CsvDiff, CsvMutation};
         use protocol::{DiffCodec, OpBinary};
@@ -100,7 +100,7 @@ mod tests {
         /// Recognizer, mirrored here so this law does not depend on the framework's own harness).
         #[test]
         fn grammar_conformance_law() {
-            let grammar_text = crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
+            let grammar_text = snapshot::text::COMPONENT_GRAMMAR_SEMIO;
             let grammar = dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
             assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar);
             let recognizer = dsl::Recognizer::compile(&grammar);
@@ -122,7 +122,7 @@ mod tests {
             let snap = snapshot::demo_csv_snapshot();
             let pack_bytes = <snapshot::CsvSnapshot as store::ArtifactPack>::encode_pack(&snap);
             let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
-            let pack_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let pack_protocol = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let trace = dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
             assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
@@ -136,7 +136,7 @@ mod tests {
             // Diff binary facet.
             let mut before = snap.clone();
             let diff = crate::artifacts::csv::schema::mutations::apply_csv_mutation(&mut before, &mutation);
-            let diff_bytes = <CsvDiff as DiffCodec>::encode_diff(&diff).expect("encode_diff");
+            let diff_bytes = <CsvDiff as DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
             let diff_protocol = dsl::parse_protocol(crate::artifacts::csv::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
             assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame");
@@ -160,13 +160,13 @@ mod tests {
         /// warning, independent of the eventual repo-wide policy gate.
         #[test]
         fn committed_grammar_and_protocol_files_parse() {
-            let g1 = dsl::parse_grammar(crate::artifacts::csv::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+            let g1 = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO);
             assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
             let g2 = dsl::parse_grammar(crate::artifacts::csv::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
             assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
             let g3 = dsl::parse_grammar(crate::artifacts::csv::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
             assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
-            let p1 = dsl::parse_protocol(crate::artifacts::csv::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+            let p1 = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
             assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
             let p2 = dsl::parse_protocol(crate::artifacts::csv::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
             assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");

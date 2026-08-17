@@ -253,10 +253,11 @@ struct ModulePayloadDiff {
 }
 
 impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
-    fn apply(&self, projection: &ModuleRenderPayload) -> ModuleRenderPayload {
-        self.payload.clone().unwrap_or_else(|| projection.clone())
+    fn apply(&self, projection: &ModuleRenderPayload) -> protocol::MutationApplyResult<ModuleRenderPayload> {
+        Ok({
+            self.payload.clone().unwrap_or_else(|| projection.clone())
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.payload.is_some() {
             *self = other;

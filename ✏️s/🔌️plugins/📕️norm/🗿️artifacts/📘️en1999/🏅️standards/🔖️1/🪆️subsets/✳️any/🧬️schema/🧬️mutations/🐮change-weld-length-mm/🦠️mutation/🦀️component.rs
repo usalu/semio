@@ -15,7 +15,7 @@ pub struct ChangeWeldLengthMm {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWeldLengthMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "weld-length-mm", kind: "change-weld-length-mm", record: "ChangedWeldLengthMm" };
 
-    fn diff(&self, base: &En1999Snapshot) -> En1999Diff {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_weld_length_mm::diff::diff(self, base)
     }
 

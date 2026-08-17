@@ -114,7 +114,7 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     fn two_primitive_snapshot() -> SemioMeshSnapshot {
         SemioMeshSnapshot {

@@ -15,7 +15,7 @@ pub struct ChangeTowerIsChimney {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerIsChimney {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tower-is-chimney", kind: "change-tower-is-chimney", record: "ChangedTowerIsChimney" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_tower_is_chimney::diff::diff(self, base)
     }
 

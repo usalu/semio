@@ -155,6 +155,19 @@
           "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
         }
       }
+    },
+    "collab-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify collab",
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
+      }
     }
   }
 }

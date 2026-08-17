@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { type ComponentSceneHostProps, type EventFeedEntry } from "@semio-tech/framework";
+import { type ComponentSceneHostProps, type EventFeedEntry, type MutationMessage } from "@semio-tech/framework";
 import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, type ContextMenuItem, type IconName } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
@@ -22,6 +22,9 @@ const FEED_TONE_CLASS: Record<string, string> = {
   success: "text-emerald-400",
   warning: "text-amber-400",
   error: "text-destructive",
+  /** ⚖️ `Severity::Fatal` (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+   * CLASS-CONFLICTS` §C1) — bolder than plain `error` since a fatal outcome never partially applied. */
+  fatal: "text-destructive font-semibold",
 };
 
 function formatFeedTimestamp(timestampMs: number): string {
@@ -30,6 +33,14 @@ function formatFeedTimestamp(timestampMs: number): string {
   } catch {
     return "";
   }
+}
+
+/** ⚖️ Mints one {@link EventFeedEntry} from a `MutationMessage` (contract freeze §C2/§C9) — `tone`
+ * follows `level` 1:1 (`FEED_TONE_CLASS` covers all four, including `fatal`), `title` stays the raw
+ * `code` (a consumer localizes it via `ui.mutation.code.*`, never by parsing `message`), `detail`
+ * carries the English prose verbatim. */
+export function mintMutationMessageFeedEntry(message: MutationMessage, id: string, timestampMs: number, iconId: IconName = "triangle-alert"): EventFeedEntry {
+  return { id, timestampMs, iconId, title: message.code, detail: message.message, tone: message.level };
 }
 //#endregion Helpers
 

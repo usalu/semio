@@ -15,7 +15,7 @@ pub struct ChangeDfPercent {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDfPercent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "df-percent", kind: "change-df-percent", record: "ChangedDfPercent" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_df_percent::diff::diff(self, base)
     }
 

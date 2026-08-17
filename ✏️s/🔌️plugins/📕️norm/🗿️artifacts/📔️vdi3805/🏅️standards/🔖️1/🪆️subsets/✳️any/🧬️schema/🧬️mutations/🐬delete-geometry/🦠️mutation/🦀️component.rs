@@ -12,7 +12,7 @@ pub struct DeleteGeometry {
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for DeleteGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "geometry", kind: "delete-geometry", record: "DeletedGeometry" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

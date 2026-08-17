@@ -13,7 +13,7 @@ pub struct DeleteLink {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "link", kind: "delete-link", record: "DeletedLink" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_delete_link(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

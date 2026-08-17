@@ -5,7 +5,10 @@ use crate::artifacts::en1998::mutations::change_retrofit_limit_state::mutation::
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeRetrofitLimitState, _base: &En1998Snapshot) -> En1998Diff {
-    En1998Diff { retrofit_limit_state: Some(payload.new_retrofit_limit_state.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeRetrofitLimitState, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    if base.retrofit_limit_state == payload.new_retrofit_limit_state {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Retrofit limit state is already \"{}\".", payload.new_retrofit_limit_state));
+    }
+    protocol::MutationOutcome::new(En1998Diff { retrofit_limit_state: Some(payload.new_retrofit_limit_state.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

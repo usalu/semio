@@ -15,7 +15,7 @@ pub struct ChangeThetaC {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeThetaC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "theta-c", kind: "change-theta-c", record: "ChangedThetaC" };
 
-    fn diff(&self, base: &En1999Snapshot) -> En1999Diff {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_theta_c::diff::diff(self, base)
     }
 

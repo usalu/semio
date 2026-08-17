@@ -1346,7 +1346,7 @@ pub(crate) mod testkit {
     pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
         let mut next = scene.clone();
         for operation in operations {
-            next = operation.diff(&next).diff().apply(&next);
+            next = operation.diff(&next).diff().apply(&next).expect("valid mutation diff");
         }
         next
     }
@@ -1380,7 +1380,7 @@ mod tests {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{align_mesh_to_fixture_centroid, default_document, object_mesh_data, primary_primitive_kind, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
     use crate::artifacts::cad::standards::v1::subsets::any::io::{cad_document_from_dwg, cad_working_scene_from_dwg, scene_from_spatial_payload};
     use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{ActionKind, AppActionRegistry, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
+    use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
 
@@ -1674,7 +1674,7 @@ mod tests {
 
     #[test]
     fn app_definition_declares_one_window_scoped_dislocate_utility() {
-        let definition = create_cad_app().definition;
+        let definition = create_cad_app();
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
         assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
         // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
@@ -1697,7 +1697,7 @@ mod tests {
     /// config-derived per frame via `ArtifactApp::window_measures`, never frozen into the manifest.
     #[test]
     fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
-        let definition = create_cad_app().definition;
+        let definition = create_cad_app();
         let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
         assert_eq!(
             windows,
@@ -1734,7 +1734,7 @@ mod tests {
 
     #[test]
     fn internal_and_plumbing_actions_excluded_from_palette() {
-        let definition = create_cad_app().definition;
+        let definition = create_cad_app();
         let hidden_actions = [
             "patchCadPlayReference",
             "engagementSubmit",
@@ -1883,7 +1883,7 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
-        let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
+        let registry = AppActionRegistry::from_definition(&create_cad_app());
         let config = CadConfig::default();
 
         let items = context_menu_direct(&app, &doc, &config, &registry);
@@ -1900,7 +1900,7 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = ArtifactView::new(&scene, &history);
-        let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
+        let registry = AppActionRegistry::from_definition(&create_cad_app());
         let config = CadConfig::default();
 
         let items = context_menu_direct(&app, &doc, &config, &registry);

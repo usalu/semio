@@ -45,7 +45,7 @@ SHA-256 fingerprints captured from the current worktree:
 | `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx` | `f6936957c8044acaa7af426e671d9a9fe83491ca2c2b4146c9b6a242e77c1aa2` | `M` (unrelated in-flight `Steps` export removal at lines 8031-8036; preserve it) |
 | `.storybook/scopes.ts` | `a99679e44eab278d9f2f86c1a28f359c2be4732d075777ddb183bc088f5be49a` | clean |
 | `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json` | `0c5a9344dec693c7351eb5a9c76c5e904bb869ca4217c6d5c65d8061afcdfe84` | clean |
-| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔣️components.json` | `b6e4aaf9e6c7b9e1a0eeb45a5f5e5b5f3dce5f9b1e7bf8be2b7d5adfe4a5d2f0` | clean |
+| `🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🔣️components.json` | `52b000d8331216ae24f801e49e56afb005bb24afa6669f62cb91c39228a3333b` | clean |
 
 The `🔣️components.json` fingerprint is recorded as the manifest surface; its content has no Card registration.
 

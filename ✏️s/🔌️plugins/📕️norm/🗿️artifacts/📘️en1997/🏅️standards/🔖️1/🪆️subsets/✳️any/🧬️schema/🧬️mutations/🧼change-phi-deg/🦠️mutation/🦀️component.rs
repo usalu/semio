@@ -15,7 +15,7 @@ pub struct ChangePhiDeg {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePhiDeg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "phi-deg", kind: "change-phi-deg", record: "ChangedPhiDeg" };
 
-    fn diff(&self, base: &En1997Snapshot) -> En1997Diff {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_phi_deg::diff::diff(self, base)
     }
 

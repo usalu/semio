@@ -2,6 +2,9 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::diff::{diff_se
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot.
-pub fn diff(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> SemioDiff {
-    diff_set_snapshot(base, snapshot)
+pub fn diff(base: &SemioSnapshot, snapshot: &SemioSnapshot) -> protocol::MutationOutcome<SemioDiff> {
+    if base == snapshot {
+        return protocol::MutationOutcome::new(SemioDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+    }
+    protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

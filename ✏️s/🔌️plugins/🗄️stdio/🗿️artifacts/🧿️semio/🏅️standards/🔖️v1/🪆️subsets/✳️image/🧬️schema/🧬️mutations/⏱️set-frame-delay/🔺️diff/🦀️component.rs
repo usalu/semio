@@ -3,7 +3,11 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::Se
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use protocol::Mutation;
 
-/// 🔺️ Diff helper for set-frame-delay.
-pub fn diff(base: &SemioImageSnapshot, index: usize, delay_ms: u32) -> SemioImageDiff {
+/// 🔺️ Diff helper for set-frame-delay — an absent BASE frame `index` is `mutation.target-missing`
+/// (Error, empty diff).
+pub fn diff(base: &SemioImageSnapshot, index: usize, delay_ms: u32) -> protocol::MutationOutcome<SemioImageDiff> {
+    if index >= base.frames.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame index {index} does not exist."), [index.to_string()]);
+    }
     Mutation::diff(&SemioImageMutation::SetFrameDelay { index, delay_ms }, base)
 }

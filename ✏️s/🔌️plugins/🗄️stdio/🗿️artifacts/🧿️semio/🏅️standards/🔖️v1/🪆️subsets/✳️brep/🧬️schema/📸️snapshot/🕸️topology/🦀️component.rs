@@ -737,7 +737,7 @@ mod tests {
     #[test]
     fn engine_rep_build_round_trips_a_closed_box_through_to_seed() {
         let mut body = Body::new();
-        let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
+        let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
 
         let seed = to_seed(&body);
@@ -757,7 +757,7 @@ mod tests {
     #[test]
     fn engine_rep_build_round_trips_a_loose_planar_face() {
         let mut body = Body::new();
-        let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
+        let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
 
         let seed = to_seed(&body);
@@ -770,7 +770,7 @@ mod tests {
     #[test]
     fn engine_rep_build_is_deterministic_for_identical_seeds() {
         let mut body = Body::new();
-        let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
+        let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let seed = to_seed(&body);
 
@@ -785,7 +785,7 @@ mod tests {
     #[test]
     fn engine_rep_build_preserves_the_label_high_water_mark() {
         let mut body = Body::new();
-        let mut rec = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder::new();
+        let mut rec = history::OpRecorder::new();
         crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
         let seed = to_seed(&body);
         assert!(seed.next_label > 0, "a box mints more than zero labels");

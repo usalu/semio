@@ -53,11 +53,13 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(document: &GisMapSnapshot, operation: &GisMapMutation) -> GisMapSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(document, operation);
+        let (forward, _messages) =
+            vcs::apply_mutation(document, operation).expect("valid mutation");
         let backwards = operation.inverse(document);
         let mut restored = forward.clone();
         for back in &backwards {
-            let (next, _messages) = vcs::apply_mutation(&restored, back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, document, "inverse must exactly restore the pre-operation document");
@@ -191,13 +193,16 @@ mod tests {
 }
 //#endregion 🔹Tests
 
-pub fn apply_gis_map_mutation(snapshot: &mut GisMapSnapshot, mutation: &GisMapMutation) {
-    let (next, _messages) = vcs::apply_mutation(snapshot, mutation);
-    *snapshot = next;
+pub fn apply_gis_map_mutation(
+    snapshot: &mut GisMapSnapshot,
+    mutation: &GisMapMutation,
+) -> protocol::MutationApplyResult<()> {
+    let (next, _messages) = vcs::apply_mutation(snapshot, mutation)?;
     // 🕸️ `drawing`/`value` are pure functions of `(positions, routes, regions)` — re-derive them
     // after every mutation so the composed children never drift from what they actually describe
     // (see `crate::artifacts::gismap::🦀️component.rs`'s `🔖️Composition` region doc).
-    *snapshot = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(std::mem::take(snapshot));
+    *snapshot = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
+    Ok(())
 }
 
 pub fn inverse_gis_map_mutation(snapshot: &GisMapSnapshot, mutation: &GisMapMutation) -> Vec<GisMapMutation> {

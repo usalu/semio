@@ -105,7 +105,8 @@ mod tests {
 
     #[test]
     fn renders_canvas_scene_for_the_metabolism_example() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
+            .expect("valid metabolism fixture mutations");
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"));
         assert!(json.contains("Demo") || json.contains("Metabolism") || json.contains("Topic"));

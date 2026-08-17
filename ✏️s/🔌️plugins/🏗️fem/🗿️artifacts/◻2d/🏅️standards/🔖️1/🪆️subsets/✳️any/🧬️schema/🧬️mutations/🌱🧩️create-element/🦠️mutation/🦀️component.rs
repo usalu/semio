@@ -17,7 +17,7 @@ pub struct CreateElement {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateElement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "element", kind: "create-element", record: "CreatedElement" };
 
-    fn diff(&self, base: &Fem2dSnapshot) -> crate::artifacts::fem2d::diff::Fem2dDiff {
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

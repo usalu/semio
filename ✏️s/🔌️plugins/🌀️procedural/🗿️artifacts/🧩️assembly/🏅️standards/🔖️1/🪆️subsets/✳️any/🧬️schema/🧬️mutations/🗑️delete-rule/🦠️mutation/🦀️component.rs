@@ -20,7 +20,7 @@ pub fn delete_rule(id: String) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for DeleteRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "rule", kind: "delete-rule", record: "DeletedRule" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

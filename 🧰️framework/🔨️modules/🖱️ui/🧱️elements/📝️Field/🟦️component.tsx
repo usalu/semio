@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏷️Field

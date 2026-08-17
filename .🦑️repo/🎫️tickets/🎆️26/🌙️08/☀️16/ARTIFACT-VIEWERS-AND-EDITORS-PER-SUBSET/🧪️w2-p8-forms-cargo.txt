@@ -3754,3 +3754,4 @@ error[E0308]: mismatched types
    = note: expected struct `artifacts::binary::standards::v_raw::subsets::any::schema::diff::component::BinaryDiff`
               found struct `MutationOutcome<artifacts::binary::standards::v_raw::subsets::any::schema::diff::component::BinaryDiff>`
 
+=== Final confirmation run (7th attempt): still 269 errors in semio-s-plugin-stdio, still 0 in 📋️forms ===

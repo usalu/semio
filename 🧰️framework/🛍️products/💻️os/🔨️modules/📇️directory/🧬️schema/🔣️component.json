@@ -1,0 +1,373 @@
+{
+  "$id": "https://semio.tech/schema/os/directory/component.json",
+  "title": "Directory",
+  "description": "Directory event log wire contract (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, contract C1): the hub's control-plane events, the client-issued commands that produce them, the `/directory/ws` stream envelope, and the REST read DTOs.",
+  "$comment": "🧭️ Deviation from contract-freeze.md's C1 prose: `space.created`'s space-kind field and `create-space`'s space-kind field are named `spaceKind`, not the prose's bare `kind` — both bodies are internally tagged (`#[serde(tag = \"kind\")]`) so a same-named payload field would collide with the discriminator on the wire. Flagged as a sharedFileRequest in lane 0-A's report for the coordinator to fold back into contract-freeze.md.",
+  "$defs": {
+    "DirectorySpaceKind": { "type": "string", "enum": ["atelier", "studio", "archive"] },
+    "DirectorySpaceVisibility": { "type": "string", "enum": ["private", "public"] },
+    "DirectorySpaceRole": { "type": "string", "enum": ["author", "spectator"] },
+    "DirectoryActorKind": { "type": "string", "enum": ["user", "admin", "system"] },
+    "DirectoryActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/DirectoryActorKind" },
+        "id": { "type": "string" }
+      }
+    },
+    "Hlc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["physicalMs", "logical"],
+      "properties": {
+        "physicalMs": { "type": "integer" },
+        "logical": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DirectoryEventBody": {
+      "type": "object",
+      "required": ["kind"],
+      "discriminator": { "propertyName": "kind" },
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "userId", "email", "displayName"],
+          "properties": {
+            "kind": { "const": "user.created" },
+            "userId": { "type": "string" },
+            "email": { "type": "string" },
+            "displayName": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "name", "spaceKind", "visibility", "ownerUserId"],
+          "properties": {
+            "kind": { "const": "space.created" },
+            "spaceId": { "type": "string" },
+            "name": { "type": "string" },
+            "spaceKind": { "$ref": "#/$defs/DirectorySpaceKind", "x-semio-note": "the space's own kind (atelier/studio/archive) — named `spaceKind` rather than the contract prose's bare `kind` because this variant is internally tagged with a discriminator ALSO named `kind` (see the schema's own header docstring)" },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" },
+            "ownerUserId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "name"],
+          "properties": {
+            "kind": { "const": "space.renamed" },
+            "spaceId": { "type": "string" },
+            "name": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "visibility"],
+          "properties": {
+            "kind": { "const": "space.visibility-changed" },
+            "spaceId": { "type": "string" },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId"],
+          "properties": {
+            "kind": { "const": "space.archived" },
+            "spaceId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId"],
+          "properties": {
+            "kind": { "const": "space.deleted" },
+            "spaceId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "userId", "role"],
+          "properties": {
+            "kind": { "const": "member.upserted" },
+            "spaceId": { "type": "string" },
+            "userId": { "type": "string" },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "userId"],
+          "properties": {
+            "kind": { "const": "member.removed" },
+            "spaceId": { "type": "string" },
+            "userId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "userId", "inviteId", "role"],
+          "properties": {
+            "kind": { "const": "invite.redeemed" },
+            "spaceId": { "type": "string" },
+            "userId": { "type": "string" },
+            "inviteId": { "type": "string" },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" }
+          }
+        }
+      ]
+    },
+    "DirectoryEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "id", "hlc", "actor", "body", "recordedAtMs"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1, "x-semio-note": "dense, 1-based, backend-assigned" },
+        "id": { "type": "string", "x-semio-note": "uuid v7" },
+        "hlc": { "$ref": "#/$defs/Hlc" },
+        "actor": { "$ref": "#/$defs/DirectoryActor" },
+        "spaceId": { "type": "string" },
+        "userId": { "type": "string" },
+        "body": { "$ref": "#/$defs/DirectoryEventBody" },
+        "recordedAtMs": { "type": "integer" }
+      }
+    },
+    "DirectoryCommand": {
+      "type": "object",
+      "required": ["kind"],
+      "discriminator": { "propertyName": "kind" },
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name", "spaceKind", "visibility"],
+          "properties": {
+            "kind": { "const": "create-space" },
+            "name": { "type": "string" },
+            "spaceKind": { "$ref": "#/$defs/DirectorySpaceKind" },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "name"],
+          "properties": {
+            "kind": { "const": "rename-space" },
+            "spaceId": { "type": "string" },
+            "name": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "visibility"],
+          "properties": {
+            "kind": { "const": "set-visibility" },
+            "spaceId": { "type": "string" },
+            "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId"],
+          "properties": {
+            "kind": { "const": "archive-space" },
+            "spaceId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId"],
+          "properties": {
+            "kind": { "const": "delete-space" },
+            "spaceId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "email", "role"],
+          "properties": {
+            "kind": { "const": "upsert-member" },
+            "spaceId": { "type": "string" },
+            "email": { "type": "string" },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "userId"],
+          "properties": {
+            "kind": { "const": "remove-member" },
+            "spaceId": { "type": "string" },
+            "userId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "role", "ttlSecs"],
+          "properties": {
+            "kind": { "const": "create-invite" },
+            "spaceId": { "type": "string" },
+            "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+            "ttlSecs": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "inviteId"],
+          "properties": {
+            "kind": { "const": "revoke-invite" },
+            "spaceId": { "type": "string" },
+            "inviteId": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "ConnectionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["syncSessionId", "spaceId", "documentId", "surface", "actor", "role", "connectedAtMs", "presenceKnown"],
+      "properties": {
+        "syncSessionId": { "type": "string" },
+        "spaceId": { "type": "string" },
+        "documentId": { "type": "string" },
+        "surface": { "type": "string" },
+        "actor": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "connectedAtMs": { "type": "integer" },
+        "presenceKnown": { "type": "boolean" }
+      }
+    },
+    "DirectoryStreamMessage": {
+      "type": "object",
+      "required": ["kind"],
+      "discriminator": { "propertyName": "kind" },
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "event"],
+          "properties": {
+            "kind": { "const": "event" },
+            "event": { "$ref": "#/$defs/DirectoryEvent" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "phase", "connection"],
+          "properties": {
+            "kind": { "const": "connection" },
+            "phase": { "type": "string", "enum": ["opened", "closed"] },
+            "connection": { "$ref": "#/$defs/ConnectionView" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "spaceId", "documentId", "surface", "actors"],
+          "properties": {
+            "kind": { "const": "presence" },
+            "spaceId": { "type": "string" },
+            "documentId": { "type": "string" },
+            "surface": { "type": "string" },
+            "actors": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "headSeq"],
+          "properties": {
+            "kind": { "const": "heartbeat" },
+            "headSeq": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "SpaceView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "ownerUserId", "memberCount", "documentCount", "activeConnections", "createdAtMs", "updatedAtMs"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "kind": { "$ref": "#/$defs/DirectorySpaceKind" },
+        "visibility": { "$ref": "#/$defs/DirectorySpaceVisibility" },
+        "ownerUserId": { "type": "string" },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "memberCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0 },
+        "activeConnections": { "type": "integer", "minimum": 0 },
+        "createdAtMs": { "type": "integer" },
+        "updatedAtMs": { "type": "integer" }
+      }
+    },
+    "MemberView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "email", "displayName", "role"],
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" }
+      }
+    },
+    "UserView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "email", "displayName", "createdAtMs"],
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAtMs": { "type": "integer" }
+      }
+    },
+    "DocumentView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "headSeq", "commitSeq", "epoch"],
+      "properties": {
+        "id": { "type": "string" },
+        "headSeq": { "type": "integer", "minimum": 0 },
+        "commitSeq": { "type": "integer", "minimum": 0 },
+        "epoch": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "InviteView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "spaceId", "role", "createdAtMs", "expiresAtMs", "revoked"],
+      "properties": {
+        "id": { "type": "string" },
+        "spaceId": { "type": "string" },
+        "role": { "$ref": "#/$defs/DirectorySpaceRole" },
+        "createdAtMs": { "type": "integer" },
+        "expiresAtMs": { "type": "integer" },
+        "revoked": { "type": "boolean" }
+      }
+    }
+  }
+}

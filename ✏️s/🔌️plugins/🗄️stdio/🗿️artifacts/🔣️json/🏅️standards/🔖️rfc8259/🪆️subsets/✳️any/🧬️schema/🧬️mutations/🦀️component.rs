@@ -119,10 +119,15 @@ fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
 /// once from the pre-mutation state, applied to produce the new state, and returned.
-pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> JsonDiff {
-    let diff = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <JsonDiff as MutationDiff<JsonSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
+    let outcome = <JsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -130,8 +135,8 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
 impl Mutation<JsonSnapshot> for JsonMutation {
     type Diff = JsonDiff;
 
-    fn diff(&self, base: &JsonSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             JsonMutation::NoMutation => JsonDiff::default(),
             JsonMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
@@ -167,7 +172,7 @@ impl Mutation<JsonSnapshot> for JsonMutation {
                 Some(old) if old != value => diff_at_path(path, Some(JsonValueDiff::Replace { value: value.clone() })),
                 _ => JsonDiff::default(),
             },
-        }
+        })
     }
 
     /// ↩️ Handcrafted mutation-level inverse, key/index-aware — reads the pre-mutation `base`
@@ -298,7 +303,7 @@ fn parse_json_mutation(line: &str) -> Result<JsonMutation, String> {
     }
 }
 
-impl protocol::OpText for JsonMutation {
+impl OpText for JsonMutation {
     fn print_op(&self) -> String {
         print_json_mutation(self)
     }
@@ -505,13 +510,13 @@ mod tests {
         JsonValue::String { value: s.into() }
     }
 
-    fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, JsonDiff) {
+    fn apply_and_check(base: &JsonSnapshot, mutation: JsonMutation) -> (JsonSnapshot, protocol::MutationOutcome<JsonDiff>) {
         let mut via_apply = base.clone();
         let returned = apply_json_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
         assert_eq!(returned, expected_diff, "apply_json_mutation must return mutation.diff(base)");
-        let via_diff_apply = expected_diff.apply(base);
-        assert_eq!(via_apply, via_diff_apply, "m.diff(base).apply(base) must equal apply_json_mutation's result");
+        let via_diff_apply = expected_diff.diff().apply(base).unwrap();
+        assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_json_mutation's result");
         (via_apply, returned)
     }
 
@@ -542,7 +547,7 @@ mod tests {
         let base = snap(objv(vec![("a", num("1"))]));
         let (result, diff) = apply_and_check(&base, JsonMutation::RemoveMember { path: vec![], key: "missing".into() });
         assert_eq!(result, base);
-        assert!(diff.is_empty());
+        assert!(diff.diff().is_empty());
     }
 
     #[test]
@@ -580,9 +585,9 @@ mod tests {
         let base = snap(objv(vec![("a", num("1"))]));
         let mutation = JsonMutation::SetMember { path: vec![], key: "a".into(), value: num("2") };
         let diff = mutation.diff(&base);
-        let mid = diff.apply(&base);
-        let inv = diff.inverse(&base);
-        assert_eq!(inv.apply(&mid), base);
+        let mid = diff.diff().apply(&base).unwrap();
+        let inv = diff.diff().inverse(&base);
+        assert_eq!(inv.apply(&mid).unwrap(), base);
     }
     //#endregion inverse_law
 

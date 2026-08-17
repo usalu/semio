@@ -40,8 +40,54 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .artifact(crate::artifacts::puzzle2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::puzzle3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::puzzle5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .document_app::<crate::apps::puzzle2d::Puzzle2dPlayApp>(crate::apps::puzzle2d::create_puzzle2d_app())
-        .document_app::<crate::apps::puzzle3d::Puzzle3dPlayApp>(crate::apps::puzzle3d::create_puzzle3d_app())
-        .document_app::<crate::apps::puzzle5d::Puzzle5dPlayApp>(crate::apps::puzzle5d::create_puzzle5d_app())
+        .editor::<crate::editor::puzzle2d::Puzzle2dPlayApp>(crate::editor::puzzle2d::create_puzzle2d_app())
+        .editor_mutation_roster::<crate::editor::puzzle2d::Puzzle2dPlayApp>()
+        .viewer::<crate::viewer::puzzle2d::Puzzle2dViewer>(crate::viewer::puzzle2d::create_puzzle2d_viewer())
+        .viewer_mutation_roster::<crate::viewer::puzzle2d::Puzzle2dViewer>()
+        .editor::<crate::editor::puzzle3d::Puzzle3dPlayApp>(crate::editor::puzzle3d::create_puzzle3d_app())
+        .editor_mutation_roster::<crate::editor::puzzle3d::Puzzle3dPlayApp>()
+        .viewer::<crate::viewer::puzzle3d::Puzzle3dViewer>(crate::viewer::puzzle3d::create_puzzle3d_viewer())
+        .viewer_mutation_roster::<crate::viewer::puzzle3d::Puzzle3dViewer>()
+        .editor::<crate::editor::puzzle5d::Puzzle5dPlayApp>(crate::editor::puzzle5d::create_puzzle5d_app())
+        .editor_mutation_roster::<crate::editor::puzzle5d::Puzzle5dPlayApp>()
+        .viewer::<crate::viewer::puzzle5d::Puzzle5dViewer>(crate::viewer::puzzle5d::create_puzzle5d_viewer())
+        .viewer_mutation_roster::<crate::viewer::puzzle5d::Puzzle5dViewer>()
         .try_build()
 }
+
+//#region 🔖️SurfaceTests
+#[cfg(test)]
+mod surface_tests {
+    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+
+    #[test]
+    fn puzzle2d_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::puzzle2d::Puzzle2dViewer>();
+    }
+
+    #[test]
+    fn puzzle2d_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle2d::Puzzle2dPlayApp, crate::viewer::puzzle2d::Puzzle2dViewer>();
+    }
+
+    #[test]
+    fn puzzle3d_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::puzzle3d::Puzzle3dViewer>();
+    }
+
+    #[test]
+    fn puzzle3d_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle3d::Puzzle3dPlayApp, crate::viewer::puzzle3d::Puzzle3dViewer>();
+    }
+
+    #[test]
+    fn puzzle5d_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::puzzle5d::Puzzle5dViewer>();
+    }
+
+    #[test]
+    fn puzzle5d_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::puzzle5d::Puzzle5dPlayApp, crate::viewer::puzzle5d::Puzzle5dViewer>();
+    }
+}
+//#endregion 🔖️SurfaceTests

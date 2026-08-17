@@ -19,6 +19,7 @@ host = { landing = "home", shell = "studio" }
 [[package.metadata.semio.playground]]
 variant = "s"
 ports = { react = 6070, wgpu = 6066 }
+user_ports = { react = [6072, 6073], wgpu = [6067, 6068] }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

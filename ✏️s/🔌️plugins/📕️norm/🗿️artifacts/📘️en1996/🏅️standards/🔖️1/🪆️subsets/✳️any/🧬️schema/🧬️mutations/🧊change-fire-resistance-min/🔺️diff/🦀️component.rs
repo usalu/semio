@@ -5,7 +5,10 @@ use crate::artifacts::en1996::mutations::change_fire_resistance_min::mutation::C
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFireResistanceMin, _base: &En1996Snapshot) -> En1996Diff {
-    En1996Diff { fire_resistance_min: Some(payload.new_fire_resistance_min.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeFireResistanceMin, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    if base.fire_resistance_min == payload.new_fire_resistance_min {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fire resistance min already has this value.");
+    }
+    protocol::MutationOutcome::new(En1996Diff { fire_resistance_min: Some(payload.new_fire_resistance_min.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

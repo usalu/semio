@@ -22,7 +22,7 @@ pub fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelMutatio
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ChangeStreamSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stream", kind: "change-stream-sync", record: "ChangedStreamSync" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

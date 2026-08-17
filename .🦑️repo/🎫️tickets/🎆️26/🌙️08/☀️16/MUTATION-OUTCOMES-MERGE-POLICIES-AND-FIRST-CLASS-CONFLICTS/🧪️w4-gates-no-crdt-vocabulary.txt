@@ -1,0 +1,10 @@
+COUNT 9
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs | "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs:654" still references CRDT vocabulary "MergeStrategyKind"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs:410" still references CRDT vocabulary "merge_concurrent_diffs"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:63" still references CRDT vocabulary "merge_concurrent_diffs"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:96" still references CRDT vocabulary "merge_strategy"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs:146" still references CRDT vocabulary "MergeStrategyKind"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs:147" still references CRDT vocabulary "ConflictRule"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/🦀️component.rs:19" still references CRDT vocabulary "ResolutionPlan"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/🦀️component.rs:285" still references CRDT vocabulary "ResolutionPlan"
+mutation-migration/no-crdt-vocabulary | 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs | "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs:255" still references CRDT vocabulary "ConflictRule"

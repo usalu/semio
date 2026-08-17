@@ -200,6 +200,19 @@ pub use crate::artifacts::program::schema::diff::ProgramDiff;
 
 pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// role surface (`✏️editor`, `👁️viewer`) for this subset shares — lives at the ARTIFACT level (not
+/// under `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling
+/// editor module. `artifact_kind` matches this schema's own `#[artifact_schema(id = "…")]` ("s.architect.program",
+/// confirmed at `🧬️schema/🦀️component.rs:14`) and `definition()`'s own schema-capability claim
+/// above (`"s.architect.program"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.architect.program@1/*#editor` / `s.architect.program@1/*#viewer` (contract §1 grammar).
+pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.architect.program", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🏛️program`).
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
@@ -620,7 +633,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::program::schema::program_artifact_schema_descriptor())
         .inferences([crate::artifacts::program::standards::v1::subsets::any::schema::inferences::program_artifact_inference_descriptor()])
         .composers(crate::artifacts::program::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::architect::ArchitectPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::architect::ArchitectPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

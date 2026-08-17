@@ -25,7 +25,7 @@ pub fn remove_gcp_observation(id: String, observation_index: u32) -> RemodelMuta
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for RemoveGcpObservation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "gcp", kind: "remove-gcp-observation", record: "RemovedGcpObservation" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

@@ -114,11 +114,11 @@ fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_in
 
     let empty = PdfDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_eq!(encode_pdf(&empty.apply(&original)).expect("self-diff logical export"), canonical);
+    assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
 
     let mut no_op = original.clone();
     let no_op_diff = apply_pdf_mutation(&mut no_op, &PdfMutation::NoMutation);
-    assert!(no_op_diff.is_empty());
+    assert!(no_op_diff.diff().is_empty());
     assert_eq!(encode_pdf(&no_op).expect("no-op mutation logical export"), canonical);
 
     let mutation = PdfMutation::AppendPageContent { index: 0, text: "dirty".into() };
@@ -126,10 +126,10 @@ fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_in
     let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
     assert_eq!(restored_mutation, mutation);
     let diff = restored_mutation.diff(&original);
-    let diff_frame = diff.encode_diff().expect("encode structural diff");
+    let diff_frame = diff.diff().encode_diff().expect("encode structural diff");
     let restored_diff = PdfDiff::decode_diff(&diff_frame).expect("decode structural diff");
-    assert_eq!(restored_diff, diff);
-    let dirty = restored_diff.apply(&original);
+    assert_eq!(&restored_diff, diff.diff());
+    let dirty = restored_diff.apply(&original).unwrap();
     let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
     assert_ne!(dirty_bytes, canonical);
     let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
@@ -138,7 +138,7 @@ fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_in
     let inverse = restored_diff.inverse(&original);
     let inverse_frame = inverse.encode_diff().expect("encode inverse diff");
     let restored_inverse = PdfDiff::decode_diff(&inverse_frame).expect("decode inverse diff");
-    let restored = restored_inverse.apply(&dirty);
+    let restored = restored_inverse.apply(&dirty).unwrap();
     assert_eq!(restored, original, "diff inverse must restore the complete logical model");
     assert_eq!(encode_pdf(&restored).expect("inverse logical writer export"), canonical);
 

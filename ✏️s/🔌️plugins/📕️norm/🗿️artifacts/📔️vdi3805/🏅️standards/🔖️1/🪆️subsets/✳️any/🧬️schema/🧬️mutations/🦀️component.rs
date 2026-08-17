@@ -148,11 +148,11 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(base: &Vdi3805Snapshot, operation: &Vdi3805Mutation) -> Vdi3805Snapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward

@@ -248,6 +248,20 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Children { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Ephemeral { .. } => None,
         AppFrame::HistorySnapshot { in_reply_to, .. } => Some(*in_reply_to),
+        AppFrame::TransactionProposal { in_reply_to, .. } => Some(*in_reply_to),
+        // 🔀️ Transaction phase-2 frames correlate by `txn_id`, not by `AppCommand::seq` — this
+        // runner's own frame script never opens a transaction (`compute_node` sends no
+        // `TransactionPrepare`/`Commit`/`Rollback`), so these can never actually appear in a
+        // `SpaceRunner` batch; listed for exhaustiveness (contract-freeze.md §C8's tag table is
+        // frozen — a wildcard arm here would silently swallow a real future addition instead of
+        // failing loud the way this match already does for everything else).
+        AppFrame::TransactionPrepared { .. } | AppFrame::TransactionCommitted { .. } | AppFrame::TransactionRolledBack { .. } => None,
+        // ⚔️ Pushed unsolicited (contract-freeze.md §C8/C9) except as the direct reply to
+        // `ResolveConflict`/`ReadConflicts` — this runner's frame script never sends those either, so
+        // `in_reply_to` is `None` in every frame this crate actually sees; still correlate correctly
+        // (not `None` unconditionally) so a future caller that DOES send them gets the real answer.
+        AppFrame::MergeReport { in_reply_to, .. } => *in_reply_to,
+        AppFrame::Conflicts { in_reply_to, .. } => *in_reply_to,
     }
 }
 
@@ -262,6 +276,41 @@ fn decode_fingerprint_wire(bytes: &[u8]) -> Result<String, RunError> {
 fn app_frame_fault_summary(fault: &[u8]) -> String {
     let fault = dsl::decode_fault_bytes(fault);
     format!("{}: {}", fault.code.0, fault.message)
+}
+
+/// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`, present
+/// whenever `fault.code == "mutation.rejected"` — contract-freeze.md §C8/C9) into a short
+/// human-readable `code: message [target]` list, so a rejected dispatch's REAL `mutation.*` messages
+/// reach `RunError`'s own text (and, through it, `sink.record(RunMutation::Log{..})`'s sealed
+/// diagnostics — see `bin.rs::run`'s `Err` branch) instead of only the generic
+/// `app_frame_fault_summary` one-liner. Empty for a pre-CHANNEL_VERSION-11 peer or a rejection whose
+/// report genuinely carries no messages.
+fn dispatch_report_summary(report: &[u8]) -> String {
+    if report.is_empty() {
+        return String::new();
+    }
+    let Ok(value) = store::pack_rt::decode_wire_value(report) else { return String::new() };
+    let Ok(decoded) = from_dsl_value::<protocol::DispatchReport>(value) else { return String::new() };
+    decoded
+        .messages
+        .iter()
+        .map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+/// 🧾 One rejected frame's full message: `` `app_id` <verb> (fault_code: fault_message)``, plus —
+/// whenever the frame's trailing `report` carries real `mutation.*` messages — `` — code: text
+/// [target]; ...`` appended (`dispatch_report_summary`). The single call site every
+/// `compute_node` `AppFrame::Error` arm shares, so a node's REAL rejection reason (not just the
+/// generic `mutation.rejected` fault) reaches `RunError`'s text everywhere a dispatch can be rejected.
+fn dispatch_error_message(app_id: &str, verb: &str, fault: &[u8], report: &[u8]) -> String {
+    let mut message = format!("`{app_id}` {verb} ({})", app_frame_fault_summary(fault));
+    let summary = dispatch_report_summary(report);
+    if !summary.is_empty() {
+        message.push_str(&format!(" — {summary}"));
+    }
+    message
 }
 
 #[cfg(test)]
@@ -852,11 +901,15 @@ pub fn plan(
 pub struct SpaceRunner<H: AppChannelHost> {
     host: H,
     blob_store: Arc<dyn BlobStore>,
+    /// ⚖️ This run's local/authority `MergePolicy` (contract-freeze.md §C3) — sent as
+    /// `AppCommand::SetMergePolicy` right after every node's `Hello`, in the same batched exchange
+    /// (see `compute_node`'s doc). `--policy`/config default: `Normal`.
+    merge_policy: protocol::MergePolicy,
 }
 
 impl<H: AppChannelHost> SpaceRunner<H> {
-    pub fn new(host: H, blob_store: Arc<dyn BlobStore>) -> Self {
-        Self { host, blob_store }
+    pub fn new(host: H, blob_store: Arc<dyn BlobStore>, merge_policy: protocol::MergePolicy) -> Self {
+        Self { host, blob_store, merge_policy }
     }
 
     pub fn into_host(self) -> H {
@@ -876,12 +929,16 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         Ok(handle)
     }
 
-    /// 🎬️ Runs one node's whole frame script — `Hello`, `LoadConfig`, `LoadDocument`, one `MediaIn`
-    /// per resolved input, one `MediaOut`+`MediaFingerprint` pair per output port, then `ReadDocument`
-    /// and finally `ReadConfig` to persist whatever the imports mutated on either artifact (see this
-    /// file's header doc: "importing media is emitting operations") — as a single batched
-    /// `host.exchange` call. Returns the node's mutated document bytes, its mutated config bytes, and
-    /// per output port the exported `Media` plus its wire fingerprint string.
+    /// 🎬️ Runs one node's whole frame script — `Hello`, `SetMergePolicy` (this run's `merge_policy`,
+    /// batched right behind `Hello` so the instance's local/authority policy is established before
+    /// any other command reaches it — contract-freeze.md §C9's "`Hello.config` seeds policy", worked
+    /// via the actual `SetMergePolicy` wire command since the frozen §C8 tag table adds no policy
+    /// field to `Hello` itself), `LoadConfig`, `LoadDocument`, one `MediaIn` per resolved input, one
+    /// `MediaOut`+`MediaFingerprint` pair per output port, then `ReadDocument` and finally
+    /// `ReadConfig` to persist whatever the imports mutated on either artifact (see this file's
+    /// header doc: "importing media is emitting operations") — as a single batched `host.exchange`
+    /// call. Returns the node's mutated document bytes, its mutated config bytes, and per output port
+    /// the exported `Media` plus its wire fingerprint string.
     fn compute_node(
         &mut self,
         live: &mut HashMap<String, u32>,
@@ -899,6 +956,9 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         };
 
         let mut commands = vec![AppCommand::Hello { channel_version: CHANNEL_VERSION, app_id: node.app_id.clone(), actor: "runner".to_string(), config: Vec::new() }];
+
+        let set_policy_seq = next_seq();
+        commands.push(AppCommand::SetMergePolicy { seq: set_policy_seq, policy: self.merge_policy.as_u8() });
 
         let load_config_seq = next_seq();
         commands.push(AppCommand::LoadConfig { seq: load_config_seq, pack: config.0.clone(), spr: config.1.clone() });
@@ -931,19 +991,20 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 
         let frames = self.host.exchange(handle, commands)?;
 
-        if let Some(AppFrame::Error { fault, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
-            return Err(RunError::Host(format!("`{}` rejected the handshake ({})", node.app_id, app_frame_fault_summary(fault))));
+        if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
+            return Err(RunError::Host(dispatch_error_message(&node.app_id, "rejected the handshake", fault, report)));
         }
 
         let reply_to = |seq: u64| -> Result<&AppFrame, RunError> { frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{}` sent no reply to seq {seq}", node.app_id))) };
         let expect_done = |seq: u64, frame: &AppFrame| -> Result<(), RunError> {
             match frame {
                 AppFrame::Done { .. } => Ok(()),
-                AppFrame::Error { fault, .. } => Err(RunError::Host(format!("`{}` rejected seq {seq} ({})", node.app_id, app_frame_fault_summary(fault)))),
+                AppFrame::Error { fault, report, .. } => Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("rejected seq {seq}"), fault, report))),
                 other => Err(RunError::Host(format!("`{}` sent an unexpected frame for seq {seq}: {other:?}", node.app_id))),
             }
         };
 
+        expect_done(set_policy_seq, reply_to(set_policy_seq)?)?;
         expect_done(load_config_seq, reply_to(load_config_seq)?)?;
         expect_done(load_document_seq, reply_to(load_document_seq)?)?;
         for this_seq in &media_in_seqs {
@@ -954,12 +1015,12 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         for (port_id, media_out_seq, fingerprint_seq) in &output_seqs {
             let media = match reply_to(*media_out_seq)? {
                 AppFrame::Media { descriptor, data, .. } => media_from_artifact(descriptor, data.clone(), self.blob_store.as_ref())?,
-                AppFrame::Error { fault, .. } => return Err(RunError::Host(format!("`{}` failed to produce media on `{port_id}` ({})", node.app_id, app_frame_fault_summary(fault)))),
+                AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to produce media on `{port_id}`"), fault, report))),
                 other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-out `{port_id}`: {other:?}", node.app_id))),
             };
             let fingerprint = match reply_to(*fingerprint_seq)? {
                 AppFrame::MediaFingerprint { fingerprint, .. } => decode_fingerprint_wire(fingerprint)?,
-                AppFrame::Error { fault, .. } => return Err(RunError::Host(format!("`{}` failed to fingerprint `{port_id}` ({})", node.app_id, app_frame_fault_summary(fault)))),
+                AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to fingerprint `{port_id}`"), fault, report))),
                 other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-fingerprint `{port_id}`: {other:?}", node.app_id))),
             };
             outputs.insert(port_id.clone(), (media, fingerprint));
@@ -967,13 +1028,13 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 
         let mutated_document = match reply_to(read_artifact_seq)? {
             AppFrame::Document { pack, spr, .. } => (pack.clone(), spr.clone()),
-            AppFrame::Error { fault, .. } => return Err(RunError::Host(format!("`{}` failed to read its document ({})", node.app_id, app_frame_fault_summary(fault)))),
+            AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, "failed to read its document", fault, report))),
             other => return Err(RunError::Host(format!("`{}` sent an unexpected frame reading its document: {other:?}", node.app_id))),
         };
 
         let mutated_config = match reply_to(read_config_seq)? {
             AppFrame::Config { pack, spr, .. } => (pack.clone(), spr.clone()),
-            AppFrame::Error { fault, .. } => return Err(RunError::Host(format!("`{}` failed to read its config ({})", node.app_id, app_frame_fault_summary(fault)))),
+            AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, "failed to read its config", fault, report))),
             other => return Err(RunError::Host(format!("`{}` sent an unexpected frame reading its config: {other:?}", node.app_id))),
         };
 
@@ -1190,9 +1251,10 @@ impl WasmtimeNodeHost {
 
     /// 📊️ `(plugins loaded so far, distinct route keys)` — surfaced by the dev-boot smoke test so a
     /// zero-plugin/zero-key router (the router silently doing nothing) is visible, not just "boot
-    /// didn't crash."
+    /// didn't crash." `IoRouter::stats` only errors on a poisoned lock — a diagnostic-only stat line
+    /// degrades to `(0, 0)` rather than panicking a whole run over it.
     pub fn io_router_stats(&self) -> (usize, usize) {
-        self.io_router.stats()
+        self.io_router.stats().unwrap_or((0, 0))
     }
 
     pub fn plugin_graph(&self) -> &semio_framework_plugin_host::PluginGraph {
@@ -1250,13 +1312,14 @@ impl WasmtimeNodeHost {
         self.inference_router.register_plugin(plugin_id, &runtime.manifest.dependencies, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
 
         self.app_router.register_plugin(plugin_id, &runtime).map_err(|fault| RunError::Host(fault.message))?;
-        // 🩺️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3 item 3 (W1 soft
-        // gate — see `AppRouter::owned_surface_gaps`'s own doc for why this cannot be a hard `assert!`
-        // yet): reported, never panics, so the host boots even though every plugin today has zero
-        // surfaces. Logged once per plugin load rather than once per gap to keep boot output bounded.
+        // 🩺️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3 item 3 (W3 hard gate,
+        // flipped from W1's logged-only diagnostic now that every owned subset ships both surfaces): a
+        // missing owner surface fails the plugin load with a real `surface.missing-owner-surface`
+        // fault instead of merely being reported — see `AppRouter::owned_surface_gaps`'s own doc.
         let gaps = self.app_router.owned_surface_gaps();
         if !gaps.is_empty() {
-            eprintln!("[app-router] plugin `{plugin_id}` load left {} owned-surface gap(s), e.g. {}", gaps.len(), gaps[0].message);
+            let detail = gaps.iter().map(|gap| gap.message.as_str()).collect::<Vec<_>>().join("; ");
+            return Err(RunError::Host(format!("plugin `{plugin_id}` load left {} owned-surface gap(s): {detail}", gaps.len())));
         }
 
         self.runtimes.insert(plugin_id.to_string(), runtime);
@@ -1428,7 +1491,7 @@ impl WasmtimeNodeHost {
             ));
         }
         let mutation = semio_framework_plugin_host::opening_config::mutations::set_default_app::mutation::set_default_app(dialect, role, app);
-        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation);
+        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
 
@@ -1440,7 +1503,7 @@ impl WasmtimeNodeHost {
         let role = opening_role_from_wire(role_wire)?;
         let dialect = semio_framework::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
         let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::mutation::clear_default_app(dialect, role);
-        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation);
+        semio_framework_plugin_host::opening_config::mutations::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
     //#endregion 🔖️OpeningCommands
@@ -1497,19 +1560,19 @@ impl AppChannelHost for WasmtimeNodeHost {
                 AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
                     frames.push(match self.resolve_open_artifact(&artifact_ref, role, &plugin_id, &app_id) {
                         Ok(_resolved) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
                     frames.push(match self.set_default_app(&artifact_kind, &standard, &subset, role, &plugin_id, &app_id) {
                         Ok(()) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
                     frames.push(match self.clear_default_app(&artifact_kind, &standard, &subset, role) {
                         Ok(()) => AppFrame::Done { in_reply_to: seq },
-                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault) },
+                        Err(fault) => AppFrame::Error { in_reply_to: Some(seq), fault: dsl::encode_fault_bytes(&fault), report: Vec::new() },
                     });
                 }
                 other => passthrough.push(other),
@@ -1596,7 +1659,7 @@ mod tests {
                 match command {
                     AppCommand::Hello { channel_version, .. } => {
                         if channel_version != CHANNEL_VERSION {
-                            frames.push(AppFrame::Error { in_reply_to: None, fault: run_fault_bytes("channel-version", "mismatched channel version") });
+                            frames.push(AppFrame::Error { in_reply_to: None, fault: run_fault_bytes("channel-version", "mismatched channel version"), report: Vec::new() });
                             continue;
                         }
                         frames.push(AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: node, manifest: Vec::new() });
@@ -1614,14 +1677,14 @@ mod tests {
                             self.imported.push((node, port, media));
                             frames.push(AppFrame::Done { in_reply_to: seq });
                         }
-                        Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()) }),
+                        Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()), report: Vec::new() }),
                     },
                     AppCommand::MediaOut { seq, port, .. } => match self.outputs.get(&(app_id.clone(), port.clone())) {
                         Some(media) => match media_to_artifact(media, &self.blob_store) {
                             Ok((descriptor, data)) => frames.push(AppFrame::Media { in_reply_to: seq, port, descriptor, data }),
-                            Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()) }),
+                            Err(error) => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", error.to_string()), report: Vec::new() }),
                         },
-                        None => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", "no output") }),
+                        None => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", "no output"), report: Vec::new() }),
                     },
                     AppCommand::MediaFingerprint { seq, port } => match self.outputs.get(&(app_id.clone(), port)) {
                         Some(media) => {
@@ -1633,7 +1696,7 @@ mod tests {
                             let value = to_dsl_value(&fingerprint).unwrap_or(dsl::DslValue::Null);
                             frames.push(AppFrame::MediaFingerprint { in_reply_to: seq, port: String::new(), fingerprint: store::pack_rt::encode_wire_value(&value) });
                         }
-                        None => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", "no output") }),
+                        None => frames.push(AppFrame::Error { in_reply_to: Some(seq), fault: run_fault_bytes("handler", "no output"), report: Vec::new() }),
                     },
                     AppCommand::ReadDocument { seq } => {
                         let (pack, spr) = self.documents.get(&node).cloned().unwrap_or_default();
@@ -1642,6 +1705,9 @@ mod tests {
                     AppCommand::ReadConfig { seq } => {
                         let (pack, spr) = self.configs.get(&node).cloned().unwrap_or_default();
                         frames.push(AppFrame::Config { in_reply_to: seq, pack, spr, ops: String::new() });
+                    }
+                    AppCommand::SetMergePolicy { seq, .. } => {
+                        frames.push(AppFrame::Done { in_reply_to: seq });
                     }
                     _ => {}
                 }
@@ -1735,7 +1801,7 @@ mod tests {
         let graph = two_node_graph();
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
         let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
@@ -1764,7 +1830,7 @@ mod tests {
         let graph = two_node_graph();
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
         let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
@@ -1794,7 +1860,7 @@ mod tests {
         let graph = two_node_graph();
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
         let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs_1 = empty_configs(&graph);
@@ -1826,7 +1892,7 @@ mod tests {
         let graph = two_node_graph();
         let mut host = FakeHost::default();
         host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
         let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
@@ -1855,7 +1921,7 @@ mod tests {
         let mut graph = two_node_graph();
         graph.nodes[1].inputs[0].spec.media_type = MediaType { class: MediaClass::Text, form: MediaForm::Document };
         let host = FakeHost::default();
-        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()));
+        let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
         let mut cache = TestMediaCache::default();
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);

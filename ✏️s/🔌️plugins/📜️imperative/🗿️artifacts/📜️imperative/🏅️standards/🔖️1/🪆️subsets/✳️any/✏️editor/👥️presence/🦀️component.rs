@@ -38,8 +38,10 @@ impl ArtifactPack for ImperativePresence {
 }
 
 impl protocol::MutationDiff<ImperativePresence> for ImperativePresence {
-    fn apply(&self, base: &ImperativePresence) -> ImperativePresence {
-        base.clone()
+    fn apply(&self, base: &ImperativePresence) -> protocol::MutationApplyResult<ImperativePresence> {
+        Ok({
+            base.clone()
+        })
     }
     fn absorb(&mut self, _other: Self) {}
 }

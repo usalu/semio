@@ -45,9 +45,10 @@ import {
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
-import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
+import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../Shell/🟦️component.tsx";
+import { ConflictDiffPreview, conflictDiffText } from "../DiffViewHost/🟦️component.tsx";
 import { defaultAppsSettingsTabLabel, defaultAppsSettingsTabText, driverDisplayLabel, noneOptionText, shellLabel, shellTabIcon, shellTerminologyLabel, surfaceRoleChipText } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -74,6 +75,10 @@ export const FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID = "framework.settings.keybind
 /** 👁️✏️ Mirrors Rust `PanelTabKind::SettingsDefaultApps.id_str()` (`🛂️manifest/🦀️component.rs:2607`,
  * contract freeze §1). */
 export const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID = "framework.settings.default-apps";
+/** ⚖️ Conflicts panel tab (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+ * CLASS-CONFLICTS` §C9) — open first-class conflicts with Accept/Discard, mirrors
+ * `FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID`'s "omitted entirely when no host is wired" idiom. */
+export const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID = "framework.settings.conflicts";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -324,7 +329,20 @@ export type SettingsHostApi = {
   readonly setKeybindingOverride: (controlId: string, keys: string) => void;
   readonly resetKeybindingOverride: (controlId: string) => void;
   readonly locks: ResolvedShellLocks;
+  /** ⚖️ Persisted `os.config.merge-policy` (contract freeze §C3/§C9) — `undefined` omits the row
+   * entirely (an embedded shell that doesn't own OS config), matching `onResetDock`'s idiom. */
+  readonly mergePolicy?: MergePolicy;
+  readonly setMergePolicy?: (policy: MergePolicy) => void;
 };
+
+const MERGE_POLICY_OPTIONS: readonly MergePolicy[] = ["LaissezFaire", "Normal", "Vigilant"];
+
+/** ⚖️ `ui.mutation.policy.<key>.label` for a `MergePolicy` — `LaissezFaire` → `laissezFaire`, others
+ * lowercase 1:1. */
+function mergePolicyLabelKey(policy: MergePolicy): UiTranslationKey {
+  const key = policy === "LaissezFaire" ? "laissezFaire" : policy === "Vigilant" ? "vigilant" : "normal";
+  return `ui.mutation.policy.${key}.label` as UiTranslationKey;
+}
 
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
   return {
@@ -445,6 +463,28 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                   ),
                 },
               ]),
+          ...(host.mergePolicy && host.setMergePolicy
+            ? [
+                {
+                  id: "framework.settings.mergePolicy",
+                  label: shellLabel("ui.mutation.policy.setting.label"),
+                  control: (
+                    <Select value={host.mergePolicy} onValueChange={(value) => host.setMergePolicy?.(value as MergePolicy)}>
+                      <SelectTrigger id="framework.settings.mergePolicy" className="h-small w-32" size="sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MERGE_POLICY_OPTIONS.map((policy) => (
+                          <SelectItem key={policy} value={policy}>
+                            {shellLabel(mergePolicyLabelKey(policy))}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                },
+              ]
+            : []),
           ...(host.onResetDock
             ? [
                 {
@@ -936,7 +976,64 @@ function buildSettingsDefaultAppsTree(host: DefaultAppsHostApi): TreePanelConfig
 }
 //#endregion 🔖️DefaultAppsPanel
 
-export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null): PanelTabNode {
+//#region 🔖️ConflictsPanel
+/** ⚖️ `ChromePanels`' read/write surface for the Conflicts settings tab (contract freeze §C5/§C9) —
+ * `ShellHost` builds `conflicts` from `Shell`'s `selectOpenConflicts`, `messageText`/`kindLabel`
+ * localize a `Conflict`'s own `ConflictKind`/`MutationMessage`s (never parsed from `message` prose).
+ * `onSelect` drives the `DiffViewHost`-backed preview for the currently expanded conflict. */
+export type ConflictsHostApi = {
+  readonly conflicts: readonly Conflict[];
+  readonly locale: string;
+  readonly selectedConflictId: string | null;
+  readonly kindLabel: (conflict: Conflict) => string;
+  readonly messageText: (conflict: Conflict) => string;
+  readonly onSelect: (conflictId: string) => void;
+  readonly onResolve: (conflictId: string, resolution: ConflictResolution) => void;
+  /** ⚖️ Current-document text for the `DiffViewHost`-backed "incoming vs current" preview (see
+   * `conflictDiffText`) — `""` when no synchronous document snapshot is in hand. */
+  readonly currentDocumentText: string;
+};
+
+function buildConflictsTree(host: ConflictsHostApi): TreePanelConfig {
+  if (host.conflicts.length === 0) {
+    return { sections: [{ id: "framework.settings.conflicts.empty", items: [{ id: "framework.settings.conflicts.empty.row", label: shellLabel("ui.settings.unavailable") }] }] };
+  }
+  return {
+    sections: [
+      {
+        id: "framework.settings.conflicts.table",
+        label: shellLabel("ui.conflict.panel"),
+        defaultOpen: true,
+        items: host.conflicts.map((conflict) => {
+          const rowId = `framework.settings.conflicts.${conflict.id}`;
+          const selected = conflict.id === host.selectedConflictId;
+          const diff = selected ? conflictDiffText(conflict, host.currentDocumentText) : null;
+          return {
+            id: rowId,
+            label: `${host.kindLabel(conflict)} — ${host.messageText(conflict)}`,
+            onClick: () => host.onSelect(conflict.id),
+            control: (
+              <div className="flex flex-col gap-single">
+                <div className="flex items-center gap-single">
+                  <Button id={`${rowId}.accept`} size="sm" text={shellLabel("ui.conflict.accept")} onClick={() => host.onResolve(conflict.id, "accept")} />
+                  <Button id={`${rowId}.discard`} size="sm" text={shellLabel("ui.conflict.discard")} onClick={() => host.onResolve(conflict.id, "discard")} />
+                </div>
+                {diff ? (
+                  <div className="max-h-40 max-w-96 overflow-auto rounded-sm border border-border">
+                    <ConflictDiffPreview before={diff.before} after={diff.after} />
+                  </div>
+                ) : null}
+              </div>
+            ),
+          };
+        }),
+      },
+    ],
+  };
+}
+//#endregion 🔖️ConflictsPanel
+
+export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null, getConflictsHost?: () => ConflictsHostApi | null): PanelTabNode {
   const children: PanelTabNode[] = [
     singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
@@ -993,6 +1090,24 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
               resolveTree: () => {
                 const host = getDefaultAppsHost();
                 return host ? buildSettingsDefaultAppsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
+              },
+            },
+          }),
+        ]
+      : []),
+    // ⚖️ `Conflicts` tab (contract freeze §C9) — omitted entirely when the shell has no conflicts
+    // host wired up, same "undefined getter → tab absent" idiom `getDefaultAppsHost` uses above.
+    ...(getConflictsHost
+      ? [
+          singleTreeLeaf({
+            id: FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID,
+            icon: shellTabIcon("triangle-alert"),
+            name: shellLabel("ui.conflict.panel"),
+            order: 4,
+            tree: {
+              resolveTree: () => {
+                const host = getConflictsHost();
+                return host ? buildConflictsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: shellLabel("ui.settings.unavailable") }] }] };
               },
             },
           }),

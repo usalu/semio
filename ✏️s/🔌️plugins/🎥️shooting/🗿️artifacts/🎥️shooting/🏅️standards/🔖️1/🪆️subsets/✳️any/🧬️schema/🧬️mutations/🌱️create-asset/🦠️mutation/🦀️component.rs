@@ -15,7 +15,7 @@ pub struct CreateAsset {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateAsset {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
-    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {

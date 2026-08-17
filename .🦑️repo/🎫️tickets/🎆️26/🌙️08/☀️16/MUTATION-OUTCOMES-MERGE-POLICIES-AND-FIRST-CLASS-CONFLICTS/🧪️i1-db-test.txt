@@ -1,0 +1,1559 @@
+=== db kernel ===
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19
+     |
+4256 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4257 | | where
+4258 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4259 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4445 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+   Compiling semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:254:25
+    |
+254 |     let seg_len = pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    |                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: `WriteOptions` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:297:25
+    |
+297 |     let options = pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
+    |                         ^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `WriteOptions` could refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `WriteOptions` could also refer to the struct defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:418:91
+    |
+418 |         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::VerificationLevel::Standard)?;
+    |                                                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:419:70
+    |
+419 |         return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::VerificationLevel::Standard)?);
+    |                                                                      ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:595:79
+    |
+595 |     pub fn verify(&self, document: &ArtifactId, generation: u64, level: pack::VerificationLevel) -> Result<(), DbError> {
+    |                                                                               ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:725:104
+    |
+725 | ...as_slice(), &pack::PackLimits::default(), pack::VerificationLevel::Full).unwrap();
+    |                                                    ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:927:44
+    |
+927 |         manager.verify(&document, 0, pack::VerificationLevel::Full).unwrap();
+    |                                            ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:933:52
+    |
+933 |         assert!(manager.verify(&document, 0, pack::VerificationLevel::Standard).is_err());
+    |                                                    ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:418:59
+    |
+418 |         match manager.verify(&document, generation, pack::VerificationLevel::Full) {
+    |                                                           ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `VerificationLevel` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:439:56
+    |
+439 |             manager.verify(document, generation, pack::VerificationLevel::Full)?;
+    |                                                        ^^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `VerificationLevel` could refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `VerificationLevel` could also refer to the enum defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:437:23
+    |
+437 |                 pack::write_varint_u64(&mut out, author.0.len() as u64);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:441:23
+    |
+441 |                 pack::write_varint_u64(&mut out, ts.actor);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:442:23
+    |
+442 |                 pack::write_varint_u64(&mut out, ts.physical_ms);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `write_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:443:23
+    |
+443 |                 pack::write_varint_u64(&mut out, ts.logical);
+    |                       ^^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `write_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `write_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:456:33
+    |
+456 |                 let len = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+    |                                 ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:465:35
+    |
+465 |                 let actor = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                   ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:466:41
+    |
+466 |                 let physical_ms = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                         ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: `read_varint_u64` is ambiguous
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:467:37
+    |
+467 |                 let logical = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+    |                                     ^^^^^^^^^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `read_varint_u64` could refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:279:9
+    |
+279 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `read_varint_u64` could also refer to the function defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:278:9
+    |
+278 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+
+warning: unused imports: `DbCapabilities`, `DbConfig`, and `Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🦀️component.rs:31:71
+   |
+31 | ...y, Database, DbCapabilities, DbConfig, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, DurabilityClass, Frontier, HistoryEntry...
+   |                 ^^^^^^^^^^^^^^  ^^^^^^^^                                                                      ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `ActorId`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:3:21
+  |
+3 | use crate::db_ids::{ActorId, DbError, ArtifactId};
+  |                     ^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../💾️durability/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::db_ids::DbError`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎚️policy/🦀️component.rs:4:5
+  |
+4 | use crate::db_ids::DbError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `pack::ContentHash`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🕸️version-graph/🦀️component.rs:4:5
+  |
+4 | use pack::ContentHash;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🕸️version-graph/🦀️component.rs:145:65
+    |
+145 | ...   let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([0u8; 32]), author: "actor-1".into(), message: "msg...
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+145 -         let change = ChangeRecord { parent: None, content_hash: pack::ContentHash([0u8; 32]), author: "actor-1".into(), message: "msg".to_string(), timestamp_ms: 0 };
+145 +         let change = ChangeRecord { parent: None, content_hash: ContentHash([0u8; 32]), author: "actor-1".into(), message: "msg".to_string(), timestamp_ms: 0 };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:618:31
+    |
+618 |     pub digests: Vec<(String, pack::ContentHash)>,
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+618 -     pub digests: Vec<(String, pack::ContentHash)>,
+618 +     pub digests: Vec<(String, ContentHash)>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:628:49
+    |
+628 |     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+    |                                                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+628 -     pending: Mutex<HashMap<u64, HashMap<String, pack::ContentHash>>>,
+628 +     pending: Mutex<HashMap<u64, HashMap<String, ContentHash>>>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:645:57
+    |
+645 |     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |                                                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+645 -     pub fn record(&self, seq: u64, label: &str, digest: pack::ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+645 +     pub fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:657:39
+    |
+657 |         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |                                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+657 -         let mut digests: Vec<(String, pack::ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+657 +         let mut digests: Vec<(String, ContentHash)> = self.expected_labels.iter().map(|l| (l.clone(), entry[l])).collect();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:706:26
+    |
+706 |     fn hash(byte: u8) -> pack::ContentHash {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+706 -     fn hash(byte: u8) -> pack::ContentHash {
+706 +     fn hash(byte: u8) -> ContentHash {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:707:9
+    |
+707 |         pack::ContentHash([byte; 32])
+    |         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+707 -         pack::ContentHash([byte; 32])
+707 +         ContentHash([byte; 32])
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:396:43
+    |
+396 |     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+396 -     fn put(&self, bytes: &[u8]) -> Result<pack::ContentHash, DbError> {
+396 +     fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:400:26
+    |
+400 |     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+400 -     fn get(&self, hash: &pack::ContentHash) -> Result<Vec<u8>, DbError> {
+400 +     fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:404:31
+    |
+404 |     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn contains(&self, hash: &pack::ContentHash) -> Result<bool, DbError> {
+404 +     fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:408:29
+    |
+408 |     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+408 -     fn delete(&self, hash: &pack::ContentHash) -> Result<(), DbError> {
+408 +     fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:412:26
+    |
+412 |     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+    |                          ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -     fn len(&self, hash: &pack::ContentHash) -> Result<u64, DbError> {
+412 +     fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:639:24
+    |
+639 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+639 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+639 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:640:47
+    |
+640 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for re...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+640 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+640 +         let handle = database.create_document(ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:651:24
+    |
+651 |         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+651 -         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+651 +         let database = Database::open_at(&root, Profile::Test).expect("testkit: reopen for replay law");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:662:24
+    |
+662 |         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+662 -         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+662 +         let database = Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:663:47
+    |
+663 | ...   let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica doc...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+663 -         let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+663 +         let handle = database.create_document(ArtifactSpec::new(document)).expect("testkit: create independent replica document");
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:126:12
+    |
+126 |     CasRef(pack::ContentHash),
+    |            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+126 -     CasRef(pack::ContentHash),
+126 +     CasRef(ContentHash),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:281:63
+    |
+281 |                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+281 -                 1 => WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash(reader.read_array32()?))),
+281 +                 1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:784:54
+    |
+784 |             WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash([5u8; 32]))),
+    |                                                      ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+784 -             WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash([5u8; 32]))),
+784 +             WalRecord::Payload(WalPayloadRef::CasRef(ContentHash([5u8; 32]))),
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:80:32
+   |
+80 |     pub base_pack_hash: Option<pack::ContentHash>,
+   |                                ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+80 -     pub base_pack_hash: Option<pack::ContentHash>,
+80 +     pub base_pack_hash: Option<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:81:20
+   |
+81 |     pub roots: Vec<pack::ContentHash>,
+   |                    ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+81 -     pub roots: Vec<pack::ContentHash>,
+81 +     pub roots: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:84:24
+   |
+84 |     pub new_pages: Vec<pack::ContentHash>,
+   |                        ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 -     pub new_pages: Vec<pack::ContentHash>,
+84 +     pub new_pages: Vec<ContentHash>,
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:152:23
+    |
+152 |             1 => Some(pack::ContentHash(r.read_array32()?)),
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+152 -             1 => Some(pack::ContentHash(r.read_array32()?)),
+152 +             1 => Some(ContentHash(r.read_array32()?)),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:192:56
+    |
+192 | fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+192 - fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[pack::ContentHash]) {
+192 + fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:199:63
+    |
+199 | fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+    |                                                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 - fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<pack::ContentHash>, DbError> {
+199 + fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:204:18
+    |
+204 |         out.push(pack::ContentHash(r.read_array32()?));
+    |                  ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+204 -         out.push(pack::ContentHash(r.read_array32()?));
+204 +         out.push(ContentHash(r.read_array32()?));
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:415:68
+    |
+415 | pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+    |                                                                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+415 - pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: pack::ContentHash) -> Result<Vec<u8>, DbError> {
+415 + pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:451:32
+    |
+451 |     pub base_pack_hash: Option<pack::ContentHash>,
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+451 -     pub base_pack_hash: Option<pack::ContentHash>,
+451 +     pub base_pack_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:452:20
+    |
+452 |     pub roots: Vec<pack::ContentHash>,
+    |                    ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+452 -     pub roots: Vec<pack::ContentHash>,
+452 +     pub roots: Vec<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:667:34
+    |
+667 |             base_pack_hash: Some(pack::ContentHash([9u8; 32])),
+    |                                  ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+667 -             base_pack_hash: Some(pack::ContentHash([9u8; 32])),
+667 +             base_pack_hash: Some(ContentHash([9u8; 32])),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:668:25
+    |
+668 |             roots: vec![pack::ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+668 -             roots: vec![pack::ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+668 +             roots: vec![ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:668:55
+    |
+668 |             roots: vec![pack::ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+    |                                                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+668 -             roots: vec![pack::ContentHash([1u8; 32]), pack::ContentHash([2u8; 32])],
+668 +             roots: vec![pack::ContentHash([1u8; 32]), ContentHash([2u8; 32])],
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:807:56
+    |
+807 |         assert!(matches!(read_page(&combined, &latest, pack::ContentHash([0xEE; 32])), Err(DbError::NotFound(_))));
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+807 -         assert!(matches!(read_page(&combined, &latest, pack::ContentHash([0xEE; 32])), Err(DbError::NotFound(_))));
+807 +         assert!(matches!(read_page(&combined, &latest, ContentHash([0xEE; 32])), Err(DbError::NotFound(_))));
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:358:28
+    |
+358 |     storage: &'storage dyn db_storage::DbStorage,
+    |                            ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+358 -     storage: &'storage dyn db_storage::DbStorage,
+358 +     storage: &'storage dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗜️compact/🦀️component.rs:362:39
+    |
+362 |     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+362 -     pub fn new(storage: &'storage dyn db_storage::DbStorage) -> Compactor<'storage> {
+362 +     pub fn new(storage: &'storage dyn DbStorage) -> Compactor<'storage> {
+    |
+
+warning: unused import: `crate::db_durability::Frontier`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:28:5
+   |
+28 | use crate::db_durability::Frontier;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:40
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                        ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:200:78
+    |
+200 | pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: d...
+    |                                                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+200 - pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn db_storage::DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+200 + pub fn replicate_document(leader: &dyn db_storage::DbStorage, follower: &dyn DbStorage, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:293:19
+    |
+293 |     storage: &dyn db_storage::DbStorage,
+    |                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+293 -     storage: &dyn db_storage::DbStorage,
+293 +     storage: &dyn DbStorage,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:307:28
+    |
+307 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+307 -     pub state_hash: Option<pack::ContentHash>,
+307 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:356:31
+    |
+356 |     fn content_hash(&self) -> pack::ContentHash {
+    |                               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+356 -     fn content_hash(&self) -> pack::ContentHash {
+356 +     fn content_hash(&self) -> ContentHash {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:468:22
+    |
+468 |     storage: Arc<dyn db_storage::DbStorage>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+468 -     storage: Arc<dyn db_storage::DbStorage>,
+468 +     storage: Arc<dyn DbStorage>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:490:68
+    |
+490 |     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u6...
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+490 -     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+490 +     pub fn create(document: protocol::ArtifactId, storage: Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<ArtifactEngine, DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:502:67
+    |
+502 |     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64...
+    |                                                                   ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+502 -     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn db_storage::DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+502 +     pub fn open(document: protocol::ArtifactId, storage: &Arc<dyn DbStorage>, config: ArtifactEngineConfig, now_ms: u64) -> Result<(ArtifactEngine, MaterializeReport), DbError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:570:96
+    |
+570 |     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal:...
+    |                                                                                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+570 -     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn db_storage::DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+570 +     fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<dyn DbStorage>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig) -> ArtifactEngine {
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1202:32
+     |
+1202 |     fn storage() -> StdArc<dyn db_storage::DbStorage> {
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1202 -     fn storage() -> StdArc<dyn db_storage::DbStorage> {
+1202 +     fn storage() -> StdArc<dyn DbStorage> {
+     |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:98:30
+   |
+98 | fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+98 - fn to_engine_frontier(core: &crate::db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+98 + fn to_engine_frontier(core: &db_durability::Frontier, document: protocol::ArtifactId) -> Frontier {
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:111:28
+    |
+111 |     pub state_hash: Option<pack::ContentHash>,
+    |                            ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+111 -     pub state_hash: Option<pack::ContentHash>,
+111 +     pub state_hash: Option<ContentHash>,
+    |
+
+warning: unused import: `Emit`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:26:5
+   |
+26 | use Emit as _;
+   |     ^^^^
+
+warning: `semio-framework-os-kernel-db` (lib test) generated 73 warnings (run `cargo fix --lib -p semio-framework-os-kernel-db --tests` to apply 54 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 6.68s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 12`
+     Running unittests 📦️glue.rs (target/debug/deps/db-562901d9164cccc1)
+
+running 424 tests
+test db_actor::tests::a_stale_generation_address_is_rejected_loudly_instead_of_enqueuing_silently ... ok
+test db_actor::tests::non_preview_lane_rejects_try_send_when_full_instead_of_shedding ... ok
+test db_actor::tests::mailbox_from_config_honors_the_profile_default_capacities ... ok
+test db_actor::tests::closing_a_mailbox_drains_remaining_messages_then_resolves_recv_to_none ... ok
+test db_actor::tests::drr_serves_a_lane_a_run_of_messages_proportional_to_its_weight ... ok
+test db_actor::tests::ask_pattern_round_trips_through_a_real_actor_thread ... ok
+test db_actor::tests::oneshot_reply_resolves_closed_when_sender_is_dropped_without_sending ... ok
+test db_actor::tests::restart_strategy_decide_is_the_pure_law_wasm_clean_paths_rely_on ... ok
+test db_actor::tests::system_and_recovery_lanes_drain_strictly_ahead_of_the_drr_lanes ... ok
+test db_actor::tests::preview_lane_sheds_its_own_oldest_message_and_never_blocks_or_errors ... ok
+test db_actor::tests::non_preview_lane_send_future_blocks_until_a_recv_frees_a_slot ... ok
+test db_actor::tests::oneshot_reply_round_trips_a_value ... ok
+test db_artifact::tests::document_authority_spawn_propagates_a_build_failure_synchronously ... ok
+test db_artifact::tests::bridge::envelope_from_operation_uses_operation_and_diff_traits ... ok
+test db_artifact::tests::command_batch_rejects_empty_and_mixed_documents ... ok
+test db_artifact::tests::declaring_the_prior_writer_as_a_dependency_avoids_the_conflict ... ok
+test db_artifact::tests::concurrent_write_to_the_same_path_without_a_dependency_is_recorded_as_a_conflict ... ok
+test db_artifact::tests::deletion_via_json_null_tombstones_a_path ... ok
+test db_artifact::tests::live_query_refresh_reports_no_further_diff_right_after_submit_already_refreshed_it ... ok
+test db_artifact::tests::outbox_and_commit_log_accumulate_and_outbox_drains ... ok
+test db_artifact::tests::preview_conflicts_uses_real_db_conflict_detector_against_recent_history ... ok
+test db_artifact::tests::preview_withdraw_and_expire_transitions ... ok
+test db_artifact::tests::query_finds_a_committed_row_by_path ... ok
+test db_artifact::tests::document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread ... ok
+test db_artifact::tests::preview_is_never_durable_and_a_conflicting_commit_supersedes_it ... ok
+test db_artifact::tests::open_replays_the_wal_and_reconstructs_state_and_frontier_identically ... ok
+test db_artifact::tests::security_gate_rejects_a_principal_denied_by_its_policy ... ok
+test db_artifact::tests::submit_rejects_an_envelope_whose_dependency_was_never_applied ... ok
+test db_artifact::tests::undo_of_an_unknown_operation_errs_not_found ... ok
+test db_artifact::tests::resubmitting_the_same_batch_returns_the_cached_receipt_without_advancing_the_frontier ... ok
+test db_artifact::tests::submit_persists_to_wal_and_updates_materialized_state_and_frontier ... ok
+test db_cli::tests::cli_conflict_simulate_requires_both_touch_flags ... ok
+test db_cli::tests::cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones ... ok
+test db_cli::tests::cli_help_and_unknown_subcommand ... ok
+test db_artifact::tests::undo_applies_the_recorded_inverse_and_produces_a_fresh_commit ... ok
+test db_cli::tests::cli_migrate_reports_a_usage_error_with_too_few_args ... ok
+test db_artifact::tests::materialize_from_snapshot_plus_wal_suffix_matches_full_replay ... ok
+test db_cli::tests::cli_profile_rejects_a_bad_durability_flag ... ok
+test db_actor::tests::one_for_one_restarts_only_the_failed_child_and_bumps_only_its_generation ... ok
+test db_cluster::tests::cluster_mailbox_drains_higher_priority_events_before_lower_ones ... ok
+test db_actor::tests::escalate_reports_the_failure_without_restarting_anything ... ok
+test db_cluster::tests::durability_satisfied_only_gates_the_quorum_class_on_ack_count ... ok
+test db_actor::tests::one_for_all_restarts_every_child_and_bumps_every_generation ... ok
+test db_cluster::tests::failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader ... ok
+test db_cluster::tests::ownership_status_reports_vacant_before_any_acquire ... ok
+test db_cluster::tests::quorum_tracker_is_ack_idempotent_and_edge_triggers_exactly_once ... ok
+test db_cluster::tests::reconcile_shard_owner_confirms_a_still_valid_local_claim ... ok
+test db_cluster::tests::reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win ... ok
+test db_cluster::tests::replicate_document_reports_up_to_date_once_a_follower_catches_up ... ok
+test db_cluster::tests::replicate_document_applies_missing_tail_commands_to_a_fresh_follower ... ok
+test db_cluster::tests::resolve_split_brain_prefers_the_higher_epoch ... ok
+test db_cluster::tests::route_read_any_replica_picks_the_freshest ... ok
+test db_cluster::tests::replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor ... ok
+test db_cluster::tests::route_read_bounded_staleness_errors_when_nothing_qualifies ... ok
+test db_cluster::tests::route_read_bounded_staleness_prefers_a_qualifying_follower_over_the_leader ... ok
+test db_cluster::tests::route_read_canonical_requires_the_leader ... ok
+test db_cluster::tests::route_read_errors_on_an_empty_replica_set ... ok
+test db_cluster::tests::route_read_preview_also_requires_the_leader ... ok
+test db_cluster::tests::shard_map_owner_is_none_for_an_empty_ring ... ok
+test db_cluster::tests::shard_map_owner_is_stable_for_a_fixed_ring ... ok
+test db_cluster::tests::shard_ownership_acquire_renew_and_validate_round_trip ... ok
+test db_cluster::tests::shard_ownership_release_frees_the_resource_for_a_fresh_acquire ... ok
+test db_compact::tests::apply_wal_retention_deletes_selected_segments_and_is_idempotent ... ok
+test db_compact::tests::build_cold_archive_matches_materialize_chain_and_reopens_independently ... ok
+test db_cluster::tests::shard_map_removing_a_node_only_remaps_documents_it_owned ... ok
+test db_compact::tests::compaction_budget_default_is_finite_and_unlimited_is_boundless ... ok
+test db_compact::tests::compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_one ... ok
+test db_compact::tests::compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot_lease ... ok
+test db_compact::tests::consolidate_respects_the_snapshot_chain_depth_budget ... ok
+test db_compact::tests::plan_wal_retention_never_selects_a_segment_with_no_known_horizon ... ok
+test db_compact::tests::plan_wal_retention_never_selects_the_highest_segment_index_even_if_it_qualifies ... ok
+test db_compact::tests::consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole_chain ... ok
+test db_compact::tests::plan_wal_retention_only_selects_segments_at_or_below_the_floor ... ok
+test db_compact::tests::plan_wal_retention_respects_the_budget_cap ... ok
+test db_compact::tests::retain_from_after_consolidate_prunes_every_generation_below_the_new_baseline ... ok
+test db_compact::tests::run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease ... ok
+test db_compact::tests::run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_releases_the_lease ... ok
+test db_compact::tests::run_from_latest_snapshot_derives_the_floor_from_the_current_snapshot_head_seq ... ok
+test db_compact::tests::run_never_deletes_the_sole_or_active_wal_segment ... ok
+test db_compact::tests::run_releases_the_compaction_lease_even_when_a_step_fails ... ok
+test db_compact::tests::segment_horizons_tracks_the_max_head_seq_seen_within_each_segment_span ... ok
+test db_cluster::tests::shard_map_adding_a_node_remaps_only_a_minority_of_documents ... ok
+test db_compact::tests::sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere ... ok
+test db_compact::tests::sweep_payloads_respects_the_budget_cap ... ok
+test db_conflict::tests::bloom_might_contain_has_no_false_negatives ... ok
+test db_conflict::tests::bloom_mismatched_sizes_conservatively_report_might_intersect ... ok
+test db_conflict::tests::bloom_rejects_new_requires_positive_params ... ok
+test db_conflict::tests::classify_is_degraded_when_accepted_but_still_warning_or_above ... ok
+test db_conflict::tests::classify_is_none_when_clean_or_below_warning ... ok
+test db_conflict::tests::classify_is_quarantined_when_the_policy_rejects_the_worst_level ... ok
+test db_conflict::tests::constraint_conflict_detected_across_disjoint_touched_paths ... ok
+test db_conflict::tests::detection_result_is_independent_of_input_order ... ok
+test db_conflict::tests::detects_write_write_touched_region_conflict ... ok
+test db_conflict::tests::disjoint_paths_never_conflict ... ok
+test db_conflict::tests::kind_matrix_declared_commuting_pair_is_symmetric ... ok
+test db_conflict::tests::kind_matrix_override_suppresses_an_otherwise_conflicting_pair ... ok
+test db_conflict::tests::kind_matrix_read_only_kind_commutes_with_everything ... ok
+test db_conflict::tests::order_key_breaks_ties_on_command_id_when_timestamps_are_equal ... ok
+test db_conflict::tests::non_overlapping_interval_constraint_conflicts_only_when_ranges_actually_overlap ... ok
+test db_conflict::tests::priority_side_is_the_earlier_command_by_timestamp_regardless_of_batch_order ... ok
+test db_conflict::tests::read_read_never_conflicts ... ok
+test db_conflict::tests::single_parent_constraint_conflicts_only_on_diverging_parent ... ok
+test db_durability::tests::durability_class_batch_max_picks_strongest_requested ... ok
+test db_durability::tests::durability_class_orders_memory_below_os_below_fsync_below_quorum ... ok
+test db_durability::tests::epoch_fence_check_accepts_matching_epoch_and_rejects_stale_or_ahead ... ok
+test db_durability::tests::epoch_fence_next_is_monotonic ... ok
+test db_durability::tests::frontier_chain_hash_typed_bridges_to_pack_core_content_hash ... ok
+test db_durability::tests::frontier_delta_between_computes_gap_and_rejects_backwards_or_mismatched ... ok
+test db_durability::tests::frontier_dominates_requires_same_document_and_all_fields_at_least ... ok
+test db_durability::tests::frontier_genesis_is_all_zero ... ok
+test db_durability::tests::resume_token_decode_rejects_malformed_input_without_panicking ... ok
+test db_durability::tests::resume_token_encode_rejects_pipe_in_document_id ... ok
+test db_durability::tests::resume_token_round_trips_through_encode_decode ... ok
+test db_cli::tests::cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root ... ok
+test db_conflict::tests::bloom_might_intersect_has_no_false_negatives_across_thousands_of_random_disjoint_and_overlapping_sets ... ok
+test db_cli::tests::cli_migrate_appends_a_migration_record_visible_to_wal_inspect ... ok
+test db_cli::tests::cli_doc_and_query_err_cleanly_on_an_unknown_document ... ok
+test db_engine::tests::document_of_an_unknown_id_errs_not_found ... ok
+test db_engine::tests::create_document_registers_it_in_the_catalog_and_document_finds_it ... ok
+test db_engine::tests::create_document_twice_errs_already_exists ... ok
+test db_engine::tests::hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent ... ok
+test db_engine::tests::hash_projection_pack_round_trips ... ok
+test db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it ... ok
+test db_engine::tests::a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root ... ok
+test db_engine::tests::security_authz_hook_rejects_a_principal_denied_by_its_policy ... ok
+test db_engine::tests::compact_document_runs_a_real_compaction_pass_without_error ... ok
+test db_engine::tests::exact_consistency_rejects_a_frontier_the_document_has_moved_past ... ok
+test db_engine::tests::open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog ... ok
+test db_facade::tests::every_family_submodule_reexports_its_headline_public_surface ... ok
+test db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower ... ok
+test db_ids::tests::check_len_rejects_over_limit_before_any_allocation_would_happen ... ok
+test db_ids::tests::document_id_and_actor_id_convert_and_display ... ok
+test db_ids::tests::generation_id_next_is_strictly_monotonic ... ok
+test db_ids::tests::pack_error_conversion_never_panics_and_maps_by_category ... ok
+test db_index::tests::actor_seq_index_rejects_actor_id_with_embedded_nul ... ok
+test db_index::tests::actor_seq_index_resolves_and_tracks_latest_per_actor ... ok
+test db_index::tests::build_run_sorts_and_last_write_wins_on_duplicate_keys ... ok
+test db_index::tests::command_index_records_and_looks_up_locations ... ok
+test db_index::tests::commit_index_round_trips ... ok
+test db_index::tests::conflict_index_accumulates_multiple_records_per_command ... ok
+test db_index::tests::decode_run_detects_corruption_via_checksum ... ok
+test db_index::tests::decode_run_rejects_kind_mismatch ... ok
+test db_index::tests::decode_run_rejects_non_ascending_entries ... ok
+test db_index::tests::different_kinds_do_not_collide_for_the_same_document ... ok
+test db_index::tests::frontier_index_round_trips_and_tracks_latest ... ok
+test db_index::tests::full_text_index_search_finds_indexed_documents ... ok
+test db_index::tests::index_handle_auto_merges_to_stay_within_policy ... ok
+test db_index::tests::index_handle_compact_collapses_to_one_run_and_drops_tombstones ... ok
+test db_index::tests::index_handle_compact_of_one_run_is_a_no_op ... ok
+test db_index::tests::index_handle_put_get_delete_round_trips ... ok
+test db_index::tests::index_handle_put_overwrites_earlier_value_for_same_key ... ok
+test db_index::tests::index_handle_scan_prefix_returns_sorted_live_entries_only ... ok
+test db_index::tests::inverse_index_records_and_looks_up_locations ... ok
+test db_index::tests::merge_runs_of_zero_runs_is_empty ... ok
+test db_index::tests::merge_runs_prefers_newest_and_respects_drop_tombstones ... ok
+test db_index::tests::preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key ... ok
+test db_index::tests::preview_index_rejects_actor_id_with_embedded_nul ... ok
+test db_index::tests::projection_index_rejects_projection_id_with_embedded_nul ... ok
+test db_index::tests::projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id ... ok
+test db_index::tests::run_id_rejects_sequence_overflowing_the_namespace ... ok
+test db_index::tests::run_id_round_trips_kind_and_sequence_for_every_kind ... ok
+test db_index::tests::run_round_trips_through_encode_and_decode ... ok
+test db_index::tests::touched_region_index_accumulates_sorted_unique_seqs ... ok
+test db_observe::tests::audit_sink_bounded_retention_still_verifies_the_surviving_window ... ok
+test db_observe::tests::audit_sink_does_not_chain_a_failed_write ... ok
+test db_observe::tests::audit_sink_verify_chain_accepts_an_untampered_log ... ok
+test db_observe::tests::audit_sink_verify_chain_detects_a_single_tampered_line ... ok
+test db_observe::tests::cardinality_limiter_admits_up_to_the_limit_then_collapses_to_overflow ... ok
+test db_observe::tests::determinism_verifier_bounds_pending_window ... ok
+test db_observe::tests::determinism_verifier_reports_divergence_on_mismatched_digests ... ok
+test db_observe::tests::determinism_verifier_reports_no_divergence_on_matching_digests ... ok
+test db_observe::tests::encode_emit_event_json_escapes_and_shapes_fields ... ok
+test db_observe::tests::encode_emit_event_json_never_emits_nan_or_infinity_literals ... ok
+test db_observe::tests::health_registry_defaults_to_healthy_with_no_components ... ok
+test db_observe::tests::health_registry_reports_worst_of_all_components ... ok
+test db_observe::tests::labels_canonicalize_insertion_order ... ok
+test db_observe::tests::metric_registry_counter_accumulates_per_series ... ok
+test db_observe::tests::metric_registry_gauge_overwrites ... ok
+test db_observe::tests::metric_registry_histogram_buckets_are_upper_inclusive_with_overflow_bucket ... ok
+test db_observe::tests::metric_registry_histogram_rejects_a_bounds_length_change ... ok
+test db_observe::tests::span_registry_double_end_returns_none_instead_of_panicking ... ok
+test db_observe::tests::span_registry_records_duration_and_moves_active_to_completed ... ok
+test db_observe::tests::span_registry_retention_is_bounded ... ok
+test db_observe::tests::structured_sink_counts_failed_writes_instead_of_dropping_silently_or_panicking ... ok
+test db_observe::tests::structured_sink_writes_one_json_line_per_event ... ok
+test db_observe::tests::writer_sink_appends_newline_terminated_lines ... ok
+test db_policy::tests::default_weights_are_strictly_decreasing_by_priority_order ... ok
+test db_policy::tests::mailbox_capacities_get_set_round_trip_per_lane ... ok
+test db_policy::tests::only_preview_is_sheddable ... ok
+test db_policy::tests::priority_rank_matches_declaration_order ... ok
+test db_policy::tests::profile_defaults_order_durability_test_below_dev_below_prod ... ok
+test db_policy::tests::test_profile_has_tighter_limits_than_prod ... ok
+test db_preview::tests::db_conflict_oracle_agrees_with_touched_region_oracle_on_write_write_and_read_read ... ok
+test db_preview::tests::every_terminal_state_is_actually_terminal ... ok
+test db_preview::tests::list_active_is_ordered_by_publish_arrival_sequence ... ok
+test db_preview::tests::preview_crate_never_references_wal_shaped_symbols ... ok
+test db_preview::tests::publish_assigns_unique_sequential_ids_and_active_state ... ok
+test db_preview::tests::publish_coalesces_latest_per_actor_key_supersedes_previous ... ok
+test db_preview::tests::publish_does_not_coalesce_across_distinct_keys_or_actors ... ok
+test db_preview::tests::publish_evicts_oldest_when_per_actor_budget_exceeded ... ok
+test db_preview::tests::publish_evicts_oldest_when_per_document_budget_exceeded ... ok
+test db_preview::tests::publish_rejects_document_mismatch ... ok
+test db_preview::tests::publish_rejects_touched_region_budget_breach ... ok
+test db_preview::tests::reconcile_default_oracle_is_db_conflict_backed_and_matches_reconcile_with_db_conflict_oracle_explicitly ... ok
+test db_preview::tests::reconcile_leaves_previews_already_at_or_ahead_of_the_landed_frontier_untouched ... ok
+test db_preview::tests::reconcile_read_only_touches_never_conflict_with_a_write ... ok
+test db_preview::tests::reconcile_rebases_non_conflicting_previews_and_advances_their_base ... ok
+test db_preview::tests::reconcile_supersedes_conflicting_previews_the_stale_half_of_rebase_or_stale ... ok
+test db_preview::tests::reconcile_with_a_custom_oracle_overrides_the_default_touched_region_check ... ok
+test db_preview::tests::sweep_expired_only_touches_active_previews_past_their_deadline ... ok
+test db_preview::tests::transition_on_unknown_id_is_not_found ... ok
+test db_preview::tests::transition_out_of_a_terminal_state_is_rejected ... ok
+test db_preview::tests::ttl_defaults_and_caps_are_derived_from_limits ... ok
+test db_preview::tests::withdraw_commit_reject_transition_active_to_the_matching_terminal_state ... ok
+test db_projection::tests::apply_envelope_advances_and_persists_incrementally ... ok
+test db_projection::tests::apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own ... ok
+test db_projection::tests::apply_envelope_rejects_a_mismatched_document ... ok
+test db_projection::tests::apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set ... ok
+test db_projection::tests::build_rejects_a_dependency_cycle ... ok
+test db_projection::tests::build_rejects_duplicate_ids ... ok
+test db_projection::tests::build_rejects_unknown_dependency ... ok
+test db_projection::tests::dependent_projection_sees_its_dependencys_state_from_the_same_step ... ok
+test db_projection::tests::preview_augmented_never_persists_and_does_not_affect_canonical_state ... ok
+test db_projection::tests::rebuild_equals_incremental_after_checkpoint_resume ... ok
+test db_projection::tests::stale_schema_version_checkpoint_is_reported_as_conflict_not_misread ... ok
+test db_projection::tests::topological_order_respects_dependency_edges ... ok
+test db_projection::tests::u64_and_string_and_bytes_projection_states_round_trip ... ok
+test db_projection::tests::versioned_round_trips_and_rejects_short_input ... ok
+test db_query::tests::consistency::at_least_succeeds_when_dominated_and_fails_otherwise ... ok
+test db_query::tests::consistency::canonical_resolves_to_current_frontier ... ok
+test db_query::tests::consistency::exact_requires_a_bytewise_match ... ok
+test db_query::tests::consistency::historical_resolves_via_commit_lookup ... ok
+test db_query::tests::consistency::speculative_and_preview_augmented_carry_the_preview_id ... ok
+test db_query::tests::execute_tests::full_scan_filters_sorts_and_paginates ... ok
+test db_query::tests::execute_tests::full_text_pushdown_without_a_lookup_is_an_error ... ok
+test db_query::tests::execute_tests::into_stream_yields_the_same_rows_as_the_result ... ok
+test db_query::tests::execute_tests::max_result_rows_limit_is_enforced ... ok
+test db_query::tests::execute_tests::offset_skips_matched_rows_before_limit_applies ... ok
+test db_query::tests::limits::default_result_bytes_matches_db_core_query_budget ... ok
+test db_query::tests::limits::max_scan_rows_is_enforced_even_when_nothing_matches ... ok
+test db_query::tests::live_query::diff_applied_to_old_snapshot_reconstructs_new_snapshot ... ok
+test db_query::tests::live_query::refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row ... ok
+test db_query::tests::live_query::refresh_reports_added_removed_and_updated_rows ... ok
+test db_query::tests::planner::plan_recognizes_bare_and_conjoined_full_text_predicates ... ok
+test db_query::tests::planner::pushdown_matches_full_scan_when_the_index_is_exhaustive ... ok
+test db_query::tests::projection_bridge::decode_rejects_trailing_bytes_after_a_complete_value ... ok
+test db_query::tests::projection_bridge::decode_rejects_truncated_bytes_and_unknown_tag_without_panicking ... ok
+test db_query::tests::projection_bridge::decode_value_rejects_an_over_large_declared_element_count_before_allocating ... ok
+test db_query::tests::projection_bridge::projection_query_source_decodes_bytes_into_a_queryable_source ... ok
+test db_query::tests::projection_bridge::projection_query_source_surfaces_corrupt_bytes_as_an_error_not_a_panic ... ok
+test db_query::tests::projection_bridge::projection_source_shapes_list_map_and_scalar_values_into_rows ... ok
+test db_query::tests::projection_bridge::value_projection_state_round_trips_every_variant_including_nesting ... ok
+test db_query::tests::projection_bridge::value_projection_state_round_trips_null_and_empty_containers ... ok
+test db_query::tests::query::and_or_not_compose ... ok
+test db_query::tests::query::eq_predicate_matches_and_rejects ... ok
+test db_query::tests::query::full_text_matches_case_insensitively_over_whole_document ... ok
+test db_query::tests::query::ne_treats_missing_path_as_failing ... ok
+test db_query::tests::query::select_paths_projects_a_map_keyed_by_dotted_path ... ok
+test db_query::tests::value::compare_values_falls_back_to_rank_across_variants ... ok
+test db_query::tests::value::compare_values_orders_numerics_across_int_and_float ... ok
+test db_query::tests::value::path_display_round_trips_through_parse ... ok
+test db_query::tests::value::path_get_rejects_type_mismatch ... ok
+test db_query::tests::value::path_get_walks_nested_map_and_list ... ok
+test db_security::tests::audit_decision_emits_named_event_with_reason_on_deny ... ok
+test db_security::tests::budget_registry_exhausts_then_refills_over_time ... ok
+test db_security::tests::budget_registry_keys_are_independent ... ok
+test db_security::tests::check_tenant_allows_matching_and_rejects_mismatched ... ok
+test db_security::tests::decision_into_result_maps_deny_to_unauthorized ... ok
+test db_security::tests::evaluate_allows_on_matching_role_pattern_and_action ... ok
+test db_security::tests::evaluate_default_denies_with_no_matching_grant ... ok
+test db_security::tests::evaluate_explicit_deny_always_wins_over_allow ... ok
+test db_security::tests::pattern_matches_exact_wildcard_and_trailing_double_star ... ok
+test db_security::tests::principal_has_role_matches_exactly ... ok
+test db_security::tests::redact_fields_beyond_depth_ceiling_is_conservatively_redacted ... ok
+test db_security::tests::redact_fields_does_not_recurse_into_a_denied_subtree ... ok
+test db_security::tests::redact_fields_hides_denied_nested_field_and_keeps_allowed_siblings ... ok
+test db_security::tests::redact_fields_top_level_object_itself_is_never_field_checked ... ok
+test db_security::tests::replay_guard_allows_same_operation_id_after_window_expires ... ok
+test db_security::tests::replay_guard_evicts_oldest_beyond_capacity_bounding_memory ... ok
+test db_security::tests::replay_guard_is_isolated_per_actor ... ok
+test db_security::tests::replay_guard_rejects_duplicate_operation_within_window ... ok
+test db_security::tests::scope_document_extracts_owning_document_or_none ... ok
+test db_security::tests::scope_segments_nest_under_document ... ok
+test db_security::tests::security_gate_admit_command_enforces_authz_then_budget_then_replay ... ok
+test db_security::tests::security_gate_admit_command_rejects_cross_tenant_before_authz ... ok
+test db_security::tests::security_gate_redact_forwards_to_policy ... ok
+test db_security::tests::sign_message_maps_protocol_error_by_category ... ok
+test db_security::tests::sign_then_verify_round_trips ... ok
+test db_security::tests::space_grants_archive_denies_author_write_even_though_allow_also_matches ... ok
+test db_security::tests::space_grants_studio_allows_author_write_and_spectator_read_only ... ok
+test db_security::tests::verify_rejects_mismatched_signature_without_panicking ... ok
+test db_snapshot::tests::build_generation_rejects_new_pages_mismatched_with_descriptor ... ok
+test db_snapshot::tests::descriptor_decode_never_panics_on_truncated_input ... ok
+test db_snapshot::tests::descriptor_decode_rejects_bad_version_tag ... ok
+test db_snapshot::tests::descriptor_encode_decode_round_trips_all_fields ... ok
+test db_snapshot::tests::descriptor_encode_decode_round_trips_none_optionals ... ok
+test db_snapshot::tests::footer_chain_flag_and_prev_offset_are_genuine_pack_wire_data ... ok
+test db_snapshot::tests::manager_incremental_chain_materializes_and_resolves_inherited_pages ... ok
+test db_snapshot::tests::manager_incremental_publish_without_prior_generation_errors ... ok
+test db_snapshot::tests::manager_publishes_full_baseline_then_loads_it_back ... ok
+test db_snapshot::tests::manager_retain_from_deletes_generations_below_a_valid_baseline_floor ... ok
+test db_snapshot::tests::manager_retain_from_requires_full_baseline_floor ... ok
+test db_snapshot::tests::manager_select_generation_picks_highest_head_seq_at_most_target ... ok
+test db_snapshot::tests::manager_verify_accepts_intact_and_rejects_corrupted_generation ... ok
+test db_snapshot::tests::open_latest_rejects_truncated_buffer ... ok
+test db_snapshot::tests::single_generation_round_trips_through_pack_public_api ... ok
+test db_snapshot::tests::snapshot_lease_resource_name_is_scoped_per_document ... ok
+test db_snapshot::tests::snapshot_lease_round_trips_acquire_renew_release_via_memory_storage ... ok
+test db_snapshot::tests::snapshot_policy_fires_on_any_threshold_alone ... ok
+test db_snapshot::tests::two_generation_incremental_chain_resolves_inherited_pages ... ok
+test db_state::tests::overlay_reads_fall_through_to_base_when_unset ... ok
+test db_state::tests::overlay_root_clone_shares_base_and_overlay_cheaply ... ok
+test db_state::tests::overlay_set_shadows_base_and_delete_tombstones_it ... ok
+test db_state::tests::page_store_interns_identical_bytes_once ... ok
+test db_state::tests::pgraph_add_and_query_edges ... ok
+test db_state::tests::pgraph_add_edge_rejects_missing_nodes ... ok
+test db_state::tests::pgraph_content_hash_ignores_insertion_order ... ok
+test db_state::tests::pgraph_remove_node_cascades_edge_cleanup ... ok
+test db_state::tests::pmap_content_hash_is_order_independent_and_content_sensitive ... ok
+test db_engine::tests::hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica ... ok
+test db_state::tests::pmap_insert_is_persistent_old_version_unaffected ... ok
+test db_state::tests::pmap_iter_visits_every_entry_exactly_once ... ok
+test db_state::tests::pmap_remove_then_reinsert_and_replace_semantics ... ok
+test db_state::tests::ptext_edits_are_persistent ... ok
+test db_state::tests::ptext_handles_multibyte_unicode_by_char_index ... ok
+test db_state::tests::ptext_insert_delete_roundtrip ... ok
+test db_state::tests::ptext_out_of_bounds_operations_error_instead_of_panicking ... ok
+test db_state::tests::ptext_slice_and_concat ... ok
+test db_state::tests::ptree_insert_get_and_ordered_iteration ... ok
+test db_state::tests::ptree_remove_maintains_correctness_and_persistence ... ok
+test db_state::tests::pmap_insert_get_roundtrip_across_many_keys ... ok
+test db_state::tests::pvec_content_hash_is_order_sensitive ... ok
+test db_state::tests::ptree_stays_balanced_within_the_avl_bound ... ok
+test db_state::tests::pvec_push_back_is_persistent ... ok
+test db_state::tests::pvec_set_and_pop_back ... ok
+test db_state::tests::touched_region_prefix_intersection ... ok
+test db_state::tests::touched_set_conflicts_only_when_a_write_is_involved ... ok
+test db_state::tests::pvec_push_back_and_get_across_multiple_levels ... ok
+test db_storage::tests::fs_storage_rejects_unsafe_path_components ... ok
+test db_facade::tests::database_error_type_is_reachable_at_the_facade_root ... ok
+test db_engine::tests::storage_accessor_reaches_the_same_backend_payload_store ... ok
+test db_engine::tests::checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids ... ok
+test db_engine::tests::full_submit_durable_query_round_trip_over_a_real_document_authority ... ok
+test db_storage::tests::fs_storage_db_storage_accessors_and_capabilities ... ok
+test db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document ... ok
+test db_storage::tests::fs_storage_satisfies_payload_storage_laws ... ok
+test db_storage::tests::memory_storage_db_storage_accessors_and_capabilities ... ok
+test db_storage::tests::memory_storage_satisfies_catalog_storage_laws ... ok
+test db_storage::tests::memory_storage_satisfies_index_storage_laws ... ok
+test db_storage::tests::memory_storage_satisfies_lease_storage_laws ... ok
+test db_storage::tests::memory_storage_satisfies_payload_storage_laws ... ok
+test db_storage::tests::memory_storage_satisfies_snapshot_storage_laws ... ok
+test db_storage::tests::memory_storage_satisfies_wal_storage_laws ... ok
+test db_sync::tests::command_envelope_round_trips_through_encode_decode ... ok
+test db_sync::tests::decide_bootstrap_reports_none_for_an_already_caught_up_replica ... ok
+test db_sync::tests::decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot ... ok
+test db_sync::tests::decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor ... ok
+test db_sync::tests::decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor ... ok
+test db_sync::tests::decode_command_envelope_rejects_malformed_bytes_without_panicking ... ok
+test db_sync::tests::frontier_delta_reports_the_command_gap_and_rejects_backwards ... ok
+test db_sync::tests::frontier_summary_bridges_round_trip ... ok
+test db_sync::tests::handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up ... ok
+test db_sync::tests::handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token ... ok
+test db_sync::tests::handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size ... ok
+test db_sync::tests::handle_hello_rejects_zero_snapshot_chunk_bytes ... ok
+test db_sync::tests::handle_hello_reports_no_follow_up_for_an_already_caught_up_replica ... ok
+test db_sync::tests::issue_resume_token_produces_the_documented_v1_wire_format ... ok
+test db_sync::tests::missing_commands_rejects_a_replica_behind_the_retained_floor ... ok
+test db_sync::tests::missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server ... ok
+test db_sync::tests::missing_commands_transfer_round_trip_for_a_partially_caught_up_replica ... ok
+test db_sync::tests::missing_commands_transfer_round_trip_from_genesis ... ok
+test db_sync::tests::replay_sync_state_derives_frontier_and_ordered_commands ... ok
+test db_sync::tests::replay_sync_state_on_empty_document_is_genesis ... ok
+test db_sync::tests::replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor ... ok
+test db_testkit::tests::crash_harness_recovers_cleanly_after_every_injected_write_failure ... ok
+test db_testkit::tests::document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail ... ok
+test db_engine::tests::subscribe_preview_and_snapshot_now_are_documented_unimplemented_not_panics ... ok
+test db_storage::tests::fs_storage_satisfies_index_storage_laws ... ok
+test db_testkit::tests::fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root ... ok
+test db_testkit::tests::fault_storage_fail_nth_write_fails_exactly_once_at_the_scripted_call ... ok
+test db_testkit::tests::fault_storage_fsync_lies_never_delegates_to_the_inner_backend ... ok
+test db_testkit::tests::fault_storage_passes_through_untouched_when_no_fault_is_scripted ... ok
+test db_testkit::tests::fault_storage_torn_write_forwards_only_the_kept_prefix ... ok
+test db_testkit::tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state ... ok
+test db_testkit::tests::law_fencing_excludes_stale_writer_memory ... ok
+test db_testkit::tests::law_inverse_undo_roundtrip ... ok
+test db_testkit::tests::law_overlay_structural_sharing ... ok
+test db_testkit::tests::law_preview_never_durable ... ok
+test db_testkit::tests::law_projection_rebuild_equals_incremental ... ok
+test db_storage::tests::fs_storage_write_atomic_survives_reopen_across_instances ... ok
+test db_testkit::tests::law_snapshot_plus_suffix_equals_replay ... ok
+test db_storage::tests::fs_storage_satisfies_catalog_storage_laws ... ok
+test db_testkit::tests::next_range_never_divides_by_zero_and_stays_in_bounds ... ok
+test db_testkit::tests::sim_runtime_clock_advances_monotonically_and_only_explicitly ... ok
+test db_testkit::tests::sim_runtime_same_seed_reproduces_identical_task_order ... ok
+test db_testkit::tests::split_mix_64_same_seed_reproduces_identical_sequence_different_seed_diverges ... ok
+test db_testkit::tests::workload_gen_disjoint_batch_is_deterministic_and_covers_distinct_paths ... ok
+test db_version_graph::tests::emit_trait_object_records_events_with_fields_and_document ... ok
+test db_version_graph::tests::null_emit_discards_without_panicking ... ok
+test db_version_graph::tests::null_version_graph_never_panics_always_reports_unimplemented ... ok
+test db_version_graph::tests::version_graph_trait_object_is_dyn_compatible ... ok
+test db_wal::tests::decode_rejects_unknown_kind_and_malformed_payload ... ok
+test db_wal::tests::empty_document_open_creates_a_fresh_wal ... ok
+test db_wal::tests::fsync_durability_forces_immediate_commit_regardless_of_policy ... ok
+test db_wal::tests::group_commit_batches_until_policy_threshold_then_commits ... ok
+test db_wal::tests::group_commit_policy_is_due_on_any_threshold ... ok
+test db_wal::tests::identity_payload_transform_round_trips_without_changing_bytes ... ok
+test db_wal::tests::multi_segment_rotation_chains_prev_hash_and_replay_spans_segments ... ok
+test db_wal::tests::non_identity_payload_transform_round_trips_through_an_inline_wal_payload_record ... ok
+test db_wal::tests::record_kinds_fill_the_extension_range_uniquely ... ok
+test db_wal::tests::recovery_rejects_a_torn_non_active_sealed_segment ... ok
+test db_wal::tests::recovery_resumes_next_tx_id_and_accepts_further_submits ... ok
+test db_wal::tests::single_segment_write_commit_flush_recovers_cleanly ... ok
+test db_wal::tests::torn_tail_is_recovered_by_truncating_and_replaying_trusted_prefix ... ok
+test db_wal::tests::wal_record_round_trips_every_kind_through_encode_decode ... ok
+test db_testkit::tests::law_sync_convergence ... ok
+test db_testkit::tests::law_fencing_excludes_stale_writer_fs ... ok
+test db_storage::tests::fs_storage_satisfies_wal_storage_laws ... ok
+test db_testkit::tests::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption ... ok
+test db_storage::tests::fs_storage_satisfies_lease_storage_laws ... ok
+test db_storage::tests::fs_storage_satisfies_snapshot_storage_laws ... ok
+test db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports ... ok
+test db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document ... ok
+test db_testkit::tests::law_replay_deterministic ... ok
+
+test result: ok. 424 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.99s
+

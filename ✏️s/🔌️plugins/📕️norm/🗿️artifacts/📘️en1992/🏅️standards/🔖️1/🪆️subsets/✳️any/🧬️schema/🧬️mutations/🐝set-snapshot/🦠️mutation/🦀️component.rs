@@ -20,7 +20,7 @@ pub struct ChangeAnnex {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnnex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
 
-    fn diff(&self, base: &En1992Snapshot) -> En1992Diff {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::set_snapshot::diff::diff(self, base)
     }
 

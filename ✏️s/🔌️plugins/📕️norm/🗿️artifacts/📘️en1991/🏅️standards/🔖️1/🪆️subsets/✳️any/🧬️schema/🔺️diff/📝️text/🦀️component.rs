@@ -13,219 +13,222 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl En1991Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1991Artifact) -> En1991Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.area_m2 {
-            next.area_m2 = value.clone();
-        }
-        if let Some(value) = &self.category {
-            next.category = value.clone();
-        }
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.self_weight_material {
-            next.self_weight_material = value.clone();
-        }
-        if let Some(value) = &self.self_weight_thickness_m {
-            next.self_weight_thickness_m = value.clone();
-        }
-        if let Some(value) = &self.assumed_g_k_kn_m2 {
-            next.assumed_g_k_kn_m2 = value.clone();
-        }
-        if let Some(value) = &self.fire_curve {
-            next.fire_curve = value.clone();
-        }
-        if let Some(value) = &self.fire_resistance_min {
-            next.fire_resistance_min = value.clone();
-        }
-        if let Some(value) = &self.fire_member_capacity_c {
-            next.fire_member_capacity_c = value.clone();
-        }
-        if let Some(value) = &self.snow_zone {
-            next.snow_zone = value.clone();
-        }
-        if let Some(value) = &self.snow_altitude_m {
-            next.snow_altitude_m = value.clone();
-        }
-        if let Some(value) = &self.en_s_k_kn_m2 {
-            next.en_s_k_kn_m2 = value.clone();
-        }
-        if let Some(value) = &self.wind_zone {
-            next.wind_zone = value.clone();
-        }
-        if let Some(value) = &self.en_v_b_m_s {
-            next.en_v_b_m_s = value.clone();
-        }
-        if let Some(value) = &self.delta_t_k {
-            next.delta_t_k = value.clone();
-        }
-        if let Some(value) = &self.construction_activity {
-            next.construction_activity = value.clone();
-        }
-        if let Some(value) = &self.accidental_mass_t {
-            next.accidental_mass_t = value.clone();
-        }
-        if let Some(value) = &self.accidental_speed_km_h {
-            next.accidental_speed_km_h = value.clone();
-        }
-        if let Some(value) = &self.bridge_lane {
-            next.bridge_lane = value.clone();
-        }
-        if let Some(value) = &self.bridge_span_m {
-            next.bridge_span_m = value.clone();
-        }
-        if let Some(value) = &self.bridge_lane_width_m {
-            next.bridge_lane_width_m = value.clone();
-        }
-        if let Some(value) = &self.bridge_moment_resistance_knm {
-            next.bridge_moment_resistance_knm = value.clone();
-        }
-        if let Some(value) = &self.crane_class {
-            next.crane_class = value.clone();
-        }
-        if let Some(value) = &self.hoist_class {
-            next.hoist_class = value.clone();
-        }
-        if let Some(value) = &self.hoisting_speed_m_s {
-            next.hoisting_speed_m_s = value.clone();
-        }
-        if let Some(value) = &self.silo_bulk_density_kn_m3 {
-            next.silo_bulk_density_kn_m3 = value.clone();
-        }
-        if let Some(value) = &self.silo_height_m {
-            next.silo_height_m = value.clone();
-        }
-        if let Some(value) = &self.silo_hydraulic_radius_m {
-            next.silo_hydraulic_radius_m = value.clone();
-        }
-        if let Some(value) = &self.silo_mu {
-            next.silo_mu = value.clone();
-        }
-        if let Some(value) = &self.silo_k {
-            next.silo_k = value.clone();
-        }
-        if let Some(value) = &self.c_s {
-            next.c_s = value.clone();
-        }
-        if let Some(value) = &self.c_d {
-            next.c_d = value.clone();
-        }
-        if let Some(value) = &self.selected_check_index {
-            next.selected_check_index = *value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &En1991Artifact) -> protocol::MutationApplyResult<En1991Artifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = &self.area_m2 {
+                next.area_m2 = value.clone();
+            }
+            if let Some(value) = &self.category {
+                next.category = value.clone();
+            }
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.self_weight_material {
+                next.self_weight_material = value.clone();
+            }
+            if let Some(value) = &self.self_weight_thickness_m {
+                next.self_weight_thickness_m = value.clone();
+            }
+            if let Some(value) = &self.assumed_g_k_kn_m2 {
+                next.assumed_g_k_kn_m2 = value.clone();
+            }
+            if let Some(value) = &self.fire_curve {
+                next.fire_curve = value.clone();
+            }
+            if let Some(value) = &self.fire_resistance_min {
+                next.fire_resistance_min = value.clone();
+            }
+            if let Some(value) = &self.fire_member_capacity_c {
+                next.fire_member_capacity_c = value.clone();
+            }
+            if let Some(value) = &self.snow_zone {
+                next.snow_zone = value.clone();
+            }
+            if let Some(value) = &self.snow_altitude_m {
+                next.snow_altitude_m = value.clone();
+            }
+            if let Some(value) = &self.en_s_k_kn_m2 {
+                next.en_s_k_kn_m2 = value.clone();
+            }
+            if let Some(value) = &self.wind_zone {
+                next.wind_zone = value.clone();
+            }
+            if let Some(value) = &self.en_v_b_m_s {
+                next.en_v_b_m_s = value.clone();
+            }
+            if let Some(value) = &self.delta_t_k {
+                next.delta_t_k = value.clone();
+            }
+            if let Some(value) = &self.construction_activity {
+                next.construction_activity = value.clone();
+            }
+            if let Some(value) = &self.accidental_mass_t {
+                next.accidental_mass_t = value.clone();
+            }
+            if let Some(value) = &self.accidental_speed_km_h {
+                next.accidental_speed_km_h = value.clone();
+            }
+            if let Some(value) = &self.bridge_lane {
+                next.bridge_lane = value.clone();
+            }
+            if let Some(value) = &self.bridge_span_m {
+                next.bridge_span_m = value.clone();
+            }
+            if let Some(value) = &self.bridge_lane_width_m {
+                next.bridge_lane_width_m = value.clone();
+            }
+            if let Some(value) = &self.bridge_moment_resistance_knm {
+                next.bridge_moment_resistance_knm = value.clone();
+            }
+            if let Some(value) = &self.crane_class {
+                next.crane_class = value.clone();
+            }
+            if let Some(value) = &self.hoist_class {
+                next.hoist_class = value.clone();
+            }
+            if let Some(value) = &self.hoisting_speed_m_s {
+                next.hoisting_speed_m_s = value.clone();
+            }
+            if let Some(value) = &self.silo_bulk_density_kn_m3 {
+                next.silo_bulk_density_kn_m3 = value.clone();
+            }
+            if let Some(value) = &self.silo_height_m {
+                next.silo_height_m = value.clone();
+            }
+            if let Some(value) = &self.silo_hydraulic_radius_m {
+                next.silo_hydraulic_radius_m = value.clone();
+            }
+            if let Some(value) = &self.silo_mu {
+                next.silo_mu = value.clone();
+            }
+            if let Some(value) = &self.silo_k {
+                next.silo_k = value.clone();
+            }
+            if let Some(value) = &self.c_s {
+                next.c_s = value.clone();
+            }
+            if let Some(value) = &self.c_d {
+                next.c_d = value.clone();
+            }
+            if let Some(value) = &self.selected_check_index {
+                next.selected_check_index = *value;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<En1991Snapshot> for En1991Diff {
-    fn apply(&self, snapshot: &En1991Snapshot) -> En1991Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.area_m2 {
-            next.area_m2 = value.clone();
-        }
-        if let Some(value) = &self.category {
-            next.category = value.clone();
-        }
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
-        }
-        if let Some(value) = &self.self_weight_material {
-            next.self_weight_material = value.clone();
-        }
-        if let Some(value) = &self.self_weight_thickness_m {
-            next.self_weight_thickness_m = value.clone();
-        }
-        if let Some(value) = &self.assumed_g_k_kn_m2 {
-            next.assumed_g_k_kn_m2 = value.clone();
-        }
-        if let Some(value) = &self.fire_curve {
-            next.fire_curve = value.clone();
-        }
-        if let Some(value) = &self.fire_resistance_min {
-            next.fire_resistance_min = value.clone();
-        }
-        if let Some(value) = &self.fire_member_capacity_c {
-            next.fire_member_capacity_c = value.clone();
-        }
-        if let Some(value) = &self.snow_zone {
-            next.snow_zone = value.clone();
-        }
-        if let Some(value) = &self.snow_altitude_m {
-            next.snow_altitude_m = value.clone();
-        }
-        if let Some(value) = &self.en_s_k_kn_m2 {
-            next.en_s_k_kn_m2 = value.clone();
-        }
-        if let Some(value) = &self.wind_zone {
-            next.wind_zone = value.clone();
-        }
-        if let Some(value) = &self.en_v_b_m_s {
-            next.en_v_b_m_s = value.clone();
-        }
-        if let Some(value) = &self.delta_t_k {
-            next.delta_t_k = value.clone();
-        }
-        if let Some(value) = &self.construction_activity {
-            next.construction_activity = value.clone();
-        }
-        if let Some(value) = &self.accidental_mass_t {
-            next.accidental_mass_t = value.clone();
-        }
-        if let Some(value) = &self.accidental_speed_km_h {
-            next.accidental_speed_km_h = value.clone();
-        }
-        if let Some(value) = &self.bridge_lane {
-            next.bridge_lane = value.clone();
-        }
-        if let Some(value) = &self.bridge_span_m {
-            next.bridge_span_m = value.clone();
-        }
-        if let Some(value) = &self.bridge_lane_width_m {
-            next.bridge_lane_width_m = value.clone();
-        }
-        if let Some(value) = &self.bridge_moment_resistance_knm {
-            next.bridge_moment_resistance_knm = value.clone();
-        }
-        if let Some(value) = &self.crane_class {
-            next.crane_class = value.clone();
-        }
-        if let Some(value) = &self.hoist_class {
-            next.hoist_class = value.clone();
-        }
-        if let Some(value) = &self.hoisting_speed_m_s {
-            next.hoisting_speed_m_s = value.clone();
-        }
-        if let Some(value) = &self.silo_bulk_density_kn_m3 {
-            next.silo_bulk_density_kn_m3 = value.clone();
-        }
-        if let Some(value) = &self.silo_height_m {
-            next.silo_height_m = value.clone();
-        }
-        if let Some(value) = &self.silo_hydraulic_radius_m {
-            next.silo_hydraulic_radius_m = value.clone();
-        }
-        if let Some(value) = &self.silo_mu {
-            next.silo_mu = value.clone();
-        }
-        if let Some(value) = &self.silo_k {
-            next.silo_k = value.clone();
-        }
-        if let Some(value) = &self.c_s {
-            next.c_s = value.clone();
-        }
-        if let Some(value) = &self.c_d {
-            next.c_d = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &En1991Snapshot) -> protocol::MutationApplyResult<En1991Snapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.area_m2 {
+                next.area_m2 = value.clone();
+            }
+            if let Some(value) = &self.category {
+                next.category = value.clone();
+            }
+            if let Some(value) = &self.annex {
+                next.annex = value.clone();
+            }
+            if let Some(value) = &self.self_weight_material {
+                next.self_weight_material = value.clone();
+            }
+            if let Some(value) = &self.self_weight_thickness_m {
+                next.self_weight_thickness_m = value.clone();
+            }
+            if let Some(value) = &self.assumed_g_k_kn_m2 {
+                next.assumed_g_k_kn_m2 = value.clone();
+            }
+            if let Some(value) = &self.fire_curve {
+                next.fire_curve = value.clone();
+            }
+            if let Some(value) = &self.fire_resistance_min {
+                next.fire_resistance_min = value.clone();
+            }
+            if let Some(value) = &self.fire_member_capacity_c {
+                next.fire_member_capacity_c = value.clone();
+            }
+            if let Some(value) = &self.snow_zone {
+                next.snow_zone = value.clone();
+            }
+            if let Some(value) = &self.snow_altitude_m {
+                next.snow_altitude_m = value.clone();
+            }
+            if let Some(value) = &self.en_s_k_kn_m2 {
+                next.en_s_k_kn_m2 = value.clone();
+            }
+            if let Some(value) = &self.wind_zone {
+                next.wind_zone = value.clone();
+            }
+            if let Some(value) = &self.en_v_b_m_s {
+                next.en_v_b_m_s = value.clone();
+            }
+            if let Some(value) = &self.delta_t_k {
+                next.delta_t_k = value.clone();
+            }
+            if let Some(value) = &self.construction_activity {
+                next.construction_activity = value.clone();
+            }
+            if let Some(value) = &self.accidental_mass_t {
+                next.accidental_mass_t = value.clone();
+            }
+            if let Some(value) = &self.accidental_speed_km_h {
+                next.accidental_speed_km_h = value.clone();
+            }
+            if let Some(value) = &self.bridge_lane {
+                next.bridge_lane = value.clone();
+            }
+            if let Some(value) = &self.bridge_span_m {
+                next.bridge_span_m = value.clone();
+            }
+            if let Some(value) = &self.bridge_lane_width_m {
+                next.bridge_lane_width_m = value.clone();
+            }
+            if let Some(value) = &self.bridge_moment_resistance_knm {
+                next.bridge_moment_resistance_knm = value.clone();
+            }
+            if let Some(value) = &self.crane_class {
+                next.crane_class = value.clone();
+            }
+            if let Some(value) = &self.hoist_class {
+                next.hoist_class = value.clone();
+            }
+            if let Some(value) = &self.hoisting_speed_m_s {
+                next.hoisting_speed_m_s = value.clone();
+            }
+            if let Some(value) = &self.silo_bulk_density_kn_m3 {
+                next.silo_bulk_density_kn_m3 = value.clone();
+            }
+            if let Some(value) = &self.silo_height_m {
+                next.silo_height_m = value.clone();
+            }
+            if let Some(value) = &self.silo_hydraulic_radius_m {
+                next.silo_hydraulic_radius_m = value.clone();
+            }
+            if let Some(value) = &self.silo_mu {
+                next.silo_mu = value.clone();
+            }
+            if let Some(value) = &self.silo_k {
+                next.silo_k = value.clone();
+            }
+            if let Some(value) = &self.c_s {
+                next.c_s = value.clone();
+            }
+            if let Some(value) = &self.c_d {
+                next.c_d = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

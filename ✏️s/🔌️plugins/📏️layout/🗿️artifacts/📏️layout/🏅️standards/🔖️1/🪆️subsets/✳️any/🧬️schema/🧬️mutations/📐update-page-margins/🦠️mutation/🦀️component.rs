@@ -18,7 +18,7 @@ pub struct UpdatePageMargins {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "page-margins", kind: "update-page-margins", record: "UpdatedPageMargins" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_update_page_margins(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

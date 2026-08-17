@@ -25,7 +25,7 @@ pub fn create_block(block: crate::artifacts::note::NoteBlockNode, parent_id: Opt
 impl MutationKind<NoteSnapshot, NoteMutation> for CreateBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "block", kind: "create-block", record: "CreatedBlock" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

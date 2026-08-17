@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "os-hub-admin",
+  "version": "0.1.0",
+  "description": "hub · admin — operator SPA served at /admin (spaces, users, connections, documents, events)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./📦️index.tsx"
+  },
+  "scripts": {
+    "dev": "bun nx run os-hub-admin:dev",
+    "build": "bun nx run os-hub-admin:build",
+    "test": "bun nx run os-hub-admin:test"
+  },
+  "dependencies": {
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "hub/modules/admin/packages/typescript"
+  },
+  "bundleKind": "application",
+  "nx": {
+    "includedScripts": []
+  }
+}

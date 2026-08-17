@@ -125,7 +125,6 @@ export interface Taxonomy {
   /** 📦️ Suffix allowlist complementing `packagingFileNames` (tool configs: `*.config.ts`, …). */
   readonly packagingFileSuffixes: readonly string[];
   readonly artifactsDirName: string;
-  readonly appsDirName: string;
   readonly modesDirName: string;
   readonly windowsDirName: string;
   readonly standardsDirName: string;
@@ -175,7 +174,7 @@ export interface Taxonomy {
   readonly surfaceRequiredChildDirs: readonly string[];
   /** 👁️✏️ IMPLEMENTATION set: language leaves every surface root must carry. */
   readonly surfaceComponentLangs: readonly string[];
-  /** 🔣️ Normative JSON Schema leaf per surface schema facet path — the surface twin of `appSchemaSpecFilenames`. */
+  /** 🔣️ Normative JSON Schema leaf per surface schema facet path. */
   readonly surfaceSchemaSpecFilenames: Readonly<Record<string, string>>;
   /** 🪆️ Allowed subset archetypes: owning owns types; derived reuses types + conformance gate. */
   readonly subsetArchetypes?: readonly string[];
@@ -206,16 +205,12 @@ export interface Taxonomy {
   readonly schemaFormats: Readonly<Record<string, { readonly leafFilename: string; readonly extension: string; readonly fieldCasing: string }>>;
   /** 🔣️ Normative JSON Schema leaf per `🧬️schema` facet path — the twin of `artifactSpecFilenames` for schema facets, which carry no `.semio` spec. */
   readonly artifactSchemaSpecFilenames: Readonly<Record<string, string>>;
-  /** ✅️ COMPLETENESS set: every app that owns a config must carry each of these as a leaf. */
-  readonly appComponentDirs: readonly string[];
   /** 🎛 Required children of each `🎚️config/` facet: its schema. */
   readonly configChildDirs: readonly string[];
   /** 👥️ Required children of each `👥️presence/` facet: its schema. */
   readonly presenceChildDirs: readonly string[];
   /** 🫧️ Required children of each `🫧️transient/` facet: its schema. The ephemeral local-only UI lane, fourth and last of the state mechanisms. */
   readonly transientChildDirs: readonly string[];
-  /** 🔣️ Normative JSON Schema leaf per app schema facet path. */
-  readonly appSchemaSpecFilenames: Readonly<Record<string, string>>;
   readonly exampleAssetsDirName: string;
   readonly exampleTestsDirName: string;
   readonly exampleSlugPattern: string;
@@ -225,7 +220,6 @@ export interface Taxonomy {
   readonly exampleTestLeafFilenames: Readonly<Record<string, string>>;
   readonly forbiddenExampleSlugs: readonly string[];
   readonly forbiddenExamplePluralDirs: readonly string[];
-  readonly appChildDirs: readonly string[];
   /** 🎭️ STRUCTURAL set: every directory allowed directly below a mode. */
   readonly modeChildDirs: readonly string[];
   /** 🎭️ COMPLETENESS set: mode children that must exist even when empty. */
@@ -361,26 +355,6 @@ function artifactFacetChildDirs(facetPath: string, taxonomy: Taxonomy): readonly
   return level.dirs.filter((d) => d !== "*");
 }
 
-/** 🌳️ Declared children of a nesting app facet. */
-function appFacetChildDirs(facet: string, taxonomy: Taxonomy): readonly string[] {
-  if (facet === "🎚️config") return taxonomy.configChildDirs ?? [];
-  if (facet === "👥️presence") return taxonomy.presenceChildDirs ?? [];
-  if (facet === "🫧️transient") return taxonomy.transientChildDirs ?? [];
-  return [];
-}
-
-/** 🧭️ Whether a `/`-joined facet path such as `🎚️config/🧬️schema` walks only declared dirs from an app (or shared config owner). */
-export function appFacetPathIsDeclared(facetPath: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
-  const [root, ...rest] = facetPath.split("/");
-  if (!root || !taxonomy.appComponentDirs.includes(root)) return false;
-  let parent = root;
-  for (const segment of rest) {
-    if (!appFacetChildDirs(parent, taxonomy).includes(segment)) return false;
-    parent = segment;
-  }
-  return true;
-}
-
 /** 🧭️ Whether a `/`-joined facet path walks only declared dirs from an artifact root (supports `*` wildcard levels). */
 export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonomy = loadTaxonomy()): boolean {
   const [root, ...rest] = facetPath.split("/");
@@ -435,8 +409,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   } catch {
     problems.push(`exampleSlugPattern is not a valid unicode RegExp: ${JSON.stringify(taxonomy.exampleSlugPattern)}`);
   }
-  if (!taxonomy.appChildDirs.includes("📚️examples")) {
-    problems.push(`appChildDirs must include "📚️examples".`);
+  if (!taxonomy.surfaceChildDirs.includes("📚️examples")) {
+    problems.push(`surfaceChildDirs must include "📚️examples".`);
   }
   if (!taxonomy.artifactChildDirs.includes("📚️examples")) {
     problems.push(`artifactChildDirs must include "📚️examples".`);
@@ -718,24 +692,9 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       problems.push(`artifactSchemaSpecFilenames["${facet}"] = ${JSON.stringify(specName)} must be the normative schemaFormats["🔣️jsonschema"] leaf ${JSON.stringify(normativeSchemaLeaf)}.`);
     }
   }
-  for (const [facet, specName] of Object.entries(taxonomy.appSchemaSpecFilenames ?? {})) {
-    if (!appFacetPathIsDeclared(facet, taxonomy)) {
-      problems.push(`appSchemaSpecFilenames key "${facet}" is not a declared app facet path.`);
-    }
-    if (specName !== normativeSchemaLeaf) {
-      problems.push(`appSchemaSpecFilenames["${facet}"] = ${JSON.stringify(specName)} must be the normative schemaFormats["🔣️jsonschema"] leaf ${JSON.stringify(normativeSchemaLeaf)}.`);
-    }
-  }
-  if (!Array.isArray(taxonomy.appComponentDirs) || taxonomy.appComponentDirs.length === 0) {
-    problems.push(`appComponentDirs must be a non-empty array.`);
-  } else {
-    for (const dir of taxonomy.appComponentDirs) {
-      if (!taxonomy.appChildDirs.includes(dir)) problems.push(`appComponentDirs member "${dir}" is missing from appChildDirs — the structural set must be a superset of the completeness set.`);
-    }
-  }
   for (const banned of ["🧮️config", "🕸️wasm"] as const) {
-    if (taxonomy.appChildDirs.includes(banned) || taxonomy.appComponentDirs.includes(banned)) {
-      problems.push(`a bare "${banned}" is not an app facet — use "🎚️config" and "🌉️wasm".`);
+    if (taxonomy.surfaceChildDirs.includes(banned) || taxonomy.surfaceRequiredChildDirs.includes(banned)) {
+      problems.push(`a bare "${banned}" is not a surface facet — use "🎚️config" and "🌉️wasm".`);
     }
   }
   for (const [owner, structural, required] of [
@@ -777,7 +736,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
     }
   }
   for (const lane of stateLaneDirs) {
-    if (!taxonomy.appChildDirs.includes(lane)) problems.push(`appChildDirs must include the state lane "${lane}".`);
+    if (!taxonomy.surfaceChildDirs.includes(lane)) problems.push(`surfaceChildDirs must include the state lane "${lane}".`);
     if (!taxonomy.modeChildDirs?.includes(lane)) problems.push(`modeChildDirs must include the state lane "${lane}".`);
     if (!taxonomy.windowChildDirs.includes(lane)) problems.push(`windowChildDirs must include the state lane "${lane}".`);
     if (!taxonomy.windowRequiredChildDirs.includes(lane)) problems.push(`windowRequiredChildDirs must include the state lane "${lane}".`);
@@ -887,7 +846,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
   }
   const commandsDir = "🎮️commands";
   for (const [owner, dirs] of [
-    ["appChildDirs", taxonomy.appChildDirs],
+    ["surfaceChildDirs", taxonomy.surfaceChildDirs],
     ["modeChildDirs", taxonomy.modeChildDirs],
     ["pluginChildDirs", taxonomy.pluginChildDirs],
     ["osChildDirs", taxonomy.osChildDirs],

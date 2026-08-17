@@ -1,0 +1,127 @@
+=== semio-s-plugin-fem (final run) ===
+
+warning: `semio-s-plugin-fem` (lib) generated 89 warnings (run `cargo fix --lib -p semio-s-plugin-fem` to apply 69 suggestions)
+warning: function `fem2d_app_manifest_for_testkit` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:444:8
+    |
+444 |     fn fem2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fem2d_app_with_registry` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:449:12
+    |
+449 |     pub fn fem2d_app_with_registry() -> Fem2dApp {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fem3d_app_manifest_for_testkit` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:637:8
+    |
+637 |     fn fem3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fem3d_app_with_registry` is never used
+   --> ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:642:12
+    |
+642 |     pub fn fem3d_app_with_registry() -> Fem3dApp {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-fem` (lib test) generated 136 warnings (86 duplicates) (run `cargo fix --lib -p semio-s-plugin-fem --tests` to apply 35 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 23.68s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+
+=== semio-s-plugin-energy ===
+2 | use crate::artifacts::model::{EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA};
+  |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `write_json_text`
+ --> ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:4:80
+  |
+4 | use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_text};
+  |                                                                                ^^^^^^^^^^^^^^^
+
+warning: unused import: `parse_json_text`
+ --> ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️component.rs:4:63
+  |
+4 | use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, write_json_pretty};
+  |                                                               ^^^^^^^^^^^^^^^
+
+warning: unused import: `protocol::SemanticMutation`
+  --> ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:42:9
+   |
+42 |     use protocol::SemanticMutation;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:10:9
+   |
+10 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-energy` (lib) generated 9 warnings (run `cargo fix --lib -p semio-s-plugin-energy` to apply 7 suggestions)
+warning: `semio-s-plugin-energy` (lib test) generated 10 warnings (9 duplicates) (run `cargo fix --lib -p semio-s-plugin-energy --tests` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized] target(s) in 25.85s
+
+=== semio-s-plugin-space ===
+     |                                                      ^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `artifact_kind` on type `Vec<semio_framework::Dialect>`
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3723:41
+     |
+3723 |             format_kind: export_dialect.artifact_kind.to_string(),
+     |                                         ^^^^^^^^^^^^^ unknown field
+
+error[E0609]: no field `standard` on type `Vec<semio_framework::Dialect>`
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3724:45
+     |
+3724 |             format_standard: export_dialect.standard.0.to_string(),
+     |                                             ^^^^^^^^ unknown field
+
+error[E0609]: no field `subset` on type `Vec<semio_framework::Dialect>`
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3725:43
+     |
+3725 |             format_subset: export_dialect.subset.0.to_string(),
+     |                                           ^^^^^^ unknown field
+
+error[E0609]: no field `artifact_kind` on type `&Vec<semio_framework::Dialect>`
+    --> 🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3229:127
+     |
+3229 | ...ource_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
+     |                                                      ^^^^^^^^^^^^^ unknown field
+
+Some errors have detailed explanations: E0063, E0308, E0609.
+For more information about an error, try `rustc --explain E0063`.
+warning: `semio-framework-os` (lib) generated 8 warnings
+error: could not compile `semio-framework-os` (lib) due to 16 previous errors; 8 warnings emitted
+
+=== semio-s-plugin-demonstrator ===
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `base`
+ --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/↩️inverse/🦀️component.rs:8:44
+  |
+8 | pub fn inverse(payload: &CreateGeneration, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {
+  |                                            ^^^^ help: if this is intentional, prefix it with an underscore: `_base`
+
+Some errors have detailed explanations: E0053, E0308, E0433.
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-s-plugin-procedural` (lib) generated 184 warnings
+error: could not compile `semio-s-plugin-procedural` (lib) due to 47 previous errors; 184 warnings emitted
+warning: unused variable: `source_id`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:153:19
+    |
+153 |         let Some((source_id, _)) = parse_endpoint(&edge.source).or_else(|| Some((edge.source.as_str(), ""))) else { continue };
+    |                   ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_source_id`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `target_id`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:154:19
+    |
+154 |         let Some((target_id, _)) = parse_endpoint(&edge.target).or_else(|| Some((edge.target.as_str(), ""))) else { continue };
+    |                   ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_target_id`
+
+Some errors have detailed explanations: E0061, E0277, E0308.
+For more information about an error, try `rustc --explain E0061`.
+warning: `semio-s-plugin-puzzle` (lib) generated 266 warnings
+error: could not compile `semio-s-plugin-puzzle` (lib) due to 39 previous errors; 266 warnings emitted

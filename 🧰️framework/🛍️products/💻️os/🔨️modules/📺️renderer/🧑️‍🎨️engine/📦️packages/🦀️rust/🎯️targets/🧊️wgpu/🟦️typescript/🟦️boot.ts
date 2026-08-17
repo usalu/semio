@@ -304,6 +304,23 @@ function resolveBootAppRole(): string {
   return viteEnv === "viewer" || urlRole === "viewer" ? "viewer" : "editor";
 }
 
+/** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0 — `S_HUB_URL`/
+ * `S_USER`/`S_DATA_DIR` for the browser wgpu build. Same defensive-read posture as
+ * `resolveBootAppRole` right above (this target is Trunk-served, not Vite-bundled, so
+ * `import.meta.env.VITE_S_*` only resolves when a deployment wraps this boot module through a Vite
+ * dev server) with `?hub=`/`?user=`/`?dataDir=` URL-param fallbacks mirroring `resolveBootAppRole`'s
+ * own `?role=` idiom. `undefined` hub url ⇒ no hub env at all ⇒ `semioWgpuSetHubEnv` is never called
+ * ⇒ the Rust side's `resolve_identity_env` stays `None` ⇒ unchanged local-only behaviour. */
+function resolveBootHubEnv(): { hubUrl: string; user: string; dataDir: string } | undefined {
+  const viteEnv = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+  const params = new URLSearchParams(window.location.search);
+  const hubUrl = viteEnv?.VITE_S_HUB_URL ?? params.get("hub") ?? undefined;
+  if (!hubUrl) return undefined;
+  const user = viteEnv?.VITE_S_USER ?? params.get("user") ?? "";
+  const dataDir = viteEnv?.VITE_S_DATA_DIR ?? params.get("dataDir") ?? "";
+  return { hubUrl, user, dataDir };
+}
+
 /** 🌐️ Surfaces a missing/incompatible plugin dependency (ticket
  * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS) as a real, localized
  * banner instead of only a console error — non-fatal, since `boot.plugins` already excludes the
@@ -384,6 +401,13 @@ try {
   // optional binding this file checks.
   if (bindings.semioWgpuSetAppRole) {
     (bindings.semioWgpuSetAppRole as (role: string) => void)(resolveBootAppRole());
+  }
+  // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§1 — same guarded,
+  // fail-soft posture as `semioWgpuSetAppRole` right above: a stale wasm build predating this ticket
+  // simply skips identity/directory wiring rather than throwing.
+  const hubEnv = resolveBootHubEnv();
+  if (hubEnv && bindings.semioWgpuSetHubEnv) {
+    (bindings.semioWgpuSetHubEnv as (hubUrl: string, user: string, dataDir: string) => void)(hubEnv.hubUrl, hubEnv.user, hubEnv.dataDir);
   }
   (bindings.semioWgpuMount as (canvas: HTMLCanvasElement, handles: typeof handles, pluginFilter: string) => void)(canvas, handles, pluginFilter);
 } catch (error) {

@@ -6,7 +6,7 @@
 
 use dsl::DslRecord;
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::shooting::schema::mutations::ShootingMutation;
@@ -16,9 +16,18 @@ pub use crate::artifacts::shooting::schema::diff::ShootingDiff;
 pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
 pub use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
 
+/// 🪪️ This artifact's dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1
+/// canonical surface id grammar) — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
+/// viewer file can read it without ever importing through the sibling editor module.
+/// `artifact_kind = "s.shooting.shooting"` matches the descriptor `definition()`'s own
+/// `"s.shooting.schema.artifact"` capability row already keys off; `standard`/`subset` match this
+/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.shooting.shooting@1/*#editor` / `s.shooting.shooting@1/*#viewer`.
+pub const SHOOTING_DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shooting", standard: StandardId("1"), subset: SubsetId::ANY };
+
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::shooting::create_shooting_app`'s `🔖️Manifest` region.
+/// `crate::editor::shooting::create_shooting_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.shooting".into(),
@@ -105,7 +114,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called the io registry/schema/inference/language
 /// registries and the document codec registrar directly from a plugin `.setup()` callback.
-/// `crate::apps::shooting::config::schema::register_app_schema()` is the one exception, still called
+/// `crate::editor::shooting::config::schema::register_app_schema()` is the one exception, still called
 /// from `🎥️shooting/🦀️component.rs`'s own `.setup()`: it registers `ShootingPlayApp`'s own
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
@@ -165,7 +174,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::shooting::standards::v1::subsets::any::schema::inferences::shooting_artifact_inference_descriptor()])
         .composers(crate::artifacts::shooting::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::shooting::ShootingPlayApp>()
+        .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::shooting::ShootingPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

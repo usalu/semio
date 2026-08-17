@@ -25,7 +25,7 @@ pub struct Mp3Diff {
 }
 
 impl MutationDiff<Mp3Snapshot> for Mp3Diff {
-    fn apply(&self, base: &Mp3Snapshot) -> Mp3Snapshot {
+    fn apply(&self, base: &Mp3Snapshot) -> protocol::MutationApplyResult<Mp3Snapshot> {
         let mut next = base.clone();
         if let Some(v) = &self.id3v2 {
             next.id3v2 = v.clone();
@@ -36,7 +36,7 @@ impl MutationDiff<Mp3Snapshot> for Mp3Diff {
         if let Some(v) = &self.id3v1 {
             next.id3v1 = v.clone();
         }
-        next
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
         if other.id3v2.is_some() {
@@ -355,13 +355,13 @@ mod tests {
         assert!(matches!(ab.id3v2, Some(Some(_))));
         assert!(ab.frames.is_some());
         assert!(matches!(ab.id3v1, Some(Some(_))));
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = Mp3Diff::between(&b, &a);
         assert_eq!(ba.id3v2, Some(None));
         assert!(ba.frames.is_some());
         assert_eq!(ba.id3v1, Some(None));
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(Mp3Diff::between(&a, &a).is_empty());
     }
@@ -372,8 +372,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(Mp3Diff::between(&a, &b).apply(&a), b);
-        assert_eq!(Mp3Diff::between(&b, &a).apply(&b), a);
+        assert_eq!(Mp3Diff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(Mp3Diff::between(&b, &a).apply(&b).unwrap(), a);
     }
     //#endregion between_roundtrip_law
 
@@ -385,7 +385,7 @@ mod tests {
         let d2 = diff_set_id3v1(Some(Id3v1Tag { raw: vec![1, 2, 3] }));
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base), d2.apply(&d1.apply(&base)));
+        assert_eq!(absorbed.apply(&base).unwrap(), d2.apply(&d1.apply(&base).unwrap()).unwrap());
 
         let d3 = diff_set_id3v2(Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![] }));
         let d4 = diff_set_id3v2(None);
@@ -404,7 +404,7 @@ mod tests {
         let mut right = da.clone();
         right.absorb(right_tail);
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base), dc.apply(&db.apply(&da.apply(&base))));
+        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
     }
     //#endregion absorb_law
 
@@ -413,8 +413,8 @@ mod tests {
     fn inverse_law_diff_level() {
         let base = sweep_a();
         let d = Mp3Diff::between(&base, &sweep_b());
-        let applied = d.apply(&base);
-        let undone = d.inverse(&base).apply(&applied);
+        let applied = d.apply(&base).unwrap();
+        let undone = d.inverse(&base).apply(&applied).unwrap();
         assert_eq!(undone, base);
     }
     //#endregion inverse_law

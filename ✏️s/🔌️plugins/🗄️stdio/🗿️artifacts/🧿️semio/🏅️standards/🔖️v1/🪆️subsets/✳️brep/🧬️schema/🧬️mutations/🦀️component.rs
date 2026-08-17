@@ -277,15 +277,15 @@ mod tests {
     /// `base` — written independently against `(payload, base)` semantics per the ticket's explicit
     /// warning not to derive test helpers from `din4108`'s reference (which diffs the inverse
     /// against the stale `base` and silently discards the forward mutation's effect). This harness
-    /// threads `mutation.diff(&current); current = diff.apply(&current)` at every step, forward AND
+    /// threads `mutation.diff(&current); current = diff.diff().apply(&current)` at every step, forward AND
     /// backward, matching this facet's own `mutate()` (`✳️brep/🧬️schema/🦀️component.rs`) production
     /// convention.
     fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(sorted_by_id(restored), sorted_by_id(base.clone()), "inverse must exactly restore the pre-operation fixture (as a SET) for {operation:?}");
         forward
@@ -320,7 +320,7 @@ mod tests {
         let base = fixture();
         let delete = SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: "v1".into() });
         let diff = delete.diff(&base);
-        let after = diff.apply(&base);
+        let after = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
         assert!(!after.vertices.iter().any(|v| v.id == "v1"), "v1 must be gone");
         assert!(!after.edges.iter().any(|e| e.id == "e1"), "e1 (dependent on v1) must be cascade-deleted");
 
@@ -328,7 +328,7 @@ mod tests {
         assert_eq!(undo.len(), 2, "inverse must reconstruct the vertex AND the one cascade-deleted edge");
         let mut restored = after;
         for back in &undo {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(sorted_by_id(restored), sorted_by_id(base), "cascade delete-vertex must be exactly undoable (as a SET)");
     }
@@ -351,18 +351,18 @@ mod tests {
             },
         });
         assert!(replace.inverse(&base).is_empty());
-        assert_eq!(replace.diff(&base).apply(&base), base, "replace-curve on an absent edge is a no-op");
+        assert_eq!(replace.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
         let mv = SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3::default() });
         assert!(mv.inverse(&base).is_empty());
-        assert_eq!(mv.diff(&base).apply(&base), base, "move-vertex on an absent vertex is a no-op");
+        assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
     }
     //#endregion 🧪️InverseRoundTripLaw
 
     //#region 🧪️DiffConsistencyLaw
     /// 🧪️ diff_consistency_law: ∀ variant, the mutation's own `diff(base)` (built directly from
     /// `(payload, base)`, never apply-then-capture) matches `SemioBrepDiff::between(base,
-    /// diff.apply(base))` — i.e. the sparse diff this facet hand-constructs is exactly the diff a
+    /// diff.diff().apply(base))` — i.e. the sparse diff this facet hand-constructs is exactly the diff a
     /// generic before/after comparison would independently derive. This is the check that would
     /// have caught an apply-then-capture bug (the `mutual recursion` trap this module's original
     /// doc comment already warned about) or a cascade that silently touched the wrong fields.
@@ -372,9 +372,9 @@ mod tests {
         let base = fixture();
         for m in demo_mutation_cases() {
             let hand_diff = m.diff(&base);
-            let after = hand_diff.apply(&base);
+            let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
             let independent_diff = SemioBrepDiff::between(&base, &after);
-            assert_eq!(hand_diff.apply(&base), independent_diff.apply(&base), "diff({m:?}) must match an independent before/after comparison");
+            assert_eq!(hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"), "diff({m:?}) must match an independent before/after comparison");
         }
     }
     //#endregion 🧪️DiffConsistencyLaw

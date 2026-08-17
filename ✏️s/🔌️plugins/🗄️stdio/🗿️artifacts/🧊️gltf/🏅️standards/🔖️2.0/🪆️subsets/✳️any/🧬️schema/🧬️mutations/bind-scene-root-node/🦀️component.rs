@@ -31,8 +31,7 @@ fn plan(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfM
 }
 fn plan_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
     let inverse: inverse::GltfBindSceneRootNodeInverse = decode(bytes)?;
-    let snapshot = inverse::apply(base, &inverse).map_err(rejection)?;
-    let _ = snapshot;
+    let _ = inverse::apply(base, &inverse).map_err(rejection)?;
     Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse)?, inverse_payload: Vec::new(), touched_paths: vec![path(inverse.scene, inverse.position)] })
 }
 fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {

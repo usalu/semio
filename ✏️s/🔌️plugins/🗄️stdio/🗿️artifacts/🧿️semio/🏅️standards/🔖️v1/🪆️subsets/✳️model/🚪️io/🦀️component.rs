@@ -217,7 +217,7 @@ pub mod derived_composition {
         /// subsets' `register()` calls (no test module of its own, and out of this ticket's
         /// `✳️model/`-only edit scope anyway).
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::model::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

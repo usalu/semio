@@ -20,7 +20,7 @@ pub fn disconnect_slots(id: String) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for DisconnectSlots {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "slots", kind: "disconnect-slots", record: "DisconnectedSlots" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

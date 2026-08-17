@@ -8,9 +8,8 @@
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifRgb, GifSnapshot};
 use protocol::os_spr::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -408,7 +407,10 @@ impl GifDiff {
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
-    fn apply(&self, base: &GifSnapshot) -> GifSnapshot {
+    fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
+        if let Some(images) = &self.images {
+            validate_gif_images(base.images.len(), images)?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -428,7 +430,7 @@ impl MutationDiff<GifSnapshot> for GifDiff {
         if let Some(images_diff) = &self.images {
             next.images = images_diff.apply(&next.images);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -453,6 +455,29 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             _ => {}
         }
     }
+}
+
+fn validate_gif_images(base_len: usize, diff: &GifImagesDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base_len || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF image removal is missing or duplicated").at(["images", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF image modification is missing, duplicated, or removed").at(["images", "modified"]));
+        }
+    }
+    let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF image addition index is invalid or duplicated").at(["images", "added"]));
+        }
+    }
+    Ok(())
 }
 
 impl DiffAlgebra<GifSnapshot> for GifDiff {
@@ -914,7 +939,7 @@ fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for GifDiff {
+impl DiffCodec for GifDiff {
     fn print_diff(&self) -> String {
         print_gif_diff(self)
     }
@@ -1027,7 +1052,7 @@ mod tests {
         let mut d1 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &mid);
         let d2 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), after);
+        assert_eq!(d1.apply(&base).unwrap(), after);
     }
 
     #[test]
@@ -1035,9 +1060,9 @@ mod tests {
         let a = GifSnapshot { width: 4, height: 4, images: vec![img(1, 4, 4)], ..GifSnapshot::default() };
         let b = GifSnapshot { width: 4, height: 4, images: vec![img(1, 4, 4), img(2, 2, 2)], ..GifSnapshot::default() };
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).unwrap(), b);
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a);
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).unwrap(), a);
         assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -1053,9 +1078,9 @@ mod tests {
             s
         };
         let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &next);
-        let mutated = d.apply(&base);
+        let mutated = d.apply(&base).unwrap();
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&mutated), base);
+        assert_eq!(inv.apply(&mutated).unwrap(), base);
     }
 
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
@@ -1087,7 +1112,7 @@ mod tests {
         sweep_b.images.push(img(6, 3, 3));
 
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(ab.apply(&sweep_a), sweep_b);
+        assert_eq!(ab.apply(&sweep_a).unwrap(), sweep_b);
         assert!(ab.width.is_some());
         assert!(ab.height.is_some());
         assert!(ab.gct.is_some());
@@ -1098,7 +1123,7 @@ mod tests {
         assert!(!images_ab.added.is_empty(), "sweep must exercise an added image (b is longer)");
 
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(ba.apply(&sweep_b), sweep_a);
+        assert_eq!(ba.apply(&sweep_b).unwrap(), sweep_a);
         let images_ba = ba.images.as_ref().expect("images must differ");
         assert!(!images_ba.removed.is_empty(), "reverse direction must exercise a removed image (a is shorter)");
 
@@ -1113,7 +1138,7 @@ mod tests {
         let b = GifSnapshot { gct: None, ..GifSnapshot::default() };
         let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
         assert_eq!(d.gct, Some(None));
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).unwrap(), b);
     }
 
     /// 🧪️ F6: `DiffCodec` round-trip laws for the hand-rolled `GifDiff` text/binary grammar —

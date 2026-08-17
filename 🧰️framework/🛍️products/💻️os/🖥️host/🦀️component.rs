@@ -8,8 +8,8 @@ pub mod host {
     // #region host
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
 
-    use crate::instance::{create_os_id, OsInstanceState};
-    use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
+    use crate::instance::{OsInstanceState, create_os_id};
+    use crate::registry::{PluginRegistry, os_app_registration, resolve_os_app_definition};
     use crate::space;
     use crate::workflow;
     use protocol::Mutation;
@@ -17,8 +17,8 @@ pub mod host {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore, SpaceConflict};
-    use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
+    use store::{ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore, create_document_envelope, document_backbone_ref, materialize_document_snapshot};
+    use ui_wgpu::wgpu::{UiNode, ui_recovery_panel};
     use vcs::{ArtifactVcs, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -319,7 +319,7 @@ pub mod host {
 
     //#region 🔖️BackboneDocument
     /// 🧬️ Generic backbone-document envelope — mirrors the dissolved `OsDocument`'s exact shape
-    /// (schema/id/name/vcs/applied_edit_ids/backbone), parametrized over any `<P, Op>` pair
+    /// (schema/id/name/vcs/cursor/outcomes/conflicts/backbone), parametrized over any `<P, Op>` pair
     /// `store::create_document_envelope`/`materialize_document_snapshot`/`print_document_pack`/
     /// `parse_document_pack` already support generically — nothing OS-specific left to hardcode. See
     /// `## The inversion` in the plan: `OsSnapshot`/`OsMutation`/`OsDocument` dissolve into the three
@@ -331,11 +331,8 @@ pub mod host {
         pub id: String,
         pub name: String,
         pub vcs: ArtifactVcs<P, Op>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub applied_edit_ids: Vec<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub cursor: store::ArtifactCursor,
         pub edit_messages: Vec<protocol::EditMessages>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub conflicts: Vec<protocol::Conflict>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub backbone: Option<ArtifactBackboneRef>,
@@ -366,15 +363,15 @@ pub mod host {
             id: id.into(),
             name: name.into(),
             vcs: create_document_envelope::<P, Op>(schema, id, initial_snapshot, None).vcs,
-            applied_edit_ids: Vec::new(),
+            cursor: store::ArtifactCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None },
             edit_messages: Vec::new(),
             conflicts: Vec::new(),
             backbone: None,
         }
     }
 
-    /// @emoji 🌉️ Builds the bare `ArtifactEnvelope` a `BackboneDocument` wraps (dropping the app-level
-    /// `name`/`applied_edit_ids` fields) — shared by every typed pack/text export path below.
+    /// @emoji 🌉️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
+    /// the app-level `name` and preserving its complete persisted cursor.
     fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> ArtifactEnvelope<P, Op>
     where
         P: Clone,
@@ -386,7 +383,7 @@ pub mod host {
             vcs: document.vcs.clone(),
             backbone: document.backbone.clone(),
             active_alternative_id: None,
-            cursor: None,
+            cursor: Some(document.cursor.clone()),
             dialect: None,
             migrated_from: None,
             owner: None,
@@ -425,16 +422,14 @@ pub mod host {
 
     /// @emoji 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + applied-edit cursor +
     /// vcs) — the persisted/synced form. `name` rides as a `store::encode_document_pack_bytes`-framed
-    /// blob wrapping a nested `pack`+`spr` pair, and `applied_edit_ids` rides through the envelope's
-    /// `cursor` so `spr`'s cursor line restores the exact undo/redo position.
+    /// blob wrapping a nested `pack`+`spr` pair, and the complete cursor rides through the envelope
+    /// so `spr` restores the exact undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
         P: Clone + store::ArtifactPack,
         Op: Clone + protocol::OpText + protocol::OpBinary,
     {
-        let mut envelope = backbone_envelope_of(document);
-        envelope.cursor = Some(store::ArtifactCursor { applied_edit_ids: document.applied_edit_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None });
-        let files = store::print_document_pack(&envelope)?;
+        let files = store::print_document_pack(&backbone_envelope_of(document))?;
         let inner = store::encode_document_pack_bytes(&files.pack, &files.spr);
         Ok(store::encode_document_pack_bytes(document.name.as_bytes(), &inner))
     }
@@ -453,17 +448,8 @@ pub mod host {
         if parsed.envelope.schema != expected_schema {
             return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
         }
-        let applied_edit_ids = parsed.envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
-        Ok(BackboneDocument {
-            schema: parsed.envelope.schema,
-            id: parsed.envelope.id,
-            name,
-            vcs: parsed.envelope.vcs,
-            applied_edit_ids,
-            edit_messages: parsed.envelope.edit_messages,
-            conflicts: parsed.envelope.conflicts,
-            backbone: parsed.envelope.backbone,
-        })
+        let cursor = parsed.envelope.cursor.ok_or_else(|| VcsError::Deserialize("backbone payload has no cursor".to_string()))?;
+        Ok(BackboneDocument { schema: parsed.envelope.schema, id: parsed.envelope.id, name, vcs: parsed.envelope.vcs, cursor, edit_messages: parsed.envelope.edit_messages, conflicts: parsed.envelope.conflicts, backbone: parsed.envelope.backbone })
     }
     //#endregion 🔖️BackboneDocument
 
@@ -478,8 +464,15 @@ pub mod host {
     /// the wiring), (3) dedupe edges with identical endpoints down to the lexicographically smallest id
     /// (deterministic across peers replaying the same operation log), (4) break any cycle the previous
     /// rules left behind, (5) drop parameter bindings whose target config field or parameter type no
-    /// longer validates. Each rule operates on the edge/binding set the previous one produced.
-    fn reconcile_workflow_snapshot(mut document: workflow::WorkflowSnapshot) -> (workflow::WorkflowSnapshot, Vec<SpaceConflict>) {
+    /// longer validates. Each rule operates on the edge/binding set the previous one produced. Reports
+    /// through `protocol::MutationMessage` (the old free-form diagnostic struct's replacement,
+    /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C10), always at
+    /// `Warning`: every rule here is corrective (the drop always happens, regardless of this
+    /// message's level — unlike a `Mutation::diff` outcome, `Fatal`/`Error`'s "no change applied" laws
+    /// don't bind a post-merge reconcile pass), so `Warning` is the level that means "the state
+    /// changed to survive a conflict, and the change is worth surfacing" rather than "rejected"
+    /// (`Error`/`Fatal`) or "a routine side effect of an otherwise-successful op" (`Info`).
+    fn reconcile_workflow_snapshot(mut document: workflow::WorkflowSnapshot) -> (workflow::WorkflowSnapshot, Vec<protocol::MutationMessage>) {
         let mut conflicts = Vec::new();
         let mut edges = std::mem::take(&mut document.graph.edges);
         let node_by_id: HashMap<&str, &workflow::WorkflowNode> = document.graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
@@ -491,10 +484,12 @@ pub mod host {
             if source_ok && target_ok {
                 true
             } else {
-                conflicts.push(SpaceConflict {
-                    kind: "workflow/edge-orphaned".into(),
-                    uri: edge.id.clone(),
+                conflicts.push(protocol::MutationMessage {
+                    level: dsl::Severity::Warning,
+                    code: dsl::FaultCode::new("workflow/edge-orphaned"),
                     message: format!("edge {} references a node or port that no longer exists ({}:{} -> {}:{})", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id),
+                    target: vec![edge.id.clone()],
+                    op_index: None,
                 });
                 false
             }
@@ -512,11 +507,11 @@ pub mod host {
             match crate::workflow::negotiate_media_contract(source_port, target_port) {
                 Ok(contract) if contract == edge.contract => true,
                 Ok(_) => {
-                    conflicts.push(SpaceConflict { kind: "workflow/edge-type-mismatch".into(), uri: edge.id.clone(), message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id) });
+                    conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-type-mismatch"), message: format!("edge {} contract stale: no longer matches negotiated port types", edge.id), target: vec![edge.id.clone()], op_index: None });
                     false
                 }
                 Err(reason) => {
-                    conflicts.push(SpaceConflict { kind: "workflow/edge-type-mismatch".into(), uri: edge.id.clone(), message: format!("edge {} connects ports whose types no longer match: {reason}", edge.id) });
+                    conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-type-mismatch"), message: format!("edge {} connects ports whose types no longer match: {reason}", edge.id), target: vec![edge.id.clone()], op_index: None });
                     false
                 }
             }
@@ -589,12 +584,12 @@ pub mod host {
     /// per-edge `HybridLogicalTimestamp`s from the edit log. `apply_workflow_operation`'s `ConnectPorts`
     /// handler appends new edges to the end of the vec, so a higher index approximates a later edit;
     /// true HLT-based tie-breaking would need this pass to also see edit history, not just the document.
-    fn drop_workflow_cycle_edges(mut edges: Vec<workflow::WorkflowEdge>, conflicts: &mut Vec<SpaceConflict>) -> Vec<workflow::WorkflowEdge> {
+    fn drop_workflow_cycle_edges(mut edges: Vec<workflow::WorkflowEdge>, conflicts: &mut Vec<protocol::MutationMessage>) -> Vec<workflow::WorkflowEdge> {
         while let Some(cycle_node_ids) = find_workflow_cycle_participants(&edges) {
             let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
-            conflicts.push(SpaceConflict { kind: "workflow/edge-cycle".into(), uri: dropped.id.clone(), message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id) });
+            conflicts.push(protocol::MutationMessage { level: dsl::Severity::Warning, code: dsl::FaultCode::new("workflow/edge-cycle"), message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id), target: vec![dropped.id.clone()], op_index: None });
         }
         edges
     }
@@ -654,14 +649,14 @@ pub mod host {
 
     impl OsWorkflowStore {
         pub fn new(document: OsWorkflowArtifactDocument) -> Result<Self, VcsError> {
-            let applied_edit_ids = document.applied_edit_ids.clone();
+            let cursor = document.cursor.clone();
             let envelope = ArtifactEnvelope {
                 schema: document.schema,
                 id: document.id,
                 vcs: document.vcs,
                 backbone: document.backbone,
                 active_alternative_id: None,
-                cursor: None,
+                cursor: Some(cursor),
                 dialect: None,
                 migrated_from: None,
                 owner: None,
@@ -669,11 +664,7 @@ pub mod host {
                 edit_messages: document.edit_messages,
                 conflicts: document.conflicts,
             };
-            let mut inner = ArtifactStore::new(envelope)?;
-            if !applied_edit_ids.is_empty() {
-                let snapshot = inner.envelope().clone();
-                inner.reset(snapshot, applied_edit_ids, Vec::new())?;
-            }
+            let inner = ArtifactStore::new(envelope)?;
             Ok(Self { inner, name: document.name })
         }
 
@@ -688,7 +679,7 @@ pub mod host {
         /// @emoji 🤝️ Fresh replay plus `reconcile_workflow_snapshot`'s whole 4(+1)-rule pipeline —
         /// invoked explicitly here rather than through `Mutation::reconcile` (a no-op default at the
         /// kernel-crate layer, since two of those rules need the os-core plugin/artifact registry).
-        pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowSnapshot, Vec<SpaceConflict>), VcsError> {
+        pub fn snapshot_with_conflicts(&self) -> Result<(workflow::WorkflowSnapshot, Vec<protocol::MutationMessage>), VcsError> {
             let document = self.inner.snapshot()?;
             Ok(reconcile_workflow_snapshot(document))
         }
@@ -700,7 +691,7 @@ pub mod host {
                 id: envelope.id.clone(),
                 name: self.name.clone(),
                 vcs: envelope.vcs.clone(),
-                applied_edit_ids: self.inner.applied_edit_ids().to_vec(),
+                cursor: envelope.cursor.clone().expect("artifact stores persist an explicit cursor"),
                 edit_messages: envelope.edit_messages.clone(),
                 conflicts: envelope.conflicts.clone(),
                 backbone: envelope.backbone.clone(),
@@ -976,7 +967,7 @@ pub mod host {
                 id: String::new(),
                 name: String::new(),
                 vcs,
-                applied_edit_ids: Vec::new(),
+                cursor: store::ArtifactCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None },
                 edit_messages: Vec::new(),
                 conflicts: Vec::new(),
                 backbone: None,
@@ -988,13 +979,13 @@ pub mod host {
     /// @emoji 📦️ Pack counterpart of `import_os_space_from_dsl`.
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let applied_edit_ids = parsed.envelope.cursor.as_ref().map(|cursor| cursor.applied_edit_ids.clone()).unwrap_or_default();
+        let cursor = parsed.envelope.cursor.ok_or_else(|| VcsError::Deserialize("space pack has no cursor".to_string()))?;
         let document = BackboneDocument {
             schema: parsed.envelope.schema,
             id: parsed.envelope.id,
             name: String::new(),
             vcs: parsed.envelope.vcs,
-            applied_edit_ids,
+            cursor,
             edit_messages: parsed.envelope.edit_messages,
             conflicts: parsed.envelope.conflicts,
             backbone: parsed.envelope.backbone,
@@ -1040,11 +1031,11 @@ pub mod host {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, WorkflowEdge, WorkflowPosition};
-        use semio_framework::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
+        use crate::workflow::{MediaContract, WorkflowEdge, WorkflowPosition, empty_workflow, placeholder_media_contract, validate_workflow};
+        use semio_framework::{AppRole, ArtifactDialect, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use store::{MemoryBackbone, MemoryBackbonePort};
-        use ui_wgpu::wgpu::SurfaceKind;
+        use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
 
         #[test]
         fn loads_plugin_apps_into_registry() {
@@ -1055,15 +1046,17 @@ pub mod host {
                 version: "0.1.0".into(),
                 apps: vec![AppDefinition {
                     id: "draw-play".into(),
-                    label: "Draw".into(),
+                    role: AppRole::Editor,
+                    dialect: ArtifactDialect { artifact_kind: "s.test.draw".into(), standard: "1".into(), subset: "*".into() },
+                    label: LocalizedLabel::data("Draw"),
                     breadcrumb: vec!["semio".into(), "draw".into()],
                     icon_id: None,
                     controller_id: "draw-play".into(),
-                    modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                    modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                     default_mode_id: "edit".into(),
                     window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                         id: "composite".into(),
-                        label: "Canvas".into(),
+                        label: LocalizedLabel::data("Canvas"),
                         body_key: "composite".into(),
                         surface_kind: SurfaceKind::Canvas2d,
                         icon_id: "pen-tool".into(),
@@ -1101,6 +1094,7 @@ pub mod host {
                 topic_contributions: vec![],
                 examples: vec![],
                 commands: vec![],
+                artifact_kinds: vec![],
                 dependencies: vec![],
                 contributions: vec![],
             };
@@ -1113,6 +1107,8 @@ pub mod host {
             let mut host = PluginHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
+                role: AppRole::Editor,
+                dialect: ArtifactDialect { artifact_kind: "s.test.draw".into(), standard: "1".into(), subset: "*".into() },
                 label: LocalizedLabel::data("Draw"),
                 breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
@@ -1157,6 +1153,8 @@ pub mod host {
             };
             let note_app = AppDefinition {
                 id: "note-play".into(),
+                role: AppRole::Editor,
+                dialect: ArtifactDialect { artifact_kind: "s.test.note".into(), standard: "1".into(), subset: "*".into() },
                 label: LocalizedLabel::data("Note"),
                 breadcrumb: vec!["semio".into(), "note".into()],
                 icon_id: None,
@@ -1201,14 +1199,38 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app.clone()], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
+                manifest: PluginManifest {
+                    plugin_id: "draw".into(),
+                    label: "Draw".into(),
+                    version: "0.1.0".into(),
+                    apps: vec![draw_app.clone()],
+                    capabilities: vec![],
+                    topic_contributions: vec![],
+                    examples: vec![],
+                    commands: vec![],
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![],
+                },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.2.0".into(), apps: vec![draw_app, note_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
+                manifest: PluginManifest {
+                    plugin_id: "draw".into(),
+                    label: "Draw".into(),
+                    version: "0.2.0".into(),
+                    apps: vec![draw_app, note_app],
+                    capabilities: vec![],
+                    topic_contributions: vec![],
+                    examples: vec![],
+                    commands: vec![],
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![],
+                },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
@@ -1224,6 +1246,8 @@ pub mod host {
             let mut host = PluginHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
+                role: AppRole::Editor,
+                dialect: ArtifactDialect { artifact_kind: "s.test.draw".into(), standard: "1".into(), subset: "*".into() },
                 label: LocalizedLabel::data("Draw"),
                 breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
@@ -1268,14 +1292,38 @@ pub mod host {
             };
             host.load_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "0.1.0".into(), apps: vec![draw_app], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
+                manifest: PluginManifest {
+                    plugin_id: "draw".into(),
+                    label: "Draw".into(),
+                    version: "0.1.0".into(),
+                    apps: vec![draw_app],
+                    capabilities: vec![],
+                    topic_contributions: vec![],
+                    examples: vec![],
+                    commands: vec![],
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![],
+                },
                 artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
             let event = host.hot_swap_plugin(LoadedProgram {
                 plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: LocalizedLabel::data("Draw"), version: "".into(), apps: vec![], capabilities: vec![], topic_contributions: vec![], examples: vec![], commands: vec![], artifact_kinds: vec![], dependencies: vec![], contributions: vec![] },
+                manifest: PluginManifest {
+                    plugin_id: "draw".into(),
+                    label: "Draw".into(),
+                    version: "".into(),
+                    apps: vec![],
+                    capabilities: vec![],
+                    topic_contributions: vec![],
+                    examples: vec![],
+                    commands: vec![],
+                    artifact_kinds: vec![],
+                    dependencies: vec![],
+                    contributions: vec![],
+                },
                 artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.plugin_id, "draw");
@@ -1305,7 +1353,7 @@ pub mod host {
                 plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
                     plugin_id: "playbook-module-procedural".into(),
-                    label: LocalizedLabel::data("Playbook Module Procedural"),
+                    label: "Playbook Module Procedural".into(),
                     version: "0.1.0".into(),
                     apps: vec![],
                     capabilities: vec![],
@@ -1314,7 +1362,8 @@ pub mod host {
                     commands: vec![],
                     artifact_kinds: vec![],
                     dependencies: vec![],
-                    contributions: vec![] },
+                    contributions: vec![],
+                },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert_eq!(host.contributions().len(), 1);
@@ -1323,7 +1372,7 @@ pub mod host {
                 plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
                     plugin_id: "playbook-module-procedural".into(),
-                    label: LocalizedLabel::data("Playbook Module Procedural"),
+                    label: "Playbook Module Procedural".into(),
                     version: "0.2.0".into(),
                     apps: vec![],
                     capabilities: vec![],
@@ -1332,7 +1381,8 @@ pub mod host {
                     commands: vec![],
                     artifact_kinds: vec![],
                     dependencies: vec![],
-                    contributions: vec![] },
+                    contributions: vec![],
+                },
                 artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());
@@ -1354,6 +1404,8 @@ pub mod host {
         fn test_app_definition(id: &str, label: &str, document_schema: &str, ports: Vec<semio_framework::MediaPortSpec>) -> AppDefinition {
             AppDefinition {
                 id: id.into(),
+                role: AppRole::Editor,
+                dialect: ArtifactDialect { artifact_kind: format!("s.test.{id}"), standard: "1".into(), subset: "*".into() },
                 label: LocalizedLabel::data(label),
                 breadcrumb: vec!["semio".into(), id.into()],
                 icon_id: None,
@@ -1428,20 +1480,19 @@ pub mod host {
             let mut store = test_workflow_store();
             store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Durable").expect("create one edit");
             let mut document = store.document();
-            let edit_id = document.applied_edit_ids.last().expect("one applied edit").clone();
+            let edit_id = document.cursor.applied_edit_ids.last().expect("one applied edit").clone();
+            let edit = document.vcs.edits.iter().find(|edit| edit.id == edit_id).expect("applied edit is persisted");
             let messages = vec![protocol::MutationMessage::warn("mutation.clamped", "durable host outcome").at(["parameters", "0"]).at_op(0)];
             document.edit_messages = vec![protocol::EditMessages { edit_id: edit_id.clone(), messages: messages.clone() }];
-            document.conflicts = vec![protocol::Conflict {
-                id: protocol::ConflictId("host-round-trip-conflict".into()),
-                kind: protocol::ConflictKind::Degraded { edit_ids: vec![edit_id] },
-                status: protocol::ConflictStatus::Open,
-                messages,
-                actors: vec![protocol::ActorId("host".into())],
-                timestamp: protocol::HybridLogicalTimestamp::new(1, 9),
-            }];
+            let kind = protocol::ConflictKind::Degraded { edit_ids: vec![edit_id] };
+            let timestamp = edit.mutation_meta.first().expect("operation metadata").timestamp;
+            let mutation_ids = edit.mutation_meta.iter().map(|meta| meta.mutation_id.clone().expect("stable mutation identity")).collect::<Vec<_>>();
+            let actors = vec![protocol::ActorId(edit.actor.clone().expect("stable edit actor"))];
+            document.conflicts = vec![protocol::Conflict { id: protocol::ConflictId::new(&kind, &protocol::ArtifactId(document.id.clone()), &mutation_ids, &timestamp), kind, status: protocol::ConflictStatus::Open, messages, actors, timestamp }];
 
             let payload = encode_backbone_payload(&document).expect("backbone payload encodes");
             let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("backbone payload decodes");
+            assert_eq!(decoded.cursor, document.cursor);
             assert_eq!(decoded.edit_messages, document.edit_messages);
             assert_eq!(decoded.conflicts, document.conflicts);
 
@@ -1449,6 +1500,39 @@ pub mod host {
             let rebuilt_document = rebuilt.document();
             assert_eq!(rebuilt_document.edit_messages, document.edit_messages);
             assert_eq!(rebuilt_document.conflicts, document.conflicts);
+
+            let text = export_backbone_dsl(&document).expect("backbone text encodes");
+            let parsed = store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops).expect("backbone text decodes");
+            assert_eq!(parsed.envelope.edit_messages, document.edit_messages);
+            assert_eq!(parsed.envelope.conflicts, document.conflicts);
+            assert_eq!(parsed.envelope.cursor.expect("text carries explicit cursor"), document.cursor);
+
+            let mut invalid = document.clone();
+            invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
+            assert!(encode_backbone_payload(&invalid).is_err(), "host binary persistence must reject a non-content-addressed conflict id");
+            let malformed_text = text.ops.replacen(&document.conflicts[0].id.0, "conflict-invalid", 1);
+            assert!(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text).is_err(), "host text persistence must reject a non-content-addressed conflict id");
+        }
+
+        #[test]
+        fn backbone_binary_text_and_workflow_store_preserve_the_complete_cursor() {
+            let mut store = test_workflow_store();
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed").expect("first edit");
+            store.inner.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("cursor checkpoint".into()), authors: Vec::new() }).expect("checkpoint");
+            store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone").expect("second edit");
+            store.dispatch_text("undo").expect("undo second edit");
+            let document = store.document();
+            assert!(!document.cursor.redo_edit_ids.is_empty(), "precondition: redo lane is populated");
+            assert!(document.cursor.checkpoint_id.is_some(), "precondition: checkpoint is populated");
+
+            let payload = encode_backbone_payload(&document).expect("binary encode");
+            let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("binary decode");
+            assert_eq!(decoded.cursor, document.cursor);
+            assert_eq!(OsWorkflowStore::new(decoded).expect("workflow rebuild").document().cursor, document.cursor);
+
+            let text = export_backbone_dsl(&document).expect("text encode");
+            let parsed = store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops).expect("text decode");
+            assert_eq!(parsed.envelope.cursor.expect("text cursor"), document.cursor);
         }
 
         #[test]
@@ -1531,7 +1615,10 @@ pub mod host {
             assert_eq!(converged_a, converged_b, "both peers must converge on the same reconciled document");
             assert!(converged_a.graph.nodes.iter().all(|node| node.id != node_b_id), "node b must stay removed");
             assert!(converged_a.graph.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
-            assert!(conflicts_a.iter().any(|conflict| conflict.kind == "workflow/edge-orphaned"), "dropping the dangling edge must surface a conflict");
+            assert!(
+                conflicts_a.iter().any(|conflict| conflict.code == dsl::FaultCode::new("workflow/edge-orphaned") && conflict.level == dsl::Severity::Warning && conflict.target == vec!["edge-race".to_string()]),
+                "dropping the dangling edge must surface a Warning-level conflict targeting the dropped edge"
+            );
             assert_eq!(conflicts_a, conflicts_b, "both peers must report the same reconciliation conflicts");
         }
 
@@ -1622,16 +1709,6 @@ pub mod host {
             }
         }
 
-        /// 📜️ `📚️examples/🎬️demo.workflow-document` is the handcrafted DSL-text fixture for `WorkflowSnapshot`
-        /// (the `s.workflow` artifact document, replacing the dissolved `📚️examples/🎬️demo.os`).
-        #[test]
-        fn dsl_round_trips_demo_workflow_example() {
-            let text = include_str!("../../📚️examples/🎬️demo.workflow-document");
-            let document = <workflow::WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("🎬️demo.workflow-document must parse as WorkflowSnapshot");
-            store::test_support::assert_dsl_round_trip(&document);
-            store::test_support::assert_dsl_pack_equivalence(&document);
-        }
-
         #[test]
         fn dsl_round_trips_default_workflow_snapshot() {
             store::test_support::assert_dsl_round_trip(&workflow::empty_workflow_snapshot());
@@ -1706,8 +1783,12 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_add_parameter() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) } });
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] } });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter {
+                parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
+            });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter {
+                parameter: workflow::WorkflowParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
+            });
             store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false } });
             store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() } });
         }
@@ -1719,7 +1800,10 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_patch_parameter() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None } });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::PatchParameter {
+                parameter_id: "p1".into(),
+                parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None },
+            });
         }
 
         #[test]
@@ -1756,13 +1840,13 @@ pub mod backbone {
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
     //! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
-    use crate::space;
     use crate::host::OsBackbonePort;
+    use crate::space;
+    #[cfg(not(target_arch = "wasm32"))]
+    use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
     use store::MemoryBackbonePort;
-    #[cfg(not(target_arch = "wasm32"))]
-    use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
     use vcs::VcsError;
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
@@ -1961,9 +2045,11 @@ pub mod host_runtime {
         PersistenceBinding::Folder { path: folder_path }
     }
 
-    /// @emoji ☁️ The semio_hub persistence binding for a document.
-    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, token: Option<String>) -> PersistenceBinding {
-        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token }
+    /// @emoji ☁️ The semio_hub persistence binding for a document. `surface` is the out-of-band
+    /// presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0) — `None` for non-presence
+    /// documents (e.g. the OS config/home documents, which stay folder-only per contract §C3).
+    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, token: Option<String>, surface: Option<String>) -> PersistenceBinding {
+        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token, surface }
     }
 
     /// @emoji 🔗️ Builds the `ArtifactActorConfig` to open an app instance's own document, from its
@@ -2045,10 +2131,9 @@ pub mod instance {
     use crate::workflow;
     use semio_framework::{ConfigFieldShape, ConfigSpec};
     use serde::{Deserialize, Serialize};
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
     use std::collections::{HashMap, HashSet};
     use std::sync::atomic::{AtomicU64, Ordering};
-    use store::SpaceConflict;
 
     pub const OS_PARAMETER_PORT_PREFIX: &str = "param.";
 
@@ -2109,9 +2194,10 @@ pub mod instance {
         pub node_id: String,
         /// 🎯️ Names a `ConfigFieldSpec.key` in the target `node`'s app's declared `ConfigSpec`
         /// (resolved via `registry::os_app_registration(node.plugin_id, node.app_id).config`) — see
-        /// `validate_parameter_config_binding` (type-checks this against the field's
-        /// `ConfigFieldShape`) and `build_configure_config` (overlays the bound parameter's value onto
-        /// that config field for an `AppCommand::Configure` payload). Historically a JSON pointer into
+        /// `build_configure_config` (overlays the bound parameter's value onto that config field for
+        /// an `AppCommand::Configure` payload; the analogous type-check against `ConfigFieldShape`
+        /// this field never had its own live caller for lives on the real workflow-graph binding type,
+        /// `workflow::validate_workflow_parameter_config_binding`). Historically a JSON pointer into
         /// the node's live document (`apply_parameter_values_to_snapshot`'s still-live overlay,
         /// used only by the media-export path today) — that document-snapshot sense is now
         /// superseded by the config-field sense for anything driving a running app instance.
@@ -2278,11 +2364,7 @@ pub mod instance {
     }
 
     fn json_pointer_segments(pointer: &str) -> Vec<String> {
-        if let Some(rest) = pointer.strip_prefix('/') {
-            rest.split('/').filter(|segment| !segment.is_empty()).map(str::to_string).collect()
-        } else {
-            pointer.split('.').filter(|segment| !segment.is_empty()).map(str::to_string).collect()
-        }
+        if let Some(rest) = pointer.strip_prefix('/') { rest.split('/').filter(|segment| !segment.is_empty()).map(str::to_string).collect() } else { pointer.split('.').filter(|segment| !segment.is_empty()).map(str::to_string).collect() }
     }
 
     /// @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object snapshot.
@@ -2313,8 +2395,8 @@ pub mod instance {
     /// Pre-`ConfigSpec` document-snapshot overlay, kept for its one remaining live caller
     /// (`app_instance_document_patches_for_binding`, the media-export path's synthetic-document seed)
     /// — `field_path` here is still read as a JSON pointer into that bare document, distinct from the
-    /// `ConfigFieldSpec.key` sense `validate_parameter_config_binding`/`build_configure_config` give it
-    /// for driving a running app instance's config (see `OsParameterFieldBinding::field_path`'s doc).
+    /// `ConfigFieldSpec.key` sense `build_configure_config` gives it for driving a running app
+    /// instance's config (see `OsParameterFieldBinding::field_path`'s doc).
     pub fn apply_parameter_values_to_snapshot(snapshot: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], node_id: &str) -> Value {
         let node_bindings: Vec<_> = bindings.iter().filter(|binding| binding.node_id == node_id).collect();
         if node_bindings.is_empty() {
@@ -2330,28 +2412,14 @@ pub mod instance {
         clone
     }
 
-    /// @emoji ✅️ Type-checks one binding's `field_path` against the target app's declared
-    /// `ConfigSpec`: the field must exist, and `parameter_type` must be able to drive its
-    /// `ConfigFieldShape` (`Numeric`↔`Number`, `Categorical`↔`Select`, `Toggle`↔`Toggle`,
-    /// `Text`↔`Text`; anything else — including an unknown `field_path` — is a conflict). Raised the
-    /// same way `host::reconcile_os_workflow` raises `"workflow/edge-type-mismatch"`, as
-    /// `"workflow/parameter-binding-invalid"`, so callers fold this into that same conflict-collecting
-    /// pass instead of a bespoke error type.
-    pub fn validate_parameter_config_binding(binding: &OsParameterFieldBinding, parameter_type: &OsParameterType, config_spec: &ConfigSpec) -> Result<(), SpaceConflict> {
-        let uri = format!("{}#{}", binding.node_id, binding.field_path);
-        let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
-            return Err(SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path) });
-        };
-        let compatible = matches!(
-            (parameter_type, &field.shape),
-            (OsParameterType::Numeric, ConfigFieldShape::Number { .. }) | (OsParameterType::Categorical, ConfigFieldShape::Select { .. }) | (OsParameterType::Toggle, ConfigFieldShape::Toggle) | (OsParameterType::Text, ConfigFieldShape::Text)
-        );
-        if compatible {
-            Ok(())
-        } else {
-            Err(SpaceConflict { kind: "workflow/parameter-binding-invalid".into(), uri, message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape) })
-        }
-    }
+    // 🪦️ `validate_parameter_config_binding` (this `instance` module's own copy, over
+    // `OsParameterFieldBinding`/`OsParameterType`) DELETED
+    // (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` M1): its only callers
+    // repo-wide were its own 3 unit tests below (also deleted) — dead code, superseded by the
+    // structurally identical, actually-live `workflow::validate_workflow_parameter_config_binding`
+    // (called from `reconcile_workflow_snapshot`'s `ParameterBindingValidation` region against the
+    // real `WorkflowParameterBinding`/`WorkflowParameterType`/`workflow`-graph types, not this
+    // module's parallel `Os*` vocabulary).
 
     trait OsParameterId {
         fn id(&self) -> &str;
@@ -2569,12 +2637,7 @@ pub mod instance {
         fn sample_config_spec() -> ConfigSpec {
             ConfigSpec {
                 fields: vec![
-                    semio_framework::ConfigFieldSpec {
-                        key: "zoom".into(),
-                        label: "Zoom".into(),
-                        shape: ConfigFieldShape::Number { min: None, max: None, step: None },
-                        default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")),
-                    },
+                    semio_framework::ConfigFieldSpec { key: "zoom".into(), label: "Zoom".into(), shape: ConfigFieldShape::Number { min: None, max: None, step: None }, default: Some(dsl::to_dsl_value(&serde_json::json!(1.0)).expect("dsl value")) },
                     semio_framework::ConfigFieldSpec {
                         key: "mode".into(),
                         label: "Mode".into(),
@@ -2587,33 +2650,12 @@ pub mod instance {
             }
         }
 
-        #[test]
-        fn validates_matching_parameter_config_bindings() {
-            let config_spec = sample_config_spec();
-            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Numeric, &config_spec).is_ok());
-            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), node_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Categorical, &config_spec).is_ok());
-            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p3".into(), node_id: "i1".into(), field_path: "flag".into() }, &OsParameterType::Toggle, &config_spec).is_ok());
-            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p4".into(), node_id: "i1".into(), field_path: "label".into() }, &OsParameterType::Text, &config_spec).is_ok());
-        }
-
-        #[test]
-        fn rejects_mismatched_parameter_config_bindings() {
-            let config_spec = sample_config_spec();
-            let mismatch =
-                validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Toggle, &config_spec).expect_err("toggle cannot drive a Number field");
-            assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
-            let mismatch =
-                validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), node_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Text, &config_spec).expect_err("text cannot drive a Select field");
-            assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
-        }
-
-        #[test]
-        fn rejects_parameter_config_binding_to_unknown_field() {
-            let config_spec = sample_config_spec();
-            let error = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), node_id: "i1".into(), field_path: "nonexistent".into() }, &OsParameterType::Numeric, &config_spec)
-                .expect_err("field does not exist on the ConfigSpec");
-            assert_eq!(error.kind, "workflow/parameter-binding-invalid");
-        }
+        // 🪦️ `validates_matching_parameter_config_bindings`/`rejects_mismatched_parameter_config_bindings`/
+        // `rejects_parameter_config_binding_to_unknown_field` DELETED alongside the dead
+        // `validate_parameter_config_binding` they exclusively exercised (see that deletion's note
+        // above) — the type-check logic they asserted is duplicated verbatim (per its own doc
+        // comment, "ported from os-core's `validate_parameter_config_binding`") in the live
+        // `workflow::validate_workflow_parameter_config_binding`, which these tests never called.
 
         #[test]
         fn build_configure_config_starts_from_config_spec_defaults() {
@@ -2653,7 +2695,7 @@ pub mod media_export_raster {
     // format kind ids, not the legacy format enum (retired — ticket 26/08/11/
     // SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     #[cfg(feature = "os-host-full")]
-    pub use crate::workflow::{register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult, export_os_app_instance_media_kind, import_os_app_instance_media_kind};
+    pub use crate::workflow::{OsMediaExportResult, export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind};
 
     #[cfg(not(feature = "os-host-full"))]
     /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
@@ -2669,22 +2711,11 @@ pub mod media_export_raster {
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw bytes + stdio format kind id.
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework::format_descriptor(format_artifact_kind)
-                .map_err(|error| error.to_string())?
-                .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
-            let data = if entry.is_binary {
-                base64::engine::general_purpose::STANDARD.encode(&bytes)
-            } else {
-                String::from_utf8(bytes).map_err(|error| error.to_string())?
-            };
-            Ok(Self {
-                data,
-                mime_type,
-                file_name: format!("{file_stem}{extension}"),
-                encoding: if entry.is_binary { Some("base64".into()) } else { None },
-            })
+            let data = if entry.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            Ok(Self { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: if entry.is_binary { Some("base64".into()) } else { None } })
         }
     }
 
@@ -2699,34 +2730,18 @@ pub mod media_export_raster {
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
 
     #[cfg(not(feature = "os-host-full"))]
-    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaExportHandler>>> =
-        LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaExportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
     #[cfg(not(feature = "os-host-full"))]
-    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaImportHandler>>> =
-        LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaImportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
 
     #[cfg(not(feature = "os-host-full"))]
-    pub fn register_os_media_export_handler_kind(
-        artifact_kind: &str,
-        format_artifact_kind: &str,
-        handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
-    ) {
-        OS_MEDIA_EXPORT_HANDLERS
-            .lock()
-            .expect("media export registry")
-            .insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
+    pub fn register_os_media_export_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
+        OS_MEDIA_EXPORT_HANDLERS.lock().expect("media export registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
 
     #[cfg(not(feature = "os-host-full"))]
-    pub fn register_os_media_import_handler_kind(
-        artifact_kind: &str,
-        format_artifact_kind: &str,
-        handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
-    ) {
-        OS_MEDIA_IMPORT_HANDLERS
-            .lock()
-            .expect("media import registry")
-            .insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
+    pub fn register_os_media_import_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
+        OS_MEDIA_IMPORT_HANDLERS.lock().expect("media import registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
     }
     //#endregion 🔖️MediaRegistryRegistryStubs
     use base64::Engine;
@@ -2916,9 +2931,7 @@ pub mod media_export_raster {
     pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
         let format_kind = exporter.format_kind();
         register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
-            let descriptor = semio_framework::format_descriptor(format_kind)
-                .map_err(|error| error.to_string())?
-                .ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
+            let descriptor = semio_framework::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
             let extension = descriptor.extensions.first().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no extension claim"))?;
             let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no MIME claim"))?;
             let mesh = mesh_from_document(doc)?;
@@ -3083,11 +3096,11 @@ pub mod workflow {
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
     #[cfg(feature = "os-host-full")]
-pub use crate::workflow_kernel::{
-        apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
-        validate_workflow as kernel_validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowSnapshot, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation,
-        WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowValidation, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
+    pub use crate::workflow_kernel::{
+        MediaContract, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter,
+        WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
+        media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot,
+        workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value,
     };
 
     #[cfg(feature = "os-host-full")]
@@ -3098,7 +3111,7 @@ pub use crate::workflow_kernel::{
     }
     //#region 🔖️RegistryStubs
     #[cfg(feature = "os-host-full")]
-    use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
+    use crate::registry::{OsArtifactDescriptor, os_app_registration, os_artifact_descriptor};
     #[cfg(not(feature = "os-host-full"))]
     #[derive(Clone, Debug, Default)]
     pub struct OsArtifactDescriptor {
@@ -3110,14 +3123,18 @@ pub use crate::workflow_kernel::{
         pub schema: String,
     }
     #[cfg(not(feature = "os-host-full"))]
-    fn os_app_registration(_id: &str) -> Option<()> { None }
+    fn os_app_registration(_id: &str) -> Option<()> {
+        None
+    }
     #[cfg(not(feature = "os-host-full"))]
-    fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> { None }
+    fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> {
+        None
+    }
     //#endregion 🔖️RegistryStubs
-    use semio_framework::{media_types_compatible, MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat};
     use base64::Engine;
+    use semio_framework::{MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat, media_types_compatible};
     use serde::{Deserialize, Serialize};
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Mutex, OnceLock};
 
@@ -3160,15 +3177,9 @@ pub use crate::workflow_kernel::{
         }
         if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
             for kind in &source.export_stdio_kinds {
-                let format_kind = semio_framework::format_descriptor(kind)
-                    .map_err(|error| error.to_string())?
-                    .ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?
-                    .kind_id;
+                let format_kind = semio_framework::format_descriptor(kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?.kind_id;
                 for other in &target.import_stdio_kinds {
-                    let target_format_kind = semio_framework::format_descriptor(other)
-                        .map_err(|error| error.to_string())?
-                        .ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?
-                        .kind_id;
+                    let target_format_kind = semio_framework::format_descriptor(other).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?.kind_id;
                     if target_format_kind == format_kind {
                         return Ok(Some(MediaWireFormat::Binary { format_kind }));
                     }
@@ -3186,18 +3197,14 @@ pub use crate::workflow_kernel::{
     /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
     fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
         use semio_framework::IoDirection;
-        let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
+        let target_reads: HashSet<&str> = semio_framework::io_dialects_for(target_kind, IoDirection::Import).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         if target_reads.contains(source_kind) {
-            let descriptor = semio_framework::format_descriptor(source_kind)
-                .map_err(|error| error.to_string())?
-                .ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
+            let descriptor = semio_framework::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
-        let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).iter().map(|d| d.artifact_kind).collect();
+        let source_reads: HashSet<&str> = semio_framework::io_dialects_for(source_kind, IoDirection::Import).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         for candidate in target_reads.intersection(&source_reads) {
-            let descriptor = semio_framework::format_descriptor(candidate)
-                .map_err(|error| error.to_string())?
-                .ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
+            let descriptor = semio_framework::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
         Ok(None)
@@ -3556,22 +3563,11 @@ pub use crate::workflow_kernel::{
         /// 📤️ Build an export result from raw bytes + stdio format kind id (the legacy format enum was retired —
         /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework::format_descriptor(format_artifact_kind)
-                .map_err(|error| error.to_string())?
-                .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
-            let data = if entry.is_binary {
-                base64::engine::general_purpose::STANDARD.encode(&bytes)
-            } else {
-                String::from_utf8(bytes).map_err(|error| error.to_string())?
-            };
-            Ok(Self {
-                data,
-                mime_type,
-                file_name: format!("{file_stem}{extension}"),
-                encoding: if entry.is_binary { Some("base64".into()) } else { None },
-            })
+            let data = if entry.is_binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
+            Ok(Self { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: if entry.is_binary { Some("base64".into()) } else { None } })
         }
     }
 
@@ -3588,22 +3584,13 @@ pub use crate::workflow_kernel::{
     }
 
     /// 🗄️ Registers an export handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
-    pub fn register_os_media_export_handler_kind(
-        artifact_kind: &str,
-        format_artifact_kind: &str,
-        handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
-    ) {
-        export_handlers()
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
+    pub fn register_os_media_export_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
+        export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
-        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind)
-            .map_err(|error| error.to_string())?
-            .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
         if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document) {
             return result;
         }
@@ -3627,12 +3614,13 @@ pub use crate::workflow_kernel::{
     /// so this lookup silently missed for EVERY artifact/format pair and always fell through to
     /// the legacy handler map, regardless of `native_dialect_kind`. Only `"s."` belongs here.
     fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
-        use semio_framework::{IoDirection, IoKey, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload};
+        use semio_framework::{Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
-        let target = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
-            .into_iter()
-            .find(|d| d.artifact_kind == target_kind)?;
+        let target = match semio_framework::io_dialects_for(&native_kind, IoDirection::Export) {
+            Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
+            Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
+        };
         let key = IoKey {
             artifact_kind: native_kind,
             standard: "1".to_string(),
@@ -3665,22 +3653,13 @@ pub use crate::workflow_kernel::{
     }
 
     /// 🗄️ Registers an import handler keyed by `(artifact_kind, format_artifact_kind)` stdio/kind ids.
-    pub fn register_os_media_import_handler_kind(
-        artifact_kind: &str,
-        format_artifact_kind: &str,
-        handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static,
-    ) {
-        import_handlers()
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
+    pub fn register_os_media_import_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
+        import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_handler_key(artifact_kind, format_artifact_kind), Box::new(handler));
     }
 
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
-        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind)
-            .map_err(|error| error.to_string())?
-            .ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
         if let Some(result) = registry_import_media(&node.yields, &format_kind, data) {
             return result;
         }
@@ -3697,26 +3676,38 @@ pub use crate::workflow_kernel::{
     /// through `io_dispatch` before falling back to the old stringly handler map.
     /// 🐛️ Same double-`"stdio."` fix as `registry_export_media` -- see that function's doc comment.
     fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
-        use semio_framework::{IoDirection, IoKey, ErasedComposeSource, IoPayload};
+        use semio_framework::{ErasedComposeSource, IoDirection, IoKey, IoPayload};
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
 
-        let source_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Import)
-            .into_iter().find(|d| d.artifact_kind == target_kind)?;
+        let source_dialect = match semio_framework::io_dialects_for(&native_kind, IoDirection::Import) {
+            Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
+            Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
+        };
         let import_key = IoKey {
-            artifact_kind: native_kind.clone(), standard: "1".to_string(), subset: "*".to_string(),
+            artifact_kind: native_kind.clone(),
+            standard: "1".to_string(),
+            subset: "*".to_string(),
             direction: IoDirection::Import,
-            format_kind: source_dialect.artifact_kind.to_string(), format_standard: source_dialect.standard.0.to_string(), format_subset: source_dialect.subset.0.to_string(),
+            format_kind: source_dialect.artifact_kind.to_string(),
+            format_standard: source_dialect.standard.0.to_string(),
+            format_subset: source_dialect.subset.0.to_string(),
         };
         let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
         let native = semio_framework::io_dispatch(&import_key, &sources).ok()?;
 
-        let export_dialect = semio_framework::io_dialects_for(&native_kind, IoDirection::Export)
-            .into_iter().find(|d| d.artifact_kind == "s.stdio.json")?;
+        let export_dialect = match semio_framework::io_dialects_for(&native_kind, IoDirection::Export) {
+            Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == "s.stdio.json")?,
+            Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
+        };
         let export_key = IoKey {
-            artifact_kind: native_kind, standard: "1".to_string(), subset: "*".to_string(),
+            artifact_kind: native_kind,
+            standard: "1".to_string(),
+            subset: "*".to_string(),
             direction: IoDirection::Export,
-            format_kind: export_dialect.artifact_kind.to_string(), format_standard: export_dialect.standard.0.to_string(), format_subset: export_dialect.subset.0.to_string(),
+            format_kind: export_dialect.artifact_kind.to_string(),
+            format_standard: export_dialect.standard.0.to_string(),
+            format_subset: export_dialect.subset.0.to_string(),
         };
         let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
         let json_out = semio_framework::io_dispatch(&export_key, &native_sources).ok()?;
@@ -3760,8 +3751,7 @@ pub use crate::workflow_kernel::{
         fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
             use base64::Engine;
             crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
-            let result =
-                export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
+            let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
             let mesh = semio_framework::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
             assert!(mesh.vertex_count() > 0);
@@ -4107,10 +4097,7 @@ pub mod wasm_exports {
     /// 🏷️ Normalize `stdio.dwg` / `dwg` to short stdio format kind id (WASM bridge).
     #[wasm_bindgen(js_name = normalizeStdioFormatKind)]
     pub fn wasm_normalize_stdio_format_kind(value: &str) -> Result<String, JsValue> {
-        semio_framework::format_descriptor(value)
-            .map_err(|error| JsValue::from_str(&error.to_string()))?
-            .map(|descriptor| descriptor.short_id)
-            .ok_or_else(|| JsValue::from_str(&format!("unknown stdio format kind `{value}`")))
+        semio_framework::format_descriptor(value).map_err(|error| JsValue::from_str(&error.to_string()))?.map(|descriptor| descriptor.short_id).ok_or_else(|| JsValue::from_str(&format!("unknown stdio format kind `{value}`")))
     }
 
     // #endregion wasm_exports
@@ -4121,10 +4108,10 @@ pub mod registry {
     // #region registry
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
 
+    use crate::instance::OsParameterFieldSpec;
     use crate::space;
     use crate::workflow;
-    use crate::instance::OsParameterFieldSpec;
-    use semio_framework::{AppDefinition, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, WindowKindDefinition};
+    use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ArtifactKindSpec, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, WindowKindDefinition};
     use semio_framework::{Locale, Terminology};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -4347,6 +4334,8 @@ pub mod registry {
     #[serde(rename_all = "camelCase")]
     pub struct OsAppRegistration {
         pub id: String,
+        pub role: AppRole,
+        pub dialect: ArtifactDialect,
         pub label: LocalizedLabel,
         pub breadcrumb: Vec<String>,
         pub controller_id: String,
@@ -4361,7 +4350,7 @@ pub mod registry {
         pub modes: Vec<ModeDefinition>,
         /// 🧮️ The app's declared `AppDefinition.config` — how `host::reconcile_os_workflow` resolves
         /// a `plugin_id`/`app_id` app instance's `ConfigSpec` to type-check/materialize its parameter
-        /// bindings (`instance::validate_parameter_config_binding`/`build_configure_config`).
+        /// bindings (`workflow::validate_workflow_parameter_config_binding`/`instance::build_configure_config`).
         #[serde(default)]
         pub config: ConfigSpec,
     }
@@ -4385,6 +4374,8 @@ pub mod registry {
         let (inputs, outputs): (Vec<_>, Vec<_>) = ports.into_iter().partition(|port| port.direction == semio_framework::MediaPortDirection::In);
         let registration = OsAppRegistration {
             id: app.id.clone(),
+            role: app.role,
+            dialect: app.dialect.clone(),
             label: app.label.clone(),
             breadcrumb: app.breadcrumb.clone(),
             controller_id: app.controller_id.clone(),
@@ -4462,6 +4453,8 @@ pub mod registry {
         let io = app_io_for_registration(&registration);
         Some(AppDefinition {
             id: registration.id,
+            role: registration.role,
+            dialect: registration.dialect,
             label: registration.label,
             breadcrumb: registration.breadcrumb,
             icon_id: None,
@@ -4571,15 +4564,17 @@ pub mod registry {
         fn registers_app_io_and_resolves_registration() {
             let app = AppDefinition {
                 id: "draw".into(),
-                label: "Draw".into(),
+                role: AppRole::Editor,
+                dialect: ArtifactDialect { artifact_kind: "s.test.draw".into(), standard: "1".into(), subset: "*".into() },
+                label: LocalizedLabel::data("Draw"),
                 breadcrumb: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
                     id: "draw".into(),
-                    label: "Draw".into(),
+                    label: LocalizedLabel::data("Draw"),
                     body_key: "draw".into(),
                     surface_kind: SurfaceKind::Canvas2d,
                     icon_id: "pen-tool".into(),
@@ -4628,51 +4623,49 @@ pub mod registry {
     // #endregion registry
 }
 
+#[cfg(feature = "os-host-full")]
+#[cfg(feature = "os-host-full")]
+pub use crate::space::*;
+#[cfg(feature = "os-host-full")]
+pub use crate::workflow::{
+    MediaContract, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA, Workflow, WorkflowDelivery,
+    WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
+    WorkflowPosition, WorkflowSnapshot, WorkflowValidation, apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
+    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
+    os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot,
+    workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value,
+};
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(feature = "os-host-full")]
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 #[cfg(feature = "os-host-full")]
 pub use host::{
-    create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
-    import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry,
-    OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, ProgramSupervisorState, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
+    BackboneDocument, LoadedProgram, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost,
+    ProgramHotSwapEvent, ProgramSupervisorState, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack,
+    import_os_space_from_dsl, import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty,
 };
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use instance::{
-    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
-    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
-    OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
+    OS_PARAMETER_PORT_PREFIX, OsArtifactRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id,
+    is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter,
+    register_os_fixture_json, resolve_parameter_values_for_instance, set_json_pointer_value,
 };
 pub use media_export_raster::{
-    dwg_drawing_to_svg, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler,
-    register_mesh_exporter, register_mesh_importer, register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes,
-    OsMediaExportResult, media_accept_filter_kinds,
+    OsMediaExportResult, dwg_drawing_to_svg, media_accept_filter_kinds, rasterize_svg_to_png_base64, register_2d_export_handlers, register_mesh_dwg_export_handler, register_mesh_dwg_import_handler, register_mesh_exporter, register_mesh_importer,
+    register_os_media_export_handler_kind, register_os_media_import_handler_kind, svg_to_dwg_bytes,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 #[cfg(feature = "os-host-full")]
 #[cfg(feature = "os-host-full")]
 pub use registry::{
-    list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor,
-    workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
+    AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry, list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, register_app_io, register_artifact_descriptor,
+    register_artifact_descriptors, resolve_os_app_definition, try_os_artifact_descriptor, workflow_palette,
 };
 pub use semio_framework::*;
-#[cfg(feature = "os-host-full")]
-#[cfg(feature = "os-host-full")]
-pub use crate::space::*;
-pub use store::{document_backbone_ref, set_host_backbone_port, ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort};
+pub use store::{ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort, document_backbone_ref, set_host_backbone_port};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
-#[cfg(feature = "os-host-full")]
-pub use crate::workflow::{
-    apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
-    os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow,
-    sync_workflow_parameter_ports, validate_workflow, validate_workflow_snapshot, validate_workflow_parameter_config_binding, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-    workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow, WorkflowDelivery, WorkflowSnapshot,
-    WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowNode, WorkflowMutation, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
-    WorkflowPosition, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
-};
 
 //#region 🔖️PluginInstallerShim
 // 🛡️ Fallback installer stub inlined after the external shim path went missing during crate consolidation.

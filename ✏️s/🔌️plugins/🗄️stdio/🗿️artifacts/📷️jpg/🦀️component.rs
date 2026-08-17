@@ -1,6 +1,6 @@
 //! 🎪 `stdio.jpg` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::jpg::schema::diff::JpgDiff;
 pub use crate::artifacts::jpg::schema::mutations::JpgMutation;
@@ -12,6 +12,16 @@ pub const STDIO_JPG_DOCUMENT_SCHEMA: &str = "stdio.jpg";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const JPG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.jpg";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const JPG_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
+pub const JPG_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

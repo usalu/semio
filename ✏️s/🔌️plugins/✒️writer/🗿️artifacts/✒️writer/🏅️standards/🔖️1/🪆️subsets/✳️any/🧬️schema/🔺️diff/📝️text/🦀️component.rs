@@ -16,84 +16,87 @@ pub use crate::artifacts::writer::schema::diff::*;
 //#region 🔖️Apply
 impl WriterDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &WriterArtifact) -> WriterArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(language_id) = &self.language_id {
-            next.language_id = language_id.clone();
-        }
-        if let Some(uri) = &self.uri {
-            next.uri = uri.clone();
-        }
-        if let Some(document) = &self.document {
-            next.document = document.clone();
-        }
-        if let Some(selection) = &self.editor_selection {
-            next.editor_selection = selection.clone();
-        }
-        if let Some(settings) = &self.editor_settings {
-            next.editor_settings = settings.clone();
-        }
-        if let Some(value) = self.format_signal {
-            next.format_signal = value;
-        }
-        if let Some(value) = self.lint_signal {
-            next.lint_signal = value;
-        }
-        if let Some(value) = self.revision {
-            next.revision = value;
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = self.camera_x {
-            next.camera_x = value;
-        }
-        if let Some(value) = self.camera_y {
-            next.camera_y = value;
-        }
-        if let Some(value) = self.camera_zoom {
-            next.camera_zoom = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(language_id) = &self.language_id {
+                next.language_id = language_id.clone();
+            }
+            if let Some(uri) = &self.uri {
+                next.uri = uri.clone();
+            }
+            if let Some(document) = &self.document {
+                next.document = document.clone();
+            }
+            if let Some(selection) = &self.editor_selection {
+                next.editor_selection = selection.clone();
+            }
+            if let Some(settings) = &self.editor_settings {
+                next.editor_settings = settings.clone();
+            }
+            if let Some(value) = self.format_signal {
+                next.format_signal = value;
+            }
+            if let Some(value) = self.lint_signal {
+                next.lint_signal = value;
+            }
+            if let Some(value) = self.revision {
+                next.revision = value;
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<WriterSnapshot> for WriterDiff {
-    fn apply(&self, snapshot: &WriterSnapshot) -> WriterSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(language_id) = &self.language_id {
-            next.language_id = language_id.clone();
-        }
-        if let Some(uri) = &self.uri {
-            next.uri = uri.clone();
-        }
-        if let Some(document) = &self.document {
-            next.document = document.clone();
-        }
-        next
+    fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(language_id) = &self.language_id {
+                next.language_id = language_id.clone();
+            }
+            if let Some(uri) = &self.uri {
+                next.uri = uri.clone();
+            }
+            if let Some(document) = &self.document {
+                next.document = document.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -244,7 +247,7 @@ mod tests {
     fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
         let base = WriterSnapshot::default();
         let diff = diff_set_text("hio", "jack", "plaintext");
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(crate::artifacts::writer::writer_text(&next), "hio");
     }
 }

@@ -18,7 +18,7 @@ pub struct CreateColumn {
 impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for CreateColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "column", kind: "create-column", record: "CreatedColumn" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {

@@ -5,7 +5,13 @@ use crate::artifacts::en1999::mutations::change_shell_t_mm::mutation::ChangeShel
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeShellTMm, _base: &En1999Snapshot) -> En1999Diff {
-    En1999Diff { shell_t_mm: Some(payload.new_shell_t_mm.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeShellTMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    if !payload.new_shell_t_mm.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Shell thickness t [mm] must be a finite number, got {}.", payload.new_shell_t_mm), Vec::<String>::new());
+    }
+    if base.shell_t_mm == payload.new_shell_t_mm {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Shell thickness t [mm] is already {}.", payload.new_shell_t_mm));
+    }
+    protocol::MutationOutcome::new(En1999Diff { shell_t_mm: Some(payload.new_shell_t_mm.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

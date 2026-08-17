@@ -12,7 +12,7 @@ pub struct ChangeEnvelopeAreaM2 {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeEnvelopeAreaM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "envelope-area-m2", kind: "change-envelope-area-m2", record: "ChangedEnvelopeAreaM2" };
 
-    fn diff(&self, base: &Din4108Snapshot) -> <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

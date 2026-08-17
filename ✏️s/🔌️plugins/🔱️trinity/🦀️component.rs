@@ -17,9 +17,13 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .artifact(crate::artifacts::jack::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::rewrite::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::jack::TrinityJackPlayApp>(crate::editor::jack::create_trinity_jack_app())
+        .editor_mutation_roster::<crate::editor::jack::TrinityJackPlayApp>()
         .viewer::<crate::viewer::jack::TrinityJackViewer>(crate::viewer::jack::create_trinity_jack_viewer())
+        .viewer_mutation_roster::<crate::viewer::jack::TrinityJackViewer>()
         .editor::<crate::editor::rewrite::TrinityRewritePlayApp>(crate::editor::rewrite::create_rewrite_app())
+        .editor_mutation_roster::<crate::editor::rewrite::TrinityRewritePlayApp>()
         .viewer::<crate::viewer::rewrite::TrinityRewriteViewer>(crate::viewer::rewrite::create_trinity_rewrite_viewer())
+        .viewer_mutation_roster::<crate::viewer::rewrite::TrinityRewriteViewer>()
         .try_build()
 }
 

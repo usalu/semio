@@ -144,14 +144,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let d = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot).into_parts().0;
-            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-            (self, d)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }

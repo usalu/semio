@@ -17,6 +17,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct StepCc6BuilderConstruction {
         snapshot: StepSnapshot,
+        diagnostics: Vec<Diagnostic>,
     }
 
     impl ArtifactBuilder for StepCc6BuilderConstruction {
@@ -25,11 +26,11 @@ pub mod derived_construction {
         type Diff = StepDiff;
 
         fn empty() -> Self {
-            Self { snapshot: StepSnapshot::default() }
+            Self { snapshot: StepSnapshot::default(), diagnostics: Vec::new() }
         }
 
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
+            Self { snapshot, diagnostics: Vec::new() }
         }
 
         fn from_text(text: &str) -> Result<Self, store::TextError> {
@@ -40,14 +41,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)
@@ -56,11 +57,12 @@ pub mod derived_construction {
         /// advisory `Diagnostic`s on a successful `Composition`); the `Err` path is only taken for
         /// hard ones.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let hard: Vec<Diagnostic> = check_cc6_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
+            let Self { snapshot, mut diagnostics } = self;
+            diagnostics.extend(check_cc6_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
+            if diagnostics.is_empty() {
+                Ok(snapshot)
             } else {
-                Err(hard)
+                Err(diagnostics)
             }
         }
     }
@@ -95,7 +97,7 @@ pub mod derived_construction {
             // honestly rather than asserting a hard failure that can never happen at cc6.
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
-            doc.instances.push(crate::artifacts::step::standards::v_ap214::engine::part21::Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
+            doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
             let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
             mutated.build().expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
@@ -250,8 +252,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec StepCc6BuilderFacets {
-        construction: derived_construction::StepCc6BuilderConstruction,
-        analysis: derived_analysis::StepCc6AnalyzerAnalysis,
+        construction: StepCc6BuilderConstruction,
+        analysis: StepCc6AnalyzerAnalysis,
         composition: super::io::derived_composition::StepCc6ComposerComposition,
     }
     builder: StepCc6Builder,

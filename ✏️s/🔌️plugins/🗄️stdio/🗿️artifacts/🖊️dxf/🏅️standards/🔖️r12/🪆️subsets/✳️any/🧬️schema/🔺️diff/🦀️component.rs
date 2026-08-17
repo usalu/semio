@@ -28,12 +28,12 @@
 //! for enums, `name{[removed];[modified];[added]}` for collection triples) — see
 //! `f6-recon-report.md` in this ticket folder.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfOtherTable, DxfStyle, DxfTables, DxfTag, DxfValue, DxfVertex};
 use crate::artifacts::dxf::DxfSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -54,23 +54,17 @@ trait DxfIndexElem: Clone + PartialEq {
 fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (idx, d) in modified {
-        if let Some(it) = items.get_mut(*idx) {
-            T::diff_apply(d, it);
-        }
+        T::diff_apply(d, &mut items[*idx]);
     }
     let mut removed_desc = removed.to_vec();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
     for idx in removed_desc {
-        if idx < items.len() {
-            items.remove(idx);
-        }
+        items.remove(idx);
     }
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
-        let at = (*idx).min(items.len());
-        items.insert(at, item.clone());
+        items.insert(*idx, item.clone());
     }
     items
 }
@@ -222,8 +216,10 @@ trait DxfNamedElem: Clone + PartialEq {
 fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (key, d) in modified {
-        if let Some(it) = items.iter_mut().find(|it| it.key() == key) {
-            T::diff_apply(d, it);
+        for item in &mut items {
+            if item.key() == key {
+                T::diff_apply(d, item);
+            }
         }
     }
     let removed_set: HashSet<&str> = removed.iter().map(String::as_str).collect();
@@ -231,8 +227,7 @@ fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(Str
     let mut adds: Vec<&(usize, T)> = added.iter().collect();
     adds.sort_by_key(|(i, _)| *i);
     for (idx, item) in adds {
-        let at = (*idx).min(items.len());
-        items.insert(at, item.clone());
+        items.insert(*idx, item.clone());
     }
     items
 }
@@ -834,7 +829,7 @@ pub struct DxfArcDiff {
 #[serde(rename_all = "camelCase")]
 pub struct DxfPolylineDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub vertices: Option<Vec<crate::artifacts::dxf::schema::snapshot::DxfVertex>>,
+    pub vertices: Option<Vec<DxfVertex>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub closed: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1446,28 +1441,186 @@ pub struct DxfDiff {
     pub entities: Option<DxfEntitiesDiff>,
 }
 
-impl MutationDiff<DxfSnapshot> for DxfDiff {
-    fn apply(&self, base: &DxfSnapshot) -> DxfSnapshot {
-        DxfSnapshot {
-            schema: base.schema.clone(),
-            header_vars: match &self.header_vars {
-                Some(d) => d.apply(&base.header_vars),
-                None => base.header_vars.clone(),
-            },
-            tables: match &self.tables {
-                Some(d) => d.apply(&base.tables),
-                None => base.tables.clone(),
-            },
-            other_tables: base.other_tables.clone(),
-            blocks: match &self.blocks {
-                Some(d) => d.apply(&base.blocks),
-                None => base.blocks.clone(),
-            },
-            entities: match &self.entities {
-                Some(d) => d.apply(&base.entities),
-                None => base.entities.clone(),
-            },
+fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+    MutationApplyError::new(code, message).at(target)
+}
+
+fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, prefix: &[String]) -> MutationApplyResult<()> {
+    let mut removed = BTreeSet::new();
+    for &index in removed_indices {
+        let mut target = prefix.to_vec();
+        target.push(index.to_string());
+        if index >= base_len || !removed.insert(index) {
+            return Err(target_error("invalid-remove-index", "removal target must exist exactly once", target));
         }
+    }
+    let mut modified = BTreeSet::new();
+    for index in modified_indices {
+        let mut target = prefix.to_vec();
+        target.push(index.to_string());
+        if index >= base_len || removed.contains(&index) || !modified.insert(index) {
+            return Err(target_error("invalid-modify-index", "modification target must exist exactly once and remain present", target));
+        }
+    }
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = added_indices.into_iter().collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        let mut target = prefix.to_vec();
+        target.push(index.to_string());
+        if index > length || previous == Some(index) {
+            return Err(target_error("invalid-add-index", "addition target must be unique and within the evolving sequence", target));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn validate_named_targets<'a>(
+    base_keys: impl IntoIterator<Item = &'a str>,
+    removed_keys: impl IntoIterator<Item = &'a str>,
+    modified_keys: impl IntoIterator<Item = &'a str>,
+    added: impl IntoIterator<Item = (usize, &'a str)>,
+    prefix: &[String],
+) -> MutationApplyResult<()> {
+    let mut base = BTreeSet::new();
+    for key in base_keys {
+        let mut target = prefix.to_vec();
+        target.push(key.to_string());
+        if !base.insert(key) {
+            return Err(target_error("duplicate-base-target", "base names must be unique", target));
+        }
+    }
+    let mut removed = BTreeSet::new();
+    for key in removed_keys {
+        let mut target = prefix.to_vec();
+        target.push(key.to_string());
+        if !base.contains(key) || !removed.insert(key) {
+            return Err(target_error("invalid-remove-target", "removal target must exist exactly once", target));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for key in modified_keys {
+        let mut target = prefix.to_vec();
+        target.push(key.to_string());
+        if !base.contains(key) || removed.contains(key) || !modified.insert(key) {
+            return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target));
+        }
+    }
+    let mut length = base.len() - removed.len();
+    let mut additions: Vec<(usize, &str)> = added.into_iter().collect();
+    additions.sort_by_key(|(index, _)| *index);
+    let mut added_keys = BTreeSet::new();
+    let mut previous = None;
+    for (index, key) in additions {
+        let mut target = prefix.to_vec();
+        target.push(key.to_string());
+        if base.contains(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
+            return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn entity_diff_matches(entity: &DxfEntity, diff: &DxfEntityDiff) -> bool {
+    matches!(
+        (entity, diff),
+        (_, DxfEntityDiff::Replace { .. })
+            | (DxfEntity::Line { .. }, DxfEntityDiff::Line(_))
+            | (DxfEntity::Circle { .. }, DxfEntityDiff::Circle(_))
+            | (DxfEntity::Arc { .. }, DxfEntityDiff::Arc(_))
+            | (DxfEntity::Polyline { .. }, DxfEntityDiff::Polyline(_))
+            | (DxfEntity::Text { .. }, DxfEntityDiff::Text(_))
+            | (DxfEntity::Solid { .. }, DxfEntityDiff::Solid(_))
+            | (DxfEntity::Insert { .. }, DxfEntityDiff::Insert(_))
+            | (DxfEntity::Other { .. }, DxfEntityDiff::Other(_))
+    )
+}
+
+fn validate_entities_diff(base: &[DxfEntity], diff: &DxfEntitiesDiff, prefix: &[String]) -> MutationApplyResult<()> {
+    validate_indexed_targets(base.len(), &diff.removed, diff.modified.iter().map(|entry| entry.index), diff.added.iter().map(|entry| entry.index), prefix)?;
+    for entry in &diff.modified {
+        if !entity_diff_matches(&base[entry.index], &entry.diff) {
+            let mut target = prefix.to_vec();
+            target.push(entry.index.to_string());
+            return Err(target_error("entity-kind-mismatch", "kind-specific entity diff must match its target entity", target));
+        }
+    }
+    Ok(())
+}
+
+fn validate_dxf_diff(diff: &DxfDiff, base: &DxfSnapshot) -> MutationApplyResult<()> {
+    if let Some(value) = &diff.header_vars {
+        validate_named_targets(
+            base.header_vars.iter().map(|entry| entry.name.as_str()),
+            value.removed.iter().map(String::as_str),
+            value.modified.iter().map(|entry| entry.name.as_str()),
+            value.added.iter().map(|entry| (entry.index, entry.header_var.name.as_str())),
+            &["headerVars".to_string()],
+        )?;
+    }
+    if let Some(tables) = &diff.tables {
+        if let Some(value) = &tables.layers {
+            validate_named_targets(
+                base.tables.layers.iter().map(|entry| entry.name.as_str()),
+                value.removed.iter().map(String::as_str),
+                value.modified.iter().map(|entry| entry.name.as_str()),
+                value.added.iter().map(|entry| (entry.index, entry.layer.name.as_str())),
+                &["tables".to_string(), "layers".to_string()],
+            )?;
+        }
+        if let Some(value) = &tables.styles {
+            validate_named_targets(
+                base.tables.styles.iter().map(|entry| entry.name.as_str()),
+                value.removed.iter().map(String::as_str),
+                value.modified.iter().map(|entry| entry.name.as_str()),
+                value.added.iter().map(|entry| (entry.index, entry.style.name.as_str())),
+                &["tables".to_string(), "styles".to_string()],
+            )?;
+        }
+        if let Some(value) = &tables.linetypes {
+            validate_named_targets(
+                base.tables.linetypes.iter().map(|entry| entry.name.as_str()),
+                value.removed.iter().map(String::as_str),
+                value.modified.iter().map(|entry| entry.name.as_str()),
+                value.added.iter().map(|entry| (entry.index, entry.linetype.name.as_str())),
+                &["tables".to_string(), "linetypes".to_string()],
+            )?;
+        }
+    }
+    if let Some(value) = &diff.blocks {
+        validate_indexed_targets(base.blocks.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), &["blocks".to_string()])?;
+        for entry in &value.modified {
+            if let Some(entities) = &entry.diff.entities {
+                validate_entities_diff(&base.blocks[entry.index].entities, entities, &["blocks".to_string(), entry.index.to_string(), "entities".to_string()])?;
+            }
+        }
+    }
+    if let Some(value) = &diff.entities {
+        validate_entities_diff(&base.entities, value, &["entities".to_string()])?;
+    }
+    Ok(())
+}
+
+fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnapshot {
+    DxfSnapshot {
+        schema: base.schema.clone(),
+        header_vars: diff.header_vars.as_ref().map_or_else(|| base.header_vars.clone(), |value| value.apply(&base.header_vars)),
+        tables: diff.tables.as_ref().map_or_else(|| base.tables.clone(), |value| value.apply(&base.tables)),
+        other_tables: base.other_tables.clone(),
+        blocks: diff.blocks.as_ref().map_or_else(|| base.blocks.clone(), |value| value.apply(&base.blocks)),
+        entities: diff.entities.as_ref().map_or_else(|| base.entities.clone(), |value| value.apply(&base.entities)),
+    }
+}
+
+impl MutationDiff<DxfSnapshot> for DxfDiff {
+    fn apply(&self, base: &DxfSnapshot) -> MutationApplyResult<DxfSnapshot> {
+        validate_dxf_diff(self, base)?;
+        Ok(apply_dxf_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract): every
@@ -1504,7 +1657,7 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
 impl DiffAlgebra<DxfSnapshot> for DxfDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
     fn inverse(&self, base: &DxfSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = apply_dxf_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 

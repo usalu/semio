@@ -18,7 +18,7 @@ pub struct ReplaceSupport {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ReplaceSupport {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "support", kind: "replace-support", record: "ReplacedSupport" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> crate::artifacts::fem3d::diff::Fem3dDiff {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

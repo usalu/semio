@@ -52,60 +52,63 @@ pub fn apply_board_step(wires: &mut DslValue, board: &mut DslValue, add_node: Op
 //#region 🔖️Apply
 impl WiresDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &WiresArtifact) -> WiresArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(wires) = &self.wires_fixture {
-            next.wires_fixture = wires.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
-        if let Some(meta) = &self.meta {
-            next.meta = meta.clone();
-        }
-        if let Some(value) = &self.drag_node_id {
-            next.drag_node_id = value.clone();
-        }
-        if let Some(value) = self.drag_last_x {
-            next.drag_last_x = value;
-        }
-        if let Some(value) = self.drag_last_y {
-            next.drag_last_y = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &WiresArtifact) -> protocol::MutationApplyResult<WiresArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(wires) = &self.wires_fixture {
+                next.wires_fixture = wires.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(camera) = &self.camera {
+                next.camera = camera.clone();
+            }
+            if let Some(meta) = &self.meta {
+                next.meta = meta.clone();
+            }
+            if let Some(value) = &self.drag_node_id {
+                next.drag_node_id = value.clone();
+            }
+            if let Some(value) = self.drag_last_x {
+                next.drag_last_x = value;
+            }
+            if let Some(value) = self.drag_last_y {
+                next.drag_last_y = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<WiresSnapshot> for WiresDiff {
-    fn apply(&self, snapshot: &WiresSnapshot) -> WiresSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(wires) = &self.wires_fixture {
-            next.wires_fixture = wires.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
-        if let Some(meta) = &self.meta {
-            next.meta = meta.clone();
-        }
-        next
+    fn apply(&self, snapshot: &WiresSnapshot) -> protocol::MutationApplyResult<WiresSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(wires) = &self.wires_fixture {
+                next.wires_fixture = wires.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(camera) = &self.camera {
+                next.camera = camera.clone();
+            }
+            if let Some(meta) = &self.meta {
+                next.meta = meta.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -215,7 +218,7 @@ mod tests {
     fn apply_adds_node_via_board_fixture_delta() {
         let snapshot = empty_wires_snapshot();
         let diff = diff_board_fixture(board_after_add_node(&snapshot, &node("node-1", "Alpha")));
-        let after = diff.apply(&snapshot);
+        let after = diff.apply(&snapshot).expect("valid mutation diff");
         assert_eq!(crate::artifacts::wires::wires_working_board(&after).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 

@@ -37,8 +37,10 @@ impl Default for LayoutPresence {
 }
 
 impl protocol::MutationDiff<LayoutPresence> for LayoutPresence {
-    fn apply(&self, _base: &LayoutPresence) -> LayoutPresence {
-        self.clone()
+    fn apply(&self, _base: &LayoutPresence) -> protocol::MutationApplyResult<LayoutPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -123,9 +125,9 @@ pub enum LayoutPresenceMutation {
 impl Mutation<LayoutPresence> for LayoutPresenceMutation {
     type Diff = LayoutPresence;
 
-    fn diff(&self, _base: &LayoutPresence) -> LayoutPresence {
+    fn diff(&self, _base: &LayoutPresence) -> protocol::MutationOutcome<LayoutPresence> {
         match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
         }
     }
 

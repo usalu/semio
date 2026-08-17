@@ -40,12 +40,12 @@ impl SemioTextDiff {
 }
 
 impl MutationDiff<SemioTextSnapshot> for SemioTextDiff {
-    fn apply(&self, base: &SemioTextSnapshot) -> SemioTextSnapshot {
+    fn apply(&self, base: &SemioTextSnapshot) -> protocol::MutationApplyResult<SemioTextSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.runs {
             next.runs = list.values.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -220,7 +220,7 @@ mod tests {
     fn apply_replaces_runs_wholesale() {
         let base = SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: vec![SemioTextRun { language: "en".into(), content: "a".into(), marks: vec![] }] };
         let diff = SemioTextDiff { runs: Some(SemioTextRunList { values: vec![SemioTextRun { language: "en".into(), content: "b".into(), marks: vec![] }] }) };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(next.runs[0].content, "b");
     }
 

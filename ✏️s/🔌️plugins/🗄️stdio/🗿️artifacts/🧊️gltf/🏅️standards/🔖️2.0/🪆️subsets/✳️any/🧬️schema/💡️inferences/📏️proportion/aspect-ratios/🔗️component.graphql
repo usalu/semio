@@ -1,11 +1,38 @@
-# 💡️ aspect-ratios glTF inference leaf GraphQL facet.
-type GltfAspectRatiosInferenceV1 {
-  id: ID!
+# 💡️ Typed aspect-ratios glTF inference result.
+type GltfAspectRatiosValueV1 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type GltfAspectRatiosQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: Int!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfAspectRatiosProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfAspectRatiosInferenceV1 {
+  value: GltfAspectRatiosValueV1
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfAspectRatiosQualityV1!
+  provenance: GltfAspectRatiosProvenanceV1!
 }

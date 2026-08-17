@@ -1,6 +1,6 @@
 //! 🎪 `stdio.svg` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::svg::schema::diff::SvgDiff;
 pub use crate::artifacts::svg::schema::mutations::SvgMutation;
@@ -12,6 +12,17 @@ pub const STDIO_SVG_DOCUMENT_SCHEMA: &str = "stdio.svg";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const SVG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.svg";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const SVG_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
+pub const SVG_BASIC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("basic") };
+pub const SVG_TINY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

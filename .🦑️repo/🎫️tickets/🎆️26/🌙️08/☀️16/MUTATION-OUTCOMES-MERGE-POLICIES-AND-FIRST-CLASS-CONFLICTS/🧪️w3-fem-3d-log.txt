@@ -1,0 +1,68 @@
+W3 lane — FEM 3D (🧊️3d) diff leaf conversion — progress log
+Scope: ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/**
+
+25/25 leaves converted (🔺️diff/🦀️component.rs only — 🦠️mutation leaves were already done per the brief):
+
+1. 🌱⚪️create-node       — Fatal mutation.duplicate-id (node id exists)
+2. 🗑⚪️delete-node       — Error mutation.target-missing (node id absent)
+3. 🌱🧩️create-element    — Fatal mutation.duplicate-id (element id exists); Error mutation.target-missing for missing start node / end node / material_id / section_id (FemElement::Bar|Frame all carry these 4 FK fields)
+4. 🗑🧩️delete-element    — Error mutation.target-missing (element id absent)
+5. 🔁🧩️replace-element   — Error mutation.target-missing (element id absent); Warning mutation.no-op (new_element == existing, PartialEq)
+6. 🌱🧱️create-material   — Fatal mutation.duplicate-id (material id exists) — no FK fields
+7. 🗑🧱️delete-material   — Error mutation.target-missing (material id absent)
+8. 🔁🧱️replace-material  — Error mutation.target-missing; Warning mutation.no-op (equal)
+9. 🌱create-section      — Fatal mutation.duplicate-id (section id exists) — no FK fields
+10. 🗑📐️delete-section   — Error mutation.target-missing (section id absent)
+11. 🔁📐️replace-section  — Error mutation.target-missing; Warning mutation.no-op (equal)
+12. 🌱🛡️create-support    — Fatal mutation.duplicate-id (support id exists); Error mutation.target-missing (support.node_id FK)
+13. 🗑delete-support      — Error mutation.target-missing (support id absent)
+14. 🔁🛡️replace-support   — Error mutation.target-missing; Warning mutation.no-op (equal)
+15. 🌱🧊️create-solid      — Fatal mutation.duplicate-id (solid id exists); Error mutation.target-missing (solid.material_id FK)
+16. 🗑🧊️delete-solid      — Error mutation.target-missing (solid id absent)
+17. 🔁replace-solid       — Error mutation.target-missing; Warning mutation.no-op (equal)
+18. 🌱📋️create-load-case  — Fatal mutation.duplicate-id (case id exists); Error mutation.target-missing per-load FK (FemLoad::Nodal.node_id / MemberUdl.element_id / Area.solid_id)
+19. 🗑📋️delete-load-case  — Error mutation.target-missing (case id absent)
+20. ➕add-load            — Error mutation.target-missing (owning case_id absent); Warning mutation.no-op (load id already present in case.loads)
+21. ➖remove-load         — Error mutation.target-missing (owning case_id absent, OR load_id absent within the case)
+22. ⚖change-load-case-self-weight — Error mutation.target-missing (case_id absent); Warning mutation.no-op (new_self_weight == current)
+23. 🌱🔗️create-combination — Fatal mutation.duplicate-id (combination id exists); Error mutation.target-missing per terms.keys() (each is a load-case id FK — FemCombination doc: "keyed by case id")
+24. 🗑🔗️delete-combination — Error mutation.target-missing (combination id absent)
+25. 🎛update-analysis-settings — document-root singleton, no target-missing; Warning mutation.no-op (payload.settings == base.analysis)
+
+No 🦠️mutation/🦀️component.rs files touched (already converted per brief — verified: all 25 already declare
+`fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff>`
+and delegate via `super::diff::diff(self, base)`).
+
+No `fn validate` overrides found anywhere under 🧊️3d (grep confirmed empty).
+
+✏️editor/🎚️config and ✏️editor/👥️presence: do not exist under 🧊️3d for this artifact (grep found no such
+directories) — nothing to verify/touch there.
+
+Deviations from guidance: none. Followed the brief's verb-family table literally:
+- replace-*: only target-missing + optional no-op (no FK re-validation on replace, per spec).
+- add-load / remove-load: only the two checks the brief specifies (case_id / load_id existence) — did
+  NOT add FK validation on the load's own node/element/solid id for add-load, since the brief's add-load
+  rule text lists only case-absent (Error) and duplicate-load-id-in-case (Warning no-op).
+- create-combination: brief didn't name combinations explicitly among its e.g. list (support/element/
+  load-case), but FemCombination.terms is a BTreeMap<load-case-id, factor> — a genuine FK per the general
+  create-* rule ("if the payload also carries a REQUIRED foreign reference... treat a missing referenced
+  entity as Error mutation.target-missing"), so added the same check.
+
+Facet-root test file:
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs
+Added new `//#region 🔖️OutcomeLaws` inside `mod tests` (after `//#endregion 🔖️MutationLaws`, mirroring the
+🕸️dag facet's OutcomeLaws region): 6x assert_missing_target_is_error (create/delete/replace/add/remove/
+change verb families) + 1x assert_fatal_never_applies (create-node duplicate-id). No pre-existing test in
+this file needed adjustment — every existing `.diff(&base)` call site already chained `.diff()`/`.into_parts()`
+correctly (the file's tests were apparently already written against the outcome-returning API).
+
+Verification:
+- `cargo check -p semio-s-plugin-fem` (lib target, no --tests): SUCCESS — 0 errors, only pre-existing
+  warnings (unrelated to this ticket: unnecessary qualifications, unused imports/functions in ◻2d and
+  🚪️io modules not in my lease).
+- `cargo check -p semio-s-plugin-fem --tests`: fails, but ALL errors are in the `semio-s-plugin-stdio`
+  crate (a build dependency), not in semio-s-plugin-fem itself — e.g.
+  `HtmlMutation: OpBinary is not satisfied`, `SvgMutation: OpBinary`, `SemioAnimationMutation: OpBinary/OpText`
+  in ✏️s/🔌️plugins/🗄️stdio/**. These match the FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS
+  ticket's charter (visible mid-flight in git status), not this ticket's 🧊️3d lease. No error in the
+  output referenced any 🧊️3d/fem3d path.

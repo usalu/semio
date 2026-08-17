@@ -1,5 +1,5 @@
 scalar GltfJson
 enum GltfCreateSceneDiffPhaseV1 { DIFF }
-type GltfCreateSceneValueV1 { nodes: [Int!]! }
-type GltfCreateSceneAnchorV1 { nodes: [Int!]!, name: String, extensions: GltfJson, extras: GltfJson }
-type GltfCreateSceneDiffV1 { id: ID!, version: Int!, phase: GltfCreateSceneDiffPhaseV1!, touchedPaths: [String!]!, position: Int!, expectedSceneCount: Int!, expectedDefaultSceneBefore: Int, expectedNextScene: GltfCreateSceneAnchorV1, scene: GltfCreateSceneValueV1! }
+type GltfCreateSceneValueV1 { nodes: [GltfCreateSceneU32!]! }
+type GltfCreateSceneAnchorV1 { nodes: [GltfCreateSceneU32!]!, name: String, extensions: GltfJson, extras: GltfJson }
+type GltfCreateSceneDiffV1 { id: ID!, version: GltfCreateSceneU32!, phase: GltfCreateSceneDiffPhaseV1!, touchedPaths: [String!]!, position: GltfCreateSceneU32!, expectedSceneCount: GltfCreateSceneU32!, expectedDefaultSceneBefore: GltfCreateSceneU32, expectedScenesBefore: [GltfCreateSceneAnchorV1!]!, scene: GltfCreateSceneValueV1! }

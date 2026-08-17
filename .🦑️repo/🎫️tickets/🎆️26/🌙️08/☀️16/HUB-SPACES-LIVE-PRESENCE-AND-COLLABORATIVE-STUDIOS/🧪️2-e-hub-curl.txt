@@ -1,0 +1,17 @@
+=== GET /admin ===
+200
+=== GET /admin content-type ===
+content-type: text/html; charset=utf-8
+=== GET /admin/api/overview (loopback, no token) ===
+{"backends":{"neo4j":false,"postgres":false,"sqlite":true},"counts":{"connections":0,"spaces":1,"users":1},"dataDirBytes":98314,"headSeq":3,"openArtifacts":0}
+=== GET /admin/api/spaces ===
+[{"id":"default","name":"Space","kind":"studio","visibility":"private","ownerUserId":"seed","memberCount":1,"documentCount":0,"activeConnections":0,"createdAtMs":1786922588098,"updatedAtMs":1786922588098}]
+=== GET /admin/spaces/sp-1 (SPA fallback) ===
+200
+=== traversal guard: /admin/../../etc/passwd ===
+404
+=== traversal guard: /admin/..%2f..%2fetc%2fpasswd ===
+400
+=== 503 when admin dir missing (separate instance, port 8799) ===
+admin SPA not built — run: bun nx run os-hub-admin:build
+HTTP 503

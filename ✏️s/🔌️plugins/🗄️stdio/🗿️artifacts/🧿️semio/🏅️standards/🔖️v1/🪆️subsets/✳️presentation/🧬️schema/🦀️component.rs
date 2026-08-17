@@ -104,13 +104,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_semio_presentation_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
@@ -157,7 +157,7 @@ pub mod derived_construction {
             let mutated_snapshot = builder.clone().build().unwrap();
             assert_eq!(mutated_snapshot.masters.len(), 1);
 
-            let reabsorbed = SemioPresentationBuilderConstruction::empty().absorb(diff);
+            let reabsorbed = SemioPresentationBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(reabsorbed.build().unwrap(), mutated_snapshot);
         }
     }
@@ -277,8 +277,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SemioPresentationBuilderFacets {
-        construction: derived_construction::SemioPresentationBuilderConstruction,
-        analysis: derived_analysis::SemioPresentationAnalyzerAnalysis,
+        construction: SemioPresentationBuilderConstruction,
+        analysis: SemioPresentationAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SemioPresentationComposerComposition,
     }
     builder: SemioPresentationBuilder,

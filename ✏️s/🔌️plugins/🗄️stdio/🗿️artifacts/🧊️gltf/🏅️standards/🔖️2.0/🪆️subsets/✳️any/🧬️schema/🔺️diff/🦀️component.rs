@@ -253,6 +253,33 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Self { removed, modified, added }
     }
 
+    pub fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
+        let mut removed = std::collections::BTreeSet::new();
+        for &index in &self.removed {
+            if index >= base_len || !removed.insert(index) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at([target]));
+            }
+        }
+        let mut modified = std::collections::BTreeSet::new();
+        for entry in &self.modified {
+            if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at([target]));
+            }
+        }
+        let mut length = base_len - removed.len();
+        let mut additions: Vec<usize> = self.added.iter().map(|entry| entry.index).collect();
+        additions.sort_unstable();
+        let mut previous = None;
+        for index in additions {
+            if index > length || previous == Some(index) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at([target]));
+            }
+            previous = Some(index);
+            length += 1;
+        }
+        Ok(())
+    }
+
     pub fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
@@ -829,17 +856,17 @@ pub struct GltfMaterialDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub pbr_metallic_roughness: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness>>,
+    pub pbr_metallic_roughness: Option<Option<GltfPbrMetallicRoughness>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub normal_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfNormalTextureInfo>>,
+    pub normal_texture: Option<Option<GltfNormalTextureInfo>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub occlusion_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfOcclusionTextureInfo>>,
+    pub occlusion_texture: Option<Option<GltfOcclusionTextureInfo>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub emissive_texture: Option<Option<crate::artifacts::gltf::schema::snapshot::GltfTextureInfo>>,
+    pub emissive_texture: Option<Option<GltfTextureInfo>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub emissive_factor: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub alpha_mode: Option<crate::artifacts::gltf::schema::snapshot::GltfAlphaMode>,
+    pub alpha_mode: Option<GltfAlphaMode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alpha_cutoff: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1045,7 +1072,7 @@ pub type GltfBuffersDiff = GltfCollectionDiff<GltfBuffer, GltfBufferDiff>;
 pub type GltfBufferViewsDiff = GltfWeakCollectionDiff<GltfBufferView>;
 pub type GltfBufferBytesDiff = GltfWeakCollectionDiff<Vec<u8>>;
 pub type GltfTexturesDiff = GltfWeakCollectionDiff<GltfTexture>;
-pub type GltfImagesDiff = GltfWeakCollectionDiff<crate::artifacts::gltf::schema::snapshot::GltfImage>;
+pub type GltfImagesDiff = GltfWeakCollectionDiff<GltfImage>;
 pub type GltfSamplersDiff = GltfWeakCollectionDiff<GltfSampler>;
 pub type GltfSkinsDiff = GltfWeakCollectionDiff<GltfSkin>;
 pub type GltfAnimationsDiff = GltfWeakCollectionDiff<GltfAnimation>;
@@ -1271,7 +1298,28 @@ impl protocol::DiffRegions for GltfDiff {
 //#endregion 🗺️TouchedRegions
 
 impl MutationDiff<GltfSnapshot> for GltfDiff {
-    fn apply(&self, base: &GltfSnapshot) -> GltfSnapshot {
+    fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
+        macro_rules! validate_collection {
+            ($field:ident, $base:expr, $target:literal) => {
+                if let Some(diff) = &self.$field {
+                    diff.validate_apply($base.len(), $target)?;
+                }
+            };
+        }
+        validate_collection!(scenes, base.document.scenes, "document/scenes");
+        validate_collection!(nodes, base.document.nodes, "document/nodes");
+        validate_collection!(meshes, base.document.meshes, "document/meshes");
+        validate_collection!(accessors, base.document.accessors, "document/accessors");
+        validate_collection!(buffer_views, base.document.buffer_views, "document/bufferViews");
+        validate_collection!(buffers, base.document.buffers, "document/buffers");
+        validate_collection!(buffer_bytes, base.buffers, "buffers");
+        validate_collection!(materials, base.document.materials, "document/materials");
+        validate_collection!(textures, base.document.textures, "document/textures");
+        validate_collection!(images, base.document.images, "document/images");
+        validate_collection!(samplers, base.document.samplers, "document/samplers");
+        validate_collection!(skins, base.document.skins, "document/skins");
+        validate_collection!(animations, base.document.animations, "document/animations");
+        validate_collection!(cameras, base.document.cameras, "document/cameras");
         let mut next = base.clone();
         let doc = &mut next.document;
         if let Some(d) = &self.asset {
@@ -1337,7 +1385,12 @@ impl MutationDiff<GltfSnapshot> for GltfDiff {
         if let Some(v) = self.source_form {
             next.source_form = v;
         }
-        next
+        if let Some(scene) = next.document.scene {
+            if scene >= next.document.scenes.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-reference", format!("default scene index {scene} does not address a scene")).at(["document/scene"]));
+            }
+        }
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1484,10 +1537,10 @@ pub fn demo_diff_cases() -> Vec<GltfDiff> {
     other.document.buffers.push(GltfBuffer { byte_length: 4, uri: None, name: Some("extra".into()), extensions: None, extras: None });
     other.buffers.push(vec![1, 2, 3, 4]);
     other.document.materials[0].double_sided = true;
-    other.document.textures.push(crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: None, source: None, name: Some("tex2".into()), extensions: None, extras: None });
-    other.document.images.push(crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("second.png".into()), ..Default::default() });
-    other.document.samplers.push(crate::artifacts::gltf::schema::snapshot::GltfSampler::default());
-    other.document.skins.push(crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0], ..Default::default() });
+    other.document.textures.push(GltfTexture { sampler: None, source: None, name: Some("tex2".into()), extensions: None, extras: None });
+    other.document.images.push(GltfImage { uri: Some("second.png".into()), ..Default::default() });
+    other.document.samplers.push(GltfSampler::default());
+    other.document.skins.push(GltfSkin { joints: vec![0], ..Default::default() });
     other.document.animations.push(GltfAnimation::default());
     other.document.cameras.push(GltfCamera {
         projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: None }),
@@ -3302,8 +3355,8 @@ pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_json_opt(w, &i.extensions);
     write_bin_json_opt(w, &i.extras);
 }
-pub(crate) fn read_bin_image(r: &mut dsl::ByteReader) -> Result<crate::artifacts::gltf::schema::snapshot::GltfImage, dsl::PackError> {
-    Ok(crate::artifacts::gltf::schema::snapshot::GltfImage {
+pub(crate) fn read_bin_image(r: &mut dsl::ByteReader) -> Result<GltfImage, dsl::PackError> {
+    Ok(GltfImage {
         uri: read_bin_option(r, read_bin_str)?,
         mime_type: read_bin_option(r, read_bin_str)?,
         buffer_view: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
@@ -4013,7 +4066,7 @@ mod tests {
         let mut d1 = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &mid);
         let d2 = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(protocol::MutationDiff::apply(&d1, &base), after);
+        assert_eq!(MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
     }
     //#endregion 🔖️AbsorbCanonicalCases
 
@@ -4026,9 +4079,9 @@ mod tests {
         b.document.asset.generator = Some("other-tool".into());
         b.source_form = GltfSourceForm::Glb;
         let ab = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&a, &b);
-        assert_eq!(protocol::MutationDiff::apply(&ab, &a), b);
+        assert_eq!(MutationDiff::apply(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
         let ba = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&b, &a);
-        assert_eq!(protocol::MutationDiff::apply(&ba, &b), a);
+        assert_eq!(MutationDiff::apply(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&a, &a).is_empty());
     }
     //#endregion 🔖️BetweenRoundtripLaw
@@ -4043,13 +4096,13 @@ mod tests {
             s.document.nodes.remove(1);
             s.document.nodes.push(node(8));
             s.document.extensions_used.clear();
-            s.document.materials[0].alpha_mode = crate::artifacts::gltf::schema::snapshot::GltfAlphaMode::Blend;
+            s.document.materials[0].alpha_mode = GltfAlphaMode::Blend;
             s
         };
         let d = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&base, &next);
-        let mutated = protocol::MutationDiff::apply(&d, &base);
+        let mutated = MutationDiff::apply(&d, &base).expect("apply must succeed for a well-formed fixture");
         let inv = <GltfDiff as DiffAlgebra<GltfSnapshot>>::inverse(&d, &base);
-        assert_eq!(protocol::MutationDiff::apply(&inv, &mutated), base);
+        assert_eq!(MutationDiff::apply(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
     }
     //#endregion 🔖️InverseLaw
 
@@ -4071,13 +4124,13 @@ mod tests {
                 nodes: vec![node(0), node(1)],
                 meshes: vec![mesh(0), mesh(1)],
                 accessors: vec![accessor(0), accessor(1)],
-                buffer_views: vec![crate::artifacts::gltf::schema::snapshot::GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: None, name: None, extensions: None, extras: None }],
+                buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 4, byte_stride: None, target: None, name: None, extensions: None, extras: None }],
                 buffers: vec![buffer_meta(0), buffer_meta(1)],
                 materials: vec![material(0), material(1)],
-                textures: vec![crate::artifacts::gltf::schema::snapshot::GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }],
-                images: vec![crate::artifacts::gltf::schema::snapshot::GltfImage { uri: Some("a.png".into()), ..Default::default() }],
-                samplers: vec![crate::artifacts::gltf::schema::snapshot::GltfSampler::default()],
-                skins: vec![crate::artifacts::gltf::schema::snapshot::GltfSkin { joints: vec![0, 1], ..Default::default() }],
+                textures: vec![GltfTexture { sampler: Some(0), source: Some(0), name: None, extensions: None, extras: None }],
+                images: vec![GltfImage { uri: Some("a.png".into()), ..Default::default() }],
+                samplers: vec![GltfSampler::default()],
+                skins: vec![GltfSkin { joints: vec![0, 1], ..Default::default() }],
                 animations: vec![animation(0), animation(1)],
                 cameras: vec![],
                 extensions_used: vec!["KHR_a".into()],
@@ -4107,8 +4160,8 @@ mod tests {
                 samplers: vec![],
                 skins: vec![],
                 animations: vec![],
-                cameras: vec![crate::artifacts::gltf::schema::snapshot::GltfCamera {
-                    projection: crate::artifacts::gltf::schema::snapshot::GltfCameraProjection::Perspective(crate::artifacts::gltf::schema::snapshot::GltfPerspective {
+                cameras: vec![GltfCamera {
+                    projection: GltfCameraProjection::Perspective(GltfPerspective {
                         aspect_ratio: Some(1.5),
                         yfov: 0.8,
                         zfar: Some(100.0),
@@ -4139,7 +4192,7 @@ mod tests {
         let sweep_b = sweep_b();
 
         let ab = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(protocol::MutationDiff::apply(&ab, &sweep_a), sweep_b);
+        assert_eq!(MutationDiff::apply(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
         assert!(ab.asset.is_some());
         assert_eq!(ab.scene, Some(None), "scene going Some->None must be tri-state Some(None)");
         assert!(ab.scenes.is_some());
@@ -4166,7 +4219,7 @@ mod tests {
         assert!(!nodes_ab.added.is_empty(), "sweep must exercise an added node (b is longer)");
 
         let ba = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(protocol::MutationDiff::apply(&ba, &sweep_b), sweep_a);
+        assert_eq!(MutationDiff::apply(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
         let nodes_ba = ba.nodes.as_ref().unwrap();
         assert!(!nodes_ba.removed.is_empty(), "reverse direction must exercise a removed node (a is shorter, b is longer)");
         let cameras_ba = ba.cameras.as_ref().unwrap();
@@ -4255,7 +4308,7 @@ mod handcrafted_diff_codec_tests {
     /// `None`).
     fn material_textures_b() -> GltfMaterial {
         GltfMaterial {
-            pbr_metallic_roughness: Some(crate::artifacts::gltf::schema::snapshot::GltfPbrMetallicRoughness { base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }), ..Default::default() }),
+            pbr_metallic_roughness: Some(GltfPbrMetallicRoughness { base_color_texture: Some(GltfTextureInfo { index: 0, tex_coord: 1, extensions: None, extras: None }), ..Default::default() }),
             normal_texture: Some(GltfNormalTextureInfo { index: 1, tex_coord: 0, scale: 2.0, extensions: None, extras: None }),
             occlusion_texture: Some(GltfOcclusionTextureInfo { index: 2, tex_coord: 0, strength: 0.5, extensions: None, extras: None }),
             emissive_texture: Some(GltfTextureInfo { index: 3, tex_coord: 0, extensions: None, extras: None }),
@@ -4269,8 +4322,8 @@ mod handcrafted_diff_codec_tests {
     fn buffer_uri_b() -> GltfBuffer {
         GltfBuffer { uri: None, ..buffer_uri_a() }
     }
-    fn camera_orthographic() -> crate::artifacts::gltf::schema::snapshot::GltfCamera {
-        crate::artifacts::gltf::schema::snapshot::GltfCamera {
+    fn camera_orthographic() -> GltfCamera {
+        GltfCamera {
             projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: Some(GltfJson::Null) }),
             name: None,
             extensions: None,
@@ -4332,8 +4385,8 @@ mod handcrafted_diff_codec_tests {
     /// slice this law test commits to (documented here, not literally all 42 occurrences).
     #[test]
     fn diff_codec_text_binary_roundtrip_law() {
-        let sweep_a = super::tests::sweep_a();
-        let sweep_b = super::tests::sweep_b();
+        let sweep_a = tests::sweep_a();
+        let sweep_b = tests::sweep_b();
         let tri_a = tristate_snapshot_a();
         let tri_b = tristate_snapshot_b();
 

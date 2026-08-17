@@ -78,6 +78,73 @@ impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
     }
 }
 
+/// 🛡️ Rejects malformed indexed collection operations before any candidate snapshot is changed.
+pub fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_len: usize, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()> {
+    let target: Vec<String> = target.into_iter().map(Into::into).collect();
+    let mut removed = std::collections::BTreeSet::new();
+    for &index in &diff.removed {
+        if index >= base_len || !removed.insert(index) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at(target.clone()));
+        }
+    }
+    let mut modified = std::collections::BTreeSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at(target.clone()));
+        }
+    }
+    let mut added = std::collections::BTreeSet::new();
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
+    additions.sort_unstable();
+    for index in additions {
+        if index > length || !added.insert(index) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
+        }
+        length += 1;
+    }
+    Ok(())
+}
+
+/// 🛡️ Rejects missing, duplicate, overlapping, or colliding named collection operations.
+pub fn validate_named_triple<K, D, T, A>(base: &[T], diff: &NamedTripleDiff<K, D, A>, key_of_base: impl Fn(&T) -> K, key_of_added: impl Fn(&A) -> K, target: impl IntoIterator<Item = impl Into<String>>) -> protocol::MutationApplyResult<()>
+where
+    K: PartialEq + Clone + std::fmt::Debug,
+{
+    let target: Vec<String> = target.into_iter().map(Into::into).collect();
+    let mut base_keys = Vec::new();
+    for item in base {
+        let key = key_of_base(item);
+        if base_keys.contains(&key) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-base-key", format!("base key {key:?} is duplicated")).at(target.clone()));
+        }
+        base_keys.push(key);
+    }
+    let mut removed = Vec::new();
+    for key in &diff.removed {
+        if !base_keys.contains(key) || removed.contains(key) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-key", format!("remove key {key:?} is absent or duplicated")).at(target.clone()));
+        }
+        removed.push(key.clone());
+    }
+    let mut modified = Vec::new();
+    for entry in &diff.modified {
+        if !base_keys.contains(&entry.key) || removed.contains(&entry.key) || modified.contains(&entry.key) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-key", format!("modify key {:?} is absent, removed, or duplicated", entry.key)).at(target.clone()));
+        }
+        modified.push(entry.key.clone());
+    }
+    let mut added = Vec::new();
+    for item in &diff.added {
+        let key = key_of_added(item);
+        if base_keys.contains(&key) || added.contains(&key) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).at(target.clone()));
+        }
+        added.push(key);
+    }
+    Ok(())
+}
+
 /// 🧷 Position-carrying "added" wrapper for name/id-keyed collections, supplied as `T` in
 /// `NamedTripleDiff<K, D, NamedAdded<T>>` by any consumer that needs a re-added interior member to
 /// land back at its real position instead of always being appended last (`IndexedTripleDiff`
@@ -284,6 +351,29 @@ mod tests {
         let encoded = enc_indexed_triple(&diff, enc_u32, enc_pair);
         let decoded = dec_indexed_triple(&encoded, dec_u32, dec_pair).expect("decode");
         assert_eq!(decoded, diff);
+    }
+
+    #[test]
+    fn indexed_preflight_rejects_missing_and_clamped_targets() {
+        let missing: IndexedTripleDiff<(), ()> = IndexedTripleDiff { removed: vec![2], modified: Vec::new(), added: Vec::new() };
+        let error = validate_indexed_triple(&missing, 1, ["items"]).unwrap_err();
+        assert_eq!(error.code, "mutation.apply.invalid-remove-index");
+        assert_eq!(error.target, vec!["items"]);
+
+        let clamped: IndexedTripleDiff<(), ()> = IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: 2, item: () }] };
+        let error = validate_indexed_triple(&clamped, 0, ["items"]).unwrap_err();
+        assert_eq!(error.code, "mutation.apply.invalid-add-index");
+    }
+
+    #[test]
+    fn named_preflight_rejects_missing_and_colliding_keys() {
+        let missing: NamedTripleDiff<String, (), String> = NamedTripleDiff { removed: Vec::new(), modified: vec![NamedModified { key: "absent".into(), diff: () }], added: Vec::new() };
+        let error = validate_named_triple(&["present".to_string()], &missing, Clone::clone, Clone::clone, ["items"]).unwrap_err();
+        assert_eq!(error.code, "mutation.apply.invalid-modify-key");
+
+        let collision: NamedTripleDiff<String, (), String> = NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec!["present".into()] };
+        let error = validate_named_triple(&["present".to_string()], &collision, Clone::clone, Clone::clone, ["items"]).unwrap_err();
+        assert_eq!(error.code, "mutation.apply.invalid-add-key");
     }
 }
 //#endregion 🔖️Tests

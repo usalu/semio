@@ -21,7 +21,7 @@ role = "plugin"
 [package.metadata.semio.storybook]
 id = "animate"
 titlePrefix = "🎬️animate"
-sourceRoots = ["🎛️apps/🎬️present/📺️renderer/⚛️react"]
+sourceRoots = ["🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
 
 [[package.metadata.semio.playground]]
 variant = "animate"

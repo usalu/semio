@@ -11,7 +11,7 @@
 use crate::artifacts::svg::SvgSnapshot;
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -154,7 +154,10 @@ pub fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SvgSnapshot> for SvgDiff {
-    fn apply(&self, base: &SvgSnapshot) -> SvgSnapshot {
+    fn apply(&self, base: &SvgSnapshot) -> MutationApplyResult<SvgSnapshot> {
+        if let Some(root) = &self.root {
+            validate_svg_node(base.doc.root.as_ref(), root)?;
+        }
         let mut next = base.clone();
         if let Some(prolog) = &self.prolog {
             next.doc.prolog = prolog.clone();
@@ -168,7 +171,7 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         if let Some(node_diff) = &self.root {
             next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -187,6 +190,94 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
             (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
         };
     }
+}
+
+fn validate_svg_node(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> MutationApplyResult<()> {
+    match diff {
+        SvgNodeDiff::Replace { .. } => Ok(()),
+        SvgNodeDiff::Text { .. } => match current {
+            Some(XmlNode::Text { .. }) => Ok(()),
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node")),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root")),
+        },
+        SvgNodeDiff::Element(element) => match current {
+            Some(XmlNode::Element { attrs, children, .. }) => {
+                if let Some(attributes) = &element.attributes {
+                    validate_svg_attrs(attrs, attributes)?;
+                }
+                if let Some(children_diff) = &element.children {
+                    validate_svg_children(children, children_diff)?;
+                }
+                Ok(())
+            }
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "element diff targets a non-element node")),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "element diff targets a missing root")),
+        },
+    }
+}
+
+fn validate_svg_attrs(base: &[XmlAttr], diff: &SvgAttributesDiff) -> MutationApplyResult<()> {
+    for (position, name) in diff.removed.iter().enumerate() {
+        if !base.iter().any(|attr| attr.name == *name) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist"));
+        }
+        if diff.removed[..position].contains(name) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute removal target is repeated"));
+        }
+    }
+    for (position, modified) in diff.modified.iter().enumerate() {
+        if !base.iter().any(|attr| attr.name == modified.name) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute modification target does not exist"));
+        }
+        if diff.removed.contains(&modified.name) || diff.modified[..position].iter().any(|candidate| candidate.name == modified.name) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "attribute modification target conflicts or repeats"));
+        }
+    }
+    let final_len = base.len() - diff.removed.len() + diff.added.len();
+    for (position, added) in diff.added.iter().enumerate() {
+        if added.index > final_len
+            || diff.added[..position].iter().any(|candidate| candidate.index == added.index)
+            || base.iter().any(|attr| attr.name == added.name)
+            || diff.removed.contains(&added.name)
+            || diff.modified.iter().any(|candidate| candidate.name == added.name)
+        {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting"));
+        }
+    }
+    Ok(())
+}
+
+fn validate_svg_children(base: &[XmlNode], diff: &SvgChildrenDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "child modification targets a removed node"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated"));
+        }
+        validate_svg_node(Some(&base[entry.index]), &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+    }
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated"));
+        }
+    }
+    Ok(())
 }
 
 fn apply_root_diff(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> Option<XmlNode> {

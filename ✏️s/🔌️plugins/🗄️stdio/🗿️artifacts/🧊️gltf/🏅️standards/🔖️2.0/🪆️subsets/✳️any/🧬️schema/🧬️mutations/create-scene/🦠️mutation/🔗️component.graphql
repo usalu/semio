@@ -1,1 +1,2 @@
-input GltfCreateScenePayloadV1 { position: Int! }
+scalar GltfCreateSceneU32
+input GltfCreateScenePayloadV1 { position: GltfCreateSceneU32! }

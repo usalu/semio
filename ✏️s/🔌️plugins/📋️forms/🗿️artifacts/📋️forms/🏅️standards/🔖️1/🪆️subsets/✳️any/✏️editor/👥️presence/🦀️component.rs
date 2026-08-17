@@ -36,8 +36,10 @@ impl ArtifactPack for FormsPresence {
 }
 
 impl protocol::MutationDiff<FormsPresence> for FormsPresence {
-    fn apply(&self, base: &FormsPresence) -> FormsPresence {
-        base.clone()
+    fn apply(&self, base: &FormsPresence) -> protocol::MutationApplyResult<FormsPresence> {
+        Ok({
+            base.clone()
+        })
     }
     fn absorb(&mut self, _other: Self) {}
 }

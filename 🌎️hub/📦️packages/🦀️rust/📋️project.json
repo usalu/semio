@@ -15,6 +15,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
@@ -54,6 +55,7 @@
     },
     "dev": {
       "executor": "nx:run-commands",
+      "dependsOn": [{ "target": "build", "projects": ["os-hub-admin"] }],
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"

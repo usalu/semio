@@ -1,0 +1,330 @@
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(439,30): error TS2304: Cannot find name 'PluginRegistryEntry'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(467,21): error TS2304: Cannot find name 'PluginSourceEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(632,9): error TS2420: Class 'PlayerEvent' incorrectly implements interface 'StatechartEvent'.
+  Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(646,13): error TS2430: Interface 'PlayerSpec' incorrectly extends interface 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(653,33): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(679,9): error TS2420: Class 'RecorderEvent' incorrectly implements interface 'StatechartEvent'.
+  Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(693,13): error TS2430: Interface 'RecorderSpec' incorrectly extends interface 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(700,35): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(869,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(870,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(876,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(877,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(878,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(884,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(885,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(886,43): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(887,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(888,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(890,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(893,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(897,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(903,27): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(904,29): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(905,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(912,27): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(913,29): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(914,43): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(915,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(916,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../../📦️packages/🟦️typescript/🟦️glue.ts(919,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+../../../../../🎠️kernel/🟦️component.ts(112,47): error TS2339: Property 'contributions' does not exist on type 'PluginManifest'.
+../../../../../🎠️kernel/🟦️component.ts(113,48): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+../../../../../🎠️kernel/🟦️component.ts(1263,23): error TS2358: The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+../../../../../🎠️kernel/🟦️component.ts(1263,96): error TS2352: Conversion of type 'string' to type 'ArrayBuffer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+../../../../../🔺️mesh/🟦️component.ts(633,43): error TS2304: Cannot find name 'PluginContextMenuRequest'.
+../../../../../🕹️interaction/🟦️component.ts(273,35): error TS2345: Argument of type 'HoverSpec' is not assignable to parameter of type 'SelectionSpec'.
+  Type 'HoverSpec' is missing the following properties from type 'SelectionSpec': modes, methods, merges
+../../../../../🖥️platform/🟦️component.ts(70,28): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🖥️platform/🟦️component.ts(73,46): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🖥️platform/🟦️component.ts(73,59): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🖥️platform/🟦️component.ts(78,52): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🖥️platform/🟦️component.ts(84,113): error TS2304: Cannot find name 'UiStatus'.
+../../../../../🖥️platform/🟦️component.ts(91,35): error TS2304: Cannot find name 'UiPresence'.
+../../../../../🖥️platform/🟦️component.ts(129,149): error TS2304: Cannot find name 'WindowLayoutWindowNode'.
+../../../../../🖥️platform/🟦️component.ts(752,33): error TS7006: Parameter 'child' implicitly has an 'any' type.
+../../../../../🖥️platform/🟦️component.ts(752,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+../../../../🎨️styling/📦️packages/🟦️typescript/📦️index.ts(230,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+📦️index.tsx(57,1114): error TS2305: Module '"@semio-tech/framework"' has no exported member 'TutorialDocumentEvent'.
+📦️index.tsx(1045,205): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1046,15): error TS2300: Duplicate identifier 'Icon'.
+📦️index.tsx(1256,24): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node | null' is not assignable to parameter of type 'Node | null'.
+  Type 'Node' is not assignable to type 'Node | null'.
+📦️index.tsx(1267,49): error TS2345: Argument of type 'Node' is not assignable to parameter of type 'Node | null'.
+📦️index.tsx(1729,7): error TS2322: Type 'true' is not assignable to type 'false'.
+📦️index.tsx(2386,11): error TS2322: Type '{ ui: { nav: { back: { label: { normal: string; beginner: string; }; }; forward: { label: { normal: string; beginner: string; }; }; up: { label: { normal: string; beginner: string; }; }; }; search: { toggle: { label: { normal: string; beginner: string; }; }; ... 5 more ...; category: { ...; }; }; ... 30 more ...; co...' is not assignable to type 'UiTranslationSchema'.
+  The types of 'ui.surfaceContextMenu' are incompatible between these types.
+    Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+📦️index.tsx(2386,11): error TS2353: Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+📦️index.tsx(3166,11): error TS2322: Type '{ ui: { nav: { back: { label: { normal: string; beginner: string; }; }; forward: { label: { normal: string; beginner: string; }; }; up: { label: { normal: string; beginner: string; }; }; }; search: { toggle: { label: { normal: string; beginner: string; }; }; ... 5 more ...; category: { ...; }; }; ... 30 more ...; co...' is not assignable to type 'UiTranslationSchema'.
+  The types of 'ui.surfaceContextMenu' are incompatible between these types.
+    Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+📦️index.tsx(3166,11): error TS2353: Object literal may only specify known properties, and 'architecture' does not exist in type '{ readonly file: UiLabelValue; readonly workspace: UiLabelValue; readonly canvas: UiLabelValue; readonly scene: UiLabelValue; ... 12 more ...; readonly map: UiLabelValue; }'.
+📦️index.tsx(3386,161): error TS2304: Cannot find name 'DeepUiTranslationKeys'.
+📦️index.tsx(4027,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4097,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(4140,11): error TS2322: Type 'HTMLElement' is not assignable to type 'Node'.
+  Type 'HTMLElement' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': position, data
+📦️index.tsx(4178,30): error TS2345: Argument of type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node' is not assignable to parameter of type 'Node'.
+  Type 'Node' is missing the following properties from type 'Node': baseURI, childNodes, firstChild, isConnected, and 46 more.
+📦️index.tsx(5218,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+📦️index.tsx(5252,15): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+📦️index.tsx(5418,26): error TS2353: Object literal may only specify known properties, and 'selectionJson' does not exist in type 'TutorialUiSnapshot'.
+📦️index.tsx(5418,48): error TS2339: Property 'selectionJson' does not exist on type '{ readonly kind: "selection"; readonly domainId: string; readonly granularity: string; readonly ids: readonly string[]; }'.
+📦️index.tsx(5468,29): error TS2339: Property 'document' does not exist on type 'TutorialTracks'.
+📦️index.tsx(5468,46): error TS7006: Parameter 'event' implicitly has an 'any' type.
+📦️index.tsx(5500,45): error TS2339: Property 'document' does not exist on type 'TutorialTracks'.
+📦️index.tsx(5500,62): error TS18046: 'e' is of type 'unknown'.
+📦️index.tsx(5729,39): error TS2322: Type '"gauge"' is not assignable to type 'ControlIcon'.
+📦️index.tsx(6606,10): error TS2741: Property 'children' is missing in type '{ ref: RefObject<HTMLDivElement | null>; sessionGhost: false; "data-level": string; "data-slot": string; "data-anchor": "top-left" | "top-middle" | "top-right" | ... 4 more ... | "left-middle"; "data-panel-chrome-tab-bar-placeholder": string; "aria-hidden": "true"; className: string; style: { ...; } | undefined; }' but required in type 'GhostRegionShellProps'.
+📦️index.tsx(6828,71): error TS2345: Argument of type '(node: Node) => boolean' is not assignable to parameter of type '(value: Node, index: number, array: Node[]) => unknown'.
+  Types of parameters 'node' and 'value' are incompatible.
+    Type 'Node' is not assignable to type 'import("/Users/ueli/Documents/semio/node_modules/@xyflow/react/dist/esm/types/nodes").Node'.
+      Type 'Node' is missing the following properties from type '{ id: string; position: XYPosition; data: Record<string, unknown>; sourcePosition?: Position | undefined; targetPosition?: Position | undefined; ... 19 more ...; measured?: { ...; } | undefined; }': id, position, data
+📦️index.tsx(7042,16): error TS2322: Type '{ xmlns: string; className: string; style: { width: string; height: string; }; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'xmlns' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+📦️index.tsx(10275,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; utilityBar: React.JSX.Element; utilityBarFolded: false; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(10335,15): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(10989,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+📦️index.tsx(11262,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+📦️index.tsx(11284,34): error TS2322: Type '"click"' is not assignable to type '"panel" | "orbit" | "action" | "utility" | "tool" | "expand" | "pan" | "zoom"'.
+📦️index.tsx(11547,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(11548,44): error TS2345: Argument of type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(11549,44): error TS2345: Argument of type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is not assignable to parameter of type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "screenNormalized"; x: number; y: number; }; to: { kind: "screenNormalized"; x: number; y: number; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(11689,23): error TS2352: Conversion of type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }[]' to type 'IntroductionStepDefinition[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'demonstrations' is missing in type '{ id: string; title: string; body: string; introduce: null; show: never[]; placement: "center"; interactions: never[]; ordered: false; logos: never[]; }' but required in type 'IntroductionStepDefinition'.
+📦️index.tsx(11765,13): error TS2322: Type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' is not assignable to type 'IntroductionGesture'.
+  Property 'modifiers' is missing in type '{ kind: "drag"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; button: "middle"; }' but required in type '{ kind: "drag"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }'.
+📦️index.tsx(11766,13): error TS2322: Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is not assignable to type 'IntroductionGesture'.
+  Type '{ kind: "orbit"; from: { kind: "element"; id: string; }; to: { kind: "element"; id: string; }; }' is missing the following properties from type '{ kind: "orbit"; from: IntroductionPoint; to: IntroductionPoint; button: IntroductionPointerButton; modifiers: IntroductionKeyModifier[]; }': button, modifiers
+📦️index.tsx(14810,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }'.
+📦️index.tsx(14813,44): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }'.
+📦️index.tsx(14821,49): error TS2345: Argument of type '{ id: string; title: string; }[]' is not assignable to parameter of type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[]'.
+  Property 'iconId' is missing in type '{ id: string; title: string; }' but required in type '{ id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }'.
+📦️index.tsx(15770,21): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { id: string; value: string; placeholder: UiLabel; onChange: React.Dispatch<React.SetStateAction<string>>; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(15959,19): error TS2741: Property 'iconId' is missing in type '{ id: string; title: UiLabel; active: true; search: { input: { value: string; placeholder: UiLabel; onChange: () => void; onAbort: () => number; }; }; children: React.JSX.Element; }' but required in type 'ModeWindowDescriptor'.
+📦️index.tsx(20471,45): error TS2741: Property 'interactionSelection' is missing in type '{ activeUtilityByWindowId: {}; activePanelTabByGroup: {}; expandedTreeIds: never[]; commandPanelOpen: false; }' but required in type 'TutorialUiSnapshot'.
+📦️index.tsx(20472,63): error TS2353: Object literal may only specify known properties, and 'document' does not exist in type 'TutorialTracks'.
+📦️index.tsx(20544,52): error TS2741: Property 'interactionSelection' is missing in type '{ activeModeId: string; activeUtilityByWindowId: {}; activePanelTabByGroup: {}; expandedTreeIds: never[]; commandPanelOpen: false; }' but required in type 'TutorialUiSnapshot'.
+📦️index.tsx(20566,11): error TS2353: Object literal may only specify known properties, and 'document' does not exist in type 'TutorialTracks'.
+../../../../🧱️elements/🎨️Canvas/🟦️component.tsx(1689,7): error TS2322: Type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[] | { ...; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[]'.
+  Type '{ id: string; title: string; iconId: string; }[]' is not assignable to type 'readonly { id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }[]'.
+    Type '{ id: string; title: string; iconId: string; }' is not assignable to type '{ id: string; title: string; iconId: "typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | ... 238 more ... | "zoom-out"; }'.
+      Types of property 'iconId' are incompatible.
+        Type 'string' is not assignable to type '"typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 237 more ... | "zoom-out"'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(54,55): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(55,9): error TS2322: Type 'unknown' is not assignable to type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...> | null | undefined'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(55,80): error TS2322: Type '{}' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(60,65): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(67,66): error TS2322: Type '{}' is not assignable to type 'string'.
+../../../../🧱️elements/💬️UIDialog/🟦️component.tsx(68,54): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+../../../../🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(540,6): error TS2604: JSX element type 'Table' does not have any construct or call signatures.
+../../../../🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(540,6): error TS2786: 'Table' cannot be used as a JSX component.
+  Its type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>' is not a valid JSX element type.
+../../../../🧱️elements/📁️VirtualFileSystem/🟦️component.tsx(544,18): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../../../🧱️elements/📊️Diagram/🟦️component.tsx(601,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊️Diagram/🟦️component.tsx(602,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/📊️Diagram/🟦️component.tsx(603,9): error TS2322: Type '(event: React.MouseEvent, node: Node) => void' is not assignable to type 'OnNodeDrag<Node>'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Type 'MouseEvent | TouchEvent' is not assignable to type 'MouseEvent<Element, MouseEvent>'.
+      Type 'MouseEvent' is missing the following properties from type 'MouseEvent<Element, MouseEvent>': nativeEvent, isDefaultPrevented, isPropagationStopped, persist
+../../../../🧱️elements/🔣️Icons/🟦️component.tsx(386,33): error TS2322: Type 'string' is not assignable to type '"typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 237 more ... | "zoom-out"'.
+../../../../🧱️elements/🔣️IconSelector/🟦️component.tsx(74,94): error TS2322: Type 'string' is not assignable to type '"typography" | "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | ... 237 more ... | "zoom-out"'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(38,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(47,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(56,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(65,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(74,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🦴️Skeletons/🧪️story.tsx(83,14): error TS2322: Type '{ name: string; render: () => JSX.Element; }' is not assignable to type 'StoryAnnotations<ReactRenderer, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }, { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }>'.
+  Property 'args' is missing in type '{ name: string; render: () => JSX.Element; }' but required in type '{ args: { columns: TableColumn<unknown>[]; rowCount?: number | undefined; className?: string | undefined; }; }'.
+../../../../🧱️elements/🪟️WindowSilhouette/🟦️component.tsx(92,15): error TS2540: Cannot assign to 'right' because it is a read-only property.
+../../../../🧱️elements/🪵️Tree/🟦️component.tsx(523,3): error TS2322: Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }[]' is not assignable to type 'ContextMenuItem[]'.
+  Type '{ id: string; label: UiLabel; icon: ControlIcon; disabled: boolean | undefined; onSelect: () => void; }' is not assignable to type 'ContextMenuItem'.
+    Types of property 'icon' are incompatible.
+      Type 'ControlIcon' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+        Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'string | { readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 10 more ... | undefined'.
+          Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type '{ readonly kind: "url"; readonly url: string; } | { readonly kind: "shortcode"; readonly code: string; } | { readonly kind: "data"; readonly data: string; } | { readonly kind: "emoji"; readonly emoji: string; } | ... 9 more ... | { ...; }'.
+            Property 'kind' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type '{ readonly kind: "themed"; readonly key: "base" | "base_blob" | "capital" | "capsule_J" | "capsule_L" | "capsule_backslash" | "capsule_p" | "capsule_q" | "capsule_s" | "capsule_slash" | ... 18 more ... | "tambour_single-storey"; }'.
+../../../../🧱️elements/🪵️Tree/🟦️component.tsx(772,54): error TS2339: Property 'escape' does not exist on type 'Readonly<{ Translate: { toString(transform: Transform | null): string | undefined; }; Scale: { toString(transform: Transform | null): string | undefined; }; Transform: { ...; }; Transition: { ...; }; }>'.
+../../../../../🛂️manifest/🟦️component.ts(254,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(287,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(305,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(326,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(341,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(351,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(365,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(377,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(389,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(400,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(410,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(420,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(431,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(451,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(459,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(474,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(485,77): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(492,19): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(513,5): error TS2304: Cannot find name 'UiComponentSceneNode'.
+../../../../../🛂️manifest/🟦️component.ts(514,5): error TS2304: Cannot find name 'UiExternalSlotNode'.
+../../../../../🛂️manifest/🟦️component.ts(921,53): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+../../../../../🛂️manifest/🟦️component.ts(1008,40): error TS2304: Cannot find name 'HostEffect'.
+../../../../../🛂️manifest/🟦️component.ts(1048,18): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🟦️component.ts(1055,28): error TS2304: Cannot find name 'ContextMenuItemSpec'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(151,9): error TS2304: Cannot find name 'ConfigSpec'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(156,17): error TS2304: Cannot find name 'CommandGrammar'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(162,5): error TS2304: Cannot find name 'AppIo'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(605,27): error TS2304: Cannot find name 'TopicContribution'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(633,79): error TS2304: Cannot find name 'TopicContribution'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(925,68): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(925,109): error TS2304: Cannot find name 'StyleSpec'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(925,150): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(932,42): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(932,55): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(934,136): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(936,161): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(938,60): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(938,97): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(940,89): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(940,231): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(942,40): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(944,95): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(946,183): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(957,124): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(959,52): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(961,99): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(961,164): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(963,63): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(965,170): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(980,35): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(980,140): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(982,67): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(982,132): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(984,60): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(984,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(986,51): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(996,8): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(998,125): error TS2304: Cannot find name 'UiMenuRef'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(1007,55): error TS2304: Cannot find name 'Label'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(1066,9): error TS2304: Cannot find name 'Locale'.
+../../../../../🛂️manifest/🤖️generated/🟦️manifest.ts(1070,14): error TS2304: Cannot find name 'Terminology'.
+../../../../../../🛍️products/💻️os/🟦️component.ts(125,7): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+      Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+      Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+../../../../../../🛍️products/💻️os/🟦️component.ts(134,5): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+      Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BodyInit | null | undefined'.
+      Type 'Uint8Array<ArrayBufferLike>' is missing the following properties from type 'URLSearchParams': size, append, delete, get, and 2 more.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1452,81): error TS2339: Property 'toString' does not exist on type 'never'.
+../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts(1453,81): error TS2339: Property 'toString' does not exist on type 'never'.

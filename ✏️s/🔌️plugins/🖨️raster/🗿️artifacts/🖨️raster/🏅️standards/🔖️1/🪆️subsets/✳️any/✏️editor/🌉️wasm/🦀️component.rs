@@ -21,7 +21,7 @@ mod document_vcs {
         #[wasm_bindgen(constructor)]
         pub fn new(envelope_json: &str) -> Result<RasterArtifactVcs, JsValue> {
             let envelope: RasterEnvelope = serde_json::from_str(envelope_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            Ok(Self { store: RefCell::new(RasterStore::new(envelope)) })
+            Ok(Self { store: RefCell::new(RasterStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]

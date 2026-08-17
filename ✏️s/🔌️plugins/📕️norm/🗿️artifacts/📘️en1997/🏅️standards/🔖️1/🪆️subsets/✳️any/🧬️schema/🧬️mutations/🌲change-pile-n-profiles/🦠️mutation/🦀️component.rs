@@ -15,7 +15,7 @@ pub struct ChangePileNProfiles {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileNProfiles {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "pile-n-profiles", kind: "change-pile-n-profiles", record: "ChangedPileNProfiles" };
 
-    fn diff(&self, base: &En1997Snapshot) -> En1997Diff {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_pile_n_profiles::diff::diff(self, base)
     }
 

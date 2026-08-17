@@ -15,7 +15,7 @@ pub struct ChangeRetrofitKnowledgeLevel {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitKnowledgeLevel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-knowledge-level", kind: "change-retrofit-knowledge-level", record: "ChangedRetrofitKnowledgeLevel" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_knowledge_level::diff::diff(self, base)
     }
 

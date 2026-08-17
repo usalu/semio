@@ -24,10 +24,10 @@
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 //#region 🔖️TriangleDiff
 /// 🔺️ Sparse per-field patch for one `StlTriangle`. Both fields are fixed-size arrays — whole-
@@ -109,25 +109,51 @@ impl StlTrianglesDiff {
 fn apply_triangles_diff(triangles: &[StlTriangle], diff: &StlTrianglesDiff) -> Vec<StlTriangle> {
     let mut result = triangles.to_vec();
     for m in &diff.modified {
-        if let Some(t) = result.get_mut(m.index) {
-            *t = apply_triangle_diff(t, &m.diff);
-        }
+        result[m.index] = apply_triangle_diff(&result[m.index], &m.diff);
     }
     let mut removed_sorted = diff.removed.clone();
     removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
     for idx in removed_sorted {
-        if idx < result.len() {
-            result.remove(idx);
-        }
+        result.remove(idx);
     }
     let mut added_sorted: Vec<&StlTriangleAdded> = diff.added.iter().collect();
     added_sorted.sort_by_key(|a| a.index);
     for a in added_sorted {
-        let at = a.index.min(result.len());
-        result.insert(at, a.triangle);
+        result.insert(a.index, a.triangle);
     }
     result
+}
+
+fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> MutationApplyResult<()> {
+    let mut removed = BTreeSet::new();
+    for &index in &diff.removed {
+        if index >= base_len || !removed.insert(index) {
+            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").at(["triangles", &index.to_string()]));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
+        }
+    }
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        if index > length || previous == Some(index) {
+            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn apply_stl_diff_unchecked(diff: &StlDiff, base: &StlSnapshot) -> StlSnapshot {
+    let triangles = diff.triangles.as_ref().map_or_else(|| base.triangles.clone(), |value| apply_triangles_diff(&base.triangles, value));
+    StlSnapshot { schema: base.schema.clone(), solid_name: diff.solid_name.clone().unwrap_or_else(|| base.solid_name.clone()), triangles }
 }
 
 /// 🧭️ Index-keyed state delta between two triangle lists: pairwise-compared over
@@ -299,12 +325,11 @@ pub struct StlDiff {
 }
 
 impl MutationDiff<StlSnapshot> for StlDiff {
-    fn apply(&self, base: &StlSnapshot) -> StlSnapshot {
-        let triangles = match &self.triangles {
-            Some(td) => apply_triangles_diff(&base.triangles, td),
-            None => base.triangles.clone(),
-        };
-        StlSnapshot { schema: base.schema.clone(), solid_name: self.solid_name.clone().unwrap_or_else(|| base.solid_name.clone()), triangles }
+    fn apply(&self, base: &StlSnapshot) -> MutationApplyResult<StlSnapshot> {
+        if let Some(diff) = &self.triangles {
+            validate_triangles_diff(base.triangles.len(), diff)?;
+        }
+        Ok(apply_stl_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalar
@@ -323,7 +348,7 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
     /// state pair into a diff, so `inverse` doesn't duplicate its per-field logic (same pattern
     /// as this ticket's zip/xml precedent).
     fn inverse(&self, base: &StlSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = apply_stl_diff_unchecked(self, base);
         <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base)
     }
 

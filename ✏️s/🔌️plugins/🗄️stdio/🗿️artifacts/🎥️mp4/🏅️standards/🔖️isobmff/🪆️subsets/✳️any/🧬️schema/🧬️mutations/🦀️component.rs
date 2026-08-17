@@ -5,7 +5,6 @@
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::diff::{IndexedAdded, IndexedDiff, IndexedModified, Mp4Diff, Mp4SampleDiff, Mp4TrackDiff};
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata};
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -69,8 +68,8 @@ fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4Sample
 impl Mutation<Mp4Snapshot> for Mp4Mutation {
     type Diff = Mp4Diff;
 
-    fn diff(&self, base: &Mp4Snapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             Mp4Mutation::NoMutation => Mp4Diff::default(),
             Mp4Mutation::SetSnapshot { snapshot } => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
             Mp4Mutation::SetFtyp { ftyp } => Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None },
@@ -89,7 +88,7 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
             Mp4Mutation::SetSampleSync { track_index, index, sync } => {
                 sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None)
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Self> {
@@ -121,16 +120,21 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention).
-pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> Mp4Diff {
-    let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(mutation, snapshot);
-    *snapshot = <Mp4Diff as protocol::MutationDiff<Mp4Snapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> protocol::MutationOutcome<Mp4Diff> {
+    let outcome = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
 /// 🎙️ Structured operation text through the shared `DslVariants` record machinery.
-impl protocol::OpText for Mp4Mutation {
+impl OpText for Mp4Mutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -151,7 +155,7 @@ impl protocol::OpText for Mp4Mutation {
 }
 
 /// ⚡️ Structured operation binary through the shared tagged-record protocol.
-impl protocol::OpBinary for Mp4Mutation {
+impl OpBinary for Mp4Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -202,7 +206,7 @@ mod tests {
         for m in variants {
             let mut snap = base.clone();
             let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
-            let expected = diff.apply(&snap);
+            let expected = diff.diff().apply(&snap).unwrap();
             let returned = apply_mp4_mutation(&mut snap, &m);
             assert_eq!(returned, diff, "apply_mp4_mutation must return the SAME diff as Mutation::diff for {m:?}");
             assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
@@ -223,7 +227,7 @@ mod tests {
         let mut snap = base.clone();
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
         apply_mp4_mutation(&mut snap, &m);
-        assert_eq!(snap, diff.apply(&base));
+        assert_eq!(snap, diff.diff().apply(&base).unwrap());
         assert_eq!(snap.tracks.len(), 1);
         let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
         let mut round = snap.clone();
@@ -252,7 +256,7 @@ mod tests {
         next.ftyp.major_brand = "isom-mutated".into();
         let mutation = Mp4Mutation::SetSnapshot { snapshot: next.clone() };
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&mutation, &base);
-        assert_eq!(diff.apply(&base), next);
+        assert_eq!(diff.diff().apply(&base).unwrap(), next);
         let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&mutation, &base);
         let mut round = next.clone();
         apply_mp4_mutation(&mut round, &inv[0]);

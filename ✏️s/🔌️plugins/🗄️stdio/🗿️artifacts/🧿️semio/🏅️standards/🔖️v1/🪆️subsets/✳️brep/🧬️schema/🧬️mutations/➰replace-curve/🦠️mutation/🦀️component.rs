@@ -17,7 +17,7 @@ pub struct ReplaceCurve {
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceCurve {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "curve", kind: "replace-curve", record: "ReplacedCurve" };
 
-    fn diff(&self, base: &SemioBrepSnapshot) -> <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff {
+    fn diff(&self, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<<SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {

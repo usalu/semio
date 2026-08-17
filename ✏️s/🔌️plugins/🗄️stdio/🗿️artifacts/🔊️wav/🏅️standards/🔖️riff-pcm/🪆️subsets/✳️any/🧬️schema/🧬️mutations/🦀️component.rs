@@ -4,7 +4,6 @@
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -28,14 +27,14 @@ pub enum WavMutation {
 impl Mutation<WavSnapshot> for WavMutation {
     type Diff = WavDiff;
 
-    fn diff(&self, base: &WavSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             WavMutation::NoMutation => WavDiff::default(),
             WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             WavMutation::SetFmt { fmt } => diff_set_fmt(fmt.clone()),
             WavMutation::SetData { data } => diff_set_data(data.clone()),
             WavMutation::SetOtherChunks { chunks } => diff_set_other_chunks(chunks.clone()),
-        }
+        })
     }
 
     fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
@@ -51,10 +50,15 @@ impl Mutation<WavSnapshot> for WavMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
-pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> WavDiff {
-    let diff = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <WavDiff as protocol::MutationDiff<WavSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> protocol::MutationOutcome<WavDiff> {
+    let outcome = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Mutation
 
@@ -65,7 +69,7 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 /// unbindable by the derive machinery today (no generic/enum-payload `DslField` bridge). This is
 /// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
 /// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
-impl protocol::OpText for WavMutation {
+impl OpText for WavMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
@@ -74,7 +78,7 @@ impl protocol::OpText for WavMutation {
     }
 }
 
-impl protocol::OpBinary for WavMutation {
+impl OpBinary for WavMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
@@ -106,7 +110,7 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    /// 🧪️ `mutation.diff(base).apply(base) == apply_wav_mutation(base, mutation)`.
+    /// 🧪️ `mutation.diff(base).diff().apply(base) == apply_wav_mutation(base, mutation)`.
     #[test]
     fn mutation_diff_law_every_variant() {
         let base = base_snapshot();
@@ -115,7 +119,7 @@ mod tests {
             let returned = apply_wav_mutation(&mut via_apply, &m);
             let direct = m.diff(&base);
             assert_eq!(direct, returned, "diff mismatch for {m:?}");
-            assert_eq!(direct.apply(&base), via_apply, "apply mismatch for {m:?}");
+            assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -134,8 +138,8 @@ mod tests {
             assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
             let d = m.diff(&base);
-            let applied = d.apply(&base);
-            let undone = d.inverse(&base).apply(&applied);
+            let applied = d.diff().apply(&base).unwrap();
+            let undone = d.diff().inverse(&base).apply(&applied).unwrap();
             assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
         }
     }

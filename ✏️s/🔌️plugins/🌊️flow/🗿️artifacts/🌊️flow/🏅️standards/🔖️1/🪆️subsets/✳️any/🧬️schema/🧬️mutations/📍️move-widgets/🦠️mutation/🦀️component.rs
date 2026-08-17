@@ -19,7 +19,7 @@ pub struct MoveWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for MoveWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "widgets", kind: "move-widgets", record: "MovedWidgets" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

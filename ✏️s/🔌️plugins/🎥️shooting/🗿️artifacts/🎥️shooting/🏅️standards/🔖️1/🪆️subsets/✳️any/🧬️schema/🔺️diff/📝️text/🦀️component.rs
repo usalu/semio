@@ -15,14 +15,14 @@ use crate::artifacts::shooting::schema::diff::*;
 
 //#region 🔖️Apply
 /// 🧩 Applies an identified-collection delta to an asset list.
-pub fn apply_assets_delta(items: &[ShootingAsset], delta: &ShootingAssetsDelta) -> Vec<ShootingAsset> {
+pub fn apply_assets_delta(items: &[ShootingAsset], delta: &ShootingAssetsDelta) -> protocol::MutationApplyResult<Vec<ShootingAsset>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingAssetPatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
 /// 🧩 Applies an identified-collection delta to a shot list.
-pub fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> Vec<ShootingShot> {
+pub fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> protocol::MutationApplyResult<Vec<ShootingShot>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &ShootingShotPatchEntry| {
         (&entry.id, &entry.patch)
     })
@@ -32,7 +32,7 @@ pub fn apply_shots_delta(items: &[ShootingShot], delta: &ShootingShotsDelta) -> 
 pub fn apply_saved_cameras_delta(
     items: &[ShootingSavedCamera],
     delta: &ShootingSavedCamerasDelta,
-) -> Vec<ShootingSavedCamera> {
+) -> protocol::MutationApplyResult<Vec<ShootingSavedCamera>> {
     apply_identified_delta(
         items,
         &delta.removed,
@@ -50,38 +50,65 @@ fn apply_identified_delta<T, P, E, F>(
     patched: &[E],
     reordered: Option<&Vec<String>>,
     entry_parts: F,
-) -> Vec<T>
+) -> protocol::MutationApplyResult<Vec<T>>
 where
     T: Clone + protocol::Identified<String> + Patchable<P>,
     P: Clone,
     F: Fn(&E) -> (&String, &P),
 {
     let mut next = items.to_vec();
+    let mut seen = std::collections::HashSet::new();
     for id in removed {
-        next.retain(|item| item.id() != id);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
+        }
+        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
+        })?;
+        next.remove(position);
     }
+    seen.clear();
     for item in added {
+        let id = item.id();
+        if !seen.insert(id.clone()) || next.iter().any(|entry| entry.id() == id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added", id.as_str()]));
+        }
         next.push(item.clone());
     }
+    seen.clear();
     for entry in patched {
         let (id, patch) = entry_parts(entry);
-        if let Some(item) = next.iter_mut().find(|item| item.id() == id) {
-            item.apply_patch(patch);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
+        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
+        })?;
+        item.apply_patch(patch);
     }
     if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (item.id().clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
+        if order.len() != next.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
+        }
+        seen.clear();
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
+            if !seen.insert(id.clone()) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item appears more than once in order").at(["reordered", id.as_str()]));
+            }
+            if !next.iter().any(|item| item.id() == id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]));
             }
         }
-        ordered.extend(by_id.into_values());
+        let mut ordered = Vec::with_capacity(next.len());
+        for id in order {
+            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
+                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
+            })?;
+            ordered.push(next.remove(position));
+        }
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
 fn absorb_assets_delta(target: &mut Option<ShootingAssetsDelta>, incoming: Option<ShootingAssetsDelta>) {
@@ -137,102 +164,105 @@ fn absorb_saved_cameras_delta(
 
 impl ShootingDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ShootingArtifact) -> ShootingArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.assets {
-            next.assets = apply_assets_delta(&next.assets, delta);
-        }
-        if let Some(delta) = &self.saved_cameras {
-            next.saved_cameras = apply_saved_cameras_delta(&next.saved_cameras, delta);
-        }
-        if let Some(scene) = &self.scene {
-            next.scene = scene.clone();
-        }
-        if let Some(delta) = &self.shots {
-            next.shots = apply_shots_delta(&next.shots, delta);
-        }
-        if let Some(id) = &self.active_shot_id {
-            next.active_shot_id = id.clone();
-        }
-        if let Some(id) = &self.active_asset_id {
-            next.active_asset_id = id.clone();
-        }
-        if let Some(value) = &self.emblem {
-            next.emblem = value.clone();
-        }
-        if let Some(list) = &self.selected_shot_ids {
-            next.selected_shot_ids = list.values.clone();
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = &self.default_shot_format {
-            next.default_shot_format = value.clone();
-        }
-        if let Some(value) = &self.default_shot_shape {
-            next.default_shot_shape = value.clone();
-        }
-        if let Some(value) = &self.default_asset_format {
-            next.default_asset_format = value.clone();
-        }
-        if let Some(value) = self.center_model {
-            next.center_model = value;
-        }
-        if let Some(value) = self.fit_revision {
-            next.fit_revision = value;
-        }
-        if let Some(value) = &self.camera_draft_label {
-            next.camera_draft_label = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &ShootingArtifact) -> protocol::MutationApplyResult<ShootingArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(delta) = &self.assets {
+                next.assets = apply_assets_delta(&next.assets, delta).map_err(|error| error.under(["assets"]))?;
+            }
+            if let Some(delta) = &self.saved_cameras {
+                next.saved_cameras = apply_saved_cameras_delta(&next.saved_cameras, delta).map_err(|error| error.under(["savedCameras"]))?;
+            }
+            if let Some(scene) = &self.scene {
+                next.scene = scene.clone();
+            }
+            if let Some(delta) = &self.shots {
+                next.shots = apply_shots_delta(&next.shots, delta).map_err(|error| error.under(["shots"]))?;
+            }
+            if let Some(id) = &self.active_shot_id {
+                next.active_shot_id = id.clone();
+            }
+            if let Some(id) = &self.active_asset_id {
+                next.active_asset_id = id.clone();
+            }
+            if let Some(value) = &self.emblem {
+                next.emblem = value.clone();
+            }
+            if let Some(list) = &self.selected_shot_ids {
+                next.selected_shot_ids = list.values.clone();
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = &self.default_shot_format {
+                next.default_shot_format = value.clone();
+            }
+            if let Some(value) = &self.default_shot_shape {
+                next.default_shot_shape = value.clone();
+            }
+            if let Some(value) = &self.default_asset_format {
+                next.default_asset_format = value.clone();
+            }
+            if let Some(value) = self.center_model {
+                next.center_model = value;
+            }
+            if let Some(value) = self.fit_revision {
+                next.fit_revision = value;
+            }
+            if let Some(value) = &self.camera_draft_label {
+                next.camera_draft_label = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<ShootingSnapshot> for ShootingDiff {
-    fn apply(&self, snapshot: &ShootingSnapshot) -> ShootingSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.assets {
-            next.assets = apply_assets_delta(&next.assets, delta);
-        }
-        if let Some(delta) = &self.saved_cameras {
-            next.saved_cameras = apply_saved_cameras_delta(&next.saved_cameras, delta);
-        }
-        if let Some(scene) = &self.scene {
-            next.scene = scene.clone();
-        }
-        if let Some(delta) = &self.shots {
-            next.shots = apply_shots_delta(&next.shots, delta);
-        }
-        if let Some(id) = &self.active_shot_id {
-            next.active_shot_id = id.clone();
-        }
-        if let Some(id) = &self.active_asset_id {
-            next.active_asset_id = id.clone();
-        }
-        if let Some(value) = &self.emblem {
-            next.emblem = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &ShootingSnapshot) -> protocol::MutationApplyResult<ShootingSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(delta) = &self.assets {
+                next.assets = apply_assets_delta(&next.assets, delta).map_err(|error| error.under(["assets"]))?;
+            }
+            if let Some(delta) = &self.saved_cameras {
+                next.saved_cameras = apply_saved_cameras_delta(&next.saved_cameras, delta).map_err(|error| error.under(["savedCameras"]))?;
+            }
+            if let Some(scene) = &self.scene {
+                next.scene = scene.clone();
+            }
+            if let Some(delta) = &self.shots {
+                next.shots = apply_shots_delta(&next.shots, delta).map_err(|error| error.under(["shots"]))?;
+            }
+            if let Some(id) = &self.active_shot_id {
+                next.active_shot_id = id.clone();
+            }
+            if let Some(id) = &self.active_asset_id {
+                next.active_asset_id = id.clone();
+            }
+            if let Some(value) = &self.emblem {
+                next.emblem = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -286,7 +316,7 @@ mod tests {
     fn empty_diff_is_a_no_operation() {
         let base = crate::artifacts::shooting::empty_shooting_snapshot();
         let diff = ShootingDiff::default();
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 }
 //#endregion 🧪️Tests

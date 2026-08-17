@@ -1,11 +1,12 @@
-//! 🔺 Diff constructor for `DragAssets`.
+//! 🔺 Diff constructor for `DragAssets`. Error `target-missing` when none of the addressed assets
+//! exist, Warning `partial` when some do not.
 
 use super::mutation::DragAssets;
 use crate::artifacts::shooting::ShootingSnapshot;
 use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
 use crate::artifacts::shooting::ShootingAssetPatch;
 
-pub fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> ShootingDiff {
+pub fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let patched: Vec<ShootingAssetPatchEntry> = base
         .assets
         .iter()
@@ -16,7 +17,14 @@ pub fn diff(payload: &DragAssets, base: &ShootingSnapshot) -> ShootingDiff {
         })
         .collect();
     if patched.is_empty() {
-        return ShootingDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested asset(s) exist.", payload.asset_ids.len()), payload.asset_ids.clone());
     }
-    ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() }
+    let found: Vec<String> = patched.iter().map(|entry| entry.id.clone()).collect();
+    let missing: Vec<String> = payload.asset_ids.iter().filter(|id| !found.contains(id)).cloned().collect();
+    let outcome = protocol::MutationOutcome::new(ShootingDiff { assets: Some(ShootingAssetsDelta { patched, ..Default::default() }), ..Default::default() });
+    if missing.is_empty() {
+        outcome
+    } else {
+        outcome.absorb_messages([protocol::MutationMessage::warn("mutation.partial", format!("{} of {} requested asset(s) did not exist and were skipped.", missing.len(), payload.asset_ids.len())).at(missing)])
+    }
 }

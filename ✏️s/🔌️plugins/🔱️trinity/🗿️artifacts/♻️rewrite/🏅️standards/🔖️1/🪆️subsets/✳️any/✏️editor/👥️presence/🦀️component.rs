@@ -30,8 +30,10 @@ impl Default for RewritePresence {
 }
 
 impl protocol::MutationDiff<RewritePresence> for RewritePresence {
-    fn apply(&self, _base: &RewritePresence) -> RewritePresence {
-        self.clone()
+    fn apply(&self, _base: &RewritePresence) -> protocol::MutationApplyResult<RewritePresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

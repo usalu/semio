@@ -15,7 +15,7 @@ pub struct ChangeBridgeSigmaCMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBridgeSigmaCMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "bridge-sigma-c-mpa", kind: "change-bridge-sigma-c-mpa", record: "ChangedBridgeSigmaCMpa" };
 
-    fn diff(&self, base: &En1992Snapshot) -> En1992Diff {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_bridge_sigma_c_mpa::diff::diff(self, base)
     }
 

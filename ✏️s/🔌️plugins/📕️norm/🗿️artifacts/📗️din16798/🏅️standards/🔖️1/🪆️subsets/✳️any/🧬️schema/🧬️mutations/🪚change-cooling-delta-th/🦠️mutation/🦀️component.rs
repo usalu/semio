@@ -15,7 +15,7 @@ pub struct ChangeCoolingDeltaTH {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolingDeltaTH {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "cooling-delta-th", kind: "change-cooling-delta-th", record: "ChangedCoolingDeltaTH" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_cooling_delta_t_h::diff::diff(self, base)
     }
 

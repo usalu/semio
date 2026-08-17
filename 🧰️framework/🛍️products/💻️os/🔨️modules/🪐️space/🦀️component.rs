@@ -129,16 +129,7 @@ pub struct InstalledExtension {
 }
 
 pub fn empty_space_snapshot(name: &str, kind: SpaceKind, visibility: SpaceVisibility) -> SpaceSnapshot {
-    SpaceSnapshot {
-        schema: S_SPACE_SCHEMA.into(),
-        name: name.into(),
-        kind,
-        visibility,
-        users: Vec::new(),
-        collections: Vec::new(),
-        programs: Vec::new(),
-        extensions: Vec::new(),
-    }
+    SpaceSnapshot { schema: S_SPACE_SCHEMA.into(), name: name.into(), kind, visibility, users: Vec::new(), collections: Vec::new(), programs: Vec::new(), extensions: Vec::new() }
 }
 
 //#region 🔖️SpaceMutation
@@ -206,11 +197,7 @@ impl protocol::OpText for SpaceMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -258,8 +245,14 @@ pub struct SpaceDiff {
 }
 
 impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
-    fn apply(&self, base: &SpaceSnapshot) -> SpaceSnapshot {
+    fn apply(&self, base: &SpaceSnapshot) -> protocol::MutationApplyResult<SpaceSnapshot> {
         let mut next = base.clone();
+        if self.rename_collection_id.is_some() != self.rename_collection_name.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "collection rename requires both id and name").at(["collections"]));
+        }
+        if self.set_extension_enabled_id.is_some() != self.set_extension_enabled.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "extension enablement requires both id and value").at(["extensions"]));
+        }
         if let Some(name) = &self.name {
             next.name = name.clone();
         }
@@ -274,29 +267,39 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
             next.users.push(user.clone());
         }
         if let Some(user_id) = &self.remove_user_id {
+            if !next.users.iter().any(|user| &user.id == user_id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("user {user_id} does not exist")).at(["users", user_id.as_str()]));
+            }
             next.users.retain(|user| &user.id != user_id);
         }
         if let Some(collection) = &self.add_collection {
+            if next.collections.iter().any(|existing| existing.id == collection.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("collection {} already exists", collection.id)).at(["collections", collection.id.as_str()]));
+            }
             next.collections.push(collection.clone());
         }
         if let Some(collection_id) = &self.remove_collection_id {
+            if !next.collections.iter().any(|collection| &collection.id == collection_id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("collection {collection_id} does not exist")).at(["collections", collection_id.as_str()]));
+            }
             next.collections.retain(|collection| &collection.id != collection_id);
         }
         if let Some(collection_id) = &self.rename_collection_id {
             if let Some(name) = &self.rename_collection_name {
-                for collection in &mut next.collections {
-                    if &collection.id == collection_id {
-                        collection.name = name.clone();
-                    }
-                }
+                let collection = next.collections.iter_mut().find(|collection| &collection.id == collection_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("collection {collection_id} does not exist")).at(["collections", collection_id.as_str()]))?;
+                collection.name = name.clone();
             }
         }
         if let Some(plugin_id) = &self.install_program {
-            if !next.programs.contains(plugin_id) {
-                next.programs.push(plugin_id.clone());
+            if next.programs.contains(plugin_id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("program {plugin_id} is already installed")).at(["programs", plugin_id.as_str()]));
             }
+            next.programs.push(plugin_id.clone());
         }
         if let Some(plugin_id) = &self.uninstall_program {
+            if !next.programs.contains(plugin_id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("program {plugin_id} is not installed")).at(["programs", plugin_id.as_str()]));
+            }
             next.programs.retain(|installed| installed != plugin_id);
         }
         if let Some(extension) = &self.install_extension {
@@ -304,18 +307,18 @@ impl protocol::MutationDiff<SpaceSnapshot> for SpaceDiff {
             next.extensions.push(extension.clone());
         }
         if let Some(extension_id) = &self.uninstall_extension_id {
+            if !next.extensions.iter().any(|existing| &existing.extension_id == extension_id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("extension {extension_id} is not installed")).at(["extensions", extension_id.as_str()]));
+            }
             next.extensions.retain(|existing| &existing.extension_id != extension_id);
         }
         if let Some(extension_id) = &self.set_extension_enabled_id {
             if let Some(enabled) = self.set_extension_enabled {
-                for extension in &mut next.extensions {
-                    if &extension.extension_id == extension_id {
-                        extension.enabled = enabled;
-                    }
-                }
+                let extension = next.extensions.iter_mut().find(|extension| &extension.extension_id == extension_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("extension {extension_id} is not installed")).at(["extensions", extension_id.as_str()]))?;
+                extension.enabled = enabled;
             }
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -386,13 +389,7 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             SpaceMutation::InstallProgram { plugin_id } => diff.install_program = Some(plugin_id.clone()),
             SpaceMutation::UninstallProgram { plugin_id } => diff.uninstall_program = Some(plugin_id.clone()),
             SpaceMutation::InstallExtension { extension_id, version, source_uri, package_hash, enabled } => {
-                diff.install_extension = Some(InstalledExtension {
-                    extension_id: extension_id.clone(),
-                    version: version.clone(),
-                    source_uri: source_uri.clone(),
-                    package_hash: package_hash.clone(),
-                    enabled: *enabled,
-                });
+                diff.install_extension = Some(InstalledExtension { extension_id: extension_id.clone(), version: version.clone(), source_uri: source_uri.clone(), package_hash: package_hash.clone(), enabled: *enabled });
             }
             SpaceMutation::UninstallExtension { extension_id } => diff.uninstall_extension_id = Some(extension_id.clone()),
             SpaceMutation::SetExtensionEnabled { extension_id, enabled } => {
@@ -414,15 +411,10 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
             },
             SpaceMutation::RemoveUser { user_id } => base.users.iter().find(|user| &user.id == user_id).map(|user| vec![SpaceMutation::UpsertUser { user: user.clone() }]).unwrap_or_default(),
             SpaceMutation::AddCollection { collection } => vec![SpaceMutation::RemoveCollection { collection_id: collection.id.clone() }],
-            SpaceMutation::RemoveCollection { collection_id } => {
-                base.collections.iter().find(|collection| &collection.id == collection_id).map(|collection| vec![SpaceMutation::AddCollection { collection: collection.clone() }]).unwrap_or_default()
+            SpaceMutation::RemoveCollection { collection_id } => base.collections.iter().find(|collection| &collection.id == collection_id).map(|collection| vec![SpaceMutation::AddCollection { collection: collection.clone() }]).unwrap_or_default(),
+            SpaceMutation::RenameCollection { collection_id, .. } => {
+                base.collections.iter().find(|collection| &collection.id == collection_id).map(|collection| vec![SpaceMutation::RenameCollection { collection_id: collection_id.clone(), name: collection.name.clone() }]).unwrap_or_default()
             }
-            SpaceMutation::RenameCollection { collection_id, .. } => base
-                .collections
-                .iter()
-                .find(|collection| &collection.id == collection_id)
-                .map(|collection| vec![SpaceMutation::RenameCollection { collection_id: collection_id.clone(), name: collection.name.clone() }])
-                .unwrap_or_default(),
             SpaceMutation::InstallProgram { plugin_id } => {
                 if base.programs.contains(plugin_id) {
                     Vec::new()
@@ -461,17 +453,9 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
                     }]
                 })
                 .unwrap_or_default(),
-            SpaceMutation::SetExtensionEnabled { extension_id, .. } => base
-                .extensions
-                .iter()
-                .find(|existing| &existing.extension_id == extension_id)
-                .map(|existing| {
-                    vec![SpaceMutation::SetExtensionEnabled {
-                        extension_id: extension_id.clone(),
-                        enabled: existing.enabled,
-                    }]
-                })
-                .unwrap_or_default(),
+            SpaceMutation::SetExtensionEnabled { extension_id, .. } => {
+                base.extensions.iter().find(|existing| &existing.extension_id == extension_id).map(|existing| vec![SpaceMutation::SetExtensionEnabled { extension_id: extension_id.clone(), enabled: existing.enabled }]).unwrap_or_default()
+            }
         }
     }
 }
@@ -511,11 +495,7 @@ fn artifact_body_document_spec() -> dsl::RecordSpec {
 }
 
 fn artifact_body_blob_spec() -> dsl::RecordSpec {
-    dsl::RecordSpec::new(
-        Some("blob"),
-        dsl::RecordLayout::Inline,
-        vec![dsl::FieldSpec::new(0, "hash", dsl::Shape::Text), dsl::FieldSpec::new(1, "size", dsl::Shape::UInt), dsl::FieldSpec::new(2, "media-type", dsl::Shape::Text)],
-    )
+    dsl::RecordSpec::new(Some("blob"), dsl::RecordLayout::Inline, vec![dsl::FieldSpec::new(0, "hash", dsl::Shape::Text), dsl::FieldSpec::new(1, "size", dsl::Shape::UInt), dsl::FieldSpec::new(2, "media-type", dsl::Shape::Text)])
 }
 
 impl dsl::DslVariants for ArtifactBody {
@@ -605,7 +585,6 @@ pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
     CollectionSnapshot { schema: S_COLLECTION_SCHEMA.into(), name: name.into(), folders: Vec::new(), entries: Vec::new() }
 }
 
-
 //#region 🔖️HandcraftedArtifactCodecs
 /// 🧬️ P6: `DslArtifact` emits helpers only — ArtifactDsl/ArtifactPack are handcrafted here.
 impl store::ArtifactDsl for SpaceSnapshot {
@@ -618,21 +597,12 @@ impl store::ArtifactDsl for SpaceSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -641,22 +611,13 @@ impl store::ArtifactDsl for SpaceSnapshot {
 impl store::ArtifactPack for SpaceSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -676,21 +637,12 @@ impl store::ArtifactDsl for CollectionSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(
-            body,
-            &Self::__dsl_spec(),
-            &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document },
-        )?;
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Dsl,
-            1,
-        )
-        .expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -699,22 +651,13 @@ impl store::ArtifactDsl for CollectionSnapshot {
 impl store::ArtifactPack for CollectionSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
-            <Self as store::ArtifactDsl>::envelope_id(),
-            store::semio_format::Component::Pack,
-            1,
-        )
-        .map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
-                "pack envelope mismatch: expected {}, got {}",
-                <Self as store::ArtifactDsl>::envelope_id(),
-                envelope.envelope_id()
-            )));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
@@ -800,7 +743,6 @@ pub enum CollectionMutation {
     },
 }
 
-
 //#region 🔖️HandcraftedOpCodecs
 impl protocol::OpText for CollectionMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
@@ -808,11 +750,7 @@ impl protocol::OpText for CollectionMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(
-                    line,
-                    &spec_fn(),
-                    &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline },
-                )?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -919,13 +857,25 @@ pub struct CollectionDiff {
 }
 
 impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
-    fn apply(&self, base: &CollectionSnapshot) -> CollectionSnapshot {
+    fn apply(&self, base: &CollectionSnapshot) -> protocol::MutationApplyResult<CollectionSnapshot> {
         let mut next = base.clone();
+        if self.created_folder.is_some() != self.created_folder_at.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created folder requires an exact final index").at(["folders"]));
+        }
+        if self.created_entry.is_some() != self.created_entry_at.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created entry requires an exact final index").at(["entries"]));
+        }
         if let Some(new_name) = &self.renamed_collection {
             next.name = new_name.clone();
         }
         if let Some(folder) = &self.created_folder {
-            let at = (self.created_folder_at.unwrap_or(u32::MAX) as usize).min(next.folders.len());
+            if next.folders.iter().any(|existing| existing.id == folder.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("folder {} already exists", folder.id)).at(["folders", folder.id.as_str()]));
+            }
+            let at = self.created_folder_at.unwrap_or_default() as usize;
+            if at > next.folders.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("folder index {at} is out of range for length {}", next.folders.len())).at(["folders".to_string(), at.to_string()]));
+            }
             next.folders.insert(at, folder.clone());
         }
         if let Some(ids) = &self.deleted_folder_ids {
@@ -933,41 +883,58 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
             // `folder_id` left pointing at one is `reconcile_collection_integrity`'s job (rules
             // `collection/folder-orphaned`/`collection/entry-folder-missing`), run separately after
             // `apply`, never inline here.
+            for (index, id) in ids.iter().enumerate() {
+                if ids[..index].contains(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("folder {id} is deleted more than once")).at(["folders", id.as_str()]));
+                }
+                if !next.folders.iter().any(|folder| folder.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {id} does not exist")).at(["folders", id.as_str()]));
+                }
+            }
             next.folders.retain(|folder| !ids.contains(&folder.id));
         }
         if let Some(moved) = &self.moved_folder {
-            if let Some(folder) = next.folders.iter_mut().find(|folder| folder.id == moved.id) {
-                folder.parent_id = moved.new_parent.clone();
-            }
+            let folder = next.folders.iter_mut().find(|folder| folder.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", moved.id)).at(["folders", moved.id.as_str()]))?;
+            folder.parent_id = moved.new_parent.clone();
         }
         if let Some(renamed) = &self.renamed_folder {
-            if let Some(folder) = next.folders.iter_mut().find(|folder| folder.id == renamed.id) {
-                folder.name = renamed.new_name.clone();
-            }
+            let folder = next.folders.iter_mut().find(|folder| folder.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", renamed.id)).at(["folders", renamed.id.as_str()]))?;
+            folder.name = renamed.new_name.clone();
         }
         if let Some(entry) = &self.created_entry {
-            let at = (self.created_entry_at.unwrap_or(u32::MAX) as usize).min(next.entries.len());
+            if next.entries.iter().any(|existing| existing.id == entry.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("entry {} already exists", entry.id)).at(["entries", entry.id.as_str()]));
+            }
+            let at = self.created_entry_at.unwrap_or_default() as usize;
+            if at > next.entries.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("entry index {at} is out of range for length {}", next.entries.len())).at(["entries".to_string(), at.to_string()]));
+            }
             next.entries.insert(at, entry.clone());
         }
         if let Some(ids) = &self.deleted_entry_ids {
+            for (index, id) in ids.iter().enumerate() {
+                if ids[..index].contains(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("entry {id} is deleted more than once")).at(["entries", id.as_str()]));
+                }
+                if !next.entries.iter().any(|entry| entry.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {id} does not exist")).at(["entries", id.as_str()]));
+                }
+            }
             next.entries.retain(|entry| !ids.contains(&entry.id));
         }
         if let Some(moved) = &self.moved_entry {
-            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == moved.id) {
-                entry.folder_id = moved.new_parent.clone();
-            }
+            let entry = next.entries.iter_mut().find(|entry| entry.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", moved.id)).at(["entries", moved.id.as_str()]))?;
+            entry.folder_id = moved.new_parent.clone();
         }
         if let Some(renamed) = &self.renamed_entry {
-            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == renamed.id) {
-                entry.name = renamed.new_name.clone();
-            }
+            let entry = next.entries.iter_mut().find(|entry| entry.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", renamed.id)).at(["entries", renamed.id.as_str()]))?;
+            entry.name = renamed.new_name.clone();
         }
         if let Some(replaced) = &self.replaced_entry_body {
-            if let Some(entry) = next.entries.iter_mut().find(|entry| entry.id == replaced.entry_id) {
-                entry.body = replaced.new_body.clone();
-            }
+            let entry = next.entries.iter_mut().find(|entry| entry.id == replaced.entry_id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", replaced.entry_id)).at(["entries", replaced.entry_id.as_str()]))?;
+            entry.body = replaced.new_body.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1023,8 +990,7 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
             CollectionMutation::DeleteFolder { folder_id } => {
                 if base.folders.iter().any(|folder| &folder.id == folder_id) {
                     let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
-                    let cascade_entry_ids: Vec<String> =
-                        base.entries.iter().filter(|entry| entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id))).map(|entry| entry.id.clone()).collect();
+                    let cascade_entry_ids: Vec<String> = base.entries.iter().filter(|entry| entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id))).map(|entry| entry.id.clone()).collect();
                     diff.deleted_folder_ids = Some(cascade_folder_ids);
                     if !cascade_entry_ids.is_empty() {
                         diff.deleted_entry_ids = Some(cascade_entry_ids);
@@ -1095,28 +1061,17 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
                 }
                 mutations
             }
-            CollectionMutation::MoveToCollection { folder_id, .. } => base
-                .folders
-                .iter()
-                .find(|folder| &folder.id == folder_id)
-                .map(|folder| vec![CollectionMutation::MoveToCollection { folder_id: folder_id.clone(), new_parent: folder.parent_id.clone() }])
-                .unwrap_or_default(),
+            CollectionMutation::MoveToCollection { folder_id, .. } => {
+                base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionMutation::MoveToCollection { folder_id: folder_id.clone(), new_parent: folder.parent_id.clone() }]).unwrap_or_default()
+            }
             CollectionMutation::RenameFolder { folder_id, .. } => {
                 base.folders.iter().find(|folder| &folder.id == folder_id).map(|folder| vec![CollectionMutation::RenameFolder { folder_id: folder_id.clone(), new_name: folder.name.clone() }]).unwrap_or_default()
             }
             CollectionMutation::CreateEntry { entry, .. } => vec![CollectionMutation::DeleteEntry { entry_id: entry.id.clone() }],
-            CollectionMutation::DeleteEntry { entry_id } => base
-                .entries
-                .iter()
-                .position(|entry| &entry.id == entry_id)
-                .map(|at| vec![CollectionMutation::CreateEntry { entry: base.entries[at].clone(), index: at as u32 }])
-                .unwrap_or_default(),
-            CollectionMutation::MoveToFolder { entry_id, .. } => base
-                .entries
-                .iter()
-                .find(|entry| &entry.id == entry_id)
-                .map(|entry| vec![CollectionMutation::MoveToFolder { entry_id: entry_id.clone(), new_folder: entry.folder_id.clone() }])
-                .unwrap_or_default(),
+            CollectionMutation::DeleteEntry { entry_id } => base.entries.iter().position(|entry| &entry.id == entry_id).map(|at| vec![CollectionMutation::CreateEntry { entry: base.entries[at].clone(), index: at as u32 }]).unwrap_or_default(),
+            CollectionMutation::MoveToFolder { entry_id, .. } => {
+                base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::MoveToFolder { entry_id: entry_id.clone(), new_folder: entry.folder_id.clone() }]).unwrap_or_default()
+            }
             CollectionMutation::RenameEntry { entry_id, .. } => {
                 base.entries.iter().find(|entry| &entry.id == entry_id).map(|entry| vec![CollectionMutation::RenameEntry { entry_id: entry_id.clone(), new_name: entry.name.clone() }]).unwrap_or_default()
             }
@@ -1437,10 +1392,7 @@ impl DraftCatalog {
     pub fn create_draft(&self, kind_id: &str, schema: &str, name: &str, now_ms: u64, ttl_ms: Option<u64>) -> DraftEntry {
         static DRAFT_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let seq = DRAFT_SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let artifact_id = vcs::content_addressed_entity_id(
-            "draft",
-            format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes(),
-        );
+        let artifact_id = vcs::content_addressed_entity_id("draft", format!("{kind_id}\0{schema}\0{name}\0{now_ms}\0{seq}").as_bytes());
         let entry = DraftEntry { artifact_id, kind_id: kind_id.into(), schema: schema.into(), name: name.into(), created_at_ms: now_ms, expires_at_ms: ttl_ms.map(|ttl| now_ms + ttl) };
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(entry.artifact_id.clone(), entry.clone());
         entry
@@ -1519,13 +1471,8 @@ impl DraftCatalog {
 
         self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(draft_id);
 
-        let entry = CollectionEntry {
-            id: draft.artifact_id.clone(),
-            folder_id,
-            name: draft.name.clone(),
-            kind_id: draft.kind_id.clone(),
-            body: Box::new(ArtifactBody::Document { schema: draft.schema.clone(), document_id: draft.artifact_id.clone() }),
-        };
+        let entry =
+            CollectionEntry { id: draft.artifact_id.clone(), folder_id, name: draft.name.clone(), kind_id: draft.kind_id.clone(), body: Box::new(ArtifactBody::Document { schema: draft.schema.clone(), document_id: draft.artifact_id.clone() }) };
         Ok((draft, CollectionMutation::CreateEntry { entry, index: u32::MAX }))
     }
 
@@ -1726,9 +1673,7 @@ pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFile
 }
 
 pub fn real_blob_reader(blob_store: &dyn store::BlobStore) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
-    move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
-        blob_store.get(hash).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
-    }
+    move |hash: &str| -> Result<Vec<u8>, SpaceZipError> { blob_store.get(hash).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string())) }
 }
 
 /// 📥️ Reconstructs a real `store::ArtifactStore<P, Mutation>` from one imported document artifact's
@@ -1762,7 +1707,7 @@ mod tests {
     use protocol::DiffCodec;
     use protocol::Mutation as _;
     use protocol::MutationDiff as _;
-    use store::{BlobStore, ArtifactDsl};
+    use store::{ArtifactDsl, BlobStore};
 
     //#region 🧸️Fixtures
     fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
@@ -1770,13 +1715,7 @@ mod tests {
     }
 
     fn demo_extension(extension_id: &str, enabled: bool) -> InstalledExtension {
-        InstalledExtension {
-            extension_id: extension_id.into(),
-            version: "1.0.0".into(),
-            source_uri: format!("https://example.test/{extension_id}.sxt"),
-            package_hash: format!("hash-{extension_id}"),
-            enabled,
-        }
+        InstalledExtension { extension_id: extension_id.into(), version: "1.0.0".into(), source_uri: format!("https://example.test/{extension_id}.sxt"), package_hash: format!("hash-{extension_id}"), enabled }
     }
 
     fn demo_space() -> SpaceSnapshot {
@@ -1823,7 +1762,7 @@ mod tests {
 
     #[test]
     fn space_default_example_dsl_round_trips() {
-        let text = include_str!("../../📚️examples/🎬️demo.space");
+        let text = include_str!("📚️examples/🎬️demo.space");
         let parsed = <SpaceSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .space example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
@@ -1843,13 +1782,12 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&demo_collection());
     }
 
-
     #[test]
     fn collection_envelope_id_is_two_dot_segments() {
         let id = <CollectionSnapshot as store::ArtifactDsl>::envelope_id();
         assert_eq!(id, "os.collection");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-        let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test")).expect("encode");
+        let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
         let decoded = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.name, "test");
     }
@@ -1859,14 +1797,14 @@ mod tests {
         let id = <SpaceSnapshot as store::ArtifactDsl>::envelope_id();
         assert_eq!(id, "os.space");
         assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-        let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private)).expect("encode");
+        let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));
         let decoded = <SpaceSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded.name, "test");
     }
 
     #[test]
     fn collection_default_example_dsl_round_trips() {
-        let text = include_str!("../../📚️examples/🎬️demo.collection");
+        let text = include_str!("📚️examples/🎬️demo.collection");
         let parsed = <CollectionSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .collection example");
         store::test_support::assert_dsl_round_trip(&parsed);
     }
@@ -1912,13 +1850,7 @@ mod tests {
         store::test_support::assert_operation_round_trip(&with_program, SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
         store::test_support::assert_operation_round_trip(
             &base,
-            SpaceMutation::InstallExtension {
-                extension_id: "flow-math".into(),
-                version: "1.0.0".into(),
-                source_uri: "https://example.test/flow-math.sxt".into(),
-                package_hash: "hash-flow-math".into(),
-                enabled: true,
-            },
+            SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "1.0.0".into(), source_uri: "https://example.test/flow-math.sxt".into(), package_hash: "hash-flow-math".into(), enabled: true },
         );
         let mut with_extension = base.clone();
         with_extension.extensions.push(demo_extension("flow-math", true));
@@ -1926,13 +1858,7 @@ mod tests {
         store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
         store::test_support::assert_operation_round_trip(
             &with_extension,
-            SpaceMutation::InstallExtension {
-                extension_id: "flow-math".into(),
-                version: "2.0.0".into(),
-                source_uri: "https://example.test/flow-math-v2.sxt".into(),
-                package_hash: "hash-flow-math-v2".into(),
-                enabled: false,
-            },
+            SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "2.0.0".into(), source_uri: "https://example.test/flow-math-v2.sxt".into(), package_hash: "hash-flow-math-v2".into(), enabled: false },
         );
     }
 
@@ -1996,7 +1922,10 @@ mod tests {
         store::test_support::assert_operation_round_trip(&base, CollectionMutation::DeleteEntry { entry_id: "e1".into() });
         store::test_support::assert_operation_round_trip(&base, CollectionMutation::MoveToFolder { entry_id: "e1".into(), new_folder: None });
         store::test_support::assert_operation_round_trip(&base, CollectionMutation::RenameEntry { entry_id: "e1".into(), new_name: "sketch 2".into() });
-        store::test_support::assert_operation_round_trip(&base, CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) });
+        store::test_support::assert_operation_round_trip(
+            &base,
+            CollectionMutation::ReplaceEntryBody { entry_id: "e2".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) },
+        );
     }
 
     /// 🧪️ `DeleteFolder`'s cascade: deleting a folder that contains a nested subfolder plus entries in
@@ -2008,8 +1937,20 @@ mod tests {
         let mut collection = empty_collection_snapshot("Demo");
         collection.folders.push(CollectionFolder { id: "root".into(), parent_id: None, name: "Root".into() });
         collection.folders.push(CollectionFolder { id: "child".into(), parent_id: Some("root".into()), name: "Child".into() });
-        collection.entries.push(CollectionEntry { id: "e-root".into(), folder_id: Some("root".into()), name: "in-root".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-root".into() }) });
-        collection.entries.push(CollectionEntry { id: "e-child".into(), folder_id: Some("child".into()), name: "in-child".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-child".into() }) });
+        collection.entries.push(CollectionEntry {
+            id: "e-root".into(),
+            folder_id: Some("root".into()),
+            name: "in-root".into(),
+            kind_id: "puzzle.2d".into(),
+            body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-root".into() }),
+        });
+        collection.entries.push(CollectionEntry {
+            id: "e-child".into(),
+            folder_id: Some("child".into()),
+            name: "in-child".into(),
+            kind_id: "puzzle.2d".into(),
+            body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-e-child".into() }),
+        });
 
         store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
 
@@ -2021,7 +1962,7 @@ mod tests {
         deleted_entries.sort();
         assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
 
-        let after = diff.apply(&collection);
+        let after = diff.apply(&collection).expect("valid collection diff");
         assert!(after.folders.is_empty());
         assert!(after.entries.is_empty());
     }

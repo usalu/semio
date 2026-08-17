@@ -51,7 +51,7 @@ impl SemioGraphDiff {
 }
 
 impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
-    fn apply(&self, base: &SemioGraphSnapshot) -> SemioGraphSnapshot {
+    fn apply(&self, base: &SemioGraphSnapshot) -> protocol::MutationApplyResult<SemioGraphSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.nodes {
             next.nodes = list.values.clone();
@@ -59,7 +59,7 @@ impl MutationDiff<SemioGraphSnapshot> for SemioGraphDiff {
         if let Some(list) = &self.edges {
             next.edges = list.values.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -321,7 +321,7 @@ mod tests {
     fn apply_replaces_nodes_and_edges_wholesale() {
         let base = SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }], edges: vec![] };
         let diff = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }), edges: None };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(next.nodes[0].id, GraphNodeId::new("b"));
     }
 

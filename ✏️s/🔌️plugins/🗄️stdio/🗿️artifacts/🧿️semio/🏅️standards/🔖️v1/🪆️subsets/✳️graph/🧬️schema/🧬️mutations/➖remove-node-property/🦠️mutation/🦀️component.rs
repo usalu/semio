@@ -15,7 +15,7 @@ pub struct RemoveNodeProperty {
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for RemoveNodeProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "node-property", kind: "remove-node-property", record: "RemovedNodeProperty" };
 
-    fn diff(&self, base: &SemioGraphSnapshot) -> <SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {

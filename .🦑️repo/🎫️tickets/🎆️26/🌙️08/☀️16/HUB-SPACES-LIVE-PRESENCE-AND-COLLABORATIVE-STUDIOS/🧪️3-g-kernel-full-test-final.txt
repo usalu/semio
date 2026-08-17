@@ -1,0 +1,14 @@
+test os_store::component::tests::space_vcs_host_meta_document_is_backbone_attachable_and_detachable ... ok
+test os_vcs::tests::content_addressed_checkpoint_id_is_deterministic_and_content_sensitive ... ok
+test os_vcs::tests::content_addressed_entity_and_mint_helpers_are_deterministic ... ok
+test os_vcs::tests::content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible ... ok
+test os_store::component::tests::typed_child_store_factory_round_trips_a_child_through_create_persist_open ... ok
+test os_dsl::fixture_sweep::m5_cross_artifact_rejection::all_non_stdio_grammars_reject_each_others_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_protocol_conformance::all_discovered_snapshot_protocols_walk_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_handcrafted_grammar_conformance::all_discovered_snapshot_grammars_recognize_their_shipped_fixtures ... ok
+test os_dsl::fixture_sweep::m5_production_coverage::all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture ... ok
+
+test result: ok. 988 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.74s
+
+
+[exited with code 0]

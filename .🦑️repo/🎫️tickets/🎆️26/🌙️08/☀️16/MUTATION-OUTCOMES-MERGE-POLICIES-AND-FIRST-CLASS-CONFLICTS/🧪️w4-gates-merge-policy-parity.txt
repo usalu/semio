@@ -1,0 +1,2 @@
+COUNT 1
+mutation-migration/merge-policy-parity | 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx | "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx" (i18n bundles (de+en, 🖱️ui react index.tsx)) is missing MergePolicy variant(s): LaissezFaire

@@ -26,7 +26,6 @@ use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, RunStyle};
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlidePictureImage, SlideShape, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
-use crate::artifacts::xml::schema::snapshot::XmlNode;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 //#region 🔖️FieldMapping
@@ -86,6 +85,7 @@ impl ArtifactDeserializer for SemioPresentationFromPptx {
 mod tests {
     use super::*;
     use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxSlide};
+    use crate::artifacts::xml::schema::snapshot::XmlNode;
     use crate::artifacts::zip::opc::OpcPackage;
 
     pub(crate) fn sample_pptx() -> PptxSnapshot {

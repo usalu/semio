@@ -13,11 +13,16 @@
 import {
   type ArtifactInstanceRef,
   ArtifactMutationRouter,
+  type Conflict,
+  type ConflictId,
+  type ConflictResolution,
   type ContextMenuItemSpec,
   type HostEffect,
   type HistoryPatch,
   InstanceDirectory,
   type InvocationResponse,
+  type MergePolicy,
+  type MergeReport,
   type PluginContextMenuRequest,
   type PluginGraphError,
   type PluginModuleLease,
@@ -32,7 +37,9 @@ import {
 import {
   AppChannelClient,
   type AppFrameValue,
+  decodeConflictsFromWire,
   decodeFaultFromWire,
+  decodeMergeReportFromWire,
   decodeMutationEnvelopesPack,
   decodePackValue,
   encodePackValue,
@@ -68,7 +75,14 @@ export type PluginWasmHandle = {
    * site already feature-detects these (`if (plugin.loadAppDocument) ...`), so leaving them
    * `undefined` here fails loud-but-inert (a `console.error`/no-op at the call site) rather than
    * silently miscoding a `.spk` container. */
-  readonly applyMutations?: (instanceId: number, mutationsPack: string) => Promise<void>;
+  /** ⚖️ `AppCommand::ApplyEnvelopes`'s reply batches `MergeReport`/`Conflicts` frames alongside the
+   * ingest itself (contract freeze §C6/§C9 "pushed unsolicited after every ingest") — decoded here,
+   * same shape as {@link resolveConflict}'s reply, so a REMOTE peer's quarantined/degraded merge
+   * reaches the caller instead of being dropped after the `Error` check. */
+  readonly applyMutations?: (
+    instanceId: number,
+    mutationsPack: string,
+  ) => Promise<{ readonly mergeReport: MergeReport | null; readonly conflicts: readonly Conflict[] | null }>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
@@ -88,6 +102,25 @@ export type PluginWasmHandle = {
   readonly transactionRollback: (instanceId: number, txnId: string) => Promise<void>;
   readonly transactionUndo: (instanceId: number, groupId: string) => Promise<void>;
   readonly transactionRedo: (instanceId: number, groupId: string) => Promise<void>;
+  //#region 🔖️Merge
+  /** ⚖️ Sets this instance's local merge-policy authority (`os.set-merge-policy`, contract freeze
+   * `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/§C8/§C9) — mirrors
+   * `AppChannelClient.setMergePolicy` (`💻️os/🟦️component.ts`); throws on an `AppFrame::Error` reply
+   * rather than silently no-opping. */
+  readonly setMergePolicy: (instanceId: number, policy: MergePolicy) => Promise<void>;
+  /** ⚔️ Accepts/discards an `Open` {@link Conflict} (`os.resolve-conflict`) — mirrors
+   * `AppChannelClient.resolveConflict`; the reply batches `MergeReport` and (when the roster
+   * changed) `Conflicts` frames together (contract freeze §C6 `resolve_conflict`), both decoded
+   * here so the caller never re-parses wire frames itself. */
+  readonly resolveConflict: (
+    instanceId: number,
+    conflictId: ConflictId,
+    resolution: ConflictResolution,
+  ) => Promise<{ readonly mergeReport: MergeReport | null; readonly conflicts: readonly Conflict[] | null }>;
+  /** 📖️ Reads the open-conflict projection (`os.read-conflicts`) — mirrors
+   * `AppChannelClient.readConflicts`. */
+  readonly readConflicts: (instanceId: number) => Promise<readonly Conflict[]>;
+  //#endregion 🔖️Merge
   readonly dispose: () => void;
 };
 
@@ -308,6 +341,25 @@ async function performContextMenu(client: AppChannelClient, request: PluginConte
   return Array.isArray(items) ? (items as ContextMenuItemSpec[]) : [];
 }
 
+//#region 🔖️ActorIdentity
+/** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3 — the shell's
+ * current actor id (`user:{userId}#{shellSessionId}` once identity resolves, `client-<random>` before
+ * that), stamped onto every `AppChannelClient` created from here on. Module-level rather than an
+ * `adaptPluginHandle` parameter because `PluginWasmHandle` is the kernel's frozen shape (no setter
+ * method to add) and every real call site (`loadPluginModuleResilient`, `ShellHelpers/🟦️component.tsx`)
+ * lives outside this ticket's lease — this is the smallest surface that reaches every future
+ * `createApp` call without touching a foreign-leased signature. Known limitation: a single JS realm
+ * hosting more than one `ShellHost` (e.g. the multi-pane demonstrator) shares one actor id across
+ * panes — out of scope for this lane, flagged in `📓️w2-c-report.md`. */
+let currentPluginRuntimeActor = "local";
+
+/** 🪪️ Sets the actor id every subsequently-created `AppChannelClient` is stamped with — call once the
+ * shell mints/resolves its `user:{userId}#{shellSessionId}` identity (or reverts it on sign-out). */
+export function setPluginRuntimeActor(actor: string): void {
+  currentPluginRuntimeActor = actor;
+}
+//#endregion 🔖️ActorIdentity
+
 /** 📡️ Wraps the framework-core `PluginWasmHandle` (the 5-function binary `exchange` ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
@@ -331,7 +383,7 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
     manifest,
     createApp: async (appId) => {
       const instanceId = await handle.createApp(appId);
-      channels.set(instanceId, new AppChannelClient(handle, instanceId, appId));
+      channels.set(instanceId, new AppChannelClient(handle, instanceId, appId, currentPluginRuntimeActor));
       return instanceId;
     },
     destroyApp: async (instanceId) => {
@@ -353,6 +405,12 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] applyMutations failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      const mergeFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly MergeReport: unknown }> => "MergeReport" in frame);
+      const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
+      return {
+        mergeReport: mergeFrame ? decodeMergeReportFromWire(mergeFrame.MergeReport.report, decodePackValue) : null,
+        conflicts: conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : null,
+      };
     },
     readAppDocument: undefined,
     loadAppDocument: undefined,
@@ -406,6 +464,31 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
     transactionRedo: async (instanceId, groupId) => {
       await requireChannel(instanceId).transactionRedo(groupId);
     },
+    //#region 🔖️Merge
+    setMergePolicy: async (instanceId, policy) => {
+      const frames = await requireChannel(instanceId).setMergePolicy(policy);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: setMergePolicy failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+    },
+    resolveConflict: async (instanceId, conflictId, resolution) => {
+      const frames = await requireChannel(instanceId).resolveConflict(conflictId, resolution);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: resolveConflict failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      const mergeFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly MergeReport: unknown }> => "MergeReport" in frame);
+      const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
+      return {
+        mergeReport: mergeFrame ? decodeMergeReportFromWire(mergeFrame.MergeReport.report, decodePackValue) : null,
+        conflicts: conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : null,
+      };
+    },
+    readConflicts: async (instanceId) => {
+      const frames = await requireChannel(instanceId).readConflicts();
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] program ${pluginId}: readConflicts failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      const conflictsFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Conflicts: unknown }> => "Conflicts" in frame);
+      return conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : [];
+    },
+    //#endregion 🔖️Merge
     dispose: () => lease.release(),
   };
 }

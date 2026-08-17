@@ -43,7 +43,7 @@ Laws: (1) Fatal ⇒ `diff == D::default()`; (2) Error ⇒ diff carries no change
 ### C5 Conflicts — new module `📡️spr/⚔️conflict/🦀️component.rs` (glue entry replaces `🔀️crdt`; re-exported from `📡️spr/🦀️component.rs`)
 ```rust
 pub struct ConflictId(pub String);            // blake3(kind, artifact id, sorted mutation ids, hlc)
-pub enum ConflictKind { Quarantined { policy: MergePolicy, envelopes: Vec<MutationEnvelope> }, Degraded { edit_ids: Vec<String> } }
+pub enum ConflictKind { Quarantined { envelopes: Vec<MutationEnvelope> }, Degraded { edit_ids: Vec<String> } }
 pub enum ConflictStatus { Open, Accepted, Discarded }   pub enum ConflictResolution { Accept, Discard }
 pub struct Conflict { id, kind, status, messages: Vec<MutationMessage>, actors: Vec<ActorId>, timestamp: HybridLogicalTimestamp }
 pub struct EditMessages { edit_id: String, messages: Vec<MutationMessage> }
@@ -71,7 +71,7 @@ pub struct MergeReport { policy, accepted: bool, insertion_index: u32, replayed:
 5. `base` = `current` if `k == len` (hot append) else `fold_history(order[..k])` (checkpoint prefix).
 6. Replay `order[k..]`: per op `o = op.diff(&state)`, stamp, `state = o.diff.apply(&state)`, rebase inverse from `state`; collect `EditMessages` (forwards/meta never rewritten).
 7. `worst` over the whole replayed suffix (incl. local edits after k).
-8. Reject (`policy.rejects(worst)`): dag not advanced, state unchanged, push `Conflict{Quarantined{policy, envelopes}, Open, messages}` → `MergeReport{accepted:false}`.
+8. Reject (`policy.rejects(worst)`): dag not advanced, state unchanged, push `Conflict{Quarantined{envelopes}, Open, messages}` → `MergeReport{accepted:false}`. The deciding `MergePolicy` is runtime-local authority state, reported through `MergeReport`/`VcsError` only; no conflict or persisted history record carries it.
 9. Accept: commit `dag`, `applied_edit_ids = order`, inverses, `current`, ledger suffix, renumber `sequence_number`, `tail_undo_cache=None`, `bump()`; if `worst ≥ Warning` push `Conflict{Degraded{edit_ids}, Open}` → `MergeReport{accepted:true, insertion_index:k, ..}`.
 - `resolve_conflict`: Quarantined+Accept ⇒ rerun 3–9 with `LaissezFaire` (Fatal still rejects), status Accepted, no second conflict; Quarantined+Discard ⇒ status Discarded, `dag.seed_applied` for those ids, never relayed; Degraded+Accept ⇒ ack; Degraded+Discard ⇒ `Err` (never rewrite shared history).
 - `merge_remote_snapshot`: after identity checks, HLC-sort merged edits, run 5–9 from first divergence; reject ⇒ one snapshot-conflict (envelopes via `mutation_envelope_from_edit`).

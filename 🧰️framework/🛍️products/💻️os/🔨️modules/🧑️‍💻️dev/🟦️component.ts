@@ -18,6 +18,11 @@ const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, import.meta.env.VITE_SEMIO_PL
 const pluginFilter = boot.variant;
 const appId = import.meta.env.VITE_SEMIO_APP_ID ?? boot.defaultAppId;
 
+/** @emoji 👁️✏️ Boot-time surface role (contract §5): `VITE_SEMIO_APP_ROLE` is `"viewer"`|`"editor"`,
+ * default `"editor"` — dev boots the editor unless the env var explicitly asks for the viewer. Mirrors
+ * `resolveBootAppRole`'s own validation so an unrecognized value falls back rather than throwing. */
+const appRole: "viewer" | "editor" = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";
+
 /** @emoji 🏷️ Baked-in shell brand for this artifact (registry `brand` column or `SEMIO_BRAND`); no `?query=` override. */
 const brand = resolveShellBrandById(import.meta.env.VITE_SEMIO_BRAND || undefined);
 
@@ -39,7 +44,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    void bootFrameworkOs({ plugin: pluginFilter, plugins, appId, locks, defaults, brand }).catch((error) => {
+    void bootFrameworkOs({ plugin: pluginFilter, plugins, appId, appRole, locks, defaults, brand }).catch((error) => {
       console.error("[DEBUG] os-dev react boot failed", error);
     });
   }

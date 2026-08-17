@@ -12,6 +12,17 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
+    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+            code: message.code.clone(),
+            severity: message.level,
+            span: dsl::TextSpan::at(1, 1),
+            message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
+            expected: None,
+            scope: dsl::FaultScope::default(),
+        }));
+    }
+
     fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [StructuralAnalysisView]".into())]), Part21Value::Str("2;1".into())],
@@ -26,16 +37,18 @@ pub mod derived_construction {
     #[derive(Clone, Debug)]
     pub struct Ifc2x3SavBuilderConstruction {
         snapshot: Ifc2x3Snapshot,
+        diagnostics: Vec<Diagnostic>,
     }
 
     impl Ifc2x3SavBuilderConstruction {
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None } }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
 
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
         pub fn add_load_group(mut self, id: u64) -> Self {
-            apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] } });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] } });
+            stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
     }
@@ -55,7 +68,7 @@ pub mod derived_construction {
             Self::new()
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
+            Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
@@ -63,20 +76,21 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let hard: Vec<Diagnostic> = check_sav_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
+            let Self { snapshot, mut diagnostics } = self;
+            diagnostics.extend(check_sav_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
+            if diagnostics.is_empty() {
+                Ok(snapshot)
             } else {
-                Err(hard)
+                Err(diagnostics)
             }
         }
     }
@@ -247,8 +261,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3SavBuilderFacets {
-        construction: derived_construction::Ifc2x3SavBuilderConstruction,
-        analysis: derived_analysis::Ifc2x3SavAnalyzerAnalysis,
+        construction: Ifc2x3SavBuilderConstruction,
+        analysis: Ifc2x3SavAnalyzerAnalysis,
         composition: super::io::derived_composition::Ifc2x3SavComposerComposition,
     }
     builder: Ifc2x3SavBuilder,

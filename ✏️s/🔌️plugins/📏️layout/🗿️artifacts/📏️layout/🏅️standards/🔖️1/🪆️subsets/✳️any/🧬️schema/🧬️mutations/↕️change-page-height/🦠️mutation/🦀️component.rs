@@ -14,7 +14,7 @@ pub struct ChangePageHeight {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageHeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "page-height", kind: "change-page-height", record: "ChangedPageHeight" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_page_height(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

@@ -32,7 +32,7 @@ page-lit = "[" box-lit "," opt-box "," INT "," hex "]"
 
 # `enc_pdf_object`/`dec_pdf_object` -- restated (same shape as ../../🧬️mutations/📝️text/
 # 📖️component.grammar.semio's own `pdf-object`) so this facet grammar is self-contained.
-pdf-object = "Z" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "A" "[" pdf-object-item* "]" | "D" "[" dict-entry-item* "]" | "F" "[" objref-lit "]" | "T" "[" "[" dict-entry-item* "]" "," hex "," opt-hex "]"
+pdf-object = "Z" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "A" "[" pdf-object-item* "]" | "D" "[" dict-entry-item* "]" | "F" "[" objref-lit "]" | "T" "[" "[" dict-entry-item* "]" "," hex "," stream-filters "]"
 pdf-object-item = pdf-object ","?
 dict-entry-item = dict-entry-lit ","?
 dict-entry-lit = "[" hex "," pdf-object "]"
@@ -73,7 +73,10 @@ array-added-item = INT ":" pdf-object ","?
 # `encode_option` over the inner `Option<String>`).
 value-diff = "L" "[" pdf-object "]" | "B" "[" bit "]" | "I" "[" INT "]" | "R" "[" number "]" | "S" "[" hex "]" | "N" "[" hex "]" | "F" "[" objref-lit "]" | "A" "[" array-diff-body "]" | "D" "[" dict-diff-body "]" | "T" "[" stream-diff-item* "]"
 stream-diff-item = stream-diff-entry ","?
-stream-diff-entry = "D" ":" dict-diff-body | "A" ":" hex | "F" ":" opt-hex
+stream-diff-entry = "D" ":" dict-diff-body | "A" ":" hex | "F" ":" stream-filters
+stream-filters = "[" stream-filter-item* "]"
+stream-filter-item = stream-filter ","?
+stream-filter = "H" | "A" | "L" | "F" "[" "0" "]" | "F" "[" "1" "," INT "," INT "," INT "," INT "]"
 
 # `enc_objects_diff`/`dec_objects_diff` -- `(id,gen)`-keyed collection triple (the recipe's
 # "numeric id" key kind, using the full `ObjRef`).

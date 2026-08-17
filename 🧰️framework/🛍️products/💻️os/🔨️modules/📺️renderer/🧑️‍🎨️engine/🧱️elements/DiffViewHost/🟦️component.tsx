@@ -5,8 +5,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useMemo, useState, type MouseEvent } from "react";
-import { type ComponentSceneHostProps } from "@semio-tech/framework";
+import { useCallback, useContext, useMemo, useState, type MouseEvent, type ReactElement } from "react";
+import { type ComponentSceneHostProps, type Conflict } from "@semio-tech/framework";
 import { cn, ContextMenuController, useLabel, type ContextMenuItem } from "@semio-tech/ui-react";
 import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../Interpreter/🟦️component.tsx";
 import { WindowInstanceIdContext } from "../World3dHost/🟦️component.tsx";
@@ -129,6 +129,26 @@ function SplitDiffPane({ rows, side }: { readonly rows: readonly SplitRow[]; rea
   );
 }
 //#endregion Rendering
+
+//#region 🔖️ConflictDiff
+/** ⚔️ Builds this host's `before`/`after` pair for a selected open {@link Conflict} (contract freeze
+ * §C5/§C9) — `before` is the caller-supplied current-document text (empty when no synchronous
+ * snapshot is in hand yet), `after` is the incoming `Quarantined` envelopes pretty-printed, or a
+ * placeholder naming the touched edits for a `Degraded` conflict (there is no separate "incoming"
+ * payload to diff against once a degraded batch already applied). */
+export function conflictDiffText(conflict: Conflict, current: string): { readonly before: string; readonly after: string } {
+  if (conflict.kind.kind === "quarantined") return { before: current, after: JSON.stringify(conflict.kind.envelopes, null, 2) };
+  return { before: current, after: `// degraded edits: ${conflict.kind.edit_ids.join(", ")}` };
+}
+
+/** ⚔️ Renders a `before`/`after` conflict pair through this host's own unified diff renderer —
+ * `ChromePanels`' Conflicts panel reuses it directly for "incoming vs current" without needing a
+ * full `DiffViewScene` component-scene node (see {@link conflictDiffText}). */
+export function ConflictDiffPreview({ before, after }: { readonly before: string; readonly after: string }): ReactElement {
+  const lines = useMemo(() => diffLines(before.split("\n"), after.split("\n")), [before, after]);
+  return <UnifiedDiff lines={lines} />;
+}
+//#endregion 🔖️ConflictDiff
 
 //#region Component
 /** @emoji 🆚️ Renders a `DiffViewScene`: a minimal, dependency-free line-based diff between `before`/`after`, unified (default) or split per `mode`. */

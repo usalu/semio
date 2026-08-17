@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "./📦️index.ts",
-    "./globals.css": "../../🎛️apps/🎬️present/📺️renderer/⚛️react/🎨️globals.css"
+    "./globals.css": "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🎨️globals.css"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

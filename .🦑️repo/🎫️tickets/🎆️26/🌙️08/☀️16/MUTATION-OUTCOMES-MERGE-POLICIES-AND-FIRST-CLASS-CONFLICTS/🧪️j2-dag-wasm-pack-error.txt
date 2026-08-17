@@ -1,0 +1,66 @@
+Captured via mcp__Claude_Browser__preview_logs against serverId a37e46a0-3c8a-4b62-bf44-7600f9f09cf5
+("dag-react" = `bun ./📜️script.ts dev dag`, port 6017), after the shared target/ dir lock held by
+sibling lanes' concurrent `cargo test -p semio-framework-os-kernel` / `cargo check -p semio-s-plugin-space`
+runs cleared.
+
+Relevant tail (full wasm-pack build log includes ~40 unrelated pre-existing warnings before this; only
+the terminal error is reproduced here):
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/././../../🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs:8650:43
+     |
+8650 |             Ok(Self { store: RefCell::new(store) })
+     |                              ------------ ^^^^^ expected `ArtifactStore<DagSnapshot, DagMutation>`, found `Result<ArtifactStore<..., ...>, ...>`
+     |                              |
+     |                              arguments to this function are incorrect
+     |
+     = note: expected struct `ArtifactStore<_, _>`
+                  found enum `Result<ArtifactStore<_, _>, VcsError>`
+note: associated function defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cell.rs:971:18
+     |
+ 971 |     pub const fn new(value: T) -> RefCell<T> {
+     |                  ^^^
+help: use the `?` operator to extract the `Result<ArtifactStore<DagSnapshot, DagMutation>, VcsError>` value, propagating a `Result::Err` value to the caller
+     |
+8650 |             Ok(Self { store: RefCell::new(store?) })
+     |                                                +
+
+Source at time of capture (🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs:8628-8651):
+
+    #[cfg(target_arch = "wasm32")]
+    mod wasm_bridge {
+        use super::*;
+        use std::cell::RefCell;
+        use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen]
+        pub struct DagSnapshotVcs {
+            store: RefCell<DagStore>,
+        }
+
+        #[wasm_bindgen]
+        impl DagSnapshotVcs {
+            #[wasm_bindgen(constructor)]
+            pub fn new(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
+                let store = match envelope_json {
+                    Some(json) => {
+                        let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                        DagStore::new(envelope)
+                    }
+                    None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)),
+                };
+                Ok(Self { store: RefCell::new(store) })
+            }
+
+`DagStore::new` resolves to `ArtifactStore::<DagSnapshot, DagMutation>::new`, whose signature at
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:4289 is:
+
+    pub fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Result<Self, VcsError> {
+
+`git status --porcelain` on the dag component.rs file returned empty — this is the tree's actual
+committed state, not an uncommitted mid-edit from a concurrent session.
+
+`mod wasm_bridge` is gated `#[cfg(target_arch = "wasm32")]`, so this break is invisible to every
+native `cargo check`/`cargo test` run in this ticket's fan-out lanes and only surfaces on an actual
+`wasm-pack build --target web` (i.e. a real dev-server boot).

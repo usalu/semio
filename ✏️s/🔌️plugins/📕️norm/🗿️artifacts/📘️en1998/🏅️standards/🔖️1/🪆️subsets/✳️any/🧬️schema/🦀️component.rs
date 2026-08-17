@@ -352,14 +352,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<En1998Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let d = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation, &self.snapshot);
-            self.snapshot = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&d, &self.snapshot);
-            (self, d)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {

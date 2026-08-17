@@ -24,7 +24,7 @@ pub fn update_camera(camera: CameraJson) -> Procedural2dMutation {
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for UpdateCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

@@ -12,7 +12,7 @@ pub struct DeleteProduct {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for DeleteProduct {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "product", kind: "delete-product", record: "DeletedProduct" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {

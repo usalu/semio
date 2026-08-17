@@ -67,10 +67,15 @@ pub enum MdMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path.
-pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> MdDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -78,8 +83,8 @@ pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> Md
 impl Mutation<MdSnapshot> for MdMutation {
     type Diff = MdDiff;
 
-    fn diff(&self, base: &MdSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             MdMutation::NoMutation => MdDiff::default(),
             MdMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             MdMutation::InsertBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())),
@@ -90,7 +95,7 @@ impl Mutation<MdSnapshot> for MdMutation {
                 Some(MdBlock::Paragraph { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) })),
                 _ => MdDiff::default(),
             },
-        }
+        })
     }
 
     fn inverse(&self, base: &MdSnapshot) -> Vec<Self> {
@@ -193,7 +198,7 @@ fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
     }
 }
 
-impl protocol::OpText for MdMutation {
+impl OpText for MdMutation {
     fn print_op(&self) -> String {
         print_md_mutation(self)
     }

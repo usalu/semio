@@ -5,6 +5,12 @@ use crate::{BlockCamera3d};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ScaleCamera3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
+    if !payload.new_zoom.is_finite() || payload.new_zoom <= 0.0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Camera zoom {} is not a finite positive number.", payload.new_zoom), ["camera3d"]);
+    }
+    if payload.new_zoom == base.camera3d.zoom {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Camera zoom is already {}.", payload.new_zoom));
+    }
     protocol::MutationOutcome::new(Block5dDiff { camera3d: Some(BlockCamera3d { zoom: payload.new_zoom, ..base.camera3d.clone() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

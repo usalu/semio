@@ -1,11 +1,32 @@
-# 💡️ elongation glTF inference leaf GraphQL facet.
-type GltfElongationInferenceV1 {
-  id: ID!
+# 💡️ Typed elongation glTF inference result.
+type GltfElongationQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: Int!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfElongationProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfElongationInferenceV1 {
+  value: Float
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfElongationQualityV1!
+  provenance: GltfElongationProvenanceV1!
 }

@@ -34,8 +34,9 @@ pub struct PluginBuilder<State> {
     /// 🗂️ Contributions onto artifact kinds owned by a dependency — resolved against `plugin_id` in
     /// `try_build`, once it is known to be final.
     contributions: Vec<ArtifactContribution>,
-    /// 📖️ One non-capturing `(document_schema, kinds)` provider per `.document_app::<A>()` call —
-    /// committed into the process-wide owner mutation roster by `try_build`.
+    /// 📖️ One non-capturing `(document_schema, kinds)` provider per `.document_app_mutation_roster::
+    /// <A>()`/`.viewer_mutation_roster::<V>()`/`.editor_mutation_roster::<E>()` call — committed into
+    /// the process-wide owner mutation roster by `try_build`.
     owner_mutation_rosters: Vec<fn() -> (&'static str, &'static [protocol::SemanticDescriptor])>,
     apps: HashMap<String, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>>,
     app_defs: Vec<(App, Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static>)>,
@@ -199,13 +200,37 @@ impl PluginBuilder<Ready> {
     }
 
     /// 🧬️ Declares a typed document app factory and app-schema descriptor for transactional assembly.
-    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self
-    where
-        A::Mutation: protocol::SemanticMutation<A::Snapshot>,
-    {
+    /// No `SemanticMutation` bound here — `ArtifactApp` itself only requires plain `protocol::
+    /// Mutation` (mirrors `.editor()`/`.viewer()`, ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-
+    /// SUBSET contract §2.2). A framework-owned document app (e.g. a workflow-backed studio) may have
+    /// a `Mutation` type with no `SemanticMutation` impl at all; `document_app` still registers and
+    /// routes it. See `document_app_mutation_roster` for the separate opt-in `contributor.list-
+    /// artifact-mutations` capability (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-
+    /// STUDIOS, lane 2-0 — the bound was blocking every non-`SemanticMutation` document app, e.g.
+    /// `semio-s-plugin-space`'s `SpaceApp`/`WorkflowMutation` and `semio-s-plugin-playbook-procedural`'s
+    /// `ModuleApp`/`ModulePayloadMutation`, from linking at all).
+    pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self {
         fn app_schema<A: ArtifactApp>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             A::app_schema()
         }
+        let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
+        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
+        self.app_defs.push((app, factory));
+        self.app_schema_descriptors.push(app_schema::<A>);
+        self.document_app_ids.push(A::APP_ID);
+        self
+    }
+
+    /// 🗂️ Opt-in: registers `A`'s owner-mutation roster with `contributor.list-artifact-mutations`
+    /// (the "owner half", `crate::app::commit_owner_mutation_roster`) — see `viewer_mutation_roster`/
+    /// `editor_mutation_roster`. Requires `A::Mutation: SemanticMutation<A::Snapshot>`. Chain right
+    /// after `.document_app::<A>(app)` for a document app whose `Mutation` already derives it; skip
+    /// it for the rest — they still register and route through `.document_app::<A>(app)` alone, they
+    /// just do not contribute a roster row.
+    pub fn document_app_mutation_roster<A: ArtifactApp>(mut self) -> Self
+    where
+        A::Mutation: protocol::SemanticMutation<A::Snapshot>,
+    {
         /// 📖️ Non-capturing thunk pairing `A::DOCUMENT_SCHEMA` with its `SemanticMutation::kinds()`
         /// table — `try_build()` commits these into the process-wide owner mutation roster
         /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
@@ -216,11 +241,6 @@ impl PluginBuilder<Ready> {
         {
             (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds())
         }
-        let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
-        let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(A::default(), registry.clone())));
-        self.app_defs.push((app, factory));
-        self.app_schema_descriptors.push(app_schema::<A>);
-        self.document_app_ids.push(A::APP_ID);
         self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
     }
@@ -229,49 +249,73 @@ impl PluginBuilder<Ready> {
     /// 👁️ Declares a typed viewer app factory (read-only surface) — the `ArtifactViewer` twin of
     /// `document_app` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.4/§2.6).
     /// `def` is `Viewer::builder(V::DIALECT)...build_definition()` — already carries the derived id,
-    /// `role`, and `dialect`.
-    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, def: crate::app::AppDefinition) -> Self
-    where
-        V::Mutation: protocol::SemanticMutation<V::Snapshot>,
-    {
+    /// `role`, and `dialect`. No `SemanticMutation` bound here — `ArtifactViewer` itself only
+    /// requires plain `protocol::Mutation` (contract §2.2, decode-only); a surface always registers
+    /// and routes regardless of what `V::Mutation` is. See `viewer_mutation_roster` for the separate
+    /// opt-in `contributor.list-artifact-mutations` capability (ticket 26/08/16/ARTIFACT-VIEWERS-
+    /// AND-EDITORS-PER-SUBSET report `📓️w2-sdk2-report.md`).
+    pub fn viewer<V: crate::app::ArtifactViewer>(mut self, def: crate::app::AppDefinition) -> Self {
+        use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         fn app_schema<V: crate::app::ArtifactViewer>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
-        }
-        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
-        where
-            V::Mutation: protocol::SemanticMutation<V::Snapshot>,
-        {
-            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
         }
         let app = App { definition: def, examples: Vec::new() };
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(crate::app::ViewerApp::<V>::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self.app_schema_descriptors.push(app_schema::<V>);
+        // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
+    }
+
+    /// 🗂️ Opt-in: registers `V`'s owner-mutation roster with `contributor.list-artifact-mutations`
+    /// (the "owner half", `crate::app::commit_owner_mutation_roster`). Requires
+    /// `V::Mutation: SemanticMutation<V::Snapshot>` — implemented only by `#[derive(Mutations)]`,
+    /// not yet every dispatch enum. Chain right after `.viewer::<V>(def)` for a subset whose
+    /// `Mutation` already derives it; skip it for the rest — they still register and route through
+    /// `.viewer::<V>(def)` alone, they just do not contribute a roster row.
+    pub fn viewer_mutation_roster<V: crate::app::ArtifactViewer>(mut self) -> Self
+    where
+        V::Mutation: protocol::SemanticMutation<V::Snapshot>,
+    {
+        fn owner_mutation_roster<V: crate::app::ArtifactViewer>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        where
+            V::Mutation: protocol::SemanticMutation<V::Snapshot>,
+        {
+            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
+        }
         self.owner_mutation_rosters.push(owner_mutation_roster::<V>);
         self
     }
 
     /// ✏️ Declares a typed editor app factory (mutation-capable surface) — the `ArtifactEditor` twin
-    /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`.
-    pub fn editor<E: crate::app::ArtifactEditor>(mut self, def: crate::app::AppDefinition) -> Self
-    where
-        E::Mutation: protocol::SemanticMutation<E::Snapshot>,
-    {
+    /// of `document_app`. `def` is `Editor::builder(E::DIALECT)...build_definition()`. No
+    /// `SemanticMutation` bound — see `viewer` above and `editor_mutation_roster` below.
+    pub fn editor<E: crate::app::ArtifactEditor>(mut self, def: crate::app::AppDefinition) -> Self {
+        use semio_framework::kernel::{ArtifactKind, Rights, Scope};
         fn app_schema<E: crate::app::ArtifactEditor>() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             E::app_schema()
-        }
-        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
-        where
-            E::Mutation: protocol::SemanticMutation<E::Snapshot>,
-        {
-            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
         }
         let app = App { definition: def, examples: Vec::new() };
         let registry = crate::app::AppActionRegistry::from_definition(&app.definition);
         let factory: Box<dyn Fn() -> Box<dyn PluginApp> + Send + 'static> = Box::new(move || Box::new(crate::app::VcsArtifactApp::with_registry(crate::app::EditorApp::<E>::default(), registry.clone())));
         self.app_defs.push((app, factory));
         self.app_schema_descriptors.push(app_schema::<E>);
+        // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
+        self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
+    }
+
+    /// 🗂️ Opt-in: registers `E`'s owner-mutation roster — see `viewer_mutation_roster`.
+    pub fn editor_mutation_roster<E: crate::app::ArtifactEditor>(mut self) -> Self
+    where
+        E::Mutation: protocol::SemanticMutation<E::Snapshot>,
+    {
+        fn owner_mutation_roster<E: crate::app::ArtifactEditor>() -> (&'static str, &'static [protocol::SemanticDescriptor])
+        where
+            E::Mutation: protocol::SemanticMutation<E::Snapshot>,
+        {
+            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
+        }
         self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
         self
     }
@@ -445,8 +489,8 @@ mod plugin_builder_dependency_tests {
         delta: i32,
     }
     impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
-        fn apply(&self, base: &DependencyTestSnapshot) -> DependencyTestSnapshot {
-            DependencyTestSnapshot { value: base.value + self.delta }
+        fn apply(&self, base: &DependencyTestSnapshot) -> protocol::MutationApplyResult<DependencyTestSnapshot> {
+            Ok(DependencyTestSnapshot { value: base.value + self.delta })
         }
         fn absorb(&mut self, other: Self) {
             self.delta += other.delta;

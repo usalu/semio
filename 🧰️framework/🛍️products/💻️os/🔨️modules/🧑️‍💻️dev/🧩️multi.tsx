@@ -21,6 +21,11 @@ const MULTI_HARNESS_PANES = [
 ] as const;
 
 type MultiHarnessPane = (typeof MULTI_HARNESS_PANES)[number];
+
+/** @emoji 👁️✏️ Boot-time surface role (contract §5), shared by every harness pane — mirrors
+ * `🟦️component.ts`'s own `VITE_SEMIO_APP_ROLE` resolution so both dev entry points agree on the same
+ * default-editor, viewer-on-request rule. */
+const MULTI_HARNESS_APP_ROLE: "viewer" | "editor" = import.meta.env.VITE_SEMIO_APP_ROLE === "viewer" ? "viewer" : "editor";
 //#endregion 🐚️MultiShellHarnessPanes
 
 function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): React.ReactElement {
@@ -38,7 +43,7 @@ function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): R
       </div>
       <div style={{ flex: "1 1 0", minHeight: 0, position: "relative" }}>
         {mounted ? (
-          <FrameworkOsShell shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} locks={{ locale: pane.locale, appearance: pane.appearance }} />
+          <FrameworkOsShell shellId={pane.shellId} storageNamespace={pane.shellId} pluginFilter={boot.variant} plugins={boot.plugins} appId={boot.defaultAppId} appRole={MULTI_HARNESS_APP_ROLE} locks={{ locale: pane.locale, appearance: pane.appearance }} />
         ) : null}
       </div>
     </div>

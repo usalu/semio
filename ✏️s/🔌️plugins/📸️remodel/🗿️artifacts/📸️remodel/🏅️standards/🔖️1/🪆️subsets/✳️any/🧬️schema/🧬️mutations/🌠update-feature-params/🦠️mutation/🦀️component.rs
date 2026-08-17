@@ -23,7 +23,7 @@ pub fn update_feature_params(params: FeatureParams) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateFeatureParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "feature-params", kind: "update-feature-params", record: "UpdatedFeatureParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

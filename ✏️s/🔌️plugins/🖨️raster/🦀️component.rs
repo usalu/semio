@@ -14,7 +14,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .version("0.1.0")
         .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::raster::RasterPlayApp>(crate::editor::raster::create_raster_app())
+        .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()
         .viewer::<crate::viewer::raster::RasterViewer>(crate::viewer::raster::create_raster_viewer())
+        .viewer_mutation_roster::<crate::viewer::raster::RasterViewer>()
         .try_build()
 }
 

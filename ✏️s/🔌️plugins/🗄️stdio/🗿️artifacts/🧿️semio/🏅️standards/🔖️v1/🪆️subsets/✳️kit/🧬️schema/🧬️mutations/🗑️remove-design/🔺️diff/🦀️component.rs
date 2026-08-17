@@ -5,8 +5,15 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::{SemioKi
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveDesign, base: &SemioKitSnapshot) -> SemioKitDiff {
+pub fn diff(payload: &RemoveDesign, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
+    if !base.designs.iter().any(|d| d.id == payload.id) {
+        return protocol::MutationOutcome::error(
+            "mutation.target-missing",
+            format!("Design \"{}\" does not exist.", payload.id),
+            [payload.id.clone()],
+        );
+    }
     let designs: Vec<_> = base.designs.iter().filter(|d| d.id != payload.id).cloned().collect();
-    SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() }
+    protocol::MutationOutcome::new(SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() })
 }
 //#endregion 🔖️Diff

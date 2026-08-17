@@ -22,7 +22,7 @@ pub fn delete_camera_calibration(camera_id: String) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteCameraCalibration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "camera-calibration", kind: "delete-camera-calibration", record: "DeletedCameraCalibration" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

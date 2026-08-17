@@ -4,7 +4,6 @@
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -27,14 +26,14 @@ pub enum Mp3Mutation {
 impl Mutation<Mp3Snapshot> for Mp3Mutation {
     type Diff = Mp3Diff;
 
-    fn diff(&self, base: &Mp3Snapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
             Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()),
             Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()),
             Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()),
-        }
+        })
     }
 
     fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
@@ -50,10 +49,15 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
-pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> Mp3Diff {
-    let diff = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
-    *snapshot = <Mp3Diff as protocol::MutationDiff<Mp3Snapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
+    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Mutation
 
@@ -64,7 +68,7 @@ pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) ->
 /// needing a hand-rolled bridge. This is a SEPARATE wire format from the subset's own
 /// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
 /// comment) — an op is always plain JSON here.
-impl protocol::OpText for Mp3Mutation {
+impl OpText for Mp3Mutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
@@ -73,7 +77,7 @@ impl protocol::OpText for Mp3Mutation {
     }
 }
 
-impl protocol::OpBinary for Mp3Mutation {
+impl OpBinary for Mp3Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
@@ -123,7 +127,7 @@ mod tests {
             let returned = apply_mp3_mutation(&mut via_apply, &m);
             let direct = m.diff(&base);
             assert_eq!(direct, returned, "diff mismatch for {m:?}");
-            assert_eq!(direct.apply(&base), via_apply, "apply mismatch for {m:?}");
+            assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -141,8 +145,8 @@ mod tests {
             assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
             let d = m.diff(&base);
-            let applied = d.apply(&base);
-            let undone = d.inverse(&base).apply(&applied);
+            let applied = d.diff().apply(&base).unwrap();
+            let undone = d.diff().inverse(&base).apply(&applied).unwrap();
             assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
         }
     }

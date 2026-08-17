@@ -8,9 +8,9 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { veilClass, glassClass } from "../🏷️ClassNames/🟦️component.tsx";
-import { useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { veilClass, glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 import { CloseIconAlt } from "../🔣️Icons/🟦️component.tsx";

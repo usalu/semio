@@ -34,8 +34,10 @@ impl Default for JackPresence {
 }
 
 impl protocol::MutationDiff<JackPresence> for JackPresence {
-    fn apply(&self, _base: &JackPresence) -> JackPresence {
-        self.clone()
+    fn apply(&self, _base: &JackPresence) -> protocol::MutationApplyResult<JackPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.dxf` to stdio.txt.
 
 use crate::artifacts::dxf::DxfSnapshot;
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.

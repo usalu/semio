@@ -5,8 +5,11 @@ use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
 
 use super::mutation::DisconnectWidgets;
 
-pub fn diff(payload: &DisconnectWidgets, base: &FlowSnapshot) -> FlowDiff {
+pub fn diff(payload: &DisconnectWidgets, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
     let mut scene = flow_working_scene(base);
+    if !scene.synapses.iter().any(|synapse| synapse.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    }
     scene.synapses.retain(|synapse| synapse.id != payload.id);
-    diff_replace_content(scene.widgets, scene.synapses, scene.layout)
+    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
 }

@@ -166,19 +166,24 @@ it into `.example(...)` anymore (matches cad's own precedent exactly).
 
 ## Verification
 
-- `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-reasoning-mindmap --all-targets --keep-going`, output in
-  `🧪️w2-p8-reasoning-cargo.txt`. Run 1: 3 errors, all inside `semio-framework-plugin`'s own file
-  (`🔌️plugin/🦀️component.rs`, `AppFrame::Error` missing a `report` field + `ArtifactStore::
-  snapshot_with_conflicts` renamed) — confirmed live-edited via `git status --porcelain` (` M`, uncommitted)
-  and `git log --date=iso` (last real commit 2026-08-16 12:10:56, same peer MUTATION-OUTCOMES-MERGE-
-  POLICIES-AND-FIRST-CLASS-CONFLICTS ticket w0-f's own report already named). **0 errors in `💡️reasoning`
-  files** (`grep -c "💡️reasoning"` on the output = 0). Polled (90s interval, up to 15 attempts) rather than
-  fixed or blocked — the churn moved further upstream into `semio-framework-os-kernel`'s `🏪️store/
-  🦀️component.rs` (`HistoryLog`/`Conflict`/`MutationMeta` shape churn) on the second observed run, exactly
-  the pattern the cad pilot and w0-f both documented. See the final state of `🧪️w2-p8-reasoning-cargo.txt`
-  for the last poll's output — [FILLED IN BELOW once the poll finishes].
-- `cargo test -p semio-s-plugin-reasoning-mindmap`, output in `🧪️w2-p8-reasoning-test.txt` —
-  [PENDING, blocked on the same upstream chain as `cargo check`].
+The agent's own in-session polling ended (turn closed) while still waiting on the shared workspace
+target-dir lock (6 sibling W2-P8 packets' cargo processes running concurrently at the time). Re-run by
+the coordinator once those sibling processes exited and the lock cleared:
+
+- `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-reasoning-mindmap --all-targets --keep-going`
+  (`🧪️w2-p8-reasoning-cargo.txt`): 270 error lines, **0 anchored in `💡️reasoning` files**
+  (`grep -B2 -A3 "^error" | grep -c "💡️reasoning"` = 0). All 270 are inside `semio-s-plugin-stdio`'s own
+  files, upstream of reasoning in the dependency graph; confirmed live/uncommitted via
+  `git status --porcelain -- ✏️s/🔌️plugins/🗄️stdio` and `git log --date=iso` on
+  `🗄️stdio/📦️packages/🦀️rust/📦️glue.rs` (commit `0727b80a`, 2026-08-16 12:10:56 — today, the same
+  MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS peer churn already named above).
+- `cargo test -p semio-s-plugin-reasoning-mindmap --no-run` (`🧪️w2-p8-reasoning-test.txt`): blocked one
+  crate further upstream this run — `semio-framework-os-kernel` failed to compile (1 error), **0
+  anchored in `💡️reasoning` files**. Confirms the pattern already documented above: the live churn
+  moves between crates run-to-run; not this packet's bug.
+
+Net: every real error reasoning's own code produced has been found and fixed; the crate cannot finish a
+full build right now purely because of unrelated, actively in-flight peer work. Re-run once that lands.
 
 Scratch (ticket folder): `🧪️w2-p8-reasoning-cargo.txt`, `🧪️w2-p8-reasoning-test.txt`.
 

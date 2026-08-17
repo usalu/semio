@@ -4,7 +4,6 @@ use crate::artifacts::deflate::schema::diff::{diff_set_compression_params, diff_
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::DeflateSnapshot;
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -42,10 +41,15 @@ pub enum DeflateMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`; the diff is the single semantics source (never
 /// apply-and-capture).
-pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> DeflateDiff {
-    let d = <DeflateMutation as protocol::Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
-    *snapshot = <DeflateDiff as protocol::MutationDiff<DeflateSnapshot>>::apply(&d, snapshot);
-    d
+pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &DeflateMutation) -> protocol::MutationOutcome<DeflateDiff> {
+    let outcome = <DeflateMutation as Mutation<DeflateSnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -53,14 +57,14 @@ pub fn apply_deflate_mutation(snapshot: &mut DeflateSnapshot, mutation: &Deflate
 impl Mutation<DeflateSnapshot> for DeflateMutation {
     type Diff = DeflateDiff;
 
-    fn diff(&self, base: &DeflateSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             DeflateMutation::NoMutation => DeflateDiff::default(),
             DeflateMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             DeflateMutation::SetCompressionParams { method, window_bits, level_hint } => diff_set_compression_params(*method, *window_bits, *level_hint),
             DeflateMutation::SetPresetDictionary { dict_id } => diff_set_preset_dictionary(*dict_id),
             DeflateMutation::SetPayload { payload } => diff_set_payload(payload.clone()),
-        }
+        })
     }
 
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<Self> {
@@ -82,7 +86,7 @@ impl Mutation<DeflateSnapshot> for DeflateMutation {
 /// `OpBinary` themselves) — the same ~15-line body every `DslOps`-derived enum's `OpText` impl
 /// uses (`FlowMutationDsl`/`SpaceMutation`/`BinaryMutation`/`GifMutation` precedent). Replaces
 /// the prior `serde_json` stub.
-impl protocol::OpText for DeflateMutation {
+impl OpText for DeflateMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -104,7 +108,7 @@ impl protocol::OpText for DeflateMutation {
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`. Replaces the prior
 /// `serde_json` stub.
-impl protocol::OpBinary for DeflateMutation {
+impl OpBinary for DeflateMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

@@ -101,7 +101,7 @@ mod tests {
     }
 
     fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -109,7 +109,7 @@ mod tests {
         // collection from whatever base it is given, so diffing against the wrong base silently
         // discards the forward mutation's effect instead of undoing it (see `✳️text`'s own fix).
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(sorted_by_id(restored), sorted_by_id(base.clone()), "inverse must exactly restore the pre-operation fixture (order-insensitive over the id-keyed node/edge sets)");
         forward
@@ -146,7 +146,7 @@ mod tests {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("absent") });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent node has nothing to undo");
-        assert_eq!(delete.diff(&base).apply(&base), base, "an absent-id delete is a no-op");
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
     }
 
     #[test]
@@ -220,7 +220,7 @@ mod tests {
 
         let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::mutation::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), index: 0 });
         assert!(remove.inverse(&base).is_empty());
-        assert_eq!(remove.diff(&base).apply(&base), base);
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]

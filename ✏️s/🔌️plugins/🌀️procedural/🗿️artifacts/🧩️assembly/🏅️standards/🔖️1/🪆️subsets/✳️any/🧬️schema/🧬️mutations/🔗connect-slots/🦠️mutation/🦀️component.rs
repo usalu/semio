@@ -23,7 +23,7 @@ pub fn connect_slots(index: usize, edge: AssemblySlotEdge) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for ConnectSlots {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "slots", kind: "connect-slots", record: "ConnectedSlots" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

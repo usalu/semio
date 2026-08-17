@@ -1,11 +1,34 @@
-# 💡️ holes glTF inference leaf GraphQL facet.
-type GltfHolesInferenceV1 {
-  id: ID!
+# 💡️ Typed holes glTF inference result.
+scalar GltfHolesUInt64V1
+
+type GltfHolesQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: GltfHolesUInt64V1!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfHolesProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfHolesInferenceV1 {
+  value: GltfHolesUInt64V1
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfHolesQualityV1!
+  provenance: GltfHolesProvenanceV1!
 }

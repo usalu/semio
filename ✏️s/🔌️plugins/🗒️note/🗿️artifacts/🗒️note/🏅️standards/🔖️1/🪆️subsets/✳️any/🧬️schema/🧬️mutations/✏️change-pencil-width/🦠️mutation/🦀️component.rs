@@ -22,7 +22,7 @@ pub fn change_pencil_width(new_width: Option<f64>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangePencilWidth {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "pencil-width", kind: "change-pencil-width", record: "ChangedPencilWidth" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

@@ -20,7 +20,7 @@ use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -345,29 +345,56 @@ where
     }
 }
 
-fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+fn apply_indexed<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     T: Clone,
 {
-    for m in &diff.modified {
-        if let Some(item) = items.get_mut(m.index) {
-            apply_item(item, &m.diff);
+    let mut removed = std::collections::HashSet::new();
+    for &idx in &diff.removed {
+        if idx >= items.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec!["removed".to_string(), idx.to_string()]));
         }
+        if !removed.insert(idx) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec!["removed".to_string(), idx.to_string()]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for m in &diff.modified {
+        if m.index >= items.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec!["modified".to_string(), m.index.to_string()]));
+        }
+        if removed.contains(&m.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec!["modified".to_string(), m.index.to_string()]));
+        }
+        if !modified.insert(m.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec!["modified".to_string(), m.index.to_string()]));
+        }
+    }
+    let final_len = items.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for add in &diff.added {
+        if add.index >= final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec!["added".to_string(), add.index.to_string()]));
+        }
+        if !added.insert(add.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec!["added".to_string(), add.index.to_string()]));
+        }
+    }
+    for m in &diff.modified {
+        let item = items.get_mut(m.index).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec!["modified".to_string(), m.index.to_string()]))?;
+        apply_item(item, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.index.to_string()]))?;
     }
     let mut removed_sorted = diff.removed.clone();
     removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    removed_sorted.dedup();
     for idx in removed_sorted {
-        if idx < items.len() {
-            items.remove(idx);
-        }
+        items.remove(idx);
     }
     let mut additions: Vec<&IndexAdded<T>> = diff.added.iter().collect();
     additions.sort_by_key(|a| a.index);
     for add in additions {
-        let at = add.index.min(items.len());
-        items.insert(at, add.item.clone());
+        items.insert(add.index, add.item.clone());
     }
+    Ok(())
 }
 
 fn inverse_indexed<T, D>(base_items: &[T], diff: &IndexedTripleDiff<D, T>, inverse_item: impl Fn(&T, &D) -> D) -> IndexedTripleDiff<D, T>
@@ -542,20 +569,52 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
 {
+    let keys: Vec<K> = items.iter().map(&key_of).collect();
+    for key in &diff.removed {
+        if !keys.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
+        }
+    }
+    for (index, key) in diff.removed.iter().enumerate() {
+        if diff.removed[..index].contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
+        }
+    }
+    let mut modified_keys = Vec::new();
+    for modified in &diff.modified {
+        if !keys.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
+        }
+        if modified_keys.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
+        }
+        modified_keys.push(modified.key.clone());
+    }
+    let mut added_keys = Vec::new();
+    for item in &diff.added {
+        let key = key_of(item);
+        if keys.contains(&key) || added_keys.contains(&key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at(["added"]));
+        }
+        added_keys.push(key);
+    }
     items.retain(|i| !diff.removed.contains(&key_of(i)));
     for m in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|i| key_of(i) == m.key) {
-            apply_item(item, &m.diff);
-        }
+        let item = items.iter_mut().find(|i| key_of(i) == m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]))?;
+        apply_item(item, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for item in &diff.added {
         items.push(item.clone());
     }
+    Ok(())
 }
 
 fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
@@ -702,30 +761,33 @@ fn diff_document(base: &DocxDocument, other: &DocxDocument) -> Option<DocxDocume
     }
 }
 
-fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) {
+fn apply_block(block: &mut DocxBlock, diff: &DocxBlockDiff) -> MutationApplyResult<()> {
     match diff {
         DocxBlockDiff::Replace { block: new } => *block = new.clone(),
         DocxBlockDiff::Paragraph(pd) => {
-            if let DocxBlock::Paragraph(p) = block {
-                if let Some(rd) = &pd.runs {
-                    apply_indexed(&mut p.runs, rd, apply_run);
-                }
-                if let Some(s) = &pd.style {
-                    p.style = s.clone();
-                }
+            let DocxBlock::Paragraph(p) = block else {
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "paragraph diff targets a non-paragraph block"));
+            };
+            if let Some(rd) = &pd.runs {
+                apply_indexed(&mut p.runs, rd, apply_run).map_err(|error| error.under(["runs"]))?;
+            }
+            if let Some(s) = &pd.style {
+                p.style = s.clone();
             }
         }
         DocxBlockDiff::Table(td) => {
-            if let DocxBlock::Table(t) = block {
-                if let Some(rd) = &td.rows {
-                    apply_indexed(&mut t.rows, rd, apply_row);
-                }
+            let DocxBlock::Table(t) = block else {
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "table diff targets a non-table block"));
+            };
+            if let Some(rd) = &td.rows {
+                apply_indexed(&mut t.rows, rd, apply_row).map_err(|error| error.under(["rows"]))?;
             }
         }
     }
+    Ok(())
 }
 
-fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) {
+fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.text {
         run.text = v.clone();
     }
@@ -738,60 +800,143 @@ fn apply_run(run: &mut DocxRun, diff: &DocxRunDiff) {
     if let Some(v) = diff.underline {
         run.underline = v;
     }
+    Ok(())
 }
 
-fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
+fn apply_row(row: &mut DocxTableRow, diff: &DocxTableRowDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_indexed(&mut row.cells, cd, apply_cell);
+        apply_indexed(&mut row.cells, cd, apply_cell).map_err(|error| error.under(["cells"]))?;
     }
+    Ok(())
 }
 
-fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
+fn apply_cell(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.blocks {
-        apply_indexed(&mut cell.blocks, bd, apply_block);
+        apply_indexed(&mut cell.blocks, bd, apply_block).map_err(|error| error.under(["blocks"]))?;
     }
+    Ok(())
 }
 
-fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) {
+fn apply_style(style: &mut DocxStyle, diff: &DocxStyleDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.name {
         style.name = v.clone();
     }
     if let Some(v) = &diff.based_on {
         style.based_on = v.clone();
     }
+    Ok(())
 }
 
-fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) {
+fn apply_document_diff(doc: &mut DocxDocument, diff: &DocxDocumentDiff) -> MutationApplyResult<()> {
     if let Some(bd) = &diff.body {
-        apply_indexed(&mut doc.body, bd, apply_block);
+        apply_indexed(&mut doc.body, bd, apply_block).map_err(|error| error.under(["body"]))?;
     }
     if let Some(sd) = &diff.styles {
-        apply_named(&mut doc.styles, sd, |s| s.id.clone(), apply_style);
+        apply_named(&mut doc.styles, sd, |s| s.id.clone(), apply_style).map_err(|error| error.under(["styles"]))?;
     }
+    Ok(())
 }
 
 fn block_with_diff_applied(block: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlock {
     let mut out = block.clone();
-    apply_block(&mut out, diff);
+    apply_block_for_absorb(&mut out, diff);
     out
 }
 
 fn run_with_diff_applied(run: &DocxRun, diff: &DocxRunDiff) -> DocxRun {
     let mut out = run.clone();
-    apply_run(&mut out, diff);
+    apply_run_for_absorb(&mut out, diff);
     out
 }
 
 fn row_with_diff_applied(row: &DocxTableRow, diff: &DocxTableRowDiff) -> DocxTableRow {
     let mut out = row.clone();
-    apply_row(&mut out, diff);
+    apply_row_for_absorb(&mut out, diff);
     out
 }
 
 fn cell_with_diff_applied(cell: &DocxTableCell, diff: &DocxTableCellDiff) -> DocxTableCell {
     let mut out = cell.clone();
-    apply_cell(&mut out, diff);
+    apply_cell_for_absorb(&mut out, diff);
     out
+}
+
+fn apply_indexed_for_absorb<T, D>(items: &mut Vec<T>, diff: &IndexedTripleDiff<D, T>, apply_item: impl Fn(&mut T, &D))
+where
+    T: Clone,
+{
+    for modified in &diff.modified {
+        apply_item(&mut items[modified.index], &modified.diff);
+    }
+    let mut removed = diff.removed.clone();
+    removed.sort_unstable_by(|a, b| b.cmp(a));
+    for index in removed {
+        items.remove(index);
+    }
+    let mut added: Vec<&IndexAdded<T>> = diff.added.iter().collect();
+    added.sort_by_key(|item| item.index);
+    for item in added {
+        items.insert(item.index, item.item.clone());
+    }
+}
+
+fn apply_block_for_absorb(block: &mut DocxBlock, diff: &DocxBlockDiff) {
+    match diff {
+        DocxBlockDiff::Replace { block: new } => *block = new.clone(),
+        DocxBlockDiff::Paragraph(pd) => {
+            if let DocxBlock::Paragraph(paragraph) = block {
+                if let Some(runs) = &pd.runs {
+                    apply_indexed_for_absorb(&mut paragraph.runs, runs, apply_run_for_absorb);
+                }
+                if let Some(style) = &pd.style {
+                    paragraph.style = style.clone();
+                }
+            }
+        }
+        DocxBlockDiff::Table(td) => {
+            if let DocxBlock::Table(table) = block {
+                if let Some(rows) = &td.rows {
+                    apply_indexed_for_absorb(&mut table.rows, rows, apply_row_for_absorb);
+                }
+            }
+        }
+    }
+}
+
+fn apply_run_for_absorb(run: &mut DocxRun, diff: &DocxRunDiff) {
+    if let Some(value) = &diff.text {
+        run.text = value.clone();
+    }
+    if let Some(value) = diff.bold {
+        run.bold = value;
+    }
+    if let Some(value) = diff.italic {
+        run.italic = value;
+    }
+    if let Some(value) = diff.underline {
+        run.underline = value;
+    }
+}
+
+fn apply_row_for_absorb(row: &mut DocxTableRow, diff: &DocxTableRowDiff) {
+    if let Some(cells) = &diff.cells {
+        apply_indexed_for_absorb(&mut row.cells, cells, apply_cell_for_absorb);
+    }
+}
+
+fn apply_cell_for_absorb(cell: &mut DocxTableCell, diff: &DocxTableCellDiff) {
+    if let Some(blocks) = &diff.blocks {
+        apply_indexed_for_absorb(&mut cell.blocks, blocks, apply_block_for_absorb);
+    }
+}
+
+fn apply_style_for_absorb(style: &mut DocxStyle, diff: &DocxStyleDiff) {
+    if let Some(value) = &diff.name {
+        style.name = value.clone();
+    }
+    if let Some(value) = &diff.based_on {
+        style.based_on = value.clone();
+    }
 }
 
 fn inverse_block(base: &DocxBlock, diff: &DocxBlockDiff) -> DocxBlockDiff {
@@ -901,7 +1046,7 @@ fn absorb_document_diff(a: DocxDocumentDiff, b: DocxDocumentDiff) -> DocxDocumen
         styles: match (a.styles, b.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style)),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style_for_absorb)),
         },
     }
 }
@@ -912,8 +1057,16 @@ fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option
     between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) {
-    apply_named(entries, diff, |(k, _)| k.clone(), |(_, v), nv| *v = nv.clone());
+fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &DocxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+    apply_named(
+        entries,
+        diff,
+        |(k, _)| k.clone(),
+        |(_, v), nv| {
+            *v = nv.clone();
+            Ok(())
+        },
+    )
 }
 
 fn inverse_ct_entries(base: &[(String, String)], diff: &DocxOpcCtEntriesDiff) -> DocxOpcCtEntriesDiff {
@@ -1016,13 +1169,27 @@ fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<Doc
     between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) {
-    apply_named(list, diff, |r| r.id.clone(), apply_rel);
+fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &DocxOpcRelListDiff) -> MutationApplyResult<()> {
+    apply_named(
+        list,
+        diff,
+        |r| r.id.clone(),
+        |relationship, change| {
+            apply_rel(relationship, change);
+            Ok(())
+        },
+    )
 }
 
 fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &DocxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
-    apply_rel_list(&mut out, diff);
+    out.retain(|relationship| !diff.removed.contains(&relationship.id));
+    for modified in &diff.modified {
+        if let Some(relationship) = out.iter_mut().find(|relationship| relationship.id == modified.key) {
+            apply_rel(relationship, &modified.diff);
+        }
+    }
+    out.extend(diff.added.iter().cloned());
     out
 }
 
@@ -1060,18 +1227,40 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     }
 }
 
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) {
+fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+    let mut added = std::collections::HashSet::new();
+    for owner in &diff.removed {
+        if !rels.contains_key(owner) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["removed".to_string(), owner.clone()]));
+        }
+        if !added.insert(owner) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner is repeated").at(vec!["removed".to_string(), owner.clone()]));
+        }
+    }
+    for modified in &diff.modified {
+        if !rels.contains_key(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), modified.key.clone()]));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is removed and modified").at(vec!["modified".to_string(), modified.key.clone()]));
+        }
+    }
+    for (owner, _) in &diff.added {
+        if rels.contains_key(owner) || !added.insert(owner) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").at(vec!["added".to_string(), owner.clone()]));
+        }
+    }
     for owner in &diff.removed {
         rels.remove(owner);
     }
     for m in &diff.modified {
-        if let Some(list) = rels.get_mut(&m.key) {
-            apply_rel_list(list, &m.diff);
-        }
+        let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), m.key.clone()]))?;
+        apply_rel_list(list, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.key.clone()]))?;
     }
     for (owner, list) in &diff.added {
         rels.insert(owner.clone(), list.clone());
     }
+    Ok(())
 }
 
 fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &DocxOpcRelationshipsDiff) -> DocxOpcRelationshipsDiff {
@@ -1106,21 +1295,31 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<DocxOpcDiff> {
     }
 }
 
-fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) {
+fn apply_opc_diff(opc: &mut OpcPackage, diff: &DocxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
-            apply_ct_entries(&mut opc.content_types.defaults, dd);
+            apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
         }
         if let Some(dd) = &d.overrides {
-            apply_ct_entries(&mut opc.content_types.overrides, dd);
+            apply_ct_entries(&mut opc.content_types.overrides, dd).map_err(|error| error.under(["contentTypes", "overrides"]))?;
         }
     }
     if let Some(d) = &diff.parts {
-        apply_named(&mut opc.parts, d, |p| p.path.clone(), apply_part);
+        apply_named(
+            &mut opc.parts,
+            d,
+            |p| p.path.clone(),
+            |part, change| {
+                apply_part(part, change);
+                Ok(())
+            },
+        )
+        .map_err(|error| error.under(["parts"]))?;
     }
     if let Some(d) = &diff.relationships {
-        apply_relationships(&mut opc.relationships, d);
+        apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
+    Ok(())
 }
 
 fn inverse_opc_diff(base: &OpcPackage, diff: &DocxOpcDiff) -> DocxOpcDiff {
@@ -1168,15 +1367,15 @@ fn absorb_opc_diff(a: DocxOpcDiff, b: DocxOpcDiff) -> DocxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<DocxSnapshot> for DocxDiff {
-    fn apply(&self, base: &DocxSnapshot) -> DocxSnapshot {
+    fn apply(&self, base: &DocxSnapshot) -> MutationApplyResult<DocxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d);
+            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
         }
         if let Some(d) = &self.document {
-            apply_document_diff(&mut next.document, d);
+            apply_document_diff(&mut next.document, d).map_err(|error| error.under(["document"]))?;
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -2709,3 +2908,18 @@ mod handcrafted_diff_codec_tests {
 }
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
+
+#[cfg(test)]
+mod result_apply_tests {
+    use super::*;
+
+    #[test]
+    fn rejects_missing_style_target_without_mutating_base() {
+        let base = DocxSnapshot::default();
+        let diff =
+            DocxDiff { document: Some(DocxDocumentDiff { styles: Some(DocxStylesDiff { modified: vec![NamedModified { key: "missing".into(), diff: DocxStyleDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
+        let result = diff.apply(&base);
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(base, DocxSnapshot::default());
+    }
+}

@@ -142,10 +142,14 @@ mod tests {
     }
 
     fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -178,8 +182,8 @@ mod tests {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeAnnex(set_snapshot::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -187,8 +191,8 @@ mod tests {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 999.0 });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::mutation::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -196,8 +200,8 @@ mod tests {
         let base = En1995Snapshot::default();
         let mutation = En1995Mutation::ChangeServiceClass(change_service_class::mutation::ChangeServiceClass { new_service_class: "sc2".into() });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::mutation::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

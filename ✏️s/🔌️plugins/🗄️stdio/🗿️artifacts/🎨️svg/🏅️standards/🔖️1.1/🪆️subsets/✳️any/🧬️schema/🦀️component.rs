@@ -416,13 +416,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
         /// before returning -- this is what lets `SvgBuilderConstruction::empty().set_view_box(...).add_rect(...)`
@@ -467,7 +467,7 @@ pub use derived_construction::*;
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
     use crate::artifacts::svg::schema::snapshot::{svg_document_to_typed, SvgElement};
-    use crate::artifacts::svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
+    use crate::artifacts::svg::SvgSnapshot;
     use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, XmlNode};
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
@@ -754,8 +754,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SvgBuilderFacets {
-        construction: derived_construction::SvgBuilderConstruction,
-        analysis: derived_analysis::SvgAnalyzerAnalysis,
+        construction: SvgBuilderConstruction,
+        analysis: SvgAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SvgComposerComposition,
     }
     builder: SvgBuilder,
@@ -808,11 +808,11 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
             XmlNode::CData { text: "raw markup".into() },
         ],
     };
-    let mut snapshot = SvgSnapshot {
+    let snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
     };
-    let text = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc);
+    let _text = crate::artifacts::svg::schema::snapshot::write_svg_xml(&snapshot.doc);
     snapshot
 }
 //#endregion 🔖️DocumentHelpers

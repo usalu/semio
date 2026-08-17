@@ -17,51 +17,54 @@ use crate::artifacts::imperative::schema::diff::*;
 //#region 🔖️Apply
 impl ImperativeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> ImperativeArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(handle) = &self.flow {
-            next.flow = handle.clone();
-        }
-        if let Some(handle) = &self.text {
-            next.text = handle.clone();
-        }
-        if let Some(list) = &self.selected_step_ids {
-            next.selected_step_ids = list.values.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> protocol::MutationApplyResult<ImperativeArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(handle) = &self.flow {
+                next.flow = handle.clone();
+            }
+            if let Some(handle) = &self.text {
+                next.text = handle.clone();
+            }
+            if let Some(list) = &self.selected_step_ids {
+                next.selected_step_ids = list.values.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.contributions_json {
+                next.contributions_json = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
-    fn apply(&self, snapshot: &ImperativeSnapshot) -> ImperativeSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(handle) = &self.flow {
-            next.flow = handle.clone();
-        }
-        if let Some(handle) = &self.text {
-            next.text = handle.clone();
-        }
-        next
+    fn apply(&self, snapshot: &ImperativeSnapshot) -> protocol::MutationApplyResult<ImperativeSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(handle) = &self.flow {
+                next.flow = handle.clone();
+            }
+            if let Some(handle) = &self.text {
+                next.text = handle.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -126,7 +129,7 @@ mod tests {
         assert!(path.steps.iter().any(|step| step.id == "step-1"));
         path.steps.retain(|step| step.id != "step-1");
         let diff = crate::artifacts::imperative::diff_replace_flow(&path);
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         let next_path = crate::artifacts::imperative::imperative_working_scene(&next).path;
         assert!(next_path.steps.iter().all(|step| step.id != "step-1"));
     }

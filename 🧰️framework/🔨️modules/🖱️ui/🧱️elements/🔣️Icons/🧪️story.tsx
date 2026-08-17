@@ -8,14 +8,11 @@
 
 // #endregion 🧲️Header
 
-import { Cursor, Icon, LoadingRow, Spinner } from "@semio-tech/ui-react";
-import { createIconComponent } from "@semio-tech/ui-react";
+import { Cursor, Icon, Spinner } from "@semio-tech/ui-react";
 import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/assets";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🖼️#region 🛒️Icons
-const Box = createIconComponent("box");
-
 const meta = {
   title: "🖱️ui⚛️react/Icons",
   component: Cursor,
@@ -115,16 +112,3 @@ export const SpinnerSizes: Story = {
   ),
 };
 // #endregion 🎹️Spinner
-
-// 🔷️#region 🎺️LoadingRow
-export const LoadingRowDefault: Story = {
-  args: { color: "#000000" },
-  render: () => (
-    <div className="w-64 space-y-2">
-      <LoadingRow name="Loading types..." icon={<Box className="size-tiny" />} />
-      <LoadingRow name="Loading designs..." />
-      <LoadingRow name="Processing..." icon={<Spinner size="small" />} />
-    </div>
-  ),
-};
-// #endregion 🎺️LoadingRow

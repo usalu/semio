@@ -26,7 +26,7 @@ pub fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> Remodel
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for AddStreamFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "stream", kind: "add-stream-frame", record: "AddedStreamFrame" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

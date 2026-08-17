@@ -1,5 +1,6 @@
-//! 🔺️ `delete-node` — sparse diff construction; a no-op when `at` is the layer root (empty
-//! `path`) or the addressed index is out of range.
+//! 🔺️ `delete-node` — sparse diff construction; `at` being the layer root (empty `path`, no
+//! parent to remove a child from), the parent not resolving to a `Group`, or the addressed index
+//! being out of range are all `mutation.target-missing` (Error, empty diff).
 
 use super::mutation::DeleteNode;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff;
@@ -17,13 +18,15 @@ pub(crate) fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)> {
 //#endregion 🔖️ParentSplit
 
 //#region 🔖️Diff
-pub fn diff(payload: &DeleteNode, base: &SemioDrawingSnapshot) -> SemioDrawingDiff {
-    let Some((parent, index)) = parent_and_index(&payload.at) else { return SemioDrawingDiff::default() };
+pub fn diff(payload: &DeleteNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    let Some((parent, index)) = parent_and_index(&payload.at) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to delete from (layer root).", payload.at.layer), [payload.at.layer.to_string()]);
+    };
     match node_at(base, &parent) {
         Some(DrawNode::Group { children, .. }) if index < children.len() => {
-            diff_at_path(&parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) }))
+            protocol::MutationOutcome::new(diff_at_path(&parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) })))
         }
-        _ => SemioDrawingDiff::default(),
+        _ => protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]),
     }
 }
 //#endregion 🔖️Diff

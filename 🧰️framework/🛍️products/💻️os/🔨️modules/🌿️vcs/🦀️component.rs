@@ -11,7 +11,7 @@ use thiserror::Error;
 // import keeps that ergonomics without re-exposing `crate::os_spr::Mutation` on `vcs`'s own public API
 // (dependents import `crate::os_spr::Mutation` directly). `MutationDiff` is imported for its `apply`
 // method, called on `Mutation::Diff` inside `apply_mutation`.
-use crate::os_spr::{Edit, Mutation, MutationDiff};
+use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
 /// @emoji 🔑 Content-addressed entity id: `{prefix}-{hex16(blake3(prefix || 0 || payload))}`.
@@ -166,6 +166,8 @@ pub enum VcsError {
     NoCheckpoint,
     #[error("empty apply command")]
     EmptyApply,
+    #[error("mutation diff rejected: {0}")]
+    MutationApply(#[from] crate::os_spr::MutationApplyError),
     #[error("nothing to undo")]
     NothingToUndo,
     #[error("cannot undo edit authored by another actor: {0}")]
@@ -389,22 +391,23 @@ where
 // store-level replay uses.
 
 /// @emoji ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
-/// snapshot alongside every [`crate::os_spr::MutationMessage`] the outcome carried. A `Fatal`
+/// snapshot alongside every [`crate::os_spr::MutationMessage`] the outcome carried. Diff-apply
+/// rejection is returned as its structured [`MutationApplyError`] before a snapshot is produced. A `Fatal`
 /// message's diff is `D::default()` by construction (§C2 LAW 1), so applying it is always a no-op —
 /// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
 /// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
 /// shape).
-pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> (P, Vec<crate::os_spr::MutationMessage>)
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
 where
     Mutation: self::Mutation<P>,
 {
     let (diff, messages) = operation.diff(snapshot).into_parts();
-    (diff.apply(snapshot), messages)
+    Ok((diff.apply(snapshot)?, messages))
 }
 
 //#endregion 🔖️Mutation
 //#region 🔖️MergeStrategy
-// 🎞️ The CRDT-era `merge_concurrent_diffs`/`protocol_crdt` this region used to point at is deleted
+// 🎞️ The CRDT-era concurrent-diff merge helper this region used to point at is deleted
 // (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`) — concurrent-merge
 // arbitration is now an authority's `MergePolicy`/`📡️spr/⚔️conflict` job. The checkpoint-ancestor/
 // merge-base helpers that used to live in this region moved to `store` along with `ArtifactEnvelope`

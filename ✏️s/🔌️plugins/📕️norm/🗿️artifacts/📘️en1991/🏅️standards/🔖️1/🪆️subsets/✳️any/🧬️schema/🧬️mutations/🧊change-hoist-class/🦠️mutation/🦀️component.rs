@@ -12,7 +12,7 @@ pub struct ChangeHoistClass {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHoistClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "hoist-class", kind: "change-hoist-class", record: "ChangedHoistClass" };
 
-    fn diff(&self, base: &En1991Snapshot) -> <En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {

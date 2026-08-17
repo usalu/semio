@@ -33,7 +33,7 @@ use crate::brep_geometry::{dispose_geometry, export_solid_json, import_solid_jso
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
-use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
+use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, MutationOutcome, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 use crate::os_store::create_document_envelope;
@@ -90,22 +90,44 @@ impl Patchable<SynapseSpec> for SynapseSpec {
 }
 
 /// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec`.
-fn apply_flow_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
+fn apply_flow_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>) -> Result<(), MutationApplyError>
 where
     TId: PartialEq,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
 {
-    for id in &diff.removed {
-        items.retain(|item| item.id() != id);
-    }
-    for patch in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|item| item.id() == &patch.id) {
-            item.apply_patch(&patch.patch);
+    for (index, id) in diff.removed.iter().enumerate() {
+        if !items.iter().any(|item| item.id() == id) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed flow item does not exist").at(["removed".to_string(), index.to_string()]));
+        }
+        if diff.removed[..index].contains(id) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "flow item is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
     }
-    for added in &diff.added {
-        items.push(added.clone());
+    for (index, patch) in diff.modified.iter().enumerate() {
+        if !items.iter().any(|item| item.id() == &patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified flow item does not exist").at(["modified".to_string(), index.to_string()]));
+        }
+        if diff.removed.contains(&patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "flow item cannot be removed and modified").at(["modified".to_string(), index.to_string()]));
+        }
+        if diff.modified[..index].iter().any(|previous| previous.id == patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "flow item is modified more than once").at(["modified".to_string(), index.to_string()]));
+        }
     }
+    for (index, added) in diff.added.iter().enumerate() {
+        if items.iter().any(|item| item.id() == added.id()) || diff.added[..index].iter().any(|previous| previous.id() == added.id()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added flow item identity already exists").at(["added".to_string(), index.to_string()]));
+        }
+    }
+    let mut candidate = items.clone();
+    candidate.retain(|item| !diff.removed.iter().any(|id| item.id() == id));
+    for patch in &diff.modified {
+        let item = candidate.iter_mut().find(|item| item.id() == &patch.id).ok_or_else(|| MutationApplyError::new("mutation.apply.conflicting-target", "an earlier patch changed a later flow target's identity").at(["modified"]))?;
+        item.apply_patch(&patch.patch);
+    }
+    candidate.extend(diff.added.iter().cloned());
+    *items = candidate;
+    Ok(())
 }
 
 /// ➕️ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
@@ -155,30 +177,35 @@ pub struct FlowDiff {
 }
 
 impl MutationDiff<FlowFixture> for FlowDiff {
-    fn apply(&self, snapshot: &FlowFixture) -> FlowFixture {
+    fn apply(&self, snapshot: &FlowFixture) -> MutationApplyResult<FlowFixture> {
         if let Some(fixture) = &self.fixture {
-            return fixture.clone();
+            return Ok(fixture.clone());
         }
         let mut next = snapshot.clone();
         if let Some(diff) = &self.widgets {
-            apply_flow_collection_diff(&mut next.widgets, diff);
+            apply_flow_collection_diff(&mut next.widgets, diff).map_err(|error| error.under(["widgets"]))?;
         }
         if let Some(diff) = &self.synapses {
-            apply_flow_collection_diff(&mut next.synapses, diff);
+            apply_flow_collection_diff(&mut next.synapses, diff).map_err(|error| error.under(["synapses"]))?;
         }
         if let Some(entries) = &self.layout {
             for entry in entries {
+                if !next.widgets.iter().any(|widget| widget.id() == &entry.id) {
+                    return Err(MutationApplyError::new("mutation.apply.missing-target", format!("layout widget {} does not exist", entry.id)).at(["layout", entry.id.as_str()]));
+                }
                 match &entry.layout {
                     Some(layout) => {
                         next.layout.insert(entry.id.clone(), layout.clone());
                     }
                     None => {
-                        next.layout.remove(&entry.id);
+                        if next.layout.remove(&entry.id).is_none() {
+                            return Err(MutationApplyError::new("mutation.apply.missing-target", format!("layout entry {} does not exist", entry.id)).at(["layout", entry.id.as_str()]));
+                        }
                     }
                 }
             }
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -853,9 +880,9 @@ mod flow_vcs_wasm {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    FlowStore::new(envelope)
+                    FlowStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)),
+                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -1103,11 +1130,11 @@ mod flow_vcs_tests {
     }
 
     fn round_trip(fixture: &FlowFixture, operation: &FlowMutation) -> FlowFixture {
-        let forward = vcs::apply_mutation(fixture, operation);
+        let forward = vcs::apply_mutation(fixture, operation).expect("valid flow diff").0;
         let inverse = operation.inverse(fixture);
         let mut restored = forward.clone();
         for back in &inverse {
-            restored = vcs::apply_mutation(&restored, back);
+            restored = vcs::apply_mutation(&restored, back).expect("valid inverse flow diff").0;
         }
         assert_eq!(&restored, fixture, "inverse() must exactly restore the pre-operation fixture");
         forward
@@ -1145,7 +1172,7 @@ mod flow_vcs_tests {
         after.widgets.push(sample_widget("c"));
         after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
         let operations = flow_fixture_operations(&before, &after);
-        let materialized = operations.iter().fold(before.clone(), |acc, operation| vcs::apply_mutation(&acc, operation));
+        let materialized = operations.iter().fold(before.clone(), |acc, operation| vcs::apply_mutation(&acc, operation).expect("valid flow replay diff").0);
         assert_eq!(materialized.widgets.len(), 2);
         assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
         assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));

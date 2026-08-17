@@ -6,12 +6,12 @@
 //! index-transport arithmetic as gif 89a's frame collection). HEADER fields are three sparse
 //! scalar slots. `schema` is identity and never appears here.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::ifc::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
 use crate::artifacts::ifc::IfcSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +79,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
     merged_removed_base.sort_unstable();
     merged_removed_base.dedup();
 
-    let mut modified_map: std::collections::BTreeMap<usize, D> = modified1.into_iter().collect();
+    let mut modified_map: BTreeMap<usize, D> = modified1.into_iter().collect();
     for base_index in &merged_removed_base {
         modified_map.remove(base_index);
     }
@@ -190,28 +190,22 @@ impl IfcArgsDiff {
     }
 
     pub fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
-        let mut next: Vec<Option<IfcValue>> = base.iter().cloned().map(Some).collect();
+        let mut next = base.to_vec();
         for m in &self.modified {
-            if let Some(slot) = next.get_mut(m.index) {
-                *slot = Some(m.value.clone());
-            }
+            next[m.index] = m.value.clone();
         }
         let mut removed_sorted = self.removed.clone();
         removed_sorted.sort_unstable();
         removed_sorted.reverse();
         for &r in &removed_sorted {
-            if r < next.len() {
-                next.remove(r);
-            }
+            next.remove(r);
         }
-        let mut out: Vec<IfcValue> = next.into_iter().flatten().collect();
         let mut added_sorted = self.added.clone();
         added_sorted.sort_by_key(|a| a.index);
         for a in added_sorted {
-            let at = a.index.min(out.len());
-            out.insert(at, a.value);
+            next.insert(a.index, a.value);
         }
-        out
+        next
     }
 
     fn absorb(&mut self, other: Self) {
@@ -341,15 +335,16 @@ impl IfcEntitiesDiff {
             entities.retain(|e| !removed.contains(&e.id));
         }
         for m in &self.modified {
-            if let Some(e) = entities.iter_mut().find(|e| e.id == m.id) {
-                *e = m.diff.apply(e);
+            for entity in &mut entities {
+                if entity.id == m.id {
+                    *entity = m.diff.apply(entity);
+                }
             }
         }
         let mut adds: Vec<&IfcEntityAdded> = self.added.iter().collect();
         adds.sort_by_key(|a| a.index);
         for a in adds {
-            let at = a.index.min(entities.len());
-            entities.insert(at, a.entity.clone());
+            entities.insert(a.index, a.entity.clone());
         }
         entities
     }
@@ -500,22 +495,104 @@ pub struct IfcDiff {
     pub entities: Option<IfcEntitiesDiff>,
 }
 
+fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+    MutationApplyError::new(code, message).at(target)
+}
+
+fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
+    let mut removed = BTreeSet::new();
+    for &index in &diff.removed {
+        let mut target = prefix.to_vec();
+        target.extend(["args".to_string(), index.to_string()]);
+        if index >= base_len || !removed.insert(index) {
+            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for entry in &diff.modified {
+        let mut target = prefix.to_vec();
+        target.extend(["args".to_string(), entry.index.to_string()]);
+        if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
+            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
+        }
+    }
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        let mut target = prefix.to_vec();
+        target.extend(["args".to_string(), index.to_string()]);
+        if index > length || previous == Some(index) {
+            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> MutationApplyResult<()> {
+    let mut base_by_id = BTreeMap::new();
+    for entity in base {
+        if base_by_id.insert(entity.id, entity).is_some() {
+            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]));
+        }
+    }
+    let mut removed = BTreeSet::new();
+    for &id in &diff.removed {
+        if !base_by_id.contains_key(&id) || !removed.insert(id) {
+            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for entry in &diff.modified {
+        let base_entity = base_by_id.get(&entry.id);
+        if base_entity.is_none() || removed.contains(&entry.id) || !modified.insert(entry.id) {
+            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
+        }
+        if let Some(args) = &entry.diff.args {
+            validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
+        }
+    }
+    let mut length = base.len() - removed.len();
+    let mut additions: Vec<&IfcEntityAdded> = diff.added.iter().collect();
+    additions.sort_by_key(|entry| entry.index);
+    let mut added_ids = BTreeSet::new();
+    let mut previous = None;
+    for entry in additions {
+        if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
+            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
+        }
+        previous = Some(entry.index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn apply_ifc_diff_unchecked(diff: &IfcDiff, base: &IfcSnapshot) -> IfcSnapshot {
+    let mut next = base.clone();
+    if let Some(value) = &diff.file_description {
+        next.header.file_description = value.clone();
+    }
+    if let Some(value) = &diff.file_name {
+        next.header.file_name = value.clone();
+    }
+    if let Some(value) = &diff.file_schema {
+        next.header.file_schema = value.clone();
+    }
+    if let Some(value) = &diff.entities {
+        next.entities = value.apply(&next.entities);
+    }
+    next
+}
+
 impl MutationDiff<IfcSnapshot> for IfcDiff {
-    fn apply(&self, base: &IfcSnapshot) -> IfcSnapshot {
-        let mut next = base.clone();
-        if let Some(v) = &self.file_description {
-            next.header.file_description = v.clone();
+    fn apply(&self, base: &IfcSnapshot) -> MutationApplyResult<IfcSnapshot> {
+        if let Some(diff) = &self.entities {
+            validate_entities_diff(&base.entities, diff)?;
         }
-        if let Some(v) = &self.file_name {
-            next.header.file_name = v.clone();
-        }
-        if let Some(v) = &self.file_schema {
-            next.header.file_schema = v.clone();
-        }
-        if let Some(d) = &self.entities {
-            next.entities = d.apply(&next.entities);
-        }
-        next
+        Ok(apply_ifc_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
@@ -538,7 +615,7 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction, per zip's precedent):
     /// the state delta from `self.apply(base)` back to `base`.
     fn inverse(&self, base: &IfcSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = apply_ifc_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 

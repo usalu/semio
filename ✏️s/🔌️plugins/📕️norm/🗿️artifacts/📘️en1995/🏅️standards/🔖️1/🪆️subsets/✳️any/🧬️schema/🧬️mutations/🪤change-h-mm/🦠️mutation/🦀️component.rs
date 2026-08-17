@@ -15,7 +15,7 @@ pub struct ChangeHMm {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeHMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "h-mm", kind: "change-h-mm", record: "ChangedHMm" };
 
-    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_h_mm::diff::diff(self, base)
     }
 

@@ -9,12 +9,12 @@ pub fn diff(payload: &super::mutation::CreateTargetVolume, base: &Puzzle3dSnapsh
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target volume"), vec![payload.target_volume.id.clone()]);
     }
     let mut delta = Puzzle3dTargetVolumesDelta { added: vec![payload.target_volume.clone()], ..Default::default() };
-    protocol::MutationOutcome::new(if let Some(index) = payload.index {
+    if let Some(index) = payload.index {
         let mut order: Vec<String> = base.target_volumes.iter().map(|entry| entry.id.clone()).collect();
         let at = index.min(order.len());
         order.insert(at, payload.target_volume.id.clone());
         delta.reordered = Some(order);
     }
-    Puzzle3dDiff { target_volumes: Some(delta), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle3dDiff { target_volumes: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

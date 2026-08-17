@@ -3,6 +3,9 @@
 use crate::artifacts::assembly::diff::AssemblyDiff;
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
 
-pub fn diff(payload: &super::mutation::ChangeSeed, _base: &AssemblySnapshot) -> AssemblyDiff {
-    AssemblyDiff { seed: Some(payload.seed), ..Default::default() }
+pub fn diff(payload: &super::mutation::ChangeSeed, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
+    if base.seed == payload.seed {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Seed is already {}.", payload.seed));
+    }
+    protocol::MutationOutcome::new(AssemblyDiff { seed: Some(payload.seed), ..Default::default() })
 }

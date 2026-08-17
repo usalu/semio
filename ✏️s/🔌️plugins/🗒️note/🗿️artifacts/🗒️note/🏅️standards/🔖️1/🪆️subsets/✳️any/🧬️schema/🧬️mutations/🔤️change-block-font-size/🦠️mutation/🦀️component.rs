@@ -23,7 +23,7 @@ pub fn change_block_font_size(id: String, new_font_size: f64) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockFontSize {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-font-size", kind: "change-block-font-size", record: "ChangedBlockFontSize" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

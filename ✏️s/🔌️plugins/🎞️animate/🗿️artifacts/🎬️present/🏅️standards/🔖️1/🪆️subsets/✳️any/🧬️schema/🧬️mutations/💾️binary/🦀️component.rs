@@ -6,9 +6,9 @@
 //! own component file), so this is the natural home for them.
 //!
 //! The app's typed `PresentCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/🎬️present/🦀️component.rs`,
+//! codec — is an APP concern, not an artifact one: it now lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`. Its
-//! WASM bridge moved to `🎛️apps/🎬️present/🦀️wasm.rs`.
+//! WASM bridge moved to `✏️editor/🌉️wasm/🦀️component.rs`.
 
 
 //#region 📡️SemioProtocol

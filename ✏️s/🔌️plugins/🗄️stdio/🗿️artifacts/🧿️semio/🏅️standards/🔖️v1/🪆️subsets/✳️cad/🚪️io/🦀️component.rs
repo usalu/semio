@@ -209,7 +209,7 @@ pub mod derived_composition {
         /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14 subsets' `register()`
         /// calls (no test module of its own, and out of this ticket's `✳️cad/`-only edit scope anyway).
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::cad::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

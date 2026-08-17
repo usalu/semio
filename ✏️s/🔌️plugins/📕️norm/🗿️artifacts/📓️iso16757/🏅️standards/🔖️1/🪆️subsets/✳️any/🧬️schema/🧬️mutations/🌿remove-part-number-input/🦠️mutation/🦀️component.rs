@@ -12,7 +12,7 @@ pub struct RemovePartNumberInput {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RemovePartNumberInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "part-number-input", kind: "remove-part-number-input", record: "RemovedPartNumberInput" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {

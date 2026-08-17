@@ -503,7 +503,6 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         let _ = l_flags; // local flags kept implicitly consistent via `flags` (central is authoritative)
     }
 
-    entries.sort_by(|left, right| left.name.cmp(&right.name));
     Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: loc.comment })
 }
 //#endregion Decode
@@ -996,9 +995,9 @@ mod codec_tests {
 
         let self_diff = ZipDiff::between(&logical, &logical);
         let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).expect("parse logical ZIP diff");
-        assert_eq!(text_diff.apply(&logical), logical);
+        assert_eq!(text_diff.apply(&logical).unwrap(), logical);
         let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
-        assert_eq!(binary_diff.apply(&logical), logical);
+        assert_eq!(binary_diff.apply(&logical).unwrap(), logical);
 
         let set_snapshot = ZipMutation::SetSnapshot { snapshot: logical.clone() };
         let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).expect("parse logical ZIP operation");
@@ -1013,7 +1012,7 @@ mod codec_tests {
         let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
         assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
         let dialect = <crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = crate::artifacts::zip::standards::v2_0::subsets::any::io::ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
+        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
         for routed in [&from_dsl, &from_pack, &from_text_op, &from_binary_op, &composition.snapshot] {

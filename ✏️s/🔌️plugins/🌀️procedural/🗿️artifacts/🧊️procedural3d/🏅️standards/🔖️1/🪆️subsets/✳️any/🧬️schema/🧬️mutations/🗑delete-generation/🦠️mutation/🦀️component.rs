@@ -14,7 +14,7 @@ pub struct DeleteGeneration {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DeleteGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "generation", kind: "delete-generation", record: "DeletedGeneration" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::delete_generation::diff::diff(self, base)
     }
 

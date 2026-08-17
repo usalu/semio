@@ -2796,17 +2796,42 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// if present, else its declared `default`, else omitted. Renderers stage edits locally and pass them
 /// here; the contract enforcer ({@link VcsArtifactApp}) materializes defaults before dispatch so plugins
 /// never re-implement default-filling.
+///
+/// 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
+/// declared, editable form field, per `HostEffect::OpenDialog { args }`) through untouched: any `seed`
+/// key that is not a declared arg id survives into the result unmodified, and a `seed` value for a
+/// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
+/// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
+/// wholesale — TS twin: {@link effectiveActionArgs} (`🧮️action-argument-resolution/🟦️component.ts`).
 pub fn effective_action_args(
     defs: &[ActionArgDef],
     staged: &DslValue,
+    seed: Option<&DslValue>,
 ) -> DslValue {
+    let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
-        return staged.clone();
+        let mut effective = seed_pairs;
+        if let Some(staged_pairs) = staged.as_object() {
+            for (key, value) in staged_pairs {
+                if let Some(existing) = effective.iter_mut().find(|(k, _)| k == key) {
+                    existing.1 = value.clone();
+                } else {
+                    effective.push((key.clone(), value.clone()));
+                }
+            }
+        }
+        return DslValue::Object(effective);
     }
-    let mut effective = Vec::new();
+    let mut effective = seed_pairs;
     for def in defs {
         if let Some(value) = staged.get(&def.id) {
-            effective.push((def.id.clone(), value.clone()));
+            if let Some(existing) = effective.iter_mut().find(|(k, _)| *k == def.id) {
+                existing.1 = value.clone();
+            } else {
+                effective.push((def.id.clone(), value.clone()));
+            }
+        } else if effective.iter().any(|(k, _)| *k == def.id) {
+            // 🌱️ seeded value already present for this declared field — keep it as the pre-fill.
         } else if let Some(default) = &def.default {
             effective.push((def.id.clone(), default.clone()));
         }
@@ -4299,10 +4324,48 @@ mod app_label_tests {
             ActionArgDef::text("c", LocalizedLabel::data("C")),
         ];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
-        let effective = effective_action_args(&defs, &staged);
+        let effective = effective_action_args(&defs, &staged, None);
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
         assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
         assert!(!effective.as_object().is_some_and(|o| o.iter().any(|(k, _)| k == "c")), "no staged, no default ⇒ omitted");
+    }
+
+    /// 👁️🔒 26/08/16 HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I: the framework-shared
+    /// bug that dropped a dialog's seeded, non-form context arg (e.g. `shareSpace`'s `spaceId`) before
+    /// it ever reached the dispatched descriptor, causing the hub to authorize against an empty id.
+    #[test]
+    fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
+        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
+        let staged = dsl::to_dsl_value(&serde_json::json!({ "email": "user2@semio.dev" })).unwrap();
+        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1" })).unwrap();
+        let effective = effective_action_args(&defs, &staged, Some(&seed));
+        assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the seeded, non-declared arg must reach the dispatched descriptor");
+        assert_eq!(effective.get("email"), Some(&DslValue::String("user2@semio.dev".into())), "the form's own staged field still resolves");
+        assert_eq!(effective.get("role"), Some(&DslValue::String("author".into())), "declared defaults still fill in alongside a seed");
+    }
+
+    /// 🌱️ A seed value for a DECLARED field pre-fills it (e.g. `renameSpace` seeding the current name
+    /// into its own editable `name` field) until the form stages its own edit, which then wins.
+    #[test]
+    fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
+        let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
+        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "name": "Old Name" })).unwrap();
+        let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
+        assert_eq!(untouched.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
+        let staged = dsl::to_dsl_value(&serde_json::json!({ "name": "New Name" })).unwrap();
+        let edited = effective_action_args(&defs, &staged, Some(&seed));
+        assert_eq!(edited.get("name"), Some(&DslValue::String("New Name".into())), "staged still wins over the seed");
+        assert_eq!(edited.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the non-declared seed key survives regardless");
+    }
+
+    /// 🗑️ A zero-declared-field confirm dialog (`deleteSpace`'s confirm/cancel shape) must pass its
+    /// entire seeded context through wholesale — there is no form field to carry it otherwise.
+    #[test]
+    fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
+        let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "confirmed": true })).unwrap();
+        let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
+        assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
+        assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
     }
 
     #[test]
@@ -4313,7 +4376,7 @@ mod app_label_tests {
         ];
         // Nothing staged, no defaults: both required ids are missing.
         let empty = DslValue::Object(Vec::new());
-        let effective = effective_action_args(&defs, &empty);
+        let effective = effective_action_args(&defs, &empty, None);
         let missing = missing_required_args(&defs, &effective);
         assert!(missing.contains(&"mode".to_string()));
         assert!(missing.contains(&"flag".to_string()));

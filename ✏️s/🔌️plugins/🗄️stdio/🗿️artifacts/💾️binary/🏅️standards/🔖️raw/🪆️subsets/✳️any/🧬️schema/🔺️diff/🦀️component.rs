@@ -38,7 +38,8 @@ pub struct ByteSplice {
 /// insert/remove at position P only moves bytes at/after P), so processing high-to-low means
 /// every splice's `offset` is still valid against the base at the moment it's applied --
 /// `offset`/`remove_len` are never re-interpreted against a partially-mutated buffer.
-/// Out-of-range offsets/lengths clamp to the buffer's current bounds (graceful, never panics).
+/// Out-of-range offsets/lengths are rejected by `MutationDiff::apply`; the unchecked helper is
+/// reserved for the algebra's total absorb/inverse machinery after a valid diff is established.
 /// 🧪️ F6-PILOT: `dsl::DslDiff` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
 /// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. `BinaryDiff`
 /// is a plain struct with one `Vec<ByteSplice>` field (`ByteSplice` itself `DslRecord`-derived
@@ -53,16 +54,9 @@ pub struct BinaryDiff {
 }
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
-    fn apply(&self, base: &BinarySnapshot) -> BinarySnapshot {
-        let mut bytes = base.bytes.clone();
-        let mut splices = self.splices.clone();
-        splices.sort_by(|a, b| b.offset.cmp(&a.offset));
-        for s in splices {
-            let start = s.offset.min(bytes.len());
-            let end = (s.offset + s.remove_len).min(bytes.len()).max(start);
-            bytes.splice(start..end, s.insert.iter().copied());
-        }
-        BinarySnapshot { schema: base.schema.clone(), bytes }
+    fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
+        validate_binary_diff(self, base)?;
+        Ok(apply_binary_diff_unchecked(self, base))
     }
 
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
@@ -71,9 +65,38 @@ impl MutationDiff<BinarySnapshot> for BinaryDiff {
     }
 }
 
+fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> protocol::MutationApplyResult<()> {
+    let mut previous = None;
+    for (position, splice) in diff.splices.iter().enumerate() {
+        if splice.offset > base.bytes.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "byte splice offset is outside the base buffer"));
+        }
+        if splice.remove_len > base.bytes.len() - splice.offset {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-range", "byte splice removal exceeds the base buffer"));
+        }
+        if previous == Some(splice.offset) || diff.splices[..position].iter().any(|prior| prior.offset == splice.offset) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "byte splice offset is repeated"));
+        }
+        previous = Some(splice.offset);
+    }
+    Ok(())
+}
+
+fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> BinarySnapshot {
+    let mut bytes = base.bytes.clone();
+    let mut splices = diff.splices.clone();
+    splices.sort_by(|a, b| b.offset.cmp(&a.offset));
+    for s in splices {
+        let start = s.offset;
+        let end = s.offset + s.remove_len;
+        bytes.splice(start..end, s.insert.iter().copied());
+    }
+    BinarySnapshot { schema: base.schema.clone(), bytes }
+}
+
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
     fn inverse(&self, base: &BinarySnapshot) -> Self {
-        let next = self.apply(base);
+        let next = apply_binary_diff_unchecked(self, base);
         Self::between(&next, base)
     }
 
@@ -243,9 +266,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base);
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid);
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
     }
 
     #[test]
@@ -255,9 +278,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base);
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid);
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
         assert!(after.bytes.windows(2).any(|w| w == [0xBB, 0xAA]) || after.bytes.contains(&0xAA) && after.bytes.contains(&0xBB));
     }
 
@@ -268,9 +291,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base);
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid);
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
     }
 
     #[test]
@@ -289,21 +312,21 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(mid);
 
-        assert_eq!(left.apply(&base), right.apply(&base));
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap());
         let sequential = {
-            let s1 = d1.apply(&base);
-            let s2 = d2.apply(&s1);
-            d3.apply(&s2)
+            let s1 = d1.apply(&base).unwrap();
+            let s2 = d2.apply(&s1).unwrap();
+            d3.apply(&s2).unwrap()
         };
-        assert_eq!(left.apply(&base), sequential);
+        assert_eq!(left.apply(&base).unwrap(), sequential);
     }
 
     #[test]
     fn between_roundtrip_synthetic() {
         let a = BinarySnapshot { bytes: vec![1, 2, 3, 4, 5], ..Default::default() };
         let b = BinarySnapshot { bytes: vec![1, 9, 9, 4, 5, 6], ..Default::default() };
-        assert_eq!(BinaryDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(BinaryDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(BinaryDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(BinaryDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(BinaryDiff::between(&a, &a).is_empty());
     }
 
@@ -311,9 +334,17 @@ mod tests {
     fn inverse_diff_level_roundtrip() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
         let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };
-        let next = d.apply(&base);
+        let next = d.apply(&base).unwrap();
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&next), base);
+        assert_eq!(inv.apply(&next).unwrap(), base);
+    }
+
+    #[test]
+    fn apply_rejects_invalid_splice_without_mutating_base() {
+        let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
+        let diff = BinaryDiff { splices: vec![ByteSplice { offset: 2, remove_len: 2, insert: vec![9] }] };
+        assert!(diff.apply(&base).is_err());
+        assert_eq!(base.bytes, vec![1, 2, 3]);
     }
 
     /// 🧪️ F6-PILOT: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`).

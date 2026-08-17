@@ -9,7 +9,7 @@
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { domSizePx } from "@semio-tech/ui-styling";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

@@ -154,3 +154,48 @@ the ticket's explicit guidance.
 - `🧰️framework/` itself may still be red (other lanes' unfinished work per the ticket brief) — see
   🧪️w3-h-g2-cargo.txt for the actual cargo check/test output and which errors (if any) are
   framework-path vs plugin-path.
+
+## Cargo results (actually run, this session)
+
+| Command | Result |
+|---|---|
+| cargo check -p semio-s-plugin-lowpoly | FAIL — exactly 1 error, framework-path (see below); 0 errors in plugin-path files |
+| cargo check -p semio-s-plugin-process | FAIL — identical single framework-path error |
+| cargo check -p semio-s-plugin-sourcing | FAIL — identical single framework-path error |
+| cargo check -p semio-s-plugin-demonstrator | FAIL — identical single framework-path error |
+| cargo test -p semio-s-plugin-lowpoly --lib | FAIL — identical single framework-path error (process/sourcing/demonstrator not re-run: byte-identical blocker confirmed 4x already on check) |
+
+All 4 checks (+ the one test run) fail at the exact same single spot, which is 100% inside
+`🧰️framework/` — never inside any of the 4 leased plugin trees:
+
+```
+error[E0277]: the trait bound `Mutation: command::Mutation<_>` is not satisfied
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2523:78
+    |
+2523 |                     mutation_ids.extend(crate::os_spr::mutation_ids_for_edit(edit));
+    |                                         ------------------------------------ ^^^^ the trait `command::Mutation<_>` is not implemented for `Mutation`
+    |
+help: the trait `command::Mutation<SpaceHistorySnapshot>` is implemented for `SpaceHistoryMutation`
+   --> 🧰️framework/…/🏪️store/🦀️component.rs:6402:1
+    |
+6402 | impl Mutation<SpaceHistorySnapshot> for SpaceHistoryMutation {
+note: required by a bound in `causal::mutation_ids_for_edit`
+   --> 🧰️framework/…/📡️spr/🔗️causal/🦀️component.rs:278:37
+```
+
+This is `semio-framework-os-kernel` failing to compile at its own `🏪️store`/`📡️spr/🔗️causal`
+seam (a generic type named plain `Mutation` at the call site not resolving to
+`SpaceHistoryMutation`'s own `command::Mutation<SpaceHistorySnapshot>` impl) — squarely inside
+`🧰️framework/`, unrelated to the `diff`-return-type change this ticket makes, and not touched by
+any edit in this session. Since `semio-framework-os-kernel` never finishes compiling, cargo never
+even reaches any of the 4 plugin crates' own source — so **none of my plugin-tree edits have been
+exercised by the compiler yet**, and this report cannot claim any of the 4 crates as green. Full
+raw output (all 5 runs, unedited) is in `🧪️w3-h-g2-cargo.txt` alongside this file. Re-running
+`cargo check -p semio-s-plugin-<name>` once the framework lane(s) land their fix is the way to
+verify the plugin-tree edits themselves.
+
+Build-lock note: the first `cargo check -p semio-s-plugin-lowpoly` attempt sat on "Blocking waiting
+for file lock on build directory" for several minutes (another concurrently-running lane's cargo
+build holding the workspace target-dir lock) and its background shell was lost without completing;
+retried once the lock cleared and it completed normally. The 4 subsequent check runs + 1 test run
+all completed quickly (warm target-dir cache from the first run).

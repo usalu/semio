@@ -14,7 +14,7 @@ pub struct ReorderSavedCameras {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ReorderSavedCameras {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "saved-cameras", kind: "reorder-saved-cameras", record: "ReorderedSavedCameras" };
-    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {

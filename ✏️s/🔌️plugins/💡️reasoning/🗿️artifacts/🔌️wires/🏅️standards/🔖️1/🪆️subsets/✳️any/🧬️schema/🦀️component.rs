@@ -140,14 +140,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let d = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
-            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-            (self, d)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
@@ -318,15 +329,15 @@ pub fn force_layout_board(board: &mut DslValue) {
 //#region 🔖️ExampleFixture
 /// 📄️ The `metabolism` example, parsed once from `crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
 /// — falls back to the empty document if the fixture ever fails to parse.
-pub fn metabolism_wires_example_snapshot() -> crate::artifacts::wires::WiresSnapshot {
+pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
     match <crate::artifacts::wires::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
-        Ok(snapshot) if fixture_nodes(&crate::artifacts::wires::wires_working_board(&snapshot)).len() >= 7 => snapshot,
+        Ok(snapshot) if fixture_nodes(&crate::artifacts::wires::wires_working_board(&snapshot)).len() >= 7 => Ok(snapshot),
         _ => handcrafted_metabolism_snapshot(),
     }
 }
 
 /// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
-fn handcrafted_metabolism_snapshot() -> crate::artifacts::wires::WiresSnapshot {
+fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
     use serde_json::json;
     let mut snapshot = crate::artifacts::wires::empty_wires_snapshot();
     for i in 1..=7 {
@@ -343,7 +354,7 @@ fn handcrafted_metabolism_snapshot() -> crate::artifacts::wires::WiresSnapshot {
             "handles": []
         }))
         .expect("node serializes");
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node));
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))?.0;
         array_mut(&mut snapshot.wires_fixture, "identities").push(
             dsl::to_dsl_value(&json!({
                 "identityId": i,
@@ -368,7 +379,7 @@ fn handcrafted_metabolism_snapshot() -> crate::artifacts::wires::WiresSnapshot {
             "edgeId": edge_id,
         }))
         .expect("relationship serializes");
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship));
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship))?.0;
     }
     let board = crate::artifacts::wires::wires_working_board(&snapshot);
     if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
@@ -376,6 +387,6 @@ fn handcrafted_metabolism_snapshot() -> crate::artifacts::wires::WiresSnapshot {
             *slot = board;
         }
     }
-    snapshot
+    Ok(snapshot)
 }
 //#endregion 🔖️ExampleFixture

@@ -309,7 +309,7 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_d
     let start = polygon[0];
     for i in 0..=steps {
         let t = i as f64 / steps as f64;
-        let angle = turns * std::f64::consts::TAU * t;
+        let angle = turns * TAU * t;
         let along = pitch * turns * t;
         let radial = rotate_around_axis(start, axis_origin, axis, angle);
         let center = axis_origin + axis * along;
@@ -357,7 +357,7 @@ fn sample_wire_points(body: &Body, wire: &Wire, samples_per_edge: usize) -> Resu
     Ok(points)
 }
 
-fn curve_point(curve: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3, u: f64) -> Pnt3 {
+fn curve_point(curve: &Curve3, u: f64) -> Pnt3 {
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     match curve {
         Curve3::Line { origin, dir } => *origin + *dir * u,

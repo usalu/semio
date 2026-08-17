@@ -16,7 +16,7 @@ pub struct CreateWidget {
 impl MutationKind<FlowSnapshot, FlowMutation> for CreateWidget {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

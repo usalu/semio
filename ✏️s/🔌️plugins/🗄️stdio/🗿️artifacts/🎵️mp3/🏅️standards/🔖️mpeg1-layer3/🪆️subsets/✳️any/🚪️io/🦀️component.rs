@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::Mp3Analyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
 

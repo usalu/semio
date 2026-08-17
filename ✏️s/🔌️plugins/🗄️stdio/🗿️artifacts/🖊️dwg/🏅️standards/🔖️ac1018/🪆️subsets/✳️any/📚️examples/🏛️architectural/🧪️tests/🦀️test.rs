@@ -437,7 +437,7 @@ fn associative_dimension_dependency_body_frames_reencode_exactly() {
 #[test]
 fn real_decode_stays_lossless_on_reencode() {
     let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
-    let reencoded = crate::artifacts::dwg::schema::snapshot::encode_dwg(&snap).expect("re-encode");
+    let reencoded = encode_dwg(&snap).expect("re-encode");
     assert_fixture_bytes(&reencoded, "re-encode");
 }
 
@@ -485,26 +485,26 @@ fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 
     let empty = DwgDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_fixture_bytes(&encode_dwg(&empty.apply(&original)).expect("empty diff export"), "empty diff export");
+    assert_fixture_bytes(&encode_dwg(&empty.apply(&original).expect("empty diff must apply")).expect("empty diff export"), "empty diff export");
 
     let mut no_op = original.clone();
     let no_op_diff = apply_dwg_mutation(&mut no_op, &DwgMutation::NoMutation);
-    assert!(no_op_diff.is_empty());
+    assert!(no_op_diff.diff().is_empty());
     assert_fixture_bytes(&encode_dwg(&no_op).expect("no-op mutation export"), "no-op mutation export");
 
     let header_change = DwgMutation::SetVersionInfo { version: original.version.clone(), maintenance_version: original.maintenance_version.wrapping_add(1), codepage: original.codepage.wrapping_add(1) };
     let header_diff = header_change.diff(&original);
-    let changed = header_diff.apply(&original);
+    let changed = header_diff.diff().apply(&original).expect("header diff must apply");
     let changed_bytes = encode_dwg(&changed).expect("byte-patched header mutation export");
     let redecoded = decode_dwg(&changed_bytes).expect("mutated header re-decode");
     assert_eq!(redecoded.maintenance_version, changed.maintenance_version);
     assert_eq!(redecoded.codepage, changed.codepage);
 
-    let inverse_diff = header_diff.inverse(&original);
-    assert_fixture_bytes(&encode_dwg(&inverse_diff.apply(&changed)).expect("inverse diff export"), "inverse diff export");
-    let mut absorbed = header_diff;
+    let inverse_diff = header_diff.diff().inverse(&original);
+    assert_fixture_bytes(&encode_dwg(&inverse_diff.apply(&changed).expect("inverse diff must apply")).expect("inverse diff export"), "inverse diff export");
+    let mut absorbed = header_diff.diff().clone();
     absorbed.absorb(inverse_diff);
-    assert_fixture_bytes(&encode_dwg(&absorbed.apply(&original)).expect("absorbed inverse export"), "absorbed inverse export");
+    assert_fixture_bytes(&encode_dwg(&absorbed.apply(&original).expect("absorbed diff must apply")).expect("absorbed inverse export"), "absorbed inverse export");
 }
 
 #[test]

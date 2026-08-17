@@ -2731,6 +2731,102 @@
       }
     },
     {
+      "name": "🛠️dev🖥️s👤️1⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6072",
+        "SEMIO_PLUGIN": "s",
+        "S_USER": "user1@semio.dev",
+        "S_HUB_URL": "http://127.0.0.1:8787",
+        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user1",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.21
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6072)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s👤️2⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6073",
+        "SEMIO_PLUGIN": "s",
+        "S_USER": "user2@semio.dev",
+        "S_HUB_URL": "http://127.0.0.1:8787",
+        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user2",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.22
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6073)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s👤️1🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6067",
+        "SEMIO_PLUGIN": "s",
+        "S_USER": "user1@semio.dev",
+        "S_HUB_URL": "http://127.0.0.1:8787",
+        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user1",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.01
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6067)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s👤️2🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6068",
+        "SEMIO_PLUGIN": "s",
+        "S_USER": "user2@semio.dev",
+        "S_HUB_URL": "http://127.0.0.1:8787",
+        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user2",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.02
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6068)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
@@ -2776,6 +2872,30 @@
       "presentation": {
         "group": "3_dev",
         "order": 387
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8787)",
+        "uriFormat": "%s/admin"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️os-hub🛡️admin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-admin:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_HUB_URL": "http://127.0.0.1:8787"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.05
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8790)",
+        "uriFormat": "%s"
       }
     },
     {
@@ -3158,6 +3278,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.97
+      }
+    },
+    {
+      "name": "⚖️gate🌎️collab-e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.98
       }
     },
     {
@@ -3756,6 +3887,15 @@
       "presentation": {
         "group": "3_dev",
         "order": 386.15
+      }
+    },
+    {
+      "name": "🧭️compound🖥️s👥️users🗄️os-hub",
+      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s👤️1⚛️react", "🛠️dev🖥️s👤️2⚛️react"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.16
       }
     }
   ]

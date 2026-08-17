@@ -231,7 +231,9 @@ mod tests {
     fn populated() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
         let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node));
+        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))
+            .expect("valid mutation")
+            .0;
         snapshot
     }
 

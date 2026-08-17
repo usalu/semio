@@ -390,6 +390,13 @@
         "command": "bun ./📜️script.ts stdio mutation-law"
       }
     },
+    "mutation-outcome-law": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify mutation-outcome-law"
+      }
+    },
     "stdio-inference": {
       "executor": "nx:run-commands",
       "dependsOn": ["stdio-mutation-law"],
@@ -428,7 +435,7 @@
     },
     "verify-gate": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": ["mutation-outcome-law"],
       "options": {
         "command": "bun ./📜️script.ts verify gate"
       }

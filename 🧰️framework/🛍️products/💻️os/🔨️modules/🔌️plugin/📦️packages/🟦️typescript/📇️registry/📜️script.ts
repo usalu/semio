@@ -74,9 +74,6 @@ function mergeAreaStates(states: readonly AreaState[]): AreaState {
  * maturity in `areas`. `legacy`/`mixed` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
 const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.pluginTaxonomyStates[area] ?? "legacy"));
 
-/** @emoji 🎛️ Taxonomy tree segment names, single-sourced from the vocabulary: anything deriving an
- * app-root path (the constitutional gate, example discovery, the window audit) shares one value. */
-const APPS_DIRNAME = TAXONOMY.appsDirName;
 /** @emoji 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
 const EXAMPLES_DIRNAME = "📚️examples";
 if (!TAXONOMY.artifactChildDirs.includes(EXAMPLES_DIRNAME)) {
@@ -186,6 +183,9 @@ export type PlaygroundEntry = {
   readonly brand?: string;
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
+  /** @emoji 👥️ Extra per-user dev ports for a multi-user collaborative session (e.g. hub-backed `s`
+   * studio dev launchers) — one port per concurrent user, over and above the single-user `ports` row. */
+  readonly userPorts?: { readonly react: readonly number[]; readonly wgpu: readonly number[] };
   readonly examples: readonly string[];
   /** @emoji 🔌️ Crate paths whose `wasm` build target must run for this playground variant. */
   readonly engines: readonly string[];
@@ -217,6 +217,15 @@ function parseTomlBoolField(block: string, key: string): boolean {
   return new RegExp(`^${key}\\s*=\\s*true\\s*$`, "m").test(block);
 }
 
+/** @emoji 🔢️ Every integer in a `key = [1, 2]` inline TOML array found inside `text` (used for
+ * sub-blocks like `user_ports = { react = [...], wgpu = [...] }` where `react`/`wgpu` aren't at the
+ * start of a line). */
+function parseTomlInlineNumberArray(text: string, key: string): number[] {
+  const match = text.match(new RegExp(`${key}\\s*=\\s*\\[([^\\]]*)\\]`));
+  if (!match) return [];
+  return [...match[1].matchAll(/\d+/g)].map((m) => Number(m[0]));
+}
+
 /** @emoji 🔗️ Every `semio-s-plugin-<id>` entry in one crate's own Cargo manifest text, both the
  * `key = { …, package = "semio-s-plugin-x" }` renamed-dependency shape and the plain
  * `semio-s-plugin-x = { … }` shape — mirrors the root policy script's
@@ -246,8 +255,12 @@ function parsePlaygroundBlock(block: string, pluginId: string, cratePath: string
   const react = portsBlock?.match(/react\s*=\s*(\d+)/)?.[1];
   const wgpu = portsBlock?.match(/wgpu\s*=\s*(\d+)/)?.[1];
   if (!react || !wgpu) return undefined;
+  const userPortsBlock = block.match(/^user_ports\s*=\s*\{([^}]*)\}/m)?.[1];
+  const userPortsReact = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "react") : [];
+  const userPortsWgpu = userPortsBlock ? parseTomlInlineNumberArray(userPortsBlock, "wgpu") : [];
+  const userPorts = userPortsReact.length > 0 && userPortsWgpu.length > 0 ? { react: userPortsReact, wgpu: userPortsWgpu } : undefined;
   const engines = parseTomlStringArray(block, "engines");
-  return { variant, pluginId, cratePath, app, brand, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, examples: [], engines, assets: [] };
+  return { variant, pluginId, cratePath, app, brand, aliases, ports: { react: Number(react), wgpu: Number(wgpu) }, ...(userPorts ? { userPorts } : {}), examples: [], engines, assets: [] };
 }
 
 /** @emoji 🗂️ Parses every `[[package.metadata.semio.assets]]` row for one crate manifest. */
@@ -286,9 +299,9 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
 }
 
 /**
- * @emoji 🖼️ Example ids for one playground row: emoji-slug dirs under
- * `🗿️artifacts/<a>/📚️examples/` and `🎛️apps/<app>/📚️examples/` that carry a definition leaf.
- * Falls back to the variant-suffix app dir when artifact/app scans are empty.
+ * @emoji 🖼️ Example ids for one playground row: emoji-slug dirs under `🗿️artifacts/<a>/📚️examples/` and
+ * every `👁️viewer`/`✏️editor` surface's `📚️examples/` that carry a definition leaf. Falls back to the
+ * variant-suffix surface (matched by its subset name) when artifact/surface scans are empty.
  */
 function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
   const segments = cratePath.split("/");
@@ -310,16 +323,15 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, plug
       ids.push(...slugIds(join(artifactsDir, artifact, EXAMPLES_DIRNAME)));
     }
   }
-  const appsDir = join(repoRoot, techRoot, APPS_DIRNAME);
-  if (existsSync(appsDir)) {
-    for (const app of listDirs(appsDir)) {
-      ids.push(...slugIds(join(appsDir, app, EXAMPLES_DIRNAME)));
-    }
+  const surfaceDirs = surfaceDirsForPlugin(join(repoRoot, techRoot));
+  for (const { abs: surfaceAbs } of surfaceDirs) {
+    ids.push(...slugIds(join(surfaceAbs, EXAMPLES_DIRNAME)));
   }
   if (ids.length > 0) return [...new Set(ids)].sort();
   if (variant.startsWith(pluginId) && variant.length > pluginId.length) {
-    const suffix = variant.slice(pluginId.length);
-    return slugIds(join(repoRoot, techRoot, APPS_DIRNAME, suffix, EXAMPLES_DIRNAME));
+    const strippedSuffix = surfaceStripEmoji(variant.slice(pluginId.length));
+    const match = surfaceDirs.find((s) => surfaceStripEmoji(s.label.split("/")[0] ?? "") === strippedSuffix);
+    if (match) return slugIds(join(match.abs, EXAMPLES_DIRNAME));
   }
   return [];
 }
@@ -562,8 +574,9 @@ function emitPlaygroundsTypeScript(playgrounds: PlaygroundEntry[], defaultHostVa
     .map((entry) => {
       const app = entry.app !== undefined ? `, app: ${JSON.stringify(entry.app)}` : "";
       const brand = entry.brand !== undefined ? `, brand: ${JSON.stringify(entry.brand)}` : "";
+      const userPorts = entry.userPorts !== undefined ? `, userPorts: { react: ${JSON.stringify(entry.userPorts.react)}, wgpu: ${JSON.stringify(entry.userPorts.wgpu)} }` : "";
       const assets = entry.assets.map(emitAssetSpecTypeScript).join(", ");
-      return `\t{ variant: ${JSON.stringify(entry.variant)}, pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}${app}${brand}, aliases: ${JSON.stringify(entry.aliases)}, ports: { react: ${entry.ports.react}, wgpu: ${entry.ports.wgpu} }, examples: ${JSON.stringify(entry.examples)}, engines: ${JSON.stringify(entry.engines)}, assets: [${assets}] },`;
+      return `\t{ variant: ${JSON.stringify(entry.variant)}, pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}${app}${brand}, aliases: ${JSON.stringify(entry.aliases)}, ports: { react: ${entry.ports.react}, wgpu: ${entry.ports.wgpu} }${userPorts}, examples: ${JSON.stringify(entry.examples)}, engines: ${JSON.stringify(entry.engines)}, assets: [${assets}] },`;
     })
     .join("\n");
   return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
@@ -580,6 +593,7 @@ export type PlaygroundBuildTarget = {
 \treadonly brand?: string;
 \treadonly aliases: readonly string[];
 \treadonly ports: { readonly react: number; readonly wgpu: number };
+\treadonly userPorts?: { readonly react: readonly number[]; readonly wgpu: readonly number[] };
 \treadonly examples: readonly string[];
 \treadonly engines: readonly string[];
 \treadonly assets: readonly PlaygroundAssetSpec[];
@@ -818,8 +832,22 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: st
   const variantOwners = new Map<string, string>();
   const aliasOwners = new Map<string, string>();
   const portOwners = new Map<string, string>();
+  /** @emoji 🌐️ Every individual port (single-user `ports.react`/`ports.wgpu` plus every
+   * `userPorts.react[]`/`userPorts.wgpu[]` entry) across the whole catalog, keyed by the raw port
+   * number — a dev machine has exactly one TCP namespace, so no two rows may ever claim the same port
+   * regardless of which renderer or user slot it's for. */
+  const globalPortOwners = new Map<number, string>();
+  const claimGlobalPort = (port: number, label: string): void => {
+    const owner = globalPortOwners.get(port);
+    if (owner) errors.push(`duplicate playground port ${port} (${owner} and ${label})`);
+    else globalPortOwners.set(port, label);
+  };
   const entriesByCrate = new Map<string, PlaygroundEntry[]>();
   for (const entry of playgrounds) {
+    claimGlobalPort(entry.ports.react, `${entry.variant} react`);
+    claimGlobalPort(entry.ports.wgpu, `${entry.variant} wgpu`);
+    entry.userPorts?.react.forEach((port, index) => claimGlobalPort(port, `${entry.variant} user${index + 1} react`));
+    entry.userPorts?.wgpu.forEach((port, index) => claimGlobalPort(port, `${entry.variant} user${index + 1} wgpu`));
     if (variantOwners.has(entry.variant)) {
       errors.push(`duplicate playground variant "${entry.variant}" (${variantOwners.get(entry.variant)} and ${entry.cratePath})`);
     } else {
@@ -923,6 +951,28 @@ function findNewContractPluginRoots(repoRoot: string): { pluginId: string; plugi
 function listDirs(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter((name) => statSync(join(dir, name)).isDirectory());
+}
+
+/** @emoji 👁️✏️ Every `👁️viewer`/`✏️editor` surface dir under one plugin's
+ * `🗿️artifacts/<a>/🏅️standards/<s>/🪆️subsets/<sub>/` tree — the W3 dissolution replacement for the old
+ * `🎛️apps/<app>/` root. Paired with a `"<subset>/<roleDirName>"` label for findings. */
+function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: string }[] {
+  const out: { abs: string; label: string }[] = [];
+  const artifactsAbs = join(pluginRoot, TAXONOMY.artifactsDirName);
+  for (const kind of listDirs(artifactsAbs)) {
+    const standardsAbs = join(artifactsAbs, kind, TAXONOMY.standardsDirName);
+    for (const std of listDirs(standardsAbs)) {
+      const subsetsAbs = join(standardsAbs, std, TAXONOMY.subsetsDirName);
+      for (const sub of listDirs(subsetsAbs)) {
+        for (const role of TAXONOMY.surfaceRoles) {
+          const dirName = TAXONOMY.surfaceDirNames[role];
+          const abs = join(subsetsAbs, sub, dirName);
+          if (existsSync(abs)) out.push({ abs, label: `${sub}/${dirName}` });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /** @emoji 🧱️ True when an inline Rust module's scope continues beyond its declaration line. */
@@ -1099,66 +1149,58 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     findings.push(`${pluginId}: plugin-root ${EXAMPLES_DIRNAME}/ is forbidden — relocate under 🗿️artifacts/<artifact>/${EXAMPLES_DIRNAME}`);
   }
 
-  const appsDir = join(pluginRoot, APPS_DIRNAME);
-  for (const app of listDirs(appsDir)) {
-    // ⚙️ The headless engine is a declared app component (taxonomy `appComponentDirs`), so its
-    // ABSENCE is the breach — while its `📚️examples/` child remains one too, since app examples are
-    // app-owned and belong at the app root. Both findings coexist; they are not the same rule.
-    if (!existsSync(join(appsDir, app, ENGINE_FACET_DIR))) {
-      findings.push(`${pluginId}: app "${app}" is missing ${ENGINE_FACET_DIR}/`);
+  // 👁️✏️ Surfaces replace 🎛️apps (W3 dissolution, ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-
+  // SUBSET). No ⚙️engine facet requirement — the ENGINELESS ticket moved engine ownership to the
+  // module level, and surfaceChildDirs carries no ⚙️engine entry. `📚️examples` is optional (contract
+  // §7.5, not in surfaceRequiredChildDirs) — only its CONTENTS are validated when present, never its
+  // absence.
+  const surfaceDirs = surfaceDirsForPlugin(pluginRoot);
+  for (const { abs: surfaceAbs, label } of surfaceDirs) {
+    const surfaceExamples = join(surfaceAbs, EXAMPLES_DIRNAME);
+    if (!existsSync(surfaceExamples)) continue;
+    const surfaceSets = listDirs(surfaceExamples);
+    if (surfaceSets.length === 0) {
+      findings.push(`${pluginId}: surface "${label}" ${EXAMPLES_DIRNAME} has no example slug`);
     }
-    const engineExamples = join(appsDir, app, ENGINE_FACET_DIR, EXAMPLES_DIRNAME);
-    if (existsSync(engineExamples)) {
-      findings.push(`${pluginId}: app "${app}" still has ${ENGINE_FACET_DIR}/${EXAMPLES_DIRNAME}/ — move to app-root ${EXAMPLES_DIRNAME}/`);
-    }
-    const appExamples = join(appsDir, app, EXAMPLES_DIRNAME);
-    if (!existsSync(appExamples)) {
-      findings.push(`${pluginId}: app "${app}" is missing ${EXAMPLES_DIRNAME}/`);
-      continue;
-    }
-    const appSets = listDirs(appExamples);
-    if (appSets.length === 0) {
-      findings.push(`${pluginId}: app "${app}" ${EXAMPLES_DIRNAME} has no example slug`);
-    }
-    for (const exampleSet of appSets) {
+    for (const exampleSet of surfaceSets) {
       if (!isExampleSlugName(exampleSet)) {
-        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is not a valid emoji+VS16+kebab slug`);
+        findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" is not a valid emoji+VS16+kebab slug`);
       }
       for (const plural of FORBIDDEN_EXAMPLE_PLURAL_DIRS) {
-        if (existsSync(join(appExamples, exampleSet, plural))) {
-          findings.push(`${pluginId}: app "${app}" example "${exampleSet}" still has plural ${plural}/`);
+        if (existsSync(join(surfaceExamples, exampleSet, plural))) {
+          findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" still has plural ${plural}/`);
         }
       }
-      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_RUST_LEAF))) {
-        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
+      if (!existsSync(join(surfaceExamples, exampleSet, EXAMPLE_RUST_LEAF))) {
+        findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" is missing ${EXAMPLE_RUST_LEAF}`);
       }
-      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_TS_LEAF))) {
-        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_TS_LEAF}`);
+      if (!existsSync(join(surfaceExamples, exampleSet, EXAMPLE_TS_LEAF))) {
+        findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" is missing ${EXAMPLE_TS_LEAF}`);
       }
-      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
-        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
+      if (!existsSync(join(surfaceExamples, exampleSet, EXAMPLE_ASSETS_DIRNAME))) {
+        findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" is missing ${EXAMPLE_ASSETS_DIRNAME}/`);
       }
-      if (!existsSync(join(appExamples, exampleSet, EXAMPLE_TESTS_DIRNAME))) {
-        findings.push(`${pluginId}: app "${app}" example "${exampleSet}" is missing ${EXAMPLE_TESTS_DIRNAME}/`);
+      if (!existsSync(join(surfaceExamples, exampleSet, EXAMPLE_TESTS_DIRNAME))) {
+        findings.push(`${pluginId}: surface "${label}" example "${exampleSet}" is missing ${EXAMPLE_TESTS_DIRNAME}/`);
       }
     }
   }
 
-  // 🪟️ windows live under apps/<app>/modes/<mode>/windows/<w> and may only contain the fixed child set.
-  for (const app of listDirs(appsDir)) {
-    const modesDir = join(appsDir, app, TAXONOMY.modesDirName);
+  // 🪟️ windows live under <surface>/modes/<mode>/windows/<w> and may only contain the fixed child set.
+  for (const { abs: surfaceAbs, label } of surfaceDirs) {
+    const modesDir = join(surfaceAbs, TAXONOMY.modesDirName);
     for (const mode of listDirs(modesDir)) {
       // 🎭️ A mode declares its windows plus its own 🎚️config / 👥️presence / 🫧️transient lanes; an
       // empty lane is valid (it carries only the tracked marker), an absent lane is not.
       for (const child of TAXONOMY_MODE_CHILDREN) {
         if (existsSync(join(modesDir, mode, child))) continue;
-        findings.push(`${pluginId}: mode "${app}/${mode}" is missing required child "${child}"`);
+        findings.push(`${pluginId}: mode "${label}/${mode}" is missing required child "${child}"`);
       }
       const windowsDir = join(modesDir, mode, TAXONOMY.windowsDirName);
       for (const w of listDirs(windowsDir)) {
         for (const child of listDirs(join(windowsDir, w))) {
           if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
-            findings.push(`${pluginId}: window "${app}/${mode}/${w}" has unexpected child "${child}" (expected one of ${[...TAXONOMY_WINDOW_CHILDREN].join(", ")})`);
+            findings.push(`${pluginId}: window "${label}/${mode}/${w}" has unexpected child "${child}" (expected one of ${[...TAXONOMY_WINDOW_CHILDREN].join(", ")})`);
           }
         }
       }
@@ -1309,8 +1351,8 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
     }
   }
 
-  //#region AppFacetWalk
-  // 🎛 Walk every 🎚️config owner (app-level and plugin-level) and its sibling 👥️presence, requiring all five schemaFormats leaves.
+  //#region SurfaceFacetWalk
+  // 🎛 Walk every 🎚️config owner (surface-level and plugin-level) and its sibling 👥️presence, requiring all five schemaFormats leaves.
   const assertAppSchemaOwner = (ownerLabel: string, parentAbs: string): void => {
     const configAbs = join(parentAbs, CONFIG_FACET_DIR);
     if (!existsSync(configAbs)) return;
@@ -1348,21 +1390,20 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
       }
     }
   };
-  for (const app of listDirs(appsDir)) {
-    const appAbs = join(appsDir, app);
-    if (existsSync(join(appAbs, LEGACY_CONFIG_FACET_DIR))) {
-      findings.push(`${pluginId}: app "${app}" still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
+  for (const { abs: surfaceAbs, label } of surfaceDirs) {
+    if (existsSync(join(surfaceAbs, LEGACY_CONFIG_FACET_DIR))) {
+      findings.push(`${pluginId}: surface "${label}" still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
     }
-    if (existsSync(join(appAbs, LEGACY_WASM_DIR))) {
-      findings.push(`${pluginId}: app "${app}" still has ${LEGACY_WASM_DIR}/ — rename to 🌉️wasm/`);
+    if (existsSync(join(surfaceAbs, LEGACY_WASM_DIR))) {
+      findings.push(`${pluginId}: surface "${label}" still has ${LEGACY_WASM_DIR}/ — rename to 🌉️wasm/`);
     }
-    assertAppSchemaOwner(`app "${app}"`, appAbs);
+    assertAppSchemaOwner(`surface "${label}"`, surfaceAbs);
   }
   if (existsSync(join(pluginRoot, LEGACY_CONFIG_FACET_DIR))) {
     findings.push(`${pluginId}: plugin-root still has ${LEGACY_CONFIG_FACET_DIR}/ — rename to ${CONFIG_FACET_DIR}/`);
   }
   assertAppSchemaOwner(`plugin-root`, pluginRoot);
-  //#endregion AppFacetWalk
+  //#endregion SurfaceFacetWalk
 
   return findings;
 }

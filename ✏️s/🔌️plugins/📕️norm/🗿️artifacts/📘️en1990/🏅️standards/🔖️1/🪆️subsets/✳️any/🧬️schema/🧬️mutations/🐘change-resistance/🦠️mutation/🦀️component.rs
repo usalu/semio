@@ -13,7 +13,7 @@ pub struct ChangeResistance {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeResistance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "resistance", kind: "change-resistance", record: "ChangedResistance" };
 
-    fn diff(&self, base: &En1990Snapshot) -> <En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {

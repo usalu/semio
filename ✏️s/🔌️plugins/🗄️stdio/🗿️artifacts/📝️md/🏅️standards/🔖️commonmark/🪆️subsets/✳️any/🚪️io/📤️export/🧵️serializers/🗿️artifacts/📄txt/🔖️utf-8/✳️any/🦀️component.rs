@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.md` to stdio.txt.
 
 use crate::artifacts::md::MdSnapshot;
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.

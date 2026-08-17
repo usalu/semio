@@ -92,6 +92,20 @@ fn parse_profile(flags: &HashMap<String, String>) -> Result<db::Profile, String>
         Some(other) => Err(format!("unknown --profile '{other}' (expected test|dev|prod)")),
     }
 }
+
+/// ⚖️ `--policy laissez-faire|normal|vigilant` — the authority-local `protocol::MergePolicy`
+/// `db_artifact::ArtifactEngine::submit`'s outcome step judges a batch's worst graded conflict/
+/// message level against (contract §C9). Replaces the deleted CRDT-era `--rule-a`/`--rule-b`/
+/// `merge:<strategy>` vocabulary (C10).
+fn parse_merge_policy(flags: &HashMap<String, String>) -> Result<protocol::MergePolicy, String> {
+    match flags.get("policy").map(String::as_str) {
+        None => Ok(protocol::MergePolicy::default()),
+        Some("laissez-faire") => Ok(protocol::MergePolicy::LaissezFaire),
+        Some("normal") => Ok(protocol::MergePolicy::Normal),
+        Some("vigilant") => Ok(protocol::MergePolicy::Vigilant),
+        Some(other) => Err(format!("unknown --policy '{other}' (expected laissez-faire|normal|vigilant)")),
+    }
+}
 //#endregion 🔖️Args
 
 //#region 🔖️Format
@@ -689,45 +703,6 @@ fn cmd_health(rest: &[String]) -> i32 {
 //#endregion 🔖️HealthCmd
 
 //#region 🔖️ConflictSimulate
-fn parse_merge_strategy(raw: &str) -> Result<protocol::MergeStrategyKind, String> {
-    match raw {
-        "lww" => Ok(protocol::MergeStrategyKind::LwwRegister),
-        "seq" => Ok(protocol::MergeStrategyKind::OrderedSequence),
-        "text" => Ok(protocol::MergeStrategyKind::TextSequence),
-        "graph" => Ok(protocol::MergeStrategyKind::TombstonedGraphSet),
-        "blob" => Ok(protocol::MergeStrategyKind::ContentAddressedBlob),
-        other => Err(format!("unknown merge strategy '{other}' (expected lww|seq|text|graph|blob)")),
-    }
-}
-
-fn parse_conflict_rule(raw: &str) -> Result<protocol::ConflictRule, String> {
-    match raw {
-        "commutes" => Ok(protocol::ConflictRule::Commutes),
-        "transform" => Ok(protocol::ConflictRule::Transform),
-        other => {
-            let Some((kind, strategy)) = other.split_once(':') else {
-                return Err(format!("unknown conflict rule '{other}' (expected commutes|transform|merge:<strategy>|crdt:<strategy>)"));
-            };
-            let strategy = parse_merge_strategy(strategy)?;
-            match kind {
-                "merge" => Ok(protocol::ConflictRule::Merge(strategy)),
-                "crdt" => Ok(protocol::ConflictRule::Crdt(strategy)),
-                other => Err(format!("unknown conflict rule kind '{other}' (expected merge|crdt)")),
-            }
-        }
-    }
-}
-
-fn describe_merge_strategy(strategy: protocol::MergeStrategyKind) -> &'static str {
-    match strategy {
-        protocol::MergeStrategyKind::LwwRegister => "lww",
-        protocol::MergeStrategyKind::OrderedSequence => "seq",
-        protocol::MergeStrategyKind::TextSequence => "text",
-        protocol::MergeStrategyKind::TombstonedGraphSet => "graph",
-        protocol::MergeStrategyKind::ContentAddressedBlob => "blob",
-    }
-}
-
 fn describe_conflict_kind(kind: &db::conflict::ConflictKind) -> String {
     match kind {
         db::conflict::ConflictKind::TouchedRegion(regions) => format!("touched_region({})", regions.iter().map(|region| region.path.as_str()).collect::<Vec<_>>().join(",")),
@@ -735,54 +710,37 @@ fn describe_conflict_kind(kind: &db::conflict::ConflictKind) -> String {
     }
 }
 
-fn describe_resolution_plan(plan: db::conflict::ResolutionPlan) -> String {
-    match plan {
-        db::conflict::ResolutionPlan::Commutes => "commutes".to_string(),
-        db::conflict::ResolutionPlan::Transform => "transform".to_string(),
-        db::conflict::ResolutionPlan::Merge(strategy) => format!("merge:{}", describe_merge_strategy(strategy)),
-        db::conflict::ResolutionPlan::Crdt(strategy) => format!("crdt:{}", describe_merge_strategy(strategy)),
-        db::conflict::ResolutionPlan::Reject => "reject".to_string(),
-    }
-}
-
-fn touched_command(command_id: &str, actor: &str, kind: &str, rule: protocol::ConflictRule, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
-    let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), rule, protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
+fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
+    let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db::state::TouchedRegion::write(path)))
 }
 
-/// ⚔️ `db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]
-/// [--rule-a commutes|transform|merge:<strategy>|crdt:<strategy>] [--rule-b ...]` — runs the real
-/// `db::conflict::ConflictDetector` over two hand-built `CommandTouch`es (no storage touched at all:
-/// a pure, local simulation). Exits `1` iff a conflict was found (so the exit code alone answers
-/// "would these conflict").
+/// ⚔️ `db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]` — runs the
+/// real `db::conflict::ConflictDetector` over two hand-built `CommandTouch`es (no storage touched at
+/// all: a pure, local simulation). Exits `1` iff a conflict was found (so the exit code alone
+/// answers "would these conflict"); grading a found conflict into a `protocol::Severity` (and
+/// whether a `protocol::MergePolicy` would reject it) is `db_artifact`'s job one layer up, not this
+/// detection-only simulation's (see `db_conflict`'s own module doc).
 fn cmd_conflict_simulate(rest: &[String]) -> i32 {
     let (_positional, flags) = parse_args(rest);
     let Some(touch_a) = flags.get("touch-a") else {
-        return usage("usage: db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K] [--rule-a R] [--rule-b R]");
+        return usage("usage: db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]");
     };
     let Some(touch_b) = flags.get("touch-b") else {
         return usage("db conflict-simulate: --touch-b is required");
     };
     let kind_a = flags.get("kind-a").map_or("command-a", String::as_str);
     let kind_b = flags.get("kind-b").map_or("command-b", String::as_str);
-    let rule_a = match parse_conflict_rule(flags.get("rule-a").map_or("commutes", String::as_str)) {
-        Ok(rule) => rule,
-        Err(message) => return usage(&message),
-    };
-    let rule_b = match parse_conflict_rule(flags.get("rule-b").map_or("commutes", String::as_str)) {
-        Ok(rule) => rule,
-        Err(message) => return usage(&message),
-    };
 
-    let command_a = touched_command("simulated-a", "actor-a", kind_a, rule_a, 1, touch_a);
-    let command_b = touched_command("simulated-b", "actor-b", kind_b, rule_b, 2, touch_b);
+    let command_a = touched_command("simulated-a", "actor-a", kind_a, 1, touch_a);
+    let command_b = touched_command("simulated-b", "actor-b", kind_b, 2, touch_b);
     let records = db::conflict::ConflictDetector::new().detect(&[command_a, command_b]);
     if records.is_empty() {
         println!("no conflict detected");
         return 0;
     }
     for record in &records {
-        println!("conflict: {} <-> {} kind={} resolution={}", record.command_id.0, record.conflicting_with.0, describe_conflict_kind(&record.kind), describe_resolution_plan(record.resolution));
+        println!("conflict: {} <-> {} kind={}", record.command_id.0, record.conflicting_with.0, describe_conflict_kind(&record.kind));
     }
     1
 }
@@ -883,17 +841,18 @@ fn cmd_migrate(rest: &[String]) -> i32 {
 
 //#region 🔖️Profile
 /// ⏱️ `db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N]
-/// [--profile test|dev|prod]` — submits `N` (default 100) trivial single-path `set`-shaped commands
-/// sequentially through the real submit pipeline (`ArtifactHandle::submit`, actor-mediated, WAL
-/// group-commit and all) and reports wall-clock throughput/latency. Opens `document` if it already
-/// exists, else creates it first — self-contained, no separate seeding step required. Deliberately
-/// hand-timed with `std::time::Instant` rather than pulling in `db_testkit`'s `WorkloadGen`/
-/// criterion harness: `db_testkit` is a sibling crate, not part of the `db` facade's own re-export
-/// surface, and this crate's dependency footprint is the `db` facade alone (see module doc).
+/// [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]` — submits `N` (default 100)
+/// trivial single-path `set`-shaped commands sequentially through the real submit pipeline
+/// (`ArtifactHandle::submit`, actor-mediated, WAL group-commit and all) and reports wall-clock
+/// throughput/latency. Opens `document` if it already exists, else creates it first —
+/// self-contained, no separate seeding step required. Deliberately hand-timed with
+/// `std::time::Instant` rather than pulling in `db_testkit`'s `WorkloadGen`/criterion harness:
+/// `db_testkit` is a sibling crate, not part of the `db` facade's own re-export surface, and this
+/// crate's dependency footprint is the `db` facade alone (see module doc).
 fn cmd_profile(rest: &[String]) -> i32 {
     let (positional, flags) = parse_args(rest);
     if positional.len() < 2 {
-        return usage("usage: db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--profile test|dev|prod]");
+        return usage("usage: db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]");
     }
     let root = &positional[0];
     let id = &positional[1];
@@ -916,6 +875,10 @@ fn cmd_profile(rest: &[String]) -> i32 {
             },
             None => return usage(&format!("db profile: unknown --durability '{other}' (expected memory|os|fsync|quorum:N)")),
         },
+    };
+    let policy = match parse_merge_policy(&flags) {
+        Ok(policy) => policy,
+        Err(message) => return usage(&message),
     };
     let profile = match parse_profile(&flags) {
         Ok(profile) => profile,
@@ -945,15 +908,15 @@ fn cmd_profile(rest: &[String]) -> i32 {
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(forward)).unwrap_or_default() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(backward)).unwrap_or_default() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]) {
             Ok(batch) => batch,
             Err(err) => return fail("build batch", err),
         };
-        match db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability })) {
+        match db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability, policy })) {
             Ok(Ok(_receipt)) => {}
             Ok(Err(err)) => return fail(&format!("submit rejected at command {counter}"), err),
             Err(err) => return fail(&format!("submit failed at command {counter}"), err),
@@ -991,10 +954,10 @@ fn print_help() {
     eprintln!("  repair <root> <document-id>");
     eprintln!("  compact <root> <document-id> [--holder H] [--consolidate] [--profile ...]");
     eprintln!("  health <root> [--profile ...]");
-    eprintln!("  conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K] [--rule-a R] [--rule-b R]");
+    eprintln!("  conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]");
     eprintln!("  replica-simulate <leader-root> <follower-root> <document-id>");
     eprintln!("  migrate <root> <document-id> <name> [--payload TEXT]");
-    eprintln!("  profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--profile ...]");
+    eprintln!("  profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile ...]");
 }
 
 pub fn main_impl(args: &[String]) -> i32 {
@@ -1049,8 +1012,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId("tester".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": "hello"})).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::json!({"greeting": null})).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1062,7 +1025,7 @@ mod tests {
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(db::ArtifactSpec::new(document.clone())).unwrap();
         let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document)]).unwrap();
-        db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync })).unwrap().unwrap();
+        db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
         database.shutdown(std::time::Duration::from_secs(1)).unwrap();
     }
     //#endregion 🧸️Fixtures

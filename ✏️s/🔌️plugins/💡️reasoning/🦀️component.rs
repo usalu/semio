@@ -9,7 +9,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .version("0.1.0")
         .artifact(crate::artifacts::wires::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::wires::ReasoningWiresPlayApp>(crate::editor::wires::create_wires_app())
+        .editor_mutation_roster::<crate::editor::wires::ReasoningWiresPlayApp>()
         .viewer::<crate::viewer::wires::WiresViewer>(crate::viewer::wires::create_wires_viewer())
+        .viewer_mutation_roster::<crate::viewer::wires::WiresViewer>()
         .try_build()
 }
 

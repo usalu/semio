@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::AviAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
 

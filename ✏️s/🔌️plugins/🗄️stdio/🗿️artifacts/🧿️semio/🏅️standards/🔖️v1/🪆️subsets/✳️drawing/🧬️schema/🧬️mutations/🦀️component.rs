@@ -65,11 +65,10 @@ pub enum SemioDrawingMutation {
 //#region 🔖️Apply
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
 /// (consumed by `../🦀️component.rs`'s `SemioDrawingBuilderConstruction::mutate`).
-pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> SemioDrawingDiff {
+pub fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
     use protocol::Mutation;
-    let diff = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioDrawingDiff as protocol::MutationDiff<SemioDrawingSnapshot>>::apply(&diff, snapshot);
-    diff
+    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -148,11 +147,11 @@ mod tests {
     /// pre-operation `base` — the din4108 harness's own documented bug, deliberately NOT copied
     /// here (this ticket's binding instruction).
     fn round_trip(base: &SemioDrawingSnapshot, operation: &SemioDrawingMutation) -> SemioDrawingSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture for {operation:?}");
         forward
@@ -185,7 +184,7 @@ mod tests {
         let base = fixture();
         let delete = SemioDrawingMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { id: "missing".into() });
         assert!(delete.inverse(&base).is_empty());
-        assert_eq!(delete.diff(&base).apply(&base), base);
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]
@@ -216,7 +215,7 @@ mod tests {
         let path_path = NodePath { layer: 0, path: vec![1] };
         let no_op_move = SemioDrawingMutation::MoveNode(move_node::mutation::MoveNode { at: path_path, new_origin: SemioPoint2 { x: 1.0, y: 1.0 } });
         assert!(no_op_move.inverse(&base).is_empty(), "Path has no origin field; move must be a no-op");
-        assert_eq!(no_op_move.diff(&base).apply(&base), base);
+        assert_eq!(no_op_move.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 
         let drag = SemioDrawingMutation::DragNodes(drag_nodes::mutation::DragNodes { ats: vec![text_path], offset: SemioPoint2 { x: 3.0, y: -2.0 } });
         let _ = round_trip(&base, &drag);
@@ -264,7 +263,7 @@ mod tests {
         let root_path = NodePath { layer: 0, path: vec![] };
         let m = SemioDrawingMutation::Group(group::mutation::GroupNodes { parent: root_path, indices: vec![0, 2], transform: SemioTransform::identity() });
         assert!(m.inverse(&base).is_empty());
-        assert_eq!(m.diff(&base).apply(&base), base);
+        assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]
@@ -287,7 +286,7 @@ mod tests {
         let root_path = NodePath { layer: 0, path: vec![] };
         let m = SemioDrawingMutation::Flatten(flatten::mutation::FlattenNode { at: root_path });
         assert!(m.inverse(&base).is_empty());
-        assert_eq!(m.diff(&base).apply(&base), base);
+        assert_eq!(m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]
@@ -320,7 +319,7 @@ mod tests {
 
         let absent_m = SemioDrawingMutation::ChangeStrokeWidth(change_stroke_width::mutation::ChangeStrokeWidth { style_name: "missing".into(), new_width: Some(1.0) });
         assert!(absent_m.inverse(&base).is_empty());
-        assert_eq!(absent_m.diff(&base).apply(&base), base);
+        assert_eq!(absent_m.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]

@@ -18,7 +18,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .version("0.1.0")
         .artifact(crate::artifacts::dag::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::dag::DagPlayApp>(crate::editor::dag::create_dag_app())
+        .editor_mutation_roster::<crate::editor::dag::DagPlayApp>()
         .viewer::<crate::viewer::dag::DagViewer>(crate::viewer::dag::create_dag_viewer())
+        .viewer_mutation_roster::<crate::viewer::dag::DagViewer>()
         .try_build()
 }
 

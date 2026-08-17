@@ -4,7 +4,7 @@
 //! protocol doc-string and the encode/decode free-function wrappers + their round-trip tests.
 //!
 //! The app's typed `SequenceCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it lives in `🎛️apps/🎬️sequence/🦀️component.rs`,
+//! codec — is an APP concern, not an artifact one: it lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 

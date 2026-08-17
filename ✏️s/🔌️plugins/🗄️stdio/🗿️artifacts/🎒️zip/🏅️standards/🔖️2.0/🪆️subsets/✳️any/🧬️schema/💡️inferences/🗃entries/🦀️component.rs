@@ -11,7 +11,7 @@ use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Real central-directory-style census over `entries`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ZipEntries {
     pub entry_count: u32,
@@ -34,6 +34,12 @@ pub fn compute_zip_entries(snapshot: &ZipSnapshot) -> ZipEntries {
         total_uncompressed_size += entry.data.len() as u64;
     }
     ZipEntries { entry_count: snapshot.entries.len() as u32, total_uncompressed_size, content_digest: format!("{:016x}", hasher.finish()) }
+}
+
+impl Default for ZipEntries {
+    fn default() -> Self {
+        compute_zip_entries(&ZipSnapshot::default())
+    }
 }
 //#endregion 🔖️Entries
 

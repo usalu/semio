@@ -218,8 +218,8 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -240,13 +240,13 @@ mod tests {
         let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
 
         let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
-        let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync })).unwrap().unwrap();
+        let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
         assert!(receipt.conflicts.is_empty());
 
         let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = serde_json::from_slice(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let value: serde_json::Value = document::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
         assert_eq!(value, serde_json::json!("hello"));
 
         let frontier = handle.frontier().unwrap();

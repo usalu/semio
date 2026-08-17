@@ -12,7 +12,7 @@ pub struct ChangeEnSKKnM2 {
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeEnSKKnM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "en-sk-kn-m2", kind: "change-en-sk-kn-m2", record: "ChangedEnSkKnM2" };
 
-    fn diff(&self, base: &En1991Snapshot) -> <En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff {
+    fn diff(&self, base: &En1991Snapshot) -> protocol::MutationOutcome<<En1991Mutation as protocol::Mutation<En1991Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {

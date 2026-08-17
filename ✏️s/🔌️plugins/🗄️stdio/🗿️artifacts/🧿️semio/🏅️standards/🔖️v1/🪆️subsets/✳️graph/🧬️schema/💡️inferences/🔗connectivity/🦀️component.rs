@@ -130,7 +130,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     fn node(id: &str) -> SemioGraphNode {
         SemioGraphNode { id: GraphNodeId::new(id), kind: "task".into(), label: id.into(), position: Default::default(), ports: Vec::new(), properties: Vec::new() }

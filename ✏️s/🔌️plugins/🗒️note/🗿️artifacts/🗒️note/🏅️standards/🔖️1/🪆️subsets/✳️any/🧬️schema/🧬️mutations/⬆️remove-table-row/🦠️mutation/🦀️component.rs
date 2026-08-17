@@ -22,7 +22,7 @@ pub fn remove_table_row(id: String) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableRow {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "table-row", kind: "remove-table-row", record: "RemovedTableRow" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

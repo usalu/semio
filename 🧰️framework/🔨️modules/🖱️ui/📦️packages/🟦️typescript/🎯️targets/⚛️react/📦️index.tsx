@@ -13,19 +13,12 @@
 
 // #region 🔌️Adapters
 
-import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import * as TogglePrimitive from "@radix-ui/react-toggle";
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -594,105 +587,86 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 
 /** @emoji 🌀️ Maps shell chrome {@link UiStatus} to the shared border ring utilities. */
 
-// 🧱️core: cn/twMergeUi extracted to 🧱️elements/🏷️ClassNames/🟦️component.tsx — ActionGroup/Toggle call
-import { cn } from "../../../../🧱️elements/🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 export { cn };
 import {
   waitingBorderClass,
   waitingBorderActiveClass,
   loadingBorderClass,
   loadingBorderActiveClass,
-  interactiveOnClass,
-  uiFormControlBrowserDefaultProps,
-  interactiveTabActiveClass,
-  groupHoverExcludingHandleBgFillClass,
-  hoverExcludingHandleTextEmphasizedClass,
-  hoverExcludingHandleBgFillClass,
-  formControlFocusBorderClass,
-  interactiveControlTransitionClass,
-  interactiveHoverClass,
-  interactiveHoverFillClass,
-  borderNormalBottomClass,
-  borderNormalClass,
-  borderElementClass,
-  interactiveActiveFillClass,
-  interactiveActiveBorderClass,
-  veilClass,
-  glassClass,
-  surfaceClass,
-  menuListItemClassName,
-  shellFloorPaints,
-  shellFloorFillClass,
   waitingBorderStateClass,
   loadingBorderStateClass,
   chromeStatusBorderClass,
-  chromeControlItemBaseClass,
-  chromeControlItemClass,
-  chromeControlTabItemClass,
-  modeDockTabClassName,
-  windowPaneChromeToggleClass,
   loadingBorderElementClass,
-  waitingBorderElementClass,
-  chromeControlGroupShellClass,
-  chromeControlGroupClass,
-  chromeControlItemOnClass,
-  chromeControlTabActiveClass,
-  sliderRangeClassName,
-  sliderReadyClassName,
-  sliderThumbClassName,
-  sliderValueClassName,
-  tableRowInteractiveClass,
-  tableRowSelectedClass
-} from "../../../../🧱️elements/🏷️ClassNames/🟦️component.tsx";
+  waitingBorderElementClass
+} from "../../../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 export {
   waitingBorderClass,
   waitingBorderActiveClass,
   loadingBorderClass,
   loadingBorderActiveClass,
+  waitingBorderStateClass,
+  loadingBorderStateClass,
+  chromeStatusBorderClass,
+  loadingBorderElementClass,
+  waitingBorderElementClass
+};
+import {
+  interactiveControlTransitionClass,
   interactiveOnClass,
-  uiFormControlBrowserDefaultProps,
   interactiveTabActiveClass,
   groupHoverExcludingHandleBgFillClass,
   hoverExcludingHandleTextEmphasizedClass,
   hoverExcludingHandleBgFillClass,
-  formControlFocusBorderClass,
-  interactiveControlTransitionClass,
   interactiveHoverClass,
   interactiveHoverFillClass,
-  borderNormalBottomClass,
-  borderNormalClass,
-  borderElementClass,
   interactiveActiveFillClass,
-  interactiveActiveBorderClass,
-  veilClass,
-  glassClass,
-  surfaceClass,
-  menuListItemClassName,
-  shellFloorPaints,
-  shellFloorFillClass,
-  waitingBorderStateClass,
-  loadingBorderStateClass,
-  chromeStatusBorderClass,
+  interactiveActiveBorderClass
+} from "../../../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+export {
+  interactiveControlTransitionClass,
+  interactiveOnClass,
+  interactiveTabActiveClass,
+  groupHoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
+  hoverExcludingHandleBgFillClass,
+  interactiveHoverClass,
+  interactiveHoverFillClass,
+  interactiveActiveFillClass,
+  interactiveActiveBorderClass
+};
+import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+export { formControlFocusBorderClass, uiFormControlBrowserDefaultProps };
+import { borderNormalBottomClass, borderNormalClass, borderElementClass } from "../../../../🔨️modules/📏️border-presentation/🟦️component.ts";
+export { borderNormalBottomClass, borderNormalClass, borderElementClass };
+import { veilClass, glassClass, surfaceClass } from "../../../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+export { veilClass, glassClass, surfaceClass };
+import { menuListItemClassName } from "../../../../🔨️modules/📋️menu-item-presentation/🟦️component.ts";
+export { menuListItemClassName };
+import { shellFloorPaints, shellFloorFillClass } from "../../../../🔨️modules/🏠️shell-floor-presentation/🟦️component.ts";
+export { shellFloorPaints, shellFloorFillClass };
+import {
   chromeControlItemBaseClass,
   chromeControlItemClass,
   chromeControlTabItemClass,
   modeDockTabClassName,
   windowPaneChromeToggleClass,
-  loadingBorderElementClass,
-  waitingBorderElementClass,
   chromeControlGroupShellClass,
   chromeControlGroupClass,
   chromeControlItemOnClass,
-  chromeControlTabActiveClass,
-  sliderRangeClassName,
-  sliderReadyClassName,
-  sliderThumbClassName,
-  sliderValueClassName,
-  tableRowInteractiveClass,
-  tableRowSelectedClass
+  chromeControlTabActiveClass
+} from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
+export {
+  chromeControlItemBaseClass,
+  chromeControlItemClass,
+  chromeControlTabItemClass,
+  modeDockTabClassName,
+  windowPaneChromeToggleClass,
+  chromeControlGroupShellClass,
+  chromeControlGroupClass,
+  chromeControlItemOnClass,
+  chromeControlTabActiveClass
 };
-// cn(...) at module top level, which requires a non-circular import (see that file's header comment for
-// why the barrel definition caused a real bug).
 
 // #region 🔖️SelectionMarquee
 /** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
@@ -1080,8 +1054,8 @@ export type { Icon } from "../../../../🧱️elements/🔣️Icons/🟦️compo
 /** @emoji 📋️ Hover row styling for menus, selects, comboboxes, and context menus. */
 
 
-import { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, isAppleUiPlatform, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions } from "../../../../🧱️elements/🖱️ContextMenu/🟦️component.tsx";
-export { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, isAppleUiPlatform, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions };
+import { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions } from "../../../../🧱️elements/🖱️ContextMenu/🟦️component.tsx";
+export { createDOMEventBinding, getElementById, queryElement, ContextMenu, contextMenuOrdinals, contextMenuItemsAtLevel, contextMenuItemAtPath, findContextMenuCheckedPath, contextMenuNavigationFromKey, moveContextMenuActivePath, contextMenuPathForOrdinal, contextMenuOpenSubmenuPath, isContextMenuPointerTarget, contextMenuDigitFromKey, findCheckedContextMenuItem, ContextMenuController, readDomTextSelection, isPointerEventOnDomTextSelection, isDomTextEditableTarget, buildTextSelectionContextMenuItems, copyDomTextSelection, cutDomTextSelection, pasteDomTextSelection, selectAllDomText, TextSelectionContextMenuHost, type ContextMenuItem, type ContextMenuProps, type ContextMenuControllerProps, type ContextMenuNavDirection, type TextSelectionContextMenuLabels, type TextSelectionContextMenuActions };
 // #endregion 🖱️ContextMenu
 
 
@@ -1092,88 +1066,12 @@ export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, 
 // #endregion UiDriver
 
 // #region ⌨️UiKeybindings
-/** @emoji ⌨️ Splits a declared `keys` binding (comma-separated chord alternatives) into individual chords. */
-export function parseKeybindingChords(keys: string): string[] {
-  return keys
-    .split(",")
-    .map((key) => key.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-/** @emoji ⌨️ Formats the first chord of a keybinding for inline or menu shortcut labels. */
-export function formatKeybindingShortcut(keys: string): string {
-  const chord = parseKeybindingChords(keys)[0];
-  if (!chord) return "";
-  const apple = isAppleUiPlatform();
-  const glyph = (part: string): string => {
-    switch (part) {
-      case "mod":
-        return apple ? "⌘️" : "Ctrl";
-      case "ctrl":
-        return apple ? "⌃️" : "Ctrl";
-      case "meta":
-        return "⌘️";
-      case "alt":
-        return apple ? "⌥️" : "Alt";
-      case "shift":
-        return apple ? "⇧️" : "Shift";
-      case "backspace":
-        return "⌫️";
-      case "delete":
-        return "⌦️";
-      case "enter":
-        return apple ? "↵️" : "Enter";
-      case "escape":
-        return apple ? "⎋️" : "Esc";
-      case "up":
-        return "↑";
-      case "down":
-        return "↓";
-      case "left":
-        return "←";
-      case "right":
-        return "→";
-      default:
-        if (part.length === 1) return part.toUpperCase();
-        return part.charAt(0).toUpperCase() + part.slice(1);
-    }
-  };
-  const parts = chord.split("+").map((part) => part.trim()).filter(Boolean);
-  const labels = parts.map(glyph);
-  return apple ? labels.join("") : labels.join("+");
-}
-
-/** @emoji ⌨️ Last-wins action→keys map from app keybindings. */
-export function buildKeysByActionId(keybindings: readonly { readonly action: { readonly action: string }; readonly keys: string }[]): ReadonlyMap<string, string> {
-  const map = new Map<string, string>();
-  for (const binding of keybindings) {
-    map.set(binding.action.action, binding.keys);
-  }
-  return map;
-}
-
-/** @emoji ⌨️ Shell chrome control ids mapped to default chords (single source for bind + display). */
-export const SHELL_KEYBINDINGS: Readonly<Record<string, string>> = {
-  "ui.introduction.skip": "escape",
-  "ui.introduction.next": "enter,arrowright",
-  "ui.introduction.back": "arrowleft",
-  "ui.dialog.cancel": "escape",
-  "ui.dialog.submit": "enter",
-  "ui.search.toggle": "mod+p",
-  "ui.find.toggle": "mod+f",
-  "os.toggleFullscreen": "mod+shift+f",
-  "ui.nav.back": "mod+[",
-  "ui.nav.forward": "mod+]",
-  "ui.nav.up": "mod+up",
-  "ui.shell.panelAnchor.topLeft": "ctrl+b,meta+b",
-  "ui.shell.panelAnchor.topMiddle": "ctrl+m,meta+m",
-  "ui.shell.panelAnchor.topRight": "ctrl+shift+b,meta+shift+b",
-  "ui.shell.panelAnchor.rightMiddle": "ctrl+shift+m,meta+shift+m",
-  "ui.shell.panelAnchor.bottomRight": "ctrl+alt+shift+b,meta+alt+shift+b",
-  "ui.shell.panelAnchor.bottomMiddle": "ctrl+alt+m,meta+alt+m",
-  "ui.shell.panelAnchor.bottomLeft": "ctrl+alt+b,meta+alt+b",
-  "ui.shell.panelAnchor.leftMiddle": "ctrl+alt+shift+m,meta+alt+shift+m",
-};
+import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
+import { buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, type ControlKeybindingAction, type ControlKeybindingDefinition, type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies } from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
+import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
+import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️component.ts";
+export { parseKeybindingChords, formatKeybindingShortcut, buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, ControlHotkeyBadge, readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides };
+export type { ControlKeybindingAction, ControlKeybindingDefinition, ControlKeybindingCallback, ControlKeybindingOptions, ControlKeybindingDependencies, ControlHotkeyBadgeProps };
 
 /** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
 export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SHELL_KEYBINDINGS & string>> = {
@@ -1187,122 +1085,6 @@ export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SH
   "left-middle": "ui.shell.panelAnchor.leftMiddle",
 };
 
-/** @emoji ⌨️ Merges shell defaults, app action bindings (keyed by control/action id), and user overrides. */
-export function composeControlKeybindings(
-  keysByActionId: ReadonlyMap<string, string>,
-  overrides: Readonly<Record<string, string>>,
-): ReadonlyMap<string, string> {
-  const map = new Map<string, string>(Object.entries(SHELL_KEYBINDINGS));
-  for (const [actionId, keys] of keysByActionId) {
-    if (!map.has(actionId)) map.set(actionId, keys);
-  }
-  for (const [controlId, keys] of Object.entries(overrides)) {
-    map.set(controlId, keys);
-  }
-  return map;
-}
-
-const EMPTY_CONTROL_KEYBINDINGS = ephemeralMap<string, string>("framework.modules.ui.packages.typescript.targets.react.index.tsx.EMPTY_CONTROL_KEYBINDINGS");
-
-const UiKeybindingsContext = reactHostPort.createContext<ReadonlyMap<string, string>>(EMPTY_CONTROL_KEYBINDINGS);
-
-/** @emoji ⌨️ Supplies the merged control-id→chords map for bind and display. */
-export function UiKeybindingsProvider({ bindings, children }: { readonly bindings: ReadonlyMap<string, string>; readonly children: React.ReactNode }): React.ReactElement {
-  return <UiKeybindingsContext.Provider value={bindings}>{children}</UiKeybindingsContext.Provider>;
-}
-
-/** @emoji ⌨️ Resolves control-id→raw-chords from the nearest {@link UiKeybindingsProvider}. */
-export function useUiKeybindingsByControlId(): ReadonlyMap<string, string> {
-  return reactHostPort.useContext(UiKeybindingsContext);
-}
-
-/** @emoji ⌨️ Raw chord string for a control id (before platform formatting). */
-export function resolveControlKeybindingRaw(id: string | undefined, bindings: ReadonlyMap<string, string>): string | undefined {
-  if (!id) return undefined;
-  const direct = bindings.get(id);
-  if (direct) return direct;
-  const labelId = resolveControlLabelId(id);
-  if (labelId !== id) return bindings.get(labelId);
-  return undefined;
-}
-
-/** @emoji ⌨️ Platform-formatted shortcut label for a chrome control id. */
-export function useControlHotkey(id: string | undefined): string | undefined {
-  const bindings = useUiKeybindingsByControlId();
-  const raw = id ? resolveControlKeybindingRaw(id, bindings) ?? SHELL_KEYBINDINGS[id] : undefined;
-  return raw ? formatKeybindingShortcut(raw) : undefined;
-}
-
-/** @emoji ⌨️ Whether an inline hotkey badge should paint on a control with the given label visibility. */
-export function useControlHotkeyInlineVisible(allowInline: boolean): boolean {
-  const driver = useUiDriver();
-  if (driver.hotkeys !== "inline") return false;
-  if (allowInline) return true;
-  return false;
-}
-
-/** @emoji ⌨️ Whether the active driver wants the chord in a tooltip for this control. */
-export function useControlHotkeyTooltipVisible(allowInline: boolean): boolean {
-  const driver = useUiDriver();
-  if (driver.hotkeys === "none" && driver.tooltips === "none") return false;
-  if (driver.hotkeys === "tooltip") return true;
-  if (driver.hotkeys === "inline" && !allowInline && driver.tooltips !== "none") return true;
-  if (driver.tooltips === "minimal") return true;
-  return driver.tooltips === "full";
-}
-
-export const controlHotkeyShortcutClassName = "ms-auto shrink-0 text-xs tracking-widest text-muted-foreground font-mono";
-
-/** @emoji ⌨️ Inline kbd badge for chrome controls under the default driver. */
-export function ControlHotkeyBadge({ id, allowInline }: { readonly id?: string; readonly allowInline: boolean }): React.ReactElement | null {
-  const hotkey = useControlHotkey(id);
-  const show = useControlHotkeyInlineVisible(allowInline);
-  if (!show || !hotkey) return null;
-  return (
-    <span data-slot="control-hotkey" aria-hidden className={controlHotkeyShortcutClassName}>
-      {hotkey}
-    </span>
-  );
-}
-
-/** @emoji ⌨️ Binds a control id's chord from {@link UiKeybindingsContext} / {@link SHELL_KEYBINDINGS}. */
-export function useControlKeybinding(controlId: string, callback: () => void, options?: Parameters<typeof useHotkeys>[2], deps?: React.DependencyList): void {
-  const bindings = useUiKeybindingsByControlId();
-  const keys = reactHostPort.useMemo(() => resolveControlKeybindingRaw(controlId, bindings) ?? SHELL_KEYBINDINGS[controlId], [bindings, controlId]);
-  const opts = (options ?? {}) as { readonly enabled?: boolean; readonly enableOnFormTags?: boolean };
-  useHotkeys(keys ?? "", callback, { ...opts, enabled: Boolean(keys) && (opts.enabled ?? true) }, deps ?? []);
-}
-
-export const UI_KEYBINDING_OVERRIDES_STORAGE_KEY = "ui.keybindings.overrides";
-
-/** @emoji ⌨️ Parses persisted keybinding overrides; invalid entries are dropped. */
-export function parseUiKeybindingOverrides(json: unknown): Record<string, string> {
-  if (typeof json !== "object" || json === null) return {};
-  const out: Record<string, string> = {};
-  for (const [controlId, value] of Object.entries(json as Record<string, unknown>)) {
-    if (!isElementId(controlId)) continue;
-    if (typeof value !== "string" || !value.trim()) continue;
-    if (parseKeybindingChords(value).length === 0) continue;
-    out[controlId] = value.trim();
-  }
-  return out;
-}
-
-/** @emoji ⌨️ Reads user keybinding overrides from storage. */
-export function readStoredUiKeybindingOverrides(storage: StoragePort): Record<string, string> {
-  const raw = storage.get(UI_KEYBINDING_OVERRIDES_STORAGE_KEY);
-  if (!raw) return {};
-  try {
-    return parseUiKeybindingOverrides(JSON.parse(raw));
-  } catch {
-    return {};
-  }
-}
-
-/** @emoji ⌨️ Persists user keybinding overrides. */
-export function writeStoredUiKeybindingOverrides(storage: StoragePort, overrides: Record<string, string>): void {
-  storage.set(UI_KEYBINDING_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides));
-}
 // #endregion ⌨️UiKeybindings
 
 // #region 🌈️SurfaceChrome
@@ -1852,7 +1634,6 @@ export function writeStoredIntroductionSeen(storage: StoragePort, appId: string)
 }
 
 import {
-  ChromeControlHint,
   WINDOW_SILHOUETTE_GEOMETRY_SCHEMA,
   WINDOW_SILHOUETTE_PATH_INSET,
   WINDOW_SILHOUETTE_CHIP_EPSILON,
@@ -1883,7 +1664,7 @@ import {
   type WindowSilhouetteSafeClearances,
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
-} from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
+} from "../../../../🧱️elements/🪟️WindowSilhouette/🟦️component.tsx";
 export {
   WINDOW_SILHOUETTE_GEOMETRY_SCHEMA,
   WINDOW_SILHOUETTE_PATH_INSET,
@@ -1916,6 +1697,7 @@ export {
   type PendingWindowSilhouetteMetrics,
   type WindowSilhouetteGeometry,
 };
+import { ChromeControlHint } from "../../../../🧱️elements/💡️ChromeControlHint/🟦️component.tsx";
 export { ChromeControlHint };
 // #endregion 🎛️UiChromeCompact
 
@@ -1936,8 +1718,8 @@ import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️Ui
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
-import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentKey, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
-export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentKey, UiRibbonParentEntries, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
+import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
+export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentEntries, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
 export { UI_RIBBON_PARENT_CATEGORIES };
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
@@ -2636,6 +2418,60 @@ export const uiChromeTranslationBundles = {
           event: { label: { normal: "Ereignismenü", beginner: "Ereignismenü" } },
           editor: { label: { normal: "Editormenü", beginner: "Editormenü" } },
           map: { label: { normal: "Kartenmenü", beginner: "Kartenmenü" } },
+        },
+        mutation: {
+          level: {
+            info: { label: { normal: "Info", beginner: "Info" } },
+            warning: { label: { normal: "Warnung", beginner: "Warnung" } },
+            error: { label: { normal: "Fehler", beginner: "Fehler" } },
+            fatal: { label: { normal: "Kritisch", beginner: "Kritischer Fehler" } },
+          },
+          code: {
+            targetMissing: { label: { normal: "Ziel fehlt", beginner: "Das Ziel dieser Änderung existiert nicht mehr." } },
+            noOp: { label: { normal: "Keine Änderung", beginner: "Der Zustand war bereits so — nichts wurde geändert." } },
+            partial: { label: { normal: "Teilweise angewendet", beginner: "Nur ein Teil der Änderung konnte angewendet werden." } },
+            clamped: { label: { normal: "Begrenzt", beginner: "Ein Wert wurde auf den zulässigen Bereich begrenzt." } },
+            duplicateId: { label: { normal: "ID bereits vergeben", beginner: "Es existiert bereits ein Element mit dieser ID." } },
+            invariant: { label: { normal: "Ungültiger Zustand", beginner: "Diese Änderung würde einen ungültigen Zustand erzeugen." } },
+            cascade: { label: { normal: "Folgeänderung", beginner: "Diese Änderung hat weitere Änderungen ausgelöst." } },
+          },
+          policy: {
+            laissezFaire: {
+              label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
+              description: { label: { normal: "Nimmt jede Änderung an, außer sie ist kritisch.", beginner: "Nimmt jede Änderung an, solange sie nicht kritisch ist." } },
+            },
+            normal: {
+              label: { label: { normal: "Normal", beginner: "Normal" } },
+              description: { label: { normal: "Lehnt fehlerhafte Änderungen ab, erlaubt Warnungen.", beginner: "Lehnt Änderungen mit Fehlern ab, lässt Warnungen aber zu." } },
+            },
+            vigilant: {
+              label: { label: { normal: "Wachsam", beginner: "Wachsam" } },
+              description: { label: { normal: "Lehnt bereits Änderungen mit Warnungen ab.", beginner: "Am strengsten: lehnt schon Änderungen mit Warnungen ab." } },
+            },
+            setting: {
+              label: { label: { normal: "Merge-Richtlinie", beginner: "Merge-Richtlinie" } },
+            },
+          },
+          rejected: {
+            title: { label: { normal: "Änderung abgelehnt", beginner: "Änderung abgelehnt" } },
+            body: { label: { normal: "Diese Änderung konnte nicht angewendet werden.", beginner: "Diese Änderung konnte nicht angewendet werden." } },
+          },
+        },
+        conflict: {
+          panel: { label: { normal: "Konflikte", beginner: "Konflikte" } },
+          accept: { label: { normal: "Übernehmen", beginner: "Übernehmen" } },
+          discard: { label: { normal: "Verwerfen", beginner: "Verwerfen" } },
+          quarantined: { label: { normal: "Zurückgehalten", beginner: "Eingehende Änderungen werden zurückgehalten, bis du entscheidest." } },
+          degraded: { label: { normal: "Beeinträchtigt", beginner: "Übernommen, aber mit Warnungen." } },
+        },
+        presence: {
+          roster: { label: { normal: "Anwesende", beginner: "Anwesende" } },
+          empty: { label: { normal: "Niemand sonst ist hier", beginner: "Niemand sonst ist hier" } },
+          overflow: { label: { normal: "+{{count}} weitere", beginner: "+{{count}} weitere" } },
+          role: {
+            author: { label: { normal: "Bearbeitet", beginner: "Bearbeitet" } },
+            spectator: { label: { normal: "Betrachtet", beginner: "Betrachtet" } },
+          },
         },
       },
       settings: {
@@ -3372,6 +3208,60 @@ export const uiChromeTranslationBundles = {
           editor: { label: { normal: "Editor Menu", beginner: "Editor Menu" } },
           map: { label: { normal: "Map Menu", beginner: "Map Menu" } },
         },
+        mutation: {
+          level: {
+            info: { label: { normal: "Info", beginner: "Info" } },
+            warning: { label: { normal: "Warning", beginner: "Warning" } },
+            error: { label: { normal: "Error", beginner: "Error" } },
+            fatal: { label: { normal: "Fatal", beginner: "Fatal error" } },
+          },
+          code: {
+            targetMissing: { label: { normal: "Target missing", beginner: "The target of this change no longer exists." } },
+            noOp: { label: { normal: "No change", beginner: "Nothing changed — the state already matched." } },
+            partial: { label: { normal: "Partially applied", beginner: "Only part of the change could be applied." } },
+            clamped: { label: { normal: "Clamped", beginner: "A value was clamped to its valid range." } },
+            duplicateId: { label: { normal: "Duplicate id", beginner: "An element with this id already exists." } },
+            invariant: { label: { normal: "Invalid state", beginner: "This change would leave the document in an invalid state." } },
+            cascade: { label: { normal: "Cascaded", beginner: "This change triggered further changes." } },
+          },
+          policy: {
+            laissezFaire: {
+              label: { label: { normal: "Laissez-faire", beginner: "Laissez-faire" } },
+              description: { label: { normal: "Accepts every change unless it is fatal.", beginner: "Accepts every change as long as it isn't fatal." } },
+            },
+            normal: {
+              label: { label: { normal: "Normal", beginner: "Normal" } },
+              description: { label: { normal: "Rejects changes with errors, allows warnings.", beginner: "Rejects any change with an error, but allows warnings through." } },
+            },
+            vigilant: {
+              label: { label: { normal: "Vigilant", beginner: "Vigilant" } },
+              description: { label: { normal: "Rejects changes with warnings too.", beginner: "Strictest: rejects a change as soon as it carries a warning." } },
+            },
+            setting: {
+              label: { label: { normal: "Merge policy", beginner: "Merge policy" } },
+            },
+          },
+          rejected: {
+            title: { label: { normal: "Change rejected", beginner: "Change rejected" } },
+            body: { label: { normal: "This change could not be applied.", beginner: "This change could not be applied." } },
+          },
+        },
+        conflict: {
+          panel: { label: { normal: "Conflicts", beginner: "Conflicts" } },
+          accept: { label: { normal: "Accept", beginner: "Accept" } },
+          discard: { label: { normal: "Discard", beginner: "Discard" } },
+          quarantined: { label: { normal: "Held back", beginner: "Incoming changes are held back until you decide." } },
+          degraded: { label: { normal: "Degraded", beginner: "Applied, but with warnings." } },
+        },
+        presence: {
+          roster: { label: { normal: "People here", beginner: "People here" } },
+          empty: { label: { normal: "No one else is here", beginner: "No one else is here" } },
+          overflow: { label: { normal: "+{{count}} more", beginner: "+{{count}} more" } },
+          role: {
+            author: { label: { normal: "Editing", beginner: "Editing" } },
+            spectator: { label: { normal: "Viewing", beginner: "Viewing" } },
+          },
+        },
       },
       settings: {
         layout: {
@@ -3729,9 +3619,9 @@ export function initUiLocaleSync(locale: ShellLocale): void {
  **/
 export function useActionHotkey(
   hotkeyOrControlId: string,
-  callback: () => void,
-  options?: Parameters<typeof useHotkeys>[2],
-  deps?: React.DependencyList,
+  callback: ControlKeybindingCallback,
+  options?: ControlKeybindingOptions,
+  dependencies?: ControlKeybindingDependencies,
   configuration?: {
     overrides?: Record<string, string> | undefined;
   },
@@ -3745,7 +3635,7 @@ export function useActionHotkey(
     return hotkeyOrControlId;
   }, [bindings, configuration?.overrides, hotkeyOrControlId]);
 
-  useHotkeys(finalHotkey, callback, options || {}, deps || []);
+  useHotkeys(finalHotkey, callback, options ?? {}, dependencies ?? []);
 }
 
 /** @emoji ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
@@ -6197,7 +6087,7 @@ export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
 
 // #region 🧭️Flow Context
 /** @emoji 🧭️ Horizontal reading direction — `"rtl"` mirrors icon/label order and rides on native CSS `dir`. */
-import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🧱️elements/🧭️Flow/🟦️component.tsx";
+import { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow } from "../../../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
 /** @emoji 🧭️ The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
@@ -6575,7 +6465,7 @@ export interface PanelDockContextValue {
 
 const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
-/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one (e.g. {@link MobilePanel}, which doesn't participate in the dock). */
+/** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
 export function usePanelDockContext(): PanelDockContextValue | null {
   return reactHostPort.useContext(PanelDockContext);
 }
@@ -7422,7 +7312,7 @@ export const windowSearchBodyClass = windowEngagementBodyClass;
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
-import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
+import { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll } from "../../../../🧱️elements/🚧️WindowContentDeadLine/🟦️component.tsx";
 export { windowChromeScrollClearanceVar, windowContentDeadLineVar, windowContentDeadLineScrollClass, readWindowChromeScrollClearancePx, measureWindowChromeScrollClearancePx, isWindowContentDeadLineHost, readWindowContentDeadLinePx, readScrollerContentOverflows, useWindowContentDeadLineScroll };
 
 /** @emoji 🏝️ Full-bleed scroll surface for chrome-aware window bodies (writer hosts, forms, tables). */
@@ -7498,8 +7388,8 @@ export const windowMeasureToggleCompactClass =
 // #endregion 🎈️Level Context
 
 // #region 🐹️Element
-import { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps } from "../../../../🧱️elements/🐹️ElementProps/🟦️component.tsx";
-export { type Transaction, TransactionProvider, useTransaction, type ElementBaseProps, type ElementProps };
+import { type ElementProps } from "../../../../🔨️modules/🆔️element-identity/🟦️component.ts";
+export type { ElementProps };
 
 //#region 🧭️ElementState
 /** @emoji 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
@@ -7589,16 +7479,6 @@ import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, Comma
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
 // #endregion 🪆️Command
 
-// #region 🔎️ShellSearchDialog
-import { ShellSearchDialog, type ShellCommandResult, type ShellSearchDialogProps } from "../../../../🧱️elements/🔍️ShellSearchDialog/🟦️component.tsx";
-export { ShellSearchDialog, type ShellCommandResult, type ShellSearchDialogProps };
-// #endregion 🔎️ShellSearchDialog
-
-// #region 🔎️ShellFindDialog
-import { ShellFindDialog, type ShellFindDialogProps } from "../../../../🧱️elements/🔎️ShellFindDialog/🟦️component.tsx";
-export { ShellFindDialog, type ShellFindDialogProps };
-// #endregion 🔎️ShellFindDialog
-
 // #region 🎛️CommandPanel
 // The footer command palette used to be its own bespoke component; commands now render as category leaf
 // tabs under one expandable Command branch of the real `Panel` at anchor="bottom-middle" (see
@@ -7612,19 +7492,14 @@ export { Footer, type FooterProps };
 // #endregion 🎮️Footer
 
 // #region 🪨️Layout
-import { Layout, type LayoutProps } from "../../../../🧱️elements/📐️Layout/🟦️component.tsx";
-export { Layout, type LayoutProps };
+import { Layout, type LayoutMobilePanelProps, type LayoutProps } from "../../../../🧱️elements/📐️Layout/🟦️component.tsx";
+export { Layout, type LayoutMobilePanelProps, type LayoutProps };
 // #endregion 🪨️Layout
 
 // #region 🌐️Popover
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "../../../../🧱️elements/🗨️Popover/🟦️component.tsx";
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 // #endregion 🌐️Popover
-
-// #region 🎙️Tooltip
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, EnhancedTooltipContent, DescriptionTooltipContent, type TooltipConfig, type DescriptionTooltipData } from "../../../../🧱️elements/💡️Tooltip/🟦️component.tsx";
-export type { TooltipConfig, DescriptionTooltipData };
-// #endregion 🎙️Tooltip
 
 // #region 🌥️Base Components
 // #region 🏷️Label
@@ -7637,44 +7512,6 @@ export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlin
 // #region 🏷️Display Components
 // Read-only display wrappers for tooltips and callouts.
 // Consumers MUST pass valid config objects.
-
-/**
- * ComposeTooltipProps holds the data fields for a ComposeTooltipProps record.
- **/
-interface ComposeTooltipProps {
-  children: React.ReactElement;
-  config: TooltipConfig;
-}
-
-/**
- * ComposeTooltip holds the data fields for a ComposeTooltip record.
- **/
-function ComposeTooltip({ children, config }: ComposeTooltipProps) {
-  const tooltips = useUiDriverTooltips();
-  const label = useLabel(config.labelKey);
-  if (tooltips === "none") return children;
-  if (!React.isValidElement(children)) return children;
-  return <ChromeControlHint text={label}>{children}</ChromeControlHint>;
-}
-
-/**
- * IdComposeTooltipProps holds the data fields for a IdComposeTooltipProps record.
- **/
-interface IdComposeTooltipProps {
-  id: string;
-  children: React.ReactNode;
-}
-
-/**
- **/
-function IdComposeTooltip({ id, children }: IdComposeTooltipProps) {
-  const tooltips = useUiDriverTooltips();
-  if (tooltips === "none") return children;
-  if (!React.isValidElement(children)) return <>{children}</>;
-  return <ChromeControlHint id={id}>{children}</ChromeControlHint>;
-}
-
-export { DescriptionTooltipContent, EnhancedTooltipContent, IdComposeTooltip, ComposeTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
 // #region 📣️Aside
 // Callout boxes for notes, tips, cautions, and dangers.
@@ -7731,15 +7568,15 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 
 // #endregion 📣️Aside
 
-// #region 📔️Avatar
-import { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar, type DraggableAvatarProps, type TableAvatarProps } from "../../../../🧱️elements/👤️Avatar/🟦️component.tsx";
-export { Avatar, AvatarFallback, AvatarImage, DraggableAvatar, TableAvatar, type DraggableAvatarProps, type TableAvatarProps };
-// #endregion 📔️Avatar
+// #region 📻️TableAvatar
+import { TableAvatar, type TableAvatarProps } from "../../../../🧱️elements/📻️TableAvatar/🟦️component.tsx";
+export { TableAvatar, type TableAvatarProps };
+// #endregion 📻️TableAvatar
 
-// #region 🎬️Card
-import { Card, CardGrid, type CardProps, type CardGridProps } from "../../../../🧱️elements/🎴️Card/🟦️component.tsx";
-export { Card, CardGrid, type CardProps, type CardGridProps };
-// #endregion 🎬️Card
+// #region 👥️PresenceBar
+import { PresenceBar, presenceHueForActor, PRESENCE_BAR_DEFAULT_MAX, type PresenceBarProps, type PresencePeer, type PresenceRole } from "../../../../🧱️elements/👥️PresenceBar/🟦️component.tsx";
+export { PresenceBar, presenceHueForActor, PRESENCE_BAR_DEFAULT_MAX, type PresenceBarProps, type PresencePeer, type PresenceRole };
+// #endregion 👥️PresenceBar
 
 // #region 🎹️Spinner
 // Animated loading spinner in small, medium, or large sizes.
@@ -7976,27 +7813,10 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;
 //#endregion 🧭️UiElementRegistry
 
-// #region LoadingRow
-import { LoadingRow, type LoadingRowProps } from "../../../../🧱️elements/🎛️Chrome/🟦️component.tsx";
-export { LoadingRow };
-export type { LoadingRowProps };
-// #endregion LoadingRow
-
 // #region 🦴️Skeletons
 import { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind } from "../../../../🧱️elements/🦴️Skeletons/🟦️component.tsx";
 export { skeletonPulseClass, SkeletonBlock, elementSkeleton, WindowBodySkeleton, PanelTreeSkeleton, CanvasSkeleton, type ElementSkeletonKind };
 // #endregion 🦴️Skeletons
-
-// #region 🔓️DiagramNode
-import { DiagramNode, PlaceholderDiagramNode, type DiagramNodeProps } from "../../../../🧱️elements/🔲️DiagramNode/🟦️component.tsx";
-export { DiagramNode, PlaceholderDiagramNode, type DiagramNodeProps };
-// #endregion 🔓️DiagramNode
-
-// #region 🔧️HoverCard
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../../../🧱️elements/🪟️HoverCard/🟦️component.tsx";
-export { HoverCard, HoverCardContent, HoverCardTrigger };
-// #endregion 🔧️HoverCard
-
 
 // #region 🖲️Section
 // Collapsible section container with heading and specificity.
@@ -8051,14 +7871,9 @@ export { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 // #endregion 🌩️ButtonGroup
 
 // #region 🌩️Button
-import { Button, ButtonCycle, type ButtonCycleProps, type ButtonProps } from "../../../../🧱️elements/🔘️Button/🟦️component.tsx";
-export { Button, ButtonCycle, type ButtonCycleProps, type ButtonProps };
+import { Button, type ButtonProps } from "../../../../🧱️elements/🔘️Button/🟦️component.tsx";
+export { Button, type ButtonProps };
 // #endregion 🌩️Button
-
-// #region 📧️Combobox
-import { Combobox } from "../../../../🧱️elements/🔍️Combobox/🟦️component.tsx";
-export { Combobox };
-// #endregion 📧️Combobox
 
 // #region 🩺️Input
 import { Input, CollapsedFieldDisplay, fitCollapsedFieldText, resolveCollapsedFieldDisplayState, COLLAPSED_FIELD_ELLIPSIS, formatNumber } from "../../../../🧱️elements/✏️Input/🟦️component.tsx";
@@ -8086,21 +7901,15 @@ export { Textarea };
 // #endregion 🎏️Textarea
 
 // #region 🗡️Toggle
-import { toggleVariants, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🎚️Toggle/🟦️component.tsx";
-export { toggleVariants };
+import { Toggle, type ToggleItem, type ToggleProps } from "../../../../🧱️elements/🎚️Toggle/🟦️component.tsx";
+export { Toggle };
 export type { ToggleItem, ToggleProps };
 // #endregion 🗡️Toggle
 
 // #region 🧩️ToggleGroup
-import { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants as toggleGroupToggleVariants } from "../../../../🧱️elements/🎛️ToggleGroup/🟦️component.tsx";
-export { Toggle, ToggleGroup, ToggleGroupItem };
+import { ToggleGroup, ToggleGroupItem } from "../../../../🧱️elements/🎛️ToggleGroup/🟦️component.tsx";
+export { ToggleGroup, ToggleGroupItem };
 // #endregion 🧩️ToggleGroup
-
-// #region 🎄️Orb
-import { Orb, type OrbProps } from "../../../../🧱️elements/🔮️Orb/🟦️component.tsx";
-export { Orb };
-export type { OrbProps };
-// #endregion 🎄️Orb
 
 // #region 🧫️Ring
 import { Ring, type RingOrbData, type RingProps } from "../../../../🧱️elements/⭕️Ring/🟦️component.tsx";
@@ -8111,11 +7920,6 @@ export type { RingOrbData, RingProps };
 // #endregion 🛒️Input Components
 
 // #region 🗼️Aggregation Components
-
-// #region 🛒️Accordion
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../../../🧱️elements/🪗️Accordion/🟦️component.tsx";
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
-// #endregion 🛒️Accordion
 
 // #region 🖥️Collapsible
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../../../🧱️elements/↕️Collapsible/🟦️component.tsx";
@@ -8160,16 +7964,6 @@ export {
 import { Scrollable } from "../../../../🧱️elements/📜️Scrollable/🟦️component.tsx";
 export { Scrollable };
 // #endregion 🎮️Scrollable
-
-// #region 🥁️Band
-import { Band, type BandItem, type BandProps } from "../../../../🧱️elements/🎗️Band/🟦️component.tsx";
-export { Band, type BandItem, type BandProps };
-// #endregion 🥁️Band
-
-// #region 📢️Strip
-import { Strip, type StripItem, type StripProps } from "../../../../🧱️elements/🎟️Strip/🟦️component.tsx";
-export { Strip, type StripItem, type StripProps };
-// #endregion 📢️Strip
 
 // #region 🖥️Fullscreen
 
@@ -8330,14 +8124,7 @@ import {
   type NavbarProps,
   SemioLogo,
   ShellBrandLogo,
-  navbarFillClassName,
   navbarFillItem,
-  shellNavbarTrailingEndReserveCss,
-  NAVBAR_NO_EXAMPLE_ID,
-  normalizePlaygroundExampleId,
-  type NavbarExampleOption,
-  type NavbarExampleSelectProps,
-  NavbarExampleSelect,
 } from "../../../../🧱️elements/🔝️Navbar/🟦️component.tsx";
 export {
   Navbar,
@@ -8345,16 +8132,14 @@ export {
   type NavbarProps,
   SemioLogo,
   ShellBrandLogo,
-  navbarFillClassName,
   navbarFillItem,
-  shellNavbarTrailingEndReserveCss,
-  NAVBAR_NO_EXAMPLE_ID,
-  normalizePlaygroundExampleId,
-  type NavbarExampleOption,
-  type NavbarExampleSelectProps,
-  NavbarExampleSelect,
 };
 // #endregion 🩺️Navbar
+
+// #region 🧪️NavbarExampleSelect
+import { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps } from "../../../../🧱️elements/🧪️NavbarExampleSelect/🟦️component.tsx";
+export { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps };
+// #endregion 🧪️NavbarExampleSelect
 
 // #region 🔗️RouteLink
 // Anchor that intercepts same-origin, protocol-less clicks for client-side navigation via history.pushState.
@@ -8441,22 +8226,6 @@ export type { CatalogueItem, CatalogueProps, ControlDef, ControlTreeClassNames, 
 // #endregion 📜️Tree
 
 // #endregion 🗼️Aggregation Components
-
-// #region 🔷️Navigation Components
-
-// #region 💡️Breadcrumb
-import { Breadcrumb, BreadcrumbItem, type BreadcrumbItemData } from "../../../../🧱️elements/🍞️Breadcrumb/🟦️component.tsx";
-export { Breadcrumb, BreadcrumbItem };
-export type { BreadcrumbItemData };
-// #endregion 💡️Breadcrumb
-
-// #region 🪩️PageNavigation
-import { PageNavigation, type PageNavigationLink, type PageNavigationProps } from "../../../../🧱️elements/🧭️PageNavigation/🟦️component.tsx";
-export { PageNavigation };
-export type { PageNavigationLink, PageNavigationProps };
-// #endregion 🪩️PageNavigation
-
-// #endregion 🔷️Navigation Components
 
 // #region 📷️Panel Components
 
@@ -8814,12 +8583,6 @@ export const Pane: React.FC<PaneProps> = ({
 };
 
 // #endregion 🪟️Pane
-
-// #region 💧️MobilePanel
-import { MobilePanel, type MobilePanelProps } from "../../../../🧱️elements/📱️MobilePanel/🟦️component.tsx";
-export { MobilePanel };
-export type { MobilePanelProps };
-// #endregion 💧️MobilePanel
 
 // #endregion 📷️Panel Components
 
@@ -9732,11 +9495,6 @@ export { Engagement };
 import { Window, type WindowConfig } from "../../../../🧱️elements/🪟️Window/🟦️component.tsx";
 export { Window, type WindowConfig };
 // #endregion 🌊️Window
-
-// #region 🌈️Page
-import { Page, type PageFrontmatter, type PageProps } from "../../../../🧱️elements/📄️Page/🟦️component.tsx";
-export { Page, type PageFrontmatter, type PageProps };
-// #endregion 🌈️Page
 
 // #region 🧫️Diagram
 // 🚧️W3-interim: applyNodeChanges/Background/.../SimulationNodeDatum are re-exports of symbols already
@@ -17138,21 +16896,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("ShellSearchDialog", () => {
-    it("renders without crashing given minimal props", () => {
-      render(<ShellSearchDialog open query="" onQueryChange={() => undefined} results={[{ id: "a", label: "Alpha" }]} onPick={() => undefined} onClose={() => undefined} />);
-      expect(document.body.querySelector('[data-slot="command-input"]')).not.toBeNull();
-      expect(document.body.textContent).toContain("Alpha");
-    });
-  });
-
-  describe("ShellFindDialog", () => {
-    it("renders without crashing given minimal props", () => {
-      render(<ShellFindDialog open query="" onQueryChange={() => undefined} results={[{ id: "b", label: "Bravo" }]} onPick={() => undefined} onClose={() => undefined} />);
-      expect(document.body.querySelector('[data-slot="command-input"]')).not.toBeNull();
-      expect(document.body.textContent).toContain("Bravo");
-    });
-  });
 }
 
 // #endregion 🔍️Window Components
@@ -18335,19 +18078,7 @@ if (treeVitest) {
       expect(ringMarkup).toContain(">Ring<");
     });
 
-    it("marks combobox and select triggers as fill-width detail controls", () => {
-      const comboboxMarkup = renderToStaticMarkup(
-        <Combobox
-          id="tooltip.manual"
-          showLabel
-          value="alpha"
-          onValueChange={() => undefined}
-          options={[
-            { label: "Alpha", value: "alpha" },
-            { label: "Beta", value: "beta" },
-          ]}
-        />,
-      );
+    it("marks select triggers as fill-width detail controls", () => {
       const selectMarkup = renderToStaticMarkup(
         <Select id="tooltip.manual" showLabel defaultValue="alpha">
           <SelectTrigger>
@@ -18359,9 +18090,6 @@ if (treeVitest) {
         </Select>,
       );
 
-      expect(comboboxMarkup).toContain("group/button-group");
-      expect(comboboxMarkup).toContain('data-detail-panel-control="fill"');
-      expect(comboboxMarkup).toContain('role="combobox"');
       expect(selectMarkup).toContain('data-slot="select-trigger"');
       expect(selectMarkup).toContain('data-detail-panel-control="fill"');
     });
@@ -18746,30 +18474,6 @@ if (treeVitest) {
       const standaloneMarkup = renderToStaticMarkup(<Textarea id="tooltip.manual" value="" />);
 
       expect(emptyMarkup).toContain('data-slot="textarea-root"');
-      expect(emptyMarkup).toContain("opacity:0.6");
-      expect(filledMarkup).toContain("opacity:1");
-      expect(standaloneMarkup).not.toContain("opacity:0.6");
-    });
-
-    it("renders empty Combobox inside a Label property row with muted opacity and full opacity when value is selected", () => {
-      const options = [
-        { label: "Alpha", value: "alpha" },
-        { label: "Beta", value: "beta" },
-      ];
-      const emptyMarkup = renderToStaticMarkup(
-        <Label id="tooltip.manual">
-          <Combobox id="tooltip.manual" value="" options={options} onValueChange={() => undefined} />
-        </Label>,
-      );
-      const filledMarkup = renderToStaticMarkup(
-        <Label id="tooltip.manual">
-          <Combobox id="tooltip.manual" value="alpha" options={options} onValueChange={() => undefined} />
-        </Label>,
-      );
-      const standaloneMarkup = renderToStaticMarkup(<Combobox id="tooltip.manual" value="" options={options} onValueChange={() => undefined} />);
-
-      // PopoverTrigger asChild merges ButtonGroup — check class presence instead of data-slot
-      expect(emptyMarkup).toContain("group/button-group");
       expect(emptyMarkup).toContain("opacity:0.6");
       expect(filledMarkup).toContain("opacity:1");
       expect(standaloneMarkup).not.toContain("opacity:0.6");
@@ -19731,7 +19435,7 @@ if (treeVitest) {
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
-          const key = `ui.ribbon.parent.${category}` as UiRibbonParentKey;
+          const key = `ui.ribbon.parent.${category}` as UiTranslationKey;
           const label = resolveTranslationLabel(uiI18n.t(key as UiTranslationKey));
           expect(label, `${locale}:${key}`).toBeTruthy();
           expect(label).not.toBe(key);
@@ -19767,18 +19471,7 @@ if (treeVitest) {
       expect(markup).not.toContain("hover:bg-hover-window");
     });
 
-    it("renders breadcrumb links and menu rows with hover feedback", () => {
-      const breadcrumbMarkup = renderToStaticMarkup(
-        <Breadcrumb
-          items={[
-            { content: "Home", onNavigate: () => undefined },
-            { content: "Project", onNavigate: () => undefined },
-          ]}
-        />,
-      );
-      expect(breadcrumbMarkup).toContain('data-slot="breadcrumb-link"');
-      expect(breadcrumbMarkup).toContain("text-element");
-      expect(breadcrumbMarkup).toContain("hover:bg-hover-interactive-fill");
+    it("renders command menu rows with hover feedback", () => {
       const commandMarkup = renderToStaticMarkup(
         <Command>
           <CommandList>
@@ -19873,9 +19566,6 @@ if (treeVitest) {
       expect(footerMarkup).toContain('data-slot="footer"');
       expect(footerMarkup).not.toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
-      const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
-      expect(breadcrumbMarkup).toContain(borderNormalClass);
-      expect(breadcrumbMarkup).not.toContain("border-emphasized");
       const ribbonMarkup = renderToStaticMarkup(
         <RibbonZone>
           <RibbonItem>
@@ -21006,6 +20696,64 @@ if (treeVitest) {
       unsubscribe();
       clock.seek(200);
       expect(listener).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("PresenceBar", () => {
+    const peers = (n: number): PresencePeer[] => Array.from({ length: n }, (_, i) => ({ actor: `user:p${i}#s`, label: `Peer ${i}`, role: i % 2 === 0 ? ("author" as const) : ("spectator" as const) }));
+
+    it("renders one listitem per peer under max, each carrying its own peer data-row-id", async () => {
+      const { render } = await import("@testing-library/react");
+      const { container } = render(<PresenceBar id="s-presence-peers" peers={peers(3)} />);
+      const root = container.querySelector("#s-presence-peers")!;
+      expect(root.getAttribute("role")).toBe("list");
+      expect(root.querySelectorAll('[role="listitem"]')).toHaveLength(3);
+      expect(container.querySelector('[data-row-id="peer:user:p0#s"]')).not.toBeNull();
+      expect(container.querySelector('[data-row-id="peer:user:p2#s"]')).not.toBeNull();
+    });
+
+    it("collapses past max into a single overflow chip", async () => {
+      const { render } = await import("@testing-library/react");
+      const { container } = render(<PresenceBar id="s-presence-peers" peers={peers(7)} max={5} />);
+      expect(container.querySelectorAll('[role="listitem"]')).toHaveLength(6);
+      expect(container.querySelector('[data-row-id="peer:overflow"]')?.textContent).toBe("+2");
+    });
+
+    it("renders an empty state with no listitems when there are no peers", async () => {
+      const { render } = await import("@testing-library/react");
+      const { container } = render(<PresenceBar id="s-presence-peers" peers={[]} />);
+      expect(container.querySelectorAll('[role="listitem"]')).toHaveLength(0);
+      expect(container.querySelector("#s-presence-peers")?.textContent).toBeTruthy();
+    });
+
+    it("resolves every ui.presence.* key in both en and de", () => {
+      // 🐚️ Mirrors the ribbon-category coverage test above: reads `uiI18n.t` directly instead of round-tripping
+      // through a React render, since this huge in-source suite shares one global i18next instance and a
+      // full-render assertion racing another test's own in-flight `changeLanguage` is exactly the kind of
+      // cross-test flake that pattern avoids.
+      const keys: UiTranslationKey[] = ["ui.presence.roster", "ui.presence.empty", "ui.presence.overflow", "ui.presence.role.author", "ui.presence.role.spectator"];
+      const seenByLocale: Record<string, string[]> = {};
+      for (const locale of ["en", "de"] as const) {
+        void uiI18n.changeLanguage(locale);
+        seenByLocale[locale] = keys.map((key) => {
+          const label = resolveTranslationLabel(uiI18n.t(key));
+          expect(label, `${locale}:${key}`).toBeTruthy();
+          expect(label, `${locale}:${key}`).not.toBe(key);
+          return label!;
+        });
+      }
+      expect(seenByLocale.en).not.toEqual(seenByLocale.de);
+      void uiI18n.changeLanguage("en");
+    });
+
+    it("assigns a deterministic per-actor hue that differs across peers", () => {
+      const a = presenceHueForActor("user:alice#s1");
+      const b = presenceHueForActor("user:alice#s1");
+      const c = presenceHueForActor("user:bob#s1");
+      expect(a).toBe(b);
+      expect(a).not.toBe(c);
+      expect(a).toBeGreaterThanOrEqual(0);
+      expect(a).toBeLessThan(360);
     });
   });
 }

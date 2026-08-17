@@ -15,7 +15,7 @@ import { type IconName } from "@semio-tech/assets";
 // the barrel import caused a real bug).
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { TableAvatar } from "../👤️Avatar/🟦️component.tsx";
+import { TableAvatar } from "../📻️TableAvatar/🟦️component.tsx";
 import { Table } from "../🦴️Skeletons/🧪️story.tsx";
 import { type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊️Table/🟦️component.tsx";
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🪵️Tree/🟦️component.tsx";

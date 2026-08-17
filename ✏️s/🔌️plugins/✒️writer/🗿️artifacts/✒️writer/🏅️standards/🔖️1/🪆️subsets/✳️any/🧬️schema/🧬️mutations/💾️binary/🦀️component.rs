@@ -2,8 +2,9 @@
 //!
 //! This component only carries the artifact-facing `encode_op`/`decode_op` wrappers plus the op
 //! text↔binary equivalence law and a whole-store round trip. The app's typed `WriterCommand` enum —
-//! which used to share the old `📡️protocol` crate with this codec — is an APP concern, not an artifact
-//! one: it now lives in `🎛️apps/✒️writer/🦀️component.rs`, assembled from the `🎮️commands/*` payload
+//! which used to share the old `📡️protocol` crate with this codec — is an EDITOR-surface concern, not
+//! an artifact one: it now lives in the subset's `✏️editor/🦀️component.rs`, assembled from the
+//! `🎮️commands/*` payload
 //! modules by `semio_framework_plugin::app_commands!`.
 
 use crate::artifacts::writer::op::WriterMutation;

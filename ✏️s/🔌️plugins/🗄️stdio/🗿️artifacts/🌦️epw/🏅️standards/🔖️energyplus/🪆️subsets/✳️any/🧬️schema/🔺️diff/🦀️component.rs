@@ -8,9 +8,8 @@
 
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT};
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -194,57 +193,9 @@ pub struct EpwDiff {
 }
 
 impl MutationDiff<EpwSnapshot> for EpwDiff {
-    fn apply(&self, base: &EpwSnapshot) -> EpwSnapshot {
-        let mut next = base.clone();
-        if let Some(v) = &self.location {
-            next.location = v.clone();
-        }
-        if let Some(v) = &self.design_conditions {
-            next.design_conditions = v.clone();
-        }
-        if let Some(v) = &self.typical_extreme_periods {
-            next.typical_extreme_periods = v.clone();
-        }
-        if let Some(v) = &self.ground_temperatures {
-            next.ground_temperatures = v.clone();
-        }
-        if let Some(v) = &self.holidays_dst {
-            next.holidays_dst = v.clone();
-        }
-        if let Some(v) = &self.comments_1 {
-            next.comments_1 = v.clone();
-        }
-        if let Some(v) = &self.comments_2 {
-            next.comments_2 = v.clone();
-        }
-        if let Some(v) = &self.data_periods {
-            next.data_periods = v.clone();
-        }
-        if let Some(rdiff) = &self.records {
-            // 🥇 modified refers to BASE indices — apply before any removal shifts them.
-            for m in &rdiff.modified {
-                if let Some(rec) = next.records.get_mut(m.index) {
-                    *rec = m.diff.apply(rec);
-                }
-            }
-            // 🥈 removed refers to BASE indices — process descending.
-            let mut removed_desc = rdiff.removed.clone();
-            removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-            removed_desc.dedup();
-            for idx in removed_desc {
-                if idx < next.records.len() {
-                    next.records.remove(idx);
-                }
-            }
-            // 🥉 added refers to FINAL indices — process ascending, clamped.
-            let mut added_asc = rdiff.added.clone();
-            added_asc.sort_by_key(|a| a.index);
-            for a in added_asc {
-                let at = a.index.min(next.records.len());
-                next.records.insert(at, a.record);
-            }
-        }
-        next
+    fn apply(&self, base: &EpwSnapshot) -> MutationApplyResult<EpwSnapshot> {
+        validate_epw_diff(self, base)?;
+        Ok(apply_epw_diff_unchecked(self, base))
     }
 
     fn absorb(&mut self, other: Self) {
@@ -285,6 +236,95 @@ impl MutationDiff<EpwSnapshot> for EpwDiff {
         };
         self.records = Some(absorb_records(d1, d2));
     }
+}
+
+fn validate_epw_diff(diff: &EpwDiff, base: &EpwSnapshot) -> MutationApplyResult<()> {
+    let Some(records) = &diff.records else { return Ok(()) };
+    let mut removed = std::collections::HashSet::new();
+    for &index in &records.removed {
+        if index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &records.modified {
+        if entry.index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "record modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record modification target is repeated"));
+        }
+    }
+    let final_len = base.records.len() - removed.len() + records.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &records.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "record addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
+}
+
+fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
+    let mut next = base.clone();
+    if let Some(v) = &diff.location {
+        next.location = v.clone();
+    }
+    if let Some(v) = &diff.design_conditions {
+        next.design_conditions = v.clone();
+    }
+    if let Some(v) = &diff.typical_extreme_periods {
+        next.typical_extreme_periods = v.clone();
+    }
+    if let Some(v) = &diff.ground_temperatures {
+        next.ground_temperatures = v.clone();
+    }
+    if let Some(v) = &diff.holidays_dst {
+        next.holidays_dst = v.clone();
+    }
+    if let Some(v) = &diff.comments_1 {
+        next.comments_1 = v.clone();
+    }
+    if let Some(v) = &diff.comments_2 {
+        next.comments_2 = v.clone();
+    }
+    if let Some(v) = &diff.data_periods {
+        next.data_periods = v.clone();
+    }
+    if let Some(rdiff) = &diff.records {
+        // 🥇 modified refers to BASE indices — apply before any removal shifts them.
+        for m in &rdiff.modified {
+            if let Some(rec) = next.records.get_mut(m.index) {
+                *rec = m.diff.apply(rec);
+            }
+        }
+        // 🥈 removed refers to BASE indices — process descending.
+        let mut removed_desc = rdiff.removed.clone();
+        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+        removed_desc.dedup();
+        for idx in removed_desc {
+            if idx < next.records.len() {
+                next.records.remove(idx);
+            }
+        }
+        // 🥉 added refers to FINAL indices — process ascending, clamped.
+        let mut added_asc = rdiff.added.clone();
+        added_asc.sort_by_key(|a| a.index);
+        for a in added_asc {
+            let at = a.index.min(next.records.len());
+            next.records.insert(at, a.record);
+        }
+    }
+    next
 }
 
 /// ➕️ Structural, total, base-free absorb of two `records` triples (same algorithm as csv's).
@@ -375,7 +415,7 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
 
 impl DiffAlgebra<EpwSnapshot> for EpwDiff {
     fn inverse(&self, base: &EpwSnapshot) -> Self {
-        let applied = self.apply(base);
+        let applied = apply_epw_diff_unchecked(self, base);
         Self::between(&applied, base)
     }
 
@@ -678,7 +718,7 @@ fn parse_epw_diff(line: &str) -> Result<EpwDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for EpwDiff {
+impl DiffCodec for EpwDiff {
     fn print_diff(&self) -> String {
         print_epw_diff(self)
     }

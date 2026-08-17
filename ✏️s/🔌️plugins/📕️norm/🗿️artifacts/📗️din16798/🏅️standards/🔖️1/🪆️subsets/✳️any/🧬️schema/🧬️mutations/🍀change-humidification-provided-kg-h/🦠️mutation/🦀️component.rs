@@ -15,7 +15,7 @@ pub struct ChangeHumidificationProvidedKgH {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHumidificationProvidedKgH {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "humidification-provided-kg-h", kind: "change-humidification-provided-kg-h", record: "ChangedHumidificationProvidedKgH" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_humidification_provided_kg_h::diff::diff(self, base)
     }
 

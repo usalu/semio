@@ -15,7 +15,7 @@ pub struct ChangeLoadDuration {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeLoadDuration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "load-duration", kind: "change-load-duration", record: "ChangedLoadDuration" };
 
-    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_load_duration::diff::diff(self, base)
     }
 

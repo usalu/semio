@@ -102,13 +102,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -215,8 +215,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec TiffBuilderFacets {
-        construction: derived_construction::TiffBuilderConstruction,
-        analysis: derived_analysis::TiffAnalyzerAnalysis,
+        construction: TiffBuilderConstruction,
+        analysis: TiffAnalyzerAnalysis,
         composition: super::super::io::derived_composition::TiffComposerComposition,
     }
     builder: TiffBuilder,
@@ -233,8 +233,8 @@ semio_framework_plugin::derive_artifact_facets!(
 // `declaration()` in the artifact root, zero real callers) deleted outright; the real codec
 // (`encode_tiff`/`encode_tiff_packbits`/`decode_tiff` + every pure format algorithm) and
 // `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
-    crate::artifacts::tiff::TiffSnapshot::default()
+pub fn empty_tiff_snapshot() -> TiffSnapshot {
+    TiffSnapshot::default()
 }
 
 /// 📄️ P2-FG2: the demo `stdio.tiff` document — a genuinely non-trivial `TiffSnapshot` exercising
@@ -251,7 +251,7 @@ pub fn empty_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
 /// demo()` identity (same class of trap `png`'s own `demo_png_snapshot()` doc comment documents
 /// for its IHDR fields) — running the real codec once here guarantees `demo()` is ALREADY in
 /// exactly the canonical shape a second `encode_tiff`/`decode_tiff` pass reproduces byte-for-byte.
-pub fn demo_tiff_snapshot() -> crate::artifacts::tiff::TiffSnapshot {
+pub fn demo_tiff_snapshot() -> TiffSnapshot {
     use crate::artifacts::tiff::standards::v6_0::subsets::any::io::{decode_tiff, encode_tiff};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
     use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::{TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH};

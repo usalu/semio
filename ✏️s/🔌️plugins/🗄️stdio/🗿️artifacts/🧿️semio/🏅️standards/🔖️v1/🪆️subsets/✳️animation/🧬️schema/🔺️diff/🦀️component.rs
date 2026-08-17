@@ -15,7 +15,6 @@ use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_indexed_triple, enc_indexed_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
@@ -605,12 +604,13 @@ impl SemioAnimationDiff {
 }
 
 impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
-    fn apply(&self, base: &SemioAnimationSnapshot) -> SemioAnimationSnapshot {
+    fn apply(&self, base: &SemioAnimationSnapshot) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
             next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply(item));
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -674,7 +674,7 @@ fn parse_semio_animation_diff(line: &str) -> Result<SemioAnimationDiff, String> 
 /// collection exists here (unlike brep's 6/flow's 2), so `presence` only ever uses bit0.
 const DIFF_BINARY_FORMAT: u8 = 1;
 
-impl protocol::DiffCodec for SemioAnimationDiff {
+impl DiffCodec for SemioAnimationDiff {
     fn print_diff(&self) -> String {
         print_semio_animation_diff(self)
     }
@@ -815,7 +815,7 @@ mod tests {
         let mut d1 = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&base, &mid);
         let d2 = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), after);
+        assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
     #[test]
@@ -827,9 +827,9 @@ mod tests {
             ..SemioAnimationSnapshot::default()
         };
         let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b);
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let ba = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a);
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -846,9 +846,9 @@ mod tests {
             s
         };
         let d = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&base, &next);
-        let mutated = d.apply(&base);
+        let mutated = d.apply(&base).expect("apply must succeed for a well-formed fixture");
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&mutated), base);
+        assert_eq!(inv.apply(&mutated).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     /// 🧪️ field_sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable
@@ -890,7 +890,7 @@ mod tests {
         };
 
         let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(ab.apply(&sweep_a), sweep_b);
+        assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
         let timelines_ab = ab.timelines.as_ref().expect("timelines must differ");
         assert!(!timelines_ab.removed.is_empty(), "sweep must exercise a removed timeline");
         assert!(!timelines_ab.modified.is_empty(), "sweep must exercise a modified timeline");
@@ -910,7 +910,7 @@ mod tests {
         assert!(keyframe_diff.value.is_some(), "AnimValue variant change must be captured");
 
         let ba = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(ba.apply(&sweep_b), sweep_a);
+        assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
         let timelines_ba = ba.timelines.as_ref().expect("timelines must differ");
         assert!(!timelines_ba.added.is_empty(), "reverse direction must exercise an added timeline");
         assert!(!timelines_ba.modified.is_empty(), "reverse direction must exercise a modified timeline");

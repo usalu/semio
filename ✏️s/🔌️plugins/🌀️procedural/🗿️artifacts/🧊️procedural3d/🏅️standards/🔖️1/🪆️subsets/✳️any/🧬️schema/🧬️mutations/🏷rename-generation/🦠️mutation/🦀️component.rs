@@ -15,7 +15,7 @@ pub struct RenameGeneration {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for RenameGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "generation", kind: "rename-generation", record: "RenamedGeneration" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::rename_generation::diff::diff(self, base)
     }
 

@@ -436,14 +436,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let d = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
-            self.snapshot = protocol::MutationDiff::apply(&d, &self.snapshot);
-            (self, d)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
@@ -564,12 +575,12 @@ mod tests {
         let base = default_snapshot();
         let object_id = base.objects[0].id.clone();
         let mutation = LowpolyMutation::RenameObject(rename_object::mutation::RenameObject { id: object_id, new_name: "Renamed".into() });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.objects[0].name, "Renamed");
         let inverse = mutation.inverse(&base);
         let mut state = after;
         for step in &inverse {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(state.objects[0].name, "Unit Box");
     }

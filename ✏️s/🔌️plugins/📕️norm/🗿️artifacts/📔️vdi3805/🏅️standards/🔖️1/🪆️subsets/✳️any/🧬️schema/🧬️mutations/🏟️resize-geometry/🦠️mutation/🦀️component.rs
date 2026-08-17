@@ -13,7 +13,7 @@ pub struct ResizeGeometry {
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ResizeGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "geometry", kind: "resize-geometry", record: "ResizedGeometry" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

@@ -1,0 +1,4 @@
+semio s.space.dsl v1
+schema=s.space space-id=demo-space
+artifacts [id:TEXT name:TEXT kind-id:TEXT schema:TEXT dialect:BLOCK created-at-ms:UINT created-by:TEXT updated-at-ms:UINT updated-by:TEXT] {
+}

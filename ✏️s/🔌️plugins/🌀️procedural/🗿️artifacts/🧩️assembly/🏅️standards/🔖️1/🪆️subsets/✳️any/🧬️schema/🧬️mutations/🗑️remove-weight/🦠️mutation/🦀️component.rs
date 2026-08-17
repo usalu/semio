@@ -23,7 +23,7 @@ pub fn remove_weight(module_id: String) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for RemoveWeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "weight", kind: "remove-weight", record: "RemovedWeight" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

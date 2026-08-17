@@ -1,7 +1,7 @@
 //! 📝️ Note artifact — the document entity this plugin's app edits: an infinite-canvas block tree
 //! (text/image/table/math/ink/group blocks).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, HashMap};
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::note::config::schema::register_app_schema()` is the
+/// a plugin `.setup()` callback. `crate::editor::note::config::schema::register_app_schema()` is the
 /// one exception, still called from this file's own `.setup()`: it registers the `NotePlayApp`
 /// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
 /// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
@@ -58,7 +58,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::note::schema::inferences::note_artifact_inference_descriptor()])
         .composers(crate::artifacts::note::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::note::NotePlayApp>()
+        // 👁️✏️ `.document_codec` is bound on the RUNTIME `ArtifactApp` trait, which only the SDK's
+        // `EditorApp<E>` adapter implements now — `crate::editor::note::NotePlayApp` itself implements
+        // the authoring trait `ArtifactEditor`, not the runtime one directly.
+        .document_codec::<EditorApp<crate::editor::note::NotePlayApp>>()
         .try_build()
 }
 
@@ -129,7 +132,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::note::create_note_app`'s `🔖️Manifest` region.
+/// `crate::editor::note::create_note_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.note".into(),
@@ -148,10 +151,21 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+//#region 🔖️Dialect
+/// 👁️✏️ C1's canonical surface id grammar (`<artifact_kind>@<standard>/<subset>#<role>`) — lives at
+/// the ARTIFACT level, not under `editor`/`viewer`, so a viewer file can read it without ever
+/// importing through the sibling `editor` module. `artifact_kind` matches this file's own
+/// `definition()` `"s.note.schema.artifact"` capability row's descriptor (`"s.note.note"`, the same
+/// schema id `NoteSnapshot`'s `#[artifact_schema(id = "s.note.note")]` already keys off);
+/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the
+/// canonical surface ids are `s.note.note@1/*#editor` / `s.note.note@1/*#viewer`.
+pub const NOTE_DIALECT: Dialect = Dialect { artifact_kind: "s.note.note", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
+
 //#region 🔖️Domain
 pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 
-/// 🎥️ Camera pose — ephemeral view state that lives in `crate::apps::note::config::NoteConfig`, never in
+/// 🎥️ Camera pose — ephemeral view state that lives in `crate::editor::note::config::NoteConfig`, never in
 /// `NoteSnapshot`, so it stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]

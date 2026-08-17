@@ -16,7 +16,7 @@ pub struct ChangeFrameFill {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameFill {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-fill", kind: "change-frame-fill", record: "ChangedFrameFill" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_frame_fill(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

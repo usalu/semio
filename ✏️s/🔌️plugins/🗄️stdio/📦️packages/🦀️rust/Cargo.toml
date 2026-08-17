@@ -20,9 +20,11 @@ path = "📦️glue.rs"
 
 [dependencies]
 async-trait = "0.1.88"
+base64 = "0.22"
 blake3 = "1"
 flate2 = { workspace = true }
 pollster = "0.4.0"
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }

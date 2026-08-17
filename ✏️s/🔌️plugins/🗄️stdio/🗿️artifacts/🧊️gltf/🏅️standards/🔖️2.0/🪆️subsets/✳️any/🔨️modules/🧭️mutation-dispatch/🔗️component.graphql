@@ -1,53 +1,11 @@
 #region 🧭️MutationDispatchContract
-# 🧬️ GltfMutation union.
-union GltfMutation =
-    GltfNoMutation
-  | GltfSetSnapshot
-  | GltfSetAsset
-  | GltfInsertScene | GltfRemoveScene | GltfSetScene
-  | GltfInsertNode | GltfRemoveNode | GltfSetNode
-  | GltfTransformNode | GltfReparentNode | GltfBindNodeMesh
-  | GltfInsertMesh | GltfRemoveMesh | GltfSetMesh
-  | GltfInsertAccessor | GltfRemoveAccessor | GltfSetAccessor
-  | GltfInsertMaterial | GltfRemoveMaterial | GltfSetMaterial
-  | GltfBindPrimitiveMaterial
-  | GltfInsertBuffer | GltfRemoveBuffer | GltfSetBuffer
-  | GltfInsertAnimation | GltfRemoveAnimation | GltfSetAnimation
-
-type GltfNoMutation { mutation: String! }
-type GltfSetSnapshot { mutation: String! snapshot: GltfSnapshot! }
-type GltfSetAsset { mutation: String! asset: GltfAsset! }
-type GltfInsertScene { mutation: String! index: Int! scene: GltfScene! }
-type GltfRemoveScene { mutation: String! index: Int! }
-type GltfSetScene { mutation: String! index: Int! scene: GltfScene! }
-type GltfInsertNode { mutation: String! index: Int! node: GltfNode! }
-type GltfRemoveNode { mutation: String! index: Int! }
-type GltfSetNode { mutation: String! index: Int! node: GltfNode! }
-type GltfTransformNode { mutation: String! index: Int! matrix: [Float!] translation: [Float!] rotation: [Float!] scale: [Float!] }
-type GltfReparentNode { mutation: String! index: Int! parent: Int scene: Int position: Int! }
-type GltfBindNodeMesh { mutation: String! index: Int! mesh: Int }
-type GltfInsertMesh { mutation: String! index: Int! mesh: GltfMesh! }
-type GltfRemoveMesh { mutation: String! index: Int! }
-type GltfSetMesh { mutation: String! index: Int! mesh: GltfMesh! }
-type GltfInsertAccessor { mutation: String! index: Int! accessor: GltfAccessor! }
-type GltfRemoveAccessor { mutation: String! index: Int! }
-type GltfSetAccessor { mutation: String! index: Int! accessor: GltfAccessor! }
-type GltfInsertMaterial { mutation: String! index: Int! material: GltfMaterial! }
-type GltfRemoveMaterial { mutation: String! index: Int! }
-type GltfSetMaterial { mutation: String! index: Int! material: GltfMaterial! }
-type GltfBindPrimitiveMaterial { mutation: String! mesh: Int! primitive: Int! material: Int }
-type GltfInsertBuffer { mutation: String! index: Int! buffer: GltfBuffer! bytes: [Int!]! }
-type GltfRemoveBuffer { mutation: String! index: Int! }
-type GltfSetBuffer { mutation: String! index: Int! buffer: GltfBuffer! bytes: [Int!]! }
-type GltfInsertAnimation { mutation: String! index: Int! animation: GltfAnimation! }
-type GltfRemoveAnimation { mutation: String! index: Int! }
-type GltfSetAnimation { mutation: String! index: Int! animation: GltfAnimation! }
-
+# 🧬️ Generic descriptor envelope; command payload validation belongs to the registered leaf.
+scalar GltfMutationU32
+enum GltfMutationPhase { MUTATION DIFF INVERSE }
+type GltfMutation { commandId: String! version: GltfMutationU32! phase: GltfMutationPhase! payload: String! }
+type GltfDiffEnvelope { commandId: String! version: GltfMutationU32! phase: GltfMutationPhase! payload: String! touchedPaths: [String!]! }
 type GltfMutationRejection { code: String! path: String! detail: String! }
 union GltfMutationApplication = GltfMutationAccepted | GltfMutationRejected
-type GltfMutationAccepted { accepted: Boolean! diff: GltfDiff! }
+type GltfMutationAccepted { accepted: Boolean! snapshot: GltfSnapshot! touchedPaths: [String!]! }
 type GltfMutationRejected { accepted: Boolean! rejection: GltfMutationRejection! }
-enum GltfReferenceFamily { SCENE NODE MESH ACCESSOR MATERIAL BUFFER }
-type GltfReferenceRule { family: GltfReferenceFamily! pathPattern: String! validate: Boolean! remapOnInsert: Boolean! remapOnRemove: Boolean! }
-type GltfMutationDerivation { mutation: GltfMutation! diff: GltfDiff! inverse: GltfMutation! touchedPaths: [String!]! touchedRegions: [GltfTouchedRegion!]! referenceRules: [GltfReferenceRule!]! }
 #endregion 🧭️MutationDispatchContract

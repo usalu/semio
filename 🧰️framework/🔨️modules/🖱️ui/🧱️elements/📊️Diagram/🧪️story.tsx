@@ -11,7 +11,7 @@
 
 // #endregion 🧲️Header
 
-import { DiagramNode, DiagramSkeleton } from "@semio-tech/ui-react";
+import { DiagramSkeleton } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // #region 🧫️Diagram
@@ -49,18 +49,6 @@ export const LargeSkeleton: Story = {
   render: (args) => (
     <div className="h-96 w-full">
       <DiagramSkeleton {...args} />
-    </div>
-  ),
-};
-
-export const Nodes: Story = {
-  args: { nodeCount: 0, edgeCount: 0 },
-  render: () => (
-    <div className="flex flex-wrap items-center gap-4 p-8">
-      <DiagramNode content="Node A" />
-      <DiagramNode content="Node B" selected />
-      <DiagramNode content="Node C" hovered />
-      <DiagramNode content="Placeholder" isPlaceholder />
     </div>
   ),
 };

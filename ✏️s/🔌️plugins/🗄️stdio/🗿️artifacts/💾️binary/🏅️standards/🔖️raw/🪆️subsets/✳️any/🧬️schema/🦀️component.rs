@@ -129,13 +129,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::binary::schema::mutations::apply_binary_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -209,8 +209,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec BinaryBuilderFacets {
-        construction: derived_construction::BinaryBuilderConstruction,
-        analysis: derived_analysis::BinaryAnalyzerAnalysis,
+        construction: BinaryBuilderConstruction,
+        analysis: BinaryAnalyzerAnalysis,
         composition: super::super::io::derived_composition::BinaryComposerComposition,
     }
     builder: BinaryBuilder,

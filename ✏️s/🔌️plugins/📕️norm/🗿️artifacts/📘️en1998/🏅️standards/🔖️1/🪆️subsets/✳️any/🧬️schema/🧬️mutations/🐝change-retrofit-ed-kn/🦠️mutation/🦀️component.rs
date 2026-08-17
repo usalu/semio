@@ -15,7 +15,7 @@ pub struct ChangeRetrofitEDKn {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitEDKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "retrofit-ed-kn", kind: "change-retrofit-ed-kn", record: "ChangedRetrofitEDKn" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_retrofit_e_d_kn::diff::diff(self, base)
     }
 

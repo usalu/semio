@@ -1,0 +1,16 @@
+### FINAL BARRIER 2026-08-17T04:28:58+02:00
+--- cargo test -p semio-hub --lib
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+--- cargo test -p semio-s-plugin-space --lib
+test result: ok. 204 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+--- cargo test -p semio-framework-os-kernel --lib
+test result: ok. 988 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+--- cargo test -p semio-framework-plugin --lib
+test result: FAILED. 217 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+error: test failed, to rerun pass `-p semio-framework-plugin --lib`
+--- cargo test -p semio-hub --bin os-hub
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+--- cargo check wgpu renderer
+0
+--- cargo test wgpu renderer --lib
+test result: FAILED. 314 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s

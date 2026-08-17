@@ -88,11 +88,11 @@ pub fn draw_op_for_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, 
 
 /// 🩹 Applies one field patch directly to `doc` — used by callers that don't need the mutation
 /// value itself (`draw_op_for_layer_field` is the undoable/command-facing entry point).
-pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawSnapshot {
+pub fn patch_layer_field(doc: &DrawSnapshot, layer_id: &str, field: &str, value: &serde_json::Value) -> protocol::MutationApplyResult<DrawSnapshot> {
     use protocol::{Mutation, MutationDiff};
     match draw_op_for_layer_field(doc, layer_id, field, value) {
-        Some(operation) => operation.diff(doc).diff().apply(doc),
-        None => doc.clone(),
+        Some(operation) => operation.diff(doc).diff().apply(doc).map_err(|error| error.under(["layers", layer_id])),
+        None => Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "layer field cannot be patched").at(["layers", layer_id, field])),
     }
 }
 //#endregion 🔖️FieldPatch
@@ -179,7 +179,7 @@ mod tests {
         let base = base_document();
         let layer_id = crate::artifacts::draw::schema::layer_id(&base.layers[0]).to_string();
         let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base).diff().clone();
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = set_layer_opacity(layer_id, 0.25).diff(&mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

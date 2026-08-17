@@ -22,7 +22,7 @@ pub fn change_grid_subdivisions(new_subdivisions: Option<f64>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSubdivisions {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-subdivisions", kind: "change-grid-subdivisions", record: "ChangedGridSubdivisions" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

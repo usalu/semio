@@ -23,7 +23,7 @@ pub fn update_geo_params(params: GeoParams) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for UpdateGeoParams {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "geo-params", kind: "update-geo-params", record: "UpdatedGeoParams" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

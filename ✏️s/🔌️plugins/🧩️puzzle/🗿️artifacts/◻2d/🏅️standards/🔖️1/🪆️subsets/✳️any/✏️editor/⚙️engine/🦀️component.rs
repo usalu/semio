@@ -14,9 +14,9 @@
 //!
 //! 🌉️ Externally reachable at `puzzle::editor::puzzle2d::engine::*` (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET moved this module here from the retired
-//! `puzzle::apps::puzzle2d::engine::*` — the framework OS renderer's own call sites still read the
-//! OLD path as of this packet, a real cross-crate compile dependency flagged to the coordinator, not
-//! fixed here) — the framework OS renderer
+//! `puzzle::apps::puzzle2d::engine::*`; the framework OS renderer's own call sites were the one real
+//! cross-crate compile dependency on the old path and were repointed at this module in the same
+//! ticket's W2-FIX lane) — the framework OS renderer
 //! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EngineCanvas/🧊️component.rs`)
 //! holds a `BoardHost` and calls `board_host::puzzle_board_host()` directly, so this module and its
 //! `board_host` child must both stay `pub`.

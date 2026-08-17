@@ -5,7 +5,10 @@ use crate::artifacts::din18599::mutations::change_occupants::mutation::ChangeOcc
 use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeOccupants, _base: &Din18599Snapshot) -> Din18599Diff {
-    Din18599Diff { occupants: Some(payload.new_occupants.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeOccupants, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    if base.occupants == payload.new_occupants {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Occupants already has this value.");
+    }
+    protocol::MutationOutcome::new(Din18599Diff { occupants: Some(payload.new_occupants.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

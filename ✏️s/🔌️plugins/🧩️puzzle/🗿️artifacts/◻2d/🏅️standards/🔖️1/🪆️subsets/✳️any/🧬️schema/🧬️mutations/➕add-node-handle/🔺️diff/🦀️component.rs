@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::AddNodeHandle, base: &Puzzle2dSnapshot) -
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node-handle", payload.node_id), vec![payload.node_id.clone()]);
     };
     if node.handles.iter().any(|handle| handle.id == payload.handle.id) {
-        return Puzzle2dDiff::default();
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Handle \"{}\" already exists on node \"{}\".", payload.handle.id, payload.node_id));
     }
     let mut next = node.clone();
     let at = payload.index.unwrap_or(next.handles.len()).min(next.handles.len());

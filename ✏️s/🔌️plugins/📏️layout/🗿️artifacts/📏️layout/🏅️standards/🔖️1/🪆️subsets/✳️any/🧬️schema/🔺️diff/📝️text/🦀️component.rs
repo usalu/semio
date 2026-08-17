@@ -23,53 +23,80 @@ fn apply_identified_delta<T, P, E, F>(
     patched: &[E],
     reordered: Option<&Vec<String>>,
     entry_parts: F,
-) -> Vec<T>
+) -> protocol::MutationApplyResult<Vec<T>>
 where
-    T: Clone + Identified<String> + Patchable<P>,
+    T: Clone + protocol::Identified<String> + Patchable<P>,
     P: Clone,
     F: Fn(&E) -> (&String, &P),
 {
     let mut next = items.to_vec();
+    let mut seen = std::collections::HashSet::new();
     for id in removed {
-        next.retain(|item| item.id() != id);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
+        }
+        let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
+        })?;
+        next.remove(position);
     }
+    seen.clear();
     for item in added {
+        let id = item.id();
+        if !seen.insert(id.clone()) || next.iter().any(|entry| entry.id() == id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added", id.as_str()]));
+        }
         next.push(item.clone());
     }
+    seen.clear();
     for entry in patched {
         let (id, patch) = entry_parts(entry);
-        if let Some(item) = next.iter_mut().find(|item| item.id() == id) {
-            item.apply_patch(patch);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
+        let item = next.iter_mut().find(|item| item.id() == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
+        })?;
+        item.apply_patch(patch);
     }
     if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (item.id().clone(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
+        if order.len() != next.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
+        }
+        seen.clear();
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
+            if !seen.insert(id.clone()) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item appears more than once in order").at(["reordered", id.as_str()]));
+            }
+            if !next.iter().any(|item| item.id() == id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]));
             }
         }
-        ordered.extend(by_id.into_values());
+        let mut ordered = Vec::with_capacity(next.len());
+        for id in order {
+            let position = next.iter().position(|item| item.id() == id).ok_or_else(|| {
+                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
+            })?;
+            ordered.push(next.remove(position));
+        }
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
-pub fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> Vec<Page> {
+pub fn apply_pages_delta(items: &[Page], delta: &LayoutPagesDelta) -> protocol::MutationApplyResult<Vec<Page>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutPagePatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
-pub fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> Vec<TextStory> {
+pub fn apply_stories_delta(items: &[TextStory], delta: &LayoutStoriesDelta) -> protocol::MutationApplyResult<Vec<TextStory>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutStoryPatchEntry| {
         (&entry.id, &entry.patch)
     })
 }
 
-pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> Vec<ImageLink> {
+pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> protocol::MutationApplyResult<Vec<ImageLink>> {
     apply_identified_delta(items, &delta.removed, &delta.added, &delta.patched, delta.reordered.as_ref(), |entry: &LayoutLinkPatchEntry| {
         (&entry.id, &entry.patch)
     })
@@ -77,120 +104,123 @@ pub fn apply_links_delta(items: &[ImageLink], delta: &LayoutLinksDelta) -> Vec<I
 
 impl LayoutDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> LayoutArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(name) = &self.name {
-            next.name = name.clone();
-        }
-        if let Some(grid) = &self.grid {
-            next.grid = grid.clone();
-        }
-        if let Some(delta) = &self.pages {
-            next.pages = apply_pages_delta(&next.pages, delta);
-        }
-        if let Some(delta) = &self.stories {
-            next.stories = apply_stories_delta(&next.stories, delta);
-        }
-        if let Some(delta) = &self.links {
-            next.links = apply_links_delta(&next.links, delta);
-        }
-        if let Some(value) = &self.print_target {
-            next.print_target = value.clone();
-        }
-        if let Some(value) = &self.data_fields_json {
-            next.data_fields_json = value.clone();
-        }
-        if let Some(value) = &self.background_drawing {
-            next.background_drawing = value.clone();
-        }
-        if let Some(value) = &self.referenced_model {
-            next.referenced_model = value.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.active_page_id {
-            next.active_page_id = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = self.camera_x {
-            next.camera_x = value;
-        }
-        if let Some(value) = self.camera_y {
-            next.camera_y = value;
-        }
-        if let Some(value) = self.camera_zoom {
-            next.camera_zoom = value;
-        }
-        if let Some(value) = self.preview_camera_x {
-            next.preview_camera_x = value;
-        }
-        if let Some(value) = self.preview_camera_y {
-            next.preview_camera_y = value;
-        }
-        if let Some(value) = self.preview_camera_zoom {
-            next.preview_camera_zoom = value;
-        }
-        if let Some(value) = &self.drop_preview {
-            next.drop_preview = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.hovered_id {
-            next.hovered_id = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &LayoutArtifact) -> protocol::MutationApplyResult<LayoutArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(name) = &self.name {
+                next.name = name.clone();
+            }
+            if let Some(grid) = &self.grid {
+                next.grid = grid.clone();
+            }
+            if let Some(delta) = &self.pages {
+                next.pages = apply_pages_delta(&next.pages, delta).map_err(|error| error.under(["pages"]))?;
+            }
+            if let Some(delta) = &self.stories {
+                next.stories = apply_stories_delta(&next.stories, delta).map_err(|error| error.under(["stories"]))?;
+            }
+            if let Some(delta) = &self.links {
+                next.links = apply_links_delta(&next.links, delta).map_err(|error| error.under(["links"]))?;
+            }
+            if let Some(value) = &self.print_target {
+                next.print_target = value.clone();
+            }
+            if let Some(value) = &self.data_fields_json {
+                next.data_fields_json = value.clone();
+            }
+            if let Some(value) = &self.background_drawing {
+                next.background_drawing = value.clone();
+            }
+            if let Some(value) = &self.referenced_model {
+                next.referenced_model = value.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.active_page_id {
+                next.active_page_id = value.clone();
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = self.preview_camera_x {
+                next.preview_camera_x = value;
+            }
+            if let Some(value) = self.preview_camera_y {
+                next.preview_camera_y = value;
+            }
+            if let Some(value) = self.preview_camera_zoom {
+                next.preview_camera_zoom = value;
+            }
+            if let Some(value) = &self.drop_preview {
+                next.drop_preview = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.hovered_id {
+                next.hovered_id = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<LayoutSnapshot> for LayoutDiff {
-    fn apply(&self, snapshot: &LayoutSnapshot) -> LayoutSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(name) = &self.name {
-            next.name = name.clone();
-        }
-        if let Some(grid) = &self.grid {
-            next.grid = grid.clone();
-        }
-        if let Some(delta) = &self.pages {
-            next.pages = apply_pages_delta(&next.pages, delta);
-        }
-        if let Some(delta) = &self.stories {
-            next.stories = apply_stories_delta(&next.stories, delta);
-        }
-        if let Some(delta) = &self.links {
-            next.links = apply_links_delta(&next.links, delta);
-        }
-        if let Some(value) = &self.print_target {
-            next.print_target = value.clone();
-        }
-        if let Some(value) = &self.data_fields_json {
-            next.data_fields_json = value.clone();
-        }
-        if let Some(value) = &self.background_drawing {
-            next.background_drawing = value.clone();
-        }
-        if let Some(value) = &self.referenced_model {
-            next.referenced_model = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &LayoutSnapshot) -> protocol::MutationApplyResult<LayoutSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(name) = &self.name {
+                next.name = name.clone();
+            }
+            if let Some(grid) = &self.grid {
+                next.grid = grid.clone();
+            }
+            if let Some(delta) = &self.pages {
+                next.pages = apply_pages_delta(&next.pages, delta).map_err(|error| error.under(["pages"]))?;
+            }
+            if let Some(delta) = &self.stories {
+                next.stories = apply_stories_delta(&next.stories, delta).map_err(|error| error.under(["stories"]))?;
+            }
+            if let Some(delta) = &self.links {
+                next.links = apply_links_delta(&next.links, delta).map_err(|error| error.under(["links"]))?;
+            }
+            if let Some(value) = &self.print_target {
+                next.print_target = value.clone();
+            }
+            if let Some(value) = &self.data_fields_json {
+                next.data_fields_json = value.clone();
+            }
+            if let Some(value) = &self.background_drawing {
+                next.background_drawing = value.clone();
+            }
+            if let Some(value) = &self.referenced_model {
+                next.referenced_model = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -305,8 +335,8 @@ mod tests {
         let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(
             crate::artifacts::layout::mutations::change_data_fields::mutation::ChangeDataFields { new_json: Some("{}".into()) },
         );
-        let diff: LayoutDiff = operation.diff(&base);
-        let applied = diff.apply(&base);
+        let diff: LayoutDiff = operation.diff(&base).into_parts().0;
+        let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));
     }
 

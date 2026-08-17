@@ -7,5 +7,5 @@ export const gltfVolumeInference = {
 } as const;
 export type GltfVolumeInference = typeof gltfVolumeInference;
 import { bounds, exact, unavailable, signedVolume, surfaceArea, type GltfTsBounds3, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️component.ts';
-export const inferGltfVolume = (context: GltfTsGeometryContext): GltfTsMeasure<number> => { const value = Math.abs(signedVolume(context)); return context.valid && value !== undefined ? exact(context, value, 'cubic-metre') : unavailable(context, 'cubic-metre'); };
-export const unavailableGltfVolume = (context: GltfTsGeometryContext): GltfTsMeasure<number> => unavailable(context, 'cubic-metre');
+export const inferGltfVolume = (context: GltfTsGeometryContext): GltfTsMeasure<number> => { const value = Math.abs(signedVolume(context)); return context.valid && value !== undefined ? exact(context, value, 'cubicMetre') : unavailable(context, 'cubicMetre'); };
+export const unavailableGltfVolume = (context: GltfTsGeometryContext): GltfTsMeasure<number> => unavailable(context, 'cubicMetre');

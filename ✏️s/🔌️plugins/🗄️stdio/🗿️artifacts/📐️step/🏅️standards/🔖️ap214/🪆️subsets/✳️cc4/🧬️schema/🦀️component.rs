@@ -17,6 +17,7 @@ pub mod derived_construction {
     #[derive(Clone, Debug, Default)]
     pub struct StepCc4BuilderConstruction {
         snapshot: StepSnapshot,
+        diagnostics: Vec<Diagnostic>,
     }
 
     impl ArtifactBuilder for StepCc4BuilderConstruction {
@@ -25,11 +26,11 @@ pub mod derived_construction {
         type Diff = StepDiff;
 
         fn empty() -> Self {
-            Self { snapshot: StepSnapshot::default() }
+            Self { snapshot: StepSnapshot::default(), diagnostics: Vec::new() }
         }
 
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
+            Self { snapshot, diagnostics: Vec::new() }
         }
 
         fn from_text(text: &str) -> Result<Self, store::TextError> {
@@ -40,14 +41,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<StepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::step::schema::mutations::apply_step_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard ISO 10303-214 CC4 (manifold surfaces with topology)
@@ -56,11 +57,12 @@ pub mod derived_construction {
         /// advisory `Diagnostic`s on a successful `Composition`); the `Err` path is only taken for
         /// hard ones.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let hard: Vec<Diagnostic> = check_cc4_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
+            let Self { snapshot, mut diagnostics } = self;
+            diagnostics.extend(check_cc4_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
+            if diagnostics.is_empty() {
+                Ok(snapshot)
             } else {
-                Err(hard)
+                Err(diagnostics)
             }
         }
     }
@@ -93,7 +95,7 @@ pub mod derived_construction {
         fn hard_violation_injected_via_raw_mutate_still_fails_build() {
             let mut snapshot = conforming_snapshot();
             let mut doc = snapshot.to_part21_document();
-            doc.instances.push(crate::artifacts::step::standards::v_ap214::engine::part21::Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
+            doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
             snapshot = StepSnapshot::from_part21_document(doc);
             let (mutated, _diff) = StepCc4BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 4 must fail build()");
@@ -251,8 +253,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec StepCc4BuilderFacets {
-        construction: derived_construction::StepCc4BuilderConstruction,
-        analysis: derived_analysis::StepCc4AnalyzerAnalysis,
+        construction: StepCc4BuilderConstruction,
+        analysis: StepCc4AnalyzerAnalysis,
         composition: super::io::derived_composition::StepCc4ComposerComposition,
     }
     builder: StepCc4Builder,

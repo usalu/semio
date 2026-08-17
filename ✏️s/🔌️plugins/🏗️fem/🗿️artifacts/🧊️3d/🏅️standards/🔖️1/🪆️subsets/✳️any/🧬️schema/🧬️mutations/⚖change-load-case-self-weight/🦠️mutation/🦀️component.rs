@@ -17,7 +17,7 @@ pub struct ChangeLoadCaseSelfWeight {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ChangeLoadCaseSelfWeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> crate::artifacts::fem3d::diff::Fem3dDiff {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

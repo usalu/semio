@@ -8,19 +8,37 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵️Tree/🟦️component.tsx";
 import { formatNumber, Input } from "../✏️Input/🟦️component.tsx";
-import { loadingBorderStateClass, waitingBorderStateClass } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️component.tsx";
-import { useInteractionCommands, sliderRangeClassName, sliderReadyClassName, sliderThumbClassName, sliderValueClassName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useInteractionCommands } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider
 // Range slider built on Radix primitives.
 // Consumers MUST provide min and max values.
+
+/** @emoji 🎚️ Slider filled range presentation. */
+const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
+
+/** @emoji 🎚️ Slider ready extent presentation. */
+const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
+
+/** @emoji 🎚️ Slider thumb presentation. */
+const sliderThumbClassName = cn(
+  "block size-small shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
+  "hover:bg-emphasized group-hover:bg-emphasized",
+  "focus-visible:bg-active-base focus-visible:ring-0",
+  "data-[dragging=true]:bg-active-base",
+  "disabled:pointer-events-none disabled:opacity-50",
+);
+
+/** @emoji 🎚️ Slider numeric readout presentation. */
+const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
 
 /** @emoji 🎚️ Whether two slider value tuples match within a step-aware epsilon. */
 export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number): boolean {
@@ -96,7 +114,6 @@ function Slider({
     interactionId?: string;
     snapValues?: number[];
   }) {
-  const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isSliding, setIsSliding] = reactHostPort.useState(false);
@@ -166,7 +183,6 @@ function Slider({
     if (!hasBeenEdited) setHasBeenEdited(true);
     setEditValue(formatReadout(displayValue));
     setIsEditing(true);
-    transaction?.start?.();
   };
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
@@ -177,16 +193,13 @@ function Slider({
         handleValueCommit([newValue]);
       }
       setIsEditing(false);
-      transaction?.finalize?.();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      transaction?.abort?.();
     }
   };
 
   const handleEditBlur = () => {
     setIsEditing(false);
-    transaction?.finalize?.();
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -196,7 +209,6 @@ function Slider({
     if (!isSliding) {
       setPendingDraftValues(externalValues);
       setIsSliding(true);
-      transaction?.start?.();
     }
     onPointerDown?.();
   };
@@ -211,7 +223,6 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
-      transaction?.finalize?.();
     }
     onPointerUp?.();
   };
@@ -223,7 +234,6 @@ function Slider({
     if (isSliding) {
       setIsSliding(false);
       setPendingDraftValues(null);
-      transaction?.abort?.();
     }
     onPointerCancel?.();
   };
@@ -233,7 +243,6 @@ function Slider({
       if (!isSliding) {
         setPendingDraftValues(externalValues);
         setIsSliding(true);
-        transaction?.start?.();
       }
     }
   };
@@ -242,13 +251,11 @@ function Slider({
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (isSliding) {
         setIsSliding(false);
-        transaction?.finalize?.();
       }
     } else if (e.key === "Escape") {
       if (isSliding) {
         setIsSliding(false);
         setPendingDraftValues(null);
-        transaction?.abort?.();
         onPointerCancel?.();
       }
     }

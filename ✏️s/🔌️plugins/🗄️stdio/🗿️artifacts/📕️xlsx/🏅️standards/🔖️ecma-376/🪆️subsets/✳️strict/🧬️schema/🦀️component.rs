@@ -87,14 +87,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here (`new`, `from_binary`, a
@@ -334,8 +334,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec XlsxStrictBuilderFacets {
-        construction: derived_construction::XlsxStrictBuilderConstruction,
-        analysis: derived_analysis::XlsxStrictAnalyzerAnalysis,
+        construction: XlsxStrictBuilderConstruction,
+        analysis: XlsxStrictAnalyzerAnalysis,
         composition: super::io::derived_composition::XlsxStrictComposerComposition,
     }
     builder: XlsxStrictBuilder,

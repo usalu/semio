@@ -21,7 +21,7 @@ pub struct WavDiff {
 }
 
 impl MutationDiff<WavSnapshot> for WavDiff {
-    fn apply(&self, base: &WavSnapshot) -> WavSnapshot {
+    fn apply(&self, base: &WavSnapshot) -> protocol::MutationApplyResult<WavSnapshot> {
         let mut next = base.clone();
         if let Some(v) = &self.fmt {
             next.fmt = v.clone();
@@ -32,7 +32,7 @@ impl MutationDiff<WavSnapshot> for WavDiff {
         if let Some(v) = &self.other_chunks {
             next.other_chunks = v.clone();
         }
-        next
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
         if other.fmt.is_some() {
@@ -298,13 +298,13 @@ mod tests {
         assert!(ab.fmt.is_some());
         assert!(ab.data.is_some());
         assert!(ab.other_chunks.is_some());
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = WavDiff::between(&b, &a);
         assert!(ba.fmt.is_some());
         assert!(ba.data.is_some());
         assert!(ba.other_chunks.is_some());
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(WavDiff::between(&a, &a).is_empty());
     }
@@ -315,8 +315,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(WavDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(WavDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(WavDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(WavDiff::between(&b, &a).apply(&b).unwrap(), a);
     }
     //#endregion between_roundtrip_law
 
@@ -328,7 +328,7 @@ mod tests {
         let d2 = diff_set_data(WavData::Raw(vec![9, 9]));
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base), d2.apply(&d1.apply(&base)));
+        assert_eq!(absorbed.apply(&base).unwrap(), d2.apply(&d1.apply(&base).unwrap()).unwrap());
         assert_eq!(absorbed.fmt, d1.fmt);
         assert_eq!(absorbed.data, d2.data);
 
@@ -351,7 +351,7 @@ mod tests {
         let mut right = da.clone();
         right.absorb(right_tail);
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base), dc.apply(&db.apply(&da.apply(&base))));
+        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
     }
     //#endregion absorb_law
 
@@ -360,8 +360,8 @@ mod tests {
     fn inverse_law_diff_level() {
         let base = sweep_a();
         let d = WavDiff::between(&base, &sweep_b());
-        let applied = d.apply(&base);
-        let undone = d.inverse(&base).apply(&applied);
+        let applied = d.apply(&base).unwrap();
+        let undone = d.inverse(&base).apply(&applied).unwrap();
         assert_eq!(undone, base);
     }
     //#endregion inverse_law

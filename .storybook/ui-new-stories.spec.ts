@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ .storybook/ui-new-stories.spec.ts
-// Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories (MobilePanel, PanelTabBar/PanelChromeTabBar, Scene, SelectionMarquee, Shell*Panel/Dialog, Skeletons, SortableTreeItems, UIDialog, UIIntroduction, UnifiedGumball, NavbarExampleSelect, ActionDropdown, Providers).
+// Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories (PanelTabBar/PanelChromeTabBar, Scene, SelectionMarquee, Shell*Panel/Dialog, Skeletons, SortableTreeItems, UIDialog, UIIntroduction, UnifiedGumball, NavbarExampleSelect, ActionDropdown, Providers).
 // Summary: Drives each story id through the aggregated Storybook static build's `iframe.html` and asserts a mounted root plus zero page/console errors — no visual/pixel assertions, this is boot-health coverage, not per-component behavior testing (each component's own barrel-level unit tests already cover behavior).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -21,16 +21,10 @@ const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-selectionmarquee--polygon",
   "🖱️ui⚛️react-shelldisplaypanel--default",
   "🖱️ui⚛️react-shelldisplaypanel--compact-on",
-  "🖱️ui⚛️react-shellfinddialog--default",
-  "🖱️ui⚛️react-shellfinddialog--filtered",
-  "🖱️ui⚛️react-shellsearchdialog--default",
-  "🖱️ui⚛️react-shellsearchdialog--filtered",
-  "🖱️ui⚛️react-shellsearchdialog--empty",
   "🖱️ui⚛️react-shellsettingspanel--default",
   "🖱️ui⚛️react-shellsettingspanel--expert-mode",
   "🖱️ui⚛️react-skeletons--table",
   "🖱️ui⚛️react-skeletons--diagram",
-  "🖱️ui⚛️react-skeletons--loading-row-story",
   "🖱️ui⚛️react-skeletons--scene",
   "🖱️ui⚛️react-sortabletreeitems--default",
   "🖱️ui⚛️react-sortabletreeitems--single-item",

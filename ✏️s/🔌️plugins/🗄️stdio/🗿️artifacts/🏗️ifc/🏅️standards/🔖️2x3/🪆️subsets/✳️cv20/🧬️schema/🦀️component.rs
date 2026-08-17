@@ -14,6 +14,17 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
+    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+            code: message.code.clone(),
+            severity: message.level,
+            span: dsl::TextSpan::at(1, 1),
+            message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
+            expected: None,
+            scope: dsl::FaultScope::default(),
+        }));
+    }
+
     //#region 🔖️Seed
     const PLACEMENT_ID: u64 = 10;
     const UNITS_ID: u64 = 20;
@@ -52,13 +63,14 @@ pub mod derived_construction {
     #[derive(Clone, Debug)]
     pub struct Ifc2x3Cv20BuilderConstruction {
         snapshot: Ifc2x3Snapshot,
+        diagnostics: Vec<Diagnostic>,
     }
 
     impl Ifc2x3Cv20BuilderConstruction {
         /// ➕ The recommended entry point: always produces a document with `IFC2X3`/`CoordinationView`
         /// header and a real project+units pair.
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None } }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
 
         /// 🧱️ Adds a product instance of `type_name` (must be one of the geometry-bearing product
@@ -69,7 +81,8 @@ pub mod derived_construction {
                 id,
                 entities: vec![(type_name.to_string(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string()), Part21Value::Unset, Part21Value::Unset, Part21Value::Ref(PLACEMENT_ID)])],
             };
-            apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
     }
@@ -93,7 +106,7 @@ pub mod derived_construction {
         }
 
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
+            Self { snapshot, diagnostics: Vec::new() }
         }
 
         fn from_text(text: &str) -> Result<Self, store::TextError> {
@@ -104,24 +117,25 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here, a hard CV2.0 violation
         /// fails `build()`; soft diagnostics pass through as advisory (the `Err` path is not taken).
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let hard: Vec<Diagnostic> = check_cv20_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
+            let Self { snapshot, mut diagnostics } = self;
+            diagnostics.extend(check_cv20_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
+            if diagnostics.is_empty() {
+                Ok(snapshot)
             } else {
-                Err(hard)
+                Err(diagnostics)
             }
         }
     }
@@ -380,8 +394,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3Cv20BuilderFacets {
-        construction: derived_construction::Ifc2x3Cv20BuilderConstruction,
-        analysis: derived_analysis::Ifc2x3Cv20AnalyzerAnalysis,
+        construction: Ifc2x3Cv20BuilderConstruction,
+        analysis: Ifc2x3Cv20AnalyzerAnalysis,
         composition: super::io::derived_composition::Ifc2x3Cv20ComposerComposition,
     }
     builder: Ifc2x3Cv20Builder,

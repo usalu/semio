@@ -1,11 +1,32 @@
-# 💡️ flatness glTF inference leaf GraphQL facet.
-type GltfFlatnessInferenceV1 {
-  id: ID!
+# 💡️ Typed flatness glTF inference result.
+type GltfFlatnessQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: Int!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfFlatnessProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfFlatnessInferenceV1 {
+  value: Float
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfFlatnessQualityV1!
+  provenance: GltfFlatnessProvenanceV1!
 }

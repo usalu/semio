@@ -8,15 +8,11 @@
 
 // #endregion 🧲️Header
 
-import { Button, ButtonCycle } from "@semio-tech/ui-react";
+import { Button } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
 
 // 🔘️#region 🔤️Button
-const Box = createIconComponent("box");
-const List = createIconComponent("list");
-const Network = createIconComponent("network");
 const Plus = createIconComponent("plus");
 
 const meta = {
@@ -40,41 +36,3 @@ export const Default: Story = {
 };
 
 // #endregion 🔤️Button
-
-// #region 🪬️ButtonCycle
-
-const cycleMeta = {
-  title: "🖱️ui⚛️react/ButtonCycle",
-  component: ButtonCycle,
-  parameters: {
-    layout: "centered",
-  },
-  tags: ["autodocs"],
-} satisfies Meta<typeof ButtonCycle>;
-
-type CycleStory = StoryObj<typeof cycleMeta>;
-
-export const Cycle: CycleStory = {
-  args: {
-    id: "button-cycle",
-    showLabel: true,
-    items: [],
-  },
-  render: (args) => {
-    const [value, setValue] = useState("view1");
-    return (
-      <ButtonCycle
-        {...args}
-        value={value}
-        onValueChange={setValue}
-        items={[
-          { value: "view1", label: <Box /> },
-          { value: "view2", label: <Network /> },
-          { value: "view3", label: <List /> },
-        ]}
-      />
-    );
-  },
-};
-
-// #endregion 🪬️ButtonCycle

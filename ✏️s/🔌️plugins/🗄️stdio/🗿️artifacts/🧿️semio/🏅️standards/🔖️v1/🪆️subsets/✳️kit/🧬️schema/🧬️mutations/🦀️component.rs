@@ -73,11 +73,11 @@ mod tests {
     /// stale pre-operation `base` — same fix `✳️text`'s corrected `round_trip` helper established
     /// (📌️important.md Trap #1).
     fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         // 🔧️ `objects`/`models`/`representations` are documented as id/role-keyed SETS with no
         // user-meaningful display order (same precedent `✳️graph`'s W2fix established for
@@ -123,7 +123,7 @@ mod tests {
         let base = fixture();
         let delete = SemioKitMutation::DeleteObject(delete_object::mutation::DeleteObject { child_id: "does-not-exist".into() });
         assert!(delete.inverse(&base).is_empty());
-        assert_eq!(delete.diff(&base).apply(&base), base);
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]
@@ -167,7 +167,7 @@ mod tests {
         let base = fixture();
         let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 99 });
         assert!(unbind.inverse(&base).is_empty());
-        assert_eq!(unbind.diff(&base).apply(&base), base);
+        assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]

@@ -8,13 +8,17 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { borderElementClass, formControlFocusBorderClass, interactiveHoverClass, glassClass, menuListItemClassName } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { formControlFocusBorderClass } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️component.ts";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { SurfaceScope, useLevel } from "../🌈️Surface/🟦️component.tsx";
 import { Label } from "../🏷️Label/🟦️component.tsx";
-import { useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -26,7 +30,6 @@ import { CheckIconAlt, ChevronDownIconAlt, ChevronUpIcon, type IconSource, Icon 
  * Select holds the data fields for a Select record.
  **/
 function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
-  const transaction = useTransaction();
   const fallbackValue = reactHostPort.useMemo(() => {
     const findValue = (nodes: React.ReactNode[]): string | undefined => {
       for (const node of nodes) {
@@ -51,11 +54,6 @@ function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ..
   }, [children]);
 
   const handleOpenChange = (open: boolean) => {
-    if (open) {
-      transaction?.start?.();
-    } else {
-      transaction?.finalize?.();
-    }
     onOpenChange?.(open);
   };
 

@@ -52,7 +52,7 @@ impl SemioTableDiff {
 }
 
 impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
-    fn apply(&self, base: &SemioTableSnapshot) -> SemioTableSnapshot {
+    fn apply(&self, base: &SemioTableSnapshot) -> protocol::MutationApplyResult<SemioTableSnapshot> {
         let mut next = base.clone();
         if let Some(list) = &self.columns {
             next.columns = list.values.clone();
@@ -60,7 +60,7 @@ impl MutationDiff<SemioTableSnapshot> for SemioTableDiff {
         if let Some(list) = &self.rows {
             next.rows = list.values.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -261,7 +261,7 @@ mod tests {
             columns: Some(SemioTableColumnList { values: vec![SemioTableColumn { name: "b".into(), kind: SemioTableCellKind::Int }] }),
             rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Int { lexeme: "1".into() }] }] }),
         };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(next.columns[0].name, "b");
         assert_eq!(next.rows[0].cells[0], SemioValue::Int { lexeme: "1".into() });
     }

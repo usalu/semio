@@ -15,7 +15,7 @@ pub struct ChangeFanEnergyReferenceKwh {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFanEnergyReferenceKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fan-energy-reference-kwh", kind: "change-fan-energy-reference-kwh", record: "ChangedFanEnergyReferenceKwh" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_fan_energy_reference_kwh::diff::diff(self, base)
     }
 

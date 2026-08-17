@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::Mp4Analyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") };
 
@@ -1045,12 +1045,12 @@ mod codec_tests {
 
         let self_diff = Mp4Diff::between(&snapshot, &snapshot);
         let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
-        assert_eq!(encode_mp4(&text_diff.apply(&snapshot)), bytes);
+        assert_eq!(encode_mp4(&text_diff.apply(&snapshot).unwrap()), bytes);
         let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
-        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot)), bytes);
+        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
 
         let mut no_op = snapshot.clone();
-        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).is_empty());
+        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).diff().is_empty());
         assert_eq!(encode_mp4(&no_op), bytes);
 
         let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: snapshot.clone() };
@@ -1070,8 +1070,8 @@ mod codec_tests {
         assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
 
         let diff = Mp4Diff::between(&snapshot, &changed);
-        let after = diff.apply(&snapshot);
-        let restored = diff.inverse(&snapshot).apply(&after);
+        let after = diff.apply(&snapshot).unwrap();
+        let restored = diff.inverse(&snapshot).apply(&after).unwrap();
         assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
         assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
         for inverse in mutation.inverse(&snapshot) {

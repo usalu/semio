@@ -1,0 +1,12 @@
+    Blocking waiting for file lock on build directory
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 2m 42s

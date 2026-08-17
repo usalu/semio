@@ -76,36 +76,30 @@ pub enum SemioMutation {
 impl Mutation<SemioSnapshot> for SemioMutation {
     type Diff = SemioDiff;
 
-    fn diff(&self, base: &SemioSnapshot) -> Self::Diff {
+    fn diff(&self, base: &SemioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
-            (SemioMutation::NoMutation, _) => SemioDiff::NoChange,
-            (SemioMutation::SetSnapshot { snapshot }, _) => SemioDiff::Replace(Box::new(snapshot.clone())),
-            (SemioMutation::Brep(m), S::Brep(b)) => SemioDiff::Brep(<SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b)),
-            (SemioMutation::Mesh(m), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b)),
-            (SemioMutation::Model(m), S::Model(b)) => SemioDiff::Model(<SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b)),
-            (SemioMutation::Value(m), S::Value(b)) => SemioDiff::Value(<SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b)),
-            (SemioMutation::Document(m), S::Document(b)) => SemioDiff::Document(<SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b)),
-            (SemioMutation::Cad(m), S::Cad(b)) => SemioDiff::Cad(<SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b)),
-            (SemioMutation::Drawing(m), S::Drawing(b)) => SemioDiff::Drawing(<SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b)),
-            (SemioMutation::Image(m), S::Image(b)) => SemioDiff::Image(<SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(m, b)),
-            (SemioMutation::Video(m), S::Video(b)) => SemioDiff::Video(<SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(m, b)),
-            (SemioMutation::Audio(m), S::Audio(b)) => SemioDiff::Audio(<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(m, b)),
-            (SemioMutation::Animation(m), S::Animation(b)) => SemioDiff::Animation(<SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b)),
-            (SemioMutation::Presentation(m), S::Presentation(b)) => SemioDiff::Presentation(<SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b)),
-            (SemioMutation::Flow(m), S::Flow(b)) => SemioDiff::Flow(<SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b)),
-            (SemioMutation::Text(m), S::Text(b)) => SemioDiff::Text(<SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b)),
-            (SemioMutation::Table(m), S::Table(b)) => SemioDiff::Table(<SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(m, b)),
-            (SemioMutation::Graph(m), S::Graph(b)) => SemioDiff::Graph(<SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(m, b)),
-            (SemioMutation::Object(m), S::Object(b)) => SemioDiff::Object(<SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b)),
-            (SemioMutation::Kit(m), S::Kit(b)) => SemioDiff::Kit(<SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(m, b)),
-            // 🛡️ A wrapped mutation whose kind doesn't match the base snapshot's current kind
-            // (e.g. `SemioMutation::Audio(..)` applied to a flow base): can only arise from
-            // caller error, not from any path this module itself constructs. `diff()` has no
-            // `Result` in its signature (per `protocol::Mutation`), so it degrades to a safe
-            // no-op (`NoChange`) rather than panicking — same total-fallback stance as `SemioDiff`'s
-            // own `apply`/`absorb`/`inverse`.
-            _ => SemioDiff::NoChange,
+            (SemioMutation::NoMutation, _) => protocol::MutationOutcome::new(SemioDiff::NoChange),
+            (SemioMutation::SetSnapshot { snapshot }, _) => protocol::MutationOutcome::new(SemioDiff::Replace(Box::new(snapshot.clone()))),
+            (SemioMutation::Brep(m), S::Brep(b)) => <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(m, b).map(SemioDiff::Brep),
+            (SemioMutation::Mesh(m), S::Mesh(b)) => <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(m, b).map(SemioDiff::Mesh),
+            (SemioMutation::Model(m), S::Model(b)) => <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(m, b).map(SemioDiff::Model),
+            (SemioMutation::Value(m), S::Value(b)) => <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(m, b).map(SemioDiff::Value),
+            (SemioMutation::Document(m), S::Document(b)) => <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(m, b).map(SemioDiff::Document),
+            (SemioMutation::Cad(m), S::Cad(b)) => <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(m, b).map(SemioDiff::Cad),
+            (SemioMutation::Drawing(m), S::Drawing(b)) => <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(m, b).map(SemioDiff::Drawing),
+            (SemioMutation::Image(m), S::Image(b)) => <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(m, b).map(SemioDiff::Image),
+            (SemioMutation::Video(m), S::Video(b)) => <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(m, b).map(SemioDiff::Video),
+            (SemioMutation::Audio(m), S::Audio(b)) => <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(m, b).map(SemioDiff::Audio),
+            (SemioMutation::Animation(m), S::Animation(b)) => <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(m, b).map(SemioDiff::Animation),
+            (SemioMutation::Presentation(m), S::Presentation(b)) => <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(m, b).map(SemioDiff::Presentation),
+            (SemioMutation::Flow(m), S::Flow(b)) => <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(m, b).map(SemioDiff::Flow),
+            (SemioMutation::Text(m), S::Text(b)) => <SemioTextMutation as Mutation<SemioTextSnapshot>>::diff(m, b).map(SemioDiff::Text),
+            (SemioMutation::Table(m), S::Table(b)) => <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(m, b).map(SemioDiff::Table),
+            (SemioMutation::Graph(m), S::Graph(b)) => <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(m, b).map(SemioDiff::Graph),
+            (SemioMutation::Object(m), S::Object(b)) => <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(m, b).map(SemioDiff::Object),
+            (SemioMutation::Kit(m), S::Kit(b)) => <SemioKitMutation as Mutation<SemioKitSnapshot>>::diff(m, b).map(SemioDiff::Kit),
+            _ => protocol::MutationOutcome::error("mutation.target-missing", "Mutation subset does not match the snapshot subset.", ["subset"]),
         }
     }
 
@@ -140,10 +134,9 @@ impl Mutation<SemioSnapshot> for SemioMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> SemioDiff {
-    let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioDiff as MutationDiff<SemioSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_mutation(snapshot: &mut SemioSnapshot, mutation: &SemioMutation) -> protocol::MutationOutcome<SemioDiff> {
+    let outcome = <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -280,7 +273,7 @@ fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
     }
 }
 
-impl protocol::OpText for SemioMutation {
+impl OpText for SemioMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_semio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -289,7 +282,7 @@ impl protocol::OpText for SemioMutation {
     }
 }
 
-impl protocol::OpBinary for SemioMutation {
+impl OpBinary for SemioMutation {
     /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`mutation_tag`]) as two genuine,
     /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload — for
     /// the 13 wrapped variants, the wrapped subset's OWN real `OpBinary::encode_op()` bytes
@@ -429,12 +422,12 @@ mod tests {
 
         let no_mut = SemioMutation::NoMutation;
         let d0 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&no_mut, &base);
-        assert_eq!(d0.apply(&base), base);
+        assert_eq!(d0.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
 
         let target = flow_base();
         let set_snap = SemioMutation::SetSnapshot { snapshot: target.clone() };
         let d1 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&set_snap, &base);
-        assert_eq!(d1.apply(&base), target);
+        assert_eq!(d1.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), target);
         let inv1 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&set_snap, &base);
         let mut round = target.clone();
         let _ = apply_semio_mutation(&mut round, &inv1[0]);
@@ -442,10 +435,10 @@ mod tests {
 
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 96_000 });
         let d2 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
-        assert!(matches!(d2, SemioDiff::Audio(_)));
+        assert!(matches!(d2.diff(), SemioDiff::Audio(_)));
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &wrapped);
-        assert_eq!(d2.apply(&base), applied);
+        assert_eq!(d2.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, d2);
         let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
         assert_eq!(inv2.len(), 1);
@@ -463,7 +456,7 @@ mod tests {
         let wrapped = SemioMutation::Flow(SemioFlowMutation::InsertNode { node: node.clone() });
         let mut applied = base.clone();
         let diff = apply_semio_mutation(&mut applied, &wrapped);
-        assert!(matches!(diff, SemioDiff::Flow(_)));
+        assert!(matches!(diff.diff(), SemioDiff::Flow(_)));
         match &applied.subset {
             SemioSubsetSnapshot::Flow(s) => assert_eq!(s.nodes, vec![node]),
             other => panic!("expected Flow, got {other:?}"),
@@ -474,15 +467,15 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    /// 🧪️ Kind-mismatch total fallback: a wrapped mutation for the WRONG kind never panics —
-    /// degrades to a documented no-op.
+    /// 🧪️ A wrapped mutation for the wrong kind remains unapplied and records its mismatch diagnostic.
     #[test]
-    fn kind_mismatch_wrapped_mutation_is_a_safe_no_op() {
+    fn kind_mismatch_wrapped_mutation_records_an_error_outcome() {
         let base = flow_base();
         let wrapped = SemioMutation::Audio(SemioAudioMutation::SetSampleRate { sample_rate: 1 });
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
-        assert_eq!(diff, SemioDiff::NoChange);
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.diff(), &SemioDiff::NoChange);
+        assert!(diff.messages().iter().any(|message| message.code.0 == "mutation.target-missing"));
+        assert_eq!(diff.diff().apply(&base).unwrap(), base);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base);
         assert_eq!(inv, vec![SemioMutation::NoMutation]);
     }
@@ -527,7 +520,7 @@ mod tests {
                 SemioSubsetSnapshot::Cad(_) => SemioMutation::Cad(SemioCadMutation::NoMutation),
                 SemioSubsetSnapshot::Drawing(_) => SemioMutation::Drawing(SemioDrawingMutation::DragNodes(crate::artifacts::semio::standards::v1::subsets::drawing::schema::mutations::drag_nodes::mutation::DragNodes {
                     ats: Vec::new(),
-                    offset: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2::default(),
+                    offset: SemioPoint2::default(),
                 })),
                 SemioSubsetSnapshot::Image(_) => SemioMutation::Image(SemioImageMutation::NoMutation),
                 SemioSubsetSnapshot::Video(_) => SemioMutation::Video(SemioVideoMutation::NoMutation),
@@ -546,7 +539,7 @@ mod tests {
             let base = SemioSnapshot { schema: "stdio.semio".into(), subset };
             let m = wrap_absent_mutation(&base.subset);
             let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-            assert!(diff.is_empty(), "wrapped NoMutation must diff empty: {diff:?}");
+            assert!(diff.diff().is_empty(), "wrapped NoMutation must diff empty: {diff:?}");
             let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
             assert_eq!(inv.len(), 1);
         }
@@ -562,11 +555,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
         let m = SemioMutation::Text(SemioTextMutation::InsertRun(insert_run::mutation::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Text(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Text(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -586,11 +579,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
         let m = SemioMutation::Brep(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: "v1".into(), point: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Brep(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -611,11 +604,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Mesh(Default::default()) };
         let m = SemioMutation::Mesh(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: SemioMesh { id: "m1".into(), primitives: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Mesh(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Mesh(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -635,11 +628,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
         let m = SemioMutation::Table(SemioTableMutation::InsertRow(insert_row::mutation::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Table(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Table(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -660,11 +653,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
         let m = SemioMutation::Graph(SemioGraphMutation::CreateNode(create_node::mutation::CreateNode { id: GraphNodeId::new("n1"), kind: "task".into(), label: "N1".into(), position: SemioPoint2::default(), ports: vec![], properties: vec![] }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Graph(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Graph(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -685,11 +678,11 @@ mod tests {
         let target = store::os_io::ArtifactRef { artifact_id: "brep-x".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
         let m = SemioMutation::Object(SemioObjectMutation::CreateBrep(create_brep::mutation::CreateBrep { child_id: "b1".into(), target }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Object(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Object(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);
@@ -709,11 +702,11 @@ mod tests {
         let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
         let m = SemioMutation::Kit(SemioKitMutation::AddType(add_type::mutation::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }));
         let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
-        assert!(matches!(diff, SemioDiff::Kit(_)));
-        assert!(!diff.is_empty());
+        assert!(matches!(diff.diff(), SemioDiff::Kit(_)));
+        assert!(!diff.diff().is_empty());
         let mut applied = base.clone();
         let returned_diff = apply_semio_mutation(&mut applied, &m);
-        assert_eq!(diff.apply(&base), applied);
+        assert_eq!(diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), applied);
         assert_eq!(returned_diff, diff);
         let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base);
         assert_eq!(inv.len(), 1);

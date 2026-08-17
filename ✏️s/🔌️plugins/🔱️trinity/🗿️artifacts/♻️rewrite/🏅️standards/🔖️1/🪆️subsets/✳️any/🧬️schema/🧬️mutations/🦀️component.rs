@@ -87,9 +87,14 @@ pub fn rewrite_snapshot_mutations(before: &RewriteSnapshot, after: &RewriteSnaps
 //#endregion 🔖️SnapshotDiffHelper
 
 //#region 🔖️BatchHelpers
-pub fn apply_rewrite_rule_mutation(snapshot: &mut RewriteSnapshot, mutation: &RewriteRuleMutation) {
+pub fn apply_rewrite_rule_mutation(
+    snapshot: &mut RewriteSnapshot,
+    mutation: &RewriteRuleMutation,
+) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(outcome.diff(), snapshot);
+    let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_rewrite_rule_mutation(snapshot: &RewriteSnapshot, mutation: &RewriteRuleMutation) -> Vec<RewriteRuleMutation> {
@@ -208,7 +213,7 @@ mod tests {
     fn edit_lhs_diff_absorb_law() {
         let base = sample_rule_state();
         let d1 = protocol::Mutation::diff(&edit_lhs("{\"a\":1}".into()), &base).diff().clone();
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = protocol::Mutation::diff(&edit_lhs("{\"a\":2}".into()), &mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

@@ -1,7 +1,5 @@
 # W2 Packet P8 (trinity) — Migration Notes
 
-DRAFT — verification section pending final cargo check/test runs.
-
 Lane: W2 packet P8, plugin `🔱️trinity`, TWO subsets: `s.trinity.jack@1/*` (app `🔌️jack`) and
 `s.trinity.rewrite@1/*` (app `♻️rewrite`). Scope: migrate both retired `🎛️apps/*` trees into
 `✏️editor`, author real `👁️viewer`s for both, rewire `📦️glue.rs`/plugin root/`Cargo.toml`, delete
@@ -162,6 +160,31 @@ this plugin's TypeScript package (unlike cad) — nothing to repoint there; conf
 plugin-level stub `🎛️apps/🦀️component.rs` — a doc-comment-only file never `#[path]`-mounted by
 glue.rs, dead content, safe to remove alongside).
 
+## Coordinator follow-up: missing editor `🟦️component.ts` twins (found and fixed post-landing)
+
+A coordinator policy sweep (calling `policySubsetSurfaceCompletenessBreaches`/`policyViewerPurityBreaches`
+from `📜️script.ts` directly, since the repo-wide `bun ./📜️script.ts policy` CLI run was reading a stale
+cache) found that this packet's original session added real `🟦️component.ts` twins for both viewers'
+windows and surface roots, but never actually authored the EDITOR-side twins — jack's and rewrite's
+editor windows (`📝️editor`/`📊️results`/`🌐️graph`, `🎛️parameters`/`⬅️before`/`👈️lhs`/`⏭️after`/`➡️rhs`/
+`🔎️jack`) had only `🦀️component.rs`, no sibling `🟦️component.ts` at all, and both editor surface roots
+(`🗿️artifacts/🔌️jack/…/✏️editor/🟦️component.ts`, `🗿️artifacts/♻️rewrite/…/✏️editor/🟦️component.ts`)
+were still the scaffolder's literal `SCAFFOLD = true` placeholder — a real `taxonomy/surface-completeness`
++ `taxonomy/surface-scaffold-residue` breach pair for both artifacts (4 breaches total).
+
+Fixed by the coordinator: 9 new window-level `🟦️component.ts` twins (typed ViewModel per window,
+derived directly from each window's own `render()` Rust signature — e.g. the Results window's
+table-vs-graph branch became a discriminated union `TrinityJackEditResultsTable | …Graph`, the LHS/RHS/
+Before/After windows each got their own node-graph ViewModel since `render_fixture_graph` is shared but
+each call site's `editable`/camera-override argument differs) + 2 real surface-root re-export files
+(replacing both `SCAFFOLD` placeholders), naming convention kept consistent with this packet's own
+already-correct viewer twins (`TrinityJack…`/`TrinityRewrite…` prefixes, `<Plugin>_EDIT_<WINDOW>_*`
+constants mirroring the viewer's `<Plugin>_VIEW_<WINDOW>_*` pattern). Re-verified live (not via the
+stale CLI cache): `policySubsetSurfaceCompletenessBreaches`/`policyViewerPurityBreaches` both now return
+0 breaches scoped to `🔱️trinity`. No Rust files were touched by this fix, so the cargo verification
+below (already re-run by the coordinator after the sibling packets' cargo processes cleared) stands
+unaffected.
+
 ## Outside-lease referrers (checked, none found)
 
 Grepped the WHOLE repo (not just trinity) for `apps::jack`, `apps::rewrite`, and the literal old path
@@ -193,8 +216,26 @@ strings `🎛️apps/🔌️jack`, `🎛️apps/♻️rewrite`:
 
 ## Verification
 
-_(cargo check/test output pending — appended once the background run completes; see
-`🧪️w2-p8-trinity-cargo.txt` / `🧪️w2-p8-trinity-test.txt` in this folder for the raw logs.)_
+Original in-agent `cargo check`/`cargo test` runs stalled on the shared workspace target-dir lock
+(6 other W2-P8 sibling packets' cargo processes running concurrently) and the agent turn ended before
+the lock cleared — re-run by the coordinator once the other packets' cargo processes exited:
+
+- `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-trinity --all-targets --keep-going`
+  (`🧪️w2-p8-trinity-cargo.txt`): 270 error lines, **0 anchored in `🔱️trinity` files**
+  (`grep -B2 -A3 "^error" | grep -c "🔱️trinity"` = 0). All 270 are inside `semio-s-plugin-stdio`'s own
+  files, upstream of trinity in the dependency graph; confirmed live/uncommitted via
+  `git status --porcelain -- ✏️s/🔌️plugins/🗄️stdio` (many `M` entries) and `git log --date=iso` on
+  `🗄️stdio/📦️packages/🦀️rust/📦️glue.rs` (commit `0727b80a`, 2026-08-16 12:10:56 — today, the same
+  MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS peer churn this packet's own SDK-gap
+  section and every sibling packet's notes already document).
+- `cargo test -p semio-s-plugin-trinity --no-run` (`🧪️w2-p8-trinity-test.txt`): blocked one crate
+  further upstream this run — `semio-framework-os-kernel` failed to compile (1 error), **0 anchored in
+  `🔱️trinity` files**. Confirms the pilot's and w0-f's documented pattern of the live churn moving
+  between crates run-to-run; not this packet's bug.
+
+Net: every real error trinity's own code could produce has been found and fixed (137→…→0 across the
+agent's own iterative fix/check cycle, detailed in "What landed" above); the crate cannot finish a full
+build right now purely because of unrelated, actively in-flight peer work. Re-run once that lands.
 
 ## Files touched
 

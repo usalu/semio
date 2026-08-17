@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "s.stdio.gltf.mutation.create-scene.v1",
+  "$id": "s.stdio.gltf.mutation.create-scene.v1.inverse",
   "title": "GltfCreateSceneInverseV1",
   "type": "object",
   "additionalProperties": false,
@@ -32,7 +32,13 @@
     },
     "position": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "expectedSceneCountAfter": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
     },
     "expectedScene": {
       "type": "object",
@@ -50,11 +56,37 @@
         "nodes"
       ]
     },
+    "expectedScenesAfter": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "extensions": {},
+          "extras": {}
+        },
+        "required": [
+          "nodes"
+        ]
+      }
+    },
     "defaultSceneBefore": {
       "anyOf": [
         {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         {
           "type": "null"
@@ -65,7 +97,8 @@
       "anyOf": [
         {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 4294967295
         },
         {
           "type": "null"
@@ -79,7 +112,9 @@
     "phase",
     "touchedPaths",
     "position",
+    "expectedSceneCountAfter",
     "expectedScene",
+    "expectedScenesAfter",
     "defaultSceneBefore",
     "expectedDefaultSceneAfter"
   ],

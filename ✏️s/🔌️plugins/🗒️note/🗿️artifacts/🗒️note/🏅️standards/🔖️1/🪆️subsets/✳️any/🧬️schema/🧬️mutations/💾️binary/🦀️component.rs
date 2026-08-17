@@ -1,7 +1,7 @@
 //! ⚖️ Note artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
 //!
 //! The app's typed `NoteCommand` enum — which used to share the old `📡️protocol` crate with this codec
-//! — is an APP concern, not an artifact one: it now lives in `🎛️apps/🗒️note/🦀️component.rs`, assembled
+//! — is an APP concern, not an artifact one: it now lives in `✏️editor/🦀️component.rs`, assembled
 //! from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 use crate::artifacts::note::schema::mutations::text::NoteMutation;

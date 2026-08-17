@@ -190,14 +190,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            crate::artifacts::puzzle3d::schema::mutations::apply_puzzle3d_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
@@ -271,7 +282,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️PrecomputeModel
 // ⚙️➡️🧬️ Rehomed from the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-// the pure data shapes the interactive brush/fill precompute session (now `crate::apps::puzzle3d::precompute`)
+// the pure data shapes the interactive brush/fill precompute session (now `crate::editor::puzzle3d::precompute`)
 // exchanges with its host — the kind catalogs, the host rules/weights, the `Fixture`/`SceneConfig` wire
 // projection `Puzzle3dEngineCommand::SetScene` carries, and the brush/fill readouts. An artifact is a schema
 // plus an io system, never an engine — the actual stateful session lives app-side; this is its data.
@@ -644,7 +655,7 @@ pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
 //#endregion 🔖️PrecomputeModel
 
 //#region 🔖️PrecomputeCommand
-/// 🎯️ Typed command envelope for `crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession::dispatch`
+/// 🎯️ Typed command envelope for `crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession::dispatch`
 /// — the headless replacement for the old per-action JSON-string wasm-bindgen methods. Declared here (not
 /// app-side) because `#[derive(dsl::DslEnum)]`'s generated code needs `SceneConfig`/`BrushPlacePayload` in
 /// scope by value, and because `🧬️mutations/💾️binary`'s `encode_engine_command`/`decode_engine_command`

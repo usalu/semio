@@ -14,7 +14,7 @@ pub struct ChangeLinkPath {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "link-path", kind: "change-link-path", record: "ChangedLinkPath" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_link_path(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

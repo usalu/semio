@@ -15,7 +15,7 @@ pub struct ChangeSystemLossesKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeSystemLossesKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "system-losses-kwh", kind: "change-system-losses-kwh", record: "ChangedSystemLossesKwh" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_system_losses_kwh::diff::diff(self, base)
     }
 

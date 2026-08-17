@@ -15,7 +15,7 @@ pub struct ChangeImportanceClass {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeImportanceClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "importance-class", kind: "change-importance-class", record: "ChangedImportanceClass" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_importance_class::diff::diff(self, base)
     }
 

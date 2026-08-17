@@ -109,8 +109,11 @@ pub use super::resize_vortex::mutation::{resize_vortex, ResizeVortex};
 pub use super::scale_camera3d::mutation::{scale_camera3d, ScaleCamera3d};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_block3d_mutation(projection: &mut Block3dSnapshot, mutation: &Block3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3dMutation) -> Vec<Block3dMutation> {
@@ -129,12 +132,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
-        let forward = mutation.diff(base).diff().apply(base);
+        let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).diff().apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -300,7 +303,7 @@ mod tests {
     fn change_object_kind_label_diff_absorb_law() {
         let base = empty_block3d_snapshot();
         let d1 = change_object_kind_label("first".into()).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_object_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -309,7 +312,7 @@ mod tests {
     fn move_vortex_diff_absorb_law() {
         let base = seeded_snapshot();
         let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = move_vortex("v0".into(), [1.1, 0.6, 0.0], [0.0, 1.0, 0.0]).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -342,7 +345,7 @@ mod tests {
     fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block3d_snapshot();
         let vortex_kind = crate::artifacts::block3d::Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
-        base.vortex_kinds.push(vortex_kind.clone());
+        crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);
         let outcome = create_vortex_kind(vortex_kind).diff(&base);
         assert_fatal_never_applies(&outcome);
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));

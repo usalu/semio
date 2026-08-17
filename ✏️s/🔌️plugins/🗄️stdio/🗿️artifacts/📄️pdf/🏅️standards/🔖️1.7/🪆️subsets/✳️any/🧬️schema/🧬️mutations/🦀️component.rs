@@ -7,7 +7,7 @@
 //! `inverse()` is handcrafted per variant.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
-    self, dec_box, dec_dict_entry, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_dict_entry, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str, encode_option, hex_decode, hex_encode,
+    self, dec_box, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str, encode_option, hex_decode, hex_encode,
     split_top_level, strip_brackets, PdfDiff, PdfPathSegment,
 };
 /// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
@@ -19,7 +19,6 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     read_str_lp, write_str_lp,
 };
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot, PdfStreamFilter};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -140,74 +139,15 @@ fn remove_dict_entry(entries: &mut Vec<PdfDictEntry>, key: &str) {
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range indices / missing ids / unresolvable paths
 /// are no-ops rather than panics -- a stale reference (e.g. from a concurrent edit) should
 /// degrade gracefully, not crash the engine.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> PdfDiff {
-    let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        PdfMutation::NoMutation => {}
-        PdfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        PdfMutation::InsertPage { index, page } => {
-            let at = (*index).min(snapshot.pages.len());
-            snapshot.pages.insert(at, page.clone());
+pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
         }
-        PdfMutation::RemovePage { index } => {
-            if *index < snapshot.pages.len() {
-                snapshot.pages.remove(*index);
-            }
-        }
-        PdfMutation::SetPageMediaBox { index, media_box } => {
-            if let Some(page) = snapshot.pages.get_mut(*index) {
-                page.media_box = *media_box;
-            }
-        }
-        PdfMutation::SetPageCropBox { index, crop_box } => {
-            if let Some(page) = snapshot.pages.get_mut(*index) {
-                page.crop_box = *crop_box;
-            }
-        }
-        PdfMutation::AppendPageContent { index, text } => {
-            if let Some(page) = snapshot.pages.get_mut(*index) {
-                if !page.text.is_empty() {
-                    page.text.push('\n');
-                }
-                page.text.push_str(text);
-            }
-        }
-        PdfMutation::SetInfo { info } => snapshot.info = info.clone(),
-        PdfMutation::InsertObject { id, value } => {
-            if !snapshot.objects.iter().any(|o| o.id == *id) {
-                snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() });
-            }
-        }
-        PdfMutation::RemoveObject { id } => {
-            snapshot.objects.retain(|o| o.id != *id);
-        }
-        PdfMutation::SetObjectValue { id, value } => match snapshot.objects.iter_mut().find(|o| o.id == *id) {
-            Some(o) => o.value = value.clone(),
-            None => snapshot.objects.push(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfIndirectObject { id: *id, value: value.clone() }),
-        },
-        PdfMutation::SetDictEntry { id, path, key, value } => {
-            if let Some(obj) = snapshot.objects.iter_mut().find(|o| o.id == *id) {
-                if let Some(container) = resolve_value_mut(&mut obj.value, path) {
-                    if let Some(entries) = dict_entries_of_mut(container) {
-                        upsert_dict_entry(entries, key, value.clone());
-                    }
-                }
-            }
-        }
-        PdfMutation::RemoveDictEntry { id, path, key } => {
-            if let Some(obj) = snapshot.objects.iter_mut().find(|o| o.id == *id) {
-                if let Some(container) = resolve_value_mut(&mut obj.value, path) {
-                    if let Some(entries) = dict_entries_of_mut(container) {
-                        remove_dict_entry(entries, key);
-                    }
-                }
-            }
-        }
-        PdfMutation::SetTrailerEntry { key, value } => upsert_dict_entry(&mut snapshot.trailer, key, value.clone()),
-        PdfMutation::RemoveTrailerEntry { key } => remove_dict_entry(&mut snapshot.trailer, key),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-
-    __diff
 }
 //#endregion 🔖️Apply
 
@@ -215,8 +155,8 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 impl Mutation<PdfSnapshot> for PdfMutation {
     type Diff = PdfDiff;
 
-    fn diff(&self, base: &PdfSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
             PdfMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             PdfMutation::InsertPage { index, page } => diff::diff_insert_page(*index, page.clone()),
@@ -232,7 +172,7 @@ impl Mutation<PdfSnapshot> for PdfMutation {
             PdfMutation::RemoveDictEntry { id, path, key } => diff::diff_remove_dict_entry(base, *id, path, key),
             PdfMutation::SetTrailerEntry { key, value } => diff::diff_set_trailer_entry(base, key, value.clone()),
             PdfMutation::RemoveTrailerEntry { key } => diff::diff_remove_trailer_entry(base, key),
-        }
+        })
     }
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
@@ -407,7 +347,7 @@ fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
     }
 }
 
-impl protocol::OpText for PdfMutation {
+impl OpText for PdfMutation {
     fn print_op(&self) -> String {
         print_pdf_mutation(self)
     }
@@ -423,7 +363,7 @@ impl protocol::OpText for PdfMutation {
 /// order `print_pdf_mutation`'s own keyword match uses. The payload past `format`/`tag` is
 /// genuine LEB128-varint/length-prefixed recursive binary (reusing the diff facet's own
 /// `pub(crate)` primitives), never the text form's bytes.
-impl protocol::OpBinary for PdfMutation {
+impl OpBinary for PdfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             PdfMutation::NoMutation => 0,
@@ -604,12 +544,12 @@ mod tests {
 
     fn round_trips(base: &PdfSnapshot, mutation: PdfMutation) {
         let diff = mutation.diff(base);
-        let mutated = diff.apply(base);
+        let mutated = diff.diff().apply(base).unwrap();
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
             let inv_diff = inv.diff(&restored);
-            restored = inv_diff.apply(&restored);
+            restored = inv_diff.diff().apply(&restored).unwrap();
         }
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
@@ -639,7 +579,7 @@ mod tests {
             let returned_diff = apply_pdf_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-            assert_eq!(snap, expected_diff.apply(&base), "apply_pdf_mutation's snapshot mutation must equal diff.apply(base) for {m:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).unwrap(), "apply_pdf_mutation's snapshot mutation must equal diff.diff().apply(base) for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -693,7 +633,7 @@ mod tests {
         let mut snap = base.clone();
         let d = apply_pdf_mutation(&mut snap, &PdfMutation::SetDictEntry { id: oref(999, 0), path: vec![], key: "X".into(), value: PdfObject::Int(1) });
         assert_eq!(snap, base);
-        assert!(d.is_empty());
+        assert!(d.diff().is_empty());
     }
     //#endregion inverse_law
 
@@ -707,16 +647,16 @@ mod tests {
         let base = base_snapshot();
         let mut snap = base.clone();
         let d1 = apply_pdf_mutation(&mut snap, &PdfMutation::SetInfo { info: PdfInfo { author: Some("A".into()), ..Default::default() } });
-        assert!(d1.info.is_some());
+        assert!(d1.diff().info.is_some());
         let d2 = apply_pdf_mutation(&mut snap, &PdfMutation::SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 100.0, 100.0] });
-        assert!(d2.pages.is_some());
+        assert!(d2.diff().pages.is_some());
         let d3 = apply_pdf_mutation(&mut snap, &PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Name("Changed".into()) });
-        assert!(d3.objects.is_some());
+        assert!(d3.diff().objects.is_some());
         let d4 = apply_pdf_mutation(&mut snap, &PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(1) });
-        assert!(d4.trailer.is_some());
+        assert!(d4.diff().trailer.is_some());
         let next = PdfSnapshot { declared_version: "1.4".into(), ..snap.clone() };
         let d5 = apply_pdf_mutation(&mut snap, &PdfMutation::SetSnapshot { snapshot: next });
-        assert!(d5.declared_version.is_some());
+        assert!(d5.diff().declared_version.is_some());
     }
     //#endregion field_sweep
 

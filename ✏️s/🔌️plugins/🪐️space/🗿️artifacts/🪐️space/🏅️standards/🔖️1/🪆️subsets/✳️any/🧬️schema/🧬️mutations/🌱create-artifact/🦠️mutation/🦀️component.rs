@@ -1,0 +1,39 @@
+//! 🌱 SSpace mutation — `CreateArtifact`: brings a new id-keyed row into the space's artifact index.
+use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
+use serde::{Deserialize, Serialize};
+
+//#region 🔖️Mutation
+/// 🌱 `create-artifact` payload — the full initial row (id/name/kind/schema/dialect/timestamps all
+/// fixed at creation, mirroring `dag`'s `CreateNode { node: DagNodeSpec }` shape).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+#[dsl(keyword = "create-artifact")]
+pub struct CreateArtifact {
+    #[dsl(block)]
+    pub artifact: SpaceArtifactRow,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn create_artifact(artifact: SpaceArtifactRow) -> SSpaceMutation {
+    SSpaceMutation::CreateArtifact(CreateArtifact { artifact })
+}
+
+impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "artifact", kind: "create-artifact", record: "CreatedArtifact" };
+
+    fn diff(&self, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> String {
+        format!("Create artifact \"{}\"", self.artifact.id)
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.artifact.id.clone()]
+    }
+}
+//#endregion 🔖️Mutation

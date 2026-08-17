@@ -216,6 +216,12 @@ pub mod os_spr {
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
 pub mod os_vcs;
 
+// 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1: directory event log
+// schema + pure read model (`DirectoryEvent`/`DirectoryReadModel`/`fold`) — plain serde data, no
+// cross-crate dependency, so it mounts cleanly unlike `🔁️workflow` below.
+#[path = "../../🔨️modules/📇️directory/🦀️component.rs"]
+pub mod os_directory;
+
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `🔁️workflow/🦀️component.rs`
 // is NOT mounted here (tried, reverted — see this file's own header comment "pending dep-DAG
 // cleanup"): its `use semio_framework::{AppDefinition, MediaClass, MediaType, ConfigSpec,

@@ -12,7 +12,7 @@
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 use crate::artifacts::md::MdSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -233,12 +233,15 @@ pub fn navigate_container<'a>(blocks: &'a [MdBlock], path: &[MdPathStep]) -> Opt
 
 //#region 🔖️Apply
 impl MutationDiff<MdSnapshot> for MdDiff {
-    fn apply(&self, base: &MdSnapshot) -> MdSnapshot {
+    fn apply(&self, base: &MdSnapshot) -> MutationApplyResult<MdSnapshot> {
+        if let Some(blocks) = &self.blocks {
+            validate_md_blocks(&base.blocks, blocks)?;
+        }
         let mut next = base.clone();
         if let Some(bd) = &self.blocks {
             next.blocks = apply_blocks_diff(&next.blocks, bd);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -247,6 +250,70 @@ impl MutationDiff<MdSnapshot> for MdDiff {
             (a, None) => a,
             (Some(a), Some(b)) => Some(absorb_blocks_diff(a, b)),
         };
+    }
+}
+
+fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown block removal is missing or duplicated").at(["blocks", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").at(["blocks", "modified"]));
+        }
+        validate_md_block(&base[entry.index], &entry.diff)?;
+    }
+    let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown block addition index is invalid or duplicated").at(["blocks", "added"]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown list-item removal is missing or duplicated").at(["items", "removed"]));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").at(["items", "modified"]));
+        }
+        validate_md_blocks(&base[entry.index], &entry.diff)?;
+    }
+    let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown list-item addition index is invalid or duplicated").at(["items", "added"]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<()> {
+    match (base, diff) {
+        (_, MdBlockDiff::Replace { .. })
+        | (MdBlock::Heading { .. }, MdBlockDiff::Heading { .. })
+        | (MdBlock::Paragraph { .. }, MdBlockDiff::Paragraph { .. })
+        | (MdBlock::CodeBlock { .. }, MdBlockDiff::CodeBlock { .. })
+        | (MdBlock::HtmlBlock { .. }, MdBlockDiff::HtmlBlock { .. })
+        | (MdBlock::ThematicBreak, MdBlockDiff::ThematicBreak) => Ok(()),
+        (MdBlock::List { items, .. }, MdBlockDiff::List { items: Some(items_diff), .. }) => validate_md_list_items(items, items_diff),
+        (MdBlock::List { .. }, MdBlockDiff::List { items: None, .. }) => Ok(()),
+        (MdBlock::BlockQuote { blocks }, MdBlockDiff::BlockQuote { blocks: Some(blocks_diff) }) => validate_md_blocks(blocks, blocks_diff),
+        (MdBlock::BlockQuote { .. }, MdBlockDiff::BlockQuote { blocks: None }) => Ok(()),
+        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block diff kind does not match its target").at(["blocks"])),
     }
 }
 

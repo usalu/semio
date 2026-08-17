@@ -24,7 +24,7 @@ pub fn replace_asset_payload(key: String, new_asset: crate::artifacts::note::Not
 impl MutationKind<NoteSnapshot, NoteMutation> for ReplaceAssetPayload {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "asset", kind: "replace-asset-payload", record: "ReplacedAsset" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

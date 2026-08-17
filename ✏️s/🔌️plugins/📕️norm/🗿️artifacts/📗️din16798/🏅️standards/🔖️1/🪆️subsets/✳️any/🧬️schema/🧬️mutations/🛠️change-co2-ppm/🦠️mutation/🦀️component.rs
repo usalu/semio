@@ -15,7 +15,7 @@ pub struct ChangeCo2Ppm {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCo2Ppm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "co2-ppm", kind: "change-co2-ppm", record: "ChangedCo2Ppm" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_co2_ppm::diff::diff(self, base)
     }
 

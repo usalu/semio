@@ -13,12 +13,12 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, MutationEnvelope, ServerFrame};
+use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, ServerFrame};
 use crate::os_spr::{ActorId, MutationId};
 use crate::os_spr::PresencePeer;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, SpaceConflict};
+use crate::os_store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles};
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
@@ -97,6 +97,11 @@ pub enum PersistenceBinding {
         space_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
+        /// @emoji 🎭️ Out-of-band presence scope (ticket 26/08/16/HUB-SPACES-…, contract §C0): rides
+        /// as `?surface=` on the WS URL rather than a wire field — `PresencePeer`'s flag byte is
+        /// already full. `<kind>@<standard>/<subset>#<role>`, e.g. `s.space.home@1/*#editor`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        surface: Option<String>,
     },
 }
 
@@ -188,8 +193,14 @@ pub enum ArtifactEvent {
     /// {@link ArtifactEvent::RemoteMutations} replacing the speculative local one), or rejected
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
     CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
-    /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / semio_hub CAS reject).
-    Conflict(SpaceConflict),
+    /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / semio_hub
+    /// protocol-level reject), on the frozen diagnostic-bag vocabulary (contract freeze `26/08/16/
+    /// MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C10) rather than the deleted
+    /// per-domain conflict-bag type this used to wrap: `level` is `Error` (this actor has no finer
+    /// severity signal from either source), `target` carries the diverged folder uri / hub base url.
+    /// This is a transport-level diagnostic, never a first-class `crate::os_spr::Conflict` (no
+    /// `id`/`status`/`actors`/`timestamp` exists for either source event).
+    Conflict(MutationMessage),
 }
 
 /// @emoji ⚖️ The client-side twin of `crate::os_spr::wire::ApplyOutcome`, minus the `Transformed`
@@ -399,12 +410,18 @@ fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_spr::His
 }
 
 /// @emoji 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
-/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/ws`.
-fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str) -> String {
+/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/ws`, with an out-of-band
+/// `?surface=` appended when the binding carries one (contract §C0's presence scope, ticket
+/// 26/08/16/HUB-SPACES-…: `(space_id, document_id, surface)` — `surface` rides outside the wire
+/// protocol rather than widening `PresencePeer`'s already-full flag byte).
+fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: Option<&str>) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws")
+    match surface {
+        Some(surface) => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws?surface={surface}"),
+        None => format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws"),
+    }
 }
 //#endregion 🔖️Endpoints
 
@@ -858,6 +875,7 @@ mod native_actor {
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
         hub_token: Option<String>,
+        hub_surface: Option<String>,
         semio_hub: Option<HubConn>,
         /// @emoji 🏔️ Last frontier the semio_hub reported (`Welcome.server_frontier` / `Commands.frontier` /
         /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
@@ -893,6 +911,7 @@ mod native_actor {
             let mut hub_base_url = None;
             let mut hub_space_id = None;
             let mut hub_token = None;
+            let mut hub_surface = None;
             for binding in &config.bindings {
                 match binding {
                     PersistenceBinding::Folder { path } => {
@@ -901,11 +920,12 @@ mod native_actor {
                             folder_watch_path = Some(folder_watch_path_for(path));
                         }
                     }
-                    PersistenceBinding::Hub { base_url, space_id, token } => {
+                    PersistenceBinding::Hub { base_url, space_id, token, surface } => {
                         if hub_base_url.is_none() {
                             hub_base_url = Some(base_url.clone());
                             hub_space_id = Some(space_id.clone());
                             hub_token = token.clone();
+                            hub_surface = surface.clone();
                         }
                     }
                 }
@@ -924,6 +944,7 @@ mod native_actor {
                 hub_base_url,
                 hub_space_id,
                 hub_token,
+                hub_surface,
                 semio_hub: None,
                 server_frontier: None,
                 resume_token: None,
@@ -1143,7 +1164,13 @@ mod native_actor {
                 self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
-                    self.emit(ArtifactEvent::Conflict(SpaceConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
+                    self.emit(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new("externalDivergence"),
+                        message: "external history diverged while local operations are pending".into(),
+                        target: vec![format!("folder://{}", self.document_id)],
+                        op_index: None,
+                    }));
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
@@ -1160,7 +1187,7 @@ mod native_actor {
             let Some(base_url) = self.hub_base_url.clone() else { return };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
             let token = self.hub_token.clone();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id);
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref());
             self.set_remote_state(RemoteState::Connecting);
             match tokio_tungstenite::connect_async(url).await {
                 Ok((stream, _response)) => {
@@ -1262,7 +1289,13 @@ mod native_actor {
                     // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(ArtifactEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    self.emit(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new(code),
+                        message,
+                        target: vec![self.hub_base_url.clone().unwrap_or_default()],
+                        op_index: None,
+                    }));
                 }
             }
         }
@@ -1467,6 +1500,7 @@ mod wasm_actor {
         hub_base_url: Option<String>,
         hub_space_id: Option<String>,
         hub_token: Option<String>,
+        hub_surface: Option<String>,
         ws: Option<WebSocket>,
         server_frontier: Option<crate::os_spr::RuntimeFrontierSummary>,
         resume_token: Option<String>,
@@ -1483,7 +1517,7 @@ mod wasm_actor {
         fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
             let space_id = self.hub_space_id.clone().unwrap_or_default();
-            let url = hub_ws_url(&base_url, &space_id, &self.document_id);
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id, self.hub_surface.as_deref());
             let Ok(ws) = WebSocket::new(&url) else { return };
             ws.set_binary_type(BinaryType::Arraybuffer);
 
@@ -1612,7 +1646,13 @@ mod wasm_actor {
                 }
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
-                    let _ = self.events.send(ArtifactEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new(code),
+                        message,
+                        target: vec![self.hub_base_url.clone().unwrap_or_default()],
+                        op_index: None,
+                    }));
                 }
             }
         }
@@ -1656,12 +1696,14 @@ mod wasm_actor {
         let mut hub_base_url = None;
         let mut hub_space_id = None;
         let mut hub_token = None;
+        let mut hub_surface = None;
         for binding in &config.bindings {
-            if let PersistenceBinding::Hub { base_url, space_id, token } = binding {
+            if let PersistenceBinding::Hub { base_url, space_id, token, surface } = binding {
                 if hub_base_url.is_none() {
                     hub_base_url = Some(base_url.clone());
                     hub_space_id = Some(space_id.clone());
                     hub_token = token.clone();
+                    hub_surface = surface.clone();
                 }
             }
         }
@@ -1675,6 +1717,7 @@ mod wasm_actor {
             hub_base_url,
             hub_space_id,
             hub_token,
+            hub_surface,
             ws: None,
             server_frontier: None,
             resume_token: None,
@@ -2173,8 +2216,8 @@ mod tests {
     }
 
     impl MutationDiff<DemoSnapshot> for DemoDiff {
-        fn apply(&self, snapshot: &DemoSnapshot) -> DemoSnapshot {
-            DemoSnapshot { n: self.n.unwrap_or(snapshot.n) }
+        fn apply(&self, snapshot: &DemoSnapshot) -> crate::os_spr::MutationApplyResult<DemoSnapshot> {
+            Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
         }
 
         fn absorb(&mut self, other: Self) {
@@ -2254,10 +2297,10 @@ mod tests {
     impl Mutation<DemoSnapshot> for DemoMutation {
         type Diff = DemoDiff;
 
-        fn diff(&self, _snapshot: &DemoSnapshot) -> DemoDiff {
-            match self {
+        fn diff(&self, _snapshot: &DemoSnapshot) -> crate::os_spr::MutationOutcome<DemoDiff> {
+            crate::os_spr::MutationOutcome::new(match self {
                 DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
-            }
+            })
         }
 
         fn inverse(&self, snapshot: &DemoSnapshot) -> Vec<Self> {
@@ -2325,9 +2368,14 @@ mod tests {
     //#region 🧪️Helpers
     #[test]
     fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
-        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1"), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
-        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2"), "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
-        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d"), "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
+        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
+        assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None), "wss://semio_hub.example.com/spaces/studio-1/documents/doc-2/ws");
+        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None), "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
+        assert_eq!(
+            hub_ws_url("remote://host:6070", "studio-1", "doc-1", Some("s.space.home@1/*#editor")),
+            "ws://host:6070/spaces/studio-1/documents/doc-1/ws?surface=s.space.home@1/*#editor",
+            "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
+        );
     }
     //#endregion 🧪️Helpers
 
@@ -2888,7 +2936,7 @@ mod tests {
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -2899,7 +2947,7 @@ mod tests {
             let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -2936,7 +2984,7 @@ mod tests {
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -2954,7 +3002,7 @@ mod tests {
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
             let host_b = ArtifactHost::new();
             let channels_b =
-                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+                host_b.open(ArtifactActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("catchup");
             let mut store_b = ArtifactStore::new(demo_envelope("catchup")).expect("valid catchup actor B fixture");
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
@@ -2982,7 +3030,7 @@ mod tests {
             let channels_b = host_b.open(ArtifactActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -2992,7 +3040,7 @@ mod tests {
 
             let host_a = ArtifactHost::new();
             let channels_a =
-                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host_a.open(ArtifactActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() });
             let mut store_a = ArtifactStore::new(demo_envelope("drain")).expect("valid drain actor A fixture");
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
@@ -3018,7 +3066,7 @@ mod tests {
             let base_url = format!("ws://{addr}");
             let host = ArtifactHost::new();
             let channels =
-                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host.open(ArtifactActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "A".into() });
             let mut events = host.subscribe("outcome");
             let mut store = ArtifactStore::new(demo_envelope("outcome")).expect("valid outcome actor fixture");
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
@@ -3046,13 +3094,13 @@ mod tests {
             let channels_a = host_a.open(ArtifactActorConfig {
                 document_id: "preview".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None, surface: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
 
             let host_b = ArtifactHost::new();
-            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+            host_b.open(ArtifactActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None, surface: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("preview");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
@@ -3226,7 +3274,7 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None));
+        let seed = ArtifactStore::<DemoSnapshot, DemoMutation>::new(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).expect("valid zero-edit text fixture");
         let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 

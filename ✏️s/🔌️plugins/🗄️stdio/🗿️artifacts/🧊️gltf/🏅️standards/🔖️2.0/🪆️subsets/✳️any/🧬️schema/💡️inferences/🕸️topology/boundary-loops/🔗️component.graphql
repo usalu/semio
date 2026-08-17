@@ -1,11 +1,34 @@
-# 💡️ boundary-loops glTF inference leaf GraphQL facet.
-type GltfBoundaryLoopsInferenceV1 {
-  id: ID!
+# 💡️ Typed boundary-loops glTF inference result.
+scalar GltfBoundaryLoopsUInt64V1
+
+type GltfBoundaryLoopsQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: GltfBoundaryLoopsUInt64V1!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfBoundaryLoopsProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfBoundaryLoopsInferenceV1 {
+  value: GltfBoundaryLoopsUInt64V1
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfBoundaryLoopsQualityV1!
+  provenance: GltfBoundaryLoopsProvenanceV1!
 }

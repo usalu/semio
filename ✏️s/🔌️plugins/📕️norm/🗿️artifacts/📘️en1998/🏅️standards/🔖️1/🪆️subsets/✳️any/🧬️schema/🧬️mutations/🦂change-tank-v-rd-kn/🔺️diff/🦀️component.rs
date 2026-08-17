@@ -5,7 +5,13 @@ use crate::artifacts::en1998::mutations::change_tank_v_rd_kn::mutation::ChangeTa
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTankVRdKn, _base: &En1998Snapshot) -> En1998Diff {
-    En1998Diff { tank_v_rd_kn: Some(payload.new_tank_v_rd_kn.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeTankVRdKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    if !payload.new_tank_v_rd_kn.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Tank shear resistance V_Rd [kN] must be a finite number, got {}.", payload.new_tank_v_rd_kn), Vec::<String>::new());
+    }
+    if base.tank_v_rd_kn == payload.new_tank_v_rd_kn {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tank shear resistance V_Rd [kN] is already {}.", payload.new_tank_v_rd_kn));
+    }
+    protocol::MutationOutcome::new(En1998Diff { tank_v_rd_kn: Some(payload.new_tank_v_rd_kn.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

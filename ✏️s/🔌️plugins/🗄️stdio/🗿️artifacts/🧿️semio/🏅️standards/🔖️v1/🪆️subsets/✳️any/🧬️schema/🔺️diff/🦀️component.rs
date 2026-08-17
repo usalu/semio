@@ -28,6 +28,7 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff::Semio
 use crate::artifacts::semio::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
+use protocol::MutationApplyError;
 use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
@@ -43,6 +44,7 @@ use serde::{Deserialize, Serialize};
 pub enum SemioDiff {
     #[default]
     NoChange,
+    Rejected(MutationApplyError),
     Brep(SemioBrepDiff),
     Mesh(SemioMeshDiff),
     Model(SemioModelDiff),
@@ -65,41 +67,41 @@ pub enum SemioDiff {
 }
 
 impl MutationDiff<SemioSnapshot> for SemioDiff {
-    fn apply(&self, base: &SemioSnapshot) -> SemioSnapshot {
+    fn apply(&self, base: &SemioSnapshot) -> protocol::MutationApplyResult<SemioSnapshot> {
         use SemioSubsetSnapshot as S;
         let subset = match (self, &base.subset) {
             (SemioDiff::NoChange, s) => s.clone(),
-            (SemioDiff::Replace(snapshot), _) => return (**snapshot).clone(),
-            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(<SemioBrepDiff as MutationDiff<SemioBrepSnapshot>>::apply(d, b)),
-            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(<SemioMeshDiff as MutationDiff<SemioMeshSnapshot>>::apply(d, b)),
-            (SemioDiff::Model(d), S::Model(b)) => S::Model(<SemioModelDiff as MutationDiff<SemioModelSnapshot>>::apply(d, b)),
-            (SemioDiff::Value(d), S::Value(b)) => S::Value(<SemioValueTreeDiff as MutationDiff<SemioValueSnapshot>>::apply(d, b)),
-            (SemioDiff::Document(d), S::Document(b)) => S::Document(<SemioDocumentDiff as MutationDiff<SemioDocumentSnapshot>>::apply(d, b)),
-            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(<SemioCadDiff as MutationDiff<SemioCadSnapshot>>::apply(d, b)),
-            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(<SemioDrawingDiff as MutationDiff<SemioDrawingSnapshot>>::apply(d, b)),
-            (SemioDiff::Image(d), S::Image(b)) => S::Image(<SemioImageDiff as MutationDiff<SemioImageSnapshot>>::apply(d, b)),
-            (SemioDiff::Video(d), S::Video(b)) => S::Video(<SemioVideoDiff as MutationDiff<SemioVideoSnapshot>>::apply(d, b)),
-            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(<SemioAudioDiff as MutationDiff<SemioAudioSnapshot>>::apply(d, b)),
-            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(<SemioAnimationDiff as MutationDiff<SemioAnimationSnapshot>>::apply(d, b)),
-            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(<SemioPresentationDiff as MutationDiff<SemioPresentationSnapshot>>::apply(d, b)),
-            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(<SemioFlowDiff as MutationDiff<SemioFlowSnapshot>>::apply(d, b)),
-            (SemioDiff::Text(d), S::Text(b)) => S::Text(<SemioTextDiff as MutationDiff<SemioTextSnapshot>>::apply(d, b)),
-            (SemioDiff::Table(d), S::Table(b)) => S::Table(<SemioTableDiff as MutationDiff<SemioTableSnapshot>>::apply(d, b)),
-            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(<SemioGraphDiff as MutationDiff<SemioGraphSnapshot>>::apply(d, b)),
-            (SemioDiff::Object(d), S::Object(b)) => S::Object(<SemioObjectDiff as MutationDiff<SemioObjectSnapshot>>::apply(d, b)),
-            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(<SemioKitDiff as MutationDiff<SemioKitSnapshot>>::apply(d, b)),
-            // 🛡️ Kind mismatch (a nested-kind diff paired with a base of a DIFFERENT kind): can
-            // only arise from a malformed/foreign diff, never from this module's own `between`/
-            // `diff` — `apply` stays TOTAL (never panics) per `MutationDiff`'s contract by
-            // degrading to a safe no-op (returns `base` unchanged) rather than guessing.
-            (_, s) => s.clone(),
+            (SemioDiff::Rejected(error), _) => return Err(error.clone()),
+            (SemioDiff::Replace(snapshot), _) => return Ok((**snapshot).clone()),
+            (SemioDiff::Brep(d), S::Brep(b)) => S::Brep(d.apply(b).map_err(|error| error.under(["subset", "brep"]))?),
+            (SemioDiff::Mesh(d), S::Mesh(b)) => S::Mesh(d.apply(b).map_err(|error| error.under(["subset", "mesh"]))?),
+            (SemioDiff::Model(d), S::Model(b)) => S::Model(d.apply(b).map_err(|error| error.under(["subset", "model"]))?),
+            (SemioDiff::Value(d), S::Value(b)) => S::Value(d.apply(b).map_err(|error| error.under(["subset", "value"]))?),
+            (SemioDiff::Document(d), S::Document(b)) => S::Document(d.apply(b).map_err(|error| error.under(["subset", "document"]))?),
+            (SemioDiff::Cad(d), S::Cad(b)) => S::Cad(d.apply(b).map_err(|error| error.under(["subset", "cad"]))?),
+            (SemioDiff::Drawing(d), S::Drawing(b)) => S::Drawing(d.apply(b).map_err(|error| error.under(["subset", "drawing"]))?),
+            (SemioDiff::Image(d), S::Image(b)) => S::Image(d.apply(b).map_err(|error| error.under(["subset", "image"]))?),
+            (SemioDiff::Video(d), S::Video(b)) => S::Video(d.apply(b).map_err(|error| error.under(["subset", "video"]))?),
+            (SemioDiff::Audio(d), S::Audio(b)) => S::Audio(d.apply(b).map_err(|error| error.under(["subset", "audio"]))?),
+            (SemioDiff::Animation(d), S::Animation(b)) => S::Animation(d.apply(b).map_err(|error| error.under(["subset", "animation"]))?),
+            (SemioDiff::Presentation(d), S::Presentation(b)) => S::Presentation(d.apply(b).map_err(|error| error.under(["subset", "presentation"]))?),
+            (SemioDiff::Flow(d), S::Flow(b)) => S::Flow(d.apply(b).map_err(|error| error.under(["subset", "flow"]))?),
+            (SemioDiff::Text(d), S::Text(b)) => S::Text(d.apply(b).map_err(|error| error.under(["subset", "text"]))?),
+            (SemioDiff::Table(d), S::Table(b)) => S::Table(d.apply(b).map_err(|error| error.under(["subset", "table"]))?),
+            (SemioDiff::Graph(d), S::Graph(b)) => S::Graph(d.apply(b).map_err(|error| error.under(["subset", "graph"]))?),
+            (SemioDiff::Object(d), S::Object(b)) => S::Object(d.apply(b).map_err(|error| error.under(["subset", "object"]))?),
+            (SemioDiff::Kit(d), S::Kit(b)) => S::Kit(d.apply(b).map_err(|error| error.under(["subset", "kit"]))?),
+            _ => {
+                return Err(MutationApplyError::new("mutation.apply.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"]));
+            }
         };
-        SemioSnapshot { schema: base.schema.clone(), subset }
+        Ok(SemioSnapshot { schema: base.schema.clone(), subset })
     }
 
     fn absorb(&mut self, other: Self) {
         use SemioDiff::*;
         let combined = match (std::mem::take(self), other) {
+            (Rejected(error), _) | (_, Rejected(error)) => Rejected(error),
             (NoChange, o) => o,
             (s, NoChange) => s,
             // 🧨 A later full replace always wins outright, regardless of what came before —
@@ -109,7 +111,10 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
             // 🪢 An earlier replace absorbing a LATER same/foreign-kind diff: fold the later diff
             // into the replacement snapshot by re-using this impl's own `apply` (self-consistent,
             // no duplicated dispatch logic) and keep the result as the new replacement.
-            (Replace(s1), o) => Replace(Box::new(o.apply(&s1))),
+            (Replace(s1), o) => match o.apply(&s1) {
+                Ok(snapshot) => Replace(Box::new(snapshot)),
+                Err(error) => Rejected(error),
+            },
             (Brep(mut d1), Brep(d2)) => {
                 d1.absorb(d2);
                 Brep(d1)
@@ -182,11 +187,7 @@ impl MutationDiff<SemioSnapshot> for SemioDiff {
                 d1.absorb(d2);
                 Kit(d1)
             }
-            // 🛡️ Mismatched, non-`Replace` kind pair — structurally impossible from this module's
-            // OWN sequential diffs (a kind change always goes through `Replace`), but `absorb`
-            // must stay TOTAL over every pair per its trait contract; last-diff-wins is the
-            // honest, never-panicking fallback for a malformed/foreign pair.
-            (_, other) => other,
+            _ => Rejected(MutationApplyError::new("mutation.absorb.kind-mismatch", "Semio subset diffs of different kinds cannot be composed").at(["subset"])),
         };
         *self = combined;
     }
@@ -231,6 +232,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
         use SemioSubsetSnapshot as S;
         match (self, &base.subset) {
             (SemioDiff::NoChange, _) => SemioDiff::NoChange,
+            (SemioDiff::Rejected(error), _) => SemioDiff::Rejected(error.clone()),
             (SemioDiff::Replace(_), _) => SemioDiff::Replace(Box::new(base.clone())),
             (SemioDiff::Brep(d), S::Brep(b)) => SemioDiff::Brep(<SemioBrepDiff as DiffAlgebra<SemioBrepSnapshot>>::inverse(d, b)),
             (SemioDiff::Mesh(d), S::Mesh(b)) => SemioDiff::Mesh(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::inverse(d, b)),
@@ -250,15 +252,14 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
             (SemioDiff::Graph(d), S::Graph(b)) => SemioDiff::Graph(<SemioGraphDiff as DiffAlgebra<SemioGraphSnapshot>>::inverse(d, b)),
             (SemioDiff::Object(d), S::Object(b)) => SemioDiff::Object(<SemioObjectDiff as DiffAlgebra<SemioObjectSnapshot>>::inverse(d, b)),
             (SemioDiff::Kit(d), S::Kit(b)) => SemioDiff::Kit(<SemioKitDiff as DiffAlgebra<SemioKitSnapshot>>::inverse(d, b)),
-            // 🛡️ Kind mismatch: same total-fallback stance as `apply`/`absorb` above — the safe
-            // inverse of "unknown, ill-typed change" is "restore base wholesale".
-            (_, b) => SemioDiff::Replace(Box::new(SemioSnapshot { schema: base.schema.clone(), subset: b.clone() })),
+            _ => SemioDiff::Rejected(MutationApplyError::new("mutation.inverse.kind-mismatch", "Semio subset diff kind does not match the base snapshot kind").at(["subset"])),
         }
     }
 
     fn is_empty(&self) -> bool {
         match self {
             SemioDiff::NoChange => true,
+            SemioDiff::Rejected(_) => false,
             SemioDiff::Replace(_) => false,
             SemioDiff::Brep(d) => d.is_empty(),
             SemioDiff::Mesh(d) => d.is_empty(),
@@ -316,12 +317,39 @@ fn dec_replace_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
     <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("replace: dsl decode: {e}"))
 }
 
+fn enc_rejection(error: &MutationApplyError) -> String {
+    std::iter::once(error.code.as_str())
+        .chain(std::iter::once(error.message.as_str()))
+        .chain(error.target.iter().map(String::as_str))
+        .map(|value| value.as_bytes().iter().map(|byte| format!("{byte:02x}")).collect::<String>())
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn dec_rejection(payload: &str) -> Result<MutationApplyError, String> {
+    let fields = payload
+        .split(',')
+        .map(|hex| {
+            if hex.len() % 2 != 0 {
+                return Err("rejected: odd hex length".to_string());
+            }
+            let bytes = (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16)).collect::<Result<Vec<_>, _>>().map_err(|error| format!("rejected: invalid hex: {error}"))?;
+            String::from_utf8(bytes).map_err(|error| format!("rejected: utf8 decode: {error}"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if fields.len() < 2 {
+        return Err("rejected: expected code and message".to_string());
+    }
+    Ok(MutationApplyError { code: fields[0].clone(), message: fields[1].clone(), target: fields[2..].to_vec() })
+}
+
 /// 🏷️ Binary tag ordinal for [`SemioDiff`] — `0` = `NoChange`, `1..=18` = the 18 wrapped subset
 /// kinds (same enum declaration order as [`crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::subset_ordinal`],
 /// offset by one to make room for `NoChange`), `19` = `Replace`.
 fn diff_tag(d: &SemioDiff) -> u8 {
     match d {
         SemioDiff::NoChange => 0,
+        SemioDiff::Rejected(_) => 20,
         SemioDiff::Brep(_) => 1,
         SemioDiff::Mesh(_) => 2,
         SemioDiff::Model(_) => 3,
@@ -347,6 +375,7 @@ fn diff_tag(d: &SemioDiff) -> u8 {
 fn print_semio_diff(d: &SemioDiff) -> String {
     match d {
         SemioDiff::NoChange => "noChange".to_string(),
+        SemioDiff::Rejected(error) => format!("rejected:{}", enc_rejection(error)),
         SemioDiff::Replace(s) => format!("replace:{}", enc_replace_snapshot(s)),
         SemioDiff::Brep(d) => format!("brep:{}", d.print_diff()),
         SemioDiff::Mesh(d) => format!("mesh:{}", d.print_diff()),
@@ -376,6 +405,7 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio diff: missing ':' in {line:?}"))?;
     match tag {
         "replace" => Ok(SemioDiff::Replace(Box::new(dec_replace_snapshot(rest)?))),
+        "rejected" => Ok(SemioDiff::Rejected(dec_rejection(rest)?)),
         "brep" => Ok(SemioDiff::Brep(SemioBrepDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "mesh" => Ok(SemioDiff::Mesh(SemioMeshDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
         "model" => Ok(SemioDiff::Model(SemioModelDiff::parse_diff(rest).map_err(|e| e.to_string())?)),
@@ -398,7 +428,7 @@ fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     }
 }
 
-impl protocol::DiffCodec for SemioDiff {
+impl DiffCodec for SemioDiff {
     fn print_diff(&self) -> String {
         print_semio_diff(self)
     }
@@ -417,6 +447,7 @@ impl protocol::DiffCodec for SemioDiff {
         let mut out = vec![DIFF_BINARY_FORMAT, diff_tag(self)];
         let payload: Vec<u8> = match self {
             SemioDiff::NoChange => Vec::new(),
+            SemioDiff::Rejected(error) => enc_rejection(error).into_bytes(),
             SemioDiff::Replace(s) => <SemioSnapshot as store::ArtifactPack>::encode_pack(s),
             SemioDiff::Brep(d) => d.encode_diff()?,
             SemioDiff::Mesh(d) => d.encode_diff()?,
@@ -473,6 +504,13 @@ impl protocol::DiffCodec for SemioDiff {
             17 => SemioDiff::Object(SemioObjectDiff::decode_diff(payload)?),
             18 => SemioDiff::Kit(SemioKitDiff::decode_diff(payload)?),
             19 => SemioDiff::Replace(Box::new(<SemioSnapshot as store::ArtifactPack>::decode_pack(payload)?)),
+            20 => SemioDiff::Rejected(
+                dec_rejection(std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "rejected diff", offset: 2, detail: error.to_string() })?).map_err(|error| protocol::ProtocolError::Malformed {
+                    what: "rejected diff",
+                    offset: 2,
+                    detail: error,
+                })?,
+            ),
             other => return Err(protocol::ProtocolError::Malformed { what: "diff tag", offset: 1, detail: format!("unknown tag {other}") }),
         })
     }
@@ -548,7 +586,7 @@ mod tests {
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
         assert!(matches!(d, SemioDiff::Audio(_)), "same-kind change must nest, not Replace: {d:?}");
         assert!(!d.is_empty());
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("valid nested diff"), b);
         assert!(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -561,9 +599,9 @@ mod tests {
         let b = flow_snapshot(&["n1", "n2"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
         assert!(matches!(d, SemioDiff::Flow(_)));
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("valid nested diff"), b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&d.apply(&a)), a);
+        assert_eq!(inv.apply(&d.apply(&a).expect("valid nested diff")).expect("valid inverse"), a);
     }
 
     /// 🧪️ between_roundtrip_law, cross-kind change: no sparse representation exists, must fall
@@ -574,7 +612,7 @@ mod tests {
         let b = flow_snapshot(&["n1"]);
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
         assert!(matches!(d, SemioDiff::Replace(_)), "cross-kind change must Replace: {d:?}");
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("valid replacement"), b);
     }
 
     /// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
@@ -582,9 +620,9 @@ mod tests {
     fn inverse_law_covers_nested_replace_and_no_change() {
         for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
             let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-            let applied = d.apply(&a);
+            let applied = d.apply(&a).expect("valid diff");
             let inv = d.inverse(&a);
-            assert_eq!(inv.apply(&applied), a, "inverse must restore base for {d:?}");
+            assert_eq!(inv.apply(&applied).expect("valid inverse"), a, "inverse must restore base for {d:?}");
         }
     }
 
@@ -597,10 +635,10 @@ mod tests {
         let after = audio_snapshot(96_000);
         let mut d1 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &mid);
         let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
-        let applied_before_absorb = d1.apply(&a);
+        let applied_before_absorb = d1.apply(&a).expect("valid first diff");
         d1.absorb(d2.clone());
-        assert_eq!(d1.apply(&a), d2.apply(&applied_before_absorb));
-        assert_eq!(d1.apply(&a), after);
+        assert_eq!(d1.apply(&a).expect("valid absorbed diff"), d2.apply(&applied_before_absorb).expect("valid second diff"));
+        assert_eq!(d1.apply(&a).expect("valid absorbed diff"), after);
     }
 
     /// 🧪️ absorb_law: a later `Replace` always wins outright, whatever preceded it.
@@ -613,7 +651,7 @@ mod tests {
         let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
         assert!(matches!(d1, SemioDiff::Replace(_)));
-        assert_eq!(d1.apply(&a), after);
+        assert_eq!(d1.apply(&a).expect("valid replacement"), after);
     }
 
     /// 🧪️ absorb_law: an earlier `Replace` absorbing a later same-kind diff folds it into the
@@ -626,7 +664,7 @@ mod tests {
         let mut d1 = SemioDiff::Replace(Box::new(replaced.clone()));
         let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&replaced, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&a), after);
+        assert_eq!(d1.apply(&a).expect("valid absorbed diff"), after);
     }
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
@@ -683,6 +721,27 @@ mod tests {
             let parsed = SemioDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d);
         }
+    }
+
+    #[test]
+    fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
+        let base = audio_snapshot(44_100);
+        let error = SemioDiff::Flow(Default::default()).apply(&base).unwrap_err();
+        assert_eq!(error.code, "mutation.apply.kind-mismatch");
+        assert_eq!(error.target, vec!["subset"]);
+
+        let mut diff = SemioDiff::Flow(Default::default());
+        diff.absorb(SemioDiff::Audio(Default::default()));
+        let SemioDiff::Rejected(error) = &diff else {
+            panic!("cross-kind absorb must preserve a typed rejection");
+        };
+        assert_eq!(error.code, "mutation.absorb.kind-mismatch");
+        assert!(diff.apply(&base).is_err());
+
+        let text = diff.print_diff();
+        assert_eq!(SemioDiff::parse_diff(&text).expect("rejection text round-trip"), diff);
+        let bytes = diff.encode_diff().expect("rejection binary encode");
+        assert_eq!(SemioDiff::decode_diff(&bytes).expect("rejection binary round-trip"), diff);
     }
 }
 //#endregion 🔖️Tests

@@ -16,7 +16,7 @@ pub struct InsertVariableAction {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for InsertVariableAction {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "variable-action", kind: "insert-variable-action", record: "InsertedVariableAction" };
 
-    fn diff(&self, base: &En1990Snapshot) -> <En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {

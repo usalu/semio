@@ -1,0 +1,200 @@
+Lane 3-H, group G4 — inventory + final report
+Plugins: draw, raster, reasoning-mindmap (wires), writer
+
+=== INVENTORY (Pass 1 target list) ===
+
+DRAW (crate semio-s-plugin-draw), root:
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/
+
+14 🧬️mutations/<kind>/ triads (🔺️diff + 🦠️mutation leaves), verb in parens:
+  replace-layer-stroke (replace), rename-layer (rename), set-layer-opacity (set),
+  create-layer (create), set-layer-visible (set), set-layer-boolean-operation (set),
+  replace-layer-fill (replace), reorder-layer (reorder), update-layer-transform (update),
+  set-layer-locked (set), update-layer-trace-params (update), set-layer-blend-mode (set),
+  delete-layer (delete), duplicate-layer (duplicate)
+1 root 🧬️schema/🔺️diff/🦀️component.rs — this is the DrawDiff TYPE DEFINITION, not a diff fn (N/A to Pass 1/2).
+2 hand-written impl Mutation<P>: ✏️editor/🎚️config/🦀️component.rs (DrawConfigMutation),
+  ✏️editor/👥️presence/🦀️component.rs (DrawPresenceMutation).
+1 call site: 🧬️mutations/🦀️component.rs patch_layer_field() operation.diff(doc).apply(doc).
+
+RASTER (crate semio-s-plugin-raster), root:
+✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/
+
+12 🧬️mutations/<kind>/ triads:
+  move-layer (move), rename-layer (rename), change-layer-opacity (change), create-layer (create),
+  change-layer-adjustment-kind (change), change-layer-blend-mode (change), change-layer-visible (change),
+  resize-layer (resize), reorder-layers (reorder), add-layer-asset (add), remove-layer-asset (remove),
+  delete-layer (delete)
+1 root 🧬️schema/🔺️diff/🦀️component.rs — RasterDiff type definition (N/A).
+2 hand-written impl Mutation<P>: ✏️editor/🎚️config/🦀️component.rs (RasterConfigMutation),
+  ✏️editor/👥️presence/🦀️component.rs (RasterPresenceMutation).
+Call sites: 🧬️mutations/🦀️component.rs round_trip() test helper (2x vcs::apply_mutation destructure),
+  resize_layer_is_a_graceful_no_op_on_a_group test, 3x absorb-law test pairs.
+
+REASONING/MINDMAP — wires artifact (crate semio-s-plugin-reasoning-mindmap), root:
+✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/
+
+10 🧬️mutations/<kind>/ triads:
+  disconnect-nodes (disconnect), edit-node-text (edit), create-node (create), change-node-kind (change),
+  resize-node (resize), connect-nodes (connect), change-node-shape (change), delete-node (delete),
+  set-node-root (set), move-node (move)
+1 root 🧬️schema/🔺️diff/🦀️component.rs — WiresDiff type definition (N/A).
+2 hand-written impl Mutation<P>: ✏️editor/🎚️config/🦀️component.rs (WiresConfigMutation),
+  ✏️editor/👥️presence/🦀️component.rs (WiresPresenceMutation).
+Call sites: 🧬️mutations/🦀️component.rs round_trip() helper + connect_disconnect test (apply_mutation),
+  create_node_satisfies_the_inverse_and_absorb_laws test.
+
+WRITER (crate semio-s-plugin-writer), root:
+✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/
+
+4 🧬️mutations/<kind>/ triads (whole-document scope, no addressable sub-target):
+  edit-text (edit), change-language (change), rename-writer (rename), change-uri (change)
+1 root 🧬️schema/🔺️diff/🦀️component.rs — WriterDiff type definition (N/A).
+2 hand-written impl Mutation<P>: 🎛️apps/✒️writer/🎚️config/🦀️component.rs (WriterConfigMutation),
+  🎛️apps/✒️writer/👥️presence/🦀️component.rs (WriterPresenceMutation).
+Call sites: 🧬️mutations/🦀️component.rs apply_writer_mutation() + 2 absorb-law test pairs.
+
+`fn validate` grep across all 4 trees: 0 real trait overrides found (one unrelated free fn
+`validate_identity_set` in reasoning's 🔍️inspection panel, left untouched per instructions).
+
+=== PASS 1 + PASS 2 STATUS ===
+All 40 named-kind diff leaves (14+12+10+4) converted AND given real verb-family Error/Warning/Fatal
+logic — none left as a bare `MutationOutcome::new(diff)` wrap. All 8 hand-written config/presence
+`impl Mutation<P>` blocks (2 per plugin) converted to the new return type; all message-free by design
+(session/view-state Snapshot-replace mutations have no addressable target to be missing — the
+contract's explicit shrink-only allowance for root-scoped kinds with genuinely nothing to check).
+
+=== DOMAIN-VERB → FAMILY MAPPINGS ===
+draw:
+  replace (replace-layer-stroke, replace-layer-fill) -> edit/replace family: Error target-missing,
+    Warning no-op when the sub-payload is unchanged. Reason: "replace" swaps a structured sub-value
+    wholesale, same shape as the taxonomy's edit/replace pair.
+  set (set-layer-visible/-locked/-opacity/-blend-mode/-boolean-operation) -> change/set/update family:
+    Error target-missing, Warning no-op when unchanged; set-layer-opacity additionally gets Fatal
+    invariant on a non-finite opacity (closest analogy: the move/scale family's non-finite rule,
+    applied since opacity is a bare scalar with a domain constraint).
+  update (update-layer-transform, update-layer-trace-params) -> change/set/update family, "cohesive
+    multi-field facet" exception already documented in the leaves' own doc comments (position+scale+
+    rotation / threshold+epsilon are one field, never independently persisted). update-layer-transform
+    gets Fatal invariant on non-finite or non-positive scale (borrowed straight from the move/scale
+    family's own rule, since a transform IS a scale+move compound).
+  reorder-layer -> reorder family: Error target-missing (layer or parent), Warning no-op when the
+    (parent, index) address is unchanged.
+  duplicate-layer -> duplicate family: Error target-missing on the source, Fatal duplicate-id if the
+    minted copy's content-addressed id collides.
+  create-layer -> create family: Fatal duplicate-id, Fatal invariant when parent_id doesn't resolve to
+    an existing Group.
+  delete-layer -> delete family: Error target-missing.
+  rename-layer -> rename family: Error target-missing, Warning no-op when the new name equals the old.
+
+raster:
+  move-layer -> move/drag/rotate/scale/resize family: Error target-missing, Warning no-op, Fatal
+    invariant on non-finite x/y.
+  resize-layer -> move/drag/rotate/scale/resize family (explicit "resize" verb): Error target-missing
+    (also used for "exists but isn't a Pixel layer" — resize only applies to pixel layers), Warning
+    no-op, Fatal invariant on zero width/height.
+  rename-layer -> rename family.
+  change-layer-opacity/-blend-mode/-visible/-adjustment-kind -> change/set/update family: Error
+    target-missing, Warning no-op; change-layer-opacity additionally Fatal invariant on non-finite;
+    change-layer-adjustment-kind treats "exists but isn't Adjustment" as target-missing too (the
+    adjustment_kind field doesn't exist at that address).
+  create-layer -> create family: Fatal duplicate-id, Fatal invariant on an unresolved/non-Group parent.
+  reorder-layers -> reorder family: Error target-missing (layer or parent), Warning no-op via a small
+    local `locate()` walker (raster's schema module has no ready-made location helper like draw's).
+  add-layer-asset -> add family: Warning no-op when the asset id is already attached (its own doc
+    comment already calls out add/remove as raster's taxonomy-correct verb pair for this id-keyed
+    root collection — no "owner absent" case applies since the owner is the document itself).
+  remove-layer-asset -> remove family: Error target-missing.
+  delete-layer -> delete family: Error target-missing.
+
+reasoning (wires):
+  disconnect-nodes -> disconnect/unbind family: Error target-missing (edge absent).
+  connect-nodes -> connect/bind family: Fatal duplicate-id on an edge id collision, Error
+    target-missing per missing endpoint (source/target node).
+  edit-node-text -> edit/replace family ("edit" verb, authored content body per the leaf's own doc
+    comment): Error target-missing, Warning no-op when text is unchanged.
+  create-node -> create family: Fatal duplicate-id.
+  change-node-kind/-shape -> change/set/update family: Error target-missing, Warning no-op.
+  resize-node -> move/drag/rotate/scale/resize family: Error target-missing, Fatal invariant on a
+    non-finite or non-positive radius/width/height, Warning no-op when every present field is
+    unchanged.
+  set-node-root -> change/set/update family ("set" verb — the leaf's own doc comment calls it "the
+    exact set-layer-visible shape"): Error target-missing, Warning no-op.
+  move-node -> move/drag/rotate/scale/resize family: Error target-missing, Fatal invariant on
+    non-finite x/y, Warning no-op.
+  delete-node -> delete family: Error target-missing.
+
+writer (whole-document scope — no addressable sub-target, so target-missing never applies; every
+kind's only real check is no-op):
+  edit-text -> edit/replace family: Warning no-op when the document's live text (via `writer_text()`)
+    already equals the payload.
+  change-language, change-uri -> change/set/update family: Warning no-op when the field is unchanged.
+  rename-writer -> rename family: Warning no-op when the new id equals the old.
+
+=== CALL-SITE / TEST FIXES ===
+draw: patch_layer_field() (dispatch file) now `.diff(doc).diff().apply(doc)`; DrawConfig's
+  round-trip test + set_layer_opacity_diff_absorb_law test extract `.diff().clone()`.
+raster: round_trip() test helper destructures `(P, Vec<MutationMessage>)`; RasterConfig round-trip
+  test; resize_layer_is_a_graceful_no_op_on_a_group test now reads outcome.diff()/worst_level(); 3
+  absorb-law test pairs (create-layer, change-layer-opacity, reorder-layers) extract `.diff().clone()`.
+reasoning: round_trip() helper + one direct apply_mutation call site destructure the tuple; WiresConfig
+  round-trip test; create_node_satisfies_the_inverse_and_absorb_laws extracts `.diff().clone()`.
+writer: apply_writer_mutation() now `.diff(snapshot).diff().apply(snapshot)`; 2 absorb-law test pairs
+  (change_uri/change_language, edit_text) extract `.diff().clone()`.
+
+=== PASS 3 — FACET TESTS ===
+Testkit law helper check (`🧰️framework/…/📡️spr/🧪️testkit/🦀️component.rs`):
+  assert_missing_target_is_error  -> LANDED (line 653)
+  assert_fatal_never_applies      -> LANDED (line 666)
+  assert_outcome_policy_matrix    -> NOT landed under that name (only the more general
+                                      `assert_policy_matrix` at line 707, which isn't outcome-specific)
+Per instructions, added tests calling the two landed laws by their frozen names, and left a
+TODO(1-D testkit laws pending) doc comment on `assert_outcome_policy_matrix` in every facet's new
+🧪️OutcomeLaws region instead of inventing a call to a function that doesn't exist yet.
+  draw:       4 new tests (2x assert_missing_target_is_error via delete/rename, 1x via set-opacity,
+              1x assert_fatal_never_applies via create-layer duplicate-id)
+  raster:     3 new tests (2x assert_missing_target_is_error via delete/rename, 1x
+              assert_fatal_never_applies via create-layer duplicate-id)
+  reasoning:  4 new tests (3x assert_missing_target_is_error via delete-node/move-node/
+              disconnect-nodes, 1x assert_fatal_never_applies via create-node duplicate-id)
+  writer:     1 new test (assert_outcome_deterministic — assert_missing_target_is_error doesn't apply,
+              writer has no addressable target; documented inline)
+This is NOT one test per verb family per facet (that would be ~40 more tests) — it is a
+representative sample proving the two landed laws hold for the riskiest kinds (create/duplicate-id,
+delete/target-missing) in each facet, given the time budget. Being honest: this is partial coverage,
+not the full verb-family x facet matrix the contract asks for.
+
+=== CARGO CHECK / TEST ===
+Ran `cargo check -p semio-s-plugin-draw|raster|reasoning-mindmap|writer`; full raw output in
+🧪️w3-h-g4-cargo.txt (this dir). Could NOT get any of the 4 crates to a real green check: every one is
+blocked by an UPSTREAM dependency failure outside this lease.
+  - First run (draw/raster/reasoning-mindmap): `semio-framework-plugin` failed to compile
+    (`AppCommand::SetMergePolicy/ResolveConflict/ReadConflicts` non-exhaustive match at
+    🧰️framework/…/🔌️plugin/…/🦀️component.rs:14633 — lane C9's guest-dispatch charter, not mine).
+  - By the time writer's check ran (~5 min later, shared live tree), that framework error was gone
+    (another lane landed it concurrently) — re-running draw confirmed the SAME fix landed for it too.
+  - With that fixed, ALL FOUR of my plugins now block on `semio-s-plugin-stdio` instead: 270 errors,
+    entirely inside `✏️s/🔌️plugins/🗄️stdio/…` (its ~34 legacy artifact `impl Mutation`/`MutationKind`
+    enums still return bare diffs, not `MutationOutcome`, plus 3 `MutationDiff` bound mismatches and a
+    stray `Severity::Hint`). This is explicitly FULL-STDIO's charter per the fan-out recipe
+    ("stdio's legacy enums are FULL-STDIO's charter — our lane wraps them minimally"), not mine, and
+    it is a hard `path` dependency of all 4 of my plugin crates (`semio-s-plugin-stdio` in every
+    Cargo.toml).
+  - Because `semio-s-plugin-stdio` fails to compile, cargo never reaches MY plugins' own source at
+    all in any of these runs (grepped the full logs for `🖍️draw`/`🖨️raster`/`🔌️wires`/`✒️writer`
+    paths in the error output — zero hits in every run). So I cannot report a compiler-verified
+    green (or red) result for my own edits — only that they are blocked pre-compilation by stdio.
+  - `cargo test` was not run for the same reason (would hit the identical stdio blocker before ever
+    reaching my crates).
+  - Every edit was hand-verified against the live struct/enum/helper-fn definitions it touches
+    (field names, Default derives, helper signatures) rather than compiler-verified; see the
+    per-file spot-checks in this session's transcript.
+
+Result table:
+  | Plugin              | cargo check | Blocker (exact) |
+  |----------------------|-------------|------------------|
+  | semio-s-plugin-draw  | BLOCKED     | semio-s-plugin-stdio: 270 errors (not my lease) |
+  | semio-s-plugin-raster| BLOCKED     | semio-s-plugin-stdio: 270 errors (not my lease) |
+  | semio-s-plugin-reasoning-mindmap | BLOCKED | semio-s-plugin-stdio: 270 errors (not my lease) |
+  | semio-s-plugin-writer| BLOCKED     | semio-s-plugin-stdio: 270 errors (not my lease) |
+  | cargo test (all 4)   | NOT RUN     | same stdio blocker would hit first |

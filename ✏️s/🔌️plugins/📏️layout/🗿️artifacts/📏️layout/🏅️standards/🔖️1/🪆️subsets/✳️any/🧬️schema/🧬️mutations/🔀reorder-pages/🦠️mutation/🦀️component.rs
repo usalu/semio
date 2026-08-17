@@ -15,7 +15,7 @@ pub struct ReorderPages {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ReorderPages {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "pages", kind: "reorder-pages", record: "ReorderedPages" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_reorder_pages(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

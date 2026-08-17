@@ -316,14 +316,25 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<FormsSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot).into_parts().0;
-            self.snapshot = crate::artifacts::forms::schema::mutations::apply_form_edit_mutation(&self.snapshot, &mutation);
-            (self, diff)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
@@ -408,12 +419,13 @@ mod tests {
         let mut spec = building_component_spec();
         let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
         let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
-        spec = apply_form_edit_mutation(&spec, &operation);
+        spec = apply_form_edit_mutation(&spec, &operation).expect("valid mutation diff");
         assert_eq!(forms_steps(&spec)[0].blocks[0].label, "Renamed");
     }
 
     fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
         crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation)
+            .expect("valid mutation diff")
     }
 
     #[test]

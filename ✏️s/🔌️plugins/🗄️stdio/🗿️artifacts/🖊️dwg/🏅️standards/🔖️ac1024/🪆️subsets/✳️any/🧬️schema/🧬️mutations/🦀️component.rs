@@ -3,7 +3,6 @@
 use crate::artifacts::dwg::schema::diff::{self, DwgDiff};
 use crate::artifacts::dwg::DwgSnapshot;
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -24,27 +23,26 @@ pub enum DwgMutation {
     },
 }
 
-pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> DwgDiff {
-    let diff = mutation.diff(snapshot);
-    match mutation {
-        DwgMutation::NoMutation => {}
-        DwgMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
-        DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => {
-            crate::artifacts::dwg::schema::snapshot::synchronize_version_info(snapshot, version, *maintenance_version, *codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
+pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
+    let outcome = mutation.diff(snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
         }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-    diff
 }
 
 impl Mutation<DwgSnapshot> for DwgMutation {
     type Diff = DwgDiff;
 
-    fn diff(&self, base: &DwgSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             DwgMutation::NoMutation => DwgDiff::default(),
             DwgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             DwgMutation::SetVersionInfo { version, maintenance_version, codepage } => diff::diff_set_version_info(base, version, *maintenance_version, *codepage),
-        }
+        })
     }
 
     fn inverse(&self, base: &DwgSnapshot) -> Vec<Self> {
@@ -58,7 +56,7 @@ impl Mutation<DwgSnapshot> for DwgMutation {
 //#endregion Mutations
 
 //#region Codecs
-impl protocol::OpText for DwgMutation {
+impl OpText for DwgMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -79,7 +77,7 @@ impl protocol::OpText for DwgMutation {
     }
 }
 
-impl protocol::OpBinary for DwgMutation {
+impl OpBinary for DwgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -108,7 +106,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let mut applied = base.clone();
             let diff = apply_dwg_mutation(&mut applied, &mutation);
-            assert_eq!(diff.apply(&base), applied);
+            assert_eq!(diff.diff().apply(&base).expect("diff must apply to base"), applied);
             for inverse in mutation.inverse(&base) {
                 apply_dwg_mutation(&mut applied, &inverse);
             }

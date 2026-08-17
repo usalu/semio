@@ -74,8 +74,10 @@ impl store::ConfigRecord for NormConfig {}
 /// 🧮️ Whole-record diff for `NormConfigMutation` — `apply` ignores `base` entirely, since
 /// `NormConfigMutation::Snapshot` already carries the full post-op config.
 impl protocol::MutationDiff<NormConfig> for NormConfig {
-    fn apply(&self, _base: &NormConfig) -> NormConfig {
-        self.clone()
+    fn apply(&self, _base: &NormConfig) -> protocol::MutationApplyResult<NormConfig> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -156,10 +158,20 @@ impl protocol::OpBinary for NormConfigMutation {
 impl Mutation<NormConfig> for NormConfigMutation {
     type Diff = NormConfig;
 
-    fn diff(&self, _base: &NormConfig) -> NormConfig {
+    fn diff(&self, base: &NormConfig) -> protocol::MutationOutcome<NormConfig> {
         match self {
-            NormConfigMutation::Snapshot { config } => config.clone(),
-            NormConfigMutation::SetSelectedCheckIndex { index } => NormConfig { selected_check_index: *index },
+            NormConfigMutation::Snapshot { config } => {
+                if config == base {
+                    return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Config snapshot is already up to date.");
+                }
+                protocol::MutationOutcome::new(config.clone())
+            }
+            NormConfigMutation::SetSelectedCheckIndex { index } => {
+                if base.selected_check_index == *index {
+                    return protocol::MutationOutcome::new(base.clone()).warn("mutation.no-op", "Selected check index is already this value.");
+                }
+                protocol::MutationOutcome::new(NormConfig { selected_check_index: *index })
+            }
         }
     }
 
@@ -190,11 +202,11 @@ mod tests {
     fn norm_config_operation_snapshot_is_a_real_inverse() {
         let base = NormConfig { selected_check_index: Some(1) };
         let op = NormConfigMutation::SetSelectedCheckIndex { index: Some(5) };
-        let next = op.diff(&base);
+        let next = op.diff(&base).diff().clone();
         assert_eq!(next.selected_check_index, Some(5));
         let backwards = op.inverse(&base);
         assert_eq!(backwards, vec![NormConfigMutation::Snapshot { config: base.clone() }]);
-        let restored = backwards[0].diff(&next);
+        let restored = backwards[0].diff(&next).diff().clone();
         assert_eq!(restored, base);
     }
 

@@ -310,10 +310,14 @@ mod tests {
     }
 
     fn round_trip(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Din16798Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -347,8 +351,8 @@ mod tests {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -356,8 +360,8 @@ mod tests {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeTOpC(change_t_op_c::mutation::ChangeTOpC { new_t_op_c: 24.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din16798Mutation::ChangeBedrooms(change_bedrooms::mutation::ChangeBedrooms { new_bedrooms: 4 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din16798Mutation::ChangeBedrooms(change_bedrooms::mutation::ChangeBedrooms { new_bedrooms: 4 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -365,8 +369,8 @@ mod tests {
         let base = Din16798Snapshot::default();
         let mutation = Din16798Mutation::ChangeOccupancy(change_occupancy::mutation::ChangeOccupancy { new_occupancy: "office".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = Din16798Mutation::ChangeDuctClass(change_duct_class::mutation::ChangeDuctClass { new_duct_class: "B".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = Din16798Mutation::ChangeDuctClass(change_duct_class::mutation::ChangeDuctClass { new_duct_class: "B".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

@@ -3,7 +3,13 @@ use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{S
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
 use protocol::Mutation;
 
-/// 🔺️ Diff helper for set-colorspace.
-pub fn diff(base: &SemioImageSnapshot, colorspace: SemioColorspace) -> SemioImageDiff {
+/// 🔺️ Diff helper for set-colorspace — a root-scoped singleton field; `colorspace` already equal
+/// to `base.colorspace` is `mutation.no-op` (Warning, empty diff). No `mutation.invariant` check:
+/// every `SemioColorspace` enum value is structurally valid, there is no narrower domain to
+/// violate.
+pub fn diff(base: &SemioImageSnapshot, colorspace: SemioColorspace) -> protocol::MutationOutcome<SemioImageDiff> {
+    if base.colorspace == colorspace {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Colorspace is already this value.".to_string());
+    }
     Mutation::diff(&SemioImageMutation::SetColorspace { colorspace }, base)
 }

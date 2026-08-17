@@ -25,7 +25,7 @@ pub fn remove_stream_frame(id: String, frame_index: u32) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for RemoveStreamFrame {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream-frame", record: "RemovedStreamFrame" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

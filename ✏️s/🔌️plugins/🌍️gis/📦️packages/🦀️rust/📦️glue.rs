@@ -786,53 +786,53 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod gis2d {
-        #[path = "../../🎛️apps/◻2d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/◻2d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/◻2d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/◻2d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
-        #[path = "../../🎛️apps/◻2d/🗺️maphost/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗺️maphost/🦀️component.rs"]
         pub mod maphost;
-        #[path = "../../🎛️apps/◻2d/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
-        #[path = "../../🎛️apps/◻2d/🌉️wasm/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs"]
         pub mod wasm;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️example/🦀️component.rs"]
             pub mod example;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️features/🦀️component.rs"]
             pub mod features;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/👁️view/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🦀️component.rs"]
             pub mod view;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🗣️locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️locale/🦀️component.rs"]
             pub mod locale;
-            #[path = "../../🎛️apps/◻2d/🎮️commands/🌐️shell/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌐️shell/🦀️component.rs"]
             pub mod shell;
         }
 
@@ -840,7 +840,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -848,21 +848,21 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod map {
-                        #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖼️render-mode/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🖼️render-mode/🦀️component.rs"]
                             pub mod render_mode;
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🎨️vector-style/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🎨️vector-style/🦀️component.rs"]
                             pub mod vector_style;
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🔽️lod-mode/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/🔽️lod-mode/🦀️component.rs"]
                             pub mod lod_mode;
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/👁️layers/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/👁️layers/🦀️component.rs"]
                             pub mod layers;
-                            #[path = "../../🎛️apps/◻2d/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/📏️layer-weights/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️options/📏️layer-weights/🦀️component.rs"]
                             pub mod layer_weights;
                         }
                     }
@@ -872,48 +872,48 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/◻2d/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod artifact;
-            #[path = "../../🎛️apps/◻2d/📌️panels/🛍️catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs"]
             pub mod catalogue;
-            #[path = "../../🎛️apps/◻2d/📌️panels/🔍️inspection/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs"]
             pub mod inspection;
         }
     }
 
     #[path = "."]
     pub mod gis3d {
-        #[path = "../../🎛️apps/🧊️3d/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🧊️3d/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🏔️exaggeration/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏔️exaggeration/🦀️component.rs"]
             pub mod exaggeration;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/👁️view/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️view/🦀️component.rs"]
             pub mod view;
-            #[path = "../../🎛️apps/🧊️3d/🎮️commands/🗣️locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️locale/🦀️component.rs"]
             pub mod locale;
         }
 
@@ -921,20 +921,72 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "../../🎛️apps/🧊️3d/🎭️modes/👁️view/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🧊️3d/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️component.rs"]
                     pub mod terrain;
                 }
             }
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod gismap {
+        #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🦀️component.rs"]
+                    pub mod map;
+                }
+            }
+        }
+    }
+
+    #[path = "."]
+    pub mod gisterrain {
+        #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️component.rs"]
+                    pub mod terrain;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
+
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -955,9 +1007,9 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_gismap_demo_tests;
-    #[path = "../../🎛️apps/◻2d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_2d_demo_session;
-    #[path = "../../🎛️apps/🧊️3d/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_3d_demo_session;
 }
 //#endregion 📚️Examples

@@ -15,7 +15,7 @@ pub struct ReorderWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for ReorderWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "widget", kind: "reorder-widgets", record: "ReorderedWidgets" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

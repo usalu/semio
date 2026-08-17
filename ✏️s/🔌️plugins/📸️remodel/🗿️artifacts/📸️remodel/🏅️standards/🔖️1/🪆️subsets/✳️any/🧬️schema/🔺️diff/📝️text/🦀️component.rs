@@ -17,99 +17,102 @@ use crate::artifacts::remodel::schema::diff::*;
 //#region 🔖️Apply
 impl RemodelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &RemodelArtifact) -> RemodelArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(list) = &self.streams {
-            next.streams = list.values.clone();
-        }
-        if let Some(assets) = &self.assets {
-            next.assets = assets.clone();
-        }
-        if let Some(calibration) = &self.calibration {
-            next.calibration = calibration.clone();
-        }
-        if let Some(params) = &self.params {
-            next.params = params.clone();
-        }
-        if let Some(list) = &self.gcps {
-            next.gcps = list.values.clone();
-        }
-        if let Some(job) = &self.job {
-            next.job = job.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        if let Some(value) = &self.selection {
-            next.selection = value.clone();
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = &self.report_table {
-            next.report_table = value.clone();
-        }
-        if let Some(value) = &self.frame_cursor {
-            next.frame_cursor = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(value) = &self.layers {
-            next.layers = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &RemodelArtifact) -> protocol::MutationApplyResult<RemodelArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(list) = &self.streams {
+                next.streams = list.values.clone();
+            }
+            if let Some(assets) = &self.assets {
+                next.assets = assets.clone();
+            }
+            if let Some(calibration) = &self.calibration {
+                next.calibration = calibration.clone();
+            }
+            if let Some(params) = &self.params {
+                next.params = params.clone();
+            }
+            if let Some(list) = &self.gcps {
+                next.gcps = list.values.clone();
+            }
+            if let Some(job) = &self.job {
+                next.job = job.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(value) = &self.selection {
+                next.selection = value.clone();
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = &self.report_table {
+                next.report_table = value.clone();
+            }
+            if let Some(value) = &self.frame_cursor {
+                next.frame_cursor = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(value) = &self.layers {
+                next.layers = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<RemodelSnapshot> for RemodelDiff {
-    fn apply(&self, snapshot: &RemodelSnapshot) -> RemodelSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(list) = &self.streams {
-            next.streams = list.values.clone();
-        }
-        if let Some(assets) = &self.assets {
-            next.assets = assets.clone();
-        }
-        if let Some(calibration) = &self.calibration {
-            next.calibration = calibration.clone();
-        }
-        if let Some(params) = &self.params {
-            next.params = params.clone();
-        }
-        if let Some(list) = &self.gcps {
-            next.gcps = list.values.clone();
-        }
-        if let Some(job) = &self.job {
-            next.job = job.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        next
+    fn apply(&self, snapshot: &RemodelSnapshot) -> protocol::MutationApplyResult<RemodelSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(list) = &self.streams {
+                next.streams = list.values.clone();
+            }
+            if let Some(assets) = &self.assets {
+                next.assets = assets.clone();
+            }
+            if let Some(calibration) = &self.calibration {
+                next.calibration = calibration.clone();
+            }
+            if let Some(params) = &self.params {
+                next.params = params.clone();
+            }
+            if let Some(list) = &self.gcps {
+                next.gcps = list.values.clone();
+            }
+            if let Some(job) = &self.job {
+                next.job = job.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -151,7 +154,12 @@ mod tests {
     #[test]
     fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {
         let scene = default_remodel_scene();
-        assert_eq!(RemodelDiff::default().apply(&scene), scene);
+        assert_eq!(
+            RemodelDiff::default()
+                .apply(&scene)
+                .expect("valid identity diff"),
+            scene
+        );
 
         let mut diff = RemodelDiff::default();
         diff.absorb(RemodelDiff {

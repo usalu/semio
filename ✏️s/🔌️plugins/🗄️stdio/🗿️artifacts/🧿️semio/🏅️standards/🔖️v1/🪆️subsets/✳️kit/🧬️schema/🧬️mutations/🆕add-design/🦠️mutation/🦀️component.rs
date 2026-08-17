@@ -15,7 +15,7 @@ pub struct AddDesign {
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for AddDesign {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "design", kind: "add-design", record: "AddedDesign" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {

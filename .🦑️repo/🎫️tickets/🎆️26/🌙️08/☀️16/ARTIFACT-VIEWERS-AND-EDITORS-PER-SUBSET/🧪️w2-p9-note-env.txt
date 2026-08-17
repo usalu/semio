@@ -1,0 +1,5 @@
+PLUGIN_DIR=✏️s/🔌️plugins/🗒️note
+APP_DIR=✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note
+SUBSET_DIR=✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any
+EDITOR_DIR=✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor
+VIEWER_DIR=✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer

@@ -23,7 +23,7 @@ pub fn edit_block_math(id: String, new_tex: String) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockMath {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-math", kind: "edit-block-math", record: "EditedBlockMath" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

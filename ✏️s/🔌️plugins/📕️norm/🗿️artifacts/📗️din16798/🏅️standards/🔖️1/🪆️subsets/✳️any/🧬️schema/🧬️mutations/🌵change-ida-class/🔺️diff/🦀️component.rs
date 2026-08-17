@@ -5,7 +5,10 @@ use crate::artifacts::din16798::mutations::change_ida_class::mutation::ChangeIda
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeIdaClass, _base: &Din16798Snapshot) -> Din16798Diff {
-    Din16798Diff { ida_class: Some(payload.new_ida_class.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeIdaClass, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    if base.ida_class == payload.new_ida_class {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Indoor air quality class is already \"{}\".", payload.new_ida_class));
+    }
+    protocol::MutationOutcome::new(Din16798Diff { ida_class: Some(payload.new_ida_class.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

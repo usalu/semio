@@ -9,6 +9,16 @@ use serde::{Deserialize, Serialize};
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
+/// 🪪️ W2 packet P7 (26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the canonical `ArtifactEditor`/
+/// `ArtifactViewer::DIALECT` for this artifact — `artifact_kind` is the 3-part schema id
+/// (`#[artifact_schema(id = "s.fem.fem2d")]` on `Fem2dSnapshot`), NOT the 2-part
+/// `ArtifactIdentity::parse("s.fem2d")` string `definition()` below uses, and NOT the module-private
+/// `FEM2D_DIALECT` in this subset's own `🚪️io/🦀️component.rs` (an older, unrelated 2-part io/composer
+/// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
+/// file can read it without ever importing through the sibling editor module.
+pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem2d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
 // #region 🔖️Document
 /// 📍️ A structural node in plan (x, y in meters).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -236,7 +246,7 @@ pub use crate::artifacts::fem2d::schema::Fem2dArtifact;
 
 // #region 🔖️ArtifactKind
 /// 🔌️ The computed-results output artifact kind (`results:out`'s `kind_id`, see
-/// `crate::apps::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
+/// `crate::editor::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
 /// `computation.fem2d`; deliberately a different `media_type` (`Computation`×`Value`) than the PORT's
 /// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
 /// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
@@ -262,9 +272,10 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // #region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from a
-/// plugin `.setup()` callback. `crate::apps::fem2d::config::schema::register_app_schema()` is the one
-/// exception, still called from `🏗️fem/🦀️component.rs`'s own narrowed `.setup()`: it registers
-/// `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
+/// plugin `.setup()` callback. `crate::editor::fem2d::config::schema::register_app_schema()` is the one
+/// pre-existing exception referenced here (module path only updated for ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem2d` → `editor::fem2d` rename); it
+/// registers `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
@@ -308,7 +319,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::fem2d::standards::v1::subsets::any::schema::inferences::fem2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::fem2d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::fem2d::Fem2dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::fem2d::Fem2dPlayApp>>()
         .try_build()
 }
 

@@ -1,6 +1,6 @@
 //! 💡️ deviation-from-smoothed-geometry atomic glTF inference leaf.
 use super::super::super::modules::{
-    inference_measures::{estimate, exact, unavailable},
+    inference_measures::{estimate, unavailable},
     measurement_contracts::*,
 };
 use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};

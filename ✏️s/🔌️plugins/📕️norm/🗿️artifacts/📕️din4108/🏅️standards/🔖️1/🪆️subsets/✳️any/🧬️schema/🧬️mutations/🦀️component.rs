@@ -128,11 +128,11 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(base: &Din4108Snapshot, operation: &Din4108Mutation) -> Din4108Snapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -214,11 +214,11 @@ mod tests {
     }
 
     #[test]
-    fn remove_layer_of_an_out_of_range_index_has_an_empty_inverse() {
+    fn remove_layer_of_an_out_of_range_index_is_rejected() {
         let base = Din4108Snapshot::default();
         let remove = Din4108Mutation::RemoveLayer(remove_layer::mutation::RemoveLayer { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).apply(&base), base, "an out-of-range remove is a no-op");
+        protocol::testkit::assert_missing_target_is_error(&base, &remove);
     }
 
     #[test]

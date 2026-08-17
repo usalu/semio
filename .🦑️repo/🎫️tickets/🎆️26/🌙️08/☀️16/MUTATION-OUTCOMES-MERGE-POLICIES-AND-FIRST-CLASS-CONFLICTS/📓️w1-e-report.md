@@ -25,44 +25,54 @@ via `preview_wire`, prefixing each resulting message's `target` with the origina
 `ArtifactRef::to_uri()` (`prefix_message_target`) and unioning into `all_messages`; (2) keeps the
 existing structural checks (ownership/cycle/genesis) as immediate hard errors, unchanged; (3) after
 every member has been previewed and every structural check passed, calls
-`reject_if_policy_rejects(parent_ref, parent.merge_policy(), &all_messages)` — one worst
+`reject_if_policy_rejects(parent.merge_policy(), &all_messages)` — one worst
 `crate::os_dsl::Severity` over the union, checked against the **parent-or-initiator's own**
 `merge_policy()` (the natural single-policy-governs-the-group choice, since `MergePolicy` is
 authority-local per §C3). A reject returns before Phase 2 ever runs, so **no member's `dispatch_wire`
 is called for anyone** — the existing `dispatch_group_validate_all_atomicity_one_bad_member_applies_
-nothing` test (Fatal, unmodified) still asserts this, and three new tests exercise Error/Warning under
-all three policies.
+nothing` test (Fatal; its `ValidationFailed` assertion updated to `Rejected`, see below) still asserts
+this, and three new tests exercise Error/Warning under all three policies.
 
-**Known gap, reported not fixed**: §C6 names a typed `VcsError::Rejected { policy, messages }` for this
-path. `VcsError` lives in `🌿️vcs/🦀️component.rs`, outside this lane's lease and unclaimed by any
-current wave lease (0-A's W0 lease that owned it closed at the barrier). I reused the existing
-`VcsError::ValidationFailed(String)` instead, folding policy/worst/messages into the string — its own
-doc comment (written by 0-A) already reserves it for exactly this "structural failures only... an
-ordinary mutation-level rejection ... never through this variant" gap and anticipates a future
-`Rejected` variant. **Coordinator: someone needs to add `VcsError::Rejected` to `🌿️vcs/component.rs`
-and repoint `reject_if_policy_rejects`'s one `Err` arm at it.**
+**Resolved mid-session**: §C6 names a typed `VcsError::Rejected { policy, messages }` for this path.
+`VcsError` lives in `🌿️vcs/🦀️component.rs`, outside this lane's lease — I first shipped
+`reject_if_policy_rejects` against the existing `VcsError::ValidationFailed(String)` as a documented
+stopgap. Partway through the session another lane landed the real `VcsError::Rejected { policy,
+messages }` variant (confirmed via a real test panic: `Rejected { policy: Normal, messages: [...] }`)
+exactly as §C6 specifies. I repointed `reject_if_policy_rejects` (and the 4 tests/1 pre-existing test
+whose assertions named `ValidationFailed`) at the real typed variant — no more gap, no coordinator
+follow-up needed here.
+
+**Second-order fix this surfaced**: the real `VcsError::Rejected` also means each member's OWN
+`dispatch_wire` (Phase 2, going through lane 1-A's now-landed `ArtifactStore::dispatch`) independently
+enforces THAT member's own `merge_policy()` — a SEPARATE check from my coordinator's group-level
+`reject_if_policy_rejects` gate (which only consults the parent's policy). My first `LaissezFaire`-
+accepts test set only the parent's policy, leaving the child at its `Normal` default; Phase 2 then
+correctly rejected the child's own Error-level op via ITS OWN policy, failing my test with a real,
+informative panic. Fixed by setting `LaissezFaire` on BOTH members — documented in both
+`reject_if_policy_rejects`'s doc comment and the test's own comment, since it is a real, load-bearing
+interaction a caller must know about (a lenient parent policy does not override a stricter child's).
 
 ## Pre-existing failing test (W0 barrier: 879/880)
 
-Could not be isolated in-tree: at the time I could first get `semio-framework-os-kernel` to compile at
-all (blocked for most of the session by lane 1-A's mid-flight `🔖️ArtifactStore`/`🔖️Authority` C6 work —
-`resolve_conflict`/`replay_mutations`/`record_edit_messages`/`HistoryLog.conflicts` all landing live —
-and briefly by a `📡️spr/🦀️component.rs` test fixture missing `HistoryLog.conflicts`, lane 1-B's C7
-territory), grepping `fn .*composition.*\|fn .*coordinator.*` inside my three regions found nothing
-logically broken by the C1 `Severity` reorder or C4/C10 deletions — every `CompositionGraph`/
-`dispatch_group`/`dispatch_peer_group` test reads correctly against the landed API on inspection. The
-crate did not hold a compiling state long enough this session for me to run `-- composition`/
-`-- coordinator` and confirm which single test it was before other lanes' next edit broke the build
-again. **Handing this back to the coordinator**: rerun `cargo test -p semio-framework-os-kernel --lib
--- composition` and `-- coordinator` once the tree is fully green; if the failure is still present and
-inside my three regions, reopen this lane.
+**Resolved by other lanes, not by this lane.** `cargo test -p semio-framework-os-kernel --lib --
+composition` → `6 passed; 0 failed`. `cargo test ... -- coordinator` → `0 passed; 0 failed` (no test
+name contains that substring). Full lib suite: **935 passed; 0 failed; 0 ignored** — up from W0's
+879/880, and every test in my three regions is included and green. The crate spent most of this
+session unable to compile at all (lane 1-A's mid-flight `🔖️ArtifactStore`/`🔖️Authority` C6 work —
+`resolve_conflict`/`replay_mutations`/`record_edit_messages`/`HistoryLog.conflicts`/`VcsError::Rejected`
+all landing live during my session — plus a transient `📡️spr/🦀️component.rs` test-fixture gap, lane
+1-B's C7 territory) and under heavy build-lock contention from many concurrent lane sessions (~40+
+`cargo` processes observed at once); by the time it held a compiling state long enough to run
+`-- composition`/`-- coordinator`, the single pre-existing failure was already gone.
 
 ## Tests written and run
 
-`cargo test -p semio-framework-os-kernel --lib -- os_store` and `cargo check -p semio-framework-os-kernel`
-— raw output in `🧪️w1-e-cargo.txt`. See that file for the actual pass/fail counts from this session;
-compile was blocked by other lanes' concurrent work for most of the session (see above), so counts were
-captured once the shared tree compiled.
+Final run, this session, from `/Users/ueli/Documents/semio` — raw output in `🧪️w1-e-cargo.txt`:
+- `cargo test -p semio-framework-os-kernel --lib -- os_store` → **139 passed; 0 failed; 0 ignored; 796 filtered out**
+- `cargo check -p semio-framework-os-kernel` → **0 errors, 9 pre-existing warnings** (unrelated dead-code/unused-qualification)
+- `cargo test -p semio-framework-os-kernel --lib -- composition` → **6 passed; 0 failed**
+- `cargo test -p semio-framework-os-kernel --lib -- coordinator` → **0 passed; 0 failed** (no matching name)
+- `cargo test -p semio-framework-os-kernel --lib` (full suite) → **935 passed; 0 failed; 0 ignored**
 
 New tests (all in my three regions' test subregions — `🔖️PreviewWireTests` under `SpaceTests`,
 `🔖️PhasePolicyTests` under `CompositionTests`):

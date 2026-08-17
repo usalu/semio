@@ -14,7 +14,7 @@ pub struct RenameAsset {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for RenameAsset {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "asset", kind: "rename-asset", record: "RenamedAsset" };
-    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {

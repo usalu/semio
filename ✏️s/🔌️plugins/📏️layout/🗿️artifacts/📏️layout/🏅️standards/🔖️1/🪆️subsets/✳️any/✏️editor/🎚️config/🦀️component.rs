@@ -125,8 +125,8 @@ store::impl_whole_record_config!(LayoutConfig);
 /// `backwards()` re-emits the SAME variant with the old field value read from `base` (no
 /// whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE `LayoutConfig` (not a granular
 /// patch type): `diff()` returns "the full config after this op", and
-/// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that returns that
-/// snapshot verbatim, ignoring `base`.
+/// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that accepts that
+/// snapshot as a successful replacement, ignoring `base`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 pub enum LayoutConfigMutation {
     #[dsl(key = "active-page")]
@@ -227,7 +227,7 @@ impl protocol::OpBinary for LayoutConfigMutation {
 impl Mutation<LayoutConfig> for LayoutConfigMutation {
     type Diff = LayoutConfig;
 
-    fn diff(&self, base: &LayoutConfig) -> LayoutConfig {
+    fn diff(&self, base: &LayoutConfig) -> protocol::MutationOutcome<LayoutConfig> {
         let mut next = base.clone();
         match self {
             LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
@@ -237,7 +237,7 @@ impl Mutation<LayoutConfig> for LayoutConfigMutation {
             LayoutConfigMutation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
             LayoutConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
-        next
+        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
@@ -294,11 +294,11 @@ mod tests {
     }
 
     fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {
-        let forward = operation.diff(base);
+        let forward = operation.diff(base).diff().clone();
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored);
+            restored = back.diff(&restored).diff().clone();
         }
         assert_eq!(&restored, base, "backwards() must exactly restore the pre-operation config");
         forward

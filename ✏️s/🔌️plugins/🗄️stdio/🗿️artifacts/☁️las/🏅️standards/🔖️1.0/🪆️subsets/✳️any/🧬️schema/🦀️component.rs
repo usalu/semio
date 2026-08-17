@@ -112,13 +112,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<LasSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::las::schema::mutations::apply_las_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <LasDiff as protocol::MutationDiff<LasSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <LasDiff as protocol::MutationDiff<LasSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -224,8 +224,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec LasBuilderFacets {
-        construction: derived_construction::LasBuilderConstruction,
-        analysis: derived_analysis::LasAnalyzerAnalysis,
+        construction: LasBuilderConstruction,
+        analysis: LasAnalyzerAnalysis,
         composition: super::super::io::derived_composition::LasComposerComposition,
     }
     builder: LasBuilder,
@@ -236,8 +236,8 @@ semio_framework_plugin::derive_artifact_facets!(
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub fn empty_las_snapshot() -> crate::artifacts::las::LasSnapshot {
-    crate::artifacts::las::LasSnapshot::default()
+pub fn empty_las_snapshot() -> LasSnapshot {
+    LasSnapshot::default()
 }
 
 /// 📄️ The demo `stdio.las` document — a small but genuinely representative point-data-format-0
@@ -245,7 +245,7 @@ pub fn empty_las_snapshot() -> crate::artifacts::las::LasSnapshot {
 /// (`📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`/`🎒️example.pack.semio`, both regenerated
 /// from this snapshot's real `print_dsl`/`encode_pack` output). Single source of truth for those
 /// fixtures, asserted equal by `conformance_laws::fixture_honesty_law`.
-pub fn demo_las_snapshot() -> crate::artifacts::las::LasSnapshot {
+pub fn demo_las_snapshot() -> LasSnapshot {
     use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
     use crate::artifacts::las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
     LasSnapshot {

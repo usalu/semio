@@ -8,10 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent } from "../💬️Dialog/🟦️component.tsx";
-import { borderNormalBottomClass, uiFormControlBrowserDefaultProps, menuListItemClassName } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { menuListItemClassName } from "../../🔨️modules/📋️menu-item-presentation/🟦️component.ts";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { SearchIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -115,10 +117,6 @@ function CommandGroup({ className, ...props }: React.ComponentProps<typeof Comma
       {...props}
     />
   );
-}
-
-function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
-  return <CommandPrimitive.Separator data-slot="command-separator" className={cn("bg-border -mx-single h-px", className)} {...props} />;
 }
 
 /**

@@ -15,7 +15,7 @@ pub struct ChangeAnnualLimitKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeAnnualLimitKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annual-limit-kwh", kind: "change-annual-limit-kwh", record: "ChangedAnnualLimitKwh" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_annual_limit_kwh::diff::diff(self, base)
     }
 

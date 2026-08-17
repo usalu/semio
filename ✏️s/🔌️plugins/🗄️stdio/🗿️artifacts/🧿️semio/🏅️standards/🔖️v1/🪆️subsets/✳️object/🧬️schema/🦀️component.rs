@@ -135,14 +135,14 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = <Self::Mutation as protocol::Mutation<SemioObjectSnapshot>>::diff(&mutation, &self.snapshot);
-            self.snapshot = <Self::Diff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot);
+            let diff = diff.apply_to(&mut self.snapshot);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SemioObjectDiff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioObjectDiff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             Ok(self.snapshot)
@@ -238,8 +238,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SemioObjectBuilderFacets {
-        construction: derived_construction::SemioObjectBuilderConstruction,
-        analysis: derived_analysis::SemioObjectAnalyzerAnalysis,
+        construction: SemioObjectBuilderConstruction,
+        analysis: SemioObjectAnalyzerAnalysis,
         composition: super::super::io::derived_composition::SemioObjectComposerComposition,
     }
     builder: SemioObjectBuilder,

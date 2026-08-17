@@ -7,7 +7,6 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{
     enc_bool, enc_kind, enc_list, enc_rational, enc_sample, enc_str, enc_stream, hex_decode, hex_encode, parse_usize, SemioVideoDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -77,10 +76,9 @@ pub enum SemioVideoMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> SemioVideoDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -98,8 +96,8 @@ fn sample_at<'a>(base: &'a SemioVideoSnapshot, stream_index: usize, index: usize
 impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
     type Diff = SemioVideoDiff;
 
-    fn diff(&self, base: &SemioVideoSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioVideoMutation::NoMutation => SemioVideoDiff::default(),
             SemioVideoMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioVideoMutation::InsertStream { index, stream } => diff_insert_stream(*index, stream.clone()),
@@ -118,7 +116,7 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
                 Some(old) => diff_set_sample_flags(old, *stream_index, *index, *pts, *key),
                 None => SemioVideoDiff::default(),
             },
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<Self> {
@@ -209,7 +207,7 @@ fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> 
     }
 }
 
-impl protocol::OpText for SemioVideoMutation {
+impl OpText for SemioVideoMutation {
     fn print_op(&self) -> String {
         print_semio_video_mutation(self)
     }
@@ -250,7 +248,7 @@ fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 /// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
 /// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
 /// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
-impl protocol::OpBinary for SemioVideoMutation {
+impl OpBinary for SemioVideoMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
@@ -367,12 +365,16 @@ mod tests {
         ]
     }
 
+    fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
+        MutationDiff::apply(diff, base).expect("valid Semio video diff fixture")
+    }
+
     #[test]
     fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_video_mutation(&mut via_apply, &mutation);
@@ -397,9 +399,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = apply_valid(diff.diff(), &base);
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = apply_valid(&inverse_diff, &next);
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -407,10 +409,10 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &SemioVideoSnapshot, d1: &SemioVideoDiff, d2: &SemioVideoDiff) -> SemioVideoDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = apply_valid(d2, &apply_valid(d1, base));
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(apply_valid(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -425,9 +427,9 @@ mod tests {
             let base = fixture();
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = streams_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -441,9 +443,9 @@ mod tests {
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: g.clone() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = streams_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == f));
@@ -455,9 +457,9 @@ mod tests {
             let base = fixture();
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 1, stream: f.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioVideoMutation::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Audio, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = streams_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -469,9 +471,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioVideoMutation::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Video, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = streams_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -483,23 +485,23 @@ mod tests {
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: g }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = apply_valid(d2.diff(), &mid1);
             let d3 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = apply_valid(d3.diff(), &mid2);
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(apply_valid(&left, &base), sequential, "absorb associativity (left) failed");
+            assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -509,19 +511,19 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b), &a), b);
+        assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&b, &a), &b), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // "Real" fixture leg: a realistic 2-stream snapshot diffed against a mutated variant.
         let real = fixture();
         let mut mutated = real.clone();
         apply_semio_video_mutation(&mut mutated, &SemioVideoMutation::SetSampleFlags { stream_index: 0, index: 0, pts: 1_000, key: true });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&real, &mutated), &real), mutated);
+        assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&mutated, &real), &mutated), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -545,9 +547,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(apply_valid(&diff_ab, &a), b);
         let diff_ba = <SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(apply_valid(&diff_ba, &b), a);
         assert!(<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&a, &a).is_empty());
 
         // a -> b: streams.removed (dropped subtitle stream) + streams.modified[0] (every scalar

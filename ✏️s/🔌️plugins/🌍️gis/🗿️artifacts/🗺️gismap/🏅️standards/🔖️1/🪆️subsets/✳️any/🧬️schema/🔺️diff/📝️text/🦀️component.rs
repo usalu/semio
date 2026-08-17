@@ -13,7 +13,65 @@ use protocol::{MutationDiff, Patchable};
 
 //#region 🔹Apply
 /// Applies an identified-collection delta to a feature list.
-pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -> Vec<MapFeature> {
+pub fn apply_features_delta(
+    items: &[MapFeature],
+    delta: &GisMapFeaturesDelta,
+) -> protocol::MutationApplyResult<Vec<MapFeature>> {
+    for (index, id) in delta.removed.iter().enumerate() {
+        if !items.iter().any(|item| &item.id == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed feature does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if delta.removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "feature is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, item) in delta.added.iter().enumerate() {
+        if items.iter().any(|existing| existing.id == item.id)
+            || delta.added[..index]
+                .iter()
+                .any(|existing| existing.id == item.id)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added feature identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        if !items.iter().any(|item| item.id == entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched feature does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.removed.contains(&entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "feature cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.patched[..index]
+            .iter()
+            .any(|prior| prior.id == entry.id)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "feature is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
     let mut next = items.to_vec();
     for id in &delta.removed {
         next.retain(|item| &item.id != id);
@@ -21,24 +79,71 @@ pub fn apply_features_delta(items: &[MapFeature], delta: &GisMapFeaturesDelta) -
     for item in &delta.added {
         next.push(item.clone());
     }
-    for entry in &delta.patched {
-        if let Some(item) = next.iter_mut().find(|item| item.id == entry.id) {
-            item.apply_patch(&entry.patch);
-        }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        let item = next.iter_mut().find(|item| item.id == entry.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched feature does not exist after structural edits",
+            )
+            .at(["patched".to_string(), index.to_string()])
+        })?;
+        item.apply_patch(&entry.patch);
     }
     if let Some(order) = &delta.reordered {
+        if order.len() != next.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id) || !next.iter().any(|item| &item.id == id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "feature reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
         let mut by_id: std::collections::BTreeMap<_, _> =
             next.into_iter().map(|item| (item.id.clone(), item)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
+            ordered.push(by_id.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered feature does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        ordered.extend(by_id.into_values());
         next = ordered;
     }
-    next
+    Ok(next)
+}
+
+fn apply_map_delta<V: Clone>(
+    target: &mut std::collections::BTreeMap<String, V>,
+    entries: &std::collections::BTreeMap<String, Option<V>>,
+) -> protocol::MutationApplyResult<()> {
+    for (key, value) in entries {
+        if value.is_none() && !target.contains_key(key) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed map entry does not exist",
+            )
+            .at([key.as_str()]));
+        }
+    }
+    let mut candidate = target.clone();
+    for (key, value) in entries {
+        match value {
+            Some(value) => {
+                candidate.insert(key.clone(), value.clone());
+            }
+            None => {
+                candidate.remove(key);
+            }
+        }
+    }
+    *target = candidate;
+    Ok(())
 }
 
 fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Option<GisMapFeaturesDelta>) {
@@ -59,66 +164,67 @@ fn absorb_features_delta(target: &mut Option<GisMapFeaturesDelta>, incoming: Opt
 
 impl GisMapDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> GisMapArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(delta) = &self.positions {
-            next.positions = apply_features_delta(&next.positions, delta);
-        }
-        if let Some(delta) = &self.routes {
-            next.routes = apply_features_delta(&next.routes, delta);
-        }
-        if let Some(delta) = &self.regions {
-            next.regions = apply_features_delta(&next.regions, delta);
-        }
-        if let Some(delta) = &self.layer_visibility {
-            for (key, value) in &delta.entries {
-                match value {
-                    Some(v) => { next.layer_visibility.insert(key.clone(), *v); }
-                    None => { next.layer_visibility.remove(key); }
-                }
+    pub fn apply_to_artifact(&self, artifact: &GisMapArtifact) -> protocol::MutationApplyResult<GisMapArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
             }
-        }
-        if let Some(delta) = &self.layer_stroke_scale {
-            for (key, value) in &delta.entries {
-                match value {
-                    Some(v) => { next.layer_stroke_scale.insert(key.clone(), *v); }
-                    None => { next.layer_stroke_scale.remove(key); }
-                }
+            let mut next = artifact.clone();
+            if let Some(delta) = &self.positions {
+                next.positions = apply_features_delta(&next.positions, delta)
+                    .map_err(|error| error.under(["positions"]))?;
             }
-        }
-        if let Some(value) = &self.camera_json { next.camera_json = value.clone(); }
-        if let Some(value) = &self.render_mode { next.render_mode = value.clone(); }
-        if let Some(value) = &self.vector_style { next.vector_style = value.clone(); }
-        if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
-        next
+            if let Some(delta) = &self.routes {
+                next.routes = apply_features_delta(&next.routes, delta)
+                    .map_err(|error| error.under(["routes"]))?;
+            }
+            if let Some(delta) = &self.regions {
+                next.regions = apply_features_delta(&next.regions, delta)
+                    .map_err(|error| error.under(["regions"]))?;
+            }
+            if let Some(delta) = &self.layer_visibility {
+                apply_map_delta(&mut next.layer_visibility, &delta.entries)
+                    .map_err(|error| error.under(["layerVisibility"]))?;
+            }
+            if let Some(delta) = &self.layer_stroke_scale {
+                apply_map_delta(&mut next.layer_stroke_scale, &delta.entries)
+                    .map_err(|error| error.under(["layerStrokeScale"]))?;
+            }
+            if let Some(value) = &self.camera_json { next.camera_json = value.clone(); }
+            if let Some(value) = &self.render_mode { next.render_mode = value.clone(); }
+            if let Some(value) = &self.vector_style { next.vector_style = value.clone(); }
+            if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
+            if let Some(value) = &self.locale { next.locale = value.clone(); }
+            next
+        })
     }
 }
 
 impl MutationDiff<GisMapSnapshot> for GisMapDiff {
-    fn apply(&self, snapshot: &GisMapSnapshot) -> GisMapSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(delta) = &self.positions {
-            next.positions = apply_features_delta(&next.positions, delta);
-        }
-        if let Some(delta) = &self.routes {
-            next.routes = apply_features_delta(&next.routes, delta);
-        }
-        if let Some(delta) = &self.regions {
-            next.regions = apply_features_delta(&next.regions, delta);
-        }
-        // 🕸️ Keep `drawing`/`value` a pure function of `(positions, routes, regions)` — mirrors
-        // `apply_gis_map_mutation`'s identical re-derivation (see `GisMapSnapshot`'s doc comment).
-        next = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
-        next
+    fn apply(&self, snapshot: &GisMapSnapshot) -> protocol::MutationApplyResult<GisMapSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(delta) = &self.positions {
+                next.positions = apply_features_delta(&next.positions, delta)
+                    .map_err(|error| error.under(["positions"]))?;
+            }
+            if let Some(delta) = &self.routes {
+                next.routes = apply_features_delta(&next.routes, delta)
+                    .map_err(|error| error.under(["routes"]))?;
+            }
+            if let Some(delta) = &self.regions {
+                next.regions = apply_features_delta(&next.regions, delta)
+                    .map_err(|error| error.under(["regions"]))?;
+            }
+            // 🕸️ Keep `drawing`/`value` a pure function of `(positions, routes, regions)` — mirrors
+            // `apply_gis_map_mutation`'s identical re-derivation (see `GisMapSnapshot`'s doc comment).
+            next = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -180,7 +286,7 @@ mod tests {
             ..Default::default()
         };
         diff.absorb(diff_set_snapshot(&replacement));
-        assert_eq!(diff.apply(&base), replacement);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 
     #[test]
@@ -194,7 +300,7 @@ mod tests {
             positions: Some(GisMapFeaturesDelta { added: vec![feature("p2")], ..Default::default() }),
             ..Default::default()
         });
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(next.positions.len(), 1);
         assert_eq!(next.positions[0].id, "p2");
     }

@@ -8,8 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { interactiveControlTransitionClass, interactiveHoverClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 
 // #endregion 🔌️Adapters
 

@@ -41,14 +41,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: injects the profile metadata, then a hard Basic 1.1
@@ -353,8 +353,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec SvgBasicBuilderFacets {
-        construction: derived_construction::SvgBasicBuilderConstruction,
-        analysis: derived_analysis::SvgBasicAnalyzerAnalysis,
+        construction: SvgBasicBuilderConstruction,
+        analysis: SvgBasicAnalyzerAnalysis,
         composition: super::io::derived_composition::SvgBasicComposerComposition,
     }
     builder: SvgBasicBuilder,

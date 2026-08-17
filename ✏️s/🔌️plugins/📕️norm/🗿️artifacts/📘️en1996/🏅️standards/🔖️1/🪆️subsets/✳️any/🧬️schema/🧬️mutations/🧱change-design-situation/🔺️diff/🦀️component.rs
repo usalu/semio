@@ -5,7 +5,10 @@ use crate::artifacts::en1996::mutations::change_design_situation::mutation::Chan
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeDesignSituation, _base: &En1996Snapshot) -> En1996Diff {
-    En1996Diff { design_situation: Some(payload.new_design_situation.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeDesignSituation, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    if base.design_situation == payload.new_design_situation {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Design situation already has this value.");
+    }
+    protocol::MutationOutcome::new(En1996Diff { design_situation: Some(payload.new_design_situation.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

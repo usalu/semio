@@ -933,7 +933,7 @@ mod tests {
         #[test]
         fn generic_envelope_registry_and_transport_laws() {
             let mutation = alpha_mode_mutation();
-            assert!(registered_gltf_mutation_command_ids().any(|id| id == mutation::ID));
+            assert!(registered_gltf_mutation_command_ids().expect("valid immutable mutation registry").contains(&mutation::ID));
             assert!(matches!(GltfMutation::new("s.stdio.gltf.mutation.unknown.v1", 1, Vec::new()), Err(GltfMutationRegistryError::UnknownCommand(_))));
             assert!(matches!(GltfMutation::new(mutation::ID, 2, Vec::new()), Err(GltfMutationRegistryError::StaleVersion { expected: 1, actual: 2, .. })));
             assert!(matches!(GltfMutation::new(mutation::ID, 1, vec![0; GLTF_MUTATION_MAX_PAYLOAD_BYTES + 1]), Err(GltfMutationRegistryError::BudgetExceeded("payload"))));

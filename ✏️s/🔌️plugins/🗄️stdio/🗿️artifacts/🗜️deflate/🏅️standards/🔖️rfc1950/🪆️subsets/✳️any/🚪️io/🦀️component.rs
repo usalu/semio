@@ -462,7 +462,7 @@ fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, 
         reserved: 0,
     };
     unsafe {
-        let initialized = libz_sys::deflateInit2_(&mut stream, 4, libz_sys::Z_DEFLATED, -15, memory, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), std::mem::size_of::<libz_sys::z_stream>() as i32);
+        let initialized = libz_sys::deflateInit2_(&mut stream, 4, libz_sys::Z_DEFLATED, -15, memory, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), size_of::<libz_sys::z_stream>() as i32);
         if initialized != libz_sys::Z_OK {
             return Err(format!("raw DEFLATE initialization failed with status {initialized}"));
         }
@@ -668,8 +668,8 @@ unsafe extern "C" fn illustrator_zlib_allocate(_opaque: *mut std::ffi::c_void, i
     let Some(size) = (items as usize).checked_mul(item_size as usize) else {
         return std::ptr::null_mut();
     };
-    let header = std::mem::size_of::<usize>();
-    let align = std::mem::align_of::<usize>();
+    let header = size_of::<usize>();
+    let align = align_of::<usize>();
     let Some(total) = size.checked_add(header) else {
         return std::ptr::null_mut();
     };
@@ -694,7 +694,7 @@ unsafe extern "C" fn illustrator_zlib_free(_opaque: *mut std::ffi::c_void, addre
     unsafe {
         let allocation = address.cast::<usize>().sub(1);
         let total = allocation.read();
-        let layout = std::alloc::Layout::from_size_align_unchecked(total, std::mem::align_of::<usize>());
+        let layout = std::alloc::Layout::from_size_align_unchecked(total, align_of::<usize>());
         std::alloc::dealloc(allocation.cast(), layout);
     }
 }
@@ -720,7 +720,7 @@ pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> 
         adler: 0,
         reserved: 0,
     };
-    let initialized = unsafe { libz_sys::deflateInit2_(&mut stream, 6, libz_sys::Z_DEFLATED, 12, 5, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), std::mem::size_of::<libz_sys::z_stream>() as std::ffi::c_int) };
+    let initialized = unsafe { libz_sys::deflateInit2_(&mut stream, 6, libz_sys::Z_DEFLATED, 12, 5, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), size_of::<libz_sys::z_stream>() as std::ffi::c_int) };
     if initialized != libz_sys::Z_OK {
         return Err(format!("zlib deflateInit2 failed with {initialized}"));
     }

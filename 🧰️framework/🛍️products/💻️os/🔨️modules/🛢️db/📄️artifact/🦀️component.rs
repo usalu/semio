@@ -101,15 +101,19 @@ impl CommandBatch {
 }
 
 /// @emoji 🎚️ Per-submit durability override — see `DurabilityClass`'s doc for the
-/// strength ordering `ArtifactWal::submit` honors.
+/// strength ordering `ArtifactWal::submit` honors. `policy` is the authority-local `protocol::
+/// MergePolicy` `submit`'s outcome step judges this batch's worst graded conflict/message level
+/// against (contract §C9) — never carried on the wire, never part of shared history (see
+/// `protocol::MergePolicy`'s own doc).
 #[derive(Clone, Copy, Debug)]
 pub struct SubmitOptions {
     pub durability: DurabilityClass,
+    pub policy: protocol::MergePolicy,
 }
 
 impl Default for SubmitOptions {
     fn default() -> Self {
-        SubmitOptions { durability: DurabilityClass::Memory }
+        SubmitOptions { durability: DurabilityClass::Memory, policy: protocol::MergePolicy::default() }
     }
 }
 //#endregion 🔖️Command
@@ -133,6 +137,28 @@ fn encode_pathmap(value: &DslValue) -> Vec<u8> {
 /// @emoji 🎯️ Inverse of `encode_pathmap`.
 fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
     store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
+}
+
+/// @emoji 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
+/// `MutationEnvelope` (test fixtures, `db_cli`'s `profile`/`migrate` commands, `db_testkit`'s
+/// workload generators) rather than going through `envelope_from_operation`: encodes a
+/// `serde_json::Value::Object` the same way `decode_pathmap`/`apply_one` decode it. Centralizing
+/// this is the single source of truth for `DB_PATHMAP_SCHEMA`'s actual wire bytes — a caller that
+/// instead hand-rolls `serde_json::to_vec` produces bytes `decode_pathmap` cannot read (it expects
+/// `store::pack_rt`'s binary encoding, not raw JSON text), which is exactly the "wire error:
+/// truncated" bug this function exists to make structurally impossible to repeat.
+pub fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError> {
+    Ok(encode_pathmap(&dsl::to_dsl_value(value).map_err(dsl_err)?))
+}
+
+/// @emoji 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
+/// value's bytes as JSON" decode every caller above this crate needs: `ArtifactEngine::get`/
+/// `preview_get` and `db_engine::ArtifactHandle::query` all hand back these same `store::pack_rt`
+/// wire bytes (single value OR whole pathmap object, both are just a `DslValue` tree to this
+/// codec), never raw JSON text — a caller reaching for `serde_json::from_slice` on them directly
+/// hits exactly the "expected value" parse error this function exists to make impossible.
+pub fn decode_pathmap_json(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
+    dsl::from_dsl_value(decode_pathmap(bytes)?).map_err(dsl_err)
 }
 
 /// @emoji 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
@@ -201,7 +227,7 @@ where
     Op: protocol::Mutation<P>,
 {
     let diff = op.diff(base);
-    let post = diff.apply(base);
+    let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
     let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
     let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
@@ -235,19 +261,33 @@ pub struct ConflictRecord {
 }
 
 /// @emoji ⚔️ Builds the `db_conflict::CommandTouch` `envelope` would produce, without applying it —
-/// shared by `submit`'s recent-history bookkeeping and `preview_conflicts`'s real `db_conflict::
-/// ConflictDetector` use. `conflict_rule` defaults uniformly to `Merge(LwwRegister)`: a raw
-/// `MutationEnvelope` carries no per-operation `ConflictRule` of its own (that lives on
-/// `protocol::Mutation`, one layer up — see `envelope_from_operation`'s doc).
+/// shared by `submit`'s outcome-step gate and `preview_conflicts`'s advisory `db_conflict::
+/// ConflictDetector` use. No per-operation conflict-declaration tag anymore (C10 deleted the CRDT-era
+/// vocabulary): a `CommandTouch` carries only what `db_conflict::ConflictDetector` actually needs to detect —
+/// identity, kind, timestamp, and the regions it touched.
 fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::TouchedSet) -> db_conflict::CommandTouch {
-    let touch = db_conflict::CommandTouch::new(
-        envelope.mutation_id.clone(),
-        envelope.actor.clone(),
-        db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()),
-        protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister),
-        envelope.timestamp,
-    );
+    let touch = db_conflict::CommandTouch::new(envelope.mutation_id.clone(), envelope.actor.clone(), db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()), envelope.timestamp);
     touched.regions.iter().fold(touch, |touch, region| touch.touch(region.clone()))
+}
+
+/// @emoji ⚖️ Grades one `db_conflict::ConflictRecord` into the `protocol::MutationMessage` the
+/// outcome step judges against `options.policy` (contract §C9: "region intersection = `Warning`;
+/// constraint violation = `Fatal`") — `db_conflict` deliberately never grades its own findings (see
+/// its module doc), so `db_artifact`, the first crate below it that actually decides what to DO
+/// about a conflict, is where that grading belongs. `TouchedRegion` still lands (last-writer-wins,
+/// see `🔖️Conflict`'s doc) so it reads as an adjusted-but-applied write (`mutation.clamped`); a
+/// violated `Constraint` reads as a broken structural invariant (`mutation.invariant`) — the two
+/// `Warning`/`Fatal` codes from the frozen 7 that fit each shape.
+fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol::MutationMessage {
+    match &record.kind {
+        db_conflict::ConflictKind::TouchedRegion(regions) => {
+            let target: Vec<String> = regions.iter().map(|region| region.path.clone()).collect();
+            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at(target)
+        }
+        db_conflict::ConflictKind::Constraint(description) => {
+            protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at([description.clone()])
+        }
+    }
 }
 //#endregion 🔖️Conflict
 
@@ -265,6 +305,10 @@ pub struct CommandReceipt {
     pub durability: DurabilityClass,
     pub conflicts: Vec<ConflictRecord>,
     pub state_hash: Option<pack::ContentHash>,
+    /// @emoji 📨️ Every `protocol::MutationMessage` the outcome step graded this batch's
+    /// `db_conflict::ConflictRecord`s into (contract §C9) — present even on an accepted-but-degraded
+    /// commit (`options.policy` let a `Warning`-or-below worst level through), empty on a clean one.
+    pub messages: Vec<protocol::MutationMessage>,
 }
 
 /// @emoji 📤️ One committed operation's opaque effect bytes, queued for downstream
@@ -599,7 +643,9 @@ impl ArtifactEngine {
         let mut records: Vec<db_wal::WalRecord> = Vec::new();
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
-        let mut newly_applied: Vec<(protocol::MutationEnvelope, db_state::TouchedSet)> = Vec::new();
+        // 🎯️ Third tuple element (`Vec<u8>`, the envelope's own encoded bytes) is kept alongside so
+        // the outbox push below the outcome-step gate doesn't have to re-encode.
+        let mut newly_applied: Vec<(protocol::MutationEnvelope, db_state::TouchedSet, Vec<u8>)> = Vec::new();
 
         for envelope in &batch.envelopes {
             // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
@@ -621,27 +667,17 @@ impl ArtifactEngine {
             protocol::encode_envelope(envelope, &mut envelope_bytes);
             check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_artifact::envelope_bytes")?;
 
-            // base-resolve/deps + validate + conflict + execute
+            // base-resolve/deps + execute
             let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids)?;
             batch_ids.insert(envelope.mutation_id.0.clone());
             if !applied_now {
                 continue;
             }
 
-            // Bookkeeping for `preview_conflicts`'s real, additive `db_conflict::ConflictDetector`
-            // integration (see its own doc) — `submit`'s own returned `ConflictRecord`s stay this
-            // crate's original path-granular last-writer detection above (see `🔖️Conflict`'s doc).
-            let touch = command_touch(envelope, &touched);
-            if self.recent_touches.len() >= MAX_RECENT_TOUCHES {
-                self.recent_touches.pop_front();
-            }
-            self.recent_touches.push_back(touch);
-
             for region in &touched.regions {
                 touched_all.record(region.clone());
             }
             conflicts_all.extend(conflicts);
-            newly_applied.push((envelope.clone(), touched));
 
             // 🎯️ B4: `WalRecord::Diff`/`Inverse` (JSON `serde_json::to_vec` of the same fields
             // `Command` already carries in real binary, via `protocol::encode_envelope`) deleted —
@@ -649,15 +685,48 @@ impl ArtifactEngine {
             // ever reconstruct state from `WalRecord::Command`), a pure redundant JSON duplicate.
             records.push(db_wal::WalRecord::Command(envelope_bytes.clone()));
             records.push(db_wal::WalRecord::Outbox(envelope_bytes.clone()));
-            self.outbox.push(OutboxEntry { mutation_id: envelope.mutation_id.clone(), bytes: envelope_bytes });
+            newly_applied.push((envelope.clone(), touched, envelope_bytes));
         }
 
         if newly_applied.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
             // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
-            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash()) };
+            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash()), messages: Vec::new() };
             self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
             return Ok(receipt);
+        }
+
+        // outcome step (contract §C9): union this batch's own `db_conflict::ConflictDetector`
+        // findings (probed against recent commit history) into graded `protocol::MutationMessage`s,
+        // then let `options.policy` decide before touching `self.recent_touches`/`self.outbox`/the
+        // WAL at all — a rejected batch must leave every one of those untouched.
+        let new_ids: HashSet<&str> = newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.0.as_str()).collect();
+        let batch_touches: Vec<db_conflict::CommandTouch> = newly_applied.iter().map(|(envelope, touched, _)| command_touch(envelope, touched)).collect();
+        let probe: Vec<db_conflict::CommandTouch> = self.recent_touches.iter().cloned().chain(batch_touches.iter().cloned()).collect();
+        let messages: Vec<protocol::MutationMessage> = db_conflict::ConflictDetector::new()
+            .detect(&probe)
+            .iter()
+            .filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str()))
+            .map(grade_conflict_record)
+            .collect();
+        if let Some(worst) = protocol::worst_level(&messages) {
+            if options.policy.rejects(worst) {
+                return Err(DbError::Rejected { policy: options.policy, worst, messages });
+            }
+        }
+
+        // Bookkeeping for `preview_conflicts`'s real, additive `db_conflict::ConflictDetector`
+        // integration (see its own doc) — `submit`'s own returned `ConflictRecord`s stay this
+        // crate's original path-granular last-writer detection above (see `🔖️Conflict`'s doc). Only
+        // reached once the outcome step above has accepted the batch.
+        for touch in batch_touches {
+            if self.recent_touches.len() >= MAX_RECENT_TOUCHES {
+                self.recent_touches.pop_front();
+            }
+            self.recent_touches.push_back(touch);
+        }
+        for (envelope, _, bytes) in &newly_applied {
+            self.outbox.push(OutboxEntry { mutation_id: envelope.mutation_id.clone(), bytes: bytes.clone() });
         }
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
@@ -675,7 +744,7 @@ impl ArtifactEngine {
         let actor_seq_index = db_index::ActorSeqIndex::new(self.storage.index(), self.document.clone());
         db_index::FrontierIndex::new(self.storage.index(), self.document.clone()).record(&new_frontier)?;
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
-        for (offset, (envelope, _)) in newly_applied.iter().enumerate() {
+        for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
             let seq = base_seq + offset as u64 + 1;
             let location = db_index::RecordLocation { segment: self.wal.active_segment_index(), offset: seq, len: 1 };
             command_index.record(seq, location)?;
@@ -689,18 +758,18 @@ impl ArtifactEngine {
         let projection_classes = (self.config.projections)();
         if !projection_classes.is_empty() {
             let engine = db_projection::ProjectionEngine::new(self.storage.index(), self.document.clone(), projection_classes)?;
-            for (offset, (envelope, touched)) in newly_applied.iter().enumerate() {
+            for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
                 engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched)?;
             }
         }
 
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
-        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
+        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
-        for (envelope, _) in &newly_applied {
+        for (envelope, _, _) in &newly_applied {
             match self.config.version_graph.record_change(
                 &self.document,
                 ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
@@ -714,7 +783,7 @@ impl ArtifactEngine {
         let _ = self.refresh_live_queries();
 
         // receipt
-        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash()) };
+        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash()), messages };
         self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
         Ok(receipt)
     }
@@ -1139,8 +1208,7 @@ mod tests {
     }
 
     fn stored_json(bytes: &[u8]) -> serde_json::Value {
-        let dsl = store::pack_rt::decode_wire_value(bytes).expect("stored wire value");
-        dsl::from_dsl_value(dsl).expect("stored json value")
+        decode_pathmap_json(bytes).expect("stored json value")
     }
 
     fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
@@ -1178,8 +1246,8 @@ mod tests {
         struct AddDiff(i64);
 
         impl protocol::MutationDiff<Counter> for AddDiff {
-            fn apply(&self, base: &Counter) -> Counter {
-                Counter(base.0 + self.0)
+            fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
+                Ok(Counter(base.0 + self.0))
             }
             fn absorb(&mut self, other: Self) {
                 self.0 += other.0;
@@ -1191,8 +1259,8 @@ mod tests {
 
         impl protocol::Mutation<Counter> for Add {
             type Diff = AddDiff;
-            fn diff(&self, _base: &Counter) -> Self::Diff {
-                AddDiff(self.0)
+            fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
+                protocol::MutationOutcome::new(AddDiff(self.0))
             }
             fn inverse(&self, _base: &Counter) -> Vec<Self> {
                 vec![Add(-self.0)]
@@ -1221,7 +1289,7 @@ mod tests {
         let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
 
         let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-        let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, 1).unwrap();
+        let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).unwrap();
 
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
@@ -1241,9 +1309,9 @@ mod tests {
         {
             let mut engine = ArtifactEngine::create(document_id(), storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
             let batch1 = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-            engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync }, 1).unwrap();
+            engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).unwrap();
             let batch2 = CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("count", serde_json::json!(2))])]).unwrap();
-            engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync }, 2).unwrap();
+            engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 2).unwrap();
         }
 
         let (reopened, report) = ArtifactEngine::open(document_id(), &storage, ArtifactEngineConfig::default(), 3).unwrap();
@@ -1266,14 +1334,14 @@ mod tests {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
                 let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, i).unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).unwrap();
             }
             engine.snapshot_now(10).unwrap();
             for i in 3..6 {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
                 let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync }, i).unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).unwrap();
             }
         }
 

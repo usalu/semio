@@ -1,6 +1,8 @@
-//! 🔺️ `create-column` — sparse diff construction. Inserts the new column at `at =
-//! index.unwrap_or(columns.len()).min(columns.len())`, then inserts `SemioValue::Null` at the
-//! SAME `at` into every row's `cells` — the CRITICAL alignment invariant.
+//! 🔺️ `create-column` — sparse diff construction. Fatal `mutation.duplicate-id` when a column
+//! named `name` already exists (name is the native key, see `📸️snapshot/🦀️component.rs`).
+//! Otherwise inserts the new column at `at = index.unwrap_or(columns.len()).min(columns.len())`,
+//! then inserts `SemioValue::Null` at the SAME `at` into every row's `cells` — the CRITICAL
+//! alignment invariant.
 
 use super::mutation::CreateColumn;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::{SemioTableColumnList, SemioTableDiff, SemioTableRowList};
@@ -8,7 +10,10 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{S
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> SemioTableDiff {
+pub fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
+    if base.columns.iter().any(|c| c.name == payload.name) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]);
+    }
     let mut columns = base.columns.clone();
     let at = payload.index.unwrap_or(columns.len()).min(columns.len());
     columns.insert(at, SemioTableColumn { name: payload.name.clone(), kind: payload.kind });
@@ -19,6 +24,6 @@ pub fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> SemioTableDiff
         row.cells.insert(pos, SemioValue::Null);
     }
 
-    SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) }
+    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) })
 }
 //#endregion 🔖️Diff

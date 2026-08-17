@@ -24,7 +24,7 @@ pub fn create_asset(key: String, asset: crate::artifacts::note::NoteImageAsset) 
 impl MutationKind<NoteSnapshot, NoteMutation> for CreateAsset {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

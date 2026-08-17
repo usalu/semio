@@ -27,8 +27,11 @@ pub enum WriterMutation {
 
 /// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
 /// per wave 0's confirmation that `vcs::apply_mutation` is already diff-first under the hood).
-pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot);
+pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationApplyResult<()> {
+    let next = mutation.diff(snapshot).diff().apply(snapshot)?;
+
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutation) -> Vec<WriterMutation> {

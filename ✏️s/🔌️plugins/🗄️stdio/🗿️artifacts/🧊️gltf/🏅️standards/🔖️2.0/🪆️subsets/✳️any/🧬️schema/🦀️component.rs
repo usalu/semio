@@ -116,27 +116,24 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
-            let diff = outcome.diff().clone();
             if outcome.worst_level().is_some_and(|level| level >= dsl::Severity::Error) {
                 self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
-                return (self, Self::Diff::default());
             }
-            match diff.try_apply(&self.snapshot) {
+            match outcome.diff().try_apply(&self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
-                    (self, diff)
                 }
                 Err(error) => {
                     self.diagnostics.push(dsl::Diagnostic::error("stdio.gltf.mutation-rejected", dsl::TextSpan::at(1, 1), error.to_string()));
-                    (self, Self::Diff::default())
                 }
             }
+            (self, outcome)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = diff.try_apply(&self.snapshot).expect("ArtifactBuilder::absorb only accepts planned GLTF mutation diffs");
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <GltfMutationDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -472,8 +469,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec GltfBuilderFacets {
-        construction: derived_construction::GltfBuilderConstruction,
-        analysis: derived_analysis::GltfAnalyzerAnalysis,
+        construction: GltfBuilderConstruction,
+        analysis: GltfAnalyzerAnalysis,
         composition: super::super::io::derived_composition::GltfComposerComposition,
     }
     builder: GltfBuilder,

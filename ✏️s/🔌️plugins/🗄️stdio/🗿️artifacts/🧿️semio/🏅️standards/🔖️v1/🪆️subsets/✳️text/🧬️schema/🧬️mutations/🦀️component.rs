@@ -67,7 +67,7 @@ mod tests {
     }
 
     fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioTextSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -75,10 +75,10 @@ mod tests {
         // `SemioTextRunList` wrapper) reconstructs the entire `runs` vec from whatever base it is
         // given, so calling it against the wrong base silently discards the forward mutation's
         // effect instead of undoing it. Same standard `mutation.diff(&current); current =
-        // diff.apply(&current)` threading `apply_semio_image_mutation`/`apply_semio_mutation`
+        // diff.diff().apply(&current)` threading `apply_semio_image_mutation`/`apply_semio_mutation`
         // establish elsewhere in this standard.
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -108,7 +108,7 @@ mod tests {
         let base = fixture();
         let remove = SemioTextMutation::RemoveRun(remove_run::mutation::RemoveRun { index: 99 });
         assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).apply(&base), base, "an out-of-range remove is a no-op");
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
         let base = fixture();
         let remove = SemioTextMutation::RemoveMark(remove_mark::mutation::RemoveMark { run_index: 99, index: 0 });
         assert!(remove.inverse(&base).is_empty());
-        assert_eq!(remove.diff(&base).apply(&base), base);
+        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[test]

@@ -23,7 +23,7 @@ pub fn replace_tracks(tracks: Vec<MotionTrackSummary>) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceTracks {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "tracks", kind: "replace-tracks", record: "ReplacedTracks" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

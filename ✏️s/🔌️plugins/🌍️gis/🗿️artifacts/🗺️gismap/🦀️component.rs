@@ -14,6 +14,14 @@ use serde::{Deserialize, Serialize};
 //#region 🔹Constants
 
 pub const GIS_MAP_SCHEMA: &str = "gis.map";
+
+/// 🪪️ The canonical surface dialect for `s.gis.gismap@1/*` (contract §1 grammar) — lives at the
+/// ARTIFACT root, not under `✏️editor`/`👁️viewer`, so a viewer file can read it without ever
+/// importing through the sibling `editor` module. `artifact_kind` is the 3-part schema id this
+/// file's own `definition()` claims (`s.gis.gismap`), NOT the 2-part `ArtifactIdentity::parse("s.gismap")`
+/// string above and NOT the module-private `🚪️io/🦀️component.rs` `GISMAP_DIALECT` (an older,
+/// unrelated io/composer const with a different 2-part `artifact_kind` — different file, no collision).
+pub const GISMAP_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.gis.gismap", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔹Constants
 
 //#region 🔹Types
@@ -253,7 +261,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])
         .composers(crate::artifacts::gismap::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::gis2d::Gis2dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::gis2d::Gis2dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Register

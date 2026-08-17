@@ -5,7 +5,13 @@ use crate::artifacts::din16798::mutations::change_floor_area_m2::mutation::Chang
 use crate::artifacts::din16798::Din16798Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFloorAreaM2, _base: &Din16798Snapshot) -> Din16798Diff {
-    Din16798Diff { floor_area_m2: Some(payload.new_floor_area_m2.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeFloorAreaM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
+    if !payload.new_floor_area_m2.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Floor area must be a finite number, got {}.", payload.new_floor_area_m2), Vec::<String>::new());
+    }
+    if base.floor_area_m2 == payload.new_floor_area_m2 {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Floor area is already {}.", payload.new_floor_area_m2));
+    }
+    protocol::MutationOutcome::new(Din16798Diff { floor_area_m2: Some(payload.new_floor_area_m2.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

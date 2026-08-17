@@ -317,12 +317,12 @@ mod tests {
     use protocol::{Mutation, MutationDiff, OpText, SemanticMutation};
 
     fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
-        let forward = operation.diff(snapshot).diff().apply(snapshot);
+        let forward = operation.diff(snapshot).diff().apply(snapshot).expect("valid mutation diff");
         let mut backward = operation.inverse(snapshot);
         backward.reverse();
         let mut restored = forward.clone();
         for undo in &backward {
-            restored = undo.diff(&restored).diff().apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, snapshot, "inverse (reversed) must exactly restore the pre-operation fixture");
         forward
@@ -533,7 +533,7 @@ mod tests {
         let create = ProgramMutation::CreateStakeholder(super::super::create_stakeholder::mutation::CreateStakeholder { stakeholder: new_stakeholder.clone() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
         let d1 = create.diff(&base).into_parts().0;
-        let after = d1.apply(&base);
+        let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = ProgramMutation::RenameStakeholder(super::super::rename_stakeholder::mutation::RenameStakeholder { id: new_stakeholder.header.id, new_name: "Renamed".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }

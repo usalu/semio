@@ -158,11 +158,11 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(base: &En1991Snapshot, operation: &En1991Mutation) -> En1991Snapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -447,5 +447,36 @@ mod tests {
         let undo = mutation.inverse(&base);
         assert_eq!(undo, vec![En1991Mutation::ChangeCraneClass(change_crane_class::mutation::ChangeCraneClass { new_crane_class: base.crane_class.clone() })]);
     }
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
+    /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
+    /// don't apply/aren't landed yet.
+    #[test]
+    fn change_area_m2_non_finite_is_fatal() {
+        let base = En1991Snapshot::default();
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: f64::INFINITY });
+        let outcome = mutation.diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_category_same_value_is_no_op() {
+        let base = En1991Snapshot::default();
+        let mutation = En1991Mutation::ChangeCategory(change_category::mutation::ChangeCategory { new_category: base.category });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert_eq!(outcome.diff(), &En1991Diff::default());
+    }
+
+    #[test]
+    fn change_area_m2_is_deterministic() {
+        let base = En1991Snapshot::default();
+        let mutation = En1991Mutation::ChangeAreaM2(change_area_m2::mutation::ChangeAreaM2 { new_area_m2: 77.0 });
+        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

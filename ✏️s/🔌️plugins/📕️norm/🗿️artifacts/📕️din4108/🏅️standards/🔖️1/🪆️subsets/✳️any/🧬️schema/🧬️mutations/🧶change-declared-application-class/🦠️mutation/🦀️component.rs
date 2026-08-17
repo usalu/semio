@@ -12,7 +12,7 @@ pub struct ChangeDeclaredApplicationClass {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeDeclaredApplicationClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "declared-application-class", kind: "change-declared-application-class", record: "ChangedDeclaredApplicationClass" };
 
-    fn diff(&self, base: &Din4108Snapshot) -> <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

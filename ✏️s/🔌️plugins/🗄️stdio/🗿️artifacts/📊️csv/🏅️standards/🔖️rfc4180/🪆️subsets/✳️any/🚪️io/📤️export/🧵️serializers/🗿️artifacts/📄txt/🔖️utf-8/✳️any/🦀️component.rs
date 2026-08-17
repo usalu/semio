@@ -1,7 +1,7 @@
 //! 📤️ Serialize `stdio.csv` to stdio.txt.
 
 use crate::artifacts::csv::CsvSnapshot;
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 
 //#region 🔖️Codec
 /// 🗂️ Register serializer hooks.

@@ -9,6 +9,16 @@ use std::collections::BTreeMap;
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
+/// 🪪️ W2 packet P7 (26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the canonical `ArtifactEditor`/
+/// `ArtifactViewer::DIALECT` for this artifact — `artifact_kind` is the 3-part schema id
+/// (`#[artifact_schema(id = "s.fem.fem3d")]` on `Fem3dSnapshot`), NOT the 2-part
+/// `ArtifactIdentity::parse("s.fem3d")` string `definition()` below uses, and NOT the module-private
+/// `FEM3D_DIALECT` in this subset's own `🚪️io/🦀️component.rs` (an older, unrelated 2-part io/composer
+/// dialect — different file, different scope, no collision). Lives at the ARTIFACT root so a viewer
+/// file can read it without ever importing through the sibling editor module.
+pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem3d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
 // #region 🔖️Document
 /// 🔁️ fem_3d's own DSL-printable mirror of `crate::model::Dof` — `crate::model::Dof` can't derive
 /// `dsl::DslScalar` from outside its own defining module the same way a foreign crate couldn't (the
@@ -190,8 +200,8 @@ pub use crate::artifacts::fem3d::schema::Fem3dArtifact;
 // #region 🔖️ArtifactKind
 /// 🏷️ The `computation.fem3d` artifact kind — every load case/combination's solved
 /// `crate::model::StaticResult`, pinned to this kind by the `results:out` media port (see
-/// `crate::apps::fem3d::fem3d_results_out_port`) and produced by
-/// `crate::apps::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
+/// `crate::editor::fem3d::fem3d_results_out_port`) and produced by
+/// `crate::editor::fem3d::Fem3dPlayApp::export_media`. Lifted verbatim out of the old ui crate's
 /// `create_fem3d_app`'s inline `.artifact_kind(...)` call so the app's manifest can reference it by name.
 pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
@@ -214,8 +224,10 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // #region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from a
-/// plugin `.setup()` callback. `crate::apps::fem3d::config::schema::register_app_schema()` is the one
-/// exception, still called from `🏗️fem/🦀️component.rs`'s own narrowed `.setup()`: it registers
+/// plugin `.setup()` callback. `crate::editor::fem3d::config::schema::register_app_schema()` is the one
+/// pre-existing exception referenced here (module path only updated for ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem3d` → `editor::fem3d` rename); it
+/// registers
 /// `Fem3dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
@@ -260,7 +272,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::fem3d::standards::v1::subsets::any::schema::inferences::fem3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::fem3d::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::fem3d::Fem3dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>()
         .try_build()
 }
 

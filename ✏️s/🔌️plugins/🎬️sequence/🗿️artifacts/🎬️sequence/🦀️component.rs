@@ -18,6 +18,14 @@ pub const SEQUENCE_DOCUMENT_SCHEMA: &str = "sequence.sequence";
 pub use crate::artifacts::sequence::snapshot::schema::{default_snapshot, SequenceFixture, SequenceSnapshot};
 
 //#region 🔖️Constants
+/// 🪪️ The canonical dialect for this artifact's one subset (`✳️any`) — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) specifically so the sibling `viewer` module can read it without ever
+/// importing through the `editor` module (contract §1/§7.4). `artifact_kind` matches this schema's own
+/// `#[artifact_schema(id = "s.sequence.sequence")]` / `definition()`'s `s.sequence.schema.artifact`
+/// capability row; `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any`
+/// location — i.e. the canonical surface id is `s.sequence.sequence@1/*#editor` /
+/// `s.sequence.sequence@1/*#viewer`, the contract §1 grammar.
+pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_plugin::Dialect { artifact_kind: "s.sequence.sequence", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 //#endregion 🔖️Constants
 
 //#region 🔖️Domain
@@ -72,7 +80,7 @@ impl dsl::DslField for StepParams {
 }
 
 /// 🎥️ Camera state for the sequence canvas — the DAG kernel's own `DagCamera` conversions
-/// live in `crate::apps::sequence` (see its `🔖️Camera` region), not here: `dag`'s `From`/`Into` impls
+/// live in the sibling editor module (see its `🔖️Camera` region), not here: `dag`'s `From`/`Into` impls
 /// would require this file to depend on the DAG layout kernel just to move a camera in and out,
 /// which would pull graph-layout machinery into the plain entity component for no reason a data
 /// schema needs — an artifact must never depend on an app either way.
@@ -291,7 +299,7 @@ pub fn diff_replace_content(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) 
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::sequence::create_sequence_app`'s `🔖️Manifest` region. Lifted verbatim out of the
+/// `crate::editor::sequence::create_sequence_app`'s `🔖️Manifest` region. Lifted verbatim out of the
 /// old `.artifact_kind(...)` builder call.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
@@ -386,7 +394,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::sequence::schema::sequence_artifact_schema_descriptor())
         .inferences([crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::sequence_artifact_inference_descriptor()])
         .composers(crate::artifacts::sequence::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::sequence::SequencePlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::sequence::SequencePlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

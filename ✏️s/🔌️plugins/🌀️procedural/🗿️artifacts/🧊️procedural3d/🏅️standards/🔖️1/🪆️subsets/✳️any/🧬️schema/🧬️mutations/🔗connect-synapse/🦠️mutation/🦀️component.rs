@@ -20,7 +20,7 @@ pub struct ConnectSynapse {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ConnectSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::connect_synapse::diff::diff(self, base)
     }
 

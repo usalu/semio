@@ -79,10 +79,15 @@ pub enum BmpMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> BmpDiff {
-    let diff = <BmpMutation as protocol::Mutation<BmpSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
+    let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -90,8 +95,8 @@ pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) ->
 impl Mutation<BmpSnapshot> for BmpMutation {
     type Diff = BmpDiff;
 
-    fn diff(&self, base: &BmpSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             BmpMutation::NoMutation => BmpDiff::default(),
             BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BmpMutation::SetHeaderFields { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } => BmpDiff {
@@ -113,7 +118,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
             BmpMutation::RemovePaletteEntry { index } => BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPaletteEntry { index, entry } => BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: vec![BmpPaletteModified { index: *index, entry: entry.clone() }], added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPixelData { pixels } => BmpDiff { pixels: Some(pixels.clone()), ..Default::default() },
-        }
+        })
     }
 
     fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
@@ -321,7 +326,7 @@ mod tests {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
-            let expected = diff.apply(&base);
+            let expected = diff.diff().apply(&base).expect("diff must apply to base");
 
             let mut via_apply = base.clone();
             let returned_diff = apply_bmp_mutation(&mut via_apply, &m);
@@ -347,8 +352,8 @@ mod tests {
 
             // 🔁️ diff-level round trip
             let d = m.diff(&base);
-            let mid = d.apply(&base);
-            let back = d.inverse(&base).apply(&mid);
+            let mid = d.diff().apply(&base).unwrap();
+            let back = d.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -361,63 +366,63 @@ mod tests {
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
         let d1 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(1, 2, 3, 0) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = BmpMutation::RemovePaletteEntry { index: 0 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
         let d1 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(9, 0, 0, 0) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(0, 9, 0, 0) }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.palette.len(), base.palette.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField (patch into the added payload).
         let d1 = BmpMutation::InsertPaletteEntry { index: 1, entry: entry(1, 1, 1, 1) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = BmpMutation::SetPaletteEntry { index: 1, entry: entry(2, 2, 2, 2) }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+SetPaletteEntry absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetPaletteEntry absorb mismatch");
         assert_eq!(after.palette[1], entry(2, 2, 2, 2));
 
         // 🧩 Modify + Remove: modifying then removing the same entry collapses to a removal.
         let d1 = BmpMutation::SetPaletteEntry { index: 1, entry: entry(5, 5, 5, 5) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = BmpMutation::RemovePaletteEntry { index: 1 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = BmpMutation::InsertPaletteEntry { index: 0, entry: entry(1, 0, 0, 0) }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = BmpMutation::SetPaletteEntry { index: 0, entry: entry(2, 0, 0, 0) }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = BmpMutation::RemovePaletteEntry { index: 2 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).unwrap();
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).unwrap(), s3);
+        assert_eq!(right.apply(&base).unwrap(), s3);
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
     }
     //#endregion 🔖️AbsorbLaw
 
@@ -426,8 +431,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
-        assert_eq!(BmpDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(BmpDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(BmpDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(BmpDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(BmpDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️BetweenRoundtripLaw
@@ -439,9 +444,9 @@ mod tests {
         let b = sweep_b();
 
         let ab = BmpDiff::between(&a, &b);
-        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) == b");
+        assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
         let ba = BmpDiff::between(&b, &a);
-        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
 
         // 🔍 Hand-written per-field assertion: every scalar field of `BmpDiff` is populated —
         // scalar compares have no positional-collision issue, so a single direction suffices.

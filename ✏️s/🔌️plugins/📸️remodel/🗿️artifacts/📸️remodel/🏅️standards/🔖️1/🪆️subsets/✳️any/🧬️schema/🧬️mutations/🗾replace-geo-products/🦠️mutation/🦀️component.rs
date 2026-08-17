@@ -24,7 +24,7 @@ pub fn replace_geo_products(geo: Option<GeoProducts>) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceGeoProducts {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "geo-products", kind: "replace-geo-products", record: "ReplacedGeoProducts" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

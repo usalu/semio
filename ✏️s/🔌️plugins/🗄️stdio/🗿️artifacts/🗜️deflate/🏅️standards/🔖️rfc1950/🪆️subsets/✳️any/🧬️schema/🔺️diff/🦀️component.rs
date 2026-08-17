@@ -41,7 +41,7 @@ pub struct DeflateDiff {
 }
 
 impl MutationDiff<DeflateSnapshot> for DeflateDiff {
-    fn apply(&self, base: &DeflateSnapshot) -> DeflateSnapshot {
+    fn apply(&self, base: &DeflateSnapshot) -> protocol::MutationApplyResult<DeflateSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.compression_method {
             next.compression_method = v;
@@ -58,7 +58,7 @@ impl MutationDiff<DeflateSnapshot> for DeflateDiff {
         if let Some(v) = &self.payload {
             next.payload = v.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -435,7 +435,7 @@ mod tests {
         assert!(ab.dict_id.is_some());
         assert_eq!(ab.dict_id, Some(Some(0xDEAD_BEEF)));
         assert!(ab.payload.is_some());
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = DeflateDiff::between(&b, &a);
         assert!(ba.compression_method.is_some());
@@ -444,7 +444,7 @@ mod tests {
         assert!(ba.dict_id.is_some());
         assert_eq!(ba.dict_id, Some(None)); // 🪆️ tri-state Some(None): dictionary cleared
         assert!(ba.payload.is_some());
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(DeflateDiff::between(&a, &a).is_empty());
         assert!(DeflateDiff::between(&b, &b).is_empty());
@@ -467,7 +467,7 @@ mod tests {
             let returned = apply_deflate_mutation(&mut via_apply, &m);
             let direct = m.diff(&base);
             assert_eq!(direct, returned, "diff mismatch for {m:?}");
-            assert_eq!(direct.apply(&base), via_apply, "apply mismatch for {m:?}");
+            assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -492,10 +492,10 @@ mod tests {
             }
             assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
-            // 🔁️ diff-level: d.inverse(base).apply(&d.apply(base)) == base.
+            // 🔁️ diff-level: d.diff().inverse(base).apply(&d.diff().apply(base)) == base.
             let d = m.diff(&base);
-            let applied = d.apply(&base);
-            let undone = d.inverse(&base).apply(&applied);
+            let applied = d.diff().apply(&base).unwrap();
+            let undone = d.diff().inverse(&base).apply(&applied).unwrap();
             assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
         }
     }
@@ -514,8 +514,8 @@ mod tests {
         let d2 = diff_set_payload(b"absorbed-payload".to_vec());
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        let sequential = d2.apply(&d1.apply(&base));
-        assert_eq!(absorbed.apply(&base), sequential);
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+        assert_eq!(absorbed.apply(&base).unwrap(), sequential);
         assert_eq!(absorbed.compression_method, Some(8));
         assert_eq!(absorbed.payload, Some(b"absorbed-payload".to_vec()));
 
@@ -525,7 +525,7 @@ mod tests {
         let mut lww = d3.clone();
         lww.absorb(d4.clone());
         assert_eq!(lww.payload, Some(b"second".to_vec()));
-        assert_eq!(lww.apply(&base), d4.apply(&d3.apply(&base)));
+        assert_eq!(lww.apply(&base).unwrap(), d4.apply(&d3.apply(&base).unwrap()).unwrap());
 
         // Associativity over a triple: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let da = diff_set_compression_params(9, 6, DeflateLevelHint::Maximum);
@@ -542,7 +542,7 @@ mod tests {
         right.absorb(right_tail);
 
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base), dc.apply(&db.apply(&da.apply(&base))));
+        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
     }
     //#endregion absorb_law
 
@@ -551,8 +551,8 @@ mod tests {
     fn between_roundtrip_law_synthetic_and_real_fixture() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(DeflateDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(DeflateDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(DeflateDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(DeflateDiff::between(&b, &a).apply(&b).unwrap(), a);
 
         // 🌱 Real fixture: decode a genuine zlib stream, then round-trip against a variant that
         // changes every field from it.
@@ -561,8 +561,8 @@ mod tests {
         other.compression_level_hint = DeflateLevelHint::Maximum;
         other.dict_id = Some(99);
         other.payload = b"real-fixture-variant-payload".to_vec();
-        assert_eq!(DeflateDiff::between(&fixture, &other).apply(&fixture), other);
-        assert_eq!(DeflateDiff::between(&other, &fixture).apply(&other), fixture);
+        assert_eq!(DeflateDiff::between(&fixture, &other).apply(&fixture).unwrap(), other);
+        assert_eq!(DeflateDiff::between(&other, &fixture).apply(&other).unwrap(), fixture);
     }
     //#endregion between_roundtrip_law
 

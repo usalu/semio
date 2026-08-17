@@ -232,6 +232,68 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
+//#region ✏️Editor
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod playground {
+        #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️change-schema/🦀️component.rs"]
+            pub mod change_schema;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                    pub mod main;
+                }
+            }
+        }
+    }
+}
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod playground {
+        #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                    pub mod main;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
+
 //#region 🛂️Manifest
 #[path = "../../🛂️manifest/🎪️demonstrator/🦀️component.rs"]
 mod manifest;

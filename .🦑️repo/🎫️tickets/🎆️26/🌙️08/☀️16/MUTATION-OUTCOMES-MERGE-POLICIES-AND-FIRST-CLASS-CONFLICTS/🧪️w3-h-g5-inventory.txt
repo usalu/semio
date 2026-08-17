@@ -125,4 +125,60 @@ SEQUENCE
 
 ## Cargo check / test results
 
-See 🧪️w3-h-g5-cargo.txt for full raw output.
+| Crate | `cargo check` | Errors in own plugin path | Blocker |
+|---|---|---|---|
+| semio-s-plugin-forms | FAIL (transitive) | 0 | `semio-s-plugin-stdio` dependency: 269 errors |
+| semio-s-plugin-playbook | FAIL (transitive) | 0 | same |
+| semio-s-plugin-animate | FAIL (transitive) | 0 | same |
+| semio-s-plugin-sequence | FAIL (transitive) | 0 | same |
+
+All 4 of my plugins depend on `semio-s-plugin-stdio` (declared in each plugin's own
+`📦️packages/🦀️rust/Cargo.toml`). `semio-s-plugin-stdio` itself fails with 269 errors, ALL under
+`✏️s/🔌️plugins/🗄️stdio/...` — zero under any of my 4 plugin paths, confirmed by grepping the
+`--> ` diagnostic lines and filtering by path segment for each of the 4 checks. The 269 stdio
+errors (145× E0053 "method `diff` has an incompatible type for trait", 109× E0308 mismatched
+types, 3× E0599 no method `apply`, several E0277 `MutationOutcome<X>: MutationDiff<X>` not
+satisfied, 1× `Severity::Hint` not found) are exactly this ticket's atomic
+`Mutation::diff -> MutationOutcome<Diff>` breaking change, unconverted in stdio's 34 legacy
+artifact mutation enums — explicitly named in `📋️contract-freeze.md`'s fan-out recipe as
+"FULL-STDIO's charter — our lane wraps them minimally", and NOT in my lease (I never edited
+`✏️s/🔌️plugins/🗄️stdio/`). `cargo test` was not run since the test binaries can't build while the
+dependency graph doesn't compile — same blocker, no separate diagnosis needed.
+
+Because I cannot get a green build to actually execute the new `🔖️OutcomeLaws` test regions I
+added (see below), I have NOT run them and cannot claim they pass — only that they compile
+against the landed `assert_missing_target_is_error`/`assert_fatal_never_applies` signatures by
+inspection (types line up: `Op: Mutation<P>`, `Op::Diff: PartialEq + Debug + Default`, and every
+mutation/base pair I constructed matches the payload structs' own field types).
+
+Full raw output: 🧪️w3-h-g5-cargo.txt.
+
+## Pass 3 — facet tests (testkit law landing check)
+
+`grep -n "fn assert_missing_target_is_error\|fn assert_fatal_never_applies\|fn assert_outcome_policy_matrix"`
+against `📡️spr/🧪️testkit/🦀️component.rs`: `assert_missing_target_is_error` and
+`assert_fatal_never_applies` ARE landed (region `🔖️Outcome`, both generic over `Mutation<P>`).
+`assert_outcome_policy_matrix` is NOT landed under that exact name — only a generic
+closure-based `assert_policy_matrix(rejects, is_applicable)` exists (region `🔖️Policy`), which
+isn't a per-mutation/per-facet law and doesn't fit this ticket's "one per verb family per facet"
+ask. I added a `🔖️OutcomeLaws` test region to each plugin's root `🧬️mutations/🦀️component.rs`
+(where a `mod tests` already lived) with a `#[test]` per verb family present in that facet:
+
+- forms: 6 `assert_missing_target_is_error` tests (delete, rename, reorder, change, move,
+  replace families) + 1 `assert_fatal_never_applies` test (create family, both create-step's
+  duplicate-id and create-block's unknown-container cases).
+- playbook: 5 `assert_missing_target_is_error` tests (add, remove, move, replace, update
+  families). No `assert_fatal_never_applies` test — playbook has no Fatal-producing path at all
+  (its only duplicate-prone family, `add`, is Warning `no-op`, never Fatal) — noted in a comment
+  rather than an empty/vacuous test.
+- animate: 4 `assert_missing_target_is_error` tests (delete, rename, resize, reorder families) +
+  2 `assert_fatal_never_applies` tests (create family's duplicate-id; resize family's
+  non-positive frame). `replace` family skipped for missing-target — both `replace-tiles`
+  (whole-collection) and `replace-source` (singleton) have no addressable id that can be
+  "missing", noted in a comment.
+- sequence: 7 `assert_missing_target_is_error` tests (delete, move, edit, change, connect,
+  disconnect, duplicate families) + 4 `assert_fatal_never_applies` tests (create, move,
+  connect, duplicate families).
+
+TODO comments citing the pending `assert_outcome_policy_matrix` name are in all 4 new
+`🔖️OutcomeLaws` regions.

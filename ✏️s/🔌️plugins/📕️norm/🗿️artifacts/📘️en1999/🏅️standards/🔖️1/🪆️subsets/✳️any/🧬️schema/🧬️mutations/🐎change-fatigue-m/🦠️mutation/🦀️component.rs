@@ -15,7 +15,7 @@ pub struct ChangeFatigueM {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueM {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fatigue-m", kind: "change-fatigue-m", record: "ChangedFatigueM" };
 
-    fn diff(&self, base: &En1999Snapshot) -> En1999Diff {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_fatigue_m::diff::diff(self, base)
     }
 

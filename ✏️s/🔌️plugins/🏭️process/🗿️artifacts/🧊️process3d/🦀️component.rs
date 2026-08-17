@@ -10,7 +10,7 @@
 //! old role as the plugin's own editable in-memory geometry vocabulary.
 
 use protocol::{Identified, Patchable};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{
     BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
@@ -23,6 +23,14 @@ pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
 pub use crate::artifacts::process3d::schema::diff::Process3dDiff;
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
+
+/// 🪪️ ARTIFACT-LEVEL dialect constant (contract §1 grammar) — lives here, not under `editor`/
+/// `viewer`, specifically so the sibling `viewer` module can read it without ever importing through
+/// the `editor` module. `artifact_kind` matches this schema's own `#[artifact_schema(id = "…")]`
+/// (`🧬️schema/🦀️component.rs:17`, `"s.process.process3d"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.process.process3d@1/*#editor` / `s.process.process3d@1/*#viewer`.
+pub const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId::ANY };
 
 //#region 🔖️Workshop
 /// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
@@ -270,7 +278,7 @@ pub fn generic_machines() -> Vec<WorkshopMachine> {
 /// install into a document's workshop. Implemented by the built-in generic/domain catalogs
 /// (`crate::artifacts::process3d::schema::{GenericCatalog, MetalCatalog, WoodCatalog, RoboticCatalog,
 /// ConcreteCatalog}`) and by the app's runtime-contributed `ContributedMachineCatalog`
-/// (`crate::apps::process3d`).
+/// (the sibling `editor` module).
 pub trait MachineCatalog {
     fn catalog_id(&self) -> &'static str;
     fn label(&self) -> &'static str;
@@ -810,7 +818,7 @@ pub fn empty_process3d_snapshot() -> Process3dSnapshot {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::process3d::create_process3d_app`'s `🔖️Manifest` region.
+/// `crate::editor::process3d::create_process3d_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.process".into(),
@@ -1054,7 +1062,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::process3d::schema::process3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::process3d::standards::v1::subsets::any::schema::inferences::process3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::process3d::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::process3d::Process3dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::process3d::Process3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

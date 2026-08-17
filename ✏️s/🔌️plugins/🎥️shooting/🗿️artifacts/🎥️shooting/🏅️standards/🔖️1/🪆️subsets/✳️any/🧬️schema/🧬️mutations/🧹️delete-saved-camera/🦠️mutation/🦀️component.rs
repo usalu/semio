@@ -13,7 +13,7 @@ pub struct DeleteSavedCamera {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for DeleteSavedCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "saved-camera", kind: "delete-saved-camera", record: "DeletedSavedCamera" };
-    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {

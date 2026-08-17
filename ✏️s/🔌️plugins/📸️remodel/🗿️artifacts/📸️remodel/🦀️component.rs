@@ -1,6 +1,6 @@
 //! 📸️ Remodel scene document — schema-only photogrammetry/videogrammetry project state (media
 //! streams, calibration, ground control points, reconstruction params/job/results) shared as CRDT
-//! operations. The actual algorithms live in the app's own `🎛️apps/📸️remodel/⚙️engine/` topic files
+//! operations. The actual algorithms live in the editor surface's own `✏️editor/⚙️engine/` topic files
 //! (`images`/`video`/`camera`/`feature`/`sfm`/`dense`/`mesh`/`motion`/`geo`/`reconstruction`,
 //! relocated out of this artifact tree by 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 //! #2553 — an artifact is a schema plus IO, never an engine), none of which this node references:
@@ -41,7 +41,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::apps::remodel::config::schema::register_app_schema()` is the
+/// a plugin `.setup()` callback. `crate::editor::remodel::config::schema::register_app_schema()` is the
 /// one exception, still called from `📸️remodel/🦀️component.rs`'s own `.setup()`: it registers the
 /// `RemodelPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately
 /// has no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
@@ -95,7 +95,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::remodel::standards::v1::subsets::any::schema::inferences::remodel_artifact_inference_descriptor()])
         .composers(crate::artifacts::remodel::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::remodel::RemodelPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::remodel::RemodelPlayApp>>()
         .try_build()
 }
 
@@ -168,6 +168,16 @@ pub use crate::artifacts::remodel::schema::mutations::RemodelMutation;
 pub use crate::artifacts::remodel::schema::diff::RemodelDiff;
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
+
+/// 🪪️ Ticket `26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET` contract §1 canonical surface id
+/// grammar (`<artifact_kind>@<standard>/<subset>#<role>`). Lives at the ARTIFACT level (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling editor
+/// module. `artifact_kind = "s.remodel.remodel"` matches this artifact's own `definition()` capability
+/// row `("s.remodel.schema.artifact", "schema", "s.remodel.remodel", …)` above — the schema-artifact
+/// descriptor, not `artifact_kind()`'s OS-level `"3d.remodel"` kind id (a different, unrelated
+/// namespace). `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const REMODEL_DIALECT: semio_framework_plugin::Dialect =
+    semio_framework_plugin::Dialect { artifact_kind: "s.remodel.remodel", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
 
 //#region 🧩️Composition
 /// 🧩️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (design map §4: "remodel→C:mesh R:image").
@@ -247,7 +257,7 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Rem
 // exactly one real mime (`image/png`, its own doc comment), so a decode failure there is anomalous
 // input worth leaving uncached. `remodel`'s `assets` legitimately carry TWO real mimes in normal
 // operation — `image/png` (textures/DSM/DTM/ortho) AND `image/jpeg` (`MediaStream.frames`, sampled
-// video frames, `🎛️apps/📸️remodel/🎮️commands/📥️import-frame-payload`'s own real call sites) — so a jpeg asset
+// video frames, the editor surface's own `🎮️commands/📥️import-frame-payload`'s own real call sites) — so a jpeg asset
 // failing `semio_image_snapshot_from_image_asset` (jpeg bridge not wired yet, see that function's
 // doc comment) is an EXPECTED, common, correct case, not bad data; leaving the cache slot empty for
 // it would make every jpeg-sourced `create-asset`'s inverse silently lossy. Caching the real asset

@@ -22,7 +22,7 @@ pub fn create_stream(stream: MediaStream) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "stream", kind: "create-stream", record: "CreatedStream" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

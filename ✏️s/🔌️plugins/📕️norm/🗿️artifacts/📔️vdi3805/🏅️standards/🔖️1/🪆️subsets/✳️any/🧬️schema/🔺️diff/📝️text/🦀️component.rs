@@ -13,81 +13,84 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Vdi3805Diff {
-    pub fn apply_to_artifact(&self, artifact: &Vdi3805Artifact) -> Vdi3805Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.manufacturer_file {
-            next.manufacturer_file = value.clone();
-        }
-        if let Some(value) = &self.catalog {
-            next.catalog = value.clone();
-        }
-        if let Some(value) = &self.edition_profile {
-            next.edition_profile = value.clone();
-        }
-        if let Some(value) = &self.correction_as_of {
-            next.correction_as_of = value.clone();
-        }
-        if let Some(value) = &self.strict_mode {
-            next.strict_mode = value.clone();
-        }
-        if let Some(value) = &self.index {
-            next.index = value.clone();
-        }
-        if let Some(value) = &self.geometry {
-            next.geometry = value.clone();
-        }
-        if let Some(value) = &self.curves {
-            next.curves = value.clone();
-        }
-        if let Some(value) = &self.limits {
-            next.limits = value.clone();
-        }
-        if let Some(value) = &self.selected_check_index {
-            next.selected_check_index = *value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Vdi3805Artifact) -> protocol::MutationApplyResult<Vdi3805Artifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = &self.manufacturer_file {
+                next.manufacturer_file = value.clone();
+            }
+            if let Some(value) = &self.catalog {
+                next.catalog = value.clone();
+            }
+            if let Some(value) = &self.edition_profile {
+                next.edition_profile = value.clone();
+            }
+            if let Some(value) = &self.correction_as_of {
+                next.correction_as_of = value.clone();
+            }
+            if let Some(value) = &self.strict_mode {
+                next.strict_mode = value.clone();
+            }
+            if let Some(value) = &self.index {
+                next.index = value.clone();
+            }
+            if let Some(value) = &self.geometry {
+                next.geometry = value.clone();
+            }
+            if let Some(value) = &self.curves {
+                next.curves = value.clone();
+            }
+            if let Some(value) = &self.limits {
+                next.limits = value.clone();
+            }
+            if let Some(value) = &self.selected_check_index {
+                next.selected_check_index = *value;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
-    fn apply(&self, snapshot: &Vdi3805Snapshot) -> Vdi3805Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.manufacturer_file {
-            next.manufacturer_file = value.clone();
-        }
-        if let Some(value) = &self.catalog {
-            next.catalog = value.clone();
-        }
-        if let Some(value) = &self.edition_profile {
-            next.edition_profile = value.clone();
-        }
-        if let Some(value) = &self.correction_as_of {
-            next.correction_as_of = value.clone();
-        }
-        if let Some(value) = &self.strict_mode {
-            next.strict_mode = value.clone();
-        }
-        if let Some(value) = &self.index {
-            next.index = value.clone();
-        }
-        if let Some(value) = &self.geometry {
-            next.geometry = value.clone();
-        }
-        if let Some(value) = &self.curves {
-            next.curves = value.clone();
-        }
-        if let Some(value) = &self.limits {
-            next.limits = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &Vdi3805Snapshot) -> protocol::MutationApplyResult<Vdi3805Snapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.manufacturer_file {
+                next.manufacturer_file = value.clone();
+            }
+            if let Some(value) = &self.catalog {
+                next.catalog = value.clone();
+            }
+            if let Some(value) = &self.edition_profile {
+                next.edition_profile = value.clone();
+            }
+            if let Some(value) = &self.correction_as_of {
+                next.correction_as_of = value.clone();
+            }
+            if let Some(value) = &self.strict_mode {
+                next.strict_mode = value.clone();
+            }
+            if let Some(value) = &self.index {
+                next.index = value.clone();
+            }
+            if let Some(value) = &self.geometry {
+                next.geometry = value.clone();
+            }
+            if let Some(value) = &self.curves {
+                next.curves = value.clone();
+            }
+            if let Some(value) = &self.limits {
+                next.limits = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

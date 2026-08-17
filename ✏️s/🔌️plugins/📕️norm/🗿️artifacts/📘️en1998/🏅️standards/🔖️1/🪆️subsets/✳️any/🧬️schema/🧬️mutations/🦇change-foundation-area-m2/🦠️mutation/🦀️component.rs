@@ -15,7 +15,7 @@ pub struct ChangeFoundationAreaM2 {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeFoundationAreaM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "foundation-area-m2", kind: "change-foundation-area-m2", record: "ChangedFoundationAreaM2" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_foundation_area_m2::diff::diff(self, base)
     }
 

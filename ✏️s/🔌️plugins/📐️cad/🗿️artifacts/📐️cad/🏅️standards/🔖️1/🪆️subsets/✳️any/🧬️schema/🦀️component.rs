@@ -289,15 +289,26 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
-            let diff = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
-            self.snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot);
-            (self, diff)
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
+                    "mutation.apply",
+                    dsl::TextSpan::at(1, 1),
+                    error.to_string(),
+                )),
+            }
+            (self, outcome)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(
+            mut self,
+            diff: Self::Diff,
+        ) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
         }
 
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {

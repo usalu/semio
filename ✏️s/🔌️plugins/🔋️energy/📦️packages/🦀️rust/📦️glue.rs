@@ -454,11 +454,76 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
+//#region ✏️👁️Surfaces
+// 🎭️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: energy's FIRST authored editor+viewer
+// surfaces for `s.energy.model@1/*` — energy had zero document apps, so there was no app tree to
+// migrate here (contrast the pilot's `📐️cad`, which moved an existing `🎛️apps/📐️cad/` tree). Two
+// independent `#[path = "."]` trees, mirroring `🔖️Artifacts` above: `editor` mounts real
+// mutation-capable content, `viewer` mounts an independently-authored read-only twin that never
+// imports through `editor` (`policyViewerPurityBreaches`). Facet dirs that hold only
+// `📌️empty.md` (`🎚️config`/`🎮️commands`/`👥️presence`/`🫧️transient` at every surface/mode level) need
+// no mount — nothing real lives there yet (`Config`/`Presence`/`Transient` = `NoConfig`/`NoPresence`/
+// `NoTransient`).
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod model {
+        #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️component.rs"]
+                    pub mod structure;
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️zones/🦀️component.rs"]
+                    pub mod zones;
+                }
+            }
+        }
+    }
+}
+
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod model {
+        #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️component.rs"]
+                    pub mod structure;
+                    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️zones/🦀️component.rs"]
+                    pub mod zones;
+                }
+            }
+        }
+    }
+}
+//#endregion ✏️👁️Surfaces
+
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 pub mod plugin;
-#[path = "../../🎛️apps/🦀️component.rs"]
-pub mod plugin_apps;
 
 //#region 📚️Examples
 #[path = "."]

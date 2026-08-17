@@ -109,8 +109,8 @@ pub enum SemioModelMutation {
 impl Mutation<SemioModelSnapshot> for SemioModelMutation {
     type Diff = SemioModelDiff;
 
-    fn diff(&self, base: &SemioModelSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
             SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioModelMutation::InsertSpatialNode { node } => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
@@ -133,7 +133,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
             SemioModelMutation::SetRelation { id, kind, from, to } => {
                 SemioModelDiff { relations: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }], ..Default::default() }), ..Default::default() }
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
@@ -189,10 +189,9 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> SemioModelDiff {
-    let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
+    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -409,7 +408,7 @@ mod tests {
         let mut applied = base.clone();
         let produced = apply_semio_model_mutation(&mut applied, &mutation);
         assert_eq!(produced, diff, "diff() must match what apply_semio_model_mutation actually applied for {mutation:?}");
-        let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(&diff, base);
+        let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(applied, expected, "applying the mutation must equal applying its own diff for {mutation:?}");
 
         let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base);

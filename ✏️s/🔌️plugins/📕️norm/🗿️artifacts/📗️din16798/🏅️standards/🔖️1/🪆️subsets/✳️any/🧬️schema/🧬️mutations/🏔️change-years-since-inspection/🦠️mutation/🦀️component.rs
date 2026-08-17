@@ -15,7 +15,7 @@ pub struct ChangeYearsSinceInspection {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeYearsSinceInspection {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "years-since-inspection", kind: "change-years-since-inspection", record: "ChangedYearsSinceInspection" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_years_since_inspection::diff::diff(self, base)
     }
 

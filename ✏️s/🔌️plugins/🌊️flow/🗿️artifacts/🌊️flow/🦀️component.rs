@@ -14,7 +14,7 @@
 //! plain struct fields.
 
 use flow::{SynapseSpec, Widget, WidgetLayout};
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
     FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
 };
@@ -25,6 +25,16 @@ use std::collections::{BTreeMap, HashMap};
 pub use crate::artifacts::flow::snapshot::schema::FlowSnapshot;
 pub use flow::FLOW_DOCUMENT_SCHEMA;
 //#endregion 🔖️Types
+
+//#region 🔖️Dialect
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1/§2.1 — lives at the
+/// ARTIFACT level (not under the sibling editor module) so a viewer file can read it without ever
+/// importing through that module. `artifact_kind` matches this artifact's own `definition()` capability
+/// row (`s.flow.schema.artifact` descriptor `b"s.flow.flow"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface ids are
+/// `s.flow.flow@1/*#editor` / `s.flow.flow@1/*#viewer`.
+pub const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio.flow` document — the flow plugin's
@@ -201,7 +211,7 @@ pub fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<S
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::flow::create_flow_app`'s `🔖️Manifest` region.
+/// `crate::editor::flow::create_flow_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.flow".into(),
@@ -284,11 +294,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::EditorApp;
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::flow::schema::flow_artifact_schema_descriptor())
         .inferences([crate::artifacts::flow::standards::v1::subsets::any::schema::inferences::flow_artifact_inference_descriptor()])
         .composers(crate::artifacts::flow::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::flow::FlowPlayApp>()
+        .document_codec::<EditorApp<crate::editor::flow::FlowPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

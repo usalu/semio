@@ -12,7 +12,7 @@ pub struct DeleteProperties {}
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for DeleteProperties {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "properties", kind: "delete-properties", record: "DeletedProperties" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> <SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {

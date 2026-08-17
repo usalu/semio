@@ -22,7 +22,7 @@ pub fn create_slot(index: usize, slot: AssemblySlot) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for CreateSlot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slot", kind: "create-slot", record: "CreatedSlot" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

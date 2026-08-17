@@ -15,7 +15,7 @@ pub struct ChangeThetaSetC {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeThetaSetC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "theta-set-c", kind: "change-theta-set-c", record: "ChangedThetaSetC" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_theta_set_c::diff::diff(self, base)
     }
 

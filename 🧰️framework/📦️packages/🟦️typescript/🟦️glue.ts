@@ -44,6 +44,7 @@ import {
   type EphemeralBox,
   type PluginCatalog,
 } from "../../🔨️modules/🎠️kernel/🟦️component.ts";
+import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef } from "../../🔨️modules/🧮️action-argument-resolution/🟦️component.ts";
 import {
   ActionId,
   ActorId,
@@ -364,6 +365,38 @@ if (import.meta.vitest) {
       expect(boot.variant).toBe("beta-play");
       expect(boot.defaultAppId).toBe("beta-play-app");
       expect(boot.plugins).toEqual([{ pluginId: "beta", moduleUrl: "/plugin-modules/beta/beta.js", contributes: [], consumes: [] }]);
+    });
+  });
+
+  describe("effectiveActionArgs", () => {
+    const textArg = (id: string, extra: Partial<ActionArgDef> = {}): ActionArgDef => ({
+      id,
+      label: id,
+      control: { kind: "text" },
+      required: false,
+      ...extra,
+    });
+
+    it("keeps a seeded arg that is not a declared form field, alongside the form's own staged fields (26/08/16 HUB-SPACES shareSpace regression: spaceId must reach the dispatched descriptor)", () => {
+      const defs = [textArg("email")];
+      const effective = effectiveActionArgs(defs, { email: "user2@semio.dev" }, { spaceId: "sp-1" });
+      expect(effective).toEqual({ spaceId: "sp-1", email: "user2@semio.dev" });
+    });
+
+    it("a seed value for a declared field pre-fills it until the form stages its own value (renameSpace's current-name prefill)", () => {
+      const defs = [textArg("name")];
+      expect(effectiveActionArgs(defs, {}, { spaceId: "sp-1", name: "Old Name" })).toEqual({ spaceId: "sp-1", name: "Old Name" });
+      expect(effectiveActionArgs(defs, { name: "New Name" }, { spaceId: "sp-1", name: "Old Name" })).toEqual({ spaceId: "sp-1", name: "New Name" });
+    });
+
+    it("a zero-declared-field confirm dialog passes seed+staged through wholesale (deleteSpace's confirm/cancel shape)", () => {
+      expect(effectiveActionArgs([], {}, { spaceId: "sp-1", confirmed: true })).toEqual({ spaceId: "sp-1", confirmed: true });
+    });
+
+    it("missingRequiredArgs is unaffected by extra seed keys", () => {
+      const defs = [textArg("email", { required: true })];
+      const effective = effectiveActionArgs(defs, {}, { spaceId: "sp-1" });
+      expect(missingRequiredArgs(defs, effective)).toEqual(["email"]);
     });
   });
 

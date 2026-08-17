@@ -1,5 +1,6 @@
-//! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*`
-//! shells out to `cargo run -p semio-framework-os-run --release -- <same args>`. This binary owns argv
+//! 🕸️ CLI: `bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param k=v]*
+//! [--policy <laissez-faire|normal|vigilant>]` shells out to `cargo run -p semio-framework-os-run
+//! --release -- <same args>`. This binary owns argv
 //! parsing and studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in
 //! the library. Non-destructive (W5 Lane A): every invocation produces/updates a `RunArtifact` under
 //! `runs/<RUN_ID>.run.pack|.spr` (sealed on success, sealed `Failed` if the run itself errored) — it
@@ -12,12 +13,14 @@
 // so cargo never got far enough to check this file — see the lib's own W1 fix history).
 extern crate semio_framework as store;
 extern crate semio_framework as workflow;
+extern crate semio_framework_os_kernel as protocol;
 
 use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use store::{BlobStore, Media, MediaFingerprint};
+use protocol::BlobStore;
+use store::{Media, MediaFingerprint};
 
 //#region 🔖️FileMediaCache
 /// 💾️ Disk-backed run-only `MediaCache` under `<space>/cache/media/<fingerprint>.json`.
@@ -127,6 +130,20 @@ struct Args {
     /// `semio_framework_os_run::node_parameter_overlay_bytes`'s doc for why this affects the
     /// fingerprint rather than the raw config bytes this crate sends to the app).
     params: Vec<(String, String)>,
+    /// ⚖️ `--policy <laissez-faire|normal|vigilant>` — this run's local/authority `MergePolicy`
+    /// (contract-freeze.md §C3), sent to every node instance at handshake time (see
+    /// `SpaceRunner::compute_node`). Defaults to `Normal`.
+    policy: protocol::MergePolicy,
+}
+
+/// ⚖️ Parses `--policy`'s value — the three `MergePolicy` variants, kebab-cased.
+fn parse_merge_policy(raw: &str) -> Result<protocol::MergePolicy, String> {
+    match raw {
+        "laissez-faire" => Ok(protocol::MergePolicy::LaissezFaire),
+        "normal" => Ok(protocol::MergePolicy::Normal),
+        "vigilant" => Ok(protocol::MergePolicy::Vigilant),
+        other => Err(format!("--policy `{other}` must be one of: laissez-faire, normal, vigilant")),
+    }
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -135,6 +152,7 @@ fn parse_args() -> Result<Args, String> {
     let mut watch = false;
     let mut only_node: Option<String> = None;
     let mut params: Vec<(String, String)> = Vec::new();
+    let mut policy = protocol::MergePolicy::default();
     let mut argv = std::env::args().skip(1);
     while let Some(arg) = argv.next() {
         match arg.as_str() {
@@ -146,12 +164,16 @@ fn parse_args() -> Result<Args, String> {
                 let (parameter_id, value) = raw.split_once('=').ok_or_else(|| format!("--param `{raw}` must be of the form <parameter_id>=<value>"))?;
                 params.push((parameter_id.to_string(), value.to_string()));
             }
+            "--policy" => {
+                let raw = argv.next().ok_or("--policy requires a value of laissez-faire, normal, or vigilant")?;
+                policy = parse_merge_policy(&raw)?;
+            }
             other if !other.starts_with("--") => bundle = Some(PathBuf::from(other)),
             other => return Err(format!("unknown flag {other}")),
         }
     }
-    let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]*".to_string())?;
-    Ok(Args { bundle, dry, watch, only_node, params })
+    let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]* [--policy <laissez-faire|normal|vigilant>]".to_string())?;
+    Ok(Args { bundle, dry, watch, only_node, params, policy })
 }
 
 fn main() {
@@ -177,10 +199,10 @@ fn main() {
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = store::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
-    let mut document_store = store::ArtifactStore::new(envelope).map_err(|error| error.to_string())?;
+    let envelope = protocol::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
+    let mut document_store = protocol::ArtifactStore::new(envelope).map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
-        document_store.dispatch(store::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).map_err(|error| error.to_string())?;
+        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).map_err(|error| error.to_string())?;
     }
     let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
@@ -202,7 +224,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceSnapshot` manifest is later-wave work.
-    let parsed: store::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = store::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
+    let parsed: protocol::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();
@@ -230,7 +252,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: store::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = store::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
+            let parsed: protocol::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = protocol::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
@@ -248,7 +270,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
     let blob_store: Arc<dyn BlobStore> = Arc::new(bundle.blob_store());
     let host = WasmtimeNodeHost::new(plugin_paths, Arc::clone(&blob_store));
-    let mut runner = SpaceRunner::new(host, blob_store);
+    let mut runner = SpaceRunner::new(host, blob_store, args.policy);
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
     let mut sink = RunSink::new(workflow::empty_run_document());
@@ -269,6 +291,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // here, regardless of whether the run itself succeeded or failed partway through.
     let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats();
     eprintln!("[os run] io-router: {io_router_plugins} plugins / {io_router_keys} keys");
+    eprintln!("[os run] merge-policy: {:?}", args.policy);
     match run_result {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
@@ -280,7 +303,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Err(error) => {
             // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
             // on failure, and a later invocation can see WHY the last run failed.
-            let _ = sink.record(workflow::RunMutation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: store::now_iso() });
+            let _ = sink.record(workflow::RunMutation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::now_iso() });
             let _ = sink.record(workflow::RunMutation::Seal { status: workflow::RunStatus::Failed });
             persist_run(&bundle, &sink)?;
             Err(error.into())

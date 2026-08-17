@@ -225,7 +225,7 @@ mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
     use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     fn fixture() -> SemioDrawingSnapshot {
         SemioDrawingSnapshot {

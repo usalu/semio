@@ -86,7 +86,7 @@ pub fn deflate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::{demo_deflate_snapshot, empty_deflate_snapshot};
+    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::demo_deflate_snapshot;
     use protocol::Inference;
 
     #[test]

@@ -198,18 +198,21 @@ pub struct SemioModelDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    fn apply(&self, base: &SemioModelSnapshot) -> SemioModelSnapshot {
+    fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
             apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
         }
         if let Some(d) = &self.elements {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"])?;
             apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
         }
         if let Some(d) = &self.relations {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"])?;
             apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -756,7 +759,7 @@ fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for SemioModelDiff {
+impl DiffCodec for SemioModelDiff {
     fn print_diff(&self) -> String {
         print_semio_model_diff(self)
     }
@@ -948,7 +951,7 @@ mod tests {
         let keep_relation = &relations.modified.iter().find(|m| m.key == "keep-relation").expect("keep-relation modified").diff;
         assert!(keep_relation.kind.is_some() && keep_relation.from.is_some() && keep_relation.to.is_some());
 
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         assert!(SemioModelDiff::between(&a, &a).is_empty());
     }
 
@@ -957,8 +960,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(SemioModelDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(SemioModelDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(SemioModelDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+        assert_eq!(SemioModelDiff::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
     }
 
     /// 🧪️ inverse_law: `d.inverse(base).apply(&d.apply(base)) == base`.
@@ -967,9 +970,9 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioModelDiff::between(&a, &b);
-        let applied = d.apply(&a);
+        let applied = d.apply(&a).expect("apply must succeed for a well-formed fixture");
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&applied), a);
+        assert_eq!(inv.apply(&applied).expect("apply must succeed for a well-formed fixture"), a);
     }
 
     /// 🧪️ absorb_law: `absorb(d1,d2).apply(base) == d2.apply(&d1.apply(base))`, including the
@@ -984,12 +987,12 @@ mod tests {
 
         let d1 = SemioModelDiff::between(&base, &mid);
         let d2 = SemioModelDiff::between(&mid, &after);
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
 
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base), sequential);
-        assert_eq!(absorbed.apply(&base), after);
+        assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
 
         // Canonical case: Insert(X) absorbed with Remove(X) annihilates the add.
         let mut with_add = SemioModelDiff::default();

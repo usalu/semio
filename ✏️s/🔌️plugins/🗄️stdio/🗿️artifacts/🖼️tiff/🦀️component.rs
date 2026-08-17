@@ -1,6 +1,6 @@
 //! 🎪 `stdio.tiff` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::tiff::schema::diff::TiffDiff;
 pub use crate::artifacts::tiff::schema::mutations::TiffMutation;
@@ -12,6 +12,16 @@ pub const STDIO_TIFF_DOCUMENT_SCHEMA: &str = "stdio.tiff";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const TIFF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.tiff";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const TIFF_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") };
+pub const TIFF_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

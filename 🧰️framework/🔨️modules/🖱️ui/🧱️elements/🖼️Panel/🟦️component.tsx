@@ -14,11 +14,11 @@ import { panelTabFirstDraggableElementId } from "@semio-tech/framework";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️component.tsx";
 import { Tree, type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../🪵️Tree/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️component.tsx";
-import { borderNormalClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
 import { dropZoneReadyFillClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { FlowProvider, useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
@@ -240,7 +240,7 @@ export interface PanelProps {
   tabBarHost?: "panel" | "chrome";
 }
 
-/** @emoji 🌲️ Leaf-tab tree body shared by {@link Panel} and {@link MobilePanel} — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
+/** @emoji 🌲️ Leaf-tab tree body shared by {@link Panel} and Layout's private mobile panel — one section per unit (sorted by order); skipped when the active tab has no units. Under a {@link PanelDockProvider}, labeled (or multi-unit) headers become native-DnD handles draggable to another leaf tab's unit list (see {@link PANEL_TREE_UNIT_MIME}). Unlabeled single-unit tabs omit the unit header so trees are not topped by a lonely grip. */
 export const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   anchor,
   tabId,

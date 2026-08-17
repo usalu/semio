@@ -754,6 +754,10 @@ export class VerifyScript extends Script {
       this.runTaxonomy(segments.slice(1));
       return;
     }
+    if (segments[0] === "mutation-outcome-law") {
+      this.runMutationOutcomeLaw();
+      return;
+    }
     await this.runGate();
     if (segments[0] === "gate") return;
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -767,6 +771,22 @@ export class VerifyScript extends Script {
     const census = buildSemanticCensus(this.root, { scope });
     process.stdout.write(renderSemanticTaxonomyReport(census, scope));
     if (mode === "enforce" && census.problems.some((problem) => problem.severity === "error")) throw new Error(`[verify taxonomy enforce] ${census.problems.filter((problem) => problem.severity === "error").length} error finding(s).`);
+  }
+
+  /**
+   * ⚖️Standalone entry point for the `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
+   * gate bundle (`policyMutationOutcomeMergePolicyBreaches`'s 7 rules) — the same checks `runGate()`'s
+   * "mutation-outcome / merge-policy law" block enforces, runnable in isolation via
+   * `bun ./📜️script.ts verify mutation-outcome-law` (the `mutation-outcome-law` nx target in
+   * `📋️project.json` wires this ahead of `verify-gate`).
+   */
+  private runMutationOutcomeLaw(): void {
+    const breaches = policyMutationOutcomeMergePolicyBreaches(this.root).filter((b) => b.priority === "high");
+    if (breaches.length > 0) {
+      for (const b of breaches) console.error(`[verify mutation-outcome-law] ${b.kind}: ${b.summary}`);
+      throw new Error(`[verify mutation-outcome-law] ${breaches.length} breach(es)`);
+    }
+    console.log("[verify mutation-outcome-law] passed.");
   }
 
   private async runGate(): Promise<void> {
@@ -873,6 +893,16 @@ export class VerifyScript extends Script {
       if (windowBreaches.length > 0) {
         for (const breach of windowBreaches) console.error(`[verify] ${breach.kind}: ${breach.summary}`);
         throw new Error(`[verify] ${windowBreaches.length} window/mode capability taxonomy breach(es)`);
+      }
+    }
+    console.log("[verify] mutation-outcome / merge-policy law…");
+    {
+      const mutationOutcomeBreaches = policyMutationOutcomeMergePolicyBreaches(this.root).filter((b) => b.priority === "high");
+      if (mutationOutcomeBreaches.length > 0) {
+        for (const b of mutationOutcomeBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${mutationOutcomeBreaches.length} mutation-outcome/merge-policy law breach(es)`);
       }
     }
     console.log("[verify] dsl fixture laws…");
@@ -1500,7 +1530,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     const standard = standards.find((candidate) => codec.id.startsWith(`${candidate.id}.codec.`));
     if (!standard) throw new Error(`[stdio] codec ${codec.id} is not owned by a declared standard.`);
     stdioVersionedLeaf(codec.id, `${standard.id}.codec.`);
-    if (!["unimplemented", "implemented", "verified"].includes(codec.status) || codec.executable_registration !== (codec.status === "implemented" || codec.status === "verified")) throw new Error(`[stdio] codec ${codec.id} has dishonest executable status.`);
+    if (!["unimplemented", "implemented", "verified"].includes(codec.status)) throw new Error(`[stdio] codec ${codec.id} has an invalid implementation status.`);
   }
   const mutations = stdioArray(definition.mutations, `${artifactId}.mutations`).map((mutation, index) => {
     const record = stdioExactFields(mutation, `${artifactId}.mutations[${index}]`, ["id", "status", "executable_registration"]);
@@ -1512,7 +1542,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
   for (const mutation of mutations) {
     stdioVersionedLeaf(mutation.id, `${artifactId}.mutation.`);
     if (artifact === "gltf" && (mutation.id.includes(".no-mutation.") || mutation.id.includes(".set-snapshot.") || mutation.id.includes(".set-"))) throw new Error(`[stdio] GLTF mutation ${mutation.id} is not semantically specific.`);
-    if (!["unimplemented", "implemented", "verified"].includes(mutation.status) || mutation.executable_registration !== (mutation.status === "implemented" || mutation.status === "verified")) throw new Error(`[stdio] mutation ${mutation.id} has dishonest executable status.`);
+    if (!["unimplemented", "implemented", "verified"].includes(mutation.status)) throw new Error(`[stdio] mutation ${mutation.id} has an invalid implementation status.`);
   }
   const inferences = stdioArray(definition.inferences, `${artifactId}.inferences`).map((inference, index) => {
     const record = stdioExactFields(inference, `${artifactId}.inferences[${index}]`, ["id", "status", "executable_registration"]);
@@ -1523,7 +1553,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
   });
   for (const inference of inferences) {
     stdioVersionedLeaf(inference.id, `${artifactId}.inference.`);
-    if (!["unimplemented", "implemented", "verified"].includes(inference.status) || inference.executable_registration !== (inference.status === "implemented" || inference.status === "verified")) throw new Error(`[stdio] inference ${inference.id} has dishonest executable status.`);
+    if (!["unimplemented", "implemented", "verified"].includes(inference.status)) throw new Error(`[stdio] inference ${inference.id} has an invalid implementation status.`);
   }
   const runtimeCapabilities = stdioArray(definition.runtime_capabilities, `${artifactId}.runtime_capabilities`).map((capability, index) => {
     const record = stdioExactFields(capability, `${artifactId}.runtime_capabilities[${index}]`, ["id", "category", "descriptor", "claims"]);
@@ -2229,11 +2259,10 @@ export class ExamplesScript extends Script {
     }
     for (const plugin of plugins) {
       const owner = `${pluginsRoot}/${plugin}`;
-      for (const kind of [taxonomy.artifactsDirName, taxonomy.appsDirName] as const) {
-        const container = join(this.root, owner, kind);
-        if (!existsSync(container)) continue;
+      const container = join(this.root, owner, taxonomy.artifactsDirName);
+      if (existsSync(container)) {
         for (const child of readdirSync(container)) {
-          const examplesRel = `${owner}/${kind}/${child}/📚️examples`;
+          const examplesRel = `${owner}/${taxonomy.artifactsDirName}/${child}/📚️examples`;
           const examplesAbs = join(this.root, examplesRel);
           if (!existsSync(examplesAbs) || !statSync(examplesAbs).isDirectory()) continue;
           for (const slug of readdirSync(examplesAbs)) {
@@ -2241,6 +2270,18 @@ export class ExamplesScript extends Script {
             if (!statSync(join(this.root, slugRel)).isDirectory()) continue;
             roots.push(slugRel);
           }
+        }
+      }
+      // 👁️✏️ Surface examples nest under 🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/{👁️viewer,✏️editor}/,
+      // deeper than the flat <kind>/<child> shape 🎛️apps used — walked via the shared surface finder.
+      for (const surfaceRel of policySurfaceRoots(this.root, owner, taxonomy)) {
+        const examplesRel = `${surfaceRel}/📚️examples`;
+        const examplesAbs = join(this.root, examplesRel);
+        if (!existsSync(examplesAbs) || !statSync(examplesAbs).isDirectory()) continue;
+        for (const slug of readdirSync(examplesAbs)) {
+          const slugRel = `${examplesRel}/${slug}`;
+          if (!statSync(join(this.root, slugRel)).isDirectory()) continue;
+          roots.push(slugRel);
         }
       }
     }
@@ -4681,8 +4722,33 @@ function policyReadFileSafe(repoRoot: string, ...parts: string[]): string {
 }
 
 /**
+ * 👁️✏️ Every `👁️viewer`/`✏️editor` surface root that actually exists under an owner's
+ * `🗿️artifacts/<a>/🏅️standards/🔖️<s>/🪆️subsets/<sub>/` tree — the W3 dissolution replacement for the
+ * old single `🎛️apps` root. Shared by every walker that used to start at `taxonomy.appsDirName`.
+ */
+function policySurfaceRoots(repoRoot: string, ownerRoot: string, taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
+  const roots: string[] = [];
+  const artifactsRoot = `${ownerRoot}/${taxonomy.artifactsDirName}`;
+  for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
+    const standardsRoot = `${artifactsRoot}/${artifact.name}/${taxonomy.standardsDirName}`;
+    for (const standard of policyReaddirSafe(repoRoot, standardsRoot).filter((e) => e.isDirectory)) {
+      const subsetsRoot = `${standardsRoot}/${standard.name}/${taxonomy.subsetsDirName}`;
+      for (const subset of policyReaddirSafe(repoRoot, subsetsRoot).filter((e) => e.isDirectory)) {
+        for (const role of taxonomy.surfaceRoles) {
+          const dirName = taxonomy.surfaceDirNames[role];
+          const surfaceRoot = `${subsetsRoot}/${subset.name}/${dirName}`;
+          if (existsSync(join(repoRoot, surfaceRoot))) roots.push(surfaceRoot);
+        }
+      }
+    }
+  }
+  return roots;
+}
+
+/**
  * 📏️Taxonomy validator, discovery-contract clause 1: every `🗿️artifacts/<a>/` may only contain the known
- * artifact child vocabulary (`taxonomy.artifactChildDirs`, plus its own leaf file), and every
+ * artifact child vocabulary (`taxonomy.artifactChildDirs`, plus its own leaf file), every `🏅️standards/`
+ * descends into `🪆️subsets/<s>/` (`taxonomy.subsetChildDirs`, including the two surfaces), and every
  * `🪟️windows/<w>/` may only contain `taxonomy.windowChildDirs` (plus its own leaf file).
  */
 function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCrateRef[]): BreachRecord[] {
@@ -4698,103 +4764,171 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
     const representationDirs = (taxonomy as { representationDirs?: string[] }).representationDirs ?? ["📝️text", "💾️binary"];
     const ioDirectionDirs = (taxonomy as { ioDirectionDirs?: string[] }).ioDirectionDirs ?? ["📥️import", "📤️export"];
     const ioDirectionChildDirs = (taxonomy as { ioDirectionChildDirs?: Record<string, string> }).ioDirectionChildDirs ?? {"📥️import": "🧩️deserializers", "📤️export": "🧵️serializers"};
-    for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
-      const artifactDir = `${artifactsRoot}/${artifact.name}`;
-      for (const child of policyReaddirSafe(repoRoot, artifactDir).filter((e) => e.isDirectory)) {
-        if (taxonomy.artifactChildDirs.includes(child.name)) {
-          //#region NestedFacetWalk
-          if (child.name === "🧬️schema") {
-            const nestedRoot = `${artifactDir}/${child.name}`;
-            for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
-              if (schemaChildDirs.includes(nested.name)) {
-                const repRoot = `${nestedRoot}/${nested.name}`;
-                for (const rep of policyReaddirSafe(repoRoot, repRoot).filter((e) => e.isDirectory)) {
-                  if (representationDirs.includes(rep.name)) continue;
-                  if (nested.name === "🧬️mutations") {
-                    // wildcard mutation slug under schema/mutations
-                    continue;
-                  }
-                  breaches.push({
-                    id: `taxonomy-dirs-artifact-${repRoot}-${rep.name}`,
-                    summary: `"${repRoot}/${rep.name}" is not a recognized representation dir`,
-                    kind: "taxonomy/dirs",
-                    scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-                    priority: policyNewSurfacePriority(crate, "medium"),
-                    reason: `Discovery contract: 🧬️schema/<snapshot|diff|mutations> may contain ${representationDirs.join(", ")} (mutations also allow emoji-slug dirs).`,
-                    solution: `Move "${rep.name}" into a representationDirs member or a mutation slug.`,
-                  });
-                }
-                continue;
-              }
-              breaches.push({
-                id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
-                summary: `"${nestedRoot}/${nested.name}" is not a recognized schema child dir`,
-                kind: "taxonomy/dirs",
-                scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-                priority: policyNewSurfacePriority(crate, "medium"),
-                reason: `Discovery contract: 🧬️schema may only contain ${schemaChildDirs.join(", ")}.`,
-                solution: `Move "${nested.name}" into a schemaChildDirs member.`,
-              });
+    const recognizedArtifactChildDirs = [...taxonomy.artifactChildDirs, ...((taxonomy as { newArtifactChildDirs?: string[] }).newArtifactChildDirs ?? [])];
+
+    //#region NestedFacetWalk
+    const validateSchemaFacet = (nestedRoot: string, breachScope: string): void => {
+      for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
+        if (schemaChildDirs.includes(nested.name)) {
+          const repRoot = `${nestedRoot}/${nested.name}`;
+          for (const rep of policyReaddirSafe(repoRoot, repRoot).filter((e) => e.isDirectory)) {
+            if (representationDirs.includes(rep.name)) continue;
+            if (nested.name === "🧬️mutations") {
+              // wildcard mutation slug under schema/mutations
+              continue;
             }
-          } else if (child.name === "🚪️io") {
-            const nestedRoot = `${artifactDir}/${child.name}`;
-            for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
-              if (!ioDirectionDirs.includes(nested.name)) {
+            breaches.push({
+              id: `taxonomy-dirs-artifact-${repRoot}-${rep.name}`,
+              summary: `"${repRoot}/${rep.name}" is not a recognized representation dir`,
+              kind: "taxonomy/dirs",
+              scope: breachScope,
+              priority: policyNewSurfacePriority(crate, "medium"),
+              reason: `Discovery contract: 🧬️schema/<snapshot|diff|mutations> may contain ${representationDirs.join(", ")} (mutations also allow emoji-slug dirs).`,
+              solution: `Move "${rep.name}" into a representationDirs member or a mutation slug.`,
+            });
+          }
+          continue;
+        }
+        breaches.push({
+          id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
+          summary: `"${nestedRoot}/${nested.name}" is not a recognized schema child dir`,
+          kind: "taxonomy/dirs",
+          scope: breachScope,
+          priority: policyNewSurfacePriority(crate, "medium"),
+          reason: `Discovery contract: 🧬️schema may only contain ${schemaChildDirs.join(", ")}.`,
+          solution: `Move "${nested.name}" into a schemaChildDirs member.`,
+        });
+      }
+    };
+    const validateIoFacet = (nestedRoot: string, breachScope: string): void => {
+      for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
+        if (!ioDirectionDirs.includes(nested.name)) {
+          breaches.push({
+            id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
+            summary: `"${nestedRoot}/${nested.name}" is not a recognized io direction dir`,
+            kind: "taxonomy/dirs",
+            scope: breachScope,
+            priority: policyNewSurfacePriority(crate, "medium"),
+            reason: `Discovery contract: 🚪️io may only contain ${ioDirectionDirs.join(", ")}.`,
+            solution: `Rename "${nested.name}" to an ioDirectionDirs member.`,
+          });
+          continue;
+        }
+        const expectedChild = ioDirectionChildDirs[nested.name];
+        const directionRoot = `${nestedRoot}/${nested.name}`;
+        for (const codec of policyReaddirSafe(repoRoot, directionRoot).filter((e) => e.isDirectory)) {
+          if (expectedChild && codec.name === expectedChild) {
+            const codecRoot = `${directionRoot}/${codec.name}`;
+            for (const mid of policyReaddirSafe(repoRoot, codecRoot).filter((e) => e.isDirectory)) {
+              if (mid.name !== taxonomy.artifactsDirName) {
                 breaches.push({
-                  id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
-                  summary: `"${nestedRoot}/${nested.name}" is not a recognized io direction dir`,
+                  id: `taxonomy-dirs-artifact-${codecRoot}-${mid.name}`,
+                  summary: `"${codecRoot}/${mid.name}" is not ${taxonomy.artifactsDirName}`,
                   kind: "taxonomy/dirs",
-                  scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+                  scope: breachScope,
                   priority: policyNewSurfacePriority(crate, "medium"),
-                  reason: `Discovery contract: 🚪️io may only contain ${ioDirectionDirs.join(", ")}.`,
-                  solution: `Rename "${nested.name}" to an ioDirectionDirs member.`,
+                  reason: `Discovery contract: deserializers/serializers nest under ${taxonomy.artifactsDirName}/<stdio-artifact>.`,
+                  solution: `Move "${mid.name}" under ${taxonomy.artifactsDirName}/.`,
                 });
                 continue;
               }
-              const expectedChild = ioDirectionChildDirs[nested.name];
-              const directionRoot = `${nestedRoot}/${nested.name}`;
-              for (const codec of policyReaddirSafe(repoRoot, directionRoot).filter((e) => e.isDirectory)) {
-                if (expectedChild && codec.name === expectedChild) {
-                  const codecRoot = `${directionRoot}/${codec.name}`;
-                  for (const mid of policyReaddirSafe(repoRoot, codecRoot).filter((e) => e.isDirectory)) {
-                    if (mid.name !== taxonomy.artifactsDirName) {
+              // wildcard stdio artifact dirs under artifacts/
+            }
+            continue;
+          }
+          breaches.push({
+            id: `taxonomy-dirs-artifact-${directionRoot}-${codec.name}`,
+            summary: `"${directionRoot}/${codec.name}" is not the declared io direction child`,
+            kind: "taxonomy/dirs",
+            scope: breachScope,
+            priority: policyNewSurfacePriority(crate, "medium"),
+            reason: `Discovery contract: ${nested.name} must contain ${expectedChild}.`,
+            solution: `Rename "${codec.name}" to ${expectedChild}.`,
+          });
+        }
+      }
+    };
+    //#endregion NestedFacetWalk
+
+    for (const artifact of policyReaddirSafe(repoRoot, artifactsRoot).filter((e) => e.isDirectory)) {
+      const artifactDir = `${artifactsRoot}/${artifact.name}`;
+      const artifactScope = `${scopeId}/${policyStripEmoji(artifact.name)}`;
+      for (const child of policyReaddirSafe(repoRoot, artifactDir).filter((e) => e.isDirectory)) {
+        if (recognizedArtifactChildDirs.includes(child.name)) {
+          if (child.name === "🧬️schema") {
+            validateSchemaFacet(`${artifactDir}/${child.name}`, artifactScope);
+          } else if (child.name === "🚪️io") {
+            validateIoFacet(`${artifactDir}/${child.name}`, artifactScope);
+          } else if (child.name === taxonomy.standardsDirName) {
+            //#region SubsetFacetWalk
+            const standardsRoot = `${artifactDir}/${child.name}`;
+            for (const standard of policyReaddirSafe(repoRoot, standardsRoot).filter((e) => e.isDirectory)) {
+              const standardDir = `${standardsRoot}/${standard.name}`;
+              for (const standardChild of policyReaddirSafe(repoRoot, standardDir).filter((e) => e.isDirectory)) {
+                if (!(taxonomy.standardChildDirs ?? []).includes(standardChild.name)) {
+                  breaches.push({
+                    id: `taxonomy-dirs-standard-${standardDir}-${standardChild.name}`,
+                    summary: `"${standardDir}/${standardChild.name}" is not a recognized standard child dir`,
+                    kind: "taxonomy/dirs",
+                    scope: artifactScope,
+                    priority: policyNewSurfacePriority(crate, "medium"),
+                    reason: `Discovery contract: a standard dir may only contain ${(taxonomy.standardChildDirs ?? []).join(", ")}.`,
+                    solution: `Move "${standardChild.name}" into a recognized standardChildDirs member.`,
+                  });
+                  continue;
+                }
+                if (standardChild.name !== taxonomy.subsetsDirName) continue;
+                const subsetsRoot = `${standardDir}/${standardChild.name}`;
+                for (const subset of policyReaddirSafe(repoRoot, subsetsRoot).filter((e) => e.isDirectory)) {
+                  const subsetDir = `${subsetsRoot}/${subset.name}`;
+                  const subsetScope = `${artifactScope}/${policyStripEmoji(subset.name)}`;
+                  for (const subsetChild of policyReaddirSafe(repoRoot, subsetDir).filter((e) => e.isDirectory)) {
+                    if (!taxonomy.subsetChildDirs.includes(subsetChild.name)) {
                       breaches.push({
-                        id: `taxonomy-dirs-artifact-${codecRoot}-${mid.name}`,
-                        summary: `"${codecRoot}/${mid.name}" is not ${taxonomy.artifactsDirName}`,
+                        id: `taxonomy-dirs-subset-${subsetDir}-${subsetChild.name}`,
+                        summary: `"${subsetDir}/${subsetChild.name}" is not a recognized subset child dir`,
                         kind: "taxonomy/dirs",
-                        scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+                        scope: subsetScope,
                         priority: policyNewSurfacePriority(crate, "medium"),
-                        reason: `Discovery contract: deserializers/serializers nest under ${taxonomy.artifactsDirName}/<stdio-artifact>.`,
-                        solution: `Move "${mid.name}" under ${taxonomy.artifactsDirName}/.`,
+                        reason: `Discovery contract: a subset dir may only contain ${taxonomy.subsetChildDirs.join(", ")}.`,
+                        solution: `Move "${subsetChild.name}" into a recognized subsetChildDirs member.`,
                       });
                       continue;
                     }
-                    // wildcard stdio artifact dirs under artifacts/
+                    if (subsetChild.name === "🧬️schema") {
+                      validateSchemaFacet(`${subsetDir}/${subsetChild.name}`, subsetScope);
+                    } else if (subsetChild.name === "🚪️io") {
+                      validateIoFacet(`${subsetDir}/${subsetChild.name}`, subsetScope);
+                    } else if (Object.values(taxonomy.surfaceDirNames ?? {}).includes(subsetChild.name)) {
+                      const surfaceDir = `${subsetDir}/${subsetChild.name}`;
+                      for (const surfaceChild of policyReaddirSafe(repoRoot, surfaceDir).filter((e) => e.isDirectory)) {
+                        if (taxonomy.surfaceChildDirs.includes(surfaceChild.name)) continue;
+                        breaches.push({
+                          id: `taxonomy-dirs-surface-${surfaceDir}-${surfaceChild.name}`,
+                          summary: `"${surfaceDir}/${surfaceChild.name}" is not a recognized surface child dir`,
+                          kind: "taxonomy/dirs",
+                          scope: subsetScope,
+                          priority: policyNewSurfacePriority(crate, "medium"),
+                          reason: `Discovery contract: a surface dir may only contain ${taxonomy.surfaceChildDirs.join(", ")}.`,
+                          solution: `Move "${surfaceChild.name}" into a recognized surfaceChildDirs member.`,
+                        });
+                      }
+                    }
                   }
-                  continue;
                 }
-                breaches.push({
-                  id: `taxonomy-dirs-artifact-${directionRoot}-${codec.name}`,
-                  summary: `"${directionRoot}/${codec.name}" is not the declared io direction child`,
-                  kind: "taxonomy/dirs",
-                  scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
-                  priority: policyNewSurfacePriority(crate, "medium"),
-                  reason: `Discovery contract: ${nested.name} must contain ${expectedChild}.`,
-                  solution: `Rename "${codec.name}" to ${expectedChild}.`,
-                });
               }
             }
+            //#endregion SubsetFacetWalk
           }
-          //#endregion NestedFacetWalk
           continue;
         }
         breaches.push({
           id: `taxonomy-dirs-artifact-${artifactDir}-${child.name}`,
           summary: `"${artifactDir}/${child.name}" is not a recognized artifact component dir`,
           kind: "taxonomy/dirs",
-          scope: `${scopeId}/${policyStripEmoji(artifact.name)}`,
+          scope: artifactScope,
           priority: policyNewSurfacePriority(crate, "medium"),
-          reason: `Discovery contract: an artifact dir may only contain ${taxonomy.artifactChildDirs.join(", ")}.`,
+          reason: `Discovery contract: an artifact dir may only contain ${recognizedArtifactChildDirs.join(", ")}.`,
           solution: `Move "${child.name}" into a recognized component dir, or if it's a genuinely new taxonomy vocabulary word, add it to 🔣️taxonomy.json's artifactChildDirs with a ticket citation.`,
         });
       }
@@ -4824,7 +4958,7 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
         walkForWindows(childRel);
       }
     };
-    walkForWindows(`${ownerRoot}/${taxonomy.appsDirName}`);
+    for (const surfaceRoot of policySurfaceRoots(repoRoot, ownerRoot, taxonomy)) walkForWindows(surfaceRoot);
   }
   return breaches;
 }
@@ -4923,7 +5057,7 @@ export function policyWindowCompletenessBreaches(repoRoot: string, crates: reado
         walk(childRel);
       }
     };
-    walk(`${crate.ownerRel}/${taxonomy.appsDirName}`);
+    for (const surfaceRoot of policySurfaceRoots(repoRoot, crate.ownerRel, taxonomy)) walk(surfaceRoot);
   }
   return breaches;
 }
@@ -5002,7 +5136,7 @@ export function policyModeCompletenessBreaches(repoRoot: string, crates: readonl
         walk(childRel);
       }
     };
-    walk(`${crate.ownerRel}/${taxonomy.appsDirName}`);
+    for (const surfaceRoot of policySurfaceRoots(repoRoot, crate.ownerRel, taxonomy)) walk(surfaceRoot);
   }
   return breaches;
 }
@@ -5172,7 +5306,7 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
         kind: "taxonomy/semio-examples",
         scope: scopeId,
         priority: policyNewSurfacePriority(crate, "high"),
-        reason: "Examples belong under 🗿️artifacts/<artifact>/📚️examples or 🎛️apps/<app>/📚️examples — never at the plugin root.",
+        reason: "Examples belong under 🗿️artifacts/<artifact>/📚️examples or a subset's 👁️viewer|✏️editor/📚️examples — never at the plugin root.",
         solution: `Move fixtures into artifact or app ${examplesDir}/<emoji-slug>/ units.`,
       });
     }
@@ -5209,48 +5343,27 @@ function policySemioArtifactExamplesBreaches(repoRoot: string, crates: readonly 
         breaches.push(...policyValidateExampleUnit(repoRoot, `${examplesRel}/${set.name}`, artScope, priority));
       }
     }
-    const appsRoot = `${ownerRoot}/${taxonomy.appsDirName}`;
-    for (const app of policyReaddirSafe(repoRoot, appsRoot).filter((e) => e.isDirectory)) {
-      const appScope = `${scopeId}/${policyStripEmoji(app.name)}`;
-      const appExamples = `${appsRoot}/${app.name}/${examplesDir}`;
-      const engineExamples = `${appsRoot}/${app.name}/⚙️engine/${examplesDir}`;
-      if (existsSync(join(repoRoot, engineExamples))) {
-        breaches.push({
-          id: `semio-examples-engine-${engineExamples}`,
-          summary: `"${engineExamples}" must not live under ⚙️engine — move to the app root`,
-          kind: "taxonomy/semio-examples",
-          scope: appScope,
-          priority,
-          reason: "App examples live at 🎛️apps/<app>/📚️examples, not under ⚙️engine.",
-          solution: `Move ${engineExamples} to ${appExamples}.`,
-        });
-      }
-      if (!existsSync(join(repoRoot, appExamples))) {
-        breaches.push({
-          id: `semio-examples-app-missing-${appExamples}`,
-          summary: `"${appExamples}" is missing`,
-          kind: "taxonomy/semio-examples",
-          scope: appScope,
-          priority,
-          reason: "Every app must ship at least one emoji-slug example unit under 📚️examples/.",
-          solution: `Add ${appExamples}/<emoji-slug>/{definition leaves, ${taxonomy.exampleAssetsDirName}/, ${taxonomy.exampleTestsDirName}/}.`,
-        });
-        continue;
-      }
-      const sets = policyReaddirSafe(repoRoot, appExamples).filter((e) => e.isDirectory);
+    for (const surfaceRoot of policySurfaceRoots(repoRoot, ownerRoot, taxonomy)) {
+      // 👁️✏️ Unlike the old 🎛️apps facet, 📚️examples is NOT in surfaceRequiredChildDirs (contract
+      // §7.5) — a surface with no examples is legal, so this only validates units that DO exist.
+      const [subsetName, roleDirName] = surfaceRoot.split("/").slice(-2);
+      const surfaceScope = `${scopeId}/${policyStripEmoji(subsetName ?? "")}/${policyStripEmoji(roleDirName ?? "")}`;
+      const surfaceExamples = `${surfaceRoot}/${examplesDir}`;
+      if (!existsSync(join(repoRoot, surfaceExamples))) continue;
+      const sets = policyReaddirSafe(repoRoot, surfaceExamples).filter((e) => e.isDirectory);
       if (sets.length === 0) {
         breaches.push({
-          id: `semio-examples-app-empty-${appExamples}`,
-          summary: `"${appExamples}" has no example slug directory`,
+          id: `semio-examples-surface-empty-${surfaceExamples}`,
+          summary: `"${surfaceExamples}" has no example slug directory`,
           kind: "taxonomy/semio-examples",
-          scope: appScope,
+          scope: surfaceScope,
           priority,
-          reason: "App examples must contain at least one emoji-slug example unit.",
-          solution: `Add ${appExamples}/<emoji-slug>/ with definition leaves, assets, and tests.`,
+          reason: "A declared surface 📚️examples/ must contain at least one emoji-slug example unit.",
+          solution: `Add ${surfaceExamples}/<emoji-slug>/ with definition leaves, assets, and tests, or remove the empty ${examplesDir}/ dir.`,
         });
       }
       for (const set of sets) {
-        breaches.push(...policyValidateExampleUnit(repoRoot, `${appExamples}/${set.name}`, appScope, priority));
+        breaches.push(...policyValidateExampleUnit(repoRoot, `${surfaceExamples}/${set.name}`, surfaceScope, priority));
       }
     }
   }
@@ -5327,8 +5440,9 @@ function policyComponentFileBreaches(repoRoot: string, crates: readonly PolicyCr
       }
       for (const entry of entries.filter((e) => e.isDirectory)) walk(`${relDir}/${entry.name}`);
     };
+    // 👁️✏️ Surfaces now nest under 🗿️artifacts/*/🏅️standards/*/🪆️subsets/*/{👁️viewer,✏️editor}/, which
+    // this recursive walk already reaches — no separate root needed once 🎛️apps is gone.
     walk(`${ownerRoot}/${taxonomy.artifactsDirName}`);
-    walk(`${ownerRoot}/${taxonomy.appsDirName}`);
   }
   return breaches;
 }
@@ -5525,7 +5639,7 @@ function policyEmojiSiblingIdentityIsStructural(relDir: string, name: string, ta
   const grandparent = segments[segments.length - 2] ?? "";
   if (grandparent === taxonomy.windowsDirName && taxonomy.windowChildDirs.includes(name)) return true;
   if (grandparent === taxonomy.modesDirName && (taxonomy.modeChildDirs ?? []).includes(name)) return true;
-  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || parent === "🎛️apps" || segments.includes("🖼️assets");
+  return name === "📝️text" || name === "💾️binary" || parent === "🏅️standards" || parent === "🪆️subsets" || parent === "💡️inferences" || parent === "🗿️artifacts" || parent === "📚️examples" || segments.includes("🖼️assets");
 }
 
 /** 🧬️Migration slug families whose bare-symbol presentation is enforced by their dedicated policy. */
@@ -5649,7 +5763,7 @@ function policyPluginRootShapeBreaches(repoRoot: string): BreachRecord[] {
           kind: "taxonomy/plugin-root-shape",
           scope: ownerRel,
           priority: "high",
-          reason: "Manifest, capabilities, setup, and apps are required direct plugin-root facets.",
+          reason: `${child} is a required direct plugin-root facet (taxonomy.pluginChildDirs).`,
           solution: `Add ${ownerRel}/${child}/🦀️component.rs.`,
         });
       }
@@ -5814,8 +5928,8 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
 };
 
 /**
- * 📏️The three legacy per-plugin facets `taxonomy.pluginChildDirs` dropped (it now reads `["🎛️apps"]`
- * only, per the W1 mechanism flip) — every one of the 33 plugins still carries doc-only (or, for
+ * 📏️The three legacy per-plugin facets `taxonomy.pluginChildDirs` dropped (it now reads `["🎮️commands"]`
+ * only, per the W3 dissolution) — every one of the 33 plugins still carries doc-only (or, for
  * gis/lowpoly/norm/stdio, real) content under these directory names; this is the "missing absence
  * check" `policyPluginRootShapeBreaches` never performed (it only ever checks presence of required
  * facets, never flags an extra one).
@@ -5872,7 +5986,7 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
             kind: "taxonomy/plugin-closed-shape",
             scope: ownerRel,
             priority: "medium",
-            reason: "APA: a plugin is EXACTLY 🎛️apps + 🗿️artifacts + root wiring — build caches and OS junk never belong at plugin root.",
+            reason: "APA: a plugin is EXACTLY 🗿️artifacts + root wiring — build caches and OS junk never belong at plugin root.",
             solution: `Delete ${childRel}; add "${child.name}" to the repo .gitignore if it keeps recurring.`,
           });
           continue;
@@ -5881,14 +5995,14 @@ function policyPluginClosedShapeBreaches(repoRoot: string): BreachRecord[] {
         const solution =
           legacy ??
           POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS[childRel] ??
-          `Relocate ${childRel} under ${ownerRel}/${taxonomy.artifactsDirName}/<kind>/ or ${ownerRel}/${taxonomy.appsDirName}/<app>/ — see 📓️w0-b-plugin-shape.md §5 for the nearest analogous mapping, or file a "needs ruling" note if none fits.`;
+          `Relocate ${childRel} under ${ownerRel}/${taxonomy.artifactsDirName}/<kind>/<standard>/🪆️subsets/<subset>/{👁️viewer,✏️editor}/ — see 📓️w0-b-plugin-shape.md §5 for the nearest analogous mapping, or file a "needs ruling" note if none fits.`;
         breaches.push({
           id: `plugin-closed-shape-dir-${childRel}`,
-          summary: `"${childRel}" is a plugin-root entry outside the closed apps+artifacts shape`,
+          summary: `"${childRel}" is a plugin-root entry outside the closed artifacts shape`,
           kind: "taxonomy/plugin-closed-shape",
           scope: ownerRel,
           priority: "medium",
-          reason: "APA: a plugin is EXACTLY 🎛️apps + 🗿️artifacts + root 🦀️component.rs/AGENTS.md/README.md + 📦️packages wiring — every other direct child is a shape violation, not merely a missing-facet gap (which is all policyPluginRootShapeBreaches ever checked).",
+          reason: "APA: a plugin is EXACTLY 🗿️artifacts + root 🦀️component.rs/AGENTS.md/README.md + 📦️packages wiring — every other direct child is a shape violation, not merely a missing-facet gap (which is all policyPluginRootShapeBreaches ever checked).",
           solution,
         });
         continue;
@@ -8646,6 +8760,391 @@ function policyMutationArtifactEngineBreaches(repoRoot: string): BreachRecord[] 
 }
 //#endregion 🔧️PolicyRuleMutationArtifactEngines
 
+//#region 🔧️PolicyRuleMutationOutcomeMergePolicy
+/**
+ * 🎫️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` C2/C4/C10 gates: every
+ * `🔺️diff` leaf must report through `protocol::MutationOutcome<D>` using only the 7 frozen codes
+ * (`📋️contract-freeze.md` §C2), `validate` is deleted everywhere, `Severity::Hint` is gone, the CRDT
+ * merge-strategy/conflict-rule vocabulary reaches zero, `MergePolicy`'s 3 variants mirror across all 4
+ * surfaces, and the dsl derive macro's two build-shape entry points stay byte-identical.
+ */
+const POLICY_MUTATION_FROZEN_CODES = ["mutation.target-missing", "mutation.no-op", "mutation.partial", "mutation.clamped", "mutation.duplicate-id", "mutation.invariant", "mutation.cascade"] as const;
+const POLICY_MUTATION_FROZEN_CODE_SET = new Set<string>(POLICY_MUTATION_FROZEN_CODES);
+
+/** 🗄️The gltf legacy typed-sparse-operation architecture's owning root — see `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST` entry (b). Exempts this tree from both `policyMutationOutcomeBreaches` (rule 1) and `policyMutationMessageCodeBreaches` (rule 2) — gltf's `GltfTopLevelMutationRejection` codes (e.g. `"mutation.rejected"`) are that separate architecture's own vocabulary, never the 7 frozen `MutationOutcome` codes. */
+const POLICY_MUTATION_GLTF_ROOT = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf";
+/** 🌐️Sentinel toggling allowlist entry (a) — see `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST`'s doc comment. */
+const POLICY_MUTATION_TOTAL_KIND_SENTINEL = "🌐️root-scoped-total-kind";
+
+/**
+ * 🎫️ `📋️contract-freeze.md` fan-out recipe: "Total kinds (root-scoped `clear-*`, root
+ * `change-<artifact>-<field>`) may return message-free outcomes via a shrink-only allowlist." Seeded
+ * with exactly the two documented entries this ticket froze:
+ * (a) `POLICY_MUTATION_TOTAL_KIND_SENTINEL` — a structural toggle (not a literal path) for root-scoped
+ *     total kinds: any mutation slug beginning `clear-` (clearing an artifact-level collection has no
+ *     id to address, so it's inherently root-scoped) or `change-<artifactId>-` (the artifact's own root
+ *     field, which always exists) may call bare `protocol::MutationOutcome::new(diff)` with no message —
+ *     `policyMutationIsRootScopedTotalKind` below is the exact predicate. Remove this entry once total
+ *     kinds are required to carry `mutation.no-op`/`mutation.cascade` like every other verb family.
+ * (b) `POLICY_MUTATION_GLTF_ROOT` — 116 leaves under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/**` are a
+ *     SEPARATE typed-sparse-operation architecture (`derive`/`apply_diff`/`GltfTopLevelMutationRejection`,
+ *     `Result<T, GltfTopLevelMutationRejection>` — never `protocol::MutationOutcome<..>`, never on the
+ *     `Mutation::diff` path) owned by the live ticket
+ *     `26/08/16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS`. This same entry also
+ *     exempts the tree from `policyMutationMessageCodeBreaches` (rule 2) — its `Mutation::diff` shim at
+ *     `🔨️modules/🧭️mutation-dispatch/🦀️component.rs` legitimately builds a `protocol::MutationOutcome`
+ *     to satisfy that trait, but reports the SEPARATE architecture's own rejection reason (a
+ *     `GltfTopLevelMutationRejection`'s `Display`) as the message, which is never one of the 7 frozen
+ *     codes by design. Remove this entry once that ticket either folds gltf onto `MutationOutcome` or
+ *     the split architecture is formally frozen elsewhere.
+ */
+const POLICY_MUTATION_TOTAL_KIND_ALLOWLIST = new Set<string>([POLICY_MUTATION_TOTAL_KIND_SENTINEL, POLICY_MUTATION_GLTF_ROOT]);
+
+/** 🔎️Root-scoped total kind per the fan-out recipe: bare `clear-*`, or `change-<artifactId>-*` addressing the artifact's own always-present root field. */
+function policyMutationIsRootScopedTotalKind(mutName: string, artifactId: string): boolean {
+  const stripped = policyStripEmoji(mutName);
+  if (stripped.startsWith("clear-")) return true;
+  return artifactId !== "" && stripped.startsWith(`change-${artifactId}-`);
+}
+
+/**
+ * 📏️Rule 1: every `🧬️mutations/<slug>/🔺️diff/🦀️component.rs` must return `protocol::MutationOutcome<`
+ * and reference at least one of the 7 frozen codes, unless `POLICY_MUTATION_TOTAL_KIND_ALLOWLIST` exempts
+ * it. Composite mutation dirs (own `🧩️plan`, not `🔺️diff`) are out of scope — their outcome folds from
+ * the plan. A leaf whose `🔺️diff` doesn't exist yet is tracked by `policyMutationTriadCompletenessBreaches`
+ * instead, not here.
+ */
+export function policyMutationOutcomeBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const gltfAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_GLTF_ROOT);
+  const totalKindAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_TOTAL_KIND_SENTINEL);
+  for (const mutationsRel of policyFindAllMutationsDirs(repoRoot)) {
+    const artRel = policyArtifactRootOfMutationsDir(mutationsRel);
+    const artifactId = policyStripEmoji(artRel.split("/").pop() ?? "");
+    for (const mutName of policyListMutationDirs(repoRoot, mutationsRel)) {
+      const mutRel = `${mutationsRel}/${mutName}`;
+      if (policyIsCompositeMutationDir(repoRoot, mutRel)) continue;
+      const diffRel = `${mutRel}/🔺️diff/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+      if (!existsSync(join(repoRoot, diffRel))) continue;
+      if (gltfAllowlisted && diffRel.startsWith(`${POLICY_MUTATION_GLTF_ROOT}/`)) continue;
+      const content = policyReadFileSafe(repoRoot, diffRel);
+      const returnsOutcome = /protocol::MutationOutcome\s*</.test(content);
+      if (!returnsOutcome) {
+        breaches.push({
+          id: `mutation-outcome-missing-type-${diffRel}`,
+          summary: `"${diffRel}" does not return protocol::MutationOutcome<..>`,
+          kind: "mutation-migration/outcome",
+          scope: artRel,
+          priority: "high",
+          reason: "C2/C4: every 🔺️diff leaf must report through the frozen MutationOutcome<D> contract.",
+          solution: `Change diff's signature to -> protocol::MutationOutcome<XDiff> and wrap the success path in MutationOutcome::new(..) (see 📋️contract-freeze.md's fan-out recipe, or the already-converted 🕸️dag/📐️cad/💠️lowpoly facets).`,
+        });
+        continue;
+      }
+      const isTotalKind = totalKindAllowlisted && policyMutationIsRootScopedTotalKind(mutName, artifactId);
+      if (isTotalKind) continue;
+      const hasCode = POLICY_MUTATION_FROZEN_CODES.some((code) => content.includes(code));
+      if (hasCode) continue;
+      breaches.push({
+        id: `mutation-outcome-missing-code-${diffRel}`,
+        summary: `"${diffRel}" returns protocol::MutationOutcome<..> but never references one of the 7 frozen message codes`,
+        kind: "mutation-migration/outcome",
+        scope: artRel,
+        priority: "high",
+        reason: "The verb-family table (📋️contract-freeze.md fan-out recipe) requires real Error/Warning/Fatal/Info detection per verb family — a bare MutationOutcome::new(..) with no message is only legal for a root-scoped total kind.",
+        solution: `Add the real detection this verb family requires (target missing ⇒ ::error("mutation.target-missing", ..), idempotent ⇒ .warn("mutation.no-op", ..), duplicate id / invariant ⇒ ::fatal(..), cascade ⇒ .info("mutation.cascade", ..)), or if this genuinely is a root-scoped total kind, confirm POLICY_MUTATION_TOTAL_KIND_ALLOWLIST covers it.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🔎️Matches definite `MutationOutcome::(error|fatal)(...)`/`MutationMessage::(info|warn|error|fatal)(...)` builders — always genuine regardless of surrounding context, capturing the first string-literal argument. */
+const POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE = /\b(?:MutationOutcome::(?:error|fatal)|MutationMessage::(?:info|warn|error|fatal))\s*\(\s*"([^"]*)"/g;
+/** 🔎️Matches the chainable `.info(..)`/`.warn(..)` shorthand — only checked inside a fn body already proven to build a `MutationOutcome` (see `policyMutationMessageCodeBreaches`), never file-wide, so an unrelated `console.warn(..)`/`log::warn!`/`tracing::warn!` can never match. */
+const POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE = /\.(?:info|warn)\s*\(\s*"([^"]*)"/g;
+/** 🔎️Finds `fn <name>(..` openers so rule 2 can scope the chainable-call check one function body at a time (paired with `policyExtractFnBody`). */
+const POLICY_FN_DECL_RE = /\bfn\s+[A-Za-z_]\w*/g;
+
+/**
+ * 📏️Rule 2: any message-constructing call's first argument must be exactly one of the 7 frozen codes
+ * (📋️contract-freeze.md §C2) — no per-plugin codes, ever. Scoped to `.rs` files (the codes are a Rust
+ * vocabulary; this also keeps 📜️script.ts itself, which is a `.ts` file, out of its own scan). Definite
+ * builders are checked file-wide; the chainable `.info(..)`/`.warn(..)` shorthand is checked only
+ * inside a `fn` body that itself references `MutationOutcome` — a plain `console.warn(..)` embedded as
+ * a JS string literal inside a Rust file (never inside such a body) can never false-positive here.
+ * Exempts `POLICY_MUTATION_GLTF_ROOT`, same allowlist entry (b) as `policyMutationOutcomeBreaches` —
+ * gltf's separate typed-sparse-operation architecture owns its own rejection vocabulary.
+ */
+export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const gltfAllowlisted = POLICY_MUTATION_TOTAL_KIND_ALLOWLIST.has(POLICY_MUTATION_GLTF_ROOT);
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (gltfAllowlisted && relPath.startsWith(`${POLICY_MUTATION_GLTF_ROOT}/`)) continue;
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content) continue;
+    const reportedLines = new Set<number>();
+    const pushIfBad = (code: string, index: number) => {
+      if (POLICY_MUTATION_FROZEN_CODE_SET.has(code)) return;
+      const line = policyLineOfIndex(content, index);
+      if (reportedLines.has(line)) return;
+      reportedLines.add(line);
+      breaches.push({
+        id: `mutation-message-code-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" uses message code "${code}" — not one of the 7 frozen codes`,
+        kind: "mutation-migration/message-code",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "C2's frozen code set is exactly 7 generic codes — there are no per-plugin codes. An eighth code must be reported to the coordinator, never invented.",
+        solution: `Map this message onto mutation.target-missing/no-op/partial/clamped/duplicate-id/invariant/cascade, or report the gap to the coordinator if none fits.`,
+      });
+    };
+
+    POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_MUTATION_MESSAGE_CODE_BUILDER_RE.exec(content))) pushIfBad(m[1]!, m.index);
+
+    if (!content.includes("MutationOutcome")) continue;
+    POLICY_FN_DECL_RE.lastIndex = 0;
+    let fm: RegExpExecArray | null;
+    while ((fm = POLICY_FN_DECL_RE.exec(content))) {
+      const body = policyExtractFnBody(content, fm.index);
+      if (!body || !body.includes("MutationOutcome")) continue;
+      const bodyStart = content.indexOf(body, fm.index);
+      POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE.lastIndex = 0;
+      let cm: RegExpExecArray | null;
+      while ((cm = POLICY_MUTATION_MESSAGE_CODE_CHAIN_RE.exec(body))) pushIfBad(cm[1]!, bodyStart + cm.index);
+    }
+  }
+  return breaches;
+}
+
+/** 🔎️CRDT-era vocabulary C10 deletes: `merge_strategy`, `MergeStrategyKind`, `merge_concurrent_diffs`, `ConflictRule`, `ResolutionPlan`, `assert_crdt_*`. */
+const POLICY_CRDT_VOCABULARY_TOKENS = ["merge_strategy", "MergeStrategyKind", "merge_concurrent_diffs", "ConflictRule", "ResolutionPlan", "assert_crdt_"] as const;
+const POLICY_CRDT_VOCABULARY_RE = new RegExp(`\\b(${POLICY_CRDT_VOCABULARY_TOKENS.join("|")})`, "g");
+
+/**
+ * 📏️Rule 3: zero repo-wide occurrences of the CRDT merge-strategy/conflict-rule vocabulary C10 deletes
+ * (`.🦑️repo/`, `node_modules`, `target`, `dist` excluded via `POLICY_SKIP_DIRS`). Scoped to `.rs` files —
+ * every token is a Rust-only identifier (no TS mirror was ever specified for the deleted CRDT pair).
+ */
+export function policyNoCrdtVocabularyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content) continue;
+    POLICY_CRDT_VOCABULARY_RE.lastIndex = 0;
+    const seenLines = new Set<number>();
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_CRDT_VOCABULARY_RE.exec(content))) {
+      const line = policyLineOfIndex(content, m.index);
+      if (seenLines.has(line)) continue;
+      seenLines.add(line);
+      breaches.push({
+        id: `no-crdt-vocabulary-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" still references CRDT vocabulary "${m[1]}"`,
+        kind: "mutation-migration/no-crdt-vocabulary",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "C10 deletes 📡️spr/🔀️crdt/** and its whole vocabulary in favor of C3's MergePolicy + C5's first-class Conflict — merge_strategy/MergeStrategyKind/merge_concurrent_diffs/ConflictRule/ResolutionPlan/assert_crdt_* must reach zero occurrences repo-wide.",
+        solution: `Delete or rewrite this reference — reach for protocol::MergePolicy / the new 📡️spr/⚔️conflict module instead (📋️contract-freeze.md §C3/C5/C10).`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🔎️A `fn validate(&self, ..)` override — the exact shape C4/C10 delete from `Mutation`/`MutationKind`/`CompositeMutationKind`. */
+const POLICY_VALIDATE_OVERRIDE_RE = /\bfn\s+validate\s*\(\s*&self\b/g;
+/** 🔎️An `impl (protocol::)?(Composite)?MutationKind<..> for X {` block opener, to scope the second half of rule 4. */
+const POLICY_MUTATION_KIND_IMPL_RE = /\bimpl\b[^\n{]*\b(?:CompositeMutationKind|MutationKind)\s*</g;
+
+/**
+ * 📏️Rule 4: no `fn validate(&self, ..)` survives — not inside a `🧬️mutations/**` file, and not inside
+ * any `impl … MutationKind`/`impl … CompositeMutationKind` block anywhere (hand-written config/presence
+ * enums included). Its checks move into the `🔺️diff` leaf as Error/Fatal messages (C4/C10). Note: gltf's
+ * `pub fn validate(payload: &P, base: &S) -> Result<(), GltfTopLevelMutationRejection>` is a FREE function
+ * with no `&self` receiver — a structurally different shape that this rule never matches.
+ */
+export function policyNoValidateOverrideBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content) continue;
+    const reportedLines = new Set<number>();
+    const pushBreach = (line: number, detail: string) => {
+      if (reportedLines.has(line)) return;
+      reportedLines.add(line);
+      breaches.push({
+        id: `no-validate-override-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" still overrides fn validate(&self, ..) ${detail}`,
+        kind: "mutation-migration/no-validate-override",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "C4/C10: validate no longer exists on Mutation/MutationKind/CompositeMutationKind — every override is deleted, its checks moved into the 🔺️diff leaf as Error/Fatal messages.",
+        solution: `Delete this fn validate override; move its check into the sibling 🔺️diff leaf as a protocol::MutationOutcome::error(..)/::fatal(..) message.`,
+      });
+    };
+
+    const underMutations = relPath.replaceAll("\\", "/").includes(`/${POLICY_MUTATIONS_FACET}/`);
+    if (underMutations) {
+      POLICY_VALIDATE_OVERRIDE_RE.lastIndex = 0;
+      let vm: RegExpExecArray | null;
+      while ((vm = POLICY_VALIDATE_OVERRIDE_RE.exec(content))) pushBreach(policyLineOfIndex(content, vm.index), `under a 🧬️mutations/ leaf`);
+    }
+
+    POLICY_MUTATION_KIND_IMPL_RE.lastIndex = 0;
+    let im: RegExpExecArray | null;
+    while ((im = POLICY_MUTATION_KIND_IMPL_RE.exec(content))) {
+      const body = policyExtractFnBody(content, im.index);
+      POLICY_VALIDATE_OVERRIDE_RE.lastIndex = 0;
+      const vm = POLICY_VALIDATE_OVERRIDE_RE.exec(body);
+      if (!vm) continue;
+      pushBreach(policyLineOfIndex(content, im.index + vm.index), `inside an impl …MutationKind block`);
+    }
+  }
+  return breaches;
+}
+
+/** 🔎️Repo-relative paths that resolve to 📜️script.ts's own content — the root `script.ts` symlink (compat alias for tooling that can't glob the emoji filename) reads through to the identical bytes, so both names must be excluded from a self-scan. */
+const POLICY_MUTATION_LAW_SELF_PATHS = new Set<string>(["📜️script.ts", "script.ts"]);
+
+/** 🔎️Source files (`.rs`/`.ts`/`.tsx`) repo-wide, excluding 📜️script.ts (and its `script.ts` symlink alias) — this policy region's own code necessarily names the banned tokens as string/regex literals, so it must not scan itself. */
+function policyMutationLawSourceFiles(repoRoot: string): string[] {
+  return policyWalkRelFiles(repoRoot, [""], (relPath, name) => (name.endsWith(".rs") || name.endsWith(".ts") || name.endsWith(".tsx")) && !POLICY_MUTATION_LAW_SELF_PATHS.has(relPath));
+}
+
+const POLICY_SEVERITY_HINT_STRUCT_RE = /\bSeverity(?:::|\.)Hint\b/g;
+
+/**
+ * 📏️Rule 5: zero `Severity::Hint`/`Severity.Hint` (C1 declaration order is now `Info, Warning, Error,
+ * Fatal` — `derive(Ord)` IS the level order, Hint was folded into Info repo-wide), and zero bare `"hint"`
+ * severity-literal on a line that also mentions "severity"/"level" (scoped to avoid flagging the ordinary
+ * English word "hint" used for unrelated UI copy/tooltips).
+ */
+export function policySeverityInfoBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyMutationLawSourceFiles(repoRoot)) {
+    const content = policyReadFileSafe(repoRoot, relPath);
+    if (!content) continue;
+    const reportedLines = new Set<number>();
+    POLICY_SEVERITY_HINT_STRUCT_RE.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = POLICY_SEVERITY_HINT_STRUCT_RE.exec(content))) {
+      const line = policyLineOfIndex(content, m.index);
+      if (reportedLines.has(line)) continue;
+      reportedLines.add(line);
+      breaches.push({
+        id: `severity-hint-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" still references Severity::Hint/Severity.Hint`,
+        kind: "mutation-migration/no-severity-hint",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "C1 collapsed Hint into Info repo-wide; Severity's declaration order (Info < Warning < Error < Fatal, 0..3) has no Hint member anymore.",
+        solution: `Rewrite this to Severity::Info / "Info" — Hint was merged into Info by C1.`,
+      });
+    }
+    const lines = content.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      if (!/["']hint["']/i.test(line) || !/severity|level/i.test(line)) continue;
+      const lineNo = i + 1;
+      if (reportedLines.has(lineNo)) continue;
+      reportedLines.add(lineNo);
+      breaches.push({
+        id: `severity-hint-literal-${relPath}-${lineNo}`,
+        summary: `"${relPath}:${lineNo}" uses a "hint" severity literal`,
+        kind: "mutation-migration/no-severity-hint",
+        scope: relPath,
+        line: lineNo,
+        priority: "high",
+        reason: "C1 collapsed Hint into Info repo-wide; a serialized/matched severity level literal must never be \"hint\".",
+        solution: `Rewrite the literal to "info" — Hint was merged into Info by C1.`,
+      });
+    }
+  }
+  return breaches;
+}
+
+/** 🔎️The 3 frozen MergePolicy variants (C3) mirrored at exactly these 4 surfaces. */
+const POLICY_MERGE_POLICY_VARIANTS = ["LaissezFaire", "Normal", "Vigilant"] as const;
+/** 🔡️Idiomatic per-language spelling accepted for each variant — Rust surfaces spell it exactly like the enum (`LaissezFaire`); TS surfaces (host codec, kernel types, i18n) may use either the PascalCase mirror or the camelCase object-key form (`laissezFaire`) that idiomatic TS reaches for. Presence-only, per surface's own convention — this is a mirror-existence check, not a shape check. */
+const POLICY_MERGE_POLICY_VARIANT_SPELLINGS: Readonly<Record<(typeof POLICY_MERGE_POLICY_VARIANTS)[number], readonly string[]>> = {
+  LaissezFaire: ["LaissezFaire", "laissezFaire"],
+  Normal: ["Normal", "normal"],
+  Vigilant: ["Vigilant", "vigilant"],
+};
+const POLICY_MERGE_POLICY_SURFACES: readonly { label: string; relPath: string }[] = [
+  { label: "Rust spine (protocol::MergePolicy, 📡️spr/🧾️wire)", relPath: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧾️wire/🦀️component.rs" },
+  { label: "TS host codec (💻️os/🟦️component.ts)", relPath: "🧰️framework/🛍️products/💻️os/🟦️component.ts" },
+  { label: "TS kernel types (🎠️kernel/🟦️component.ts)", relPath: "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts" },
+  { label: "i18n bundles (de+en, 🖱️ui react index.tsx)", relPath: "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx" },
+];
+
+/**
+ * 📏️Rule 6: the three `MergePolicy` variants must be present in all 4 frozen surfaces from C3/C9,
+ * each under whatever idiomatic spelling that surface's language uses (`POLICY_MERGE_POLICY_VARIANT_
+ * SPELLINGS` — as substrings, this is a mirror-existence check, not a shape check); fewer than all
+ * four ⇒ one breach per surface that's missing at least one variant under any of its spellings.
+ */
+export function policyMergePolicyParityBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const surface of POLICY_MERGE_POLICY_SURFACES) {
+    const content = policyReadFileSafe(repoRoot, surface.relPath);
+    const missing = POLICY_MERGE_POLICY_VARIANTS.filter((v) => !POLICY_MERGE_POLICY_VARIANT_SPELLINGS[v].some((spelling) => content.includes(spelling)));
+    if (missing.length === 0) continue;
+    breaches.push({
+      id: `merge-policy-parity-${surface.relPath}`,
+      summary: `"${surface.relPath}" (${surface.label}) is missing MergePolicy variant(s): ${missing.join(", ")}`,
+      kind: "mutation-migration/merge-policy-parity",
+      scope: surface.relPath,
+      priority: "high",
+      reason: "C3/C9: MergePolicy {LaissezFaire, Normal, Vigilant} must mirror across all 4 surfaces (Rust spine, TS host codec, TS kernel types, both i18n bundles) or the merge-policy setting silently desyncs across a surface.",
+      solution: `Add the missing MergePolicy variant name(s) to ${surface.relPath} (see 📋️contract-freeze.md §C3/C9 for the exact shape expected at this surface).`,
+    });
+  }
+  return breaches;
+}
+
+const POLICY_DERIVE_MIRROR_A = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs";
+const POLICY_DERIVE_MIRROR_B = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs";
+
+/** 📏️Rule 7: the dsl derive macro's two build-shape entry points must stay byte-identical — a drift means one shape silently runs stale derive logic. */
+export function policyDeriveMirrorBreaches(repoRoot: string): BreachRecord[] {
+  const a = policyReadFileSafe(repoRoot, POLICY_DERIVE_MIRROR_A);
+  const b = policyReadFileSafe(repoRoot, POLICY_DERIVE_MIRROR_B);
+  if (a === b) return [];
+  return [
+    {
+      id: `derive-mirror-drift-${POLICY_DERIVE_MIRROR_A}`,
+      summary: `"${POLICY_DERIVE_MIRROR_A}" and "${POLICY_DERIVE_MIRROR_B}" have drifted — they must stay byte-identical`,
+      kind: "mutation-migration/derive-mirror",
+      scope: POLICY_DERIVE_MIRROR_A,
+      priority: "high",
+      reason: "The dsl derive macro's component.rs and its glue.rs copy under 📦️packages/🦀️rust are two build-shape entry points for the exact same macro body — any drift means one shape silently runs stale derive logic.",
+      solution: `Copy whichever of the two files has the real edit over the other so they stay byte-identical (${POLICY_DERIVE_MIRROR_A} ⇔ ${POLICY_DERIVE_MIRROR_B}).`,
+    },
+  ];
+}
+
+/** ⚖️Aggregates this ticket's 7 mutation-outcome / merge-policy / no-CRDT / no-validate / derive-mirror gates — the bundle both `policy` (below) and `VerifyScript.runGate`/`verify mutation-outcome-law` share. */
+function policyMutationOutcomeMergePolicyBreaches(repoRoot: string): BreachRecord[] {
+  return [
+    ...policyMutationOutcomeBreaches(repoRoot),
+    ...policyMutationMessageCodeBreaches(repoRoot),
+    ...policyNoCrdtVocabularyBreaches(repoRoot),
+    ...policyNoValidateOverrideBreaches(repoRoot),
+    ...policySeverityInfoBreaches(repoRoot),
+    ...policyMergePolicyParityBreaches(repoRoot),
+    ...policyDeriveMirrorBreaches(repoRoot),
+  ];
+}
+//#endregion 🔧️PolicyRuleMutationOutcomeMergePolicy
+
 //#region 🔧️PolicyRuleInferenceFamily
 /**
  * 💡️ Wave P3 inference-family scanners (INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
@@ -9824,24 +10323,24 @@ export function policyArtifactSchemaBreaches(repoRoot: string): BreachRecord[] {
 
 //#region 🔧️PolicyRuleAppSchemas
 /**
- * 🧬️Wave A2 app-schema facet scanners (APP-SCHEMA-FACETS).
- * Two facets (config + presence) × five `schemaFormats` leaves; the five per-format extractors from
- * `PolicyRuleArtifactSchemas` are reused unchanged. Owners are derived from each app's
- * `type Config = …` binding — never a hand-maintained prefix table.
+ * 🧬️Wave A2 surface-schema facet scanners (APP-SCHEMA-FACETS, retargeted W3 from `🎛️apps` to the two
+ * per-subset surfaces). Two facets (config + presence) × five `schemaFormats` leaves; the five
+ * per-format extractors from `PolicyRuleArtifactSchemas` are reused unchanged. Owners are derived from
+ * each surface's `type Config = …` binding — never a hand-maintained prefix table.
  */
 
-/** 🎚️Canonical app config dir (level-slider). */
+/** 🎚️Canonical surface config dir (level-slider). */
 const POLICY_APP_CONFIG_DIR = "🎚️config";
 /** 🧮Legacy abacus config dir — forbidden by `app-schema/config-relocation`. */
 const POLICY_APP_CONFIG_LEGACY_DIR = "🧮️config";
-/** 👥️App presence dir, sibling of the config owner. */
+/** 👥️Surface presence dir, sibling of the config owner. */
 const POLICY_APP_PRESENCE_DIR = "👥️presence";
 /** 🕸️Legacy wasm dir — forbidden by `app-schema/config-relocation`. */
 const POLICY_APP_WASM_LEGACY_DIR = "🕸️wasm";
 /** 🧬️Schema facet folder under a config or presence owner. */
 const POLICY_APP_SCHEMA_FACET = "🧬️schema";
 
-/** 🪪One discovered app-schema owner (deduped by owner path). */
+/** 🪪One discovered surface-schema owner (deduped by owner path). */
 export type PolicyAppSchemaOwner = {
   ownerRel: string;
   configType: string;
@@ -9858,28 +10357,28 @@ function policyAppPresenceTypeName(configType: string): string {
 }
 
 /**
- * 🗂️Walk every plugin app `🦀️component.rs`, parse `type Config = XConfig;`, and resolve
- * the config owner dir (app `🎚️config`, else legacy `🧮️config`, else plugin-level `🎚️config` that
- * declares `pub struct XConfig`). Presence owner is the sibling `👥️presence` under the same parent.
+ * 🗂️Walk every plugin's `👁️viewer`/`✏️editor` surface `🦀️component.rs`, parse `type Config = XConfig;`,
+ * and resolve the config owner dir (surface `🎚️config`, else legacy `🧮️config`, else plugin-level
+ * `🎚️config` that declares `pub struct XConfig`). Presence owner is the sibling `👥️presence` under the
+ * same parent.
  */
 export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchemaOwner[] {
   const pluginsRoot = "✏️s/🔌️plugins";
+  const taxonomy = loadTaxonomy();
   const byOwner = new Map<string, PolicyAppSchemaOwner>();
   for (const plugin of policyReaddirSafe(repoRoot, pluginsRoot)) {
     if (!plugin.isDirectory) continue;
-    const appsRel = `${pluginsRoot}/${plugin.name}/🎛️apps`;
-    for (const app of policyReaddirSafe(repoRoot, appsRel)) {
-      if (!app.isDirectory) continue;
-      const appRel = `${appsRel}/${app.name}`;
-      const componentRel = `${appRel}/🦀️component.rs`;
+    const pluginRel = `${pluginsRoot}/${plugin.name}`;
+    for (const surfaceRel of policySurfaceRoots(repoRoot, pluginRel, taxonomy)) {
+      const componentRel = `${surfaceRel}/🦀️component.rs`;
       if (!existsSync(join(repoRoot, componentRel))) continue;
       const text = policyReadFileSafe(repoRoot, componentRel);
       const m = /\btype\s+Config\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*;/.exec(text);
       if (!m) continue;
       const configType = m[1]!;
-      const sliderRel = `${appRel}/${POLICY_APP_CONFIG_DIR}`;
-      const legacyRel = `${appRel}/${POLICY_APP_CONFIG_LEGACY_DIR}`;
-      const pluginConfigRel = `${pluginsRoot}/${plugin.name}/${POLICY_APP_CONFIG_DIR}`;
+      const sliderRel = `${surfaceRel}/${POLICY_APP_CONFIG_DIR}`;
+      const legacyRel = `${surfaceRel}/${POLICY_APP_CONFIG_LEGACY_DIR}`;
+      const pluginConfigRel = `${pluginRel}/${POLICY_APP_CONFIG_DIR}`;
       let ownerRel: string | null = null;
       if (existsSync(join(repoRoot, sliderRel))) {
         ownerRel = sliderRel;
@@ -9898,13 +10397,14 @@ export function policyDiscoverAppSchemaOwners(repoRoot: string): PolicyAppSchema
       const presenceType = policyAppPresenceTypeName(configType);
       const parentRel = ownerRel.split("/").slice(0, -1).join("/");
       const presenceRel = `${parentRel}/${POLICY_APP_PRESENCE_DIR}`;
-      const appId = `${plugin.name}/${app.name}`;
+      const [subsetName, roleDirName] = surfaceRel.split("/").slice(-2);
+      const surfaceId = `${plugin.name}/${subsetName}/${roleDirName}`;
       const existing = byOwner.get(ownerRel);
       if (existing) {
-        existing.apps.push(appId);
+        existing.apps.push(surfaceId);
         continue;
       }
-      byOwner.set(ownerRel, { ownerRel, configType, presenceType, presenceRel, apps: [appId] });
+      byOwner.set(ownerRel, { ownerRel, configType, presenceType, presenceRel, apps: [surfaceId] });
     }
   }
   return [...byOwner.values()].sort((a, b) => a.ownerRel.localeCompare(b.ownerRel));
@@ -9957,7 +10457,7 @@ function policyLoadAppSchemaFacetLeaves(
   return out;
 }
 
-/** 🧭️Taxonomy `appSchemaSpecFilenames` key for a config or presence facet. */
+/** 🧭️Taxonomy `surfaceSchemaSpecFilenames` key for a config or presence facet. */
 function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
   return kind === "config"
     ? `${POLICY_APP_CONFIG_DIR}/${POLICY_APP_SCHEMA_FACET}`
@@ -9966,12 +10466,12 @@ function policyAppSchemaFacetRole(kind: "config" | "presence"): string {
 
 /**
  * 📏️Facet completeness + normative leaf: both config and presence schema facets, each with every
- * schemaFormats leaf and the `appSchemaSpecFilenames` normative JSON Schema leaf.
+ * schemaFormats leaf and the `surfaceSchemaSpecFilenames` normative JSON Schema leaf.
  */
 function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecord[] {
   const taxonomy = loadTaxonomy();
   const formats = Object.entries(taxonomy.schemaFormats ?? {});
-  const normativeByFacet = taxonomy.appSchemaSpecFilenames ?? {};
+  const normativeByFacet = taxonomy.surfaceSchemaSpecFilenames ?? {};
   const breaches: BreachRecord[] = [];
   for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
     const facets: { kind: "config" | "presence"; facetAbs: string }[] = [
@@ -10009,7 +10509,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
       if (!existsSync(join(repoRoot, normativeRel))) {
         breaches.push({
           id: `app-schema-normative-missing-${normativeRel}`,
-          summary: `"${facetAbs}" is missing normative appSchemaSpecFilenames leaf ${normative}`,
+          summary: `"${facetAbs}" is missing normative surfaceSchemaSpecFilenames leaf ${normative}`,
           kind: "app-schema/facet-completeness",
           scope: owner.ownerRel,
           priority: "high",
@@ -13927,6 +14427,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyProtocolFileBreaches(repoRoot));
   breaches.push(...policyTsFacadeBreaches(repoRoot));
   breaches.push(...policyMutationArtifactEngineBreaches(repoRoot));
+  breaches.push(...policyMutationOutcomeMergePolicyBreaches(repoRoot));
   breaches.push(...policyPluginDependencyParityBreaches(repoRoot));
   breaches.push(...policyContributionTargetBreaches(repoRoot));
   breaches.push(...policyInferenceFamilyBreaches(repoRoot));

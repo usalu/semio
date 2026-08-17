@@ -12,7 +12,7 @@ import i18next from "i18next";
 import { sizeVar } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🪵️Tree/🟦️component.tsx";
 import { type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️component.tsx";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️component.tsx";

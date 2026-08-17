@@ -27,7 +27,7 @@ consumes = ["forms.questionKind", "flow.extension", "process.machines"]
 
 [[package.metadata.semio.playground]]
 variant = "generator"
-app = "procedural3d-play"
+app = "s.procedural.procedural3d@1/*#editor"
 brand = "entwerfen-mit-bestand-generator"
 aliases = ["entwerfen-mit-bestand-generator"]
 ports = { react = 6027, wgpu = 6127 }
@@ -41,7 +41,7 @@ ports = { react = 6028, wgpu = 6128 }
 
 [[package.metadata.semio.playground]]
 variant = "aggregator"
-app = "puzzle3d-play"
+app = "s.puzzle3d@1/*#editor"
 brand = "entwerfen-mit-bestand-aggregator"
 aliases = ["mit-bestand", "entwerfen-mit-bestand"]
 ports = { react = 6023, wgpu = 6123 }
@@ -62,7 +62,7 @@ ports = { react = 6031, wgpu = 6131 }
 
 [[package.metadata.semio.playground]]
 variant = "verfolgen"
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 brand = "entwerfen-mit-bestand-verfolgen"
 aliases = ["entwerfen-mit-bestand-verfolgen"]
 ports = { react = 6032, wgpu = 6132 }
@@ -77,7 +77,7 @@ root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️sta
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-app = "puzzle3d-play"
+app = "s.puzzle3d@1/*#editor"
 roots = ["🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
 placeholder = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧊️placeholder.glb"
 filter_from_examples = true
@@ -85,20 +85,20 @@ filter_from_examples = true
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/infinite-fixture"
-app = "puzzle3d-play"
+app = "s.puzzle3d@1/*#editor"
 root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧫️fixtures"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/osm"
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 cache = "osm-tiles"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/vt"
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 upstream = "https://tiles.openfreemap.org/planet"
 cache = "openfreemap-vt"
 

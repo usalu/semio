@@ -11,7 +11,7 @@ pub struct DeleteMesh {}
 impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for DeleteMesh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "mesh", kind: "delete-mesh", record: "DeletedMesh" };
 
-    fn diff(&self, base: &SemioObjectSnapshot) -> <SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff {
+    fn diff(&self, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<<SemioObjectMutation as protocol::Mutation<SemioObjectSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {

@@ -366,11 +366,11 @@ mod tests {
     /// ARE position-preserving, so plain round-trip equality (not merely set equality) is expected
     /// and asserted directly.
     fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(restored, base.clone(), "inverse must exactly restore the pre-operation fixture for {operation:?}");
         forward
@@ -405,7 +405,7 @@ mod tests {
         let base = fixture();
         let delete = SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: "mat-missing".into() });
         assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
-        assert!(delete.diff(&base).is_empty(), "deleting an absent id must diff empty, not merely be harmless to apply");
+        assert!(delete.diff(&base).diff().is_empty(), "deleting an absent id must diff empty, not merely be harmless to apply");
     }
 
     #[test]
@@ -414,7 +414,7 @@ mod tests {
 
         let topo = SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: "mesh-missing".into(), primitive_id: "prim-missing".into(), topology: SemioTopology::Lines });
         assert!(topo.inverse(&base).is_empty());
-        assert_eq!(topo.diff(&base).apply(&base), base, "set-primitive-topology on an absent target is a no-op");
+        assert_eq!(topo.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "set-primitive-topology on an absent target is a no-op");
 
         let geom = SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::mutation::ReplacePrimitiveGeometry {
             mesh_id: "mesh-missing".into(),
@@ -426,22 +426,22 @@ mod tests {
             indices: vec![],
         });
         assert!(geom.inverse(&base).is_empty());
-        assert_eq!(geom.diff(&base).apply(&base), base, "replace-primitive-geometry on an absent target is a no-op");
+        assert_eq!(geom.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-primitive-geometry on an absent target is a no-op");
 
         let color = SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: "mat-missing".into(), new_base_color: SemioRgba::default() });
         assert!(color.inverse(&base).is_empty());
-        assert_eq!(color.diff(&base).apply(&base), base, "change-material-base-color on an absent target is a no-op");
+        assert_eq!(color.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "change-material-base-color on an absent target is a no-op");
 
         let mv = SemioMeshMutation::MoveVertex(move_vertex::mutation::MoveVertex { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), vertex_index: 999, new_point: SemioPoint3::default() });
         assert!(mv.inverse(&base).is_empty());
-        assert_eq!(mv.diff(&base).apply(&base), base, "move-vertex at an out-of-bounds index is a no-op");
+        assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex at an out-of-bounds index is a no-op");
     }
     //#endregion 🧪️InverseRoundTripLaw
 
     //#region 🧪️DiffConsistencyLaw
     /// 🧪️ diff_consistency_law: ∀ variant, the mutation's own `diff(base)` (built directly from
     /// `(payload, base)`, never apply-then-capture) matches `SemioMeshDiff::between(base,
-    /// diff.apply(base))` — the sparse diff this facet hand-constructs is exactly the diff a
+    /// diff.diff().apply(base))` — the sparse diff this facet hand-constructs is exactly the diff a
     /// generic before/after comparison would independently derive.
     #[test]
     fn diff_consistency_law_matches_independent_between() {
@@ -449,9 +449,9 @@ mod tests {
         let base = fixture();
         for m in demo_mutation_cases() {
             let hand_diff = m.diff(&base);
-            let after = hand_diff.apply(&base);
+            let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
             let independent_diff = SemioMeshDiff::between(&base, &after);
-            assert_eq!(hand_diff.apply(&base), independent_diff.apply(&base), "diff({m:?}) must match an independent before/after comparison");
+            assert_eq!(hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"), "diff({m:?}) must match an independent before/after comparison");
         }
     }
     //#endregion 🧪️DiffConsistencyLaw

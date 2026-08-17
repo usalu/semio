@@ -22,7 +22,7 @@ pub fn change_grid_visible(new_visible: Option<bool>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridVisible {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-visible", kind: "change-grid-visible", record: "ChangedGridVisible" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

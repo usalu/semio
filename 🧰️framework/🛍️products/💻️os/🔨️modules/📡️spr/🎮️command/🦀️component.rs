@@ -10,10 +10,48 @@
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.
 
 //#region 🔖️Mutation
-/// @emoji 📦️ Centralized snapshot mutation — one `apply` per technology. Moved from
-/// `crate::os_store::MutationDiff` verbatim (only the parameter name `snapshot` → `base`).
+/// @emoji 🚫️ Structured rejection of a diff that cannot be applied to its supplied base.
+/// The shape is protocol-owned and wire-safe: callers never need a technology crate's error type
+/// to preserve the stable machine code, human diagnostic, and outermost-first target address.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, thiserror::Error)]
+#[serde(rename_all = "camelCase")]
+#[error("{code}: {message}")]
+pub struct MutationApplyError {
+    pub code: String,
+    pub message: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub target: Vec<String>,
+}
+
+impl MutationApplyError {
+    /// 🏗️ Builds an untargeted typed rejection.
+    pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
+        Self { code: code.into(), message: message.into(), target: Vec::new() }
+    }
+
+    /// 🎯️ Attaches the rejected diff address, outermost segment first.
+    pub fn at(mut self, target: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.target = target.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// 🪆️ Prefixes outer address segments while retaining the inner error's exact target.
+    pub fn under(mut self, prefix: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        let mut target: Vec<String> = prefix.into_iter().map(Into::into).collect();
+        target.append(&mut self.target);
+        self.target = target;
+        self
+    }
+}
+
+/// @emoji 🛡️ Crate-owned result of applying a diff to a snapshot.
+pub type MutationApplyResult<P> = Result<P, MutationApplyError>;
+
+/// @emoji 📦️ Centralized snapshot mutation — one fallible `apply` per technology. A
+/// malformed or base-incompatible persisted diff must return [`MutationApplyError`]; it must never
+/// clamp an index, ignore a missing target, or return the unchanged base as implicit success.
 pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
-    fn apply(&self, base: &P) -> P;
+    fn apply(&self, base: &P) -> MutationApplyResult<P>;
     /// @emoji ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
     /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
@@ -22,10 +60,12 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
     /// parameter; the two diffs alone determine the result), and **sequential-coalesce only**
     /// (this composes two diffs known to have been applied in sequence by the same actor;
     /// concurrent-edit merging is an authority's `MergePolicy`/`📡️spr/⚔️conflict` job, never this
-    /// method's — the CRDT-era `protocol_crdt::merge_concurrent_diffs` this docstring used to point
-    /// at is deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
-    /// LAW: `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))`, associative
-    /// over further absorbs of the same artifact's diff vocabulary.
+    /// method's — the CRDT-era concurrent-diff merge helper this docstring used to point at is
+    /// deleted, see `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
+    /// LAW: whenever sequential application succeeds,
+    /// `absorb(d1, d2).apply(base) == d1.apply(base).and_then(|mid| d2.apply(&mid))`, associative
+    /// over further absorbs of the same artifact's diff vocabulary. A rejection remains a
+    /// rejection; absorb must not manufacture an implicit success path.
     fn absorb(&mut self, other: Self);
 }
 
@@ -36,8 +76,8 @@ pub trait MutationDiff<P>: Clone + Default + serde::Serialize + serde::de::Deser
 /// precedent below: land the trait standalone in a spine wave, adopt it per-type in later waves
 /// via a seeded shrink-only policy allowlist (`POLICY_DIFF_ALGEBRA`), never as a hard bound on
 /// `MutationDiff` itself until every implementor is covered.
-/// LAWS: `d.inverse(base).apply(&d.apply(base)) == *base`; `Self::between(a, b).apply(a) == *b`;
-/// `Self::between(a, a).is_empty()`.
+/// LAWS (for valid diffs): `d.inverse(base).apply(&d.apply(base)?) == Ok(*base)`;
+/// `Self::between(a, b).apply(a) == Ok(*b)`; `Self::between(a, a).is_empty()`.
 pub trait DiffAlgebra<P>: Sized {
     /// 🔁️ Diff-level undo: the diff that, applied after `self`, restores `base`.
     fn inverse(&self, base: &P) -> Self;
@@ -53,7 +93,7 @@ pub trait DiffAlgebra<P>: Sized {
 /// `base_version` now returns `Option<crate::os_spr::ids::ArtifactVersion>` (was a bare `u64`
 /// defaulting to `0`, which conflated "no base" with "based on version 0" — `None` fixes that);
 /// `state_class` is a new defaulted method so every existing `impl` recompiles unchanged.
-/// `validate`/`merge_strategy`/`conflict_rule`/`reconcile` are GONE (ticket
+/// `validate` and its CRDT-era merge/reconcile hooks are GONE (ticket
 /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4): every rejection or
 /// merge-policy concern a technology used to express through those hooks now travels as a
 /// [`MutationMessage`] on `diff`'s own [`MutationOutcome`].
@@ -214,6 +254,24 @@ impl<D> MutationOutcome<D> {
     /// ➡️ Consumes `self` into its raw `(diff, messages)` parts.
     pub fn into_parts(self) -> (D, Vec<MutationMessage>) {
         (self.diff, self.messages)
+    }
+
+    /// 🛡️ Applies this outcome atomically and converts an apply rejection into a fatal outcome.
+    pub fn apply_to<P>(self, snapshot: &mut P) -> Self
+    where
+        D: Default + MutationDiff<P>,
+    {
+        let (diff, mut messages) = self.into_parts();
+        match diff.apply(snapshot) {
+            Ok(next) => {
+                *snapshot = next;
+                Self { diff, messages }
+            }
+            Err(error) => {
+                messages.push(MutationMessage::fatal(error.code, error.message).at(error.target));
+                Self { diff: D::default(), messages }
+            }
+        }
     }
 
     /// ➕️ Appends one `Info`-level message (e.g. a cascade note).
@@ -643,21 +701,47 @@ impl<K, V, Patch> NamedTripleDiff<K, V, Patch> {
     }
 }
 
-/// @emoji ▶️ Applies a [`NamedTripleDiff`] to an id-keyed `Vec` in place: removals, then patches
-/// (in whatever pre-removal/pre-add state remains — patches never target a removed or just-added
-/// id by construction), then appends (added items pushed at the end, in order).
-pub fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>)
+/// @emoji ▶️ Validates and applies a [`NamedTripleDiff`] to an id-keyed `Vec` in place:
+/// removals, then patches, then appends. Validation is completed before the first write, so a
+/// missing/duplicate/contradictory persisted target rejects the whole diff atomically.
+pub fn named_apply<K, V, Patch>(items: &mut Vec<V>, diff: &NamedTripleDiff<K, V, Patch>) -> Result<(), MutationApplyError>
 where
     K: PartialEq,
     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
 {
-    items.retain(|item| !diff.removed.iter().any(|id| item.id() == id));
-    for item_patch in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|item| item.id() == &item_patch.id) {
-            item.apply_patch(&item_patch.patch);
+    for (index, id) in diff.removed.iter().enumerate() {
+        if !items.iter().any(|item| item.id() == id) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed".to_string(), index.to_string()]));
+        }
+        if diff.removed[..index].iter().any(|previous| previous == id) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed".to_string(), index.to_string()]));
         }
     }
-    items.extend(diff.added.iter().cloned());
+    for (index, item_patch) in diff.modified.iter().enumerate() {
+        if !items.iter().any(|item| item.id() == &item_patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified item does not exist").at(["modified".to_string(), index.to_string()]));
+        }
+        if diff.removed.iter().any(|id| id == &item_patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "item cannot be removed and modified by the same diff").at(["modified".to_string(), index.to_string()]));
+        }
+        if diff.modified[..index].iter().any(|previous| previous.id == item_patch.id) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "item is modified more than once").at(["modified".to_string(), index.to_string()]));
+        }
+    }
+    for (index, added) in diff.added.iter().enumerate() {
+        if items.iter().any(|item| item.id() == added.id()) || diff.added[..index].iter().any(|previous| previous.id() == added.id()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added".to_string(), index.to_string()]));
+        }
+    }
+    let mut candidate = items.clone();
+    candidate.retain(|item| !diff.removed.iter().any(|id| item.id() == id));
+    for item_patch in &diff.modified {
+        let item = candidate.iter_mut().find(|item| item.id() == &item_patch.id).ok_or_else(|| MutationApplyError::new("mutation.apply.conflicting-target", "an earlier patch changed a later target's identity").at(["modified"]))?;
+        item.apply_patch(&item_patch.patch);
+    }
+    candidate.extend(diff.added.iter().cloned());
+    *items = candidate;
+    Ok(())
 }
 
 /// @emoji 🗃️ Index-keyed ordered-collection delta shape — the shared type behind an intrinsically
@@ -685,31 +769,56 @@ impl<V, Patch> IndexedTripleDiff<V, Patch> {
     }
 }
 
-/// @emoji ▶️ Applies an [`IndexedTripleDiff`] in place: BASE-state `modified` patches first, then
-/// BASE-state `removed` (descending, so earlier removals don't shift later indices), then
-/// FINAL-state `added` (ascending, clamped to the growing length).
-pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>)
+/// @emoji ▶️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
+/// patches first, BASE-state `removed` descending, then FINAL-state `added` ascending. Every
+/// index is exact; out-of-range and duplicate indices reject atomically instead of clamping.
+pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
 where
     V: Clone + crate::os_vcs::Patchable<Patch>,
 {
-    for (index, patch) in &diff.modified {
-        if let Some(item) = items.get_mut(*index) {
-            item.apply_patch(patch);
+    for (position, (index, _)) in diff.modified.iter().enumerate() {
+        if *index >= items.len() {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("modified base index {index} is out of range for length {}", items.len())).at(["modified".to_string(), position.to_string()]));
         }
+        if diff.modified[..position].iter().any(|(previous, _)| previous == index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is modified more than once")).at(["modified".to_string(), position.to_string()]));
+        }
+        if diff.removed.contains(index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", format!("base index {index} cannot be removed and modified by the same diff")).at(["modified".to_string(), position.to_string()]));
+        }
+    }
+    for (position, index) in diff.removed.iter().enumerate() {
+        if *index >= items.len() {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("removed base index {index} is out of range for length {}", items.len())).at(["removed".to_string(), position.to_string()]));
+        }
+        if diff.removed[..position].contains(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("base index {index} is removed more than once")).at(["removed".to_string(), position.to_string()]));
+        }
+    }
+    let mut added: Vec<(usize, &(usize, V))> = diff.added.iter().enumerate().collect();
+    added.sort_unstable_by_key(|(_, (index, _))| *index);
+    let mut next_len = items.len() - diff.removed.len();
+    for (ordinal, (position, (index, _))) in added.iter().enumerate() {
+        if ordinal > 0 && added[ordinal - 1].1.0 == *index {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", format!("final index {index} is added more than once")).at(["added".to_string(), position.to_string()]));
+        }
+        if *index > next_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", format!("added final index {index} is out of range for length {next_len}")).at(["added".to_string(), position.to_string()]));
+        }
+        next_len += 1;
+    }
+    for (index, patch) in &diff.modified {
+        items[*index].apply_patch(patch);
     }
     let mut removed: Vec<usize> = diff.removed.clone();
     removed.sort_unstable_by(|a, b| b.cmp(a));
     for index in removed {
-        if index < items.len() {
-            items.remove(index);
-        }
+        items.remove(index);
     }
-    let mut added: Vec<&(usize, V)> = diff.added.iter().collect();
-    added.sort_unstable_by_key(|(index, _)| *index);
-    for (index, value) in added {
-        let at = (*index).min(items.len());
-        items.insert(at, value.clone());
+    for (_, (index, value)) in added {
+        items.insert(*index, value.clone());
     }
+    Ok(())
 }
 //#endregion 🔖️DiffKit
 
@@ -910,6 +1019,8 @@ pub enum PlanError {
     Cycle(String),
     #[error("step rejected: {0}")]
     StepRejected(String),
+    #[error("step diff could not be applied: {0}")]
+    Apply(#[from] MutationApplyError),
     #[error("{0}")]
     Invalid(String),
 }
@@ -923,6 +1034,7 @@ pub enum PlanError {
 pub struct Planner<P, Op: Mutation<P>> {
     base: P,
     steps: Vec<PlanStep<Op>>,
+    pre_states: Vec<Option<P>>,
     depth: u8,
     seen: Vec<(String, [u8; 32])>,
     messages: Vec<MutationMessage>,
@@ -937,7 +1049,7 @@ fn prefix_message(mut message: MutationMessage, prefix: &str) -> MutationMessage
 
 impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     pub fn new(base: &P) -> Self {
-        Self { base: base.clone(), steps: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
+        Self { base: base.clone(), steps: Vec::new(), pre_states: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
     }
 
     /// 🪞️ The snapshot as it stands after every step `call`ed so far.
@@ -969,8 +1081,10 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         if is_fatal {
             return Err(PlanError::StepRejected(reason));
         }
-        self.base = diff.apply(&self.base);
+        let pre_state = self.base.clone();
+        self.base = diff.apply(&self.base)?;
         self.steps.push(PlanStep::Local(op));
+        self.pre_states.push(Some(pre_state));
         Ok(())
     }
 
@@ -986,6 +1100,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         self.depth = next_depth;
         self.seen.push(key);
         self.steps.push(PlanStep::Foreign(step));
+        self.pre_states.push(None);
         Ok(())
     }
 
@@ -995,6 +1110,11 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
 
     pub fn into_steps(self) -> Vec<PlanStep<Op>> {
         self.steps
+    }
+
+    /// 🧭️ Consumes the plan with each local step's already-validated pre-state.
+    fn into_steps_with_pre_states(self) -> (Vec<PlanStep<Op>>, Vec<Option<P>>) {
+        (self.steps, self.pre_states)
     }
 
     /// ➡️ Consumes `self` into its raw `(steps, messages)` parts — [`fold_plan_diff`]'s primitive.
@@ -1060,7 +1180,13 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
     for step in steps {
         if let PlanStep::Local(op) = step {
             let diff = op.diff(&current).into_parts().0;
-            current = diff.apply(&current);
+            match diff.apply(&current) {
+                Ok(next) => current = next,
+                Err(error) => {
+                    messages.push(MutationMessage::fatal("mutation.invariant", error.to_string()).at(error.target));
+                    return MutationOutcome::new(<Op as Mutation<P>>::Diff::default()).absorb_messages(messages);
+                }
+            }
             folded.absorb(diff);
         }
     }
@@ -1073,16 +1199,14 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
 /// `🏪️store/🦀️component.rs`'s own replay/rewrite paths already use — so applying the composite
 /// then this restores `base`. A planning failure folds to `Vec::new()`, never a panic.
 pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
-    let Ok(steps) = plan_of(kind, base) else {
+    let mut planner = Planner::new(base);
+    if kind.plan(base, &mut planner).is_err() {
         return Vec::new();
-    };
-    let mut current = base.clone();
+    }
+    let (steps, pre_states) = planner.into_steps_with_pre_states();
     let mut local_steps: Vec<(Op, P)> = Vec::new();
-    for step in steps {
-        if let PlanStep::Local(op) = step {
-            let pre_state = current.clone();
-            let diff = op.diff(&current).into_parts().0;
-            current = diff.apply(&current);
+    for (step, pre_state) in steps.into_iter().zip(pre_states) {
+        if let (PlanStep::Local(op), Some(pre_state)) = (step, pre_state) {
             local_steps.push((op, pre_state));
         }
     }
@@ -1115,6 +1239,22 @@ pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P,
 mod tests {
     use super::*;
 
+    //#region 🧪️ApplyErrorContract
+    #[test]
+    fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
+        let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").at(["slides", "4"]);
+        let json = serde_json::to_string(&error).expect("serialize apply error");
+        assert_eq!(json, r#"{"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}"#);
+        assert_eq!(serde_json::from_str::<MutationApplyError>(&json).expect("deserialize apply error"), error);
+    }
+
+    #[test]
+    fn mutation_apply_error_under_prefixes_without_losing_inner_target() {
+        let error = MutationApplyError::new("mutation.apply.missing-target", "vertex missing").at(["vertices", "v1"]).under(["objects", "o1"]);
+        assert_eq!(error.target, vec!["objects", "o1", "vertices", "v1"]);
+    }
+    //#endregion 🧪️ApplyErrorContract
+
     //#region 🧸️Fixtures
     // Dummy (P=i64, Op=AddOp) pair: the smallest possible Mutation/MutationDiff/OpText impl,
     // used across every law test below instead of a real technology's op set.
@@ -1123,8 +1263,8 @@ mod tests {
         delta: i64,
     }
     impl MutationDiff<i64> for AddDiff {
-        fn apply(&self, base: &i64) -> i64 {
-            base + self.delta
+        fn apply(&self, base: &i64) -> MutationApplyResult<i64> {
+            Ok(base + self.delta)
         }
         fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
@@ -1254,10 +1394,10 @@ mod tests {
     fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).diff().apply(&base);
+        let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        let restored = undo.diff(&forward).diff().apply(&forward);
+        let restored = undo.diff(&forward).diff().apply(&forward).expect("valid inverse diff");
         assert_eq!(restored, base);
     }
 
@@ -1439,7 +1579,7 @@ mod tests {
     fn named_apply_removes_patches_then_adds() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }, Item { id: "c".into(), value: 3 }];
         let diff = NamedTripleDiff::<String, Item, i64> { removed: vec!["a".into()], modified: vec![ItemPatch { id: "b".into(), patch: 10 }], added: vec![Item { id: "d".into(), value: 4 }] };
-        named_apply(&mut items, &diff);
+        named_apply(&mut items, &diff).expect("valid named diff");
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "d"]);
         assert_eq!(items.iter().find(|i| i.id == "b").unwrap().value, 12);
     }
@@ -1458,9 +1598,22 @@ mod tests {
         // BASE state: [a, b, c]. modified targets base index 0 (a). removed targets base index 2 (c).
         // added targets FINAL indices 0 and 2 in the post-remove/pre-add state [a', b].
         let diff = IndexedTripleDiff::<Item, i64> { removed: vec![2], modified: vec![(0, 100)], added: vec![(0, Item { id: "z".into(), value: 9 }), (2, Item { id: "y".into(), value: 8 })] };
-        indexed_apply(&mut items, &diff);
+        indexed_apply(&mut items, &diff).expect("valid indexed diff");
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["z", "a", "y", "b"]);
         assert_eq!(items[1].value, 101, "modified applies to BASE-state index 0 (item a) before removal/insertion shift it");
+    }
+
+    #[test]
+    fn indexed_apply_rejects_duplicate_added_indices_without_mutating() {
+        let original = vec![Item { id: "a".into(), value: 1 }];
+        let mut items = original.clone();
+        let diff = IndexedTripleDiff::<Item, i64> {
+            added: vec![(1, Item { id: "b".into(), value: 2 }), (1, Item { id: "c".into(), value: 3 })],
+            ..Default::default()
+        };
+        let error = indexed_apply(&mut items, &diff).expect_err("duplicate final indices must reject");
+        assert_eq!(error.code, "mutation.apply.duplicate-target");
+        assert_eq!(items, original, "rejected indexed diff must be atomic");
     }
 
     #[test]
@@ -1527,8 +1680,8 @@ mod tests {
         name: Option<String>,
     }
     impl MutationDiff<MiniDoc> for MiniDiff {
-        fn apply(&self, base: &MiniDoc) -> MiniDoc {
-            MiniDoc { name: self.name.clone().unwrap_or_else(|| base.name.clone()) }
+        fn apply(&self, base: &MiniDoc) -> MutationApplyResult<MiniDoc> {
+            Ok(MiniDoc { name: self.name.clone().unwrap_or_else(|| base.name.clone()) })
         }
         fn absorb(&mut self, other: Self) {
             if other.name.is_some() {
@@ -1569,13 +1722,13 @@ mod tests {
         let base = MiniDoc { name: "a".into() };
         let mutation = MiniMutation::RenameMini(rename_mini::RenameMini { new_name: "b".into() });
 
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(after.name, "b");
 
         let inverse = mutation.inverse(&base);
         assert_eq!(inverse.len(), 1, "inverse of a single rename is a single rename back");
         let MiniMutation::RenameMini(undo) = &inverse[0];
-        assert_eq!(undo.diff(&after).diff().apply(&after), base, "inverse computed from base must restore base");
+        assert_eq!(undo.diff(&after).diff().apply(&after), Ok(base), "inverse computed from base must restore base");
 
         assert_eq!(MiniMutation::kinds().len(), 1);
         assert_eq!(MiniMutation::kinds()[0].kind, "rename-mini");
@@ -1689,11 +1842,11 @@ mod tests {
         let base: i64 = 10;
         let noop = AddDiff { delta: 0 };
         assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
-        assert_eq!(AddInference::infer(&noop.apply(&base)), AddInference::infer(&base));
+        assert_eq!(AddInference::infer(&noop.apply(&base).expect("valid no-op diff")), AddInference::infer(&base));
 
         let real = AddDiff { delta: 1 };
         assert!(real.touches().intersects_any(AddInference::fields()[0].reads));
-        assert_ne!(AddInference::infer(&real.apply(&base)), AddInference::infer(&base));
+        assert_ne!(AddInference::infer(&real.apply(&base).expect("valid real diff")), AddInference::infer(&base));
     }
 
     #[test]
@@ -1756,28 +1909,28 @@ mod tests {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
         let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.diff().apply(&base), 16);
+        assert_eq!(diff.diff().apply(&base), Ok(16));
 
         let steps = plan_of(&kind, &base).expect("plan succeeds");
         let mut sequential = base;
         for step in &steps {
             if let PlanStep::Local(op) = step {
-                sequential = op.diff(&sequential).diff().apply(&sequential);
+                sequential = op.diff(&sequential).diff().apply(&sequential).expect("valid planned diff");
             }
         }
-        assert_eq!(diff.diff().apply(&base), sequential, "fold_plan_diff must equal sequential application of the plan's local steps");
+        assert_eq!(diff.diff().apply(&base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
     }
 
     #[test]
     fn fold_plan_inverse_restores_base() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
-        let forward = fold_plan_diff(&kind, &base).diff().apply(&base);
+        let forward = fold_plan_diff(&kind, &base).diff().apply(&base).expect("valid folded diff");
         assert_ne!(forward, base);
         let inverses = fold_plan_inverse(&kind, &base);
         let mut restored = forward;
         for op in &inverses {
-            restored = op.diff(&restored).diff().apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
     }
@@ -1787,7 +1940,7 @@ mod tests {
         let base: i64 = 0;
         let quad = QuadAdd { delta: 2 };
         let diff = fold_plan_diff(&quad, &base);
-        assert_eq!(diff.diff().apply(&base), 8, "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
+        assert_eq!(diff.diff().apply(&base), Ok(8), "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
 
         let steps = plan_of(&quad, &base).expect("plan succeeds");
         let local_deltas: Vec<i64> = steps
@@ -1800,9 +1953,9 @@ mod tests {
         assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
         let inverses = fold_plan_inverse(&quad, &base);
-        let mut restored = diff.diff().apply(&base);
+        let mut restored = diff.diff().apply(&base).expect("valid folded diff");
         for op in &inverses {
-            restored = op.diff(&restored).diff().apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base);
     }
@@ -1829,7 +1982,7 @@ mod tests {
         let base: i64 = 5;
         let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
         let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.diff().apply(&base), 9, "only the local AddOp{{delta:4}} may contribute to the folded diff");
+        assert_eq!(diff.diff().apply(&base), Ok(9), "only the local AddOp{{delta:4}} may contribute to the folded diff");
 
         let foreign = plan_foreign_steps(&kind, &base);
         assert_eq!(foreign.len(), 2);
@@ -1863,11 +2016,11 @@ mod tests {
         let base: i64 = 1;
         let kind = DerivedDoubleAdd { delta: 5 };
         let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);
-        assert_eq!(diff.diff().apply(&base), 11);
+        assert_eq!(diff.diff().apply(&base), Ok(11));
         let inverse = MutationKind::<i64, AddOp>::inverse(&kind, &base);
-        let mut restored = diff.diff().apply(&base);
+        let mut restored = diff.diff().apply(&base).expect("valid folded diff");
         for op in &inverse {
-            restored = op.diff(&restored).diff().apply(&restored);
+            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base);
         assert_eq!(<DerivedDoubleAdd as MutationKind<i64, AddOp>>::SEMANTICS.kind, "derived-double-add");

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
+    "noEmit": true,
+    "types": ["react", "react-dom", "vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx"],
+      "@semio-tech/framework-os": ["../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../../🧱️elements/**/*.tsx"],
+  "exclude": ["node_modules", "📤️dist"]
+}

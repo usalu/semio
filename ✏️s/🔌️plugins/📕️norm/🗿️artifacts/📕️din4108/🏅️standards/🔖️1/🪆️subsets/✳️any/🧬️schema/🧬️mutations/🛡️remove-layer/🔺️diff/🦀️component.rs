@@ -1,16 +1,26 @@
-//! 🔺️ `remove-layer` — sparse diff construction; an out-of-range BASE index is a no-op clone
-//! (nothing to remove).
+//! 🔺️ `remove-layer` — sparse diff construction with strict BASE-index validation.
 
 use super::mutation::RemoveLayer;
 use crate::artifacts::din4108::diff::Din4108LayerList;
 use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &RemoveLayer, base: &Din4108Snapshot) -> Din4108Diff {
+pub fn diff(
+    payload: &RemoveLayer,
+    base: &Din4108Snapshot,
+) -> protocol::MutationOutcome<Din4108Diff> {
     let mut layers = base.layers.clone();
-    if payload.index < layers.len() {
-        layers.remove(payload.index);
+    if payload.index >= layers.len() {
+        return protocol::MutationOutcome::error(
+            "mutation.target-missing",
+            format!("Layer #{} does not exist.", payload.index),
+            [payload.index.to_string()],
+        );
     }
-    Din4108Diff { layers: Some(Din4108LayerList { values: layers }), ..Default::default() }
+    layers.remove(payload.index);
+    protocol::MutationOutcome::new(Din4108Diff {
+        layers: Some(Din4108LayerList { values: layers }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

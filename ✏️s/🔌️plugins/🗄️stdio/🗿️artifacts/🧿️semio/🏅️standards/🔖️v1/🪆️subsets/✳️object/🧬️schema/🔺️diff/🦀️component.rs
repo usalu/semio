@@ -41,7 +41,7 @@ impl SemioObjectDiff {
 }
 
 impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
-    fn apply(&self, base: &SemioObjectSnapshot) -> SemioObjectSnapshot {
+    fn apply(&self, base: &SemioObjectSnapshot) -> protocol::MutationApplyResult<SemioObjectSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.transform {
             next.transform = t.clone();
@@ -55,7 +55,7 @@ impl MutationDiff<SemioObjectSnapshot> for SemioObjectDiff {
         if let Some(p) = &self.properties {
             next.properties = p.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -231,7 +231,7 @@ mod tests {
     fn apply_replaces_touched_fields_only() {
         let base = demo_object_snapshot();
         let diff = SemioObjectDiff { brep: Some(None), ..Default::default() };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert!(next.brep.is_none());
         assert_eq!(next.mesh, base.mesh, "untouched fields must be preserved");
     }

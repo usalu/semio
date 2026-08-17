@@ -15,84 +15,87 @@ use protocol::MutationDiff;
 //#region 🔹Apply
 impl FlowDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &FlowArtifact) -> FlowArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.schema {
-            next.schema = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(list) = &self.selected_node_ids {
-            next.selected_node_ids = list.values.clone();
-        }
-        if let Some(list) = &self.selected_edge_ids {
-            next.selected_edge_ids = list.values.clone();
-        }
-        if let Some(list) = &self.selected_handle_ids {
-            next.selected_handle_ids = list.values.clone();
-        }
-        if let Some(list) = &self.preview_off_node_ids {
-            next.preview_off_node_ids = list.values.clone();
-        }
-        if let Some(value) = &self.lod_mode {
-            next.lod_mode = value.clone();
-        }
-        if let Some(value) = self.proximity_distance {
-            next.proximity_distance = value;
-        }
-        if let Some(value) = self.grid_visible {
-            next.grid_visible = value;
-        }
-        if let Some(value) = self.grid_snap_enabled {
-            next.grid_snap_enabled = value;
-        }
-        if let Some(value) = self.grid_factor {
-            next.grid_factor = value;
-        }
-        if let Some(value) = &self.catalogue_sections_json {
-            next.catalogue_sections_json = value.clone();
-        }
-        if let Some(value) = &self.automation_enabled_json {
-            next.automation_enabled_json = value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        if let Some(value) = &self.generation_json {
-            next.generation_json = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &FlowArtifact) -> protocol::MutationApplyResult<FlowArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = &self.schema {
+                next.schema = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(list) = &self.selected_node_ids {
+                next.selected_node_ids = list.values.clone();
+            }
+            if let Some(list) = &self.selected_edge_ids {
+                next.selected_edge_ids = list.values.clone();
+            }
+            if let Some(list) = &self.selected_handle_ids {
+                next.selected_handle_ids = list.values.clone();
+            }
+            if let Some(list) = &self.preview_off_node_ids {
+                next.preview_off_node_ids = list.values.clone();
+            }
+            if let Some(value) = &self.lod_mode {
+                next.lod_mode = value.clone();
+            }
+            if let Some(value) = self.proximity_distance {
+                next.proximity_distance = value;
+            }
+            if let Some(value) = self.grid_visible {
+                next.grid_visible = value;
+            }
+            if let Some(value) = self.grid_snap_enabled {
+                next.grid_snap_enabled = value;
+            }
+            if let Some(value) = self.grid_factor {
+                next.grid_factor = value;
+            }
+            if let Some(value) = &self.catalogue_sections_json {
+                next.catalogue_sections_json = value.clone();
+            }
+            if let Some(value) = &self.automation_enabled_json {
+                next.automation_enabled_json = value.clone();
+            }
+            if let Some(value) = &self.contributions_json {
+                next.contributions_json = value.clone();
+            }
+            if let Some(value) = &self.generation_json {
+                next.generation_json = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<FlowSnapshot> for FlowDiff {
-    fn apply(&self, snapshot: &FlowSnapshot) -> FlowSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.schema {
-            next.schema = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        next
+    fn apply(&self, snapshot: &FlowSnapshot) -> protocol::MutationApplyResult<FlowSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.schema {
+                next.schema = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -162,7 +165,7 @@ mod tests {
         let diff: FlowDiff = operation.diff(&base);
         assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
         assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");
-        let after = diff.apply(&base);
+        let after = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(after.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 3.0, y: 4.0 }));
     }
 
@@ -173,7 +176,7 @@ mod tests {
         replacement.schema = "flow.replaced".into();
         let mut diff = diff_replace_content(Vec::new(), Vec::new(), Default::default());
         diff.absorb(diff_set_snapshot(&replacement));
-        assert_eq!(diff.apply(&base), replacement);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 }
 //#endregion 🧪️Tests

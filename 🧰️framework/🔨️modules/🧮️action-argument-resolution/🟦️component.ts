@@ -2,12 +2,18 @@
 /** 🧮️ Resolves staged and default action arguments, then identifies unresolved required arguments. */
 import type { ActionArgDef } from "../🛂️manifest/🟦️component.ts";
 
-export function effectiveActionArgs(defs: readonly ActionArgDef[], staged: Readonly<Record<string, unknown>>): Record<string, unknown> {
-  const effective: Record<string, unknown> = {};
+/** 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
+ * declared, editable form field) through untouched: declared `defs` still resolve staged-then-default
+ * as before, but any `seed` key that is not a declared arg id survives into the result unmodified, and
+ * a `seed` value for a declared id that the form hasn't staged yet acts as that field's initial value.
+ * A dialog with zero declared `defs` (a plain confirm/cancel) passes `seed`+`staged` through wholesale. */
+export function effectiveActionArgs(defs: readonly ActionArgDef[], staged: Readonly<Record<string, unknown>>, seed?: Readonly<Record<string, unknown>>): Record<string, unknown> {
+  if (defs.length === 0) return { ...seed, ...staged };
+  const effective: Record<string, unknown> = seed ? { ...seed } : {};
   for (const def of defs) {
     if (Object.prototype.hasOwnProperty.call(staged, def.id)) {
       effective[def.id] = staged[def.id];
-    } else if (def.default !== undefined && def.default !== null) {
+    } else if (!Object.prototype.hasOwnProperty.call(effective, def.id) && def.default !== undefined && def.default !== null) {
       effective[def.id] = def.default;
     }
   }

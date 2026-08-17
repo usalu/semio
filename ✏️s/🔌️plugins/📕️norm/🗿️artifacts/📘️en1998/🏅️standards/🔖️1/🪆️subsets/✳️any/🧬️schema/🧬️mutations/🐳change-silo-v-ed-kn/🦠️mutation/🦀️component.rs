@@ -15,7 +15,7 @@ pub struct ChangeSiloVEdKn {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloVEdKn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "silo-v-ed-kn", kind: "change-silo-v-ed-kn", record: "ChangedSiloVEdKn" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_silo_v_ed_kn::diff::diff(self, base)
     }
 

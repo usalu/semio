@@ -325,95 +325,123 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
-    pub mod curate {
-        #[path = "../../🎛️apps/🗂️curate/🦀️component.rs"]
+    pub mod sourcing {
+        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/🗂️curate/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🗂️curate/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/🗂️curate/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/🗂️curate/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/🗂️curate/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️set-artifact-json/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact-json/🦀️component.rs"]
             pub mod set_artifact_json;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️set-active-example/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-active-example/🦀️component.rs"]
             pub mod set_active_example;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/📄️stock-from-catalogue/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️stock-from-catalogue/🦀️component.rs"]
             pub mod stock_from_catalogue;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-add/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-add/🦀️component.rs"]
             pub mod curate_add;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-set-count/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-set-count/🦀️component.rs"]
             pub mod curate_set_count;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️curate-remove/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️curate-remove/🦀️component.rs"]
             pub mod curate_remove;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️drop-on-pool/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️drop-on-pool/🦀️component.rs"]
             pub mod drop_on_pool;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧺️drop-on-curated/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧺️drop-on-curated/🦀️component.rs"]
             pub mod drop_on_curated;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-query/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-query/🦀️component.rs"]
             pub mod set_filter_query;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-module/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-module/🦀️component.rs"]
             pub mod set_filter_module;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-typology/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-typology/🦀️component.rs"]
             pub mod set_filter_typology;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️set-filter-min-availability/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️set-filter-min-availability/🦀️component.rs"]
             pub mod set_filter_min_availability;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🔍️sort-table/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️sort-table/🦀️component.rs"]
             pub mod sort_table;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
-            #[path = "../../🎛️apps/🗂️curate/🎮️commands/🧩️set-contributions/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️component.rs"]
             pub mod set_contributions;
         }
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
-            pub mod curate {
-                #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🦀️component.rs"]
+            pub mod edit {
+                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🏊️pool/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🦀️component.rs"]
                     pub mod pool;
-                    #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🧺️curated/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧺️curated/🦀️component.rs"]
                     pub mod curated;
-                    #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/👁️preview/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs"]
                     pub mod preview;
-                    #[path = "../../🎛️apps/🗂️curate/🎭️modes/🗂️curate/🪟️windows/🔢️grid/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🦀️component.rs"]
                     pub mod grid;
                 }
             }
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod sourcing {
+        #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏊️pool/🦀️component.rs"]
+                    pub mod pool;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -426,7 +454,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_curate_demo;
-    #[path = "../../🎛️apps/🗂️curate/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_curate_demo_session;
 }
 //#endregion 📚️Examples

@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { TableAvatar } from "../👤️Avatar/🟦️component.tsx";
-import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { TableAvatar } from "../📻️TableAvatar/🟦️component.tsx";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🗄️HistoryTable
@@ -19,6 +19,11 @@ export interface HistoryColumnAuthor {
   readonly name: string;
   readonly avatar?: string;
 }
+
+/** ⚖️ The four-level mutation-outcome severity a checkpoint's worst `MutationMessage` reached
+ * (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C1) —
+ * `undefined` when the checkpoint carries no message at all (the common case). */
+export type HistoryMutationLevel = "info" | "warning" | "error" | "fatal";
 
 /** @emoji 🗄️ One row of a checkpoint ancestor graph — mirrors the plugin-side `HistoryColumn` (see `vcs::HistoryColumn`). */
 export interface HistoryColumn {
@@ -30,6 +35,9 @@ export interface HistoryColumn {
   readonly description?: string;
   readonly lane: number;
   readonly alternativeIds: readonly string[];
+  /** ⚖️ Worst `MutationMessage` level this checkpoint's edit carried — a `Degraded` first-class
+   * conflict (§C5/§C6) always sets at least `"warning"`. `undefined` renders no badge. */
+  readonly mutationLevel?: HistoryMutationLevel;
 }
 
 export interface HistoryTableProps extends ElementProps {
@@ -126,6 +134,22 @@ function HistoryRowAuthors({ column }: { readonly column: HistoryColumn }): Reac
   return <div className="flex shrink-0 -space-x-2">{column.authors.length > 0 ? column.authors.map((author) => <TableAvatar key={author.id} id={author.id} name={author.name} icon={author.avatar} />) : <TableAvatar id="unknown" name="?" />}</div>;
 }
 
+const HISTORY_LEVEL_BADGE_CLASS: Record<HistoryMutationLevel, string> = {
+  info: "bg-[var(--accent)] text-[var(--accent-foreground)]",
+  warning: "bg-amber-400/20 text-amber-400",
+  error: "bg-destructive/20 text-destructive",
+  fatal: "bg-destructive text-destructive-foreground",
+};
+
+/** ⚖️ Small uppercase level chip for a checkpoint's worst `mutationLevel` — see {@link HistoryColumn}. */
+function HistoryLevelBadge({ level }: { readonly level: HistoryMutationLevel }): React.ReactElement {
+  return (
+    <span className={cn("shrink-0 rounded px-1.5 py-0.5 text-2xs uppercase", HISTORY_LEVEL_BADGE_CLASS[level])} title={level}>
+      {level}
+    </span>
+  );
+}
+
 function HistoryRowLabels({ column }: { readonly column: HistoryColumn }): React.ReactElement {
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1">
@@ -194,7 +218,8 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, classNa
                     </div>
                   </div>
                 </div>
-                <div className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center border-b border-[var(--border)] px-single")} style={{ gridColumn: 3, gridRow: index + 1 }}>
+                <div className={cn(HISTORY_ROW_SHELL_CLASS, "flex items-center gap-1 border-b border-[var(--border)] px-single")} style={{ gridColumn: 3, gridRow: index + 1 }}>
+                  {column.mutationLevel ? <HistoryLevelBadge level={column.mutationLevel} /> : null}
                   <span className="min-w-0 truncate text-muted-foreground" title={column.description ?? ""}>
                     {column.description ?? ""}
                   </span>

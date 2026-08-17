@@ -38,18 +38,23 @@ import {
 import {
   createBrowserStoragePort,
   createMemoryStoragePort,
+  DEFAULT_MERGE_POLICY,
   SemioFaultError,
   SHELL_LOCALES,
   type AppDefinition,
   type AppRole,
   type CommandDefinition,
+  type Conflict,
+  type ConflictId,
   type DockSkeleton,
   type DockUiState,
   type Fault,
+  type MergePolicy,
   type PluginAppLabelsOverlay,
   type PluginDependency,
   type PluginViewState,
   type PresenceInteraction,
+  type Severity,
   type ShellBrand,
   type ShellLocale,
   type ShellTerminology,
@@ -497,12 +502,16 @@ type OverlayState = {
 };
 
 /** 🧯️ One non-blocking shell notice — `code` carries the originating fault code (e.g.
- * `SURFACE_FAULT_CODES.ViewerReadOnly`) when the notice was raised from a decoded {@link Fault},
- * `undefined` for a locally-raised notice. */
+ * `SURFACE_FAULT_CODES.ViewerReadOnly`, or `"mutation.rejected"` for a rejected local dispatch —
+ * contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C8/§C9)
+ * when the notice was raised from a decoded {@link Fault}, `undefined` for a locally-raised notice.
+ * `kind` widened from the original `"info" | "error"` to the full four-level {@link Severity}
+ * vocabulary so a rejected dispatch's own worst level (`DispatchReport.worst`) can render as
+ * `"warning"`/`"fatal"` too, not just collapse onto `"error"`. */
 export type TransientNotice = {
   readonly id: number;
   readonly message: string;
-  readonly kind: "info" | "error";
+  readonly kind: Severity;
   readonly code?: string;
 };
 
@@ -553,6 +562,19 @@ type SyncState = {
   readonly syncStatusByDocumentId: Readonly<Record<string, ArtifactSyncStatus>>;
 };
 
+/** ⚖️ Merge-outcome/first-class-conflict slice (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-
+ * POLICIES-AND-FIRST-CLASS-CONFLICTS` §C3/§C5/§C9) — `mergePolicy` mirrors the persisted
+ * `os.config.merge-policy` setting (`🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy`),
+ * `conflicts` is this authority's `Conflict` roster as of the last `MergeReport`/`Conflicts` frame,
+ * `selectedConflictId` drives the `ChromePanels` Conflicts panel's `DiffViewHost` preview. Whether a
+ * peer batch is currently quarantined is DERIVED (see {@link selectQuarantinedConflicts}), never a
+ * separate stored flag — it is exactly "any `Open` `Quarantined` conflict in this list". */
+type MergeState = {
+  readonly mergePolicy: MergePolicy;
+  readonly conflicts: readonly Conflict[];
+  readonly selectedConflictId: ConflictId | null;
+};
+
 /**
  * 🎛️ Command palette state not already covered by the generic per-anchor `Panel` state: the command
  * whose arg form is expanded one level above the command list (exclusive — only one at a time), and
@@ -575,6 +597,7 @@ export type ShellState = {
   readonly tutorial: TutorialState;
   readonly uiPrefs: UiPrefsState;
   readonly sync: SyncState;
+  readonly merge: MergeState;
 };
 //#endregion slice shapes
 
@@ -655,7 +678,10 @@ export type ShellAction =
   | { readonly type: "SET_SYNC_BACKBONE_URI"; readonly value: Updatable<string | null> }
   | { readonly type: "SET_SYNC_CARD_KIND"; readonly value: Updatable<SyncCardKind | null> }
   | { readonly type: "SET_SYNC_DRAFT_PATH"; readonly value: Updatable<string> }
-  | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: ArtifactSyncStatus };
+  | { readonly type: "SET_SYNC_STATUS_FOR_DOCUMENT"; readonly documentId: string; readonly status: ArtifactSyncStatus }
+  | { readonly type: "SET_MERGE_POLICY"; readonly value: MergePolicy }
+  | { readonly type: "SET_CONFLICTS"; readonly value: Updatable<readonly Conflict[]> }
+  | { readonly type: "SET_SELECTED_CONFLICT_ID"; readonly value: ConflictId | null };
 //#endregion actions
 
 //#region slice reducers
@@ -929,6 +955,23 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
   }
 }
 
+/** ⚖️ Reducer for the merge-outcome/first-class-conflict slice — see {@link MergeState}. */
+function mergeReducer(state: MergeState, action: ShellAction): MergeState {
+  switch (action.type) {
+    case "SET_MERGE_POLICY":
+      return state.mergePolicy === action.value ? state : { ...state, mergePolicy: action.value };
+    case "SET_CONFLICTS": {
+      const conflicts = resolveUpdatable(action.value, state.conflicts);
+      const selectedConflictId = state.selectedConflictId && conflicts.some((entry) => entry.id === state.selectedConflictId) ? state.selectedConflictId : null;
+      return { ...state, conflicts, selectedConflictId };
+    }
+    case "SET_SELECTED_CONFLICT_ID":
+      return state.selectedConflictId === action.value ? state : { ...state, selectedConflictId: action.value };
+    default:
+      return state;
+  }
+}
+
 /** 🎥️ Reducer for the tutorial playback/recording slice — see `TutorialState`. `SET_TUTORIAL` resets every playback-rate/deviation flag (a fresh tutorial never inherits the previous one's rate/deviation); starting an introduction (`SET_INTRODUCTION_STEP` with a non-null value) clears the active tutorial, mirroring `overlayReducer`'s reverse case. */
 function tutorialReducer(state: TutorialState, action: ShellAction): TutorialState {
   switch (action.type) {
@@ -972,11 +1015,20 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     tutorial: tutorialReducer(state.tutorial, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
     sync: syncReducer(state.sync, action),
+    merge: mergeReducer(state.merge, action),
   };
 }
 
 //#region selectors
 export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
+
+/** ⚖️ Open `Quarantined` conflicts — "a peer batch is being held" (contract freeze §C6/§C9's
+ * `ShellSync` quarantine indicator) is exactly "this list is non-empty", never a separately stored
+ * flag (see {@link MergeState}'s doc comment). */
+export const selectQuarantinedConflicts = (state: ShellState): readonly Conflict[] => state.merge.conflicts.filter((conflict) => conflict.kind.kind === "quarantined" && conflict.status === "open");
+
+/** ⚖️ Open conflicts of either kind, for the `ChromePanels` Conflicts panel. */
+export const selectOpenConflicts = (state: ShellState): readonly Conflict[] => state.merge.conflicts.filter((conflict) => conflict.status === "open");
 //#endregion selectors
 
 /** 🌱️ Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from the shell's own storage for UI prefs). */
@@ -1029,6 +1081,7 @@ export function initialShellState(_props: {
       uiKeybindingOverrides: readStoredUiKeybindingOverrides(storage),
     },
     sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
+    merge: { mergePolicy: DEFAULT_MERGE_POLICY, conflicts: [], selectedConflictId: null },
   };
 }
 //#endregion 🧮️ShellStore

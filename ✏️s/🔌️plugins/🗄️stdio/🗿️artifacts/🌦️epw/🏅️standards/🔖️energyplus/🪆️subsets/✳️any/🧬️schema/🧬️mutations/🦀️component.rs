@@ -6,7 +6,6 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::{
     dec_data_periods, dec_location, dec_record, dec_str, diff_set_snapshot, enc_data_periods, enc_location, enc_record, enc_str, split_top_level, strip_brackets, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff,
 };
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -78,10 +77,15 @@ pub enum EpwMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> EpwDiff {
-    let diff = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <EpwDiff as protocol::MutationDiff<EpwSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
+    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -89,8 +93,8 @@ pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) ->
 impl Mutation<EpwSnapshot> for EpwMutation {
     type Diff = EpwDiff;
 
-    fn diff(&self, base: &EpwSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             EpwMutation::NoMutation => EpwDiff::default(),
             EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             EpwMutation::SetLocation { location } => EpwDiff { location: Some(location.clone()), ..EpwDiff::default() },
@@ -108,7 +112,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
                 fdiff.set_at(*field_index, Some(value.clone()));
                 EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }], added: Vec::new() }), ..EpwDiff::default() }
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &EpwSnapshot) -> Vec<Self> {
@@ -228,7 +232,7 @@ impl OpText for EpwMutation {
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `EpwDiff`'s hand-rolled codec.
-impl protocol::OpBinary for EpwMutation {
+impl OpBinary for EpwMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
@@ -333,7 +337,7 @@ mod tests {
         ];
         for m in variants {
             let diff = m.diff(&base);
-            let expected = diff.apply(&base);
+            let expected = diff.diff().apply(&base).unwrap();
 
             let mut via_apply = base.clone();
             let returned_diff = apply_epw_mutation(&mut via_apply, &m);
@@ -366,8 +370,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.apply(&base);
-            let back = d.inverse(&base).apply(&mid);
+            let mid = d.diff().apply(&base).unwrap();
+            let back = d.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -379,59 +383,59 @@ mod tests {
         let base = base_snapshot();
 
         let d1 = EpwMutation::InsertRecord { index: 2, record: record("40", "ins") }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::RemoveRecord { index: 0 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         let d1 = EpwMutation::InsertRecord { index: 2, record: record("41", "f") }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::InsertRecord { index: 2, record: record("42", "g") }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
         let d1 = EpwMutation::InsertRecord { index: 1, record: record("43", "orig") }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::SetRecordField { record_index: 1, field_index: 6, value: "patched".into() }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+SetRecordField absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetRecordField absorb mismatch");
         assert_eq!(after.records[1].dry_bulb_temp, "patched");
 
         let d1 = EpwMutation::SetRecordField { record_index: 1, field_index: 6, value: "will-vanish".into() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::RemoveRecord { index: 1 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         let base = base_snapshot();
         let d1 = EpwMutation::InsertRecord { index: 0, record: record("44", "a") }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = EpwMutation::SetRecordField { record_index: 0, field_index: 6, value: "a2".into() }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = EpwMutation::RemoveRecord { index: 2 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).unwrap();
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).unwrap(), s3);
+        assert_eq!(right.apply(&base).unwrap(), s3);
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
     }
     //#endregion 🔖️AbsorbLaw
 
@@ -440,8 +444,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
-        assert_eq!(EpwDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(EpwDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(EpwDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(EpwDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(EpwDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️BetweenRoundtripLaw
@@ -453,10 +457,10 @@ mod tests {
         let b = sweep_b();
 
         let d_ab = EpwDiff::between(&a, &b);
-        assert_eq!(d_ab.apply(&a), b, "between(a,b).apply(a) == b");
+        assert_eq!(d_ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
 
         let d_ba = EpwDiff::between(&b, &a);
-        assert_eq!(d_ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
 
         assert!(d_ab.location.is_some(), "location must be populated");
         assert!(d_ab.design_conditions.is_some());
@@ -487,14 +491,14 @@ mod tests {
         let d_shrink = EpwDiff::between(&a, &shorter);
         let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
         assert!(!shrink_records.removed.is_empty(), "a shorter record list must produce a removed entry");
-        assert_eq!(d_shrink.apply(&a), shorter);
+        assert_eq!(d_shrink.apply(&a).unwrap(), shorter);
 
         let mut longer = a.clone();
         longer.records.push(record("4", "-5.0"));
         let d_grow = EpwDiff::between(&a, &longer);
         let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
         assert!(!grow_records.added.is_empty(), "a longer record list must produce an added entry");
-        assert_eq!(d_grow.apply(&a), longer);
+        assert_eq!(d_grow.apply(&a).unwrap(), longer);
 
         assert!(EpwDiff::between(&a, &a).is_empty());
     }

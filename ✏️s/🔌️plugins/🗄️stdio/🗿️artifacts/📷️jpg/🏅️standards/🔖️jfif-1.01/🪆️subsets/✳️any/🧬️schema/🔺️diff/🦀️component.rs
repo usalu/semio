@@ -11,7 +11,7 @@
 use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
 use crate::artifacts::jpg::JpgSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -903,7 +903,17 @@ pub struct JpgDiff {
 }
 
 impl MutationDiff<JpgSnapshot> for JpgDiff {
-    fn apply(&self, base: &JpgSnapshot) -> JpgSnapshot {
+    fn apply(&self, base: &JpgSnapshot) -> MutationApplyResult<JpgSnapshot> {
+        validate_jpg_frame(base.frame.as_ref(), self.frame.as_ref())?;
+        if let Some(quant) = &self.quant_tables {
+            validate_jpg_quant_tables(&base.quant_tables, quant)?;
+        }
+        if let Some(huffman) = &self.huffman_tables {
+            validate_jpg_huffman_tables(&base.huffman_tables, huffman)?;
+        }
+        if let Some(segments) = &self.other_segments {
+            validate_jpg_indexed(base.other_segments.len(), &segments.removed, segments.modified.iter().map(|entry| entry.index), segments.added.iter().map(|entry| entry.index), ["otherSegments"])?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -953,7 +963,7 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
         if let Some(od) = &self.other_segments {
             next.other_segments = apply_other_segments(&next.other_segments, od);
         }
-        next
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars
@@ -1011,11 +1021,134 @@ impl MutationDiff<JpgSnapshot> for JpgDiff {
     }
 }
 
+fn validate_jpg_frame(base: Option<&JpgFrameHeader>, change: Option<&JpgFrameChange>) -> MutationApplyResult<()> {
+    let Some(change) = change else { return Ok(()) };
+    match change {
+        JpgFrameChange::Replace { .. } => Ok(()),
+        JpgFrameChange::Modify(fields) => {
+            let Some(base) = base else {
+                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame modification requires an existing frame").at(["frame"]));
+            };
+            let Some(components) = &fields.components else { return Ok(()) };
+            let removed: std::collections::HashSet<u8> = components.removed.iter().copied().collect();
+            if removed.len() != components.removed.len() || components.removed.iter().any(|id| base.components.iter().all(|component| component.id != *id)) {
+                return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG frame component removal is missing or duplicated").at(["frame", "components"]));
+            }
+            let mut modified = std::collections::HashSet::new();
+            for entry in &components.modified {
+                if base.components.iter().all(|component| component.id != entry.id) || !modified.insert(entry.id) || removed.contains(&entry.id) {
+                    return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG frame component modification is missing, duplicated, or removed").at(["frame", "components"]));
+                }
+            }
+            let final_len = base.components.len().saturating_sub(components.removed.len()).saturating_add(components.added.len());
+            let mut added_ids = std::collections::HashSet::new();
+            for entry in &components.added {
+                if entry.index > final_len || !added_ids.insert(entry.item.id) || base.components.iter().any(|component| component.id == entry.item.id) {
+                    return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG frame component addition conflicts with the target state").at(["frame", "components"]));
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+fn validate_jpg_quant_tables(base: &[JpgQuantTable], diff: &JpgQuantTablesDiff) -> MutationApplyResult<()> {
+    let base_ids: std::collections::HashSet<u8> = base.iter().map(|table| table.id).collect();
+    let removed: std::collections::HashSet<u8> = diff.removed.iter().copied().collect();
+    if removed.len() != diff.removed.len() || diff.removed.iter().any(|id| !base_ids.contains(id)) {
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG quantization-table removal is missing or duplicated").at(["quantTables"]));
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if !base_ids.contains(&entry.id) || !modified.insert(entry.id) || removed.contains(&entry.id) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG quantization-table modification is missing, duplicated, or removed").at(["quantTables"]));
+        }
+    }
+    let mut added_ids = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if base_ids.contains(&entry.item.id) || !added_ids.insert(entry.item.id) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG quantization-table addition conflicts with the target state").at(["quantTables", "added"]));
+        }
+    }
+    validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["quantTables", "added"])
+}
+
+fn validate_jpg_huffman_tables(base: &[JpgHuffmanTable], diff: &JpgHuffmanTablesDiff) -> MutationApplyResult<()> {
+    let base_keys: std::collections::HashSet<JpgHuffmanTableKey> = base.iter().map(huffman_key).collect();
+    let removed: std::collections::HashSet<JpgHuffmanTableKey> = diff.removed.iter().copied().collect();
+    if removed.len() != diff.removed.len() || diff.removed.iter().any(|key| !base_keys.contains(key)) {
+        return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG Huffman-table removal is missing or duplicated").at(["huffmanTables"]));
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if !base_keys.contains(&entry.key) || !modified.insert(entry.key) || removed.contains(&entry.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG Huffman-table modification is missing, duplicated, or removed").at(["huffmanTables"]));
+        }
+    }
+    let mut added_keys = std::collections::HashSet::new();
+    for entry in &diff.added {
+        let key = huffman_key(&entry.item);
+        if base_keys.contains(&key) || !added_keys.insert(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "JPEG Huffman-table addition conflicts with the target state").at(["huffmanTables", "added"]));
+        }
+    }
+    validate_jpg_additions(base.len(), diff.removed.len(), diff.added.iter().map(|entry| entry.index), ["huffmanTables", "added"])
+}
+
+fn validate_jpg_additions<I, K>(base_len: usize, removed_len: usize, added: I, path: K) -> MutationApplyResult<()>
+where
+    I: IntoIterator<Item = usize>,
+    K: IntoIterator,
+    K::Item: AsRef<str>,
+{
+    let path: Vec<String> = path.into_iter().map(|part| part.as_ref().to_owned()).collect();
+    let added: Vec<usize> = added.into_iter().collect();
+    let final_len = base_len.saturating_sub(removed_len).saturating_add(added.len());
+    let mut added_set = std::collections::HashSet::new();
+    for index in added {
+        if index > final_len || !added_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    Ok(())
+}
+
+fn validate_jpg_indexed<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+where
+    I: IntoIterator<Item = usize>,
+    J: IntoIterator<Item = usize>,
+    K: IntoIterator,
+    K::Item: AsRef<str>,
+{
+    let path: Vec<String> = path.into_iter().map(|part| part.as_ref().to_owned()).collect();
+    let mut removed_set = std::collections::HashSet::new();
+    for &index in removed {
+        if index >= base_len || !removed_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "JPEG collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    let mut modified_set = std::collections::HashSet::new();
+    for index in modified {
+        if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "JPEG collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
+        }
+    }
+    let added: Vec<usize> = added.into_iter().collect();
+    let final_len = base_len.saturating_sub(removed.len()).saturating_add(added.len());
+    let mut added_set = std::collections::HashSet::new();
+    for index in added {
+        if index > final_len || !added_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "JPEG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<JpgSnapshot> for JpgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) exactly like zip's/
     /// png's: the state delta from `self.apply(base)` back to `base`.
     fn inverse(&self, base: &JpgSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = self.apply(base).unwrap();
         Self::between(&mutated, base)
     }
 

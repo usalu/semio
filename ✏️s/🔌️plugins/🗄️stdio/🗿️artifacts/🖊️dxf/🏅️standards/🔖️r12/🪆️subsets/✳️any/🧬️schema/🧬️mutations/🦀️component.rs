@@ -70,7 +70,6 @@ use crate::artifacts::dxf::schema::diff::{
     enc_style,
     enc_style_bin,
     entity_diff_between_pub,
-    header_var_diff_between,
     layer_diff_between,
     linetype_diff_between,
     read_str_lp,
@@ -80,7 +79,6 @@ use crate::artifacts::dxf::schema::diff::{
 };
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
 use crate::artifacts::dxf::DxfSnapshot;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -187,10 +185,15 @@ pub enum DxfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> DxfDiff {
-    let diff = <DxfMutation as protocol::Mutation<DxfSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <DxfDiff as protocol::MutationDiff<DxfSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
+    let outcome = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -198,8 +201,8 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 impl Mutation<DxfSnapshot> for DxfMutation {
     type Diff = DxfDiff;
 
-    fn diff(&self, base: &DxfSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             DxfMutation::NoMutation => DxfDiff::default(),
             DxfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
@@ -243,7 +246,7 @@ impl Mutation<DxfSnapshot> for DxfMutation {
                 Some(old) => diff_set_block(*index, block_diff_between(old, block)),
                 None => diff_insert_block(*index, block.clone()),
             },
-        }
+        })
     }
 
     fn inverse(&self, base: &DxfSnapshot) -> Vec<Self> {
@@ -389,7 +392,7 @@ fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     }
 }
 
-impl protocol::OpText for DxfMutation {
+impl OpText for DxfMutation {
     fn print_op(&self) -> String {
         print_dxf_mutation(self)
     }
@@ -405,7 +408,7 @@ impl protocol::OpText for DxfMutation {
 /// uses. Every variant payload reuses `🔺️diff/🦀️component.rs`'s real recursive binary item
 /// codecs (`enc_dxf_snapshot_bin`/`enc_dxf_entity_bin`/`enc_block_bin`/…) — genuinely structured,
 /// varint/length-prefixed binary, never text-as-bytes.
-impl protocol::OpBinary for DxfMutation {
+impl OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DxfMutation::NoMutation => 0,
@@ -636,8 +639,19 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::dxf::schema::diff::DxfEntitiesDiff;
     use crate::artifacts::dxf::schema::snapshot::{DxfOtherTable, DxfTables, DxfTag, DxfValue, DxfVertex};
     use protocol::command::DiffAlgebra;
+
+    #[test]
+    fn missing_entity_target_is_rejected_before_mutation() {
+        let base = DxfSnapshot::default();
+        let diff = DxfDiff { entities: Some(DxfEntitiesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
+        let error = diff.apply(&base).expect_err("missing entity target must be rejected");
+        assert_eq!(error.code, "invalid-remove-index");
+        assert_eq!(error.target, vec!["entities", "0"]);
+        assert_eq!(base, DxfSnapshot::default());
+    }
 
     //#region 🔖️Fixtures
     fn base_snapshot() -> DxfSnapshot {
@@ -735,7 +749,7 @@ mod tests {
         let base = base_snapshot();
         for m in variants() {
             let diff = m.diff(&base);
-            let expected = diff.apply(&base);
+            let expected = diff.diff().apply(&base).expect("valid mutation diff");
 
             let mut via_apply = base.clone();
             let returned_diff = apply_dxf_mutation(&mut via_apply, &m);
@@ -759,8 +773,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.apply(&base);
-            let back = d.inverse(&base).apply(&mid);
+            let mid = d.diff().apply(&base).expect("valid forward diff");
+            let back = d.diff().inverse(&base).apply(&mid).expect("valid inverse diff");
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -774,33 +788,33 @@ mod tests {
         // 🧩 Insert(2)+Remove(0) on entities: the two-op sequence base → mid → after.
         let new_entity = DxfEntity::Arc { center: [0.0, 0.0, 0.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
         let d1 = DxfMutation::InsertEntity { index: 2, entity: new_entity.clone() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = DxfMutation::RemoveEntity { index: 0 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f)+Insert(2,g): both must survive.
         let d1 = DxfMutation::InsertEntity { index: 2, entity: new_entity.clone() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let other_entity = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 1.0, value: "g".into(), layer: "0".into(), unknown_group_codes: vec![] };
         let d2 = DxfMutation::InsertEntity { index: 2, entity: other_entity }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.entities.len(), base.entities.len() + 2, "both inserts must survive");
 
         // 🧩 Add+SetField (kind-preserving): patch into the added payload.
         let d1 = DxfMutation::InsertEntity { index: 1, entity: new_entity.clone() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let patched = DxfEntity::Arc { center: [9.0, 9.0, 9.0], radius: 1.0, start_angle: 0.0, end_angle: 90.0, layer: "0".into(), unknown_group_codes: vec![] };
         let d2 = DxfMutation::SetEntity { index: 1, entity: patched }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+SetField absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
         match &after.entities[1] {
             DxfEntity::Arc { center, .. } => assert_eq!(*center, [9.0, 9.0, 9.0]),
             other => panic!("expected Arc, got {other:?}"),
@@ -810,55 +824,55 @@ mod tests {
         // canonical case — SetEntity with a different kind produces `Replace`, which must still
         // absorb cleanly into a preceding Insert's carried payload).
         let d1 = DxfMutation::InsertEntity { index: 1, entity: new_entity.clone() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let swapped = DxfEntity::Text { position: [0.0, 0.0, 0.0], height: 3.0, value: "swap".into(), layer: "0".into(), unknown_group_codes: vec![] };
         let d2 = DxfMutation::SetEntity { index: 1, entity: swapped.clone() }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+Replace(kind-change) absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+Replace(kind-change) absorb mismatch");
         assert_eq!(after.entities[1], swapped);
 
         // 🧩 Modify+Remove: modifying then removing the same entity collapses to a removal.
         let d1 = DxfMutation::SetEntity { index: 1, entity: DxfEntity::Circle { center: [0.0, 0.0, 0.0], radius: 9.0, layer: "0".into(), unknown_group_codes: vec![] } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = DxfMutation::RemoveEntity { index: 1 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Name-keyed: Add layer + remove-of-added annihilates the add.
         let d1 = DxfMutation::InsertLayer { index: 2, layer: DxfLayer { name: "Fresh".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = DxfMutation::RemoveLayer { name: "Fresh".into() }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+Remove(name-keyed) absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
         assert_eq!(after.tables.layers, base.tables.layers, "add-then-remove of the same name must be a full no-op");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = DxfMutation::InsertEntity { index: 0, entity: new_entity.clone() }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = DxfMutation::SetEntity { index: 0, entity: DxfEntity::Circle { center: [2.0, 2.0, 2.0], radius: 4.0, layer: "0".into(), unknown_group_codes: vec![] } }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).expect("valid second diff");
         let d3 = DxfMutation::RemoveEntity { index: 2 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).expect("valid third diff");
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).expect("valid left diff"), s3);
+        assert_eq!(right.apply(&base).expect("valid right diff"), s3);
+        assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must be associative");
     }
     //#endregion 🔖️AbsorbLaw
 
@@ -867,8 +881,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(DxfDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(DxfDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(DxfDiff::between(&a, &b).apply(&a).expect("valid forward diff"), b);
+        assert_eq!(DxfDiff::between(&b, &a).apply(&b).expect("valid backward diff"), a);
         assert!(DxfDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️BetweenRoundtripLaw
@@ -880,9 +894,9 @@ mod tests {
         let b = sweep_b();
 
         let d_ab = DxfDiff::between(&a, &b);
-        assert_eq!(d_ab.apply(&a), b, "between(a,b).apply(a) == b");
+        assert_eq!(d_ab.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
         let d_ba = DxfDiff::between(&b, &a);
-        assert_eq!(d_ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert_eq!(d_ba.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
         assert!(DxfDiff::between(&a, &a).is_empty());
 
         // 🔍 header_vars (name-keyed): removed + modified + added from ONE between(a,b) call.

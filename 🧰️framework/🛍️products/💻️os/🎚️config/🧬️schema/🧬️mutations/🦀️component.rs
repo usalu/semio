@@ -45,8 +45,9 @@ impl Mutation<OpeningPreferences> for OpeningConfigMutation {
 }
 
 /// 🧮️ Diff-first apply — `operation.diff(base).apply(base)`, matching every other migrated facet.
-pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) {
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot);
+pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) -> protocol::MutationApplyResult<()> {
+    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
+    Ok(())
 }
 
 pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &OpeningConfigMutation) -> Vec<OpeningConfigMutation> {
@@ -70,13 +71,40 @@ mod tests {
         let base = OpeningPreferences::default();
 
         let set_op = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() });
-        let after_set = set_op.diff(&base).diff().apply(&base);
+        let after_set = set_op.diff(&base).diff().apply(&base).expect("valid set-default diff");
         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
 
         let undo = set_op.inverse(&base);
         assert_eq!(undo, vec![OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect: dialect.clone(), role: AppRole::Editor })]);
         let restored = undo[0].diff(&after_set).diff().apply(&after_set);
-        assert_eq!(restored, base);
+        assert_eq!(restored, Ok(base));
     }
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// `set`/`clear` have no missing-target or Fatal-domain case (an upsert and an idempotent
+    /// removal never reference an external entity that could be absent or invariant-violating), so
+    /// the only real outcome-law surface here is `mutation.no-op` on the idempotent path.
+    #[test]
+    fn set_default_app_already_pinned_is_no_op() {
+        let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
+        let app = AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() };
+        let base = OpeningPreferences { defaults: vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }] };
+        let outcome = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect, role: AppRole::Editor, app }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+        assert_eq!(outcome.diff(), &base);
+    }
+
+    #[test]
+    fn clear_default_app_without_a_pin_is_no_op() {
+        let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
+        let base = OpeningPreferences::default();
+        let outcome = OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect, role: AppRole::Viewer }).diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
+        assert_eq!(outcome.diff(), &base);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

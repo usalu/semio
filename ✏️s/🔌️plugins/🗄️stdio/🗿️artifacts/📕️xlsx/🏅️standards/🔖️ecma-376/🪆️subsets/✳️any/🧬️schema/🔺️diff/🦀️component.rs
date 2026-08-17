@@ -21,7 +21,7 @@ use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxShee
 use crate::artifacts::xlsx::XlsxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -209,20 +209,46 @@ where
     }
 }
 
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()>
 where
     K: PartialEq + Clone,
     T: Clone,
 {
+    let keys: Vec<K> = items.iter().map(&key_of).collect();
+    for (position, key) in diff.removed.iter().enumerate() {
+        if !keys.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist"));
+        }
+        if diff.removed[..position].contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated"));
+        }
+    }
+    for (position, modified) in diff.modified.iter().enumerate() {
+        if !keys.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist"));
+        }
+        if diff.removed.contains(&modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item"));
+        }
+        if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated"));
+        }
+    }
+    for item in &diff.added {
+        let key = key_of(item);
+        if keys.contains(&key) || diff.added.iter().filter(|candidate| key_of(candidate) == key).count() != 1 {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists"));
+        }
+    }
     items.retain(|i| !diff.removed.contains(&key_of(i)));
     for m in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|i| key_of(i) == m.key) {
-            apply_item(item, &m.diff);
-        }
+        let item = items.iter_mut().find(|i| key_of(i) == m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist"))?;
+        apply_item(item, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for item in &diff.added {
         items.push(item.clone());
     }
+    Ok(())
 }
 
 fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
@@ -303,16 +329,23 @@ fn diff_cell(old: &XlsxCell, new: &XlsxCell) -> Option<XlsxCellDiff> {
     Some(XlsxCellDiff { value: Some(new.value.clone()) })
 }
 
-fn apply_cell(cell: &mut XlsxCell, diff: &XlsxCellDiff) {
+fn apply_cell(cell: &mut XlsxCell, diff: &XlsxCellDiff) -> MutationApplyResult<()> {
     if let Some(v) = &diff.value {
         cell.value = v.clone();
     }
+    Ok(())
 }
 
 fn cell_with_diff_applied(cell: &XlsxCell, diff: &XlsxCellDiff) -> XlsxCell {
     let mut out = cell.clone();
-    apply_cell(&mut out, diff);
+    apply_cell_for_absorb(&mut out, diff);
     out
+}
+
+fn apply_cell_for_absorb(cell: &mut XlsxCell, diff: &XlsxCellDiff) {
+    if let Some(value) = &diff.value {
+        cell.value = value.clone();
+    }
 }
 
 fn inverse_cell(base: &XlsxCell, diff: &XlsxCellDiff) -> XlsxCellDiff {
@@ -335,16 +368,39 @@ fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
     }
 }
 
-fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) {
+fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_named(&mut sheet.cells, cd, cell_key, apply_cell);
+        apply_named(&mut sheet.cells, cd, cell_key, apply_cell).map_err(|error| error.under(["cells"]))?;
     }
+    Ok(())
 }
 
 fn sheet_with_diff_applied(sheet: &XlsxSheet, diff: &XlsxSheetDiff) -> XlsxSheet {
     let mut out = sheet.clone();
-    apply_sheet(&mut out, diff);
+    apply_sheet_for_absorb(&mut out, diff);
     out
+}
+
+fn apply_sheet_for_absorb(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) {
+    if let Some(cells) = &diff.cells {
+        apply_named_for_absorb(&mut sheet.cells, cells, cell_key, apply_cell_for_absorb);
+    }
+}
+
+fn apply_named_for_absorb<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+where
+    K: PartialEq + Clone,
+    T: Clone,
+{
+    items.retain(|item| !diff.removed.contains(&key_of(item)));
+    for modified in &diff.modified {
+        if let Some(item) = items.iter_mut().find(|item| key_of(item) == modified.key) {
+            apply_item(item, &modified.diff);
+        }
+    }
+    for added in &diff.added {
+        items.push(added.clone());
+    }
 }
 
 fn inverse_sheet(base: &XlsxSheet, diff: &XlsxSheetDiff) -> XlsxSheetDiff {
@@ -355,7 +411,7 @@ fn absorb_sheet_diff(mut a: XlsxSheetDiff, b: XlsxSheetDiff) -> XlsxSheetDiff {
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_named(ca, cb, cell_key, absorb_cell_diff, apply_cell)),
+        (Some(ca), Some(cb)) => Some(absorb_named(ca, cb, cell_key, absorb_cell_diff, apply_cell_for_absorb)),
     };
     a
 }
@@ -372,11 +428,20 @@ fn diff_shared_strings(old: &[String], new: &[String]) -> Option<XlsxSharedStrin
     between_named(&shared_strings_pairs(old), &shared_strings_pairs(new), |(i, _)| *i, diff_shared_string)
 }
 
-fn apply_shared_strings(strings: &mut Vec<String>, diff: &XlsxSharedStringsDiff) {
+fn apply_shared_strings(strings: &mut Vec<String>, diff: &XlsxSharedStringsDiff) -> MutationApplyResult<()> {
     let mut pairs = shared_strings_pairs(strings);
-    apply_named(&mut pairs, diff, |(i, _)| *i, |(_, v), nv| *v = nv.clone());
+    apply_named(
+        &mut pairs,
+        diff,
+        |(i, _)| *i,
+        |(_, value), next| {
+            *value = next.clone();
+            Ok(())
+        },
+    )?;
     pairs.sort_by_key(|(i, _)| *i);
     *strings = pairs.into_iter().map(|(_, v)| v).collect();
+    Ok(())
 }
 
 fn inverse_shared_strings(base: &[String], diff: &XlsxSharedStringsDiff) -> XlsxSharedStringsDiff {
@@ -400,13 +465,14 @@ fn diff_workbook(base: &XlsxWorkbook, other: &XlsxWorkbook) -> Option<XlsxWorkbo
     }
 }
 
-fn apply_workbook_diff(workbook: &mut XlsxWorkbook, diff: &XlsxWorkbookDiff) {
+fn apply_workbook_diff(workbook: &mut XlsxWorkbook, diff: &XlsxWorkbookDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.sheets {
-        apply_named(&mut workbook.sheets, sd, |s| s.name.clone(), apply_sheet);
+        apply_named(&mut workbook.sheets, sd, |s| s.name.clone(), apply_sheet).map_err(|error| error.under(["sheets"]))?;
     }
     if let Some(ssd) = &diff.shared_strings {
-        apply_shared_strings(&mut workbook.shared_strings, ssd);
+        apply_shared_strings(&mut workbook.shared_strings, ssd).map_err(|error| error.under(["sharedStrings"]))?;
     }
+    Ok(())
 }
 
 fn inverse_workbook_diff(base: &XlsxWorkbook, diff: &XlsxWorkbookDiff) -> XlsxWorkbookDiff {
@@ -418,7 +484,7 @@ fn absorb_workbook_diff(a: XlsxWorkbookDiff, b: XlsxWorkbookDiff) -> XlsxWorkboo
         sheets: match (a.sheets, b.sheets) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.name.clone(), absorb_sheet_diff, apply_sheet)),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.name.clone(), absorb_sheet_diff, apply_sheet_for_absorb)),
         },
         shared_strings: match (a.shared_strings, b.shared_strings) {
             (None, x) => x,
@@ -434,8 +500,16 @@ fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option
     between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
 }
 
-fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &XlsxOpcCtEntriesDiff) {
-    apply_named(entries, diff, |(k, _)| k.clone(), |(_, v), nv| *v = nv.clone());
+fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &XlsxOpcCtEntriesDiff) -> MutationApplyResult<()> {
+    apply_named(
+        entries,
+        diff,
+        |(k, _)| k.clone(),
+        |(_, value), next| {
+            *value = next.clone();
+            Ok(())
+        },
+    )
 }
 
 fn inverse_ct_entries(base: &[(String, String)], diff: &XlsxOpcCtEntriesDiff) -> XlsxOpcCtEntriesDiff {
@@ -536,13 +610,21 @@ fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<Xls
     between_named(old, new, |r| r.id.clone(), diff_rel)
 }
 
-fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &XlsxOpcRelListDiff) {
-    apply_named(list, diff, |r| r.id.clone(), apply_rel);
+fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &XlsxOpcRelListDiff) -> MutationApplyResult<()> {
+    apply_named(
+        list,
+        diff,
+        |r| r.id.clone(),
+        |relationship, change| {
+            apply_rel(relationship, change);
+            Ok(())
+        },
+    )
 }
 
 fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &XlsxOpcRelListDiff) -> Vec<OpcRelationship> {
     let mut out = list.to_vec();
-    apply_rel_list(&mut out, diff);
+    apply_named_for_absorb(&mut out, diff, |relationship| relationship.id.clone(), |relationship, change| apply_rel(relationship, change));
     out
 }
 
@@ -580,18 +662,45 @@ fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap
     }
 }
 
-fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) {
+fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) -> MutationApplyResult<()> {
+    for (position, owner) in diff.removed.iter().enumerate() {
+        if !rels.contains_key(owner) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
+        }
+        if diff.removed[..position].contains(owner) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner removal is repeated"));
+        }
+    }
+    for (position, m) in diff.modified.iter().enumerate() {
+        if !rels.contains_key(&m.key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
+        }
+        if diff.removed.contains(&m.key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both removed and modified"));
+        }
+        if diff.modified[..position].iter().any(|candidate| candidate.key == m.key) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner modification is repeated"));
+        }
+    }
+    for (position, (owner, _)) in diff.added.iter().enumerate() {
+        if rels.contains_key(owner) || diff.added[..position].iter().any(|(candidate, _)| candidate == owner) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists"));
+        }
+        if diff.removed.contains(owner) || diff.modified.iter().any(|candidate| candidate.key == *owner) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both changed and added"));
+        }
+    }
     for owner in &diff.removed {
         rels.remove(owner);
     }
     for m in &diff.modified {
-        if let Some(list) = rels.get_mut(&m.key) {
-            apply_rel_list(list, &m.diff);
-        }
+        let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"))?;
+        apply_rel_list(list, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for (owner, list) in &diff.added {
         rels.insert(owner.clone(), list.clone());
     }
+    Ok(())
 }
 
 fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) -> XlsxOpcRelationshipsDiff {
@@ -626,21 +735,31 @@ fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<XlsxOpcDiff> {
     }
 }
 
-fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) {
+fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
-            apply_ct_entries(&mut opc.content_types.defaults, dd);
+            apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
         }
         if let Some(dd) = &d.overrides {
-            apply_ct_entries(&mut opc.content_types.overrides, dd);
+            apply_ct_entries(&mut opc.content_types.overrides, dd).map_err(|error| error.under(["contentTypes", "overrides"]))?;
         }
     }
     if let Some(d) = &diff.parts {
-        apply_named(&mut opc.parts, d, |p| p.path.clone(), apply_part);
+        apply_named(
+            &mut opc.parts,
+            d,
+            |p| p.path.clone(),
+            |part, change| {
+                apply_part(part, change);
+                Ok(())
+            },
+        )
+        .map_err(|error| error.under(["parts"]))?;
     }
     if let Some(d) = &diff.relationships {
-        apply_relationships(&mut opc.relationships, d);
+        apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
     }
+    Ok(())
 }
 
 fn inverse_opc_diff(base: &OpcPackage, diff: &XlsxOpcDiff) -> XlsxOpcDiff {
@@ -688,15 +807,15 @@ fn absorb_opc_diff(a: XlsxOpcDiff, b: XlsxOpcDiff) -> XlsxOpcDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<XlsxSnapshot> for XlsxDiff {
-    fn apply(&self, base: &XlsxSnapshot) -> XlsxSnapshot {
+    fn apply(&self, base: &XlsxSnapshot) -> MutationApplyResult<XlsxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d);
+            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
         }
         if let Some(d) = &self.workbook {
-            apply_workbook_diff(&mut next.workbook, d);
+            apply_workbook_diff(&mut next.workbook, d).map_err(|error| error.under(["workbook"]))?;
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1695,10 +1814,10 @@ mod handcrafted_diff_codec_tests {
 
         let cases = vec![
             XlsxDiff::default(),
-            <XlsxDiff as protocol::command::DiffAlgebra<XlsxSnapshot>>::between(&a, &b),
-            <XlsxDiff as protocol::command::DiffAlgebra<XlsxSnapshot>>::between(&b, &a),
-            <XlsxDiff as protocol::command::DiffAlgebra<XlsxSnapshot>>::between(&a, &empty),
-            <XlsxDiff as protocol::command::DiffAlgebra<XlsxSnapshot>>::between(&empty, &a),
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b),
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a),
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &empty),
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&empty, &a),
         ];
         for d in cases {
             let printed = d.print_diff();
@@ -1713,3 +1832,18 @@ mod handcrafted_diff_codec_tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod result_apply_tests {
+    use super::*;
+
+    #[test]
+    fn rejects_missing_sheet_target_without_mutating_base() {
+        let base = XlsxSnapshot::default();
+        let diff =
+            XlsxDiff { workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: "missing".into(), diff: XlsxSheetDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
+        let result = diff.apply(&base);
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(base, XlsxSnapshot::default());
+    }
+}

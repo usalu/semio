@@ -105,54 +105,57 @@ pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMu
 //#region 🔖️Apply
 impl Procedural2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> Procedural2dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(fixture) = &self.fixture {
-            next.fixture = fixture.clone();
-        }
-        if let Some(generation) = &self.generation {
-            next.generation = generation.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.graph_camera {
-            next.graph_camera = value.clone();
-        }
-        if let Some(value) = &self.show_mode {
-            next.show_mode = value.clone();
-        }
-        if let Some(value) = &self.selected_generation_id {
-            next.selected_generation_id = value.clone();
-        }
-        if let Some(value) = &self.generation_preview_text {
-            next.generation_preview_text = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Procedural2dArtifact) -> protocol::MutationApplyResult<Procedural2dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(fixture) = &self.fixture {
+                next.fixture = fixture.clone();
+            }
+            if let Some(generation) = &self.generation {
+                next.generation = generation.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.graph_camera {
+                next.graph_camera = value.clone();
+            }
+            if let Some(value) = &self.show_mode {
+                next.show_mode = value.clone();
+            }
+            if let Some(value) = &self.selected_generation_id {
+                next.selected_generation_id = value.clone();
+            }
+            if let Some(value) = &self.generation_preview_text {
+                next.generation_preview_text = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<Procedural2dSnapshot> for Procedural2dDiff {
-    fn apply(&self, snapshot: &Procedural2dSnapshot) -> Procedural2dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(fixture) = &self.fixture {
-            next.fixture = fixture.clone();
-        }
-        if let Some(generation) = &self.generation {
-            next.generation = generation.clone();
-        }
-        next
+    fn apply(&self, snapshot: &Procedural2dSnapshot) -> protocol::MutationApplyResult<Procedural2dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(fixture) = &self.fixture {
+                next.fixture = fixture.clone();
+            }
+            if let Some(generation) = &self.generation {
+                next.generation = generation.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -250,7 +253,7 @@ mod tests {
             None,
             None,
         );
-        let next = diff.apply(&snapshot);
+        let next = diff.apply(&snapshot).expect("valid mutation diff");
         assert_eq!(next.fixture.widgets.len(), snapshot.fixture.widgets.len() + 1);
         let replaced = next.fixture.widgets.iter().find(|w| widget_id(w) == existing_id.as_str()).expect("replaced");
         assert_eq!(replaced, &Widget::InputNote { id: existing_id, text: "replaced".into() });

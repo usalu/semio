@@ -136,8 +136,8 @@ impl WorkloadGen {
                     document_id: document.clone(),
                     actor,
                     dependencies: Vec::new(),
-                    diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-                    inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+                    diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap_or_default() },
+                    inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
                     timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 }
             })
@@ -579,7 +579,7 @@ fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::Mutati
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("testkit: baseline submit must not fault");
+        engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("testkit: baseline submit must not fault");
     }
 }
 
@@ -593,7 +593,7 @@ fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::Mu
     };
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).expect("testkit: single-envelope batch");
-        if engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).is_err() {
+        if engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).is_err() {
             return;
         }
     }
@@ -639,7 +639,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
         let database = db_engine::Database::open_at(&root, Profile::Test).expect("testkit: open_at for replay law");
         let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone())).expect("testkit: create_document for replay law");
         for envelope in &ops {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().expect("frontier");
         drop(handle);
@@ -662,7 +662,7 @@ pub fn assert_replay_deterministic(seed: u64, op_count: usize) {
         let database = db_engine::Database::open_at(&root_independent, Profile::Test).expect("testkit: open independent replica");
         let handle = database.create_document(db_engine::ArtifactSpec::new(document)).expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
         handle.frontier().expect("frontier")
     };
@@ -682,7 +682,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit a");
+            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("submit a");
             if i + 1 == before_snapshot {
                 engine.snapshot_now((i + 1) as u64).expect("snapshot_now");
             }
@@ -695,7 +695,7 @@ pub fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usi
     {
         let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("submit b");
+            engine.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("submit b");
         }
     }
     let (materialized_full_replay, report_b) = db_artifact::ArtifactEngine::open(document, &storage_full_replay, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine b");
@@ -779,8 +779,8 @@ fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &str, ac
         document_id: document.clone(),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap_or_default() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
@@ -800,14 +800,14 @@ pub fn assert_inverse_undo_roundtrip(seed: u64) {
     let target = envelope.mutation_id.clone();
     engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions::default(), 1).expect("submit forward");
 
-    let after_forward: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("forward value present")).expect("json");
+    let after_forward: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).expect("forward value present")).expect("json");
     assert_eq!(after_forward, forward_value);
 
     engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).expect("undo");
     assert!(engine.get(&path).is_none(), "undo must apply the recorded inverse — path deleted");
 
     engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).expect("redo (undo of undo)");
-    let after_redo: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("redo value present")).expect("json");
+    let after_redo: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).expect("redo value present")).expect("json");
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");
 }
 
@@ -823,7 +823,7 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
     let server_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
     let mut server = db_artifact::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
-        server.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("server submit");
+        server.submit(single_envelope_batch(envelope.clone()), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("server submit");
     }
     let server_frontier = server.frontier();
     let sync_state = db_sync::replay_sync_state(server_storage.wal(), document_core.clone()).expect("replay_sync_state");
@@ -832,7 +832,7 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
     let mut replica1 = db_artifact::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica1");
     let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
-        replica1.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica1 submit");
+        replica1.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("replica1 submit");
     }
 
     let replica2_storage: Arc<dyn DbStorage> = Arc::new(db_storage::MemoryStorage::new());
@@ -840,12 +840,12 @@ pub fn assert_sync_convergence(seed: u64, op_count: usize) {
     let half = ops.len() / 2;
     let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).expect("missing_commands first half");
     for (i, envelope) in missing2_first.into_iter().take(half).enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).expect("replica2 submit (first half)");
+        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).expect("replica2 submit (first half)");
     }
     let replica2_resume_frontier = replica2.frontier();
     let missing2_rest = db_sync::missing_commands(&sync_state, &replica2_resume_frontier).expect("missing_commands resumed");
     for (i, envelope) in missing2_rest.into_iter().enumerate() {
-        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, (half + i) as u64).expect("replica2 submit (rest)");
+        replica2.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, (half + i) as u64).expect("replica2 submit (rest)");
     }
 
     assert_eq!(server_frontier, replica1.frontier(), "a one-shot replica must converge to the server's exact frontier");
@@ -883,7 +883,7 @@ pub fn assert_preview_never_durable(seed: u64) {
     let path = CommandGen::new(seed).random_path();
     let committed_value = serde_json::json!("committed");
     let envelope = schema_erased_envelope(&document, "op-committed", "actor-1", &path, committed_value.clone(), serde_json::Value::Null);
-    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, 1).expect("submit committed");
+    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).expect("submit committed");
 
     let segments_before = storage.wal().list_segments(&core_document).expect("list_segments");
     let lengths_before: Vec<u64> = segments_before.iter().map(|&index| storage.wal().segment_len(&core_document, index).expect("segment_len")).collect();
@@ -898,10 +898,10 @@ pub fn assert_preview_never_durable(seed: u64) {
     assert_eq!(lengths_before, lengths_after, "publishing a preview must never append a single byte to the wal");
     assert_eq!(engine.frontier(), frontier_before, "a preview must never advance the document's committed frontier");
 
-    let previewed: serde_json::Value = serde_json::from_slice(&engine.preview_get(&preview_id, &path).expect("preview_get").expect("preview value present")).expect("json");
+    let previewed: serde_json::Value = db_artifact::decode_pathmap_json(&engine.preview_get(&preview_id, &path).expect("preview_get").expect("preview value present")).expect("json");
     assert_eq!(previewed, preview_value, "the preview overlay must shadow the committed value for its own reader");
 
-    let committed_still: serde_json::Value = serde_json::from_slice(&engine.get(&path).expect("committed value still present")).expect("json");
+    let committed_still: serde_json::Value = db_artifact::decode_pathmap_json(&engine.get(&path).expect("committed value still present")).expect("json");
     assert_eq!(committed_still, committed_value, "a preview must never mutate the canonical committed state");
 }
 
@@ -974,7 +974,7 @@ mod tests {
         let ops_c = WorkloadGen::new(43).disjoint_batch(&document, 8);
         assert_eq!(ops_a, ops_b, "same seed must generate byte-identical envelopes");
         assert_ne!(ops_a, ops_c, "a different seed must generate different actor/value draws");
-        let paths: std::collections::HashSet<String> = ops_a.iter().flat_map(|envelope| serde_json::from_slice::<serde_json::Value>(&envelope.diff.payload).unwrap().as_object().unwrap().keys().cloned().collect::<Vec<_>>()).collect();
+        let paths: std::collections::HashSet<String> = ops_a.iter().flat_map(|envelope| db_artifact::decode_pathmap_json(&envelope.diff.payload).unwrap().as_object().unwrap().keys().cloned().collect::<Vec<_>>()).collect();
         assert_eq!(paths.len(), 8, "disjoint_batch must touch exactly `count` distinct paths");
     }
     //#endregion 🔖️Prng + Generators
@@ -1018,7 +1018,7 @@ mod tests {
                 let engine = engine.clone();
                 runtime.schedule(envelope.mutation_id.0.clone(), move |clock| {
                     let now = clock.now_ms() + i as u64;
-                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, now).expect("submit");
+                    engine.borrow_mut().submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, now).expect("submit");
                 });
             }
             runtime.run(4);
@@ -1105,7 +1105,7 @@ mod tests {
         {
             let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
             let envelope = schema_erased_envelope(&document, "op-1", "actor-1", "x", serde_json::json!(1), serde_json::Value::Null);
-            let _ = engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, 1);
+            let _ = engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1);
         }
         let (recovered, report) = db_artifact::ArtifactEngine::open(document, &storage, db_artifact::ArtifactEngineConfig::default(), 2).expect("recovery must not error");
         assert_eq!(report.torn_tail_bytes, 1, "recovery must report exactly the torn bytes it discarded");
@@ -1188,7 +1188,7 @@ mod tests {
                 let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).unwrap();
                 for i in 0..2 {
                     let envelope = schema_erased_envelope(&document, &format!("op-{i}"), "actor-1", &format!("x{i}"), serde_json::json!(i), serde_json::Value::Null);
-                    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync }, i as u64).unwrap();
+                    engine.submit(single_envelope_batch(envelope), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).unwrap();
                 }
             }
             let core_document = ArtifactId(document.0);

@@ -6,6 +6,6 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &RotateObject, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
-    vec![SemioObjectMutation::RotateObject(super::mutation::RotateObject { rotation: base.transform.rotation })]
+    vec![SemioObjectMutation::RotateObject(RotateObject { rotation: base.transform.rotation })]
 }
 //#endregion 🔖️Inverse

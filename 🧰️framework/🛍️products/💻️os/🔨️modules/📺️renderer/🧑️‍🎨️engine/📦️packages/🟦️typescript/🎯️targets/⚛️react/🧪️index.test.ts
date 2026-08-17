@@ -146,10 +146,21 @@ import {
   flattenPanelTabLeaves,
   groupUtilityNodesByCategory,
   initialShellState,
+  selectOpenConflicts,
+  selectQuarantinedConflicts,
   isFlowGraphScene,
   mergeRecordPreservingIdentity,
   parseSpaceShellPath,
   parseShellRoute,
+  shellActorId,
+  canonicalSurfaceId,
+  directoryCommandFromAction,
+  AUTO_CHECKIN_IDLE_MS,
+  AUTO_CHECKIN_EDIT_THRESHOLD,
+  AutoCheckinScheduler,
+  canCheckIn,
+  computeSyncPillState,
+  syncPillText,
   ShellFaultBoundary,
   preserveJsonIdentity,
   reconcileUtilityPath,
@@ -1161,6 +1172,96 @@ describe("framework plugin runtime", () => {
     expect(response.requestedEffects).toEqual(["requestSync"]);
     expect(response.uiScope).toEqual({ kind: "partial", windowBodies: ["graph"], utilities: false });
     expect(response.historyPatch).toEqual({ cursor: 1, upserts: [] });
+  });
+
+  it("adaptPluginHandle exposes setMergePolicy/resolveConflict/readConflicts and sends the real AppCommand wire frames — ticket 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS lane K2: the merge-policy Settings control and Conflicts panel Accept/Discard used to call `plugin.handle.setMergePolicy?.(…)` against a handle that never had the method, so the optional call silently no-opped — this asserts the method genuinely exists AND that calling it round-trips through the real `AppCommand`/`AppFrame` codecs, not an internal spy", async () => {
+    const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os");
+    const sentCommands: unknown[] = [];
+    const fakeHandle = {
+      manifest: async () => encodePackValue({ pluginId: "mock-merge", label: "Mock Merge", version: "0", apps: [], programs: [], examples: [] }),
+      createApp: async () => 9,
+      destroyApp: async () => {},
+      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+        const [command] = frames.map(decodeAppCommand);
+        sentCommands.push(command);
+        if (command && typeof command === "object" && "setMergePolicy" in command) return [];
+        if (command && typeof command === "object" && "resolveConflict" in command) {
+          const seq = command.resolveConflict.seq;
+          return [
+            encodeAppFrame({ MergeReport: { in_reply_to: seq, report: Array.from(encodePackValue({ policy: "Normal", accepted: true, insertionIndex: 0, replayed: [], worst: null, conflict: null })) } }),
+            encodeAppFrame({ Conflicts: { in_reply_to: seq, conflicts: Array.from(encodePackValue([])) } }),
+          ];
+        }
+        if (command && typeof command === "object" && "readConflicts" in command) {
+          return [encodeAppFrame({ Conflicts: { in_reply_to: command.readConflicts.seq, conflicts: Array.from(encodePackValue([])) } })];
+        }
+        throw new Error(`unexpected command ${JSON.stringify(command)}`);
+      },
+      dispose: () => {},
+    };
+    const handle = await adaptPluginHandle("mock-merge", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    expect(typeof handle.setMergePolicy).toBe("function");
+    expect(typeof handle.resolveConflict).toBe("function");
+    expect(typeof handle.readConflicts).toBe("function");
+    const instanceId = await handle.createApp("main");
+
+    // ⚖️ Same call the Settings merge-policy `Select`'s `dispatchSetMergePolicy` makes (`ShellHost/🟦️component.tsx`).
+    await handle.setMergePolicy(instanceId, "Vigilant");
+    expect(sentCommands[0]).toEqual({ setMergePolicy: { seq: 1, policy: 2 } });
+
+    // ⚔️ Same call the Conflicts panel's Accept button makes (`ChromePanels`'s `onResolve` → `dispatchResolveConflict`).
+    const resolved = await handle.resolveConflict(instanceId, "conflict-abc", "accept");
+    expect(sentCommands[1]).toEqual({ resolveConflict: { seq: 2, conflict_id: "conflict-abc", resolution: 0 } });
+    expect(resolved.mergeReport?.accepted).toBe(true);
+    expect(resolved.conflicts).toEqual([]);
+
+    await handle.readConflicts(instanceId);
+    expect(sentCommands[2]).toEqual({ readConflicts: { seq: 3 } });
+  });
+
+  it("adaptPluginHandle.applyMutations decodes an unsolicited MergeReport/Conflicts reply and it reaches ShellState — ticket 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS lane L1 gap 1: a peer's ApplyEnvelopes ingest batches MergeReport/Conflicts frames alongside it (contract freeze §C6/§C9 'pushed unsolicited after every ingest'), but `applyMutations` used to only look for an Error frame and silently drop everything else — this asserts the guest's real roster survives the decode AND that dispatching it through `shellReducer`'s SET_CONFLICTS (what ShellHost's `applyRemoteMerge` does) lands a remote-origin quarantined conflict in both `selectOpenConflicts` and `selectQuarantinedConflicts`, exactly the panel/badge lane K2 wired", async () => {
+    const { encodeAppFrame, decodeAppCommand, encodePackValue, encodeMutationEnvelopesPack } = await import("@semio-tech/framework-os");
+    const remoteConflict = {
+      id: "conflict-remote-1",
+      kind: { kind: "quarantined", envelopes: [] },
+      status: "open",
+      messages: [{ level: "error", code: "mutation.targetMissing", message: "peer deleted the renamed node" }],
+      actors: ["peer-actor"],
+      timestamp: { actor: 7, physical_ms: 1000, logical: 1 },
+    };
+    const fakeHandle = {
+      manifest: async () => encodePackValue({ pluginId: "mock-remote-merge", label: "Mock Remote Merge", version: "0", apps: [], programs: [], examples: [] }),
+      createApp: async () => 11,
+      destroyApp: async () => {},
+      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+        const [command] = frames.map(decodeAppCommand);
+        if (!command || typeof command !== "object" || !("ApplyEnvelopes" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
+        const seq = command.ApplyEnvelopes.seq;
+        return [
+          // ⚖️ Unsolicited: the command was ApplyEnvelopes, not ReadConflicts/ResolveConflict — this
+          // is exactly the "pushed unsolicited after every ingest" reply shape contract freeze §C8
+          // describes, alongside whatever `DocumentChanged`/effect frames a real ingest would also carry.
+          encodeAppFrame({ MergeReport: { in_reply_to: seq, report: Array.from(encodePackValue({ policy: "Normal", accepted: false, insertionIndex: 0, replayed: [], worst: "error", conflict: remoteConflict.id })) } }),
+          encodeAppFrame({ Conflicts: { in_reply_to: seq, conflicts: Array.from(encodePackValue([remoteConflict])) } }),
+        ];
+      },
+      dispose: () => {},
+    };
+    const handle = await adaptPluginHandle("mock-remote-merge", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const instanceId = await handle.createApp("main");
+
+    // 🐛 Pre-fix, `applyMutations` returned `Promise<void>` and this whole roster was thrown away.
+    const result = await handle.applyMutations(instanceId, encodeMutationEnvelopesPack([]));
+    expect(result.mergeReport?.accepted).toBe(false);
+    expect(result.mergeReport?.worst).toBe("error");
+    expect(result.conflicts).toEqual([remoteConflict]);
+
+    // ⚖️ The other half of the gap: ShellHost's `applyRemoteMerge` (fed by `applyRemoteMergeRef` from
+    // the `remoteMutations` worker-event branch) just dispatches `SET_CONFLICTS` with this roster —
+    // reproduced here at the reducer level so the assertion doesn't need a mounted `ShellHost`.
+    const state = shellReducer(initialShellState({ plugins: [], storage: createMemoryStoragePort() }), { type: "SET_CONFLICTS", value: result.conflicts ?? [] });
+    expect(selectOpenConflicts(state)).toEqual([remoteConflict]);
+    expect(selectQuarantinedConflicts(state)).toEqual([remoteConflict]);
   });
 
   it("detects jco payload-shaped plugin instance busy errors", async () => {
@@ -2754,6 +2855,61 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("Draw");
   });
 
+  // 🆔️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F: a plugin-authored
+  // row's own `id` (now reachable from `TableWindowKit::render_rows`, `🔌️plugin/🦀️component.rs`) must
+  // survive all the way to the DOM as `data-row-id` (contract §C0's `"space:<id>"`/`"artifact:<id>"`
+  // grammar) — this was already true of `TableHost`/`Table` before lane 3-F; these two tests lock it in.
+  it("stamps a row's own id onto the rendered row's data-row-id attribute", () => {
+    const { container } = render(
+      createElement(TableHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "s.space.home",
+          controllerId: "s-home",
+          componentKind: "table",
+          table: {
+            columnsJson: JSON.stringify([{ id: "col0", label: "Name" }]),
+            rowsJson: JSON.stringify([{ id: "space:abc", col0: { kind: "text", value: "Atelier" } }]),
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    expect(container.querySelector('[data-row-id="space:abc"]')).not.toBeNull();
+  });
+
+  it("dispatches a row action button's own ActionDescriptor, unmodified, on click", () => {
+    const onAction = vi.fn();
+    const { container } = render(
+      createElement(TableHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "s.space.home",
+          controllerId: "s-home",
+          componentKind: "table",
+          table: {
+            columnsJson: JSON.stringify([
+              { id: "col0", label: "Name" },
+              { id: "actions", label: "" },
+            ]),
+            rowsJson: JSON.stringify([
+              {
+                id: "space:abc",
+                col0: { kind: "text", value: "Atelier" },
+                actions: { kind: "buttons", buttons: [{ iconId: "trash-2", label: "delete", action: { controllerId: "s-home", action: "deleteSpace", args: { spaceId: "abc" } } }] },
+              },
+            ]),
+          },
+        },
+        onAction,
+      }),
+    );
+    const button = container.querySelector('[data-row-id="space:abc"] button');
+    if (!button) throw new Error("row action button not found");
+    fireEvent.click(button);
+    expect(onAction).toHaveBeenCalledWith({ controllerId: "s-home", action: "deleteSpace", args: { spaceId: "abc" } });
+  });
+
   it("renders vcs history host with an ancestor graph fork", () => {
     const columns = [
       {
@@ -3826,6 +3982,154 @@ describe("s workflow flow routing", () => {
     expect(parseShellRoute("/spaces/my-studio")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: undefined });
     expect(parseShellRoute("/spaces/my-studio/instances/inst-1")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: "inst-1" });
     expect(parseShellRoute("/unknown/path")).toEqual({ kind: "notFound", path: "/unknown/path" });
+  });
+
+  // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 — pure-function
+  // coverage of the identity/directory helpers `ShellHost/🟦️component.tsx` exports for this. Full
+  // end-to-end coverage (a real `openDocument` binding snapshot with/without a resolved identity, an
+  // `os.open-artifact{documentId}` effect resulting in a worker `open` request with hub+folder
+  // bindings) would need `fetch`/`Worker`/`DirectoryClient` mocking this already-huge shared suite has
+  // no existing pattern for; not added this lane — see `📓️w2-c-report.md`.
+  it("shellActorId mints user:{userId}#{sessionId} once identity resolves, else client-{sessionId}", () => {
+    expect(shellActorId("sess-1", null)).toBe("client-sess-1");
+    expect(
+      shellActorId("sess-1", { userId: "u-1", email: "u1@semio.dev", displayName: "U1", hubBaseUrl: "http://127.0.0.1:8787", sessionToken: "tok", issuedAtMs: 0 }),
+    ).toBe("user:u-1#sess-1");
+  });
+
+  it("canonicalSurfaceId formats <kind>@<standard>/<subset>#<role>", () => {
+    expect(canonicalSurfaceId({ artifactKind: "s.space.space", standard: "1", subset: "*" }, "editor")).toBe("s.space.space@1/*#editor");
+    expect(canonicalSurfaceId({ artifactKind: "s.space.space", standard: "1", subset: "*" }, "viewer")).toBe("s.space.space@1/*#viewer");
+  });
+
+  it("directoryCommandFromAction maps all 7 frozen os.directory.* ids, share-link sugaring to create-invite", () => {
+    expect(directoryCommandFromAction("os.directory.create-space", { name: "Atelier", spaceKind: "atelier", visibility: "private" })).toEqual({
+      kind: "create-space",
+      name: "Atelier",
+      spaceKind: "atelier",
+      visibility: "private",
+    });
+    expect(directoryCommandFromAction("os.directory.delete-space", { spaceId: "sp-1" })).toEqual({ kind: "delete-space", spaceId: "sp-1" });
+    expect(directoryCommandFromAction("os.directory.rename-space", { spaceId: "sp-1", name: "New" })).toEqual({ kind: "rename-space", spaceId: "sp-1", name: "New" });
+    expect(directoryCommandFromAction("os.directory.set-visibility", { spaceId: "sp-1", visibility: "public" })).toEqual({ kind: "set-visibility", spaceId: "sp-1", visibility: "public" });
+    expect(directoryCommandFromAction("os.directory.upsert-member", { spaceId: "sp-1", email: "a@b.com", role: "author" })).toEqual({
+      kind: "upsert-member",
+      spaceId: "sp-1",
+      email: "a@b.com",
+      role: "author",
+    });
+    expect(directoryCommandFromAction("os.directory.remove-member", { spaceId: "sp-1", userId: "u-1" })).toEqual({ kind: "remove-member", spaceId: "sp-1", userId: "u-1" });
+    expect(directoryCommandFromAction("os.directory.share-link", { spaceId: "sp-1", role: "spectator", ttlSecs: 60 })).toEqual({
+      kind: "create-invite",
+      spaceId: "sp-1",
+      role: "spectator",
+      ttlSecs: 60,
+    });
+    expect(directoryCommandFromAction("os.unknownVerb", {})).toBeNull();
+  });
+
+  // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C5 — save/check-in policy
+  // (lane 3-A). `AutoCheckinScheduler` is deliberately framework-free (see its own doc) so its
+  // debounce/storm-guard behaviour is verifiable with fake timers directly, without mounting
+  // `ShellHost` — the same "no Worker/fetch/DirectoryClient mocking pattern exists yet" ceiling
+  // `📓️w2-c-report.md` already documented applies here too; `ShellHost`'s own wiring of this
+  // scheduler (and the pill's rendering into the sync tab) is reviewed, not click/mount-tested.
+  describe("AutoCheckinScheduler (§C5 auto check-in)", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("3 edits then idle ⇒ exactly one commitCheckpoint", () => {
+      vi.useFakeTimers();
+      const onCheckpoint = vi.fn();
+      const scheduler = new AutoCheckinScheduler(onCheckpoint);
+      scheduler.notify(1);
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS - 1);
+      scheduler.notify(2);
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS - 1);
+      scheduler.notify(3);
+      expect(onCheckpoint).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS);
+      expect(onCheckpoint).toHaveBeenCalledTimes(1);
+      // 🎯️ "never a storm": more time passing without a fresh `notify` never fires a second time.
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS * 3);
+      expect(onCheckpoint).toHaveBeenCalledTimes(1);
+    });
+
+    it("≥ 200 uncommitted edits ⇒ checkpoint without waiting for idle", () => {
+      vi.useFakeTimers();
+      const onCheckpoint = vi.fn();
+      const scheduler = new AutoCheckinScheduler(onCheckpoint);
+      scheduler.notify(AUTO_CHECKIN_EDIT_THRESHOLD - 1);
+      expect(onCheckpoint).not.toHaveBeenCalled();
+      scheduler.notify(AUTO_CHECKIN_EDIT_THRESHOLD);
+      expect(onCheckpoint).toHaveBeenCalledTimes(1);
+      // 🎯️ "never a storm": a second `notify` at/above the threshold before the checkpoint's own
+      // `notify(0)` lands must not fire again.
+      scheduler.notify(AUTO_CHECKIN_EDIT_THRESHOLD + 1);
+      expect(onCheckpoint).toHaveBeenCalledTimes(1);
+    });
+
+    it("notify(0) (a landed checkpoint) clears the pending latch for a fresh idle window later", () => {
+      vi.useFakeTimers();
+      const onCheckpoint = vi.fn();
+      const scheduler = new AutoCheckinScheduler(onCheckpoint);
+      scheduler.notify(AUTO_CHECKIN_EDIT_THRESHOLD);
+      expect(onCheckpoint).toHaveBeenCalledTimes(1);
+      scheduler.notify(0);
+      scheduler.notify(1);
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS);
+      expect(onCheckpoint).toHaveBeenCalledTimes(2);
+    });
+
+    it("cancel() stops a pending idle timer (unmount/session-switch)", () => {
+      vi.useFakeTimers();
+      const onCheckpoint = vi.fn();
+      const scheduler = new AutoCheckinScheduler(onCheckpoint);
+      scheduler.notify(1);
+      scheduler.cancel();
+      vi.advanceTimersByTime(AUTO_CHECKIN_IDLE_MS * 2);
+      expect(onCheckpoint).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("sync status pill (§C5 status pill, ArtifactSyncStatus → persisted|pending(n)|remote(...))", () => {
+    it("persisted: a live remote with nothing pending", () => {
+      const state = computeSyncPillState({ persisted: true, pendingMutations: 0, remote: { kind: "live", peerCount: 1 } });
+      expect(state).toEqual({ kind: "persisted" });
+      expect(syncPillText(state, "en")).toBe("Persisted");
+      expect(syncPillText(state, "de")).toBe("Gespeichert");
+    });
+
+    it("pending(n): a live remote with unacked mutations", () => {
+      const state = computeSyncPillState({ persisted: false, pendingMutations: 3, remote: { kind: "live", peerCount: 1 } });
+      expect(state).toEqual({ kind: "pending", count: 3 });
+      expect(syncPillText(state, "en")).toBe("Pending (3)");
+      expect(syncPillText(state, "de")).toBe("Ausstehend (3)");
+    });
+
+    it("remote(connecting|backoff|detached): a non-live remote takes priority over a pending count", () => {
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 0, remote: { kind: "connecting" } }), "en")).toBe("Remote: connecting");
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 0, remote: { kind: "connecting" } }), "de")).toBe("Remote: verbindet");
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 0, remote: { kind: "backoff", retryInMs: 500 } }), "en")).toBe("Remote: backoff");
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 9, remote: { kind: "backoff", retryInMs: 500 } }), "en")).toBe("Remote: backoff");
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 0, remote: { kind: "detached" } }), "en")).toBe("Remote: detached");
+      expect(syncPillText(computeSyncPillState({ persisted: false, pendingMutations: 0, remote: { kind: "detached" } }), "de")).toBe("Remote: getrennt");
+    });
+
+    it("no status observed yet reads as remote(detached)", () => {
+      expect(computeSyncPillState(null)).toEqual({ kind: "remote", remote: "detached" });
+    });
+  });
+
+  // 🧪️ §C5 item 5: "viewers never checkpoint" — `canCheckIn` is the SAME predicate `ShellHost` gates
+  // both the `#s-checkin`/checkpoint footer items (JSX presence, `!canCheckIn(session.app.role)`) and
+  // the auto-checkin scheduler's arming (`isEditorSession`) with, so this one test covers both call
+  // sites' logic without needing to mount `ShellHost` itself.
+  it("canCheckIn is true only for an editor role — viewer gets no affordance and no auto timer", () => {
+    expect(canCheckIn("editor")).toBe(true);
+    expect(canCheckIn("viewer")).toBe(false);
+    expect(canCheckIn(undefined)).toBe(false);
   });
 
   it("isolates render faults in ShellFaultBoundary", () => {

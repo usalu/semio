@@ -15,7 +15,7 @@ pub struct ChangeQBKpa {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeQBKpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "qb-kpa", kind: "change-qb-kpa", record: "ChangedQBKpa" };
 
-    fn diff(&self, base: &En1997Snapshot) -> En1997Diff {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_q_b_kpa::diff::diff(self, base)
     }
 

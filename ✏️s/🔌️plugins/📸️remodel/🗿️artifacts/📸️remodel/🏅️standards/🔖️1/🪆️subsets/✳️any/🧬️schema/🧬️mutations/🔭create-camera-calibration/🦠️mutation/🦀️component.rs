@@ -24,7 +24,7 @@ pub fn create_camera_calibration(camera: CameraCalibration) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateCameraCalibration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "camera-calibration", kind: "create-camera-calibration", record: "CreatedCameraCalibration" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

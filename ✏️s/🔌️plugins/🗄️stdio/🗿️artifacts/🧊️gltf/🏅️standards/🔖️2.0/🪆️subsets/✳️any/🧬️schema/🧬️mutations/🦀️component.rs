@@ -2,6 +2,7 @@
 
 use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::DESCRIPTOR as CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR;
 use crate::artifacts::gltf::schema::mutations::change_material_double_sided::DESCRIPTOR as CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR;
+use crate::artifacts::gltf::schema::mutations::create_scene::DESCRIPTOR as CREATE_SCENE_DESCRIPTOR;
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 
 //#region 🔖️DescriptorContract
@@ -34,7 +35,7 @@ pub struct GltfMutationLeafApplication {
 #[derive(Clone, Copy)]
 pub struct GltfMutationLeafDescriptor {
     pub command_id: &'static str,
-    pub version: u16,
+    pub version: u32,
     pub plan: fn(&[u8], &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError>,
     pub plan_inverse: fn(&[u8], &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError>,
     pub apply_diff: fn(&[u8], &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError>,
@@ -43,7 +44,7 @@ pub struct GltfMutationLeafDescriptor {
 //#endregion 🔖️DescriptorContract
 
 //#region 🔖️Assembly
-pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR, CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR];
+pub const GLTF_MUTATION_LEAF_DESCRIPTORS: &[GltfMutationLeafDescriptor] = &[CHANGE_MATERIAL_ALPHA_MODE_DESCRIPTOR, CHANGE_MATERIAL_DOUBLE_SIDED_DESCRIPTOR, CREATE_SCENE_DESCRIPTOR];
 
 pub fn gltf_mutation_leaf_descriptors() -> &'static [GltfMutationLeafDescriptor] {
     GLTF_MUTATION_LEAF_DESCRIPTORS

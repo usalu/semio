@@ -32,10 +32,76 @@ pub(crate) fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
     items.iter().position(|item| item.id() == id)
 }
 
-fn apply_delta<T: HasId + Clone, P>(items: &[T], delta: &P) -> Vec<T>
+fn apply_delta<T: HasId + Clone, P>(
+    items: &[T],
+    delta: &P,
+) -> protocol::MutationApplyResult<Vec<T>>
 where
     P: DeltaAccess<T>,
 {
+    for (index, id) in delta.removed().iter().enumerate() {
+        if !items.iter().any(|item| item.id() == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed item does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if delta.removed()[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, item) in delta.added().iter().enumerate() {
+        if items.iter().any(|existing| existing.id() == item.id())
+            || delta.added()[..index]
+                .iter()
+                .any(|existing| existing.id() == item.id())
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added item identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
+    let patched = delta.patched();
+    for (index, (id, item)) in patched.iter().enumerate() {
+        if !items.iter().any(|existing| existing.id() == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched item does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.removed().contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "item cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if patched[..index].iter().any(|(prior, _)| prior == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if item.id() != id
+            && (items.iter().any(|existing| existing.id() == item.id())
+                || delta.added().iter().any(|added| added.id() == item.id()))
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "patched item identity collides with another item",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
     let mut next = items.to_vec();
     for id in delta.removed() {
         next.retain(|item| item.id() != id);
@@ -47,24 +113,46 @@ where
             next.push(item.clone());
         }
     }
-    for (id, item) in delta.patched() {
+    for (id, item) in patched {
         if let Some(pos) = next.iter().position(|existing| existing.id() == id) {
             next[pos] = item.clone();
         }
     }
+    let mut resulting_ids = std::collections::HashSet::new();
+    if !next.iter().all(|item| resulting_ids.insert(item.id())) {
+        return Err(protocol::MutationApplyError::new(
+            "mutation.apply.duplicate-target",
+            "resulting collection contains duplicate identities",
+        )
+        .at(["identities"]));
+    }
     if let Some(order) = delta.reordered() {
+        if order.len() != next.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id) || !next.iter().any(|item| item.id() == id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
         let mut by_id: std::collections::BTreeMap<_, _> =
             next.into_iter().map(|item| (item.id().to_string(), item)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
-            }
+            ordered.push(by_id.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered item does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        ordered.extend(by_id.into_values());
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
 trait DeltaAccess<T: HasId + Clone> {
@@ -100,81 +188,100 @@ impl_delta_access!(Fem2dCombinationsDelta, FemCombination, Fem2dCombinationsPatc
 //#region 🔖️Apply
 impl Fem2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Fem2dArtifact) -> Fem2dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(delta) = &self.nodes {
-            next.nodes = apply_delta(&next.nodes, delta);
-        }
-        if let Some(delta) = &self.elements {
-            next.elements = apply_delta(&next.elements, delta);
-        }
-        if let Some(delta) = &self.regions {
-            next.regions = apply_delta(&next.regions, delta);
-        }
-        if let Some(delta) = &self.materials {
-            next.materials = apply_delta(&next.materials, delta);
-        }
-        if let Some(delta) = &self.sections {
-            next.sections = apply_delta(&next.sections, delta);
-        }
-        if let Some(delta) = &self.supports {
-            next.supports = apply_delta(&next.supports, delta);
-        }
-        if let Some(delta) = &self.load_cases {
-            next.load_cases = apply_delta(&next.load_cases, delta);
-        }
-        if let Some(delta) = &self.combinations {
-            next.combinations = apply_delta(&next.combinations, delta);
-        }
-        if let Some(value) = &self.analysis { next.analysis = value.clone(); }
-        if let Some(value) = &self.result_source_id { next.result_source_id = value.clone(); }
-        if let Some(value) = &self.result_mode { next.result_mode = value.clone(); }
-        if let Some(value) = self.result_mode_index { next.result_mode_index = value; }
-        if let Some(value) = &self.camera { next.camera = value.clone(); }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
-        if let Some(value) = &self.solver_results_json { next.solver_results_json = value.clone(); }
-        if let Some(value) = &self.mesh_preview_json { next.mesh_preview_json = value.clone(); }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Fem2dArtifact) -> protocol::MutationApplyResult<Fem2dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(delta) = &self.nodes {
+                next.nodes = apply_delta(&next.nodes, delta)
+                    .map_err(|error| error.under(["nodes"]))?;
+            }
+            if let Some(delta) = &self.elements {
+                next.elements = apply_delta(&next.elements, delta)
+                    .map_err(|error| error.under(["elements"]))?;
+            }
+            if let Some(delta) = &self.regions {
+                next.regions = apply_delta(&next.regions, delta)
+                    .map_err(|error| error.under(["regions"]))?;
+            }
+            if let Some(delta) = &self.materials {
+                next.materials = apply_delta(&next.materials, delta)
+                    .map_err(|error| error.under(["materials"]))?;
+            }
+            if let Some(delta) = &self.sections {
+                next.sections = apply_delta(&next.sections, delta)
+                    .map_err(|error| error.under(["sections"]))?;
+            }
+            if let Some(delta) = &self.supports {
+                next.supports = apply_delta(&next.supports, delta)
+                    .map_err(|error| error.under(["supports"]))?;
+            }
+            if let Some(delta) = &self.load_cases {
+                next.load_cases = apply_delta(&next.load_cases, delta)
+                    .map_err(|error| error.under(["loadCases"]))?;
+            }
+            if let Some(delta) = &self.combinations {
+                next.combinations = apply_delta(&next.combinations, delta)
+                    .map_err(|error| error.under(["combinations"]))?;
+            }
+            if let Some(value) = &self.analysis { next.analysis = value.clone(); }
+            if let Some(value) = &self.result_source_id { next.result_source_id = value.clone(); }
+            if let Some(value) = &self.result_mode { next.result_mode = value.clone(); }
+            if let Some(value) = self.result_mode_index { next.result_mode_index = value; }
+            if let Some(value) = &self.camera { next.camera = value.clone(); }
+            if let Some(value) = &self.locale { next.locale = value.clone(); }
+            if let Some(value) = &self.solver_results_json { next.solver_results_json = value.clone(); }
+            if let Some(value) = &self.mesh_preview_json { next.mesh_preview_json = value.clone(); }
+            next
+        })
     }
 }
 
 impl MutationDiff<Fem2dSnapshot> for Fem2dDiff {
-    fn apply(&self, snapshot: &Fem2dSnapshot) -> Fem2dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(delta) = &self.nodes {
-            next.nodes = apply_delta(&next.nodes, delta);
-        }
-        if let Some(delta) = &self.elements {
-            next.elements = apply_delta(&next.elements, delta);
-        }
-        if let Some(delta) = &self.regions {
-            next.regions = apply_delta(&next.regions, delta);
-        }
-        if let Some(delta) = &self.materials {
-            next.materials = apply_delta(&next.materials, delta);
-        }
-        if let Some(delta) = &self.sections {
-            next.sections = apply_delta(&next.sections, delta);
-        }
-        if let Some(delta) = &self.supports {
-            next.supports = apply_delta(&next.supports, delta);
-        }
-        if let Some(delta) = &self.load_cases {
-            next.load_cases = apply_delta(&next.load_cases, delta);
-        }
-        if let Some(delta) = &self.combinations {
-            next.combinations = apply_delta(&next.combinations, delta);
-        }
-        if let Some(value) = &self.analysis { next.analysis = value.clone(); }
-        next
+    fn apply(&self, snapshot: &Fem2dSnapshot) -> protocol::MutationApplyResult<Fem2dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(delta) = &self.nodes {
+                next.nodes = apply_delta(&next.nodes, delta)
+                    .map_err(|error| error.under(["nodes"]))?;
+            }
+            if let Some(delta) = &self.elements {
+                next.elements = apply_delta(&next.elements, delta)
+                    .map_err(|error| error.under(["elements"]))?;
+            }
+            if let Some(delta) = &self.regions {
+                next.regions = apply_delta(&next.regions, delta)
+                    .map_err(|error| error.under(["regions"]))?;
+            }
+            if let Some(delta) = &self.materials {
+                next.materials = apply_delta(&next.materials, delta)
+                    .map_err(|error| error.under(["materials"]))?;
+            }
+            if let Some(delta) = &self.sections {
+                next.sections = apply_delta(&next.sections, delta)
+                    .map_err(|error| error.under(["sections"]))?;
+            }
+            if let Some(delta) = &self.supports {
+                next.supports = apply_delta(&next.supports, delta)
+                    .map_err(|error| error.under(["supports"]))?;
+            }
+            if let Some(delta) = &self.load_cases {
+                next.load_cases = apply_delta(&next.load_cases, delta)
+                    .map_err(|error| error.under(["loadCases"]))?;
+            }
+            if let Some(delta) = &self.combinations {
+                next.combinations = apply_delta(&next.combinations, delta)
+                    .map_err(|error| error.under(["combinations"]))?;
+            }
+            if let Some(value) = &self.analysis { next.analysis = value.clone(); }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

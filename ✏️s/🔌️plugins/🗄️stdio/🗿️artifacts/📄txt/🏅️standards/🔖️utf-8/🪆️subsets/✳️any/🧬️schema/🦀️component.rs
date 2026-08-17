@@ -1,7 +1,7 @@
 //! 🧬️ TxtArtifact schema — full artifact state.
 
 use crate::artifacts::txt::schema::snapshot::LineEnding;
-use crate::artifacts::txt::{TxtDiff, TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -118,13 +118,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -253,8 +253,8 @@ pub fn demo_txt_snapshot() -> TxtSnapshot {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec TxtBuilderFacets {
-        construction: derived_construction::TxtBuilderConstruction,
-        analysis: derived_analysis::TxtAnalyzerAnalysis,
+        construction: TxtBuilderConstruction,
+        analysis: TxtAnalyzerAnalysis,
         composition: super::super::io::derived_composition::TxtComposerComposition,
     }
     builder: TxtBuilder,
@@ -267,6 +267,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::txt::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 
     #[test]
     fn empty_snapshot_matches_schema() {
@@ -362,9 +363,9 @@ mod tests {
         let b = sweep_b();
 
         let ab = TxtDiff::between(&a, &b);
-        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
         let ba = TxtDiff::between(&b, &a);
-        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
 
         assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
         assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");
@@ -425,7 +426,7 @@ mod tests {
         // Diff binary facet.
         let mut before = snap.clone();
         let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut before, &mutation);
-        let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(&diff).expect("encode_diff");
+        let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
         let diff_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
         assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame (32-byte header + opaque .spk tail)");

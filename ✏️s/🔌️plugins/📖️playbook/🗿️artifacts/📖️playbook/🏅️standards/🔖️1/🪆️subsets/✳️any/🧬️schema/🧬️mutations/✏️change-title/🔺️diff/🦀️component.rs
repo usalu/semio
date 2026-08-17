@@ -3,7 +3,10 @@
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::ChangeTitle, _base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
+pub fn diff(payload: &super::mutation::ChangeTitle, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
+    if payload.new_title == base.title {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Playbook title already has this value.");
+    }
     protocol::MutationOutcome::new(PlaybookDiff { title: Some(payload.new_title.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

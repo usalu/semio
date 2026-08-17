@@ -79,10 +79,12 @@ mod tests {
     }
 
     fn round_trip(base: &CurateSnapshot, mutation: &SourcingMutation) -> CurateSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
@@ -120,7 +122,7 @@ mod tests {
         let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
         let d1 = mutation.diff(&base).into_parts().0;
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }

@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
     use crate::artifacts::tsv::standards::iana::subsets::any::schema::TsvAnalyzer;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") };
 

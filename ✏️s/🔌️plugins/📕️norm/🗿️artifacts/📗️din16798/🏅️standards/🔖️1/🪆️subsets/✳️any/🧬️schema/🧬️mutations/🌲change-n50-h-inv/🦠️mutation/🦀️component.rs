@@ -15,7 +15,7 @@ pub struct ChangeN50HInv {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeN50HInv {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "n50-h-inv", kind: "change-n50-h-inv", record: "ChangedN50HInv" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_n50_h_inv::diff::diff(self, base)
     }
 

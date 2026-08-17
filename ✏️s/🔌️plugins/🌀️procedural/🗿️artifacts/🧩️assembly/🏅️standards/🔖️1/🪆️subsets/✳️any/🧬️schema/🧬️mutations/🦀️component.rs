@@ -47,8 +47,11 @@ pub type AssemblyEnvelope = store::ArtifactEnvelope<AssemblySnapshot, AssemblyMu
 pub type AssemblyStore = store::ArtifactStore<AssemblySnapshot, AssemblyMutation>;
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant.
-pub fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &AssemblyMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_assembly_mutation(projection: &mut AssemblySnapshot, mutation: &AssemblyMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
@@ -66,10 +69,12 @@ mod tests {
     use vcs::apply_mutation;
 
     fn round_trip(projection: &AssemblySnapshot, mutation: &AssemblyMutation) -> AssemblySnapshot {
-        let forward = apply_mutation(projection, mutation);
+        let (forward, _) = apply_mutation(projection, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(projection) {
-            restored = apply_mutation(&restored, &back);
+            restored = apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, projection, "inverse() must restore the pre-mutation document");
         forward
@@ -177,11 +182,11 @@ mod tests {
     fn diff_absorb_composes_two_change_seed_mutations() {
         let base = AssemblySnapshot::default();
         let d1 = change_seed(1).diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_seed(2).diff(&mid);
         let mut composed = d1.clone();
         composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), d2.apply(&mid));
+        assert_eq!(composed.apply(&base).expect("valid mutation diff"), d2.apply(&mid).expect("valid mutation diff"));
     }
 }
 //#endregion 🧪️Tests

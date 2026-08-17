@@ -23,7 +23,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `HostEffect::LoadDocument`, see
-/// `Fem2dPlayApp::whole_document_operation` returning `None` now and `apps::fem2d::reset_document_effect`).
+/// `Fem2dPlayApp::whole_document_operation` returning `None` now and `editor::fem2d::reset_document_effect`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem2dSnapshot, diff = Fem2dDiff, schema = "fem.fem2d")]
@@ -94,8 +94,11 @@ pub type Fem2dStore = ArtifactStore<Fem2dSnapshot, Fem2dMutation>;
 /// 🌉️ Thin delegates to the derive-generated `protocol::Mutation` impl — kept because
 /// `🏗️builder/🦀️component.rs` (an artifact-generic caller, no per-variant knowledge) and
 /// `📝️text/🦀️component.rs`'s re-export both call these by name.
-pub fn apply_fem2d_mutation(snapshot: &mut Fem2dSnapshot, mutation: &Fem2dMutation) {
-    *snapshot = vcs::apply_mutation(snapshot, mutation);
+pub fn apply_fem2d_mutation(snapshot: &mut Fem2dSnapshot, mutation: &Fem2dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(snapshot, mutation)?;
+
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation) -> Vec<Fem2dMutation> {
@@ -143,10 +146,14 @@ mod tests {
 
     // #region 🔖️OpRoundTrip
     fn round_trip(snapshot: &Fem2dSnapshot, operation: &Fem2dMutation) -> Fem2dSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation);
+        let forward = vcs::apply_mutation(snapshot, operation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
         forward
@@ -255,7 +262,7 @@ mod tests {
         assert!(Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
         assert!(Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
         assert!(Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
-        assert_eq!(Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }).diff(&base), Fem2dDiff::default());
+        assert_eq!(*Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }).diff(&base).diff(), Fem2dDiff::default());
     }
     // #endregion 🔖️OpRoundTrip
 
@@ -309,9 +316,9 @@ mod tests {
         let base = Fem2dSnapshot::default();
         let mutation = Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let after = d1.apply(&base);
-        let d2 = Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after);
+        let d1 = mutation.diff(&base).diff().clone();
+        let after = d1.apply(&base).expect("valid mutation diff");
+        let d2 = Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -327,9 +334,9 @@ mod tests {
         let base = simply_supported_beam_doc();
         let mutation = Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "dead".into(), load: Box::new(FemLoad::Area { id: "l9".into(), region_id: "r1".into(), pressure: 400.0 }) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let after = d1.apply(&base);
-        let d2 = Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "none".into() }).diff(&after);
+        let d1 = mutation.diff(&base).diff().clone();
+        let after = d1.apply(&base).expect("valid mutation diff");
+        let d2 = Fem2dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "none".into() }).diff(&after).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -343,6 +350,56 @@ mod tests {
         }
     }
     // #endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
+    /// (create/delete/replace/add/remove/change).
+    #[test]
+    fn create_node_duplicate_id_is_fatal() {
+        let base = simply_supported_beam_doc();
+        let existing_id = base.nodes.first().unwrap().id.clone();
+        let outcome = Fem2dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: existing_id, x: 0.0, y: 0.0 } }).diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn create_support_missing_node_is_error() {
+        let base = Fem2dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } }));
+    }
+
+    #[test]
+    fn delete_node_missing_target_is_error() {
+        let base = Fem2dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }));
+    }
+
+    #[test]
+    fn replace_material_missing_target_is_error() {
+        let base = simply_supported_beam_doc();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, nu: 0.3, rho: 1.0 } }));
+    }
+
+    #[test]
+    fn add_load_missing_target_is_error() {
+        let base = simply_supported_beam_doc();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Ty, value: 1.0 }) }));
+    }
+
+    #[test]
+    fn remove_load_missing_target_is_error() {
+        let base = simply_supported_beam_doc();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }));
+    }
+
+    #[test]
+    fn change_load_case_self_weight_missing_target_is_error() {
+        let base = simply_supported_beam_doc();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem2dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true }));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 // #endregion 🧪️Tests
 

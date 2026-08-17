@@ -15,7 +15,7 @@ pub struct ChangeReferenceQPKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeReferenceQPKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "reference-qp-kwh", kind: "change-reference-qp-kwh", record: "ChangedReferenceQPKwh" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_reference_q_p_kwh::diff::diff(self, base)
     }
 

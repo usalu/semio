@@ -21,7 +21,7 @@ pub struct ConnectWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for ConnectWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-widgets", record: "ConnectedWidgets" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

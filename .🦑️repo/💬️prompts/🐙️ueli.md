@@ -378,6 +378,21 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Achieve the following end to end:
+Running s with running plugins.
+Running hub with persistance for spaces and live presence between all users in the same app/viewer/editor.
+The home app of s is an overview table with all spaces (you can create, open, delete spaces, etc)
+The space app is a table with all artifacts (you can create, open, delete artifacts, etc).
+Studios must be sharable for collaborative editing.
+Artifacts can be either opened in a viewer or editor
+When the user edits an artifact, the mutations are saved and checked in into vcs.
+Add new dev config for s for user 1 and user 2 that run on different ports and connect to the same hub.
+user 1, user 2 and hub must be running at the same time.
+The hub needs to have an admin page that shows all spaces and allows to manage them, see active connections, etc.
+
+
+---
+
 The current goal of where all apps are combined into workflows nodes, remain non-destructive and have a headless engine that replays everything will not work because every single ui interactions must be saved and checked in into vcs which will become too slow.
 Instead we adjusted the design:
 We introduce interactions.

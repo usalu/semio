@@ -119,8 +119,8 @@ pub fn composable_subsets() -> Vec<&'static str> {
     semio_subset_table!(subset_names)
 }
 
-impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
-    fn create(&self, id: &str, dialect: &crate::dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn crate::dsl::SpaceMember>, crate::dsl::VcsError> {
+impl dsl::ChildStoreFactory for SemioChildStoreFactory {
+    fn create(&self, id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Box<dyn dsl::SpaceMember>, dsl::VcsError> {
         use crate::artifacts::semio::standards::v1::subsets;
         macro_rules! create_arm {
             ($($name:ident => $module:ident, $snapshot:ident, $mutation:ident);* $(;)?) => {
@@ -133,7 +133,7 @@ impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
         semio_subset_table!(create_arm)
     }
 
-    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn crate::dsl::SpaceMember>, crate::dsl::VcsError> {
+    fn open(&self, envelope_pack: &[u8]) -> Result<Box<dyn dsl::SpaceMember>, dsl::VcsError> {
         use crate::artifacts::semio::standards::v1::subsets;
         let subset = subset_of_persisted_envelope(envelope_pack)?;
         macro_rules! open_arm {
@@ -151,10 +151,10 @@ impl crate::dsl::ChildStoreFactory for SemioChildStoreFactory {
 /// 🎯️ Reads a persisted child's subset out of its own `.spr` composition overlay — deliberately
 /// snapshot-type-agnostic (it decodes only the history log, never the document body), because
 /// choosing the snapshot type is exactly what this answer is needed FOR.
-fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, crate::dsl::VcsError> {
-    let (_, spr) = crate::dsl::decode_document_pack_bytes(envelope_pack)?;
-    let log = crate::dsl::decode_history(&spr, &crate::dsl::os_spr::DecodeOptions::default()).map_err(|error| crate::dsl::VcsError::Deserialize(error.to_string()))?;
-    log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| crate::dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
+fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
+    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack)?;
+    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
+    log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
 }
 
 /// 🧸️ Registers the `semio` child-store factory so any plugin declaring
@@ -167,7 +167,7 @@ fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, crate::d
 /// stdio children is a DIFFERENT component from stdio itself. Idempotent, so calling it from N
 /// plugins is harmless.
 pub fn register_child_store_factories() {
-    crate::dsl::register_child_store_factory(crate::dsl::os_io::ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical semio artifact kind"), std::sync::Arc::new(SemioChildStoreFactory));
+    dsl::register_child_store_factory(dsl::os_io::ArtifactKindId::parse(SEMIO_ARTIFACT_SCHEMA_ID).expect("canonical semio artifact kind"), std::sync::Arc::new(SemioChildStoreFactory));
 }
 //#endregion 🔖️ChildStoreFactories
 

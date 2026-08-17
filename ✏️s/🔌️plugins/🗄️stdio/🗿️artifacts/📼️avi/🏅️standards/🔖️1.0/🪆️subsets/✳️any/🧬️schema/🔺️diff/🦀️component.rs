@@ -8,7 +8,7 @@
 
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
@@ -58,6 +58,42 @@ pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_it
         result.insert(idx, a.item);
     }
     result
+}
+
+fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
+        }
+        validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+    }
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
 }
 
 pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
@@ -282,14 +318,20 @@ fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
 }
 
 impl MutationDiff<AviSnapshot> for AviDiff {
-    fn apply(&self, base: &AviSnapshot) -> AviSnapshot {
-        AviSnapshot {
+    fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
+        if let Some(diff) = &self.streams {
+            validate_indexed(&base.streams, diff, validate_stream_diff)?;
+        }
+        if let Some(diff) = &self.unknown_chunks {
+            validate_indexed(&base.unknown_chunks, diff, |_, _| Ok(()))?;
+        }
+        Ok(AviSnapshot {
             schema: base.schema.clone(),
             main_header: self.main_header.clone().unwrap_or_else(|| base.main_header.clone()),
             streams: self.streams.as_ref().map_or_else(|| base.streams.clone(), |sd| apply_indexed(&base.streams, sd, apply_stream_diff)),
             idx1_present: self.idx1_present.unwrap_or(base.idx1_present),
             unknown_chunks: self.unknown_chunks.as_ref().map_or_else(|| base.unknown_chunks.clone(), |cd| apply_indexed(&base.unknown_chunks, cd, apply_riff_diff)),
-        }
+        })
     }
 
     fn absorb(&mut self, other: Self) {
@@ -312,6 +354,13 @@ impl MutationDiff<AviSnapshot> for AviDiff {
     }
 }
 
+fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApplyResult<()> {
+    if let Some(chunks) = &diff.chunks {
+        validate_indexed(&base.chunks, chunks, |_, _| Ok(()))?;
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<AviSnapshot> for AviDiff {
     fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
         let streams_diff = between_indexed(&base.streams, &other.streams, between_stream, stream_diff_is_empty);
@@ -325,7 +374,19 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
     }
     fn inverse(&self, base: &AviSnapshot) -> Self {
         // 🔁️ Correct-by-construction (identical reasoning to mp4's `Mp4Diff::inverse`).
-        let after = self.apply(base);
+        let mut after = base.clone();
+        if let Some(v) = &self.main_header {
+            after.main_header = v.clone();
+        }
+        if let Some(v) = &self.streams {
+            after.streams = apply_indexed(&base.streams, v, apply_stream_diff);
+        }
+        if let Some(v) = self.idx1_present {
+            after.idx1_present = v;
+        }
+        if let Some(v) = &self.unknown_chunks {
+            after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff);
+        }
         Self::between(&after, base)
     }
     fn is_empty(&self) -> bool {
@@ -414,8 +475,8 @@ mod tests {
         assert!(d.streams.is_some());
         assert!(d.idx1_present.is_some());
         assert!(d.unknown_chunks.is_some());
-        assert_eq!(d.apply(&a), b);
-        assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&b, &a).apply(&b), a);
+        assert_eq!(d.apply(&a).unwrap(), b);
+        assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&b, &a).apply(&b).unwrap(), a);
         assert!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -425,9 +486,9 @@ mod tests {
         let mut b = a.clone();
         b.streams[0].chunks[0].keyframe = !b.streams[0].chunks[0].keyframe;
         let d = <AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &b);
-        let after = d.apply(&a);
+        let after = d.apply(&a).unwrap();
         assert_eq!(after, b);
-        assert_eq!(d.inverse(&a).apply(&after), a);
+        assert_eq!(d.inverse(&a).apply(&after).unwrap(), a);
     }
 
     #[test]
@@ -481,9 +542,9 @@ mod tests {
         let mut right = d1;
         right.absorb(d23);
 
-        assert_eq!(left.apply(&a), after);
-        assert_eq!(right.apply(&a), after);
-        assert_eq!(left.apply(&a), right.apply(&a));
+        assert_eq!(left.apply(&a).unwrap(), after);
+        assert_eq!(right.apply(&a).unwrap(), after);
+        assert_eq!(left.apply(&a).unwrap(), right.apply(&a).unwrap());
     }
 }
 //#endregion 🔖️Tests

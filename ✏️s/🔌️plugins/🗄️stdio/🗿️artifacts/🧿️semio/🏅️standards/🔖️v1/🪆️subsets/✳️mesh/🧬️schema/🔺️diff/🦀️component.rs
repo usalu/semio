@@ -227,18 +227,21 @@ pub fn wrap_primitive_diff(mesh_id: &str, primitive_id: &str, diff: SemioPrimiti
 
 //#region 🔖️Apply
 impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
-    fn apply(&self, base: &SemioMeshSnapshot) -> SemioMeshSnapshot {
+    fn apply(&self, base: &SemioMeshSnapshot) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
             apply_named(&mut next.meshes, md, |m| m.id.clone(), apply_mesh);
         }
         if let Some(md) = &self.materials {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
             apply_named(&mut next.materials, md, |m| m.id.clone(), apply_material);
         }
         if let Some(td) = &self.textures {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
             apply_named(&mut next.textures, td, |t| t.id.clone(), apply_texture);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -335,7 +338,7 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
     /// to hand-derive `NamedAdded<T>` position math for the undo direction): `mid = self.apply(base)`,
     /// then `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
     fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
-        let mid = self.apply(base);
+        let mid = self.apply(base).unwrap();
         Self::between(&mid, base)
     }
 
@@ -1135,9 +1138,9 @@ mod tests {
         let a = snapshot_a();
         let b = snapshot_b();
         let d = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&d.apply(&a)), a);
+        assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -1149,10 +1152,10 @@ mod tests {
         after.materials[0].metallic = 0.42;
         let mut d1 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &mid);
         let d2 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&mid, &after);
-        let applied_before_absorb = d1.apply(&a);
+        let applied_before_absorb = d1.apply(&a).expect("apply must succeed for a well-formed fixture");
         d1.absorb(d2.clone());
-        assert_eq!(d1.apply(&a), d2.apply(&applied_before_absorb));
-        assert_eq!(d1.apply(&a), after);
+        assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), d2.apply(&applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
+        assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), after);
     }
 
     /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` round-trips through both

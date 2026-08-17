@@ -1473,6 +1473,7 @@
     },
     "@generated:s:react",
     "@generated:s:wgpu",
+    "@generated:s:users",
     {
       "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
       "type": "node-terminal",
@@ -1519,6 +1520,30 @@
       "presentation": {
         "group": "3_dev",
         "order": 387
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8787)",
+        "uriFormat": "%s/admin"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️os-hub🛡️admin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-admin:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_HUB_URL": "http://127.0.0.1:8787"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.05
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8790)",
+        "uriFormat": "%s"
       }
     },
     {
@@ -1747,6 +1772,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.97
+      }
+    },
+    {
+      "name": "⚖️gate🌎️collab-e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.98
       }
     },
     {
@@ -2269,6 +2305,15 @@
       "presentation": {
         "group": "3_dev",
         "order": 386.15
+      }
+    },
+    {
+      "name": "🧭️compound🖥️s👥️users🗄️os-hub",
+      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s👤️1⚛️react", "🛠️dev🖥️s👤️2⚛️react"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.16
       }
     }
   ]
@@ -2983,6 +3028,17 @@
       "wgpuServerReadyAction": {
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})",
         "uriFormat": "%s"
+      },
+      "users": {
+        "namePrefixPattern": "🖥️s👤️{N}",
+        "emailPattern": "user{N}@semio.dev",
+        "env": {
+          "S_OS_PORT": "{PORT}",
+          "SEMIO_PLUGIN": "s",
+          "S_USER": "{EMAIL}",
+          "S_HUB_URL": "http://127.0.0.1:8787",
+          "S_DATA_DIR": "${workspaceFolder}/.semio/s-user{N}"
+        }
       }
     },
     "sequence": {

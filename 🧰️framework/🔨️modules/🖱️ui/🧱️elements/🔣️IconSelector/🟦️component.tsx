@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../☑️Select/🟦️component.tsx";
 import { Textarea } from "../📄️Textarea/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";

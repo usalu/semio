@@ -47,14 +47,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ Re-runs the honestly-scope-limited Baseline TIFF check -- always SOFT at this schema,
@@ -276,8 +276,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec TiffBaselineBuilderFacets {
-        construction: derived_construction::TiffBaselineBuilderConstruction,
-        analysis: derived_analysis::TiffBaselineAnalyzerAnalysis,
+        construction: TiffBaselineBuilderConstruction,
+        analysis: TiffBaselineAnalyzerAnalysis,
         composition: super::io::derived_composition::TiffBaselineComposerComposition,
     }
     builder: TiffBaselineBuilder,

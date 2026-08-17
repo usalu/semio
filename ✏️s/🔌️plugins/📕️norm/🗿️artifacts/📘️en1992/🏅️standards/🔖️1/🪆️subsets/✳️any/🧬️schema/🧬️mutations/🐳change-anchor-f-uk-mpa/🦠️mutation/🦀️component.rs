@@ -15,7 +15,7 @@ pub struct ChangeAnchorFUkMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorFUkMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "anchor-f-uk-mpa", kind: "change-anchor-f-uk-mpa", record: "ChangedAnchorFUkMpa" };
 
-    fn diff(&self, base: &En1992Snapshot) -> En1992Diff {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_anchor_f_uk_mpa::diff::diff(self, base)
     }
 

@@ -4,7 +4,6 @@
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{AviChunkDiff, AviDiff, AviStreamDiff, IndexedAdded, IndexedDiff, IndexedModified};
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -72,8 +71,8 @@ fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDif
 impl Mutation<AviSnapshot> for AviMutation {
     type Diff = AviDiff;
 
-    fn diff(&self, base: &AviSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             AviMutation::NoMutation => AviDiff::default(),
             AviMutation::SetSnapshot { snapshot } => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot),
             AviMutation::SetMainHeader { main_header } => AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() },
@@ -89,7 +88,7 @@ impl Mutation<AviSnapshot> for AviMutation {
             }
             AviMutation::AddUnknownChunk { index, item } => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }), ..AviDiff::default() },
             AviMutation::RemoveUnknownChunk { index } => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..AviDiff::default() },
-        }
+        })
     }
 
     fn inverse(&self, base: &AviSnapshot) -> Vec<Self> {
@@ -130,17 +129,22 @@ impl Mutation<AviSnapshot> for AviMutation {
 }
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff.
-pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> AviDiff {
-    let diff = <AviMutation as Mutation<AviSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <AviDiff as protocol::MutationDiff<AviSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> protocol::MutationOutcome<AviDiff> {
+    let outcome = <AviMutation as Mutation<AviSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
 /// 🎙️ Handcrafted `OpText`/`OpBinary` — plain `serde_json` round-trip (see mp4's identical
 /// module-doc rationale: f6-final-summary.md §4.4, no generic collection-diff `DslField` bridge).
-impl protocol::OpText for AviMutation {
+impl OpText for AviMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
@@ -149,7 +153,7 @@ impl protocol::OpText for AviMutation {
     }
 }
 
-impl protocol::OpBinary for AviMutation {
+impl OpBinary for AviMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
     }
@@ -164,7 +168,7 @@ impl protocol::OpBinary for AviMutation {
 mod tests {
     use super::*;
     use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
-    use protocol::command::DiffAlgebra;
+    
     use protocol::MutationDiff;
 
     fn base_snapshot() -> AviSnapshot {
@@ -229,7 +233,7 @@ mod tests {
         for m in variants {
             let mut snap = base.clone();
             let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&m, &snap);
-            let expected = diff.apply(&snap);
+            let expected = diff.diff().apply(&snap).unwrap();
             let returned = apply_avi_mutation(&mut snap, &m);
             assert_eq!(returned, diff, "apply_avi_mutation must return the SAME diff as Mutation::diff for {m:?}");
             assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
@@ -263,7 +267,7 @@ mod tests {
         next.main_header.width = 999;
         let mutation = AviMutation::SetSnapshot { snapshot: next.clone() };
         let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&mutation, &base);
-        assert_eq!(diff.apply(&base), next);
+        assert_eq!(diff.diff().apply(&base).unwrap(), next);
         let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&mutation, &base);
         let mut round = next.clone();
         apply_avi_mutation(&mut round, &inv[0]);

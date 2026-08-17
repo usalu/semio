@@ -297,16 +297,33 @@ fn runtime_claims(item: &RuntimeCapability) -> BTreeSet<(String, String)> {
     item.claims.iter().map(|claim| (claim.namespace.clone(), claim.value.clone())).collect()
 }
 
-type CapabilityExecutable = fn();
-
 /// 🧷️ Maps exactly the schema leaves that declare a native executable.
-fn executable_mappings(_source: &Source) -> BTreeMap<String, CapabilityExecutable> {
-    BTreeMap::new()
+fn executable_mappings(source: &Source) -> Result<BTreeMap<String, ArtifactExecutableIdentity>, PluginAssemblyError> {
+    let services = match source.artifact.as_str() {
+        "gltf" => crate::artifacts::gltf::gltf_inference_services(),
+        _ => Vec::new(),
+    };
+    let mut mappings = BTreeMap::new();
+    for service in services {
+        let id = service.metadata().inference_schema.to_owned();
+        if mappings.insert(id.clone(), service.executable_identity()).is_some() {
+            return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
+        }
+    }
+    if source.artifact == "gltf" {
+        for descriptor in crate::artifacts::gltf::schema::mutations::gltf_mutation_leaf_descriptors() {
+            let id = descriptor.command_id.to_owned();
+            let identity = ArtifactExecutableIdentity::from_function_pointer(descriptor.plan as *const ());
+            if mappings.insert(id.clone(), identity).is_some() {
+                return Err(failure(format!("{} repeats executable mapping {id}", source.id)));
+            }
+        }
+    }
+    Ok(mappings)
 }
 
-fn executable_identity(source: &Source, id: &str) -> Result<Option<ArtifactExecutableIdentity>, PluginAssemblyError> {
-    let mappings = executable_mappings(source);
-    let expected = source
+fn expected_executable_ids(source: &Source) -> BTreeSet<String> {
+    source
         .codecs
         .iter()
         .map(|item| (&item.id, item.executable_registration))
@@ -314,11 +331,7 @@ fn executable_identity(source: &Source, id: &str) -> Result<Option<ArtifactExecu
         .chain(source.inferences.iter().map(|item| (&item.id, item.executable_registration)))
         .filter(|(_, registered)| *registered)
         .map(|(id, _)| id.clone())
-        .collect::<BTreeSet<_>>();
-    if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected {
-        return Err(failure(format!("{} executable mapping keys diverge from schema registrations", source.id)));
-    }
-    Ok(mappings.get(id).copied().map(ArtifactExecutableIdentity::from_function))
+        .collect()
 }
 
 fn same(label: &str, left: impl IntoIterator<Item = String>, right: impl IntoIterator<Item = String>) -> Result<(), PluginAssemblyError> {
@@ -422,7 +435,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
     for item in &source.codecs {
         let standard = source.standards.iter().find(|standard| item.id.starts_with(&format!("{}.codec.", standard.id))).ok_or_else(|| failure(format!("invalid codec {}", item.id)))?;
         versioned_leaf(&item.id, &format!("{}.codec.", standard.id))?;
-        if item.from.is_empty() || item.to.is_empty() || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") || item.executable_registration != matches!(item.status.as_str(), "implemented" | "verified") {
+        if item.from.is_empty() || item.to.is_empty() || !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
             return Err(failure(format!("invalid codec {}", item.id)));
         }
     }
@@ -431,12 +444,13 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         if source.artifact == "gltf" && (item.id.contains(".no-mutation.") || item.id.contains(".set-snapshot.") || item.id.contains(".set-")) {
             return Err(failure(format!("GLTF capability {} is not a specific semantic command", item.id)));
         }
-        if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") || item.executable_registration != matches!(item.status.as_str(), "implemented" | "verified") {
+        if !matches!(item.status.as_str(), "unimplemented" | "implemented" | "verified") {
             return Err(failure(format!("invalid {category} {}", item.id)));
         }
     }
-    for item in source.codecs.iter().map(|item| &item.id).chain(source.mutations.iter().map(|item| &item.id)).chain(source.inferences.iter().map(|item| &item.id)) {
-        executable_identity(source, item)?;
+    let mappings = executable_mappings(source)?;
+    if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected_executable_ids(source) {
+        return Err(failure(format!("{} executable mapping keys diverge from schema registrations", source.id)));
     }
     let mut runtime_ids = BTreeSet::new();
     let mut runtime_claim_sets = BTreeSet::new();
@@ -574,10 +588,10 @@ pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) 
     Ok(ArtifactAssembly::Definition(definition))
 }
 
-fn declared_capability<T: Serialize>(source: &Source, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
+fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
     let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
-    if let Some(executable) = executable_identity(source, id)? {
-        capability = capability.executable(executable);
+    if let Some(executable) = mappings.get(id) {
+        capability = capability.executable(*executable);
     }
     Ok(capability)
 }
@@ -593,27 +607,28 @@ fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, Pl
 }
 
 fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
+    let mappings = executable_mappings(source)?;
     let mut definition = ArtifactDefinition::stdio(&source.artifact).map_err(PluginAssemblyError::definition)?;
     for item in &source.standards {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::standard(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::standard(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.profiles {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::profile(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::profile(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.source_dialects {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::source_dialect(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::source_dialect(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.representations {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::representation(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::representation(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.codecs {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::codec(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::codec(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.mutations {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::mutation(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::mutation(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.inferences {
-        definition = definition.capability(declared_capability(source, &item.id, ArtifactCapabilityKind::inference(), item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::inference(), item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.runtime_capabilities {
         definition = definition.capability(runtime_capability(item)?).map_err(PluginAssemblyError::definition)?;
@@ -767,10 +782,27 @@ mod tests {
     #[test]
     fn gltf_capability_ledger_is_honest() {
         let ledger = capability_ledger().unwrap();
-        assert_eq!(ledger.declared, CapabilityCounts { codecs: 6, mutations: 18, inferences: 15 });
-        assert_eq!(ledger.registered, CapabilityCounts::default());
+        assert_eq!(ledger.declared, CapabilityCounts { codecs: 6, mutations: 3, inferences: 67 });
+        assert_eq!(ledger.registered, CapabilityCounts { codecs: 0, mutations: 3, inferences: 67 });
         assert_eq!(ledger.implemented, CapabilityCounts::default());
         assert_eq!(ledger.verified, CapabilityCounts::default());
+    }
+
+    #[test]
+    fn gltf_executable_identity_keys_are_exactly_the_registered_services() {
+        let source = sources().unwrap().into_iter().find(|source| source.artifact == "gltf").expect("gltf source");
+        let mappings = executable_mappings(&source).expect("gltf executable mappings");
+        assert_eq!(mappings.keys().cloned().collect::<BTreeSet<_>>(), expected_executable_ids(&source));
+        assert_eq!(mappings.len(), 70);
+        let definition = build(&source).expect("gltf definition");
+        assert_eq!(
+            definition
+                .capabilities()
+                .filter(|capability| { matches!(capability.kind().as_str(), "inference" | "mutation") && capability.executable_identity().is_some() })
+                .map(|capability| capability.identity().as_str().to_owned())
+                .collect::<BTreeSet<_>>(),
+            expected_executable_ids(&source)
+        );
     }
 
     #[test]

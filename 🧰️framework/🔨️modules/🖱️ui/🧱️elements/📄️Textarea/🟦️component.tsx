@@ -7,13 +7,14 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵️Tree/🟦️component.tsx";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️component.tsx";
-import { borderElementClass, formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { formControlFocusBorderClass, uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -38,7 +39,6 @@ interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" |
 /**
  **/
 function Textarea({ className, lazy, value: externalValue, onChange, onLazyChange, id, showLabel, placeholderId, placeholder, mixed, rows, ...props }: TextareaProps) {
-  const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [localValue, setLocalValue] = reactHostPort.useState(externalValue?.toString() || "");
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
@@ -71,7 +71,6 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     setIsFocused(true);
     if (lazy) {
       setIsEditing(true);
-      transaction?.start?.();
     }
     props.onFocus?.(e);
   };
@@ -81,7 +80,6 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
     if (lazy) {
       setIsEditing(false);
       onLazyChange?.(localValue);
-      transaction?.finalize?.();
     }
     props.onBlur?.(e);
   };
@@ -91,7 +89,6 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
       if (e.key === "Escape") {
         setIsEditing(false);
         setLocalValue(externalValue?.toString() || "");
-        transaction?.abort?.();
         (e.target as HTMLTextAreaElement).blur();
       }
     }

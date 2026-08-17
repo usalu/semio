@@ -24,6 +24,19 @@ use std::collections::{BTreeMap, HashMap};
 use store_sync::{PresencePeer, PresencePoint, PresenceViewport};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
+// 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
+// lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
+// re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
+// shell and the hub's own Rust twin import). Native-only: the browser wgpu build has no native
+// `ArtifactHost`/document-sync path either (see `attach_sync_backbone`'s wasm32 branch), so identity/
+// directory wiring stays inside the same `not(wasm32)` boundary as every other native-only field on
+// `ShellState` (`document_host`, `sync_channel`, `sync_status`).
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_kernel::os_directory::{
+    client::{native::NativeDirectoryTransport, DirectoryClient, DirectoryStreamEvent},
+    identity::{actor_id, mint_or_restore, Identity, IdentityEnv, IdentityOutcome, IdentityStatus},
+    DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
+};
 use ui_wgpu::wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
@@ -151,6 +164,314 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
         checked: checked.unwrap_or(false),
     }
 }
+
+//#region 🔖️IdentityPure
+/// 🎭️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0 — mints this process's
+/// stable per-shell session id (the `{sessionId}` half of `user:{userId}#{sessionId}`), once, at
+/// `ShellState::new`. Process id + boot-time millis is deliberately simple (CLAUDE.md: concise code,
+/// no cryptographic uniqueness need) — collisions would require two `semio-wgpu-native` processes
+/// booting the same pid at the same millisecond, which the OS itself already rules out.
+#[cfg(not(target_arch = "wasm32"))]
+fn mint_shell_session_id() -> String {
+    let pid = std::process::id();
+    let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis()).unwrap_or(0);
+    format!("wgpu-{pid}-{now_ms:x}")
+}
+
+/// 🌱️ Native: `S_HUB_URL`/`S_USER`/`S_DATA_DIR` straight off the process env (contract §C0 — "wgpu
+/// native reads `S_*` directly"). No hub env ⇒ `None` ⇒ every identity/binding/directory code path
+/// below is a no-op, preserving today's local-only behaviour byte-for-byte.
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_identity_env() -> Option<IdentityEnv> {
+    IdentityEnv::from_process_env()
+}
+
+/// 🌐️ Browser wgpu build: `IdentityEnv::from_process_env` reads `std::env::var`, which never resolves
+/// anything meaningful on `wasm32-unknown-unknown` — `🟦️boot.ts` calls `semioWgpuSetHubEnv` (mirroring
+/// its existing `semioWgpuSetAppRole` call) with the `VITE_S_*` values it read, stashed here.
+#[cfg(target_arch = "wasm32")]
+thread_local! {
+    static BOOT_HUB_ENV: std::cell::RefCell<Option<(String, String, Option<String>)>> = std::cell::RefCell::new(None);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuSetHubEnv)]
+pub fn semio_wgpu_set_hub_env(hub_url: String, user: String, data_dir: String) {
+    let data_dir = if data_dir.is_empty() { None } else { Some(data_dir) };
+    BOOT_HUB_ENV.with(|cell| *cell.borrow_mut() = Some((hub_url, user, data_dir)));
+}
+
+#[cfg(target_arch = "wasm32")]
+fn resolve_identity_env() -> Option<IdentityEnv> {
+    let _ = IdentityEnv::from_process_env; // never meaningful on this target; kept for symmetry with native's doc.
+    None
+}
+
+/// 🎭️ contract §C0's actor grammar: `user:{userId}#{sessionId}` once an identity is minted/restored,
+/// falling back to the pre-identity local default (`wgpu-{instanceId}`) — the same default this shell
+/// used everywhere before this lane, so local-only (no hub env) behaviour is unchanged.
+#[cfg(not(target_arch = "wasm32"))]
+fn shell_actor(identity: Option<&Identity>, session_id: &str, instance_id: u32) -> String {
+    match identity {
+        Some(identity) => actor_id(identity, session_id),
+        None => format!("wgpu-{instance_id}"),
+    }
+}
+
+/// 🔗️ ticket §2 — `attach_sync_backbone`/`open_document`'s default binding decision: `[Hub, Folder]`
+/// when an identity AND a space both exist, `[Folder]` with a data dir but no identity, `[]`
+/// otherwise. Pure and free-standing so the decision is unit-testable without a live `ShellState`.
+#[cfg(not(target_arch = "wasm32"))]
+fn default_persistence_bindings(identity: Option<&Identity>, space_id: Option<&str>, data_dir: Option<&std::path::Path>, surface: Option<&str>) -> Vec<PersistenceBinding> {
+    let folder = match (space_id, data_dir) {
+        (Some(space_id), Some(data_dir)) => Some(PersistenceBinding::Folder { path: data_dir.join("spaces").join(space_id) }),
+        _ => None,
+    };
+    match (identity, space_id) {
+        (Some(identity), Some(space_id)) => {
+            let mut bindings = vec![PersistenceBinding::Hub { base_url: identity.hub_base_url.clone(), space_id: space_id.to_string(), token: Some(identity.session_token.clone()), surface: surface.map(str::to_string) }];
+            bindings.extend(folder);
+            bindings
+        }
+        _ => folder.into_iter().collect(),
+    }
+}
+
+/// 📇️ ticket §C6 — maps an `os.directory.<verb>` action id + its relayed JSON args onto a
+/// `DirectoryCommand`, mirroring the React shell's `directoryCommandFromAction` verb-for-verb
+/// (`📓️w2-c-report.md`) — same action ids, same field names, same `share-link` → `create-invite`
+/// sugar (contract §C1 has no directory-schema command kind of its own for it). `None` for an
+/// unrecognized verb, defensive against a foreign/future caller.
+#[cfg(not(target_arch = "wasm32"))]
+fn directory_command_from_action(action_id: &str, args: Option<&serde_json::Value>) -> Option<DirectoryCommand> {
+    let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or("").to_string();
+    let str_field_or = |key: &str, default: &str| args.and_then(|value| value.get(key)).and_then(|value| value.as_str()).unwrap_or(default).to_string();
+    let space_kind = |raw: &str| match raw {
+        "studio" => DirectorySpaceKind::Studio,
+        "archive" => DirectorySpaceKind::Archive,
+        _ => DirectorySpaceKind::Atelier,
+    };
+    let visibility = |raw: &str| if raw == "public" { DirectorySpaceVisibility::Public } else { DirectorySpaceVisibility::Private };
+    let role = |raw: &str| if raw == "author" { DirectorySpaceRole::Author } else { DirectorySpaceRole::Spectator };
+    match action_id {
+        "os.directory.create-space" => Some(DirectoryCommand::CreateSpace { name: str_field("name"), space_kind: space_kind(&str_field_or("spaceKind", "atelier")), visibility: visibility(&str_field_or("visibility", "private")) }),
+        "os.directory.delete-space" => Some(DirectoryCommand::DeleteSpace { space_id: str_field("spaceId") }),
+        "os.directory.rename-space" => Some(DirectoryCommand::RenameSpace { space_id: str_field("spaceId"), name: str_field("name") }),
+        "os.directory.set-visibility" => Some(DirectoryCommand::SetVisibility { space_id: str_field("spaceId"), visibility: visibility(&str_field_or("visibility", "private")) }),
+        "os.directory.upsert-member" => Some(DirectoryCommand::UpsertMember { space_id: str_field("spaceId"), email: str_field("email"), role: role(&str_field_or("role", "spectator")) }),
+        "os.directory.remove-member" => Some(DirectoryCommand::RemoveMember { space_id: str_field("spaceId"), user_id: str_field("userId") }),
+        "os.directory.share-link" => Some(DirectoryCommand::CreateInvite {
+            space_id: str_field("spaceId"),
+            role: role(&str_field_or("role", "spectator")),
+            ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(|value| value.as_u64()).unwrap_or(3600),
+        }),
+        _ => None,
+    }
+}
+
+/// 📇️ ticket §3/§C6 — the pure `ActionDescriptor` this shell dispatches to fold a `DirectoryEvent`
+/// batch into whichever session is currently mounted (home/studio/space — this shell, like the React
+/// one, keeps exactly one plugin session live at a time), mirroring the React shell's
+/// `dispatchDirectoryEventBatch` action name/payload shape (`foldDirectoryEvents`, `{ events }`)
+/// exactly so the guest plugins — shared between both shells — see one contract.
+#[cfg(not(target_arch = "wasm32"))]
+fn fold_directory_events_action(controller_id: &str, events: &[DirectoryEvent]) -> Option<ActionDescriptor> {
+    if events.is_empty() {
+        return None;
+    }
+    let events_json: Vec<serde_json::Value> = events.iter().filter_map(|event| serde_json::to_value(event).ok()).collect();
+    let args = optional_json_as_dsl_value(Some(serde_json::json!({ "events": events_json })));
+    Some(ActionDescriptor { controller_id: controller_id.to_string(), action: "foldDirectoryEvents".to_string(), args })
+}
+
+/// 📂️ ticket §4/§3-B — parses the `os.open-artifact`/`os.open-artifact-with` relay's JSON args for
+/// the `documentId`/`spaceId` fields the opening relay now carries (contract §C6: they ride inside
+/// the existing `ReplayShellCommand` args, no channel tag added). `documentId` absent ⇒ `None` (the
+/// relay only opened an app, no document to attach — the pre-existing gap this closes).
+#[cfg(not(target_arch = "wasm32"))]
+struct OpenArtifactRelayTarget {
+    document_id: String,
+    space_id: Option<String>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn open_artifact_relay_target(args: Option<&serde_json::Value>) -> Option<OpenArtifactRelayTarget> {
+    let document_id = args.and_then(|value| value.get("documentId")).and_then(|value| value.as_str())?.to_string();
+    let space_id = args.and_then(|value| value.get("spaceId")).and_then(|value| value.as_str()).map(str::to_string);
+    Some(OpenArtifactRelayTarget { document_id, space_id })
+}
+
+/// 👥️ ticket §5 — the presence roster IS surface-scoped: a `PresencePeer` batch from the currently
+/// attached document only renders when the shell's own attached surface (set at `open_document`/
+/// `attach_sync_backbone` time) matches the surface being displayed, so a stale batch from a
+/// just-closed document/surface can never leak into whatever opens next. `PresencePeer` itself
+/// carries no `surface` field (contract §C0: it travels out-of-band on the WS URL, "no `PresencePeer`
+/// wire change") — this is the client-side half of that scoping.
+#[cfg(not(target_arch = "wasm32"))]
+fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Option<&str>, target_surface: &str) -> Vec<ui_wgpu::wgpu::PresencePeerRow> {
+    if attached_surface != Some(target_surface) {
+        return Vec::new();
+    }
+    peers
+        .iter()
+        .map(|peer| ui_wgpu::wgpu::PresencePeerRow {
+            actor: peer.actor.clone(),
+            user_id: peer.user_id.clone(),
+            label: peer.label.clone().unwrap_or_else(|| peer.actor.clone()),
+            role: match peer.role.as_deref() {
+                Some("author") | Some("owner") | Some("member") => Some(ui_wgpu::wgpu::PresenceRole::Author),
+                Some("spectator") | Some("viewer") => Some(ui_wgpu::wgpu::PresenceRole::Spectator),
+                _ => None,
+            },
+            connected_at_ms: Some(peer.connected_at_ms),
+        })
+        .collect()
+}
+
+/// 🪐️ ticket §C4/§6 — the space's own artifact-index document: kind `s.space`, dialect
+/// `s.space.space@1/*`, document id always the literal `"index"` (one per hub space) — mirrored from
+/// the Rust source of truth (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️component.rs`), same as the
+/// React shell's own `S_SPACE_INDEX_DOCUMENT_SCHEMA`/`SPACE_INDEX_DIALECT` mirror
+/// (`📓️w2-c-report.md`).
+#[cfg(not(target_arch = "wasm32"))]
+const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
+#[cfg(not(target_arch = "wasm32"))]
+const S_SPACE_INDEX_DOCUMENT_ID: &str = "index";
+
+#[cfg(not(target_arch = "wasm32"))]
+fn space_index_dialect() -> semio_framework::ArtifactDialect {
+    semio_framework::ArtifactDialect { artifact_kind: "s.space.space".to_string(), standard: "1".to_string(), subset: "*".to_string() }
+}
+
+/// 📇️ §5/§6 — a direct manifest scan for the one app a plugin declares for a given
+/// `(dialect, role)`, mirroring the React shell's `findDialectApp`.
+#[cfg(not(target_arch = "wasm32"))]
+fn find_dialect_app<'a>(program: &'a ProgramBridgeEntry, dialect: &semio_framework::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
+    program.manifest.apps.iter().find(|app| &app.dialect == dialect && app.role == role)
+}
+
+//#endregion 🔖️IdentityPure
+
+//#region 🧪️IdentityDirectoryPresenceTests
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod identity_directory_presence_tests {
+    use super::*;
+
+    fn sample_identity() -> Identity {
+        Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 }
+    }
+
+    /// 🧪️ Verify item: "the actor id shape".
+    #[test]
+    fn shell_actor_uses_contract_grammar_when_identity_present_else_local_default() {
+        assert_eq!(shell_actor(Some(&sample_identity()), "sess-1", 7), "user:u-amara#sess-1");
+        assert_eq!(shell_actor(None, "sess-1", 7), "wgpu-7");
+    }
+
+    /// 🧪️ Verify item: "the default-bindings decision with and without identity".
+    #[test]
+    fn default_bindings_are_hub_plus_folder_with_identity_and_space() {
+        let identity = sample_identity();
+        let data_dir = std::path::Path::new("/tmp/semio-s-user1");
+        let bindings = default_persistence_bindings(Some(&identity), Some("sp-1"), Some(data_dir), Some("s.space.space@1/*#editor"));
+        assert_eq!(bindings.len(), 2, "hub first, folder second");
+        match &bindings[0] {
+            PersistenceBinding::Hub { base_url, space_id, token, surface } => {
+                assert_eq!(base_url, "http://hub.local");
+                assert_eq!(space_id, "sp-1");
+                assert_eq!(token.as_deref(), Some("tok"));
+                assert_eq!(surface.as_deref(), Some("s.space.space@1/*#editor"));
+            }
+            other => panic!("expected Hub binding first, got {other:?}"),
+        }
+        assert_eq!(bindings[1], PersistenceBinding::Folder { path: data_dir.join("spaces").join("sp-1") });
+    }
+
+    #[test]
+    fn default_bindings_are_folder_only_without_identity() {
+        let data_dir = std::path::Path::new("/tmp/semio-s-user1");
+        let bindings = default_persistence_bindings(None, Some("sp-1"), Some(data_dir), None);
+        assert_eq!(bindings, vec![PersistenceBinding::Folder { path: data_dir.join("spaces").join("sp-1") }]);
+    }
+
+    #[test]
+    fn default_bindings_are_empty_without_space_or_data_dir() {
+        assert!(default_persistence_bindings(None, None, None, None).is_empty());
+        assert!(default_persistence_bindings(Some(&sample_identity()), None, None, None).is_empty(), "identity alone, no open space, binds nothing");
+    }
+
+    #[test]
+    fn directory_command_from_action_covers_every_frozen_verb() {
+        assert_eq!(
+            directory_command_from_action("os.directory.create-space", Some(&serde_json::json!({"name": "Atelier", "spaceKind": "atelier", "visibility": "private"}))),
+            Some(DirectoryCommand::CreateSpace { name: "Atelier".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Private })
+        );
+        assert_eq!(directory_command_from_action("os.directory.delete-space", Some(&serde_json::json!({"spaceId": "sp-1"}))), Some(DirectoryCommand::DeleteSpace { space_id: "sp-1".into() }));
+        assert_eq!(
+            directory_command_from_action("os.directory.share-link", Some(&serde_json::json!({"spaceId": "sp-1", "role": "author", "ttlSecs": 120}))),
+            Some(DirectoryCommand::CreateInvite { space_id: "sp-1".into(), role: DirectorySpaceRole::Author, ttl_secs: 120 }),
+            "share-link is client-side sugar for create-invite, contract §C1 has no schema command kind of its own for it"
+        );
+        assert_eq!(directory_command_from_action("os.unknown.verb", None), None);
+    }
+
+    /// 🧪️ Verify item: "the directory-event fold reaching a session".
+    #[test]
+    fn fold_directory_events_action_reaches_the_controller_with_the_events_payload() {
+        let event: DirectoryEvent = serde_json::from_value(serde_json::json!({
+            "seq": 7, "id": "e1", "hlc": {"physicalMs": 1, "logical": 0},
+            "actor": {"kind": "system", "id": "sys"}, "body": {"kind": "space.archived", "spaceId": "sp-1"}, "recordedAtMs": 1
+        }))
+        .expect("fixture event decodes");
+        let action = fold_directory_events_action("s.home.controller", std::slice::from_ref(&event)).expect("a non-empty batch builds an action");
+        assert_eq!(action.controller_id, "s.home.controller");
+        assert_eq!(action.action, "foldDirectoryEvents");
+        let args_json = action.args.as_ref().map(dsl_value_as_json).expect("args present");
+        // 🧮️ `ActionDescriptor.args` is a `DslValue`, whose `Number` variant is always `f64` (see
+        // `dsl/schema/component.rs`) — every action-args payload round-trips numbers through this
+        // f64 representation, so the JSON view here carries `seq` as a float-tagged
+        // `serde_json::Number` (`.as_i64()` is `None` for it) even though the value is whole.
+        assert_eq!(args_json["events"][0]["seq"].as_f64(), Some(7.0));
+        assert!(fold_directory_events_action("s.home.controller", &[]).is_none(), "an empty batch dispatches nothing");
+    }
+
+    /// 🧪️ Verify item: "the `os.open-artifact{documentId}` path".
+    #[test]
+    fn open_artifact_relay_target_parses_document_and_space_ids() {
+        let target = open_artifact_relay_target(Some(&serde_json::json!({"documentId": "index", "spaceId": "sp-1"}))).expect("documentId present");
+        assert_eq!(target.document_id, "index");
+        assert_eq!(target.space_id.as_deref(), Some("sp-1"));
+        assert!(open_artifact_relay_target(Some(&serde_json::json!({"artifactRef": "s.space.space@1/*"}))).is_none(), "no documentId means no document to attach, the pre-existing gap this closes");
+    }
+
+    /// 🧪️ Verify item: "the presence roster filtering by surface".
+    #[test]
+    fn presence_rows_are_scoped_to_the_attached_surface() {
+        let peer = PresencePeer { actor: "user:a#1".into(), label: Some("Alice".into()), presence_pack: None, connected_at_ms: 1, user_id: None, role: Some("author".into()), cursor: None, viewport: None, drag_ghost_json: None, interaction: None };
+        let rows = presence_peer_rows_for_surface(std::slice::from_ref(&peer), Some("s.space.space@1/*#editor"), "s.space.space@1/*#editor");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].actor, "user:a#1");
+        assert_eq!(rows[0].role, Some(ui_wgpu::wgpu::PresenceRole::Author));
+        assert!(presence_peer_rows_for_surface(std::slice::from_ref(&peer), Some("s.space.space@1/*#editor"), "s.space.space@1/*#viewer").is_empty(), "a different surface sees no roster");
+        assert!(presence_peer_rows_for_surface(std::slice::from_ref(&peer), None, "s.space.space@1/*#editor").is_empty(), "no attached surface (local-only document) sees no roster");
+    }
+
+    /// 🧪️ Verify item: "the status pill renders each state" — mirrors the React twin's
+    /// `computeSyncPillState`/`syncPillText` test coverage (`📓️w3-a-report.md`).
+    #[test]
+    fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
+        assert_eq!(ShellState::sync_pill_text(None), "Remote: detached");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 } })), "Persisted");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 3, remote: RemoteState::Live { peer_count: 1 } })), "Pending (3)");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Connecting })), "Remote: connecting");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Backoff { retry_in_ms: 500 } })), "Remote: backoff");
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 0, remote: RemoteState::Detached })), "Remote: detached");
+        // 🎯️ A non-live remote takes priority over a nonzero pending count — the connection itself
+        // being degraded is the more urgent fact, mirroring the React twin's own priority order.
+        assert_eq!(ShellState::sync_pill_text(Some(&ArtifactSyncStatus { persisted: false, pending_mutations: 9, remote: RemoteState::Backoff { retry_in_ms: 500 } })), "Remote: backoff");
+    }
+}
+//#endregion 🧪️IdentityDirectoryPresenceTests
 
 //#region ShellTypes
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -495,6 +816,53 @@ pub struct ShellState {
     /// @emoji 🚦️ Latest sync health for the active document's status badge (native only).
     #[cfg(not(target_arch = "wasm32"))]
     pub sync_status: Option<ArtifactSyncStatus>,
+    //#region 🔖️Identity
+    /// 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the restored-or-
+    /// minted session, `None` with no hub env (unchanged local-only behaviour) or before boot's
+    /// bootstrap thread reports back. Native only, see this region's header note above.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub identity: Option<Identity>,
+    /// 📶️ Set when `mint_or_restore` degraded to the last cached identity because the hub was
+    /// unreachable — never blocks, never clears `identity` itself.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub identity_offline: bool,
+    /// 🌱️ `S_HUB_URL`/`S_USER`/`S_DATA_DIR`, resolved once at `boot()` — `None` means "no hub env",
+    /// the sentinel every identity/binding/directory code path below checks first.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub identity_env: Option<IdentityEnv>,
+    /// 🎭️ Per-process session id — the `{sessionId}` half of contract §C0's `user:{userId}#{sessionId}`
+    /// actor grammar, minted once in `ShellState::new` and stable for this process's lifetime.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub shell_session_id: String,
+    /// 📡️ Non-blocking identity bootstrap result channel — `boot()` spawns a background thread that
+    /// calls `mint_or_restore` and reports back here so a slow/unreachable hub never blocks the
+    /// native render loop (contract §C3: "never blocks the UI thread").
+    #[cfg(not(target_arch = "wasm32"))]
+    pub identity_bootstrap_rx: Option<std::sync::mpsc::Receiver<Result<IdentityOutcome, String>>>,
+    /// 📇️ The hub directory client used to issue `os.directory.*` commands (§C6) — constructed once
+    /// identity resolves, holding the session token.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_client: Option<DirectoryClient<NativeDirectoryTransport>>,
+    /// 📡️ `/directory/ws` stream messages, drained once per frame by `pump_directory_events` — owned
+    /// by a dedicated background thread (its own current-thread tokio runtime, see
+    /// `open_directory_stream`) so the auto-reconnect backoff never blocks the render loop either.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub directory_events_rx: Option<std::sync::mpsc::Receiver<DirectoryStreamMessage>>,
+    /// 🎮️ Bounded offline queue for `os.directory.*` commands issued while the hub is unreachable —
+    /// flushed opportunistically every frame once `directory_client` exists (contract §C6: "commands
+    /// queue in the shell (bounded, in-memory) and flush on reconnect").
+    #[cfg(not(target_arch = "wasm32"))]
+    pub pending_directory_commands: Vec<DirectoryCommand>,
+    /// 👥️ ticket §5 — shell-LOCAL presence roster from the currently attached document's
+    /// `ArtifactEvent::Presence`, deliberately NOT folded into the shared kernel `ViewModel`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub presence_peers: Vec<PresencePeer>,
+    /// 👥️ The canonical surface id (`surface_app_id`) the CURRENTLY attached document's hub binding
+    /// used, if any — `presence_peers` is scoped to this surface; a document opened without a hub
+    /// binding (local-only) carries `None` and renders no roster.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub presence_surface: Option<String>,
+    //#endregion 🔖️Identity
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub utility_collection_expanded: HashMap<String, bool>,
@@ -770,6 +1138,26 @@ impl ShellState {
             sync_channel: None,
             #[cfg(not(target_arch = "wasm32"))]
             sync_status: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            identity: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            identity_offline: false,
+            #[cfg(not(target_arch = "wasm32"))]
+            identity_env: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            shell_session_id: mint_shell_session_id(),
+            #[cfg(not(target_arch = "wasm32"))]
+            identity_bootstrap_rx: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_client: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            directory_events_rx: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            pending_directory_commands: Vec::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            presence_peers: Vec::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            presence_surface: None,
             window_engagements: HashMap::new(),
             window_measures: HashMap::new(),
             utility_collection_expanded: HashMap::new(),
@@ -899,6 +1287,10 @@ impl ShellState {
         }
         self.sync_dock();
         self.sync_session_chrome();
+        // 📇️ ticket §1 — non-blocking (spawns a background thread and returns immediately, see
+        // `bootstrap_identity`'s own doc): a slow/unreachable hub must never delay the first frame.
+        #[cfg(not(target_arch = "wasm32"))]
+        self.bootstrap_identity();
         self.refresh_ui().await
     }
 
@@ -1593,7 +1985,7 @@ impl ShellState {
         if let Some(rest) = uri.strip_prefix("remote://") {
             let (host_port, space_id) = rest.split_once('/').unwrap_or((rest, "default"));
             let space_id = if space_id.is_empty() { "default" } else { space_id };
-            return Ok(vec![PersistenceBinding::Hub { base_url: format!("http://{host_port}"), space_id: space_id.to_string(), token: None }]);
+            return Ok(vec![PersistenceBinding::Hub { base_url: format!("http://{host_port}"), space_id: space_id.to_string(), token: None, surface: None }]);
         }
         if let Some(path) = uri.strip_prefix("folder://") {
             return Ok(vec![PersistenceBinding::Folder { path: std::path::PathBuf::from(path) }]);
@@ -1621,6 +2013,9 @@ impl ShellState {
             self.document_host.close(&channel.document_id);
         }
         self.sync_status = None;
+        // 👥️ ticket §5 — a detached document's roster must never linger onto whatever opens next.
+        self.presence_peers.clear();
+        self.presence_surface = None;
     }
 
     /// @emoji 📬️ Drains the active document actor's event stream into the plugin store and the sync
@@ -1632,9 +2027,13 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
+        // 📇️ ticket §1/§3 — non-blocking identity bootstrap result + directory-stream/command-queue
+        // drain, folded into this same every-frame pump (glue.rs's frame loop already calls this
+        // method once per tick; adding a second call site outside this lane's lease was avoidable).
+        let directory_changed = self.pump_directory_events().await;
         let (instance_id, plugin_id, events) = {
             let Some(channel) = self.sync_channel.as_mut() else {
-                return false;
+                return directory_changed;
             };
             let mut events: Vec<ArtifactEvent> = Vec::new();
             loop {
@@ -1645,12 +2044,12 @@ impl ShellState {
                 }
             }
             if events.is_empty() {
-                return false;
+                return directory_changed;
             }
             (channel.instance_id, channel.plugin_id.clone(), events)
         };
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id);
-        let mut changed = false;
+        let mut changed = directory_changed;
         for event in events {
             match event {
                 ArtifactEvent::RemoteMutations { envelopes } => {
@@ -1674,10 +2073,12 @@ impl ShellState {
                     self.sync_status = Some(status);
                     changed = true;
                 }
-                ArtifactEvent::Presence { .. } => {
-                    // 👥️ The Rust `semio_framework::ViewModel` has no presence field yet (only the
-                    // TS shell threads `presencePeersJson`); presence roster display in the native
-                    // wgpu shell is a documented follow-up once core `ViewModel` carries it.
+                ArtifactEvent::Presence { peers } => {
+                    // 👥️ ticket §5 — shell-LOCAL roster (deliberately NOT the shared kernel
+                    // `ViewModel`, which still has no presence field). Rendered by
+                    // `render_presence_bar` in the footer, scoped to `presence_surface`.
+                    self.presence_peers = peers;
+                    changed = true;
                 }
                 ArtifactEvent::Conflict(_) => {
                     self.sync_card_kind = Some("conflict".into());
@@ -1717,6 +2118,32 @@ impl ShellState {
         format!("{remote} · {persisted}{pending}")
     }
 
+    /// 🚦️ ticket §C5 — the `#s-sync-status` footer pill's text, mirroring the React shell's
+    /// `computeSyncPillState`/`syncPillText` three-way vocabulary (`persisted | pending(n) |
+    /// remote(connected|connecting|backoff|detached)`) exactly, distinct from `sync_status_label`
+    /// above (that one is the manual sync-card's own popover-style summary, unchanged). English-only
+    /// — `active_locale()` resolves plugin-declared `LocalizedLabel`s, not shell-owned plain text like
+    /// this one (same tier `sync_status_label` is already at); a real bilingual pill needs the same
+    /// `Label`/`LocalizedLabel` plumbing gap `📓️w2-b-report.md` already flagged for tree-content
+    /// strings, not invented bespoke here — see `📓️w3-a-report.md`'s "what is NOT done".
+    #[cfg(not(target_arch = "wasm32"))]
+    fn sync_pill_text(status: Option<&ArtifactSyncStatus>) -> String {
+        let Some(status) = status else { return "Remote: detached".to_string() };
+        if !matches!(status.remote, RemoteState::Live { .. }) {
+            let remote = match &status.remote {
+                RemoteState::Live { .. } => "connected",
+                RemoteState::Connecting => "connecting",
+                RemoteState::Backoff { .. } => "backoff",
+                RemoteState::Detached => "detached",
+            };
+            return format!("Remote: {remote}");
+        }
+        if status.pending_mutations > 0 {
+            return format!("Pending ({})", status.pending_mutations);
+        }
+        "Persisted".to_string()
+    }
+
     /// 💓️ Publishes the newest renderer cursor and app-typed presence through the document host's
     /// per-document coalescer. The channel drain also exposes transient generation for the native
     /// renderer's next-frame invalidation contract without ever sharing transient contents.
@@ -1735,11 +2162,11 @@ impl ShellState {
             .map(|(presence, _, _)| presence);
         let label = self.session.as_ref().map(|session| session.app.id.clone());
         let peer = PresencePeer {
-            actor: format!("wgpu-{instance_id}"),
+            actor: self.current_shell_actor(instance_id),
             label,
             presence_pack,
             connected_at_ms,
-            user_id: None,
+            user_id: self.identity.as_ref().map(|identity| identity.user_id.clone()),
             role: None,
             cursor: Some(PresencePoint { x: input.pointer_x as f64, y: input.pointer_y as f64 }),
             viewport: Some(PresenceViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
@@ -1747,6 +2174,13 @@ impl ShellState {
             interaction: None,
         };
         self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
+    }
+
+    /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
+    /// else the pre-identity local default this shell always used (`shell_actor`'s pure decision).
+    #[cfg(not(target_arch = "wasm32"))]
+    fn current_shell_actor(&self, instance_id: u32) -> String {
+        shell_actor(self.identity.as_ref(), &self.shell_session_id, instance_id)
     }
     //#endregion 🔖️NativeBackboneSync
 
@@ -1764,8 +2198,13 @@ impl ShellState {
             let schema = session.app.breadcrumb.join(".");
             let bindings = Self::parse_persistence_binding(&uri)?;
             self.detach_sync_backbone_internal();
+            // 🔗️ The manual `remote://` sync-card override never carries a surface (§C6's
+            // auto-binding is what threads one through — see `open_document` below), so the presence
+            // roster stays empty for this path, same as before this lane.
+            self.presence_surface = None;
             let actor_uri = format!("actor://{document_id}");
-            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor: format!("wgpu-{}", session.instance_id) });
+            let actor = self.current_shell_actor(session.instance_id);
+            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
             let events = self.document_host.subscribe(&document_id);
             runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
@@ -1787,6 +2226,50 @@ impl ShellState {
             web_sys::console::log_1(&"[DEBUG] attached backbone (browser wgpu: relayed via host-shim)".into());
             Ok(())
         }
+    }
+
+    /// 📇️ ticket §2/§C6 — opens an explicit document id/schema on the same `framework/sync`
+    /// `ArtifactHost` sequence `attach_sync_backbone` uses, but with caller-supplied bindings (task
+    /// 2's default-binding computation, or an explicit override) instead of parsing a manual sync-
+    /// card uri — independent of `attach_sync_backbone`, which stays the untouched `remote://`
+    /// override path. Used by the `os.open-artifact{documentId}` opening relay (§4) and by the
+    /// identity-driven space-index auto-bind on the `/spaces/{id}` route (§6).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>) -> Result<(), String> {
+        let session = self.session.clone().ok_or("session missing")?;
+        let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
+        let runtime = plugin.wasm_runtime().ok_or("native plugin runtime missing")?;
+        self.detach_sync_backbone_internal();
+        self.presence_surface = surface;
+        let actor_uri = format!("actor://{document_id}");
+        let actor = self.current_shell_actor(session.instance_id);
+        let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
+        let events = self.document_host.subscribe(&document_id);
+        runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
+        plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
+        let cmd_tx = channels.cmd_tx.clone();
+        let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
+        self.sync_backbone_uri = Some(actor_uri.clone());
+        self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
+        self.sync_status = Some(ArtifactSyncStatus::default());
+        self.sync_card_kind = None;
+        self.refresh_ui().await
+    }
+
+    /// 📇️ Default bindings for a document opened against the CURRENTLY mounted session's own
+    /// dialect/role — `default_persistence_bindings`'s pure decision, fed the live identity/space/
+    /// data-dir/surface this shell already holds.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn default_bindings_for_current_session(&self) -> (Vec<PersistenceBinding>, Option<String>) {
+        let space_id = self.open_space_id.clone();
+        let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
+        let surface = self
+            .session
+            .as_ref()
+            .filter(|_| self.identity.is_some() && space_id.is_some())
+            .map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));
+        let bindings = default_persistence_bindings(self.identity.as_ref(), space_id.as_deref(), data_dir, surface.as_deref());
+        (bindings, surface)
     }
 
     async fn handle_sync_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
@@ -2014,6 +2497,15 @@ impl ShellState {
                         self.deferred_actions.push(descriptor);
                     }
                 }
+                // 📇️ ticket §C6/§3/§4 — the `os.directory.*` funnel and the `os.open-artifact`/
+                // `os.open-artifact-with` opening relay (§3-B: `documentId`/`spaceId` riding inside
+                // the existing args, no channel tag added). Every other `ReplayShellCommand` action id
+                // (e.g. `os.setThemeId`'s undo replay) has no handler in this lease, same pre-existing
+                // gap the React shell's own report documents.
+                #[cfg(not(target_arch = "wasm32"))]
+                semio_framework::kernel::HostEffect::ReplayShellCommand { action_id, args } => {
+                    self.handle_replay_shell_command(action_id, args.as_ref()).await;
+                }
                 _ => {}
             }
         }
@@ -2056,12 +2548,235 @@ impl ShellState {
                 semio_framework::kernel::HostEffect::DispatchAction { action, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.clone(), args: args.clone() });
                 }
+                // 📇️ ticket §C6/§3/§4 — same funnel as `dispatch_action`'s own arm above; a "surface
+                // command" per contract §C6's own wording is exactly a command-boundary emission, so
+                // both dispatch paths need the handler.
+                #[cfg(not(target_arch = "wasm32"))]
+                semio_framework::kernel::HostEffect::ReplayShellCommand { action_id, args } => {
+                    self.handle_replay_shell_command(action_id, args.as_ref()).await;
+                }
                 _ => {}
             }
         }
         let operations: Vec<String> = result.mutations.iter().filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok()).collect();
         self.apply_mutations(&operations).await
     }
+
+    //#region 🔖️DirectoryAndIdentity
+    /// 📇️ ticket §C6/§3/§4 — dispatches a `ReplayShellCommand`'s `action_id`/`args` onto the
+    /// directory funnel or the opening relay; every other action id is a documented no-op (see this
+    /// region's callers' own comment).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn handle_replay_shell_command(&mut self, action_id: &str, args: Option<&DslValue>) {
+        let args_json = args.map(dsl_value_as_json);
+        if let Some(command) = directory_command_from_action(action_id, args_json.as_ref()) {
+            self.dispatch_directory_command(command).await;
+            return;
+        }
+        if action_id == "os.open-artifact" || action_id == "os.open-artifact-with" {
+            self.handle_open_artifact_relay(args_json.as_ref()).await;
+        }
+    }
+
+    /// 📂️ ticket §4/§3-B — opens the relayed `documentId` (with `spaceId` pinning `open_space_id`
+    /// first, so the default-binding computation sees it) with this session's own default bindings.
+    /// `documentId` absent ⇒ no-op (the relay only opened an app, nothing further to attach — same
+    /// as the React shell's own documented gap until lane 3-B's opening relay carries a real
+    /// `schema` field; the `s.space` mapping is the one this lane knows, mirroring `📓️w2-c-report.md`).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn handle_open_artifact_relay(&mut self, args: Option<&serde_json::Value>) {
+        let Some(target) = open_artifact_relay_target(args) else {
+            return;
+        };
+        if let Some(space_id) = target.space_id {
+            self.open_space_id = Some(space_id);
+        }
+        let schema = if target.document_id == S_SPACE_INDEX_DOCUMENT_ID { S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() } else { target.document_id.clone() };
+        let (bindings, surface) = self.default_bindings_for_current_session();
+        if let Err(error) = self.open_document(target.document_id, schema, bindings, surface).await {
+            eprintln!("[DEBUG] wgpu shell os.open-artifact relay failed: {error}");
+        }
+    }
+
+    /// 📇️ ticket §4/§C6 — issues one `os.directory.*` command against the hub, dropping (with a
+    /// warning) when no identity is signed in at all, else queueing on any transport/HTTP failure
+    /// (the "same offline queueing behaviour as the React side" the brief asks for — React's worker
+    /// queues in-memory and flushes on reconnect; this shell's `pending_directory_commands` +
+    /// `flush_pending_directory_commands` (called every frame from `pump_directory_events`) is the
+    /// native twin of that policy).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn dispatch_directory_command(&mut self, command: DirectoryCommand) {
+        if self.identity.is_none() {
+            eprintln!("[DEBUG] wgpu shell directory command dropped, no signed-in identity: {command:?}");
+            return;
+        }
+        let Some(client) = self.directory_client.as_ref() else {
+            self.queue_pending_directory_command(command);
+            return;
+        };
+        if let Err(error) = client.command(&command).await {
+            eprintln!("[DEBUG] wgpu shell directory command failed, queueing: {error}");
+            self.queue_pending_directory_command(command);
+        }
+    }
+
+    /// 🎮️ Bounded (contract §C6: "bounded, in-memory") — drops the OLDEST queued command rather than
+    /// the newest once full, so a burst never silently loses the caller's most recent intent.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn queue_pending_directory_command(&mut self, command: DirectoryCommand) {
+        const MAX_PENDING_DIRECTORY_COMMANDS: usize = 64;
+        if self.pending_directory_commands.len() >= MAX_PENDING_DIRECTORY_COMMANDS {
+            self.pending_directory_commands.remove(0);
+        }
+        self.pending_directory_commands.push(command);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn flush_pending_directory_commands(&mut self) {
+        let Some(client) = self.directory_client.as_ref() else { return };
+        if self.pending_directory_commands.is_empty() {
+            return;
+        }
+        let pending = std::mem::take(&mut self.pending_directory_commands);
+        for command in pending {
+            if let Err(error) = client.command(&command).await {
+                eprintln!("[DEBUG] wgpu shell directory command flush failed, re-queueing: {error}");
+                self.pending_directory_commands.push(command);
+            }
+        }
+    }
+
+    /// 📇️ ticket §3/§C6 — folds one `DirectoryEvent` batch into whichever session is CURRENTLY
+    /// mounted, mirroring the React shell's `dispatchDirectoryEventBatch` exactly (same action name/
+    /// payload shape, same "one session at a time" constraint — see `fold_directory_events_action`'s
+    /// own doc).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn dispatch_directory_event_batch(&mut self, events: Vec<DirectoryEvent>) {
+        let Some(session) = self.session.clone() else { return };
+        let Some(action) = fold_directory_events_action(&session.app.controller_id, &events) else { return };
+        if let Err(error) = self.dispatch_action(action).await {
+            eprintln!("[DEBUG] wgpu shell foldDirectoryEvents dispatch failed: {error}");
+        }
+    }
+
+    /// 🪪️ ticket §1 — spawns a background OS thread that calls `mint_or_restore` and reports back
+    /// through `identity_bootstrap_rx`, polled every frame by `pump_directory_events`. Deliberately
+    /// NOT `.await`ed inline in `boot()`: `mint_or_restore`'s native HTTP calls (`ureq`, blocking-
+    /// thread-per-call) can hang on an unresponsive (not just refused) hub, and this method's whole
+    /// point is that such a hang must never delay the first rendered frame (contract §C3: "never
+    /// blocks the UI thread"). No hub env ⇒ no-op, unchanged local-only behaviour.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn bootstrap_identity(&mut self) {
+        let Some(env) = resolve_identity_env() else { return };
+        self.identity_env = Some(env.clone());
+        let (tx, rx) = std::sync::mpsc::channel::<Result<IdentityOutcome, String>>();
+        std::thread::spawn(move || {
+            let client = DirectoryClient::new(NativeDirectoryTransport::new(), env.hub_url.clone());
+            let outcome = pollster::block_on(mint_or_restore(&client, &env)).map_err(|error| error.to_string());
+            let _ = tx.send(outcome);
+        });
+        self.identity_bootstrap_rx = Some(rx);
+    }
+
+    /// 🪪️ Drains `identity_bootstrap_rx` (non-blocking `try_recv`) and, once resolved, mints the
+    /// live `directory_client` and opens the directory stream — called from `pump_directory_events`.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn poll_identity_bootstrap(&mut self) {
+        let Some(rx) = self.identity_bootstrap_rx.as_ref() else { return };
+        match rx.try_recv() {
+            Ok(Ok(outcome)) => {
+                self.identity_offline = outcome.status == IdentityStatus::Offline;
+                self.identity = Some(outcome.identity.clone());
+                let client = DirectoryClient::new(NativeDirectoryTransport::new(), outcome.identity.hub_base_url.clone());
+                client.set_token(Some(outcome.identity.session_token.clone()));
+                self.directory_client = Some(client);
+                if !self.identity_offline {
+                    self.open_directory_stream(&outcome.identity);
+                }
+                self.identity_bootstrap_rx = None;
+            }
+            Ok(Err(error)) => {
+                eprintln!("[DEBUG] wgpu shell identity bootstrap failed: {error}");
+                self.identity_bootstrap_rx = None;
+            }
+            Err(std::sync::mpsc::TryRecvError::Empty) => {}
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                self.identity_bootstrap_rx = None;
+            }
+        }
+    }
+
+    /// 📡️ ticket §3 — opens `/directory/ws` once per shell (guarded by `directory_events_rx` already
+    /// being set) on a dedicated background thread with its own current-thread tokio runtime
+    /// (`tokio-tungstenite`'s WS transport needs a real reactor — `pollster::block_on` alone does
+    /// not provide one; mirrors `🏪️store/🔄️sync`'s own native actor precedent per `📓️w1-d-report.md`).
+    /// Reconnect backoff is handled entirely inside `DirectoryStream` — this loop just sleeps
+    /// `after_ms` between dials, exactly the division of labor `DirectoryStream::recv`'s own doc asks
+    /// callers to honor.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn open_directory_stream(&mut self, identity: &Identity) {
+        if self.directory_events_rx.is_some() {
+            return;
+        }
+        let (tx, rx) = std::sync::mpsc::channel::<DirectoryStreamMessage>();
+        let base_url = identity.hub_base_url.clone();
+        let token = identity.session_token.clone();
+        std::thread::spawn(move || {
+            let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+                Ok(runtime) => runtime,
+                Err(error) => {
+                    eprintln!("[DEBUG] wgpu shell directory stream: tokio runtime build failed: {error}");
+                    return;
+                }
+            };
+            runtime.block_on(async move {
+                let client = DirectoryClient::new(NativeDirectoryTransport::new(), base_url);
+                client.set_token(Some(token));
+                let mut stream = client.stream(0);
+                loop {
+                    match stream.recv().await {
+                        Some(DirectoryStreamEvent::Message(message)) => {
+                            if tx.send(message).is_err() {
+                                break;
+                            }
+                        }
+                        Some(DirectoryStreamEvent::Reconnecting { after_ms }) => {
+                            tokio::time::sleep(std::time::Duration::from_millis(after_ms)).await;
+                        }
+                        None => break,
+                    }
+                }
+            });
+        });
+        self.directory_events_rx = Some(rx);
+    }
+
+    /// 📡️ ticket §1/§3/§4 — called once per frame from `pump_sync_events` (this lease's own region;
+    /// glue.rs's frame loop already calls that method every tick, so no second call site was needed
+    /// outside this lease): polls the identity bootstrap, drains `directory_events_rx` into
+    /// `foldDirectoryEvents` batches, and opportunistically flushes any queued offline commands.
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn pump_directory_events(&mut self) -> bool {
+        self.poll_identity_bootstrap();
+        let mut changed = false;
+        if let Some(rx) = self.directory_events_rx.as_ref() {
+            let mut events: Vec<DirectoryEvent> = Vec::new();
+            loop {
+                match rx.try_recv() {
+                    Ok(DirectoryStreamMessage::Event { event }) => events.push(event),
+                    Ok(DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::Heartbeat { .. }) => {}
+                    Err(std::sync::mpsc::TryRecvError::Empty) | Err(std::sync::mpsc::TryRecvError::Disconnected) => break,
+                }
+            }
+            if !events.is_empty() {
+                self.dispatch_directory_event_batch(events).await;
+                changed = true;
+            }
+        }
+        self.flush_pending_directory_commands().await;
+        changed
+    }
+    //#endregion 🔖️DirectoryAndIdentity
 
     pub async fn apply_mutations(&mut self, operations: &[String]) -> Result<(), String> {
         self.apply_ops_inner(operations, true).await
@@ -2258,20 +2973,74 @@ impl ShellState {
         self.refresh_ui().await
     }
 
+    /// 📇️ ticket §6 — generic app switch by definition (not the host's landing/host app via
+    /// `host_config()`), used for the `s.space` artifact-index route below. Kept as a close sibling of
+    /// `switch_to_managed_app` (CLAUDE.md: repeated code stays close together) rather than a forced
+    /// shared abstraction that would blur the two call shapes (this one has no workflow-panel state).
+    #[cfg(not(target_arch = "wasm32"))]
+    async fn switch_to_app(&mut self, plugin_id: &str, app: AppDefinition) -> Result<(), String> {
+        let program = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id).cloned().ok_or("program missing")?;
+        if let Some(session) = &self.session {
+            if session.plugin_id == plugin_id && session.app.id == app.id {
+                return Ok(());
+            }
+        }
+        let instance_id = program.create_app(&app.id).await?;
+        let view_state = ViewModel {
+            active_mode_id: Some(app.default_mode_id.clone()),
+            active_window_kind_id: Some(app.window_kinds.first().id.clone()),
+            active_utility_id: None,
+            panel_json: None,
+            contributions_json: None,
+            locale: self.active_locale(),
+            terminology: self.active_terminology(),
+            window_id: None,
+            window_instances: Vec::new(),
+            active_tool_id: None,
+            active_utility_by_window_id: std::collections::HashMap::new(),
+        };
+        self.active_window_id = Some(app.window_kinds.first().id.clone());
+        self.session = Some(ActiveSession { plugin_id: plugin_id.to_string(), instance_id, app, view_state });
+        self.refresh_ui().await
+    }
+
     async fn apply_shell_uri(&mut self, uri: &str) -> Result<(), String> {
         let Some(cfg) = self.host_config() else {
             return Ok(());
         };
         let path = uri.split('?').next().unwrap_or(uri);
-        let space_id = path.strip_prefix("/spaces/").map(|value| value.trim_end_matches('/').to_string()).filter(|value| !value.is_empty());
-        if space_id.is_none() {
+        let raw = path.strip_prefix("/spaces/").map(|value| value.trim_end_matches('/').to_string()).filter(|value| !value.is_empty());
+        if raw.is_none() {
             self.open_space_id = None;
             if self.session.as_ref().map(|session| session.app.id.as_str()) != Some(cfg.landing_app_id) {
                 self.switch_to_managed_app(cfg.landing_app_id, None).await?;
             }
             return Ok(());
         }
-        let space_id = space_id.expect("studio id");
+        let raw = raw.expect("space route");
+        // 📇️ ticket §5/§6 — "/spaces/{id}/studio" keeps the pre-existing studio behaviour (the ONLY
+        // behaviour this route had before this lane); a bare "/spaces/{id}" now opens the `s.space`
+        // artifact-index app instead, mirroring the React shell's `applyShellUri` (`📓️w2-c-report.md`).
+        let (space_id, is_studio_route) = match raw.split_once('/') {
+            Some((id, "studio")) => (id.to_string(), true),
+            _ => (raw.clone(), false),
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        if !is_studio_route {
+            self.open_space_id = Some(space_id.clone());
+            let host_program = self.plugins.iter().find(|program| program.plugin_id == cfg.plugin_id).cloned();
+            let space_app = host_program
+                .as_ref()
+                .and_then(|program| find_dialect_app(program, &space_index_dialect(), semio_framework::manifest::AppRole::Editor).or_else(|| find_dialect_app(program, &space_index_dialect(), semio_framework::manifest::AppRole::Viewer)))
+                .cloned();
+            let Some(space_app) = space_app else {
+                eprintln!("[DEBUG] wgpu shell apply_shell_uri: no app registered for dialect s.space.space@1/* — s.space (lane 1-E) not loaded yet");
+                return Ok(());
+            };
+            self.switch_to_app(cfg.plugin_id, space_app).await?;
+            let (bindings, surface) = self.default_bindings_for_current_session();
+            return self.open_document(S_SPACE_INDEX_DOCUMENT_ID.to_string(), S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, surface).await;
+        }
         let studio_changed = self.open_space_id.as_deref() != Some(space_id.as_str());
         // 🧭️ Pin before the async switch so a concurrent chrome sync cannot boot the demo example over
         // an explicit `/spaces/:id` route.
@@ -4485,6 +5254,78 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
     buckets
 }
 
+/// 👥️ ticket §5 — walks `ui_wgpu::wgpu::build_presence_bar`'s declarative `UiNode` tree (id
+/// `s-presence-peers`, per-peer `peer:<actor>` — contract §C0's frozen id grammar, the wgpu↔React
+/// parity join) and paints one `ChromeGroupItem` chip per peer, right-aligned in the footer, reusing
+/// the SAME `render_chrome_group`/`measure_chrome_group_item` primitives `render_footer_utility_nodes`
+/// already draws with (rather than the generic `render_ui_node` pipeline plugin surfaces use, which
+/// needs a `&mut GpuContext` this footer's own immediate-mode callers don't carry). Not clickable
+/// (`register_hits: false`) — a `peer:<actor>` hit is registered separately, with no `event`, purely
+/// so the id is discoverable for e2e/hit-testing.
+#[cfg(not(target_arch = "wasm32"))]
+fn render_presence_bar(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rows: &[ui_wgpu::wgpu::PresencePeerRow], right_edge: f32, btn_y: f32, btn_h: f32) {
+    if rows.is_empty() {
+        return;
+    }
+    let node = ui_wgpu::wgpu::build_presence_bar("s-presence-peers", rows, None);
+    let UiNode::Stack(root) = node else { return };
+    let mut x = right_edge;
+    for child in root.children.iter().rev() {
+        let UiNode::Stack(peer_stack) = child else { continue };
+        let label = peer_stack.children.iter().find_map(|node| if let UiNode::Text(text) = node { Some(text.value.as_str().to_string()) } else { None }).unwrap_or_default();
+        let item = ChromeGroupItem { control_id: "framework.presence.peer", icon_id: None, label: Some(label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+        let item_w = measure_chrome_group_item(atlas, theme, &item);
+        x -= item_w;
+        let rect = Rect::new(x, btn_y, item_w, btn_h);
+        render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], false);
+        if let Some(id) = &peer_stack.id {
+            input.register_hit(HitTarget { rect, event: None, control_id: Some(format!("framework.presence.{id}")), kind: HitKind::Button, drag_axis: None, drag_data: None });
+        }
+        x -= theme.gap_standard * 0.5;
+    }
+}
+
+/// 🚦️ ticket §C5 — `#s-sync-status` status pill + `#s-checkin` explicit check-in, painted directly in
+/// the footer left-to-right (same `ChromeGroupItem`/`render_chrome_group`/`measure_chrome_group_item`
+/// immediate-mode primitives `render_presence_bar` above already uses, for the identical reason: these
+/// are SHELL-owned chrome, not a plugin-declared `UtilityNode`/`active_utilities` entry). `#s-checkin`
+/// is simply absent for a viewer session — contract §C5 "viewers never checkpoint" — never rendered
+/// disabled, mirroring `render_footer_utility_nodes`'s own undo/redo precedent one region up in the
+/// React twin. **Known gap vs the React shell** (documented in `📓️w3-a-report.md`): this dispatches a
+/// FIXED `"check-in"` message rather than opening a text-entry dialog — this footer's immediate-mode
+/// chrome has no text-input primitive today (confirmed: no `UiEvent::TextInput`-consuming widget
+/// anywhere in this file's footer/chrome code, only the generic plugin-surface `Interpreter` pipeline
+/// has one, which this hand-painted footer deliberately bypasses, same as `render_presence_bar`'s own
+/// design note). Auto check-in / checkpoint-on-close / `TouchArtifact` are NOT ported to this shell
+/// this wave either — the native wgpu shell tracks no history/uncommitted-edit projection at all
+/// today (verified: zero `HistoryPatch`/`read_history` call sites anywhere in this file), so there is
+/// no uncommitted-edit count to trigger an idle timer from without first building that tracking from
+/// scratch inside `dispatch_action`/`dispatch_command`'s shared match loops — real, unmitigated risk
+/// to take on blind while `semio-s-plugin-puzzle` keeps this whole crate from compiling (see the
+/// report's blocker section); left as an explicit follow-up instead.
+#[cfg(not(target_arch = "wasm32"))]
+fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, status: Option<&ArtifactSyncStatus>, session: Option<&ActiveSession>, mut x: f32, btn_y: f32, btn_h: f32) -> f32 {
+    let pill_label = ShellState::sync_pill_text(status);
+    let pill = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(pill_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+    let pill_w = measure_chrome_group_item(atlas, theme, &pill);
+    let pill_rect = Rect::new(x, btn_y, pill_w, btn_h);
+    render_chrome_group(draw, atlas, icons, input, theme, pill_rect, &[pill], false);
+    input.register_hit(HitTarget { rect: pill_rect, event: None, control_id: Some("s-sync-status".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    x += pill_w + theme.gap_standard * 0.5;
+    if let Some(session) = session {
+        if session.app.role != semio_framework::manifest::AppRole::Viewer {
+            let checkin = ChromeGroupItem { control_id: "s-checkin", icon_id: None, label: Some("Check In"), active: false, disabled: false, kind: HitKind::Button };
+            let checkin_w = measure_chrome_group_item(atlas, theme, &checkin);
+            let checkin_rect = Rect::new(x, btn_y, checkin_w, btn_h);
+            render_chrome_group(draw, atlas, icons, input, theme, checkin_rect, &[checkin], true);
+            let event = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: "commitCheckpoint".into(), args: crate::action_args_json!({ "message": "check-in" }) };
+            input.register_hit(HitTarget { rect: checkin_rect, event: Some(event), control_id: Some("s-checkin".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+            x += checkin_w + theme.gap_standard * 0.5;
+        }
+    }
+    x
+}
+
 fn render_footer_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
     draw.push_solid([x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0], theme.border_normal);
     x + theme.gap_standard
@@ -5032,7 +5873,7 @@ impl ShellState {
     /// {@link semio_framework::missing_required_args}).
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, serde_json::Value>) -> Option<serde_json::Map<String, serde_json::Value>> {
         let staged_dsl = semio_framework::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
-        let effective = semio_framework::effective_action_args(defs, &staged_dsl);
+        let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
         if semio_framework::missing_required_args(defs, &effective).is_empty() {
             semio_framework::from_dsl_value::<serde_json::Value>(effective).ok().and_then(|value| value.as_object().cloned())
         } else {
@@ -5568,11 +6409,13 @@ pub(crate) fn fuzzy_match_score(query: &str, target: &str) -> Option<i64> {
 #[cfg(test)]
 mod command_registry_tests {
     use super::*;
-    use semio_framework::{ActionArgControl, ActionKind, AppDefinition, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
+    use semio_framework::{ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
 
     fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
         AppDefinition {
             id: "test-app".into(),
+            role: AppRole::Editor,
+            dialect: ArtifactDialect { artifact_kind: "s.test.app".into(), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data("Test App"),
             breadcrumb: vec!["semio".into(), "test".into()],
             icon_id: None,
@@ -7823,7 +8666,25 @@ impl ShellState {
             first_section = false;
             utility_x = render_footer_utility_nodes(draw, atlas, icons, input, theme, utility_x, btn_y, btn_h, utilities, &self.utility_collection_expanded);
         }
+        // 🚦️ ticket §C5 — `#s-sync-status`/`#s-checkin`, left-aligned right after the plugin-declared
+        // utility sections (own divider, `first_section` no longer matters past this point).
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if !first_section {
+                utility_x = render_footer_section_divider(draw, theme, utility_x, btn_y, btn_h);
+            }
+            utility_x = render_sync_status_and_checkin(draw, atlas, icons, input, theme, self.sync_status.as_ref(), self.session.as_ref(), utility_x, btn_y, btn_h);
+        }
         let _ = utility_x;
+        // 👥️ ticket §5 — the live presence roster, right-aligned in the footer, scoped to the
+        // CURRENTLY mounted session's own canonical surface (`presence_peer_rows_for_surface`'s pure
+        // decision, so a stale roster from a just-closed document/surface never leaks in).
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(session) = &self.session {
+            let target_surface = semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role);
+            let rows = presence_peer_rows_for_surface(&self.presence_peers, self.presence_surface.as_deref(), &target_surface);
+            render_presence_bar(draw, atlas, icons, input, theme, &rows, width - theme.padding_standard, btn_y, btn_h);
+        }
     }
 
     fn render_floating_panel(

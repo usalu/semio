@@ -1,6 +1,6 @@
 //! 🎪 `stdio.avi` artifact — new-format artifact (master plan "New format artifacts" table).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::AviDiff;
 pub use crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation;
@@ -12,6 +12,15 @@ pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const AVI_ARTIFACT_SCHEMA_ID: &str = "s.stdio.avi";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const AVI_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

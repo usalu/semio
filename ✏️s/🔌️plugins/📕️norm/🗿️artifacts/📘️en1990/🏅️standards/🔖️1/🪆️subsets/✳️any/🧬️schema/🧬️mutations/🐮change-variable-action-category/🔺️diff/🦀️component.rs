@@ -7,11 +7,15 @@ use super::mutation::ChangeVariableActionCategory;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeVariableActionCategory, base: &En1990Snapshot) -> En1990Diff {
+pub fn diff(payload: &ChangeVariableActionCategory, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     let mut q_k = en1990_qk(base);
-    if let Some(entry) = q_k.get_mut(payload.index) {
-        entry.category = payload.new_category.clone();
+    let Some(entry) = q_k.get_mut(payload.index) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Variable action #{} does not exist.", payload.index), [payload.index.to_string()]);
+    };
+    if entry.category == payload.new_category {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Variable action #{} already has category \"{}\".", payload.index, payload.new_category));
     }
-    En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() }
+    entry.category = payload.new_category.clone();
+    protocol::MutationOutcome::new(En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() })
 }
 //#endregion 🔖️Diff

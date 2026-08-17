@@ -18,7 +18,7 @@ pub struct AddLoad {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for AddLoad {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "load", kind: "add-load", record: "AddedLoad" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> crate::artifacts::fem3d::diff::Fem3dDiff {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

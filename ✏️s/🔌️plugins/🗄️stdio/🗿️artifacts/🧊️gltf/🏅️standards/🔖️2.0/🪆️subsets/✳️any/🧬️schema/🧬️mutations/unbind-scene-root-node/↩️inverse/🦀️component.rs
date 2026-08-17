@@ -6,7 +6,7 @@ use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfUnbindSceneRootNodeInverse {
     pub scene: usize,
     pub node: usize,
@@ -20,13 +20,7 @@ pub fn derive(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> 
     let position =
         base.document.scenes[payload.scene].nodes.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?;
     let after = crate::artifacts::gltf::schema::mutations::unbind_scene_root_node::mutation::apply(payload, base)?;
-    Ok(GltfUnbindSceneRootNodeInverse {
-        scene: payload.scene,
-        node: payload.node,
-        position,
-        expected_nodes: after.document.scenes[payload.scene].nodes.clone(),
-        touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, position)],
-    })
+    Ok(GltfUnbindSceneRootNodeInverse { scene: payload.scene, node: payload.node, position, expected_nodes: after.document.scenes[payload.scene].nodes.clone(), touched_paths: vec![format!("document/scenes/{}/nodes/{}", payload.scene, position)] })
 }
 
 pub fn apply(base: &GltfSnapshot, inverse: &GltfUnbindSceneRootNodeInverse) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {

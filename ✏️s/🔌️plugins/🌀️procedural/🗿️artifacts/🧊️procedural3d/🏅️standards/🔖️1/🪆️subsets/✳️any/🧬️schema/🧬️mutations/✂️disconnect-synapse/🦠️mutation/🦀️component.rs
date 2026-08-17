@@ -19,7 +19,7 @@ pub struct DisconnectSynapse {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DisconnectSynapse {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-synapse", record: "DisconnectedSynapse" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::disconnect_synapse::diff::diff(self, base)
     }
 

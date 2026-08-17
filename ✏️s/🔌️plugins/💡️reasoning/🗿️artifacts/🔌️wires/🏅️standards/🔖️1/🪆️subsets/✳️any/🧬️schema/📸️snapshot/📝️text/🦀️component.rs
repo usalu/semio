@@ -44,7 +44,8 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_metabolism_fixture() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
+            .expect("valid metabolism fixture mutations");
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
         assert_eq!(crate::artifacts::wires::wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));

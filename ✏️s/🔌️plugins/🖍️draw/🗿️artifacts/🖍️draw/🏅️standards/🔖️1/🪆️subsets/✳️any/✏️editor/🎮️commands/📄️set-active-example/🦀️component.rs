@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// vocabulary": `SetSnapshot` has no replacement mutation). File-open/paste-over/load-example
 /// commands go through the sanctioned non-history `ArtifactStore::reset` path instead, which from
 /// an `ArtifactApp::handle` this reaches via `HostEffect::LoadDocument` (pack+spr bytes) — the same
-/// host-owned whole-store-swap primitive `apps::space`'s `open_space` command uses.
+/// host-owned whole-store-swap primitive `engine::space`'s `open_space` command uses.
 fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfigMutation> {
     let envelope = store::ArtifactEnvelope::<DrawSnapshot, DrawMutation> {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
@@ -28,6 +28,8 @@ fn load_document_effect(snapshot: DrawSnapshot) -> Emit<DrawMutation, DrawConfig
         migrated_from: None,
         owner: None,
         lanes: Default::default(),
+        edit_messages: Vec::new(),
+        conflicts: Vec::new(),
     };
     match store::print_document_pack(&envelope) {
         Ok(files) => Emit { effects: vec![HostEffect::LoadDocument { pack: files.pack, spr: files.spr }], ..Default::default() },

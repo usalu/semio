@@ -14,7 +14,7 @@ pub struct DisconnectWidgets {
 impl MutationKind<FlowSnapshot, FlowMutation> for DisconnectWidgets {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "disconnect", entity: "synapse", kind: "disconnect-widgets", record: "DisconnectedWidgets" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

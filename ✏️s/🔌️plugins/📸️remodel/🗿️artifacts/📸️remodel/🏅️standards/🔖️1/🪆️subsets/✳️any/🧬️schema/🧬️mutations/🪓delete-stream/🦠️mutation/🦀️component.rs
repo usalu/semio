@@ -21,7 +21,7 @@ pub fn delete_stream(id: String) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for DeleteStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "stream", kind: "delete-stream", record: "DeletedStream" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

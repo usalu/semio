@@ -148,10 +148,12 @@ pub mod tests {
     fn inverse_inverts_every_variant_against_a_populated_scene() {
         let base = sample_scene();
         for op in every_mutation() {
-            let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base);
+            let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base)
+                .expect("valid mutation diff");
             let mut restored = forward.clone();
             for inverse in op.inverse(&base) {
-                restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored);
+                restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored)
+                    .expect("valid inverse mutation diff");
             }
             assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
         }
@@ -244,7 +246,8 @@ pub mod tests {
     fn create_drawing_duplicate_id_never_applies() {
         let sample = sample_model_child("dup-drawing-1");
         let mut base = sample_scene();
-        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base);
+        base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() }).diff(&base).diff(), &base)
+            .expect("valid mutation diff");
         let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.to_uri() });
         protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
     }

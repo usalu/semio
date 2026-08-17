@@ -10,9 +10,8 @@ use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // (`.🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -247,37 +246,9 @@ pub struct CsvDiff {
 }
 
 impl MutationDiff<CsvSnapshot> for CsvDiff {
-    fn apply(&self, base: &CsvSnapshot) -> CsvSnapshot {
-        let mut next = base.clone();
-        if let Some(has_header) = self.has_header {
-            next.has_header = has_header;
-        }
-        if let Some(rdiff) = &self.records {
-            // 🥇 modified refers to BASE indices — apply before any removal shifts them.
-            for m in &rdiff.modified {
-                if let Some(rec) = next.records.get_mut(m.index) {
-                    *rec = m.diff.apply(rec);
-                }
-            }
-            // 🥈 removed refers to BASE indices — process descending so earlier removals
-            // never shift the position of a later (larger) one still to be removed.
-            let mut removed_desc = rdiff.removed.clone();
-            removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-            removed_desc.dedup();
-            for idx in removed_desc {
-                if idx < next.records.len() {
-                    next.records.remove(idx);
-                }
-            }
-            // 🥉 added refers to FINAL indices — process ascending, clamped.
-            let mut added_asc = rdiff.added.clone();
-            added_asc.sort_by_key(|a| a.index);
-            for a in added_asc {
-                let at = a.index.min(next.records.len());
-                next.records.insert(at, a.record);
-            }
-        }
-        next
+    fn apply(&self, base: &CsvSnapshot) -> MutationApplyResult<CsvSnapshot> {
+        validate_csv_diff(self, base)?;
+        Ok(apply_csv_diff_unchecked(self, base))
     }
 
     fn absorb(&mut self, other: Self) {
@@ -297,6 +268,80 @@ impl MutationDiff<CsvSnapshot> for CsvDiff {
         };
         self.records = Some(absorb_records(d1, d2));
     }
+}
+
+fn validate_csv_diff(diff: &CsvDiff, base: &CsvSnapshot) -> MutationApplyResult<()> {
+    let Some(records) = &diff.records else { return Ok(()) };
+    let mut removed = std::collections::HashSet::new();
+    for &index in &records.removed {
+        if index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &records.modified {
+        if entry.index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "record modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "record modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record modification target is repeated"));
+        }
+        if let Some(fields) = &entry.diff.fields {
+            if fields.len() > base.records[entry.index].fields.len() {
+                return Err(MutationApplyError::new("mutation.apply.invalid-index", "record field patch exceeds the base record"));
+            }
+        }
+    }
+    let final_len = base.records.len() - removed.len() + records.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &records.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "record addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "record addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
+}
+
+fn apply_csv_diff_unchecked(diff: &CsvDiff, base: &CsvSnapshot) -> CsvSnapshot {
+    let mut next = base.clone();
+    if let Some(has_header) = diff.has_header {
+        next.has_header = has_header;
+    }
+    if let Some(rdiff) = &diff.records {
+        // 🥇 modified refers to BASE indices — apply before any removal shifts them.
+        for m in &rdiff.modified {
+            if let Some(rec) = next.records.get_mut(m.index) {
+                *rec = m.diff.apply(rec);
+            }
+        }
+        // 🥈 removed refers to BASE indices — process descending so earlier removals
+        // never shift the position of a later (larger) one still to be removed.
+        let mut removed_desc = rdiff.removed.clone();
+        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+        removed_desc.dedup();
+        for idx in removed_desc {
+            if idx < next.records.len() {
+                next.records.remove(idx);
+            }
+        }
+        // 🥉 added refers to FINAL indices — process ascending, clamped.
+        let mut added_asc = rdiff.added.clone();
+        added_asc.sort_by_key(|a| a.index);
+        for a in added_asc {
+            let at = a.index.min(next.records.len());
+            next.records.insert(at, a.record);
+        }
+    }
+    next
 }
 
 /// ➕️ Structural, total, base-free absorb of two `records` triples
@@ -410,7 +455,7 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
 
 impl DiffAlgebra<CsvSnapshot> for CsvDiff {
     fn inverse(&self, base: &CsvSnapshot) -> Self {
-        let applied = self.apply(base);
+        let applied = apply_csv_diff_unchecked(self, base);
         Self::between(&applied, base)
     }
 
@@ -768,7 +813,7 @@ fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "csv diff binary", offset: 0, detail: e.to_string() }
 }
 
-impl protocol::DiffCodec for CsvDiff {
+impl DiffCodec for CsvDiff {
     fn print_diff(&self) -> String {
         print_csv_diff(self)
     }

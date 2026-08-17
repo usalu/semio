@@ -5,9 +5,18 @@ pub use crate::artifacts::procedural3d::schema::mutations::Procedural3dMutation;
 pub use crate::artifacts::procedural3d::schema::snapshot::Procedural3dSnapshot;
 
 use flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
+
+/// 🎯️ This subset's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §2.1/§7.4) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind` matches this artifact's own `s.procedural3d.schema.artifact` capability descriptor
+/// above (`b"s.procedural.procedural3d"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.procedural.procedural3d@1/*#editor` / `s.procedural.procedural3d@1/*#viewer`.
+pub const PROCEDURAL3D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.procedural3d", standard: StandardId("1"), subset: SubsetId::ANY };
 
 //#region 🔖️Helpers
 /// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
@@ -28,7 +37,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::procedural3d::create_procedural3d_app`'s `🔖️Manifest` region.
+/// `crate::editor::procedural3d::create_procedural3d_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "3d.procedural".into(),
@@ -131,7 +140,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::procedural3d::schema::procedural3d_artifact_schema_descriptor())
         .inferences([crate::artifacts::procedural3d::standards::v1::subsets::any::schema::inferences::procedural3d_artifact_inference_descriptor()])
         .composers(crate::artifacts::procedural3d::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::procedural3d::Procedural3dPlayApp>()
+        .document_codec::<EditorApp<crate::editor::procedural3d::Procedural3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -144,6 +153,13 @@ mod tests {
     #[test]
     fn artifact_kind_schema_matches_the_document_schema() {
         assert_eq!(artifact_kind().schema, PROCEDURAL_3D_SCHEMA);
+    }
+
+    #[test]
+    fn dialect_artifact_kind_matches_the_schema_capability_descriptor() {
+        assert_eq!(PROCEDURAL3D_DIALECT.artifact_kind, "s.procedural.procedural3d");
+        assert_eq!(PROCEDURAL3D_DIALECT.standard, StandardId("1"));
+        assert_eq!(PROCEDURAL3D_DIALECT.subset, SubsetId::ANY);
     }
 
     #[test]

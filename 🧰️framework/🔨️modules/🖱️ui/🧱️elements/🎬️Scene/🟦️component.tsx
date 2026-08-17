@@ -16,9 +16,10 @@ import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from 
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { sceneHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { ActionDropdown } from "../⚡️ActionGroup/🟦️component.tsx";
-import { surfaceClass, loadingBorderClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { HostThreeCanvas, uiSpacingPx, resolveSemanticColorHex, resolveColorHex, themeColorVar, tokenVar, resolveSpatialAxisColors, type ActionDropdownOption, CameraIcon, type Point, type Vector, type Plane, type Camera } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { GripVerticalIcon } from "../🔣️Icons/🟦️component.tsx";

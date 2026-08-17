@@ -1,0 +1,50 @@
+rustc syntax+test check for the 7 new os.directory.* command leaves (not wired into any crate yet, same as their 5 pre-existing siblings under os/commands/):
+== check1 ==
+
+running 1 test
+test tests::directory_create_space_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check2 ==
+
+running 1 test
+test tests::directory_delete_space_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check3 ==
+
+running 1 test
+test tests::directory_remove_member_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check4 ==
+
+running 1 test
+test tests::directory_rename_space_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check5 ==
+
+running 1 test
+test tests::directory_set_visibility_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check6 ==
+
+running 1 test
+test tests::directory_share_link_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+== check7 ==
+
+running 1 test
+test tests::directory_upsert_member_id_and_labels_are_frozen ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

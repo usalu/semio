@@ -15,7 +15,7 @@ pub struct ChangeFrameWrapMode {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameWrapMode {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-wrap-mode", kind: "change-frame-wrap-mode", record: "ChangedFrameWrapMode" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_frame_wrap_mode(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

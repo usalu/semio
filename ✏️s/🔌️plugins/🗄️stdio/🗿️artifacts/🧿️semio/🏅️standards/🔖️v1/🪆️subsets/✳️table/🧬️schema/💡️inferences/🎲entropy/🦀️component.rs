@@ -112,7 +112,7 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    use store::{InferenceCache, InferenceCacheConfig};
 
     fn two_column_snapshot() -> SemioTableSnapshot {
         SemioTableSnapshot {

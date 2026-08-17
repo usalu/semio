@@ -713,143 +713,143 @@ pub mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod remodel {
-        #[path = "../../🎛️apps/📸️remodel/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod engine {
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs"]
             mod component;
             pub use component::*;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🌟️feature/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌟️feature/🦀️component.rs"]
             pub mod feature;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🌫️dense/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌫️dense/🦀️component.rs"]
             pub mod dense;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🎥️video/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs"]
             pub mod video;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🏃️motion/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️motion/🦀️component.rs"]
             pub mod motion;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🏭️reconstruction/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏭️reconstruction/🦀️component.rs"]
             pub mod reconstruction;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/📷️camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📷️camera/🦀️component.rs"]
             pub mod camera;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/📸️sfm/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📸️sfm/🦀️component.rs"]
             pub mod sfm;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🖼️images/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/🦀️component.rs"]
             pub mod images;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🗺️geo/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗺️geo/🦀️component.rs"]
             pub mod geo;
-            #[path = "../../🎛️apps/📸️remodel/⚙️engine/🥽️mesh/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🦀️component.rs"]
             pub mod mesh;
         }
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/📸️remodel/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📸️remodel/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/📸️remodel/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/📸️remodel/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
-        #[path = "../../🎛️apps/📸️remodel/🗣️terminology/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs"]
         pub mod terminology;
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️edit-calibration/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️edit-calibration/🦀️component.rs"]
             pub mod edit_calibration;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️calibrate-cameras/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️calibrate-cameras/🦀️component.rs"]
             pub mod calibrate_cameras;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️add-gcp/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️add-gcp/🦀️component.rs"]
             pub mod add_gcp;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️remove-gcp/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️remove-gcp/🦀️component.rs"]
             pub mod remove_gcp;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🎯️place-gcp-observation/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️place-gcp-observation/🦀️component.rs"]
             pub mod place_gcp_observation;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-frame-payload/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-frame-payload/🦀️component.rs"]
             pub mod import_frame_payload;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-frame-payload/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-video-frame-payload/🦀️component.rs"]
             pub mod import_video_frame_payload;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-done/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-video-done/🦀️component.rs"]
             pub mod import_video_done;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️import-video-bytes-payload/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-video-bytes-payload/🦀️component.rs"]
             pub mod import_video_bytes_payload;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️add-stream/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️add-stream/🦀️component.rs"]
             pub mod add_stream;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️remove-stream/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️remove-stream/🦀️component.rs"]
             pub mod remove_stream;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/📥️set-stream-sync/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-stream-sync/🦀️component.rs"]
             pub mod set_stream_sync;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-ingest-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-ingest-params/🦀️component.rs"]
             pub mod set_ingest_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-feature-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-feature-params/🦀️component.rs"]
             pub mod set_feature_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-match-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-match-params/🦀️component.rs"]
             pub mod set_match_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-sfm-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-sfm-params/🦀️component.rs"]
             pub mod set_sfm_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-dense-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-dense-params/🦀️component.rs"]
             pub mod set_dense_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-mesh-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-mesh-params/🦀️component.rs"]
             pub mod set_mesh_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-motion-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-motion-params/🦀️component.rs"]
             pub mod set_motion_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/⚙️set-geo-params/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚙️set-geo-params/🦀️component.rs"]
             pub mod set_geo_params;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️run-reconstruction/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-reconstruction/🦀️component.rs"]
             pub mod run_reconstruction;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️retry-stage/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️retry-stage/🦀️component.rs"]
             pub mod retry_stage;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🚀️run-stage/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️run-stage/🦀️component.rs"]
             pub mod run_stage;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️reset-placeholder-mesh/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️reset-placeholder-mesh/🦀️component.rs"]
             pub mod reset_placeholder_mesh;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-sparse/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-sparse/🦀️component.rs"]
             pub mod clear_sparse;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-dense/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-dense/🦀️component.rs"]
             pub mod clear_dense;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-mesh-result/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-mesh-result/🦀️component.rs"]
             pub mod clear_mesh_result;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-tracks/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-tracks/🦀️component.rs"]
             pub mod clear_tracks;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-geo-products/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-geo-products/🦀️component.rs"]
             pub mod clear_geo_products;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🧹️clear-result/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧹️clear-result/🦀️component.rs"]
             pub mod clear_result;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️import-frames/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🐚️import-frames/🦀️component.rs"]
             pub mod import_frames;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️import-video/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🐚️import-video/🦀️component.rs"]
             pub mod import_video;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/🐚️export-qc-report/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🐚️export-qc-report/🦀️component.rs"]
             pub mod export_qc_report;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-camera/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-camera/🦀️component.rs"]
             pub mod set_camera;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-layer-visibility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-layer-visibility/🦀️component.rs"]
             pub mod set_layer_visibility;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-frame-cursor/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-frame-cursor/🦀️component.rs"]
             pub mod set_frame_cursor;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-report-table/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-report-table/🦀️component.rs"]
             pub mod set_report_table;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-active-utility/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-active-utility/🦀️component.rs"]
             pub mod set_active_utility;
-            #[path = "../../🎛️apps/📸️remodel/🎮️commands/👁️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -857,7 +857,7 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod model {
-                #[path = "../../🎛️apps/📸️remodel/🎭️modes/🧊️model/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
@@ -865,13 +865,13 @@ pub mod apps {
                 pub mod windows {
                     #[path = "."]
                     pub mod model {
-                        #[path = "../../🎛️apps/📸️remodel/🎭️modes/🧊️model/🪟️windows/🧊️model/🦀️component.rs"]
+                        #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🦀️component.rs"]
                         mod component;
                         pub use component::*;
 
                         #[path = "."]
                         pub mod options {
-                            #[path = "../../🎛️apps/📸️remodel/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️options/👁️layers/🦀️component.rs"]
+                            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️options/👁️layers/🦀️component.rs"]
                             pub mod layers;
                         }
                     }
@@ -880,26 +880,26 @@ pub mod apps {
 
             #[path = "."]
             pub mod capture {
-                #[path = "../../🎛️apps/📸️remodel/🎭️modes/📷️capture/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📸️remodel/🎭️modes/📷️capture/🪟️windows/🖼️frames/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🦀️component.rs"]
                     pub mod frames;
                 }
             }
 
             #[path = "."]
             pub mod analyze {
-                #[path = "../../🎛️apps/📸️remodel/🎭️modes/🔍️analyze/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/📸️remodel/🎭️modes/🔍️analyze/🪟️windows/📊️report/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🦀️component.rs"]
                     pub mod report;
                 }
             }
@@ -907,24 +907,56 @@ pub mod apps {
 
         #[path = "."]
         pub mod panels {
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/🎯️calibration/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🎯️calibration/🦀️component.rs"]
             pub mod calibration;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/📄️artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs"]
             pub mod document;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/🗂️media/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️media/🦀️component.rs"]
             pub mod media;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/⚙️parameters/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/⚙️parameters/🦀️component.rs"]
             pub mod parameters;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/✅️quality/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/✅️quality/🦀️component.rs"]
             pub mod quality;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/🧵️results/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🧵️results/🦀️component.rs"]
             pub mod results;
-            #[path = "../../🎛️apps/📸️remodel/📌️panels/🏃️tracks/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🏃️tracks/🦀️component.rs"]
             pub mod tracks;
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod remodel {
+        #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "."]
+                    pub mod model {
+                        #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -936,7 +968,7 @@ semio_framework_plugin::plugin_exports!(plugin::plugin);
 pub mod examples {
     #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
     pub mod art_remodel_demo;
-    #[path = "../../🎛️apps/📸️remodel/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_remodel_demo_session;
 }
 //#endregion 📚️Examples

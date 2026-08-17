@@ -5,7 +5,10 @@ use crate::artifacts::en1995::mutations::change_load_duration::mutation::ChangeL
 use crate::artifacts::en1995::En1995Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeLoadDuration, _base: &En1995Snapshot) -> En1995Diff {
-    En1995Diff { load_duration: Some(payload.new_load_duration.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeLoadDuration, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
+    if base.load_duration == payload.new_load_duration {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Load duration already has this value.");
+    }
+    protocol::MutationOutcome::new(En1995Diff { load_duration: Some(payload.new_load_duration.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

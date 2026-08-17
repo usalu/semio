@@ -16,262 +16,266 @@ use protocol::{Identified, MutationDiff, Patchable};
 //#region 🔖️Apply
 impl ProgramDiff {
     /// 🧬️ Apply every field entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> ProgramArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(v) = &self.schema {
-            next.schema = v.clone();
-        }
-        if let Some(v) = &self.meta {
-            next.meta = v.clone();
-        }
-        if let Some(v) = &self.project {
-            next.project = v.clone();
-        }
-        if let Some(v) = &self.governance {
-            next.governance = v.clone();
-        }
+    pub fn apply_to_artifact(&self, artifact: &ProgramArtifact) -> protocol::MutationApplyResult<ProgramArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(v) = &self.schema {
+                next.schema = v.clone();
+            }
+            if let Some(v) = &self.meta {
+                next.meta = v.clone();
+            }
+            if let Some(v) = &self.project {
+                next.project = v.clone();
+            }
+            if let Some(v) = &self.governance {
+                next.governance = v.clone();
+            }
 
-        if let Some(delta) = &self.stakeholders {
-            apply_collection_delta(&mut next.stakeholders, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.users {
-            apply_collection_delta(&mut next.users, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.activities {
-            apply_collection_delta(&mut next.activities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.functions {
-            apply_collection_delta(&mut next.functions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.elements {
-            apply_collection_delta(&mut next.elements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.quantities {
-            apply_collection_delta(&mut next.quantities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.relationships {
-            apply_collection_delta(&mut next.relationships, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.adjacencies {
-            apply_collection_delta(&mut next.adjacencies, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.processes {
-            apply_collection_delta(&mut next.processes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.flows {
-            apply_collection_delta(&mut next.flows, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.access_rules {
-            apply_collection_delta(&mut next.access_rules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.operations {
-            apply_collection_delta(&mut next.operations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.equipment {
-            apply_collection_delta(&mut next.equipment, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.resources {
-            apply_collection_delta(&mut next.resources, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.storage {
-            apply_collection_delta(&mut next.storage, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.environmental {
-            apply_collection_delta(&mut next.environmental, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.human_factors {
-            apply_collection_delta(&mut next.human_factors, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.accessibility {
-            apply_collection_delta(&mut next.accessibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.privacy {
-            apply_collection_delta(&mut next.privacy, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.safety {
-            apply_collection_delta(&mut next.safety, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.security {
-            apply_collection_delta(&mut next.security, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.regulatory {
-            apply_collection_delta(&mut next.regulatory, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.site_context {
-            apply_collection_delta(&mut next.site_context, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.organizational {
-            apply_collection_delta(&mut next.organizational, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.services {
-            apply_collection_delta(&mut next.services, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.infrastructure {
-            apply_collection_delta(&mut next.infrastructure, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.information {
-            apply_collection_delta(&mut next.information, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.communication {
-            apply_collection_delta(&mut next.communication, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.wayfinding {
-            apply_collection_delta(&mut next.wayfinding, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.schedules {
-            apply_collection_delta(&mut next.schedules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.flexibility {
-            apply_collection_delta(&mut next.flexibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.growth {
-            apply_collection_delta(&mut next.growth, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.sustainability {
-            apply_collection_delta(&mut next.sustainability, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.resilience {
-            apply_collection_delta(&mut next.resilience, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.costs {
-            apply_collection_delta(&mut next.costs, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.delivery {
-            apply_collection_delta(&mut next.delivery, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.risks {
-            apply_collection_delta(&mut next.risks, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.conflicts {
-            apply_collection_delta(&mut next.conflicts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.requirements {
-            apply_collection_delta(&mut next.requirements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.priorities {
-            apply_collection_delta(&mut next.priorities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.scenarios {
-            apply_collection_delta(&mut next.scenarios, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.options {
-            apply_collection_delta(&mut next.options, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.decisions {
-            apply_collection_delta(&mut next.decisions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.validations {
-            apply_collection_delta(&mut next.validations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.performance {
-            apply_collection_delta(&mut next.performance, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.quality {
-            apply_collection_delta(&mut next.quality, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.documents {
-            apply_collection_delta(&mut next.artifacts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.assumptions {
-            apply_collection_delta(&mut next.assumptions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.constraints {
-            apply_collection_delta(&mut next.constraints, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.compliance_records {
-            apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.approvals {
-            apply_collection_delta(&mut next.approvals, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.meetings {
-            apply_collection_delta(&mut next.meetings, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.changes {
-            apply_collection_delta(&mut next.changes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.collaboration {
-            apply_collection_delta(&mut next.collaboration, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.analyses {
-            apply_collection_delta(&mut next.analyses, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.reports {
-            apply_collection_delta(&mut next.reports, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.search_filters {
-            apply_collection_delta(&mut next.search_filters, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.status_records {
-            apply_collection_delta(&mut next.status_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.workshops {
-            apply_collection_delta(&mut next.workshops, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.surveys {
-            apply_collection_delta(&mut next.surveys, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.issues {
-            apply_collection_delta(&mut next.issues, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.audit_events {
-            apply_collection_delta(&mut next.audit_events, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(delta) = &self.templates {
-            apply_collection_delta(&mut next.templates, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(child) = &self.knowledge {
-            next.knowledge = child.clone();
-        }
-        if let Some(child) = &self.benchmarks {
-            next.benchmarks = child.clone();
-        }
-        if let Some(delta) = &self.traces {
-            apply_collection_delta(&mut next.traces, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered);
-        }
-        if let Some(v) = &self.selected_ids {
-            next.selected_ids = v.values.clone();
-        }
-        if let Some(v) = &self.active_register {
-            next.active_register = v.clone();
-        }
-        if let Some(v) = &self.adjacency_kind_filter {
-            next.adjacency_kind_filter = v.clone();
-        }
-        if let Some(v) = &self.active_report_json {
-            next.active_report_json = v.clone();
-        }
-        if let Some(v) = &self.search_query {
-            next.search_query = v.clone();
-        }
-        if let Some(v) = &self.search_history_json {
-            next.search_history_json = v.clone();
-        }
-        if let Some(v) = &self.last_result_json {
-            next.last_result_json = v.clone();
-        }
-        if let Some(v) = &self.last_analysis_json {
-            next.last_analysis_json = v.clone();
-        }
-        if let Some(v) = &self.graph_camera_x {
-            next.graph_camera_x = *v;
-        }
-        if let Some(v) = &self.graph_camera_y {
-            next.graph_camera_y = *v;
-        }
-        if let Some(v) = &self.graph_camera_zoom {
-            next.graph_camera_zoom = *v;
-        }
-        next
+            if let Some(delta) = &self.stakeholders {
+                apply_collection_delta(&mut next.stakeholders, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["stakeholders"]))?;
+            }
+            if let Some(delta) = &self.users {
+                apply_collection_delta(&mut next.users, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["users"]))?;
+            }
+            if let Some(delta) = &self.activities {
+                apply_collection_delta(&mut next.activities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["activities"]))?;
+            }
+            if let Some(delta) = &self.functions {
+                apply_collection_delta(&mut next.functions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["functions"]))?;
+            }
+            if let Some(delta) = &self.elements {
+                apply_collection_delta(&mut next.elements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["elements"]))?;
+            }
+            if let Some(delta) = &self.quantities {
+                apply_collection_delta(&mut next.quantities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["quantities"]))?;
+            }
+            if let Some(delta) = &self.relationships {
+                apply_collection_delta(&mut next.relationships, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["relationships"]))?;
+            }
+            if let Some(delta) = &self.adjacencies {
+                apply_collection_delta(&mut next.adjacencies, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["adjacencies"]))?;
+            }
+            if let Some(delta) = &self.processes {
+                apply_collection_delta(&mut next.processes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["processes"]))?;
+            }
+            if let Some(delta) = &self.flows {
+                apply_collection_delta(&mut next.flows, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["flows"]))?;
+            }
+            if let Some(delta) = &self.access_rules {
+                apply_collection_delta(&mut next.access_rules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["accessRules"]))?;
+            }
+            if let Some(delta) = &self.operations {
+                apply_collection_delta(&mut next.operations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["operations"]))?;
+            }
+            if let Some(delta) = &self.equipment {
+                apply_collection_delta(&mut next.equipment, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["equipment"]))?;
+            }
+            if let Some(delta) = &self.resources {
+                apply_collection_delta(&mut next.resources, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["resources"]))?;
+            }
+            if let Some(delta) = &self.storage {
+                apply_collection_delta(&mut next.storage, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["storage"]))?;
+            }
+            if let Some(delta) = &self.environmental {
+                apply_collection_delta(&mut next.environmental, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["environmental"]))?;
+            }
+            if let Some(delta) = &self.human_factors {
+                apply_collection_delta(&mut next.human_factors, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["humanFactors"]))?;
+            }
+            if let Some(delta) = &self.accessibility {
+                apply_collection_delta(&mut next.accessibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["accessibility"]))?;
+            }
+            if let Some(delta) = &self.privacy {
+                apply_collection_delta(&mut next.privacy, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["privacy"]))?;
+            }
+            if let Some(delta) = &self.safety {
+                apply_collection_delta(&mut next.safety, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["safety"]))?;
+            }
+            if let Some(delta) = &self.security {
+                apply_collection_delta(&mut next.security, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["security"]))?;
+            }
+            if let Some(delta) = &self.regulatory {
+                apply_collection_delta(&mut next.regulatory, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["regulatory"]))?;
+            }
+            if let Some(delta) = &self.site_context {
+                apply_collection_delta(&mut next.site_context, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["siteContext"]))?;
+            }
+            if let Some(delta) = &self.organizational {
+                apply_collection_delta(&mut next.organizational, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["organizational"]))?;
+            }
+            if let Some(delta) = &self.services {
+                apply_collection_delta(&mut next.services, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["services"]))?;
+            }
+            if let Some(delta) = &self.infrastructure {
+                apply_collection_delta(&mut next.infrastructure, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["infrastructure"]))?;
+            }
+            if let Some(delta) = &self.information {
+                apply_collection_delta(&mut next.information, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["information"]))?;
+            }
+            if let Some(delta) = &self.communication {
+                apply_collection_delta(&mut next.communication, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["communication"]))?;
+            }
+            if let Some(delta) = &self.wayfinding {
+                apply_collection_delta(&mut next.wayfinding, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["wayfinding"]))?;
+            }
+            if let Some(delta) = &self.schedules {
+                apply_collection_delta(&mut next.schedules, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["schedules"]))?;
+            }
+            if let Some(delta) = &self.flexibility {
+                apply_collection_delta(&mut next.flexibility, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["flexibility"]))?;
+            }
+            if let Some(delta) = &self.growth {
+                apply_collection_delta(&mut next.growth, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["growth"]))?;
+            }
+            if let Some(delta) = &self.sustainability {
+                apply_collection_delta(&mut next.sustainability, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["sustainability"]))?;
+            }
+            if let Some(delta) = &self.resilience {
+                apply_collection_delta(&mut next.resilience, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["resilience"]))?;
+            }
+            if let Some(delta) = &self.costs {
+                apply_collection_delta(&mut next.costs, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["costs"]))?;
+            }
+            if let Some(delta) = &self.delivery {
+                apply_collection_delta(&mut next.delivery, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["delivery"]))?;
+            }
+            if let Some(delta) = &self.risks {
+                apply_collection_delta(&mut next.risks, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["risks"]))?;
+            }
+            if let Some(delta) = &self.conflicts {
+                apply_collection_delta(&mut next.conflicts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["conflicts"]))?;
+            }
+            if let Some(delta) = &self.requirements {
+                apply_collection_delta(&mut next.requirements, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["requirements"]))?;
+            }
+            if let Some(delta) = &self.priorities {
+                apply_collection_delta(&mut next.priorities, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["priorities"]))?;
+            }
+            if let Some(delta) = &self.scenarios {
+                apply_collection_delta(&mut next.scenarios, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["scenarios"]))?;
+            }
+            if let Some(delta) = &self.options {
+                apply_collection_delta(&mut next.options, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["options"]))?;
+            }
+            if let Some(delta) = &self.decisions {
+                apply_collection_delta(&mut next.decisions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["decisions"]))?;
+            }
+            if let Some(delta) = &self.validations {
+                apply_collection_delta(&mut next.validations, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["validations"]))?;
+            }
+            if let Some(delta) = &self.performance {
+                apply_collection_delta(&mut next.performance, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["performance"]))?;
+            }
+            if let Some(delta) = &self.quality {
+                apply_collection_delta(&mut next.quality, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["quality"]))?;
+            }
+            if let Some(delta) = &self.documents {
+                apply_collection_delta(&mut next.artifacts, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["artifacts"]))?;
+            }
+            if let Some(delta) = &self.assumptions {
+                apply_collection_delta(&mut next.assumptions, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["assumptions"]))?;
+            }
+            if let Some(delta) = &self.constraints {
+                apply_collection_delta(&mut next.constraints, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["constraints"]))?;
+            }
+            if let Some(delta) = &self.compliance_records {
+                apply_collection_delta(&mut next.compliance_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["complianceRecords"]))?;
+            }
+            if let Some(delta) = &self.approvals {
+                apply_collection_delta(&mut next.approvals, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["approvals"]))?;
+            }
+            if let Some(delta) = &self.meetings {
+                apply_collection_delta(&mut next.meetings, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["meetings"]))?;
+            }
+            if let Some(delta) = &self.changes {
+                apply_collection_delta(&mut next.changes, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["changes"]))?;
+            }
+            if let Some(delta) = &self.collaboration {
+                apply_collection_delta(&mut next.collaboration, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["collaboration"]))?;
+            }
+            if let Some(delta) = &self.analyses {
+                apply_collection_delta(&mut next.analyses, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["analyses"]))?;
+            }
+            if let Some(delta) = &self.reports {
+                apply_collection_delta(&mut next.reports, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["reports"]))?;
+            }
+            if let Some(delta) = &self.search_filters {
+                apply_collection_delta(&mut next.search_filters, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["searchFilters"]))?;
+            }
+            if let Some(delta) = &self.status_records {
+                apply_collection_delta(&mut next.status_records, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["statusRecords"]))?;
+            }
+            if let Some(delta) = &self.workshops {
+                apply_collection_delta(&mut next.workshops, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["workshops"]))?;
+            }
+            if let Some(delta) = &self.surveys {
+                apply_collection_delta(&mut next.surveys, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["surveys"]))?;
+            }
+            if let Some(delta) = &self.issues {
+                apply_collection_delta(&mut next.issues, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["issues"]))?;
+            }
+            if let Some(delta) = &self.audit_events {
+                apply_collection_delta(&mut next.audit_events, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["auditEvents"]))?;
+            }
+            if let Some(delta) = &self.templates {
+                apply_collection_delta(&mut next.templates, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["templates"]))?;
+            }
+            if let Some(child) = &self.knowledge {
+                next.knowledge = child.clone();
+            }
+            if let Some(child) = &self.benchmarks {
+                next.benchmarks = child.clone();
+            }
+            if let Some(delta) = &self.traces {
+                apply_collection_delta(&mut next.traces, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["traces"]))?;
+            }
+            if let Some(v) = &self.selected_ids {
+                next.selected_ids = v.values.clone();
+            }
+            if let Some(v) = &self.active_register {
+                next.active_register = v.clone();
+            }
+            if let Some(v) = &self.adjacency_kind_filter {
+                next.adjacency_kind_filter = v.clone();
+            }
+            if let Some(v) = &self.active_report_json {
+                next.active_report_json = v.clone();
+            }
+            if let Some(v) = &self.search_query {
+                next.search_query = v.clone();
+            }
+            if let Some(v) = &self.search_history_json {
+                next.search_history_json = v.clone();
+            }
+            if let Some(v) = &self.last_result_json {
+                next.last_result_json = v.clone();
+            }
+            if let Some(v) = &self.last_analysis_json {
+                next.last_analysis_json = v.clone();
+            }
+            if let Some(v) = &self.graph_camera_x {
+                next.graph_camera_x = *v;
+            }
+            if let Some(v) = &self.graph_camera_y {
+                next.graph_camera_y = *v;
+            }
+            if let Some(v) = &self.graph_camera_zoom {
+                next.graph_camera_zoom = *v;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<ProgramSnapshot> for ProgramDiff {
-    fn apply(&self, base: &ProgramSnapshot) -> ProgramSnapshot {
-        self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone())).to_snapshot()
+    fn apply(&self, base: &ProgramSnapshot) -> protocol::MutationApplyResult<ProgramSnapshot> {
+        self.apply_to_artifact(&ProgramArtifact::from_snapshot(base.clone()))
+            .map(|artifact| artifact.to_snapshot())
+            .map_err(|error| error.under(["artifact"]))
     }
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
@@ -1142,34 +1146,132 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
     }
 }
 
-fn apply_collection_delta<T, P>(items: &mut Vec<T>, added: &[T], removed: &[String], patched: &[(String, P)], reordered: &Option<Vec<String>>)
+fn apply_collection_delta<T, P>(
+    items: &mut Vec<T>,
+    added: &[T],
+    removed: &[String],
+    patched: &[(String, P)],
+    reordered: &Option<Vec<String>>,
+) -> protocol::MutationApplyResult<()>
 where
     T: Identified<EntityId> + Clone + Patchable<P>,
     P: Clone,
 {
+    for (index, id) in removed.iter().enumerate() {
+        let eid = EntityId(id.clone());
+        if !items.iter().any(|item| item.id() == &eid) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed entity does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "entity is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, item) in added.iter().enumerate() {
+        if items.iter().any(|existing| existing.id() == item.id())
+            || added[..index]
+                .iter()
+                .any(|existing| existing.id() == item.id())
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added entity identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
+    for (index, (id, _)) in patched.iter().enumerate() {
+        let eid = EntityId(id.clone());
+        if !items.iter().any(|item| item.id() == &eid) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched entity does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if removed.contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "entity cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if patched[..index].iter().any(|(prior, _)| prior == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "entity is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
+    let mut candidate = items.clone();
     for id in removed {
         let eid = EntityId(id.clone());
-        items.retain(|item| item.id() != &eid);
+        candidate.retain(|item| item.id() != &eid);
     }
     for (id, patch) in patched {
         let eid = EntityId(id.clone());
-        if let Some(item) = items.iter_mut().find(|item| item.id() == &eid) {
-            item.apply_patch(patch);
+        candidate
+            .iter_mut()
+            .find(|item| item.id() == &eid)
+            .ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "patched entity does not exist",
+                )
+                .at(["patched".to_string(), id.clone()])
+            })?
+            .apply_patch(patch);
+    }
+    candidate.extend(added.iter().cloned());
+    for (index, item) in candidate.iter().enumerate() {
+        if candidate[..index]
+            .iter()
+            .any(|prior| prior.id() == item.id())
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "patch produced a duplicate entity identity",
+            )
+            .at(["patched"]));
         }
     }
-    items.extend(added.iter().cloned());
     if let Some(order) = reordered {
+        if order.len() != candidate.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id)
+                    || !candidate.iter().any(|item| item.id().0 == *id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "entity reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
         let mut map: std::collections::BTreeMap<String, T> = std::collections::BTreeMap::new();
-        for item in items.drain(..) {
+        for item in candidate.drain(..) {
             map.insert(item.id().0.clone(), item);
         }
         for id in order {
-            if let Some(item) = map.remove(id) {
-                items.push(item);
-            }
+            candidate.push(map.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered entity does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        items.extend(map.into_values());
     }
+    *items = candidate;
+    Ok(())
 }
 //#endregion 🔖️Apply
 
@@ -1190,7 +1292,9 @@ mod tests {
         let mut renamed_meta = artifact.meta.clone();
         renamed_meta.title = "Renamed".into();
         let diff = ProgramDiff { meta: Some(renamed_meta.clone()), ..Default::default() };
-        let next = diff.apply_to_artifact(&artifact);
+        let next = diff
+            .apply_to_artifact(&artifact)
+            .expect("valid artifact diff");
         assert_eq!(next.meta.title, "Renamed");
     }
 
@@ -1200,7 +1304,9 @@ mod tests {
         let mut replacement = artifact.clone();
         replacement.schema = "s.architect.program@2".into();
         let diff = ProgramDiff { artifact: Some(Box::new(replacement.clone())), schema: Some("ignored".into()), ..Default::default() };
-        let next = diff.apply_to_artifact(&artifact);
+        let next = diff
+            .apply_to_artifact(&artifact)
+            .expect("valid artifact diff");
         assert_eq!(next, replacement);
     }
 }

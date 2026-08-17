@@ -1,5 +1,7 @@
-//! 🔺️ `flatten` — sparse diff construction; a no-op when `at` is not a `Group` or any descendant
-//! group has a non-identity `transform` (see `🦠️mutation/🦀️component.rs`'s doc comment for why).
+//! 🔺️ `flatten` — sparse diff construction; an absent `at` is `mutation.target-missing` (Error,
+//! empty diff). `at` not resolving to a `Group`, any descendant group having a non-identity
+//! `transform` (see `🦠️mutation/🦀️component.rs`'s doc comment for why), or the group already
+//! being flat (no change to `children`) is `mutation.no-op` (Warning, empty diff).
 
 use super::mutation::FlattenNode;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
@@ -27,13 +29,17 @@ pub(crate) fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Vec<Draw
 //#endregion 🔖️CollectLeaves
 
 //#region 🔖️Diff
-pub fn diff(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> SemioDrawingDiff {
-    match node_at(base, &payload.at) {
-        Some(DrawNode::Group { transform, children }) => match collect_flattened_leaves(children) {
-            Some(leaves) => diff_at_path(&payload.at, DrawNodeDiff::Replace { node: DrawNode::Group { transform: *transform, children: leaves } }),
-            None => SemioDrawingDiff::default(),
+pub fn diff(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    let Some(node) = node_at(base, &payload.at) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
+    };
+    match node {
+        DrawNode::Group { transform, children } => match collect_flattened_leaves(children) {
+            Some(leaves) if leaves != *children => protocol::MutationOutcome::new(diff_at_path(&payload.at, DrawNodeDiff::Replace { node: DrawNode::Group { transform: *transform, children: leaves } })),
+            Some(_) => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is already flat.", payload.at.layer)),
+            None => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} cannot be flattened without losing a descendant transform.", payload.at.layer)),
         },
-        _ => SemioDrawingDiff::default(),
+        _ => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is not a group.", payload.at.layer)),
     }
 }
 //#endregion 🔖️Diff

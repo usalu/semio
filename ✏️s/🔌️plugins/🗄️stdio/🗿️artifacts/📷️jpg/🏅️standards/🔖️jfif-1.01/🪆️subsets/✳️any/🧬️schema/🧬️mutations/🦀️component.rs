@@ -7,7 +7,6 @@
 use crate::artifacts::jpg::schema::diff::{self, JpgDiff, JpgHuffmanTableKey};
 use crate::artifacts::jpg::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgHuffmanTable, JpgQuantTable, JpgSegment};
 use crate::artifacts::jpg::JpgSnapshot;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -100,10 +99,15 @@ pub enum JpgMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (png/csv precedent).
-pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> JpgDiff {
-    let d = <JpgMutation as Mutation<JpgSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <JpgDiff as MutationDiff<JpgSnapshot>>::apply(&d, snapshot);
-    d
+pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) -> protocol::MutationOutcome<JpgDiff> {
+    let outcome = <JpgMutation as Mutation<JpgSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -111,8 +115,8 @@ pub fn apply_jpg_mutation(snapshot: &mut JpgSnapshot, mutation: &JpgMutation) ->
 impl Mutation<JpgSnapshot> for JpgMutation {
     type Diff = JpgDiff;
 
-    fn diff(&self, base: &JpgSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             JpgMutation::NoMutation => JpgDiff::default(),
             JpgMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             JpgMutation::SetJfifHeader { version, density_units, x_density, y_density, thumbnail } => diff::diff_set_jfif_header(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()),
@@ -125,7 +129,7 @@ impl Mutation<JpgSnapshot> for JpgMutation {
             JpgMutation::RemoveOtherSegment { index } => diff::diff_remove_other_segment(base, *index),
             JpgMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
             JpgMutation::SetReEncodeQuality { quality } => diff::diff_set_re_encode_quality(base, *quality),
-        }
+        })
     }
 
     /// ↩️ Handcrafted, id/index-aware mutation-level inverses. Out-of-range/nonexistent targets
@@ -290,7 +294,7 @@ fn parse_jpg_mutation(line: &str) -> Result<JpgMutation, String> {
     }
 }
 
-impl protocol::OpText for JpgMutation {
+impl OpText for JpgMutation {
     fn print_op(&self) -> String {
         print_jpg_mutation(self)
     }
@@ -375,7 +379,7 @@ fn dec_jpg_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSnapsho
 /// written/read via the real (non-recursive) binary value codecs `diff`/`§SnapshotBinaryCodec`
 /// provide — no opaque tail anywhere in this frame (jpg has no self-recursive mutation payload,
 /// unlike xml's `XmlMutation`).
-impl protocol::OpBinary for JpgMutation {
+impl OpBinary for JpgMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         match self {
@@ -480,7 +484,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
     fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }
     }
-    fn huffman(class: crate::artifacts::jpg::schema::snapshot::JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
+    fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
         JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
     }
     fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
@@ -646,7 +650,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_jpg_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_jpg_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
@@ -704,9 +708,9 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.apply(&base);
-            let inv_d = d.inverse(&base);
-            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+            let mutated = d.diff().apply(&base).expect("diff must apply to base");
+            let inv_d = d.diff().inverse(&base);
+            assert_eq!(inv_d.apply(&mutated).expect("inverse diff must apply to mutated"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
     //#endregion 🔖️inverse_law
@@ -714,13 +718,13 @@ mod tests {
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &JpgSnapshot, m1: JpgMutation, m2: JpgMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.apply(base);
+        let mid = d1.diff().apply(base).expect("d1 must apply to base");
         let d2 = m2.diff(&mid);
-        let sequential = d2.apply(&mid);
+        let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
 
-        let mut merged = d1.clone();
-        merged.absorb(d2.clone());
-        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
+        assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
     #[test]
@@ -754,26 +758,26 @@ mod tests {
     fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = JpgMutation::SetQuantTable { table: quant(7, 1) }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
         let d2 = JpgMutation::SetQuantTable { table: quant(7, 2) }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).expect("d2 must apply to s1");
         let d3 = JpgMutation::RemoveQuantTable { id: 0 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).expect("d3 must apply to s2");
 
         // (d1∘d2)∘d3
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
+        assert_eq!(left.apply(&base).expect("left must apply to base"), s3);
+        assert_eq!(right.apply(&base).expect("right must apply to base"), s3);
+        assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must associate");
     }
     //#endregion 🔖️absorb_law
 
@@ -787,9 +791,9 @@ mod tests {
         b.pixels = vec![5u8; a.pixels.len()];
 
         let d = JpgDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(d.apply(&a).expect("d must apply to a"), b, "between(a,b).apply(a) must equal b");
         let d_rev = JpgDiff::between(&b, &a);
-        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(d_rev.apply(&b).expect("d_rev must apply to b"), a, "between(b,a).apply(b) must equal a");
         assert!(JpgDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️between_roundtrip_law
@@ -835,9 +839,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = JpgDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("forward must apply to a"), b, "between(a,b).apply(a) must equal b");
         let backward = JpgDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("backward must apply to b"), a, "between(b,a).apply(b) must equal a");
         assert!(JpgDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Raster scalars.

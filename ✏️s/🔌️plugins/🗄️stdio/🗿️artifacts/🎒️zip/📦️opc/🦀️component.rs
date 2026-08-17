@@ -468,7 +468,6 @@ pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 
-    parts.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(OpcPackage { parts, content_types, relationships, comment: zip.comment })
 }
 
@@ -485,6 +484,38 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
             let content_types = paths.remove(index);
             paths.insert(0, content_types);
         }
+    })
+}
+
+/// 📦️ Re-encode an OPC package with metadata entries first and every remaining entry in the
+/// package's authoritative part order. This is the lossless OOXML path: central-directory order
+/// is preserved by `decode_opc`, and an untouched package can therefore be emitted without a
+/// semantic part-order rewrite.
+pub(crate) fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
+    encode_opc_with_path_order(pkg, |paths| {
+        let mut ordered = Vec::with_capacity(paths.len());
+        let mut take = |path: String| {
+            if let Some(index) = paths.iter().position(|candidate| candidate == &path) {
+                ordered.push(paths.remove(index));
+            }
+        };
+        take(CONTENT_TYPES_PART.into());
+        if pkg.relationships.contains_key("") {
+            take("_rels/.rels".into());
+        }
+        for part in &pkg.parts {
+            let rels_path = if let Some((directory, file)) = part.path.rsplit_once('/') { format!("{directory}/_rels/{file}.rels") } else { format!("_rels/{}.rels", part.path) };
+            if pkg.relationships.contains_key(&part.path) {
+                take(rels_path);
+            }
+        }
+        for part in &pkg.parts {
+            take(part.path.clone());
+        }
+        drop(take);
+        paths.sort();
+        ordered.extend(paths.drain(..));
+        *paths = ordered;
     })
 }
 

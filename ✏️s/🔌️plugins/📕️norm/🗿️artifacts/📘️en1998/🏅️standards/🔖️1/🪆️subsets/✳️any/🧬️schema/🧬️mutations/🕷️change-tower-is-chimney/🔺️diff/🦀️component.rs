@@ -5,7 +5,10 @@ use crate::artifacts::en1998::mutations::change_tower_is_chimney::mutation::Chan
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeTowerIsChimney, _base: &En1998Snapshot) -> En1998Diff {
-    En1998Diff { tower_is_chimney: Some(payload.new_tower_is_chimney.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeTowerIsChimney, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    if base.tower_is_chimney == payload.new_tower_is_chimney {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Tower-is-chimney flag is already {}.", payload.new_tower_is_chimney));
+    }
+    protocol::MutationOutcome::new(En1998Diff { tower_is_chimney: Some(payload.new_tower_is_chimney.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -11,6 +11,11 @@
         "commandId": "s.stdio.gltf.mutation.change-material-double-sided.v1",
         "version": 1,
         "descriptor": "change-material-double-sided/🦀️component.rs::DESCRIPTOR"
+      },
+      {
+        "commandId": "s.stdio.gltf.mutation.create-scene.v1",
+        "version": 1,
+        "descriptor": "create-scene/🦀️component.rs::DESCRIPTOR"
       }
     ]
   }

@@ -24,7 +24,6 @@ use crate::artifacts::obj::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRa
 use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::artifacts::obj::ObjSnapshot;
 use protocol::{Mutation, MutationDiff};
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -123,10 +122,15 @@ pub enum ObjMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> ObjDiff {
-    let diff = <ObjMutation as protocol::Mutation<ObjSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
+    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -134,8 +138,8 @@ pub fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) ->
 impl Mutation<ObjSnapshot> for ObjMutation {
     type Diff = ObjDiff;
 
-    fn diff(&self, base: &ObjSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             ObjMutation::NoMutation => ObjDiff::default(),
             ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
@@ -182,7 +186,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
             ObjMutation::SetUsemtl { usemtl } => diff_set_usemtl(usemtl.clone()),
             ObjMutation::SetSmoothingGroups { smoothing_groups } => diff_set_smoothing_groups(smoothing_groups.clone()),
             ObjMutation::SetUnknownStatements { unknown_statements } => diff_set_unknown_statements(unknown_statements.clone()),
-        }
+        })
     }
 
     fn inverse(&self, base: &ObjSnapshot) -> Vec<Self> {
@@ -260,7 +264,7 @@ impl Mutation<ObjSnapshot> for ObjMutation {
 /// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — the same ~15-line body
 /// every `DslOps`-derived enum's `OpText` impl uses (`GifMutation`, `FlowMutationDsl`,
 /// `SpaceMutation`; see `f6-recon-report.md` §2).
-impl protocol::OpText for ObjMutation {
+impl OpText for ObjMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -281,7 +285,7 @@ impl protocol::OpText for ObjMutation {
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
-impl protocol::OpBinary for ObjMutation {
+impl OpBinary for ObjMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -410,7 +414,7 @@ mod tests {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
-            let expected = diff.apply(&base);
+            let expected = diff.diff().apply(&base).expect("valid mutation diff");
 
             let mut via_apply = base.clone();
             let returned_diff = apply_obj_mutation(&mut via_apply, &m);
@@ -434,8 +438,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.apply(&base);
-            let back = d.inverse(&base).apply(&mid);
+            let mid = d.diff().apply(&base).expect("valid forward diff");
+            let back = d.diff().inverse(&base).apply(&mid).expect("valid inverse diff");
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -448,73 +452,73 @@ mod tests {
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
         let d1 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 8.0, y: 8.0, z: 8.0, w: None } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveVertex { index: 0 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive.
         let d1 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::InsertVertex { index: 2, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: None } }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.vertices.len(), base.vertices.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField (SetVertex): patch into the added payload.
         let d1 = ObjMutation::InsertVertex { index: 1, vertex: ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::SetVertex { index: 1, vertex: ObjVertex { x: 42.0, y: 0.0, z: 0.0, w: Some(1.0) } }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+SetField absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
         assert_eq!(after.vertices[1].x, 42.0);
 
         // 🧩 Modify + Remove: modifying then removing the same vertex collapses to a removal.
         let d1 = ObjMutation::SetVertex { index: 1, vertex: ObjVertex { x: 7.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveVertex { index: 1 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Name-keyed: Add group + Rename-shaped remove-of-added annihilates the add.
         let d1 = ObjMutation::SetGroup { name: "Fresh".into(), faces: vec![0] }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::RemoveGroup { name: "Fresh".into() }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+Remove(name-keyed) absorb mismatch");
+        let after = d2.diff().apply(&mid).expect("valid second diff");
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
         assert_eq!(after.groups, base.groups, "add-then-remove of the same name must be a full no-op");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = ObjMutation::InsertVertex { index: 0, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).expect("valid first diff");
         let d2 = ObjMutation::SetVertex { index: 0, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: Some(1.0) } }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).expect("valid second diff");
         let d3 = ObjMutation::RemoveVertex { index: 2 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).expect("valid third diff");
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).expect("valid left diff"), s3);
+        assert_eq!(right.apply(&base).expect("valid right diff"), s3);
+        assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must be associative");
     }
     //#endregion 🔖️AbsorbLaw
 
@@ -523,8 +527,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(ObjDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(ObjDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(ObjDiff::between(&a, &b).apply(&a).expect("valid forward diff"), b);
+        assert_eq!(ObjDiff::between(&b, &a).apply(&b).expect("valid backward diff"), a);
         assert!(ObjDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️BetweenRoundtripLaw
@@ -536,9 +540,9 @@ mod tests {
         let b = sweep_b();
 
         let d_ab = ObjDiff::between(&a, &b);
-        assert_eq!(d_ab.apply(&a), b, "between(a,b).apply(a) == b");
+        assert_eq!(d_ab.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
         let d_ba = ObjDiff::between(&b, &a);
-        assert_eq!(d_ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert_eq!(d_ba.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
         assert!(ObjDiff::between(&a, &a).is_empty());
 
         // 🔍 Index-keyed collections: `between(a,b)` (b longer) proves modified+added;

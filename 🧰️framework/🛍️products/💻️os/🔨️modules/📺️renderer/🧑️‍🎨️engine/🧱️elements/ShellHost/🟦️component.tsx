@@ -32,6 +32,7 @@ import {
   type AppRouterManifest,
   type ArtifactDialect,
   dialectCoordinate,
+  parseDialectCoordinate,
   EMPTY_OPENING_PREFERENCES,
   foldOpeningPreferences,
   type OpeningConfigMutation,
@@ -109,6 +110,12 @@ import {
   type WindowEngagement,
   type WindowLayout,
   type WindowMeasure,
+  type Conflict,
+  type ConflictResolution,
+  type Fault,
+  type MergePolicy,
+  type MergeReport,
+  type Severity,
 } from "@semio-tech/framework";
 import {
   type BackboneWorkerRequest,
@@ -124,11 +131,29 @@ import {
   encodeBackboneMessage,
   encodeBackboneWorkerRequest,
   encodeMutationEnvelopesPack,
+  encodePackValue,
   FRAMEWORK_SYNC_CONTROLLER_ID,
   mutationEnvelopeFromWire,
   mutationEnvelopeToWire,
+  type MutationEnvelope,
   type PersistenceBinding,
+  DirectoryClient,
+  DirectoryHttpError,
+  type DirectoryCommand,
+  type DirectoryEvent,
+  type DirectoryStreamMessage,
 } from "@semio-tech/framework-os";
+/** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
+ * identity facet's documentId/schema + fold. `@semio-tech/framework-os/backbone-worker` is the
+ * package's own subpath export for this (`💻️os/📦️packages/🟦️typescript/🟦️glue.backbone-worker.ts`),
+ * but this package's own `🧪️vitest.config.ts` (outside this lane's lease) only aliases the bare
+ * `@semio-tech/framework-os` specifier, not its subpaths — imported by the same relative path the
+ * `new Worker(new URL(...))` call below already uses, sidestepping that gap rather than editing a
+ * foreign-leased config file. Never redefined here. */
+import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../../🟦️backbone-worker.ts";
+/** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
+ * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
+import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation, signIn } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts";
 import {
   decodeWorldProjectionTemplateId,
   worldProjectionSpecIconId,
@@ -201,6 +226,8 @@ import {
   type PanelTabSelectionOptions,
   type PanelTreeUnitDockMove,
   parseUiTheme,
+  PresenceBar,
+  type PresencePeer,
   readStoredIntroductionSeen,
   readStoredUiChromeLocale,
   readStoredUiChromeThemeSnapshot,
@@ -240,6 +267,7 @@ import {
   UIIntroduction,
   UiKeybindingsProvider,
   type UiLocale,
+  type UiTranslationKey,
   type UiStatus,
   type UiTheme,
   useActionHotkey,
@@ -285,6 +313,8 @@ import {
   type LoadedProgramState,
   resolveBootExampleId,
   type ResolvedShellLocks,
+  selectOpenConflicts,
+  selectQuarantinedConflicts,
   ShellFaultBoundary,
   shellReducer,
   shouldPersistIntroductionSeen,
@@ -364,6 +394,13 @@ import {
   parsePanelState,
   parseShellRoute,
   patchDocumentTreeSelectedIds,
+  AutoCheckinScheduler,
+  canCheckIn,
+  checkinActionText,
+  checkinCancelText,
+  checkinMessagePlaceholderText,
+  checkinSubmitText,
+  computeSyncPillState,
   patchWorld3dChromeOntoNode,
   presenceClientIdentity,
   preserveJsonIdentity,
@@ -394,8 +431,10 @@ import {
   studioPanelFocusingSpawned,
   surfaceRoleChipText,
   syncDocumentId,
+  syncPillText,
   synthesizeLocalizedLabel,
   toolIdFromPanelTabId,
+  type SyncPillState,
   viewerReadOnlyNoticeText,
   useUIHistory,
   utilityBarNode,
@@ -417,6 +456,7 @@ import {
   createFrameworkMarketplacePanelTab,
   createFrameworkSettingsPanelTab,
   DEFAULT_APP_NONE_VALUE,
+  type ConflictsHostApi,
   type DefaultAppRow,
   type DefaultAppsHostApi,
   encodeDefaultAppValue,
@@ -431,7 +471,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../ChromePanels/🟦️component.tsx";
-import { type PluginWasmHandle } from "../PluginRuntime/🟦️component.tsx";
+import { type PluginWasmHandle, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated/🟦️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📦️packages/🟦️typescript/📇️registry/🟦️catalog.ts";
 
@@ -450,6 +490,46 @@ export const SetWindowTitleContext = createContext<((windowId: string, title: st
 export const SetWindowIconContext = createContext<((windowId: string, iconId: IconName) => void) | null>(null);
 
 const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
+
+/** ⚖️ `TransientNotice.kind` tone per `Severity` (contract freeze `26/08/16/MUTATION-OUTCOMES-
+ * MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C1) — `info`/`warning` share the neutral popover
+ * chrome (matches the pre-existing "not error" branch), `error`/`fatal` both render destructive,
+ * `fatal` additionally bolded so a rejected dispatch's worst level reads as more severe than a
+ * plain `error`. */
+const TRANSIENT_NOTICE_TONE_CLASS: Record<Severity, string> = {
+  info: "border-border bg-popover text-popover-foreground",
+  warning: "border-amber-400 bg-amber-400/10 text-amber-400",
+  error: "border-destructive bg-destructive text-destructive-foreground",
+  fatal: "border-destructive bg-destructive text-destructive-foreground font-semibold",
+};
+
+/** ⚖️ `Fault.code` for a rejected local dispatch (contract freeze §C8/§C9) — never invented locally,
+ * mirrors the Rust guest's `Fault("mutation.rejected")`. */
+const MUTATION_REJECTED_FAULT_CODE = "mutation.rejected";
+
+/** ⚖️ Maps one of the frozen seven `mutation.*` codes (contract freeze §C2 — no per-plugin codes,
+ * ever) onto its `ui.mutation.code.*` label key; an unrecognized code falls back to the generic
+ * rejected-title key rather than fabricating a key the schema doesn't have. */
+function mutationCodeLabelKey(code: string): UiTranslationKey {
+  switch (code) {
+    case "mutation.target-missing":
+      return "ui.mutation.code.targetMissing";
+    case "mutation.no-op":
+      return "ui.mutation.code.noOp";
+    case "mutation.partial":
+      return "ui.mutation.code.partial";
+    case "mutation.clamped":
+      return "ui.mutation.code.clamped";
+    case "mutation.duplicate-id":
+      return "ui.mutation.code.duplicateId";
+    case "mutation.invariant":
+      return "ui.mutation.code.invariant";
+    case "mutation.cascade":
+      return "ui.mutation.code.cascade";
+    default:
+      return "ui.mutation.rejected.title";
+  }
+}
 
 /** @emoji ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
 const AppKeybindingsContext = createContext<ReadonlyMap<string, string>>(EMPTY_KEYS_BY_ACTION_ID);
@@ -693,6 +773,114 @@ export interface FrameworkOsShellProps {
   readonly suppressAutoIntroduction?: boolean;
 }
 
+//#region 🔖️Identity
+/** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3 — reads one
+ * `VITE_S_*` compile-time define (`💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts`'s
+ * `define` block). Guarded for non-Vite embeds (SSR/tests/other bundlers) where `import.meta.env` is
+ * absent — mirrors `Shell/🟦️component.tsx`'s `readViteAppRoleEnv` idiom (that file is out of this
+ * lane's lease, so re-implemented locally rather than imported). Returns `undefined` for an unset/
+ * empty define, never `""` — every call site treats "no hub env" as "skip identity entirely" (§C3
+ * "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly"). */
+function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_USER" | "VITE_S_DATA_DIR"): string | undefined {
+  try {
+    const env = (import.meta as unknown as { readonly env?: Readonly<Record<string, string | undefined>> }).env;
+    return env?.[name] || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation} — mirrors the exact shape the
+ * in-source `foldIdentityEvent` tests build (`🟦️backbone-worker.ts`'s `🔖️DirectoryLaneTests`/identity
+ * fold vectors), since this facet's diff is whole-record (never merged) and has no history/undo chrome
+ * wired to it this wave (no real inverse chain needed beyond a structurally valid envelope). */
+function identityMutationEnvelope(actor: string, mutation: IdentityConfigMutation, base: Identity | null): MutationEnvelope {
+  const nextPayload = applyIdentityConfigMutation(base, mutation);
+  return {
+    id: `identity-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    actor,
+    document: IDENTITY_CONFIG_SCHEMA,
+    schemaVersion: IDENTITY_CONFIG_SCHEMA,
+    payloadHash: "",
+    diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: nextPayload },
+    inverse: { targetOperation: "sign-in", inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: base }, baseVersion: 0, undoPolicy: "exactBaseOnly" },
+  };
+}
+
+/** 🪪️ `decodePayload` for {@link foldIdentityEvent} — a remote/cross-tab envelope's `diff.payload` is
+ * either a full `Identity` record or `null` (signed out); anything else (a different facet's envelope
+ * riding the same `BroadcastChannel`, contract §C6 has no such case today but this stays defensive)
+ * returns `undefined` so the fold leaves `base` untouched. */
+function decodeIdentityPayload(payload: unknown): Identity | null | undefined {
+  if (payload === null) return null;
+  if (typeof payload !== "object") return undefined;
+  const candidate = payload as Partial<Identity>;
+  if (typeof candidate.userId === "string" && typeof candidate.email === "string" && typeof candidate.sessionToken === "string") return candidate as Identity;
+  return undefined;
+}
+
+/** 🪪️ Mints the shell actor id (contract §C0: `user:{userId}#{shellSessionId}`) once identity
+ * resolves; the pre-identity default stays `client-{shellSessionId}` (unchanged shape, just the
+ * random-suffix source now shared with the post-sign-in id so a reload's actor id is stable relative
+ * to its own tab even before/without a hub). */
+export function shellActorId(sessionId: string, identity: Identity | null): string {
+  return identity ? `user:${identity.userId}#${sessionId}` : `client-${sessionId}`;
+}
+
+/** 🪪️ Canonical surface id (contract §C0 `<kind>@<standard>/<subset>#<role>`) for whichever app/role
+ * a session is opening — the `PersistenceBinding.hub.surface` `openDocument`'s default bindings (§2)
+ * stamp onto the hub document WS URL's `?surface=`. */
+export function canonicalSurfaceId(dialect: ArtifactDialect, role: AppRole): string {
+  return `${dialectCoordinate(dialect)}#${role}`;
+}
+
+/** 🪪️ ticket §C4 — the space's own artifact-index document: kind `s.space`, dialect
+ * `s.space.space@1/*`, document id always the literal `"index"` (one per hub space). No TS constant
+ * is exported for these (lane 1-E's TS twin re-exports types only, see `📓️w1-e-report.md`), so they
+ * are mirrored here from the Rust source of truth
+ * (`✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️component.rs`'s `S_SPACE_INDEX_DOCUMENT_SCHEMA`/
+ * `SPACE_INDEX_DIALECT`). */
+const S_SPACE_INDEX_DOCUMENT_SCHEMA = "s.space";
+const S_SPACE_INDEX_DOCUMENT_ID = "index";
+const SPACE_INDEX_DIALECT: ArtifactDialect = { artifactKind: "s.space.space", standard: "1", subset: "*" };
+
+/** 📇️ §5 "wire the routing by dialect/surface id so it works the moment 2-B lands" — a direct
+ * manifest scan (rather than the `AppRouter`/`appRouter.entriesFor` machinery, which is declared
+ * later in `FrameworkOsShellInner` than `applyShellUri` and would be a `const` temporal-dead-zone
+ * reference from there) for the one app a plugin declares for a given `(dialect, role)`. */
+function findDialectApp(plugin: LoadedProgramState | undefined, dialect: ArtifactDialect, role: AppRole): AppDefinition | undefined {
+  return plugin?.manifest.apps.find((app) => app.dialect && dialectCoordinate(app.dialect) === dialectCoordinate(dialect) && app.role === role);
+}
+
+/** 📇️ Maps an `os.directory.<verb>` action id (contract §C6's 7 command ids) + its relayed JSON args
+ * onto a {@link DirectoryCommand} — `share-link` has no directory-schema command kind of its own
+ * (contract §C1), so it's client-side sugar for `create-invite` (see the new
+ * `🎮️commands/📇️directory-share-link/🦀️component.rs` header doc). Returns `null` for an
+ * unrecognized verb (defensive — every relay source in this codebase today only emits the 7 frozen
+ * ids, but a foreign/future caller should never crash the funnel). */
+export function directoryCommandFromAction(actionId: string, args: Record<string, unknown> | undefined): DirectoryCommand | null {
+  const a = args ?? {};
+  switch (actionId) {
+    case "os.directory.create-space":
+      return { kind: "create-space", name: String(a.name ?? ""), spaceKind: (a.spaceKind as string) ?? "atelier", visibility: (a.visibility as string) ?? "private" } as DirectoryCommand;
+    case "os.directory.delete-space":
+      return { kind: "delete-space", spaceId: String(a.spaceId ?? "") } as DirectoryCommand;
+    case "os.directory.rename-space":
+      return { kind: "rename-space", spaceId: String(a.spaceId ?? ""), name: String(a.name ?? "") } as DirectoryCommand;
+    case "os.directory.set-visibility":
+      return { kind: "set-visibility", spaceId: String(a.spaceId ?? ""), visibility: (a.visibility as string) ?? "private" } as DirectoryCommand;
+    case "os.directory.upsert-member":
+      return { kind: "upsert-member", spaceId: String(a.spaceId ?? ""), email: String(a.email ?? ""), role: (a.role as string) ?? "spectator" } as DirectoryCommand;
+    case "os.directory.remove-member":
+      return { kind: "remove-member", spaceId: String(a.spaceId ?? ""), userId: String(a.userId ?? "") } as DirectoryCommand;
+    case "os.directory.share-link":
+      return { kind: "create-invite", spaceId: String(a.spaceId ?? ""), role: (a.role as string) ?? "spectator", ttlSecs: Number(a.ttlSecs ?? 3600) } as DirectoryCommand;
+    default:
+      return null;
+  }
+}
+//#endregion 🔖️Identity
+
 /** @emoji 🐚️ Resolves the {@link ShellScope.storage} port for a shell mount: ephemeral brands always get
  * an in-memory port (never durable, regardless of namespace); a namespaced non-ephemeral shell gets a
  * scoped view over browser storage; a bare non-ephemeral shell (the historical single-app-per-page
@@ -777,7 +965,7 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
-  const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false });
+  const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean; readonly currentCheckpointId: string | undefined }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined });
   const { loadedPlugins, pluginStatusById, pluginSupervisorById, session, error } = shellState.pluginRuntime;
   const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
     if (!patch) return;
@@ -785,7 +973,10 @@ function FrameworkOsShellInner({
       if (!replace && patch.cursor <= current.cursor) return current;
       const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
       for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
-      return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false };
+      // 📌️ §C5 — `currentCheckpointId` used to be dropped here even though `HistoryPatch` always
+      // carried it; `🔖️CheckIn` below watches it change to know a checkpoint it asked for actually
+      // landed (see `touchSpaceIndexArtifact`'s call site).
+      return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId) };
     });
   }, []);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
@@ -817,6 +1008,7 @@ function FrameworkOsShellInner({
   const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
+  const { mergePolicy, conflicts, selectedConflictId } = shellState.merge;
   const importSpaceInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
   const contributionsJsonRef = useRef<string | null>(null);
@@ -862,8 +1054,63 @@ function FrameworkOsShellInner({
   const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
   /** 🧵️ Lazily-created worker running `🟦️backbone-🟦️worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
+  /** 🪪️ Per-tab session id component of the actor (contract §C0 `user:{userId}#{shellSessionId}`) —
+   * stable for this tab's whole lifetime, shared by both the pre-identity `client-{id}` actor and the
+   * post-sign-in `user:{userId}#{id}` one, so a tab's actor id only ever changes its PREFIX on sign-in,
+   * never re-mints the suffix mid-session. */
+  const shellSessionIdRef = useRef<string>(Math.random().toString(36).slice(2));
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
-  const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
+  const shellActorIdRef = useRef<string>(`client-${shellSessionIdRef.current}`);
+  /** 🪪️ §C3 identity bootstrap — `null` until `DirectoryClient.me()`/`mintSession` resolves (or forever,
+   * with no hub env). Mirrored into {@link shellActorIdRef}/`setPluginRuntimeActor` by the effect below,
+   * never read directly for the actor id (that's always `shellActorIdRef.current`). */
+  const [identity, setIdentity] = useState<Identity | null>(null);
+  const identityRef = useRef<Identity | null>(null);
+  identityRef.current = identity;
+  /** 🪪️ True once a hub env is configured but the hub could not be reached (§C3 "keep the last
+   * persisted identity, show an offline chip... never blocks the UI thread"). */
+  const [identityOffline, setIdentityOffline] = useState(false);
+  /** 🪪️ REST-only client for the identity boot handshake (`me`/`mintSession`) — distinct from the
+   * directory-lane's persistent `/directory/ws` subscription, which the shell never opens itself (§C6:
+   * `🟦️backbone-worker.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
+   * hub base url or token actually changes. */
+  const directoryClientRef = useRef<DirectoryClient | null>(null);
+  const hubEnv = useMemo(() => {
+    const hubBaseUrl = readViteSEnv("VITE_S_HUB_URL");
+    const email = readViteSEnv("VITE_S_USER");
+    const dataDir = readViteSEnv("VITE_S_DATA_DIR");
+    return hubBaseUrl ? { hubBaseUrl, email, dataDir } : null;
+  }, []);
+  /** 📇️ §C6 — guards `directory-open` to once per shell (a `useEffect` re-running on an unrelated
+   * identity re-render must not reopen the socket). */
+  const directoryOpenedRef = useRef(false);
+  /** 📇️ Set by the `foldDirectoryEvents` region below once it's defined — `ensureBackboneWorker`'s
+   * `onmessage` (created once, `useCallback([])`) reads this indirection rather than the callback
+   * itself so a fold that depends on `session`/`hostConfig`/`onActionRef` never goes stale. */
+  const dispatchDirectoryEventsRef = useRef<(events: readonly DirectoryEvent[]) => void>(() => {});
+  /** ⚖️ Same ref-forwarding idiom as {@link dispatchDirectoryEventsRef} — `ensureBackboneWorker`'s
+   * `remoteMutations` handling (below) needs `showTransientNotice`/`shellLabel`, both declared LATER
+   * in this component (contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
+   * CONFLICTS` §C6/§C9: a peer's `MergeReport`/`Conflicts` reply to `ApplyEnvelopes` must reach the
+   * Conflicts panel and, for a `"degraded"` outcome, a transient notice). Set once `applyRemoteMerge`
+   * itself is defined, read only from inside the worker's `onmessage` closure body. */
+  const applyRemoteMergeRef = useRef<(conflicts: readonly Conflict[] | null, mergeReport: MergeReport | null) => void>(() => {});
+  /** 📇️ `applyHostEffects`'s new `replayShellCommand` branch (below) needs `openDocument`/
+   * `openArtifactWithAppRef`, both declared LATER in this same component (after `applyHostEffects`
+   * itself) — a direct reference in `applyHostEffects`'s own dependency array would be a `const`
+   * temporal-dead-zone violation at the point `useCallback` evaluates that array. Same ref-forwarding
+   * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
+   * after each real declaration, read only from inside a later callback body, never from a deps array. */
+  const openDocumentRef = useRef<(ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[]) => Promise<void>>(async () => {});
+  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole) => Promise<void>>(async () => {});
+  /** 📇️ Offline-queue depth surfaced by the worker's `directory-status` — not yet rendered by any
+   * chrome this lane owns (2-F/3-A's "row shows 'pending'" territory); kept as local state so a
+   * consumer can read it once that chrome lands, with zero further plumbing here. */
+  const [, setDirectoryPendingCommands] = useState(0);
+  /** 🪪️ Settled once by the identity bootstrap effect's very first `snapshotReplaced` for
+   * `IDENTITY_CONFIG_SCHEMA` (a previously-persisted session) — see that effect for the bounded
+   * timeout that resolves it to `null` when no such file exists (never blocks the UI thread). */
+  const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
   const presenceConnectedAtMsRef = useRef(Date.now());
   const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
@@ -892,6 +1139,53 @@ function FrameworkOsShellInner({
     const worker = new Worker(new URL("../../../../../🟦️backbone-worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
+      // 📇️ §C6 directory lane — the worker's `directory-*` responses never carry a `documentId` this
+      // shell already has an `openDocumentSessionsRef` entry for (they're not artifact-sync events at
+      // all), so they're routed here, ahead of the artifact-event early return below.
+      if (message.kind === "directory-message") {
+        if (message.message.kind === "event") dispatchDirectoryEventsRef.current([message.message.event]);
+        return;
+      }
+      if (message.kind === "directory-status") {
+        setDirectoryPendingCommands(message.pendingCommands);
+        return;
+      }
+      if (message.kind === "directory-command-result") {
+        if (!message.ok) {
+          console.error("[os-shell] directory command failed", message.requestId, message.error);
+        } else if (message.events && message.events.length > 0) {
+          // 📇️ Defense-in-depth (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
+          // w4-h): the ORIGINATING client folds its own accepted command's events directly instead of
+          // depending entirely on the live `/directory/ws` broadcast finding its way back to the same
+          // socket — correct only if that subscription is guaranteed already-open at command-issue
+          // time, which a fresh page load racing identity bootstrap does not guarantee. The live
+          // broadcast path (`directory-message` above) still folds the same events for every OTHER
+          // client; a duplicate here is harmless — `FoldDirectoryEvent`'s fold is idempotent per event
+          // id (config lane, "last envelope wins" — see `📓️w1-c-report.md`).
+          dispatchDirectoryEventsRef.current(message.events);
+        }
+        return;
+      }
+      // 🪪️ §C3 identity facet — opened directly (never through `openDocument`, so it never gets an
+      // `openDocumentSessionsRef` entry: it has no plugin/session, only the shell itself). Routed here,
+      // ahead of the `!entry` early return below, which would otherwise silently drop every one of its
+      // events. `snapshotReplaced` (whole-record pack, the folder read-back) resolves the bootstrap
+      // effect's one-shot wait; `remoteMutations` (another tab's sign-in/out, echoed over this
+      // document's `BroadcastChannel`) folds via {@link foldIdentityEvent} like `OpeningPreferences`.
+      if (message.kind === "event" && message.documentId === IDENTITY_CONFIG_SCHEMA) {
+        const identityEvent = message.event;
+        if (identityEvent.kind === "snapshotReplaced") {
+          const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(identityEvent.pack)));
+          if (decoded !== undefined) {
+            setIdentity(decoded);
+            identitySnapshotResolverRef.current?.(decoded);
+            identitySnapshotResolverRef.current = null;
+          }
+        } else if (identityEvent.kind === "remoteMutations") {
+          setIdentity((current) => foldIdentityEvent(current, identityEvent, decodeIdentityPayload));
+        }
+        return;
+      }
       if (message.kind !== "event") return;
       const entry = openDocumentSessionsRef.current.get(message.documentId);
       if (!entry) return;
@@ -905,7 +1199,15 @@ function FrameworkOsShellInner({
           value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
         });
       } else if (event.kind === "remoteMutations" && entry.plugin.applyMutations) {
-        void entry.plugin.applyMutations(entry.session.instanceId, encodeMutationEnvelopesPack(event.envelopes));
+        // ⚖️ `AppCommand::ApplyEnvelopes`'s reply to THIS remote ingest batches `MergeReport`/
+        // `Conflicts` frames alongside it (contract freeze §C6/§C9 "pushed unsolicited after every
+        // ingest") — routed through `applyRemoteMergeRef` (see its declaration doc) so a peer's
+        // quarantined/degraded merge reaches the Conflicts panel / a transient notice without the
+        // user asking for it, instead of being dropped after the (still-present) error check.
+        void entry.plugin
+          .applyMutations(entry.session.instanceId, encodeMutationEnvelopesPack(event.envelopes))
+          .then((result) => applyRemoteMergeRef.current(result.conflicts, result.mergeReport))
+          .catch((commandError) => console.error("[DEBUG] applyMutations failed", commandError));
         const actorUri = `actor://${message.documentId}`;
         postPluginBackboneInbound(entry.session.pluginId, actorUri, [
           encodeBackboneMessage({
@@ -929,12 +1231,100 @@ function FrameworkOsShellInner({
           encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: new Uint8Array(event.spr) }),
         ]);
       } else if (event.kind === "conflict") {
+        // ⚖️ Investigated for contract freeze `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
+        // CLASS-CONFLICTS` §C6/§C9 (lane L1): this is `🏪️store/🔄️sync/🦀️component.rs`'s hub-relay
+        // `ArtifactEvent::Conflict(MutationMessage)` — a TRANSPORT-level diagnostic (external folder
+        // divergence / a hub `ServerFrame::Error`), never a first-class `Conflict` roster (no
+        // `id`/`status`/`actors` exists for either source event, and `protocol_wire::ServerFrame` has
+        // no `MergeReport`/`Conflicts` variant to carry one). The REAL roster/merge-outcome delivery
+        // this contract added is `AppCommand::ApplyEnvelopes`'s own reply — see the `remoteMutations`
+        // branch above (`applyRemoteMergeRef`) — so this branch stays a passive log, same as before.
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
       }
     };
     backboneWorkerRef.current = worker;
     return worker;
   }, []);
+
+  // 🪪️ §C3 identity bootstrap — pre-identity default actor, set once at mount so `PluginRuntime`'s
+  // `AppChannelClient`s created before sign-in resolves (or with no hub env at all) still carry the
+  // SAME `client-{sessionId}` id `shellActorIdRef` already defaults to.
+  useEffect(() => {
+    setPluginRuntimeActor(shellActorIdRef.current);
+  }, []);
+
+  useEffect(() => {
+    // 📇️ §C3 "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly" — the
+    // existing `🛠️dev🖥️s⚛️react` launcher (no `S_HUB_URL`) never reaches any code below this guard.
+    if (!hubEnv) return;
+    let cancelled = false;
+    (async () => {
+      const worker = ensureBackboneWorker();
+      const identityConfig = identityActorConfig(shellActorIdRef.current, hubEnv.dataDir);
+      // 📇️ Opens the identity document FIRST (folder poll starts immediately) so the snapshot wait
+      // below has something to resolve against; re-opening later with the same `documentId` (once the
+      // real actor id is known) is a harmless idempotent re-subscribe (`openArtifact` always closes
+      // any prior state for the same id first).
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", ...identityConfig }) });
+      // 📇️ Bounded one-shot wait for a previously-persisted identity's `snapshotReplaced` (a 404/no-
+      // file-yet folder read never emits one at all — see `pollFolderOnce`'s doc in
+      // `🟦️backbone-worker.ts` — so this can only be resolved by a timeout, not a second event).
+      // 2s is generous for a local folder read; never blocks the UI thread (this whole effect body
+      // runs off-render, in a microtask/timer chain).
+      const cachedIdentity = await new Promise<Identity | null>((resolve) => {
+        identitySnapshotResolverRef.current = resolve;
+        setTimeout(() => resolve(null), 2000);
+      });
+      identitySnapshotResolverRef.current = null;
+      if (cancelled) return;
+      const client = new DirectoryClient(hubEnv.hubBaseUrl, cachedIdentity?.sessionToken);
+      directoryClientRef.current = client;
+      let resolved: Identity | null = null;
+      try {
+        const me = cachedIdentity?.sessionToken ? await client.me() : null;
+        if (me) {
+          resolved = { userId: me.userId, email: me.email, displayName: me.displayName, hubBaseUrl: hubEnv.hubBaseUrl, sessionToken: cachedIdentity!.sessionToken, issuedAtMs: cachedIdentity!.issuedAtMs };
+        } else {
+          const email = hubEnv.email ?? cachedIdentity?.email;
+          if (!email) throw new DirectoryHttpError(0, "no VITE_S_USER and no cached identity to mint a session for");
+          const minted = await client.mintSession(email);
+          resolved = { userId: minted.userId, email, displayName: email, hubBaseUrl: hubEnv.hubBaseUrl, sessionToken: minted.token, issuedAtMs: Date.now() };
+        }
+      } catch (error) {
+        // 📇️ §C3 "Hub unreachable ⇒ keep the last persisted identity, show an offline state, never
+        // block the UI, never throw" — `cachedIdentity` (if any) was already applied via the
+        // `snapshotReplaced` handler above; nothing further to roll back.
+        console.error("[os-shell] identity bootstrap: hub unreachable, staying offline", error);
+        if (!cancelled) setIdentityOffline(true);
+        return;
+      }
+      if (cancelled || !resolved) return;
+      setIdentityOffline(false);
+      shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
+      setPluginRuntimeActor(shellActorIdRef.current);
+      setIdentity(resolved);
+      const mutation = signIn(resolved);
+      const envelope = identityMutationEnvelope(shellActorIdRef.current, mutation, cachedIdentity);
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, message: { kind: "localMutations", envelopes: [envelope] } }) });
+      worker.postMessage({
+        wire: encodeBackboneWorkerRequest({
+          kind: "send",
+          documentId: IDENTITY_CONFIG_SCHEMA,
+          message: { kind: "localSnapshot", pack: Array.from(encodePackValue(resolved)), spr: [] },
+        }),
+      });
+      // 📇️ §C6 — one directory socket per shell, opened only once identity resolves (never on the UI
+      // thread itself: this posts a request into `🟦️backbone-worker.ts`'s `🔖️Directory` region, the
+      // socket's real owner).
+      if (!directoryOpenedRef.current) {
+        directoryOpenedRef.current = true;
+        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-open", baseUrl: resolved.hubBaseUrl, token: resolved.sessionToken, since: 0 }) });
+      }
+    })().catch((error) => console.error("[os-shell] identity bootstrap failed unexpectedly", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [hubEnv]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -2322,6 +2712,52 @@ function FrameworkOsShellInner({
           }
           continue;
         }
+        if ("replayShellCommand" in effect) {
+          // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C6/§5 — the
+          // `os.directory.*` funnel and the `os.open-artifact`/`os.open-artifact-with` opening relay
+          // (§3-B "closes the known gap where `openArtifactWithAppRef` opened an app but no
+          // document" — `documentId`/`spaceId` are optional here since the relay side of that gap
+          // closure is a different, not-yet-landed lane; every other `replayShellCommand` action id
+          // (e.g. `os.setThemeId`'s Backwards replay) has no handler in this lease and is a no-op).
+          const { actionId, args } = effect.replayShellCommand;
+          const argsRecord = args as Record<string, unknown> | undefined;
+          if (actionId.startsWith("os.directory.")) {
+            const command = directoryCommandFromAction(actionId, argsRecord);
+            if (!command) {
+              console.warn("[os-shell] replayShellCommand: unrecognized directory action", actionId);
+            } else if (!identityRef.current) {
+              console.warn("[os-shell] replayShellCommand: directory command dropped, no signed-in identity", actionId);
+            } else {
+              const worker = ensureBackboneWorker();
+              const requestId = `${actionId}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+              worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-command", requestId, command }) });
+            }
+          } else if (actionId === "os.open-artifact" || actionId === "os.open-artifact-with") {
+            const artifactRef = typeof argsRecord?.artifactRef === "string" ? argsRecord.artifactRef : undefined;
+            const pluginId = typeof argsRecord?.pluginId === "string" ? argsRecord.pluginId : undefined;
+            const appId = typeof argsRecord?.appId === "string" ? argsRecord.appId : undefined;
+            const documentId = typeof argsRecord?.documentId === "string" ? argsRecord.documentId : undefined;
+            const spaceId = typeof argsRecord?.spaceId === "string" ? argsRecord.spaceId : undefined;
+            const role: AppRole = argsRecord?.role === 0 ? "viewer" : "editor";
+            if (artifactRef && pluginId && appId) {
+              const dialect = parseDialectCoordinate(artifactRef);
+              await openArtifactWithAppRefRef.current({ pluginId, appId }, dialect, role);
+              if (documentId) {
+                if (spaceId) openSpaceIdRef.current = spaceId;
+                // 📇️ `schema` has no general dialect-coordinate → document-schema formula (verified
+                // against `s.space`'s own three DIFFERENT id strings — artifact-kind id, dialect
+                // coordinate, document schema — none derivable from the others); the one mapping known
+                // to this lane is used, `artifactRef` itself is the best-effort fallback for anything
+                // else until lane 3-B's opening relay carries a real `schema` field.
+                const schema = dialectCoordinate(dialect) === dialectCoordinate(SPACE_INDEX_DIALECT) ? S_SPACE_INDEX_DOCUMENT_SCHEMA : artifactRef;
+                await openDocumentRef.current({ documentId, schema });
+              }
+            } else {
+              console.warn("[os-shell] replayShellCommand: os.open-artifact missing artifactRef/pluginId/appId", args);
+            }
+          }
+          continue;
+        }
         if ("requestMediaFrames" in effect) {
           // 🎞️ D5: decodes a video (file picker, or `payload` bytes already in hand from a drop zone)
           // and fans sampled frames + a completion marker out through the same `dispatchOne` path as
@@ -2453,7 +2889,14 @@ function FrameworkOsShellInner({
       const currentSession = sessionRef.current;
       if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
-      const route = parseShellRoute(path);
+      // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
+      // (optionally `/instances/{id}`) opens the workflow studio (`hostConfig.hostAppId`, the
+      // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
+      // `ShellHelpers/🟦️component.tsx`, outside this lane's lease) has no concept of a `/studio`
+      // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
+      // its own existing route classification (and tests) stay exactly as they were.
+      const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
+      const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
       const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
       if (!sPlugin) return;
       if (route.kind === "landing") {
@@ -2468,6 +2911,34 @@ function FrameworkOsShellInner({
         return;
       }
       const { spaceId, instanceId } = route;
+      // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
+      // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
+      // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
+      // the moment lane 2-B registers a real app for that dialect — no further change needed here.
+      if (!studioMatch && !instanceId) {
+        const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
+        const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
+        if (!spaceApp) {
+          console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
+          return;
+        }
+        // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
+        // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
+        // `applyShellUri` identity (e.g. `switchToManagedApp` depending on `session`, which
+        // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
+        // already-open space, tearing the document's sync session down and reopening it in a tight
+        // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
+        // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
+        // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
+        const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
+        openSpaceIdRef.current = spaceId;
+        openInstanceIdRef.current = null;
+        if (spaceIndexAlreadyOpen) return;
+        const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToManagedApp(spaceApp.id, preservedViewState);
+        if (!spaceSession) return;
+        await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA });
+        return;
+      }
       // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
       // race-navigate to `/spaces/demo` while `switchToManagedApp` is still awaiting.
       const studioChanged = openSpaceIdRef.current !== spaceId;
@@ -2516,11 +2987,20 @@ function FrameworkOsShellInner({
   }, [loadedPlugins, panel, session, hostMode]);
 
   /**
-   * 🧵️ `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
-   * reuses) `🟦️backbone-🟦️worker.ts`, tells it to open the document, subscribes to its postMessage events,
-   * and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
-   * the plugin-side store starts pumping through the same logical channel. The `actor://<documentId>`
-   * uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the Rust side.
+   * 🧵️ `openDocument(ref, bindings?)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up
+   * (or reuses) `🟦️backbone-🟦️worker.ts`, tells it to open the document, subscribes to its postMessage
+   * events, and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods
+   * (WS-D) so the plugin-side store starts pumping through the same logical channel. The
+   * `actor://<documentId>` uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the
+   * Rust side.
+   *
+   * 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3/§2 — `bindings`
+   * omitted (as opposed to `attachSyncBackbone`'s always-explicit array, which stays a working manual
+   * override with zero change here) defaults to
+   * `[{kind:"hub", baseUrl, spaceId, token, surface}, {kind:"folder", path: "${dataDir}/spaces/${spaceId}"}]`
+   * when an identity is resolved and the current route has an open space, else `[{kind:"folder", …}]`
+   * (identity or dataDir missing), else `[]` (no route space — the OS config/home documents stay
+   * folder-only per contract §C3 and never call `openDocument` with omitted bindings for this reason).
    *
    * Full loop note: this wires the main-thread half of the contract. The remaining hop — the
    * sandboxed plugin's own `backbone-send`/`backbone-poll` WIT host-import calls relaying through its
@@ -2529,12 +3009,23 @@ function FrameworkOsShellInner({
    * per this session's priority order if not otherwise completed); see that file's own notes.
    */
   const openDocument = useCallback(
-    async (ref: { readonly documentId: string; readonly schema: string }, bindings: readonly PersistenceBinding[]) => {
+    async (ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[]) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
       const worker = ensureBackboneWorker();
+      const resolvedBindings: readonly PersistenceBinding[] =
+        bindings ??
+        (() => {
+          const spaceId = openSpaceIdRef.current;
+          const dataDir = hubEnv?.dataDir;
+          const folder: PersistenceBinding[] = spaceId && dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
+          const currentIdentity = identityRef.current;
+          if (!currentIdentity || !spaceId) return folder;
+          const surface = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
+          return [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, token: currentIdentity.sessionToken, surface }, ...folder];
+        })();
       openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, plugin });
       // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
       // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
@@ -2544,18 +3035,19 @@ function FrameworkOsShellInner({
         kind: "open",
         documentId: ref.documentId,
         schema: ref.schema,
-        bindings,
+        bindings: resolvedBindings,
         watchExternal: true,
         actor: shellActorIdRef.current,
       };
-      worker.postMessage(request);
+      worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
       const uri = `actor://${ref.documentId}`;
       if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
       dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     },
-    [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession],
+    [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession, hubEnv],
   );
+  openDocumentRef.current = openDocument;
 
   const closeDocument = useCallback((documentId: string) => {
     const entry = openDocumentSessionsRef.current.get(documentId);
@@ -2564,7 +3056,7 @@ function FrameworkOsShellInner({
     pluginBackboneRouteUnregistersRef.current.get(documentId)?.();
     pluginBackboneRouteUnregistersRef.current.delete(documentId);
     const request: BackboneWorkerRequest = { kind: "close", documentId };
-    backboneWorkerRef.current?.postMessage(request);
+    backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
   }, []);
 
   /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
@@ -2889,6 +3381,10 @@ function FrameworkOsShellInner({
         .catch((actionError) => {
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+            return;
+          }
+          if (isMutationRejectedFault(actionError)) {
+            showMutationRejectedNotice((actionError as SemioFaultError).fault);
             return;
           }
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
@@ -3282,26 +3778,77 @@ function FrameworkOsShellInner({
   );
   //#endregion 🎥️TutorialOrchestration
 
+  //#region 🔖️DirectoryLane
+  /** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C6 — folds one batch of
+   * `DirectoryEvent`s into the CURRENTLY mounted session (home, studio, or the new `s.space` app) as
+   * the `foldDirectoryEvents` plugin view action; the fold itself is `…ConfigMutation::FoldDirectoryEvent`
+   * on the plugin side (contract §C6), this only relays the raw batch through the existing action
+   * funnel. Brief's prose says "home session AND the open space session" — this shell keeps exactly
+   * ONE plugin session mounted at a time (`session`/`switchToManagedApp`), so only whichever of
+   * home/studio/space is actually live right now can receive it.
+   *
+   * w4-h root-cause fix #1: every `command_from_action` implementation on the Rust side
+   * (`home/…/✏️editor/🦀️component.rs`, `space/…/✏️editor/🦀️component.rs`) reads the batch as a
+   * `eventsJson: string` field (`args.get("eventsJson")` → `.as_str()` → `serde_json::from_str`), never
+   * a raw `events` array — sending `{ events }` left `.get("eventsJson")` finding nothing and silently
+   * falling back to `"[]"` on every call, so the fold ran on zero events every single time regardless
+   * of whether the live broadcast or the command-result round trip delivered the real payload. Proven
+   * live: the collab-e2e harness's new console capture shows the WS frame with the real
+   * `space.created` event arriving, yet no row ever appeared — a data-shape bug, not a thrown error,
+   * which is why neither `pageerror` nor any `console.error` ever caught it.
+   *
+   * w4-h root-cause fix #2: `hostConfig.landingAppId`/`hostAppId` are the plugin's OWN Cargo.toml
+   * metadata aliases (`host = { landing = "home", shell = "studio" }`, a human-readable nickname pair
+   * the registry generator carries through verbatim) — NEVER the real canonical `app.id` a mounted
+   * session actually carries (`s.space.home@1/*#editor`, `s.space.studio@1/*#editor` — dialect-derived,
+   * confirmed via `engine::space::component::tests::space_manifest_uses_studio_app_id`). Comparing
+   * `current.app.id` against the raw alias string can never be true; this file's OWN `landingApp`/
+   * `hostApp` (a few lines up, `hostPlugin?.manifest.apps.find(app => app.id === hostConfig.landingAppId
+   * /hostAppId)`) already exist to bridge alias → real app object (`landingApp` masks the same dead
+   * comparison with a `?? manifest.apps[0]` fallback that happens to land on Home since it's the
+   * plugin's first-registered app; `hostApp` has no such fallback and is consequently always
+   * `undefined` today — a separate, pre-existing, wider bug this lane's lease does not cover fixing).
+   * Comparing against the resolved OBJECTS' `.id` instead of the raw alias strings is what actually
+   * works; proven live via a temporary debug log (`🧪️4-h-collab-e2e-run3.txt`): `isHome` was `false` on
+   * every single invocation even though `currentAppId` (`s.space.home@1/*#editor`) and the fold's own
+   * event payload were both correct. */
+  const dispatchDirectoryEventBatch = useCallback(
+    (events: readonly DirectoryEvent[]) => {
+      if (events.length === 0 || !hostConfig) return;
+      const current = sessionRef.current;
+      if (!current) return;
+      const isHome = current.app.id === landingApp?.id;
+      const isStudio = current.app.id === hostApp?.id;
+      const isSpaceIndex = current.app.dialect !== undefined && dialectCoordinate(current.app.dialect) === dialectCoordinate(SPACE_INDEX_DIALECT);
+      if (!isHome && !isStudio && !isSpaceIndex) return;
+      onActionRef.current({ controllerId: current.app.controllerId, action: "foldDirectoryEvents", args: { eventsJson: JSON.stringify(events) } });
+    },
+    [hostConfig, landingApp, hostApp],
+  );
+  dispatchDirectoryEventsRef.current = dispatchDirectoryEventBatch;
+  //#endregion 🔖️DirectoryLane
+
   const hostSessionActive = hostMode && session?.app.id === hostAppId;
   // 🏠️🧳️ Once `hostSessionActive` is true, `session.app` *is* the host app, so its own self-declared
   // `controllerId` is the right value — no separate app-identity lookup needed.
   const studioSessionControllerId = hostSessionActive ? session?.app.controllerId : undefined;
   useEffect(() => {
     if (!hostSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
-    const identity = presenceClientIdentity(ephemeral);
-    const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: identity });
+    // 🪪️ §C3 — a resolved sign-in shows the real user in presence chrome instead of a random Guest.
+    const presenceIdentity = presenceClientIdentity(ephemeral, identityRef.current ? { clientId: shellActorIdRef.current, name: identityRef.current.displayName } : undefined);
+    const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: presenceIdentity });
     const initial = window.setTimeout(beat, 1000);
     const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
     return () => {
       window.clearTimeout(initial);
       window.clearInterval(timer);
     };
-  }, [hostSessionActive, studioSessionControllerId, ephemeral]);
+  }, [hostSessionActive, studioSessionControllerId, ephemeral, identity]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     let publishing = false;
-    const identity = presenceClientIdentity(ephemeral);
+    const presenceIdentity = presenceClientIdentity(ephemeral, identityRef.current ? { clientId: shellActorIdRef.current, name: identityRef.current.displayName } : undefined);
     const beat = async () => {
       const worker = backboneWorkerRef.current;
       if (!worker || publishing) return;
@@ -3316,7 +3863,7 @@ function FrameworkOsShellInner({
               kind: "presenceHeartbeat",
               peer: {
                 actor: shellActorIdRef.current,
-                label: identity.name,
+                label: presenceIdentity.name,
                 presencePack: snapshot?.presence,
                 connectedAtMs: presenceConnectedAtMsRef.current,
                 cursor: presenceCursorRef.current,
@@ -3333,7 +3880,7 @@ function FrameworkOsShellInner({
     void beat();
     const timer = window.setInterval(() => void beat(), PRESENCE_HEARTBEAT_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [ephemeral]);
+  }, [ephemeral, identity]);
 
   usePanelChromeHotkeys({
     // 📱️ All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
@@ -3549,7 +4096,7 @@ function FrameworkOsShellInner({
    * accessor (by design — it's addressed one `(dialect, role)` pair at a time). */
   const knownDialects = useMemo((): readonly ArtifactDialect[] => {
     const byCoordinate = new Map<string, ArtifactDialect>();
-    for (const entry of loadedPlugins) for (const app of entry.manifest.apps) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
+    for (const entry of loadedPlugins) for (const app of entry.manifest.apps) if (app.dialect) byCoordinate.set(dialectCoordinate(app.dialect), app.dialect);
     return [...byCoordinate.values()];
   }, [loadedPlugins]);
 
@@ -3561,16 +4108,19 @@ function FrameworkOsShellInner({
   const [openingPreferences, setOpeningPreferences] = useState<OpeningPreferences>(EMPTY_OPENING_PREFERENCES);
   const pinnedAppFor = useCallback((dialect: ArtifactDialect, role: AppRole): AppRef | undefined => openingPreferences.defaults.find((entry) => dialectCoordinate(entry.dialect) === dialectCoordinate(dialect) && entry.role === role)?.app, [openingPreferences]);
 
-  /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` (out of this lease) wraps the raw `exchange` ABI
-   * behind typed methods — `transactionPrepare`/`transactionCommit`/`transactionUndo`/`transactionRedo`
-   * are already wrapped that way (`adaptPluginHandle`, `PluginRuntime/🟦️component.tsx`), each
-   * internally riding its own `AppChannelClient`. `openArtifact`/`setDefaultApp`/`clearDefaultApp`
-   * (contract freeze §3) are NOT wrapped yet — the raw `exchange` method itself isn't re-exposed, so
-   * this lease cannot construct its own `AppChannelClient` from the handle it's given. Feature-detected
+  /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
+   * `transactionPrepare`/`transactionCommit`/`transactionUndo`/`transactionRedo` and (as of ticket
+   * `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` lane K2)
+   * `setMergePolicy`/`resolveConflict`/`readConflicts` are wrapped this way (`adaptPluginHandle`,
+   * `PluginRuntime/🟦️component.tsx`), each internally riding its own `AppChannelClient` — see
+   * {@link pluginHandleFor} below. `openArtifact`/`setDefaultApp`/`clearDefaultApp` (contract freeze
+   * §3) are NOT wrapped yet — the raw `exchange` method itself isn't re-exposed for them, so this
+   * lease cannot construct its own `AppChannelClient` from the handle it's given. Feature-detected
    * here (structurally optional, not a type-lying cast) so this activates the moment `PluginRuntime`
-   * adds the same three methods the transaction family already has, with zero changes on this side.
-   * See `📓️w1-c-report.md` "NOT done" — until then these are local-only (the opening-prefs fold below
-   * and the session switch in `openArtifactWithAppRef` both still work; only the wire notify is inert). */
+   * adds the same three methods the transaction/merge families already have, with zero changes on
+   * this side. See `📓️w1-c-report.md` "NOT done" — until then these three are local-only (the
+   * opening-prefs fold below and the session switch in `openArtifactWithAppRef` both still work;
+   * only the wire notify is inert). */
   type PendingAppChannelMethods = {
     readonly openArtifact?: (artifactRef: string, role: number, pluginId?: string, appId?: string) => Promise<unknown>;
     readonly setDefaultApp?: (artifactKind: string, standard: string, subset: string, role: number, pluginId: string, appId: string) => Promise<unknown>;
@@ -3580,6 +4130,12 @@ function FrameworkOsShellInner({
     (pluginId: string): PendingAppChannelMethods | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle as PendingAppChannelMethods | undefined,
     [loadedPlugins],
   );
+
+  /** ⚖️ Finds a loaded plugin's real `PluginWasmHandle` by pluginId, for the merge-policy/conflict
+   * pass-throughs below — unlike {@link pendingAppChannelFor}'s ad hoc cast, `setMergePolicy`/
+   * `resolveConflict`/`readConflicts` are genuine, always-present `PluginWasmHandle` members now
+   * (`adaptPluginHandle`, `PluginRuntime/🟦️component.tsx`), so no feature-detection is needed. */
+  const pluginHandleFor = useCallback((pluginId: string): PluginWasmHandle | undefined => loadedPlugins.find((entry) => entry.handle.pluginId === pluginId)?.handle, [loadedPlugins]);
 
   const dispatchSetDefaultApp = useCallback(
     (dialect: ArtifactDialect, role: AppRole, app: AppRef) => {
@@ -3602,6 +4158,44 @@ function FrameworkOsShellInner({
         ?.catch((commandError) => console.error("[DEBUG] clearDefaultApp failed", commandError));
     },
     [pendingAppChannelFor, session?.pluginId],
+  );
+
+  /** ⚖️ Persists `os.config.merge-policy` through the `🛡️change-merge-policy` config triad's own
+   * event-sourced fold (local, always works), then genuinely forwards `AppCommand::SetMergePolicy`
+   * (contract freeze §C8) through `PluginWasmHandle.setMergePolicy` — a real handle member now (see
+   * {@link pluginHandleFor}'s doc), so a session-less/plugin-not-loaded guard is the only thing
+   * standing between this and the wire call; a failed dispatch surfaces loudly via the `.catch`
+   * (never a silent optional-chain no-op). */
+  const dispatchSetMergePolicy = useCallback(
+    (policy: MergePolicy) => {
+      dispatch({ type: "SET_MERGE_POLICY", value: policy });
+      if (!session) return;
+      const plugin = pluginHandleFor(session.pluginId);
+      if (!plugin) return;
+      void plugin.setMergePolicy(session.instanceId, policy).catch((commandError) => console.error("[DEBUG] setMergePolicy failed", commandError));
+    },
+    [pluginHandleFor, session],
+  );
+
+  /** ⚖️ `ChromePanels`' Conflicts panel Accept/Discard — forwards `AppCommand::ResolveConflict`
+   * (contract freeze §C6/§C8/§C9) through `PluginWasmHandle.resolveConflict`; the local roster is
+   * replaced from the `Conflicts` frame the reply itself batches (contract freeze §C6
+   * `resolve_conflict`: "Returns the authoritative `MergeReport` + `Conflicts` frames"), never
+   * optimistically, since `resolve_conflict` can itself reject (Quarantined+Accept still enforces
+   * Fatal — that path returns no `Conflicts` frame, so the roster is left untouched). */
+  const dispatchResolveConflict = useCallback(
+    (conflictId: string, resolution: ConflictResolution) => {
+      if (!session) return;
+      const plugin = pluginHandleFor(session.pluginId);
+      if (!plugin) return;
+      void plugin
+        .resolveConflict(session.instanceId, conflictId, resolution)
+        .then((result) => {
+          if (result.conflicts) dispatch({ type: "SET_CONFLICTS", value: result.conflicts });
+        })
+        .catch((commandError) => console.error("[DEBUG] resolveConflict failed", commandError));
+    },
+    [pluginHandleFor, session],
   );
 
   /** 👁️✏️ Re-points the primary session at a different registered `AppRef` for the SAME artifact
@@ -3635,6 +4229,7 @@ function FrameworkOsShellInner({
     },
     [loadedPlugins, installPlugin, uiTerminology, uiLocale],
   );
+  openArtifactWithAppRefRef.current = openArtifactWithAppRef;
 
   /** 👁️✏️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
    * roles even when only one has registered surfaces (an empty `options` list still renders the row,
@@ -3664,11 +4259,66 @@ function FrameworkOsShellInner({
   const defaultAppsHostRef = useRef(defaultAppsHost);
   defaultAppsHostRef.current = defaultAppsHost;
 
+  /** ⚖️ `ChromePanels`' Conflicts settings tab — `Shell`'s `selectOpenConflicts` selector feeds the
+   * roster, `kindLabel`/`messageText` localize a `Conflict`'s own `ConflictKind`/first `MutationMessage`
+   * (never parsed from English prose). */
+  const openConflicts = useMemo(() => selectOpenConflicts(shellState), [shellState]);
+  const conflictKindLabel = useCallback(
+    (conflict: Conflict): string => shellLabel(conflict.kind.kind === "quarantined" ? "ui.conflict.quarantined" : "ui.conflict.degraded"),
+    [],
+  );
+  const conflictMessageText = useCallback((conflict: Conflict): string => {
+    const worst = conflict.messages[0];
+    if (!worst) return "";
+    return `${shellLabel(mutationCodeLabelKey(worst.code))} — ${worst.message}`;
+  }, []);
+  const conflictsHost: ConflictsHostApi = useMemo(
+    () => ({
+      conflicts: openConflicts,
+      locale: uiLocale,
+      selectedConflictId,
+      kindLabel: conflictKindLabel,
+      messageText: conflictMessageText,
+      onSelect: (conflictId) => dispatch({ type: "SET_SELECTED_CONFLICT_ID", value: conflictId }),
+      onResolve: dispatchResolveConflict,
+      // 🐢️ No synchronous "current document as JSON" accessor is in this lease's reach yet (the
+      // decoded artifact lives inside the plugin wasm instance, not mirrored into `ShellState`) — an
+      // empty string is an honest "no local snapshot", never a fabricated diff side.
+      currentDocumentText: "",
+    }),
+    [openConflicts, uiLocale, selectedConflictId, conflictKindLabel, conflictMessageText, dispatchResolveConflict],
+  );
+  const conflictsHostRef = useRef(conflictsHost);
+  conflictsHostRef.current = conflictsHost;
+
+  /** 📖️ Seeds the Conflicts panel with this session's authoritative roster on session start/switch
+   * (`AppCommand::ReadConflicts`, contract freeze §C8/§C9) — otherwise the panel would only ever
+   * show conflicts a later `setMergePolicy`/`resolveConflict` reply happened to carry, staying empty
+   * across a reload even when the guest already holds `Open` conflicts. Reads
+   * `loadedPluginsRef.current` rather than depending on `loadedPlugins` so a plugin hot-swap that
+   * leaves the session's pluginId in place doesn't re-fire this on every unrelated roster change. */
+  useEffect(() => {
+    if (!session) return;
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    let cancelled = false;
+    void plugin
+      .readConflicts(session.instanceId)
+      .then((conflicts) => {
+        if (!cancelled) dispatch({ type: "SET_CONFLICTS", value: conflicts });
+      })
+      .catch((commandError) => console.error("[DEBUG] readConflicts failed", commandError));
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.instanceId, session?.pluginId]);
+
   /** 👁️✏️ "Open with…" entries for the CURRENT session's own dialect, grouped by role — the Document
    * panel section, and what the context-menu/palette entries focus. `undefined` with no session or
-   * router (nothing to list yet). */
+   * router (nothing to list yet), and for a non-surface app — one bound to no subset, such as the
+   * workflow studio — which has no dialect to open anything else against. */
   const openWithEntries = useMemo(() => {
-    if (!session || !appRouter) return undefined;
+    if (!session || !appRouter || !session.app.dialect) return undefined;
     return groupOpenWithEntries(appRouter, session.app.dialect, { pluginId: session.pluginId, appId: session.app.id }, (role) => pinnedAppFor(session.app.dialect, role), pluginLabelById);
   }, [session, appRouter, pinnedAppFor, pluginLabelById]);
   const hasOpenArtifactSurfaces = (openWithEntries?.viewer.length ?? 0) + (openWithEntries?.editor.length ?? 0) > 0;
@@ -3678,7 +4328,7 @@ function FrameworkOsShellInner({
   /** 🧯️ Shows a non-blocking, auto-dismissing notice (contract freeze §2.3/§5) — replaces whatever
    * notice is currently showing rather than queuing, since only one can render at a time. */
   const showTransientNotice = useCallback(
-    (message: string, kind: "info" | "error" = "info", code?: string) => {
+    (message: string, kind: Severity = "info", code?: string) => {
       if (transientNoticeTimerRef.current) clearTimeout(transientNoticeTimerRef.current);
       transientNoticeIdRef.current += 1;
       const id = transientNoticeIdRef.current;
@@ -3690,6 +4340,47 @@ function FrameworkOsShellInner({
   /** 🧯️ `true` for a `SemioFaultError` carrying `"viewer.read-only"` — the one host-raised fault this
    * lease knows to render as a notice instead of letting it crash into `ShellFaultBoundary`. */
   const isViewerReadOnlyFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === SURFACE_FAULT_CODES.ViewerReadOnly, []);
+  /** ⚖️ `true` for a `SemioFaultError` carrying `"mutation.rejected"` — one LOCAL dispatch's
+   * `store.dispatch` was rejected by this authority's `MergePolicy` (contract freeze `26/08/16/
+   * MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C8/§C9: `Fault.code ==
+   * "mutation.rejected"`, `Fault.severity` mirrors the rejected `DispatchReport.worst`). */
+  const isMutationRejectedFault = useCallback((error: unknown): boolean => error instanceof SemioFaultError && error.fault.code === MUTATION_REJECTED_FAULT_CODE, []);
+  /** ⚖️ One toast per gesture for a rejected local dispatch — worst level already IS `fault.severity`
+   * (that field mirrors `DispatchReport.worst`), body = the first cause's localized `ui.mutation.
+   * code.*` label + its English prose, falling back to `ui.mutation.rejected.body` when the fault
+   * carries no `causes` yet (the guest-side wiring that populates them is a different lane). */
+  const showMutationRejectedNotice = useCallback(
+    (fault: Fault) => {
+      const cause = fault.causes?.[0];
+      const codeLabel = cause?.code ? shellLabel(mutationCodeLabelKey(cause.code)) : shellLabel("ui.mutation.rejected.title");
+      const body = cause ? `${codeLabel} — ${cause.message}` : shellLabel("ui.mutation.rejected.body");
+      showTransientNotice(`${shellLabel("ui.mutation.rejected.title")}: ${body}`, fault.severity, MUTATION_REJECTED_FAULT_CODE);
+    },
+    [showTransientNotice],
+  );
+  /** ⚖️ Remote-origin merge-outcome bridge (contract freeze §C6/§C9) — fed by `applyRemoteMergeRef`
+   * (see its declaration doc) from `ensureBackboneWorker`'s `remoteMutations` handling. A non-null
+   * `conflicts` roster replaces the Conflicts panel's roster exactly like `dispatchResolveConflict`'s
+   * reply does — `ChromePanels`' panel and `ShellSync`'s quarantine badge both derive from `state.
+   * merge.conflicts` (`selectOpenConflicts`/`selectQuarantinedConflicts`), so a REMOTE quarantined
+   * conflict lands there with zero further wiring. A `"degraded"` outcome additionally gets THIS
+   * authority's only "surfaces without being asked" channel — the same transient-notice convention
+   * {@link showMutationRejectedNotice} uses for a LOCAL rejected dispatch — since a degraded merge
+   * already applied silently and has no other passive indicator (unlike quarantine's badge). */
+  const applyRemoteMerge = useCallback(
+    (conflicts: readonly Conflict[] | null, mergeReport: MergeReport | null) => {
+      if (conflicts) dispatch({ type: "SET_CONFLICTS", value: conflicts });
+      if (!mergeReport?.worst || !mergeReport.conflict) return;
+      const flagged = (conflicts ?? []).find((conflict) => conflict.id === mergeReport.conflict);
+      if (flagged?.kind.kind !== "degraded") return;
+      const worst = flagged.messages[0];
+      const kindLabel = shellLabel("ui.conflict.degraded");
+      const body = worst ? `${shellLabel(mutationCodeLabelKey(worst.code))} — ${worst.message}` : undefined;
+      showTransientNotice(body ? `${kindLabel}: ${body}` : kindLabel, mergeReport.worst);
+    },
+    [showTransientNotice],
+  );
+  applyRemoteMergeRef.current = applyRemoteMerge;
   //#endregion 🔖️SurfaceRoles
 
   //#region 🔖️ThemeMutators
@@ -3991,6 +4682,8 @@ function FrameworkOsShellInner({
       setKeybindingOverride,
       resetKeybindingOverride,
       locks,
+      mergePolicy,
+      setMergePolicy: dispatchSetMergePolicy,
     }),
     [
       session,
@@ -4036,12 +4729,17 @@ function FrameworkOsShellInner({
       themeSaveLabel,
       setThemeSaveLabel,
       noteOsCommand,
+      mergePolicy,
+      dispatchSetMergePolicy,
     ],
   );
   settingsHostRef.current = settingsHost;
 
   const frameworkDisplayTabs = useMemo(() => createFrameworkDisplayPanelTabs(() => displayHostRef.current), [displayHost, uiLocale]);
-  const frameworkSettingsTab = useMemo(() => createFrameworkSettingsPanelTab(() => settingsHostRef.current, () => defaultAppsHostRef.current), [settingsHost, defaultAppsHost]);
+  const frameworkSettingsTab = useMemo(
+    () => createFrameworkSettingsPanelTab(() => settingsHostRef.current, () => defaultAppsHostRef.current, () => conflictsHostRef.current),
+    [settingsHost, defaultAppsHost, conflictsHost],
+  );
 
   const marketplaceHostRef = useRef<MarketplaceHostApi | null>(null);
   const marketplaceHost: MarketplaceHostApi = useMemo(
@@ -4257,6 +4955,204 @@ function FrameworkOsShellInner({
     return session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-right").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay, uiTerminology, uiLocale));
   }, [appLabelsOverlay, onAction, panelUiByKey, session, uiTerminology, uiLocale]);
 
+  //#region 🔖️CheckIn — ticket §C5 "when the user edits an artifact, the mutations are saved and
+  // checked into vcs": status pill (`#s-sync-status`), auto check-in (idle ≥ 20s or ≥ 200 uncommitted
+  // edits), explicit check-in (`#s-checkin`), checkpoint-on-close, and the post-checkpoint
+  // `TouchArtifact` relay to the space index. Placed ahead of `🧰️FooterUtilityLeaves`/`🔄️SyncLeaf`
+  // (their `useMemo`s below close over these) — everything here is additive, no existing behaviour
+  // changed for a session outside a hub-bound space.
+  /** 📌️ Reverse-lookup: `openDocumentSessionsRef` is keyed by documentId → `{session, plugin}`, never
+   * the other way around (no `ActiveSession.documentId` field exists — see `📓️w3-a-report.md`'s
+   * "Design decisions"). `session` changing is the only thing that can change which entry matches, so
+   * keying the memo on `[session]` alone is sufficient even though the ref itself isn't reactive. */
+  const currentDocumentId = useMemo(() => {
+    if (!session) return null;
+    for (const [documentId, entry] of openDocumentSessionsRef.current) {
+      if (entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId) return documentId;
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
+  // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, fed by `presencePeersJson` (set above, in
+  // `ensureBackboneWorker`'s `event.kind === "presence"` branch, keyed to `entry.session.instanceId`
+  // — i.e. the SAME open document `currentDocumentId` already resolves for THIS session, so reading it
+  // straight off `session.viewState` is already filtered to the current `(space, document, surface)`
+  // scope with no extra plumbing: a background/non-visible session's presence never lands on the one
+  // `session` this shell renders. Reshapes the wire's `{clientId, name}` pair (the SAME shape
+  // `NodeGraph`'s own `presencePeersJson` decoding already relies on) into `PresenceBar`'s
+  // `{actor, label}` — the two shells' peer identity vocabulary otherwise matches byte-for-byte
+  // (`peer:<actor>` row id, contract §C0).
+  const presencePeers = useMemo((): readonly PresencePeer[] => {
+    const json = session?.viewState.presencePeersJson;
+    if (!json) return [];
+    try {
+      const raw = JSON.parse(json) as readonly { readonly clientId: string; readonly name: string }[];
+      return raw.map((peer) => ({ actor: peer.clientId, label: peer.name || peer.clientId }));
+    } catch {
+      return [];
+    }
+  }, [session?.viewState.presencePeersJson]);
+
+  const currentSyncStatus = currentDocumentId ? (syncStatusByDocumentId[currentDocumentId] ?? null) : null;
+  const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
+
+  /** 📌️ Uncommitted-since-last-checkpoint count, derived purely from the already-tracked
+   * `historyProjection.entries` (no new wire field): every applied `mutation`-kind entry counts,
+   * reset to 0 the moment a `commitCheckpoint` (`kind: "history"`) entry is seen — mirrors
+   * `store::uncommitted_edit_ids`'s own "since the last Change" semantics closely enough for an
+   * auto-checkin heuristic (undo/redo of an already-committed edit is the one case this
+   * under/over-counts by one entry; not worth threading `applied_edit_ids` all the way to the host
+   * for this). */
+  const uncommittedEditCount = useMemo(() => {
+    const entries = Object.values(historyProjection.entries).sort((left, right) => left.seq - right.seq);
+    let pending = 0;
+    for (const entry of entries) {
+      if (entry.kind === "history" && entry.actionId === "commitCheckpoint") {
+        pending = 0;
+        continue;
+      }
+      if (entry.kind === "mutation" && entry.applied !== false) pending += 1;
+    }
+    return pending;
+  }, [historyProjection.entries]);
+
+  const isEditorSession = canCheckIn(session?.app.role);
+
+  const spaceIndexInstanceRef = useRef<Map<string, { readonly pluginId: string; readonly instanceId: number }>>(new Map());
+
+  /** 📌️ §C5 item 6 — after a successful checkpoint, `TouchArtifact` the space's `index` document so
+   * every connected user's home/space table `updated`/`updated-by` columns move. The index document
+   * is almost never the one mounted in this shell's single visible session while an artifact editor
+   * is open, so this opens (once per space, cached) a background, non-visible instance of the `s.space`
+   * editor bound to `index` and dispatches its `touchArtifact` command directly — never touches
+   * `dispatch({type:"SET_SESSION"...})`, so the user's own editor stays exactly where it is. */
+  const touchSpaceIndexArtifact = useCallback(
+    async (spaceId: string, artifactId: string) => {
+      try {
+        let handle = spaceIndexInstanceRef.current.get(spaceId);
+        let pluginEntry = handle ? loadedPlugins.find((entry) => entry.handle.pluginId === handle!.pluginId) : undefined;
+        // 🐚️ If the space index document happens to already be THIS shell's own visibly-mounted
+        // session (the user is on `/spaces/{id}` itself, RIGHT NOW — `currentDocumentId`, not a
+        // possibly-stale `openDocumentSessionsRef` entry from a space visited earlier this session
+        // and never explicitly `closeDocument`d), reuse THAT session instead of a second instance.
+        const liveEntry = currentDocumentId === S_SPACE_INDEX_DOCUMENT_ID ? openDocumentSessionsRef.current.get(S_SPACE_INDEX_DOCUMENT_ID) : undefined;
+        if (liveEntry) {
+          pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === liveEntry.plugin.pluginId);
+          handle = pluginEntry ? { pluginId: pluginEntry.handle.pluginId, instanceId: liveEntry.session.instanceId } : undefined;
+        }
+        if (!handle || !pluginEntry) {
+          pluginEntry = loadedPlugins.find((entry) => findDialectApp(entry, SPACE_INDEX_DIALECT, "editor"));
+          if (!pluginEntry) return;
+          const app = findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
+          if (!app) return;
+          const instanceId = await pluginEntry.handle.createApp(app.id);
+          handle = { pluginId: pluginEntry.handle.pluginId, instanceId };
+          spaceIndexInstanceRef.current.set(spaceId, handle);
+          const worker = ensureBackboneWorker();
+          const currentIdentity = identityRef.current;
+          const dataDir = hubEnv?.dataDir;
+          const folder: PersistenceBinding[] = dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
+          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, token: currentIdentity.sessionToken, surface: canonicalSurfaceId(SPACE_INDEX_DIALECT, "editor") }, ...folder] : folder;
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, bindings, watchExternal: true, actor: shellActorIdRef.current }) });
+          const uri = `actor://${S_SPACE_INDEX_DOCUMENT_ID}`;
+          if (pluginEntry.handle.attachBackbone) await pluginEntry.handle.attachBackbone(instanceId, uri);
+        }
+        const app = findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
+        if (!app || !pluginEntry.handle.handleCommand) return;
+        const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, app, "touchArtifact", { id: artifactId, nowMs: Date.now(), actor: identityRef.current?.userId ?? shellActorIdRef.current });
+        await pluginEntry.handle.handleCommand(handle.instanceId, wire, { activeModeId: app.defaultModeId ?? app.modes[0]?.id });
+      } catch (touchError) {
+        console.error("[DEBUG] touchSpaceIndexArtifact failed", touchError);
+      }
+    },
+    [loadedPlugins, ensureBackboneWorker, hubEnv, currentDocumentId],
+  );
+
+  /** 📌️ Fires `commitCheckpoint` through the SAME action funnel the History panel's own quick
+   * "Checkpoint" button uses (`history_command` in `🔌️plugin/component.rs`) — `message` is optional
+   * (auto check-ins pass `"auto"`), `authors` rides along for when the framework threads it (today it
+   * doesn't — `history_command` hardcodes `authors: Vec::new()`, see `📓️w3-a-report.md`'s
+   * sharedFileRequest). `checkpointDispatchedRef` lets the effect below tell "a checkpoint we asked
+   * for landed" apart from "the session just mounted with a pre-existing checkpoint". */
+  const checkpointDispatchedRef = useRef(false);
+  const dispatchCheckpoint = useCallback(
+    (message: string) => {
+      if (!session) return;
+      checkpointDispatchedRef.current = true;
+      const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
+      onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
+    },
+    [session, onAction],
+  );
+
+  // 📌️ §C5 item 6 continued — `TouchArtifact` fires once per checkpoint THIS shell asked for,
+  // detected as `historyProjection.currentCheckpointId` changing away from whatever it was the last
+  // time this effect ran (never on the initial mount/session-snapshot, which isn't a checkpoint WE
+  // just made).
+  const previousCheckpointIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const previous = previousCheckpointIdRef.current;
+    const next = historyProjection.currentCheckpointId;
+    previousCheckpointIdRef.current = next;
+    if (!checkpointDispatchedRef.current || !next || next === previous) return;
+    checkpointDispatchedRef.current = false;
+    const spaceId = openSpaceIdRef.current;
+    if (spaceId && currentDocumentId && currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) {
+      void touchSpaceIndexArtifact(spaceId, currentDocumentId);
+    }
+  }, [historyProjection.currentCheckpointId, currentDocumentId, touchSpaceIndexArtifact]);
+
+  // 📌️ §C5 item 2 — auto check-in, delegated to the framework-free `AutoCheckinScheduler`
+  // (`ShellHelpers`) so the debounce/storm-guard logic is unit-testable with fake timers without
+  // mounting this component. One scheduler instance per open editor session (rebuilt whenever
+  // `session`/`currentDocumentId` changes — a document switch is a fresh idle clock), `cancel`ed on
+  // unmount/switch (the effect's own cleanup).
+  const autoCheckinSchedulerRef = useRef<AutoCheckinScheduler | null>(null);
+  useEffect(() => {
+    if (!isEditorSession || !currentDocumentId) {
+      autoCheckinSchedulerRef.current = null;
+      return;
+    }
+    const scheduler = new AutoCheckinScheduler(() => dispatchCheckpoint("auto"));
+    autoCheckinSchedulerRef.current = scheduler;
+    return () => scheduler.cancel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditorSession, currentDocumentId, dispatchCheckpoint]);
+  useEffect(() => {
+    autoCheckinSchedulerRef.current?.notify(uncommittedEditCount);
+  }, [uncommittedEditCount]);
+
+  // 📌️ §C5 item 4 — checkpoint on close: fires from the cleanup of an effect keyed on
+  // `[session, currentDocumentId]`, so it runs the instant either changes (switching document/app —
+  // this shell keeps exactly one session mounted, so "switch away" IS "close" here) as well as on true
+  // unmount. Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
+  // time the response arrives `historyProjection` may already belong to the NEW session).
+  const uncommittedEditCountRef = useRef(uncommittedEditCount);
+  uncommittedEditCountRef.current = uncommittedEditCount;
+  useEffect(() => {
+    if (!isEditorSession || !currentDocumentId) return;
+    const documentId = currentDocumentId;
+    const spaceId = openSpaceIdRef.current;
+    return () => {
+      if (uncommittedEditCountRef.current > 0) {
+        dispatchCheckpoint("auto");
+        if (spaceId && documentId !== S_SPACE_INDEX_DOCUMENT_ID) void touchSpaceIndexArtifact(spaceId, documentId);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, currentDocumentId]);
+
+  // 📌️ §C5 item 3 — explicit check-in: `#s-checkin` opens a small message dialog (local, ephemeral
+  // state — never persisted, never survives a session switch), then dispatches with that message.
+  const [checkinDialog, setCheckinDialog] = useState<{ readonly message: string } | null>(null);
+  const submitCheckin = useCallback(() => {
+    if (!checkinDialog) return;
+    dispatchCheckpoint(checkinDialog.message.trim().length > 0 ? checkinDialog.message.trim() : "check-in");
+    setCheckinDialog(null);
+  }, [checkinDialog, dispatchCheckpoint]);
+  //#endregion 🔖️CheckIn
+
   //#region 🧰️FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
   // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
@@ -4282,7 +5178,43 @@ function FrameworkOsShellInner({
             items: [
               { id: "framework.history.undo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canUndo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "undo" })}>Undo</button> },
               { id: "framework.history.redo", label: "", control: <button type="button" disabled={isViewer || !historyProjection.canRedo} onClick={() => onAction({ controllerId: session.app.controllerId, action: "redo" })}>Redo</button> },
-              ...(isViewer ? [] : [{ id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> }]),
+              // 📌️ §C5 items 3/5 — `#s-checkin` (explicit check-in, opens a message dialog) is a
+              // SEPARATE affordance from the no-message quick "Checkpoint" button above; both are
+              // absent outright for a viewer (never disabled — a viewer role has no meaningful
+              // disabled affordance for either, mirroring undo/redo's own comment above `isViewer`).
+              // `!canCheckIn(...)` here specifically (not the local `isViewer`) so this gate is the
+              // SAME tested predicate `📓️w3-a-report.md`'s viewer-guard test exercises.
+              ...(!canCheckIn(session.app.role)
+                ? []
+                : [
+                    { id: "framework.history.checkpoint", label: "", control: <button type="button" onClick={() => onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint" })}>Checkpoint</button> },
+                    {
+                      id: "framework.history.checkin",
+                      label: "",
+                      control: checkinDialog ? (
+                        <span style={{ display: "inline-flex", gap: 4 }}>
+                          <input
+                            id="s-checkin-message"
+                            type="text"
+                            value={checkinDialog.message}
+                            placeholder={checkinMessagePlaceholderText(uiLocale)}
+                            onChange={(event) => setCheckinDialog({ message: event.target.value })}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") submitCheckin();
+                              if (event.key === "Escape") setCheckinDialog(null);
+                            }}
+                          />
+                          <button type="button" onClick={submitCheckin}>{checkinSubmitText(uiLocale)}</button>
+                          <button type="button" onClick={() => setCheckinDialog(null)}>{checkinCancelText(uiLocale)}</button>
+                        </span>
+                      ) : (
+                        <button type="button" id="s-checkin" onClick={() => setCheckinDialog({ message: "" })}>
+                          {checkinActionText(uiLocale)}
+                          {uncommittedEditCount > 0 ? ` (${uncommittedEditCount})` : ""}
+                        </button>
+                      ),
+                    },
+                  ]),
             ],
           },
           {
@@ -4299,18 +5231,25 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [appLabelsOverlay, historyProjection, onAction, session, uiLocale, uiTerminology]);
+  }, [appLabelsOverlay, checkinDialog, historyProjection, onAction, session, submitCheckin, uiLocale, uiTerminology, uncommittedEditCount]);
   //#endregion 🧰️FooterUtilityLeaves
 
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
+  const quarantinedConflicts = useMemo(() => selectQuarantinedConflicts(shellState), [shellState]);
   const frameworkSyncTab = useMemo((): PanelTabNode | null => {
     const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri) as readonly UtilityNode[];
     if (!syncUtilities.length) return null;
     const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
+    // 📌️ §C5 item 1 — the status pill lives on THIS tab's own folded chrome button (`id`/`name`,
+    // always visible in the footer's tab strip, no click needed) rather than the manual sync-card's
+    // OWN status line further below (`SyncAttachCard`'s `syncStatusLabel`, peer-owned, unchanged) —
+    // the pill reflects the CURRENT session's document (`syncPillState`, computed in `🔖️CheckIn`
+    // above from `currentDocumentId`), not just a manually-attached `remote://` override, so it
+    // updates for the common case (identity auto-bound to a hub space) too.
     return singleTreeLeaf({
-      id: "framework.sync",
+      id: "s-sync-status",
       icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.sync),
-      name: shellLabel("ui.panel.sync"),
+      name: syncPillText(syncPillState, uiLocale),
       order: 0,
       tree: {
         sections: [
@@ -4328,6 +5267,7 @@ function FrameworkOsShellInner({
                     draftPath={syncDraftPath}
                     syncUtilities={syncUtilities}
                     status={syncStatus}
+                    quarantinedConflicts={quarantinedConflicts}
                     onAction={onAction}
                     onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
                     onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
@@ -4341,7 +5281,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, uiLocale]);
+  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
   //#endregion 🔄️SyncLeaf
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -4489,6 +5429,10 @@ function FrameworkOsShellInner({
         .catch((error) => {
           if (isViewerReadOnlyFault(error)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
+            return;
+          }
+          if (isMutationRejectedFault(error)) {
+            showMutationRejectedNotice((error as SemioFaultError).fault);
             return;
           }
           console.error("Command execution failed", error);
@@ -5524,9 +6468,13 @@ function FrameworkOsShellInner({
     } else {
       items.push(navbarFillItem("footerLeadingFill"));
     }
+    // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, right-aligned in the footer, mirroring the wgpu
+    // shell's own `render_presence_bar` placement (`Shell/🧊️component.rs`) rather than hiding behind a
+    // panel tab click: presence is ambient chrome, always visible while a document is open.
+    if (!mobile) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
     if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [brand?.id, buildPanelSelectionProps, mobile, uiLocale]);
+  }, [brand?.id, buildPanelSelectionProps, mobile, presencePeers, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -5683,7 +6631,7 @@ function FrameworkOsShellInner({
               aria-live="polite"
               data-semio-transient-notice=""
               data-notice-code={transientNotice.code}
-              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 -translate-x-1/2 rounded-sm border px-double py-single text-sm shadow-sm", transientNotice.kind === "error" ? "border-destructive bg-destructive text-destructive-foreground" : "border-border bg-popover text-popover-foreground")}
+              className={cn("pointer-events-auto absolute top-workbench left-1/2 z-50 -translate-x-1/2 rounded-sm border px-double py-single text-sm shadow-sm", TRANSIENT_NOTICE_TONE_CLASS[transientNotice.kind])}
             >
               {transientNotice.message}
               <button type="button" className="ml-single underline" onClick={() => dispatch({ type: "SET_TRANSIENT_NOTICE", value: null })}>

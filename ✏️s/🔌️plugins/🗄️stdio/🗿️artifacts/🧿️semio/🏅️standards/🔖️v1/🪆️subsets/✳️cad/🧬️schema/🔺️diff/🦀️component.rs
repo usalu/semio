@@ -211,18 +211,21 @@ pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRec
 
 //#region 🔖️Apply
 impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
-    fn apply(&self, base: &SemioCadSnapshot) -> SemioCadSnapshot {
+    fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
             apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
         }
         if let Some(bd) = &self.blocks {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |block| block.name.clone(), ["blocks"])?;
             apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
         }
         if let Some(ed) = &self.entities {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |entity| entity.handle.clone(), ["entities"])?;
             apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -801,9 +804,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = SemioCadDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).expect("apply must succeed for a well-formed fixture"), b, "between(a,b).apply(a) must equal b");
         let backward = SemioCadDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).expect("apply must succeed for a well-formed fixture"), a, "between(b,a).apply(b) must equal a");
         assert!(SemioCadDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         let layers_diff = forward.layers.as_ref().expect("layers diff present");
@@ -870,28 +873,28 @@ mod tests {
 
         // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let d1 = wrap_layer_diff("keep", CadLayerDiff { color_index: Some(42), line_type: None, visible: None });
-        let mid1 = d1.apply(&base);
+        let mid1 = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
         let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CadLayer { name: "assoc".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }] }), blocks: None, entities: None };
-        let mid2 = d2.apply(&mid1);
+        let _mid2 = d2.apply(&mid1).expect("apply must succeed for a well-formed fixture");
         let d3 = wrap_layer_diff("assoc", CadLayerDiff { color_index: None, line_type: Some("DASHED".into()), visible: None });
 
         let mut left = d1.clone();
-        protocol::MutationDiff::absorb(&mut left, d2.clone());
-        protocol::MutationDiff::absorb(&mut left, d3.clone());
+        MutationDiff::absorb(&mut left, d2.clone());
+        MutationDiff::absorb(&mut left, d3.clone());
 
         let mut d2_d3 = d2;
-        protocol::MutationDiff::absorb(&mut d2_d3, d3);
+        MutationDiff::absorb(&mut d2_d3, d3);
         let mut right = d1;
-        protocol::MutationDiff::absorb(&mut right, d2_d3);
+        MutationDiff::absorb(&mut right, d2_d3);
 
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).expect("apply must succeed for a well-formed fixture"), right.apply(&base).expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
     }
 
     fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d2: SemioCadDiff) -> SemioCadDiff {
-        let sequential = d2.apply(&d1.apply(base));
+        let sequential = d2.apply(&d1.apply(base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         let mut absorbed = d1;
-        protocol::MutationDiff::absorb(&mut absorbed, d2);
-        assert_eq!(absorbed.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+        MutationDiff::absorb(&mut absorbed, d2);
+        assert_eq!(absorbed.apply(base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
         absorbed
     }
     //#endregion
@@ -903,9 +906,9 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let d = SemioCadDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b);
+        assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let d_back = SemioCadDiff::between(&b, &a);
-        assert_eq!(d_back.apply(&b), a);
+        assert_eq!(d_back.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(SemioCadDiff::between(&a, &a).is_empty());
     }
     //#endregion

@@ -1,81 +1,77 @@
-/** 🧬 Complete semantic glTF mutation vocabulary; binary ordinals are frozen at 0–27. */
-import type { NoMutation } from '../../🧬️schema/🧬️mutations/🚫️no-mutation/🟦️component.ts';
-import type { SetSnapshot } from '../../🧬️schema/🧬️mutations/📄set-snapshot/🟦️component.ts';
-import type { SetAsset } from '../../🧬️schema/🧬️mutations/🏷️set-asset/🟦️component.ts';
-import type { InsertScene } from '../../🧬️schema/🧬️mutations/➕️insert-scene/🟦️component.ts';
-import type { RemoveScene } from '../../🧬️schema/🧬️mutations/➖️remove-scene/🟦️component.ts';
-import type { SetScene } from '../../🧬️schema/🧬️mutations/✏️set-scene/🟦️component.ts';
-import type { InsertNode } from '../../🧬️schema/🧬️mutations/➕️insert-node/🟦️component.ts';
-import type { RemoveNode } from '../../🧬️schema/🧬️mutations/➖️remove-node/🟦️component.ts';
-import type { SetNode } from '../../🧬️schema/🧬️mutations/✏️set-node/🟦️component.ts';
-import type { InsertMesh } from '../../🧬️schema/🧬️mutations/➕️insert-mesh/🟦️component.ts';
-import type { RemoveMesh } from '../../🧬️schema/🧬️mutations/➖️remove-mesh/🟦️component.ts';
-import type { SetMesh } from '../../🧬️schema/🧬️mutations/✏️set-mesh/🟦️component.ts';
-import type { InsertAccessor } from '../../🧬️schema/🧬️mutations/➕️insert-accessor/🟦️component.ts';
-import type { RemoveAccessor } from '../../🧬️schema/🧬️mutations/➖️remove-accessor/🟦️component.ts';
-import type { SetAccessor } from '../../🧬️schema/🧬️mutations/✏️set-accessor/🟦️component.ts';
-import type { InsertMaterial } from '../../🧬️schema/🧬️mutations/➕️insert-material/🟦️component.ts';
-import type { RemoveMaterial } from '../../🧬️schema/🧬️mutations/➖️remove-material/🟦️component.ts';
-import type { SetMaterial } from '../../🧬️schema/🧬️mutations/✏️set-material/🟦️component.ts';
-import type { InsertBuffer } from '../../🧬️schema/🧬️mutations/➕️insert-buffer/🟦️component.ts';
-import type { RemoveBuffer } from '../../🧬️schema/🧬️mutations/➖️remove-buffer/🟦️component.ts';
-import type { SetBuffer } from '../../🧬️schema/🧬️mutations/✏️set-buffer/🟦️component.ts';
-import type { InsertAnimation } from '../../🧬️schema/🧬️mutations/➕️insert-animation/🟦️component.ts';
-import type { RemoveAnimation } from '../../🧬️schema/🧬️mutations/➖️remove-animation/🟦️component.ts';
-import type { SetAnimation } from '../../🧬️schema/🧬️mutations/✏️set-animation/🟦️component.ts';
-import type { TransformNode } from '../../🧬️schema/🧬️mutations/🔄️transform-node/🟦️component.ts';
-import type { ReparentNode } from '../../🧬️schema/🧬️mutations/🌳️reparent-node/🟦️component.ts';
-import type { BindNodeMesh } from '../../🧬️schema/🧬️mutations/🔗️bind-node-mesh/🟦️component.ts';
-import type { BindPrimitiveMaterial } from '../../🧬️schema/🧬️mutations/🔗️bind-primitive-material/🟦️component.ts';
-import type { GltfDiff } from '../../🧬️schema/🔺️diff/🟦️component.ts';
+/** 🧭 Open glTF mutation descriptor registry and generic envelopes. */
+import type { GltfSnapshot } from '../../🧬️schema/📸️snapshot/🟦️component.ts';
+import { gltfMutationLeafDescriptors, type GltfMutationLeafApplication, type GltfMutationLeafDescriptor, type GltfMutationLeafError, type GltfMutationLeafPlan, type GltfMutationLeafResult } from '../../🧬️schema/🧬️mutations/🟦️component.ts';
 
-export interface GltfMutationRejection { code: string; path: string; detail: string }
-/** 🛂 Application is total and typed: rejection never degrades to an empty diff. */
-export type GltfMutationApplication = { accepted: true; diff: GltfDiff } | { accepted: false; rejection: GltfMutationRejection };
-export type GltfTouchedRegion = 'asset' | 'scene' | 'scenes' | 'nodes' | 'meshes' | 'accessors' | 'bufferViews' | 'buffers' | 'bufferBytes' | 'materials' | 'textures' | 'images' | 'samplers' | 'skins' | 'animations' | 'cameras' | 'extensionsUsed' | 'extensionsRequired' | 'extensions' | 'extras' | 'sourceForm';
-/** ↩️ `inverse` restores the exact base and `diff` is the accepted sparse state transition. */
-export interface GltfMutationDerivation { mutation: GltfMutation; diff: GltfDiff; inverse: GltfMutation; touchedPaths: string[]; touchedRegions: GltfTouchedRegion[]; referenceRules: GltfReferenceRule[] }
-export interface GltfReferenceRule { family: 'scene' | 'node' | 'mesh' | 'accessor' | 'material' | 'buffer'; pathPattern: string; validate: boolean; remapOnInsert: boolean; remapOnRemove: boolean }
-/** 🔗 Includes primitive attributes, indices, and every morph-target semantic accessor reference. */
-export const GLTF_ACCESSOR_REFERENCE_RULES: readonly GltfReferenceRule[] = [
-  { family: 'accessor', pathPattern: 'document/meshes/{mesh}/primitives/{primitive}/attributes/{semantic}', validate: true, remapOnInsert: true, remapOnRemove: true },
-  { family: 'accessor', pathPattern: 'document/meshes/{mesh}/primitives/{primitive}/targets/{target}/{semantic}', validate: true, remapOnInsert: true, remapOnRemove: true },
-  { family: 'accessor', pathPattern: 'document/meshes/{mesh}/primitives/{primitive}/indices', validate: true, remapOnInsert: true, remapOnRemove: true },
-  { family: 'accessor', pathPattern: 'document/skins/{skin}/inverseBindMatrices', validate: true, remapOnInsert: true, remapOnRemove: true },
-  { family: 'accessor', pathPattern: 'document/animations/{animation}/samplers/{sampler}/{input|output}', validate: true, remapOnInsert: true, remapOnRemove: true },
-];
-export const GLTF_STRUCTURAL_REFERENCE_RULES: readonly GltfReferenceRule[] = [
-  { family: 'node', pathPattern: 'incomingInsertNode/children/{slot}', validate: true, remapOnInsert: true, remapOnRemove: false },
-  { family: 'buffer', pathPattern: 'document/buffers|snapshot/buffers', validate: true, remapOnInsert: true, remapOnRemove: true },
-];
+export const GLTF_MUTATION_MAX_COMMAND_ID_BYTES = 160;
+export const GLTF_MUTATION_MAX_PAYLOAD_BYTES = 64 * 1024;
+export const GLTF_MUTATION_MAX_TOUCHED_PATHS = 64;
+export const GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES = 512;
+const U32_MAX = 0xffff_ffff;
+const utf8 = new TextEncoder();
+const isU32 = (value: number): boolean => Number.isInteger(value) && value > 0 && value <= U32_MAX;
+const reject = (code: string, path: string, detail: string): GltfMutationRejection => ({ code, path, detail });
+const accepted = <T>(value: T): GltfMutationResult<T> => ({ accepted: true, value });
+const rejected = <T>(rejection: GltfMutationRejection): GltfMutationResult<T> => ({ accepted: false, rejection });
 
-export type GltfMutation =
-  | ({ mutation: 'noMutation' } & NoMutation)
-  | ({ mutation: 'setSnapshot' } & SetSnapshot)
-  | ({ mutation: 'setAsset' } & SetAsset)
-  | ({ mutation: 'insertScene' } & InsertScene)
-  | ({ mutation: 'removeScene' } & RemoveScene)
-  | ({ mutation: 'setScene' } & SetScene)
-  | ({ mutation: 'insertNode' } & InsertNode)
-  | ({ mutation: 'removeNode' } & RemoveNode)
-  | ({ mutation: 'setNode' } & SetNode)
-  | ({ mutation: 'insertMesh' } & InsertMesh)
-  | ({ mutation: 'removeMesh' } & RemoveMesh)
-  | ({ mutation: 'setMesh' } & SetMesh)
-  | ({ mutation: 'insertAccessor' } & InsertAccessor)
-  | ({ mutation: 'removeAccessor' } & RemoveAccessor)
-  | ({ mutation: 'setAccessor' } & SetAccessor)
-  | ({ mutation: 'insertMaterial' } & InsertMaterial)
-  | ({ mutation: 'removeMaterial' } & RemoveMaterial)
-  | ({ mutation: 'setMaterial' } & SetMaterial)
-  | ({ mutation: 'insertBuffer' } & InsertBuffer)
-  | ({ mutation: 'removeBuffer' } & RemoveBuffer)
-  | ({ mutation: 'setBuffer' } & SetBuffer)
-  | ({ mutation: 'insertAnimation' } & InsertAnimation)
-  | ({ mutation: 'removeAnimation' } & RemoveAnimation)
-  | ({ mutation: 'setAnimation' } & SetAnimation)
-  | ({ mutation: 'transformNode' } & TransformNode)
-  | ({ mutation: 'reparentNode' } & ReparentNode)
-  | ({ mutation: 'bindNodeMesh' } & BindNodeMesh)
-  | ({ mutation: 'bindPrimitiveMaterial' } & BindPrimitiveMaterial);
+export type GltfMutationPhase = 'mutation' | 'diff' | 'inverse';
+export interface GltfMutationRejection { readonly code: string; readonly path: string; readonly detail: string }
+export type GltfMutationResult<T> = { readonly accepted: true; readonly value: T } | { readonly accepted: false; readonly rejection: GltfMutationRejection };
+export interface GltfMutation { readonly commandId: string; readonly version: number; readonly phase: 'mutation' | 'inverse'; readonly payload: string }
+export interface GltfDiffEnvelope { readonly commandId: string; readonly version: number; readonly phase: 'diff' | 'inverse'; readonly payload: string; readonly touchedPaths: readonly string[] }
 
+const leaf = <T>(result: GltfMutationLeafResult<T>): GltfMutationResult<T> => result.accepted ? accepted(result.value) : rejected(result.rejection);
+
+export class GltfMutationDescriptorRegistry {
+  readonly #descriptors = new Map<string, GltfMutationLeafDescriptor>();
+
+  constructor(descriptors: readonly GltfMutationLeafDescriptor[]) {
+    for (const descriptor of descriptors) {
+      if (!descriptor.commandId || utf8.encode(descriptor.commandId).length > GLTF_MUTATION_MAX_COMMAND_ID_BYTES || !isU32(descriptor.version)) throw new Error('invalid glTF mutation descriptor');
+      if (this.#descriptors.has(descriptor.commandId)) throw new Error(`duplicate glTF mutation descriptor ${descriptor.commandId}`);
+      this.#descriptors.set(descriptor.commandId, descriptor);
+    }
+  }
+
+  resolve(commandId: string, version: number): GltfMutationResult<GltfMutationLeafDescriptor> {
+    const descriptor = this.#descriptors.get(commandId);
+    if (!descriptor) return rejected(reject('gltf.mutation.unknown-command', 'commandId', 'command is not registered'));
+    return descriptor.version === version ? accepted(descriptor) : rejected(reject('gltf.mutation.stale-version', 'version', 'command version does not match its descriptor'));
+  }
+
+  commandIds(): readonly string[] { return [...this.#descriptors.keys()]; }
+}
+
+export const gltfMutationDescriptorRegistry = new GltfMutationDescriptorRegistry(gltfMutationLeafDescriptors);
+export const registeredGltfMutationCommandIds = (): readonly string[] => gltfMutationDescriptorRegistry.commandIds();
+
+const validateEnvelope = (envelope: { readonly commandId: string; readonly version: number; readonly payload: string }): GltfMutationRejection | undefined => {
+  if (!envelope.commandId || utf8.encode(envelope.commandId).length > GLTF_MUTATION_MAX_COMMAND_ID_BYTES) return reject('gltf.mutation.budget-exceeded', 'commandId', 'command id exceeds its byte budget');
+  if (!isU32(envelope.version)) return reject('gltf.mutation.invalid-version', 'version', 'version must be a nonzero u32');
+  return typeof envelope.payload === 'string' && utf8.encode(envelope.payload).length <= GLTF_MUTATION_MAX_PAYLOAD_BYTES ? undefined : reject('gltf.mutation.budget-exceeded', 'payload', 'payload exceeds its byte budget');
+};
+
+export const validateGltfMutationEnvelope = (envelope: GltfMutation): GltfMutationRejection | undefined => {
+  const invalid = validateEnvelope(envelope);
+  if (invalid) return invalid;
+  const descriptor = gltfMutationDescriptorRegistry.resolve(envelope.commandId, envelope.version);
+  return descriptor.accepted ? undefined : descriptor.rejection;
+};
+
+export const planGltfMutation = (envelope: GltfMutation, base: GltfSnapshot): GltfMutationResult<GltfMutationLeafPlan> => {
+  const invalid = validateEnvelope(envelope);
+  if (invalid) return rejected(invalid);
+  const descriptor = gltfMutationDescriptorRegistry.resolve(envelope.commandId, envelope.version);
+  if (!descriptor.accepted) return descriptor;
+  return leaf(envelope.phase === 'mutation' ? descriptor.value.plan(envelope.payload, base) : descriptor.value.planInverse(envelope.payload, base));
+};
+
+export const applyGltfMutationEnvelope = (envelope: GltfDiffEnvelope, base: GltfSnapshot): GltfMutationResult<GltfMutationLeafApplication> => {
+  const invalid = validateEnvelope(envelope);
+  if (invalid) return rejected(invalid);
+  if (envelope.touchedPaths.length > GLTF_MUTATION_MAX_TOUCHED_PATHS || envelope.touchedPaths.some(path => utf8.encode(path).length > GLTF_MUTATION_MAX_TOUCHED_PATH_BYTES)) return rejected(reject('gltf.mutation.budget-exceeded', 'touchedPaths', 'touched paths exceed their byte budget'));
+  const descriptor = gltfMutationDescriptorRegistry.resolve(envelope.commandId, envelope.version);
+  if (!descriptor.accepted) return descriptor;
+  const applied = leaf(envelope.phase === 'diff' ? descriptor.value.applyDiff(envelope.payload, base) : descriptor.value.applyInverse(envelope.payload, base));
+  if (!applied.accepted) return applied;
+  return JSON.stringify(applied.value.touchedPaths) === JSON.stringify(envelope.touchedPaths) ? applied : rejected(reject('gltf.mutation.invalid-touched-paths', 'touchedPaths', 'envelope paths do not match the descriptor payload'));
+};

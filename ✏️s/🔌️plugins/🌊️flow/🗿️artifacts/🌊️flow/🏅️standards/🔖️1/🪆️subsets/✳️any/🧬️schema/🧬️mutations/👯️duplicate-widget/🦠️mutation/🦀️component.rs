@@ -32,9 +32,6 @@ impl CompositeMutationKind<FlowSnapshot, FlowMutation> for DuplicateWidget {
     fn target(&self) -> Vec<String> {
         vec![self.source_id.clone(), self.new_id.clone()]
     }
-    fn validate(&self, base: &FlowSnapshot) -> Result<(), String> {
-        super::plan::precondition(self, base)
-    }
 }
 //#endregion 👯️DuplicateWidget
 

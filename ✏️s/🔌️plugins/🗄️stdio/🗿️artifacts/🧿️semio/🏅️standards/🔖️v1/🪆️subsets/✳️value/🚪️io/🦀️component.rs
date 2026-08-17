@@ -134,7 +134,7 @@ pub mod derived_composition {
     //#region 🧪️Tests
     #[cfg(test)]
     mod tests {
-        use super::*;
+        
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-facet conformance laws (grammar-recipe.md §4 deliverable 7): grammar/protocol
@@ -146,7 +146,7 @@ pub mod derived_composition {
         /// scope), same convention `json`'s `⚙️engine/🦀️component.rs` and `flow`'s own
         /// `🎹️composer/🦀️component.rs` use.
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

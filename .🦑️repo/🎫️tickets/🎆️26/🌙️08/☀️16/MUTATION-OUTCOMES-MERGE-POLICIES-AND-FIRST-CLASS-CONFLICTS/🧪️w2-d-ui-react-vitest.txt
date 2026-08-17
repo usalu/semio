@@ -1,0 +1,159 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 📦️index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/ui-react| 📦️index.tsx (520 tests | 10 failed) 5144ms
+     × builds parallel orthographic rays via isOrthographicCamera duck-typing (not instanceof) 40ms
+     × gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment 4ms
+     × dismisses on outside pointerdown 6ms
+     × open chrome-hosted top-right panel reserves trailing navbar end space on the cap row only when trailing elements exist 6ms
+     × renders default icons before tree section and item labels when icon is omitted 3ms
+     × renders parent-level vertical guides through expanded last-sibling branches 7ms
+     × renders expand affordance only for rows with children 1ms
+     × renders file node kind vendored icons instead of avatars for schema icon ids 0ms
+     × renders per-row extension icons for kit files 0ms
+     × invokes onRowDoubleClick on double-click 22ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > UnifiedGumball math > builds parallel orthographic rays via isOrthographicCamera duck-typing (not instanceof)
+TypeError: camera.updateMatrixWorld is not a function
+ ❯ gumballRayFromNdc ../../../../🧱️elements/🎬️Scene/ð¦ï¸component.tsx:1047:10
+ ❯ ð¦ï¸index.tsx:12110:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > icon hover animations > gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment
+AssertionError: missing [data-icon="beam"] rule: expected null to be truthy
+
+- Expected:
+true
+
++ Received:
+null
+
+ ❯ ð¦ï¸index.tsx:12325:65
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > CanvasPickMenu > dismisses on outside pointerdown
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ ð¦ï¸index.tsx:13065:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > Shell components > open chrome-hosted top-right panel reserves trailing navbar end space on the cap row only when trailing elements exist
+AssertionError: expected '99.2px' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ 99.2px
+
+ ❯ ð¦ï¸index.tsx:13424:53
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > tree helpers > renders default icons before tree section and item labels when icon is omitted
+AssertionError: expected 2 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ ð¦ï¸index.tsx:17784:67
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > tree helpers > renders parent-level vertical guides through expanded last-sibling branches
+AssertionError: expected [] to include '6.5'
+ ❯ ð¦ï¸index.tsx:17864:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > VirtualFileSystem > renders expand affordance only for rows with children
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > VirtualFileSystem > renders file node kind vendored icons instead of avatars for schema icon ids
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > VirtualFileSystem > renders per-row extension icons for kit files
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+ ❯ renderElement ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:15
+ ❯ retryNode ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ renderNodeDestructive ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:11
+ ❯ finishFunctionComponent ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:13
+ ❯ renderElement ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:11
+ ❯ retryNode ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:21
+ ❯ performWork ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:17
+ ❯ startWork ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:7
+ ❯ renderToStringImpl ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:7
+ ❯ process.env.NODE_ENV.exports.renderToStaticMarkup ../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:9861:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  |@semio-tech/ui-react| 📦️index.tsx > VirtualFileSystem > invokes onRowDoubleClick on double-click
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+
+Check the render method of `VirtualFileSystem`.
+ ❯ createFiberFromTypeAndProps ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:5021:28
+ ❯ createFiberFromElement ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:5035:14
+ ❯ reconcileChildFibersImpl ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:6920:31
+ ❯ ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:7098:33
+ ❯ reconcileChildren ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:9701:13
+ ❯ updateFunctionComponent ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:10182:7
+ ❯ beginWork ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync ../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 2 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: event.target?.closest is not a function
+ ❯ ../../../../🧱️elements/↕️Resizable/ð¦ï¸component.tsx:87:56
+ ❯ callTheUserObjectsOperation ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30
+ ❯ innerInvokeEventListeners ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25
+ ❯ invokeEventListeners ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3
+ ❯ EventTargetImpl._dispatch ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:217:9
+ ❯ EventTargetImpl.dispatchEvent ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17
+ ❯ dispatchEvent ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34
+ ❯ ð¦ï¸index.tsx:13064:14
+ ❯ ../../../../../../../node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+This error originated in "📦️index.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "dismisses on outside pointerdown". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+ ❯ Object.exports.convert ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/Node.js:25:9
+ ❯ HTMLDivElement.contains ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/Node.js:258:28
+ ❯ onPointerDown ð¦ï¸index.tsx:866:17
+ ❯ callTheUserObjectsOperation ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30
+ ❯ innerInvokeEventListeners ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25
+ ❯ invokeEventListeners ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3
+ ❯ EventTargetImpl._dispatch ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:217:9
+ ❯ EventTargetImpl.dispatchEvent ../../../../../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17
+ ❯ dispatchEvent ../../../../../../../node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34
+ ❯ ð¦ï¸index.tsx:13064:14
+
+This error originated in "📦️index.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "dismisses on outside pointerdown". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 510 passed (520)
+     Errors  2 errors
+   Start at  22:22:20
+   Duration  14.42s (transform 2.72s, setup 195ms, import 8.02s, tests 5.14s, environment 820ms)
+

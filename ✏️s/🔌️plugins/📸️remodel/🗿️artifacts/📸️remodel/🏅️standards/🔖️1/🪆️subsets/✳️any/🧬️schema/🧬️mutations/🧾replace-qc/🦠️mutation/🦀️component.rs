@@ -24,7 +24,7 @@ pub fn replace_qc(qc: Option<QcReportSnapshot>) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceQc {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "qc", kind: "replace-qc", record: "ReplacedQc" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

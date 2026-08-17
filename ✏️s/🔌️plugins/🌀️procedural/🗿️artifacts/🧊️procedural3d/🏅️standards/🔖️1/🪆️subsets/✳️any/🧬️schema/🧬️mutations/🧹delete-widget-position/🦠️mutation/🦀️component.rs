@@ -19,7 +19,7 @@ pub struct DeleteWidgetPosition {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for DeleteWidgetPosition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget-position", kind: "delete-widget-position", record: "DeletedWidgetPosition" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::delete_widget_position::diff::diff(self, base)
     }
 

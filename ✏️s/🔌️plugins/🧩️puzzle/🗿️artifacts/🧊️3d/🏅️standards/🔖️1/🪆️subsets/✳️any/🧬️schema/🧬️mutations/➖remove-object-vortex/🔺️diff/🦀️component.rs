@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapsh
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "object-vortex", payload.object_id), vec![payload.object_id.clone()]);
     };
     if !object.vortices.iter().any(|vortex| vortex.id == payload.vortex_id) {
-        return Puzzle3dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Vortex \"{}\" not found on object \"{}\".", payload.vortex_id, payload.object_id), vec![payload.vortex_id.clone()]);
     }
     let mut next = object.clone();
     next.vortices.retain(|vortex| vortex.id != payload.vortex_id);

@@ -17,7 +17,7 @@ pub use crate::artifacts::puzzle3d::schema::BrushPlacePayload;
 /// 🧠️ A puzzle-5d brush/fill precompute session — a thin JSON-string facade over the 3d artifact's
 /// `Puzzle3dPrecomputeSession`, which owns the actual collision/placement solver.
 pub struct Puzzle5dPrecomputeSession {
-    inner: crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession,
+    inner: crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession,
 }
 
 impl Default for Puzzle5dPrecomputeSession {
@@ -28,7 +28,7 @@ impl Default for Puzzle5dPrecomputeSession {
 
 impl Puzzle5dPrecomputeSession {
     pub fn new() -> Self {
-        Self { inner: crate::apps::puzzle3d::precompute::Puzzle3dPrecomputeSession::new() }
+        Self { inner: crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession::new() }
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {

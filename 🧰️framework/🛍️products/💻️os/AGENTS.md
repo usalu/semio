@@ -6,11 +6,13 @@ os is a cooperative pseudo operating system with version control, collaboration,
 
 # 🔌 Plugin
 
-A plugin is a manifest and a collection of apps.
+A plugin is a manifest and a collection of artifacts.
 
-# 🎛️ App
+# 🎭 Surface
 
-An app has a engine, 
+A surface is a role-carrying app over one artifact subset: an editor (mutation-capable) or a viewer
+(read-only). Every artifact subset registers one of each. A surface is addressed as
+`<kind>@<standard>/<subset>#<role>`.
 
 # 🛂 Manifest
 

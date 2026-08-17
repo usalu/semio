@@ -263,8 +263,11 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> Vec<Puzzle3dMutation> {
@@ -277,12 +280,15 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 // boundary round-trips through the typed `Puzzle3dSnapshot` (`serde_json::from_value`/`to_value`)
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
-    fn apply(&self, projection: &Value) -> Value {
-        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).unwrap_or_default();
-        let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base);
-        serde_json::to_value(next).unwrap_or_else(|_| projection.clone())
+    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+        let base: Puzzle3dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
+        })?;
+        let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        serde_json::to_value(next).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
@@ -356,10 +362,10 @@ impl store::ArtifactPack for Puzzle3dPlaySnapshot {
 }
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> Puzzle3dPlaySnapshot {
-        Puzzle3dPlaySnapshot(MutationDiff::<Value>::apply(self, &projection.0))
+    fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
+        MutationDiff::<Value>::apply(self, &projection.0)
+            .map(Puzzle3dPlaySnapshot)
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
     }
@@ -374,6 +380,27 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 
     fn inverse(&self, projection: &Puzzle3dPlaySnapshot) -> Vec<Puzzle3dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
+    }
+}
+
+/// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
+/// `SemanticMutation<Puzzle3dSnapshot>` impl above never actually reads `Puzzle3dSnapshot` data in
+/// any of the four), so this bridges the same vocabulary onto `Puzzle3dPlaySnapshot` by forwarding
+/// straight through — the `SemanticMutation` twin of the `Mutation<Puzzle3dPlaySnapshot>` bridge
+/// immediately above, needed so `.editor_mutation_roster::<Puzzle3dPlayApp>()` can register this
+/// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
+impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds()
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::semantics(self)
+    }
+    fn label(&self) -> String {
+        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(self)
+    }
+    fn target(&self) -> Vec<String> {
+        <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::target(self)
     }
 }
 //#endregion 🔖️PlaySnapshot
@@ -412,11 +439,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }

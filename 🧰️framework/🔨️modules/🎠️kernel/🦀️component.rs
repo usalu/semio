@@ -650,6 +650,10 @@ pub struct WindowOutput {
 //#endregion 🔖️Window
 
 //#region 🔖️MergeStrategy
+// 🎞️ `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` C10/W0: the CRDT-era
+// per-artifact-kind merge projection is gone — CLAUDE.md forbids CRDTs and the projection had no
+// remaining callers; merge behavior is now the single repo-wide `MergePolicy` setting (C3).
+// `ArtifactMergeKind` itself stays: it is still a real artifact-kind tag, just without that reading.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ArtifactMergeKind {
@@ -658,30 +662,5 @@ pub enum ArtifactMergeKind {
     TextSequence,
     TombstonedGraph,
     ContentAddressedBlob,
-}
-
-// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::MergeStrategyKind` has identical variants but no
-// `#[serde(rename_all = "camelCase")]` — left local and unchanged for the same wire-format
-// -preservation reason documented on `kernel::HybridLogicalTimestamp` above.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum MergeStrategyKind {
-    LwwRegister,
-    OrderedSequence,
-    TextSequence,
-    TombstonedGraphSet,
-    ContentAddressedBlob,
-}
-
-impl ArtifactMergeKind {
-    pub fn merge_strategy(&self) -> MergeStrategyKind {
-        match self {
-            ArtifactMergeKind::PlainRecord => MergeStrategyKind::LwwRegister,
-            ArtifactMergeKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
-            ArtifactMergeKind::TextSequence => MergeStrategyKind::TextSequence,
-            ArtifactMergeKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
-            ArtifactMergeKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
-        }
-    }
 }
 //#endregion 🔖️MergeStrategy

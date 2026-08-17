@@ -22,112 +22,145 @@ fn apply_identified_delta<T: Clone>(
     patched: &[(String, Option<T>)],
     reordered: &Option<Vec<String>>,
     id_of: impl Fn(&T) -> &str,
-) -> Vec<T> {
+) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
+    let mut seen = std::collections::HashSet::new();
     for id in removed {
-        next.retain(|item| id_of(item) != id);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
+        }
+        let position = next.iter().position(|item| id_of(item) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
+        })?;
+        next.remove(position);
     }
+    seen.clear();
     for item in added {
-        if let Some(pos) = next.iter().position(|entry| id_of(entry) == id_of(item)) {
-            next[pos] = item.clone();
-        } else {
-            next.push(item.clone());
+        let id = id_of(item);
+        if !seen.insert(id.to_string()) || next.iter().any(|entry| id_of(entry) == id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added", id]));
         }
+        next.push(item.clone());
     }
+    seen.clear();
     for (id, replacement) in patched {
-        if let (Some(pos), Some(value)) = (next.iter().position(|entry| id_of(entry) == id), replacement) {
-            next[pos] = value.clone();
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
+        let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
+        })?;
+        let value = replacement.as_ref().ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "item patch has no replacement").at(["patched", id.as_str()])
+        })?;
+        let replacement_id = id_of(value);
+        if replacement_id != id && next.iter().enumerate().any(|(index, entry)| index != position && id_of(entry) == replacement_id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched item identity already exists").at(["patched", replacement_id]));
+        }
+        next[position] = value.clone();
     }
     if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (id_of(&item).to_string(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
+        if order.len() != next.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
+        }
+        seen.clear();
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
+            if !seen.insert(id.clone()) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item appears more than once in order").at(["reordered", id.as_str()]));
+            }
+            if !next.iter().any(|entry| id_of(entry) == id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]));
             }
         }
-        ordered.extend(by_id.into_values());
+        let mut ordered = Vec::with_capacity(next.len());
+        for id in order {
+            let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
+            })?;
+            ordered.push(next.remove(position));
+        }
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
-pub fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> Vec<Puzzle5dPart> {
+pub fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dPart>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(parts, &delta.removed, &delta.added, &patched, &delta.reordered, |p| &p.id)
 }
 
-pub fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> Vec<Puzzle5dFastener> {
+pub fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dFastener>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(fasteners, &delta.removed, &delta.added, &patched, &delta.reordered, |f| &f.id)
 }
 
 impl Puzzle5dDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> Puzzle5dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(domain) = &self.domain { next.domain = domain.clone(); }
-        if let Some(label) = &self.label { next.label = label.clone(); }
-        if let Some(meta) = &self.meta { next.meta = meta.clone(); }
-        if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
-        if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
-        if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
-        if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta); }
-        if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta); }
-        if let Some(list) = &self.selected_part_ids { next.selected_part_ids = list.values.clone(); }
-        if let Some(list) = &self.selected_grip_ids { next.selected_grip_ids = list.values.clone(); }
-        if let Some(list) = &self.selected_fastener_ids { next.selected_fastener_ids = list.values.clone(); }
-        if let Some(value) = &self.active_utility_id { next.active_utility_id = value.clone(); }
-        if let Some(value) = self.camera2d_x { next.camera2d_x = value; }
-        if let Some(value) = self.camera2d_y { next.camera2d_y = value; }
-        if let Some(value) = self.camera2d_zoom { next.camera2d_zoom = value; }
-        if let Some(value) = self.camera3d_position_x { next.camera3d_position_x = value; }
-        if let Some(value) = self.camera3d_position_y { next.camera3d_position_y = value; }
-        if let Some(value) = self.camera3d_position_z { next.camera3d_position_z = value; }
-        if let Some(value) = self.camera3d_target_x { next.camera3d_target_x = value; }
-        if let Some(value) = self.camera3d_target_y { next.camera3d_target_y = value; }
-        if let Some(value) = self.camera3d_target_z { next.camera3d_target_z = value; }
-        if let Some(value) = self.camera3d_zoom { next.camera3d_zoom = value; }
-        if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
-        if let Some(value) = self.grid_snap_enabled { next.grid_snap_enabled = value; }
-        if let Some(value) = self.grid_factor { next.grid_factor = value; }
-        if let Some(value) = self.suggestion_offset { next.suggestion_offset = value; }
-        if let Some(value) = self.overlap_budget { next.overlap_budget = value; }
-        if let Some(value) = self.fill_count { next.fill_count = value; }
-        if let Some(value) = self.brush_candidate_index { next.brush_candidate_index = value; }
-        if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
-        if let Some(value) = &self.runtime_extras_json { next.runtime_extras_json = value.clone(); }
-        if let Some(value) = &self.hovered_part_id { next.hovered_part_id = value.clone(); }
-        if let Some(value) = self.preview_seq { next.preview_seq = value; }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(domain) = &self.domain { next.domain = domain.clone(); }
+            if let Some(label) = &self.label { next.label = label.clone(); }
+            if let Some(meta) = &self.meta { next.meta = meta.clone(); }
+            if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
+            if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
+            if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
+            if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta).map_err(|error| error.under(["parts"]))?; }
+            if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta).map_err(|error| error.under(["fasteners"]))?; }
+            if let Some(list) = &self.selected_part_ids { next.selected_part_ids = list.values.clone(); }
+            if let Some(list) = &self.selected_grip_ids { next.selected_grip_ids = list.values.clone(); }
+            if let Some(list) = &self.selected_fastener_ids { next.selected_fastener_ids = list.values.clone(); }
+            if let Some(value) = &self.active_utility_id { next.active_utility_id = value.clone(); }
+            if let Some(value) = self.camera2d_x { next.camera2d_x = value; }
+            if let Some(value) = self.camera2d_y { next.camera2d_y = value; }
+            if let Some(value) = self.camera2d_zoom { next.camera2d_zoom = value; }
+            if let Some(value) = self.camera3d_position_x { next.camera3d_position_x = value; }
+            if let Some(value) = self.camera3d_position_y { next.camera3d_position_y = value; }
+            if let Some(value) = self.camera3d_position_z { next.camera3d_position_z = value; }
+            if let Some(value) = self.camera3d_target_x { next.camera3d_target_x = value; }
+            if let Some(value) = self.camera3d_target_y { next.camera3d_target_y = value; }
+            if let Some(value) = self.camera3d_target_z { next.camera3d_target_z = value; }
+            if let Some(value) = self.camera3d_zoom { next.camera3d_zoom = value; }
+            if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
+            if let Some(value) = self.grid_snap_enabled { next.grid_snap_enabled = value; }
+            if let Some(value) = self.grid_factor { next.grid_factor = value; }
+            if let Some(value) = self.suggestion_offset { next.suggestion_offset = value; }
+            if let Some(value) = self.overlap_budget { next.overlap_budget = value; }
+            if let Some(value) = self.fill_count { next.fill_count = value; }
+            if let Some(value) = self.brush_candidate_index { next.brush_candidate_index = value; }
+            if let Some(value) = &self.lod_mode { next.lod_mode = value.clone(); }
+            if let Some(value) = &self.locale { next.locale = value.clone(); }
+            if let Some(value) = &self.runtime_extras_json { next.runtime_extras_json = value.clone(); }
+            if let Some(value) = &self.hovered_part_id { next.hovered_part_id = value.clone(); }
+            if let Some(value) = self.preview_seq { next.preview_seq = value; }
+            next
+        })
     }
 }
 
 impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
-    fn apply(&self, snapshot: &Puzzle5dSnapshot) -> Puzzle5dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(domain) = &self.domain { next.domain = domain.clone(); }
-        if let Some(label) = &self.label { next.label = label.clone(); }
-        if let Some(meta) = &self.meta { next.meta = meta.clone(); }
-        if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
-        if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
-        if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
-        if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta); }
-        if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta); }
-        next
+    fn apply(&self, snapshot: &Puzzle5dSnapshot) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(domain) = &self.domain { next.domain = domain.clone(); }
+            if let Some(label) = &self.label { next.label = label.clone(); }
+            if let Some(meta) = &self.meta { next.meta = meta.clone(); }
+            if let Some(catalogs) = &self.kind_catalogs { next.kind_catalogs = catalogs.clone(); }
+            if let Some(extra) = &self.kind_catalogs_extra { next.kind_catalogs_extra = extra.clone(); }
+            if let Some(list) = &self.kind_compatibility { next.kind_compatibility = list.values.clone(); }
+            if let Some(delta) = &self.parts { next.parts = apply_parts_delta(&next.parts, delta).map_err(|error| error.under(["parts"]))?; }
+            if let Some(delta) = &self.fasteners { next.fasteners = apply_fasteners_delta(&next.fasteners, delta).map_err(|error| error.under(["fasteners"]))?; }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() { *self = other; return; }
         macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }
@@ -158,4 +191,3 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
     }
 }
 //#endregion 🔖️Apply
-

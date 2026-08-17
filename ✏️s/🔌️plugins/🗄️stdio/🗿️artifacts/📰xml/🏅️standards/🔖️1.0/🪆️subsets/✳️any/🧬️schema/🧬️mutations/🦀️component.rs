@@ -7,8 +7,6 @@ use crate::artifacts::xml::schema::diff::{
 use crate::artifacts::xml::schema::diff::{diff_set_snapshot, XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlChildAdded, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-#[cfg(test)]
-use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -97,10 +95,15 @@ pub enum XmlMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`
 /// -- the diff is the single semantics source, never a separate imperative apply path.
-pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> XmlDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) -> protocol::MutationOutcome<XmlDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -108,8 +111,8 @@ pub fn apply_xml_mutation(snapshot: &mut XmlSnapshot, mutation: &XmlMutation) ->
 impl Mutation<XmlSnapshot> for XmlMutation {
     type Diff = XmlDiff;
 
-    fn diff(&self, base: &XmlSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             XmlMutation::NoMutation => XmlDiff::default(),
             XmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             XmlMutation::SetDeclaration { declaration } => XmlDiff { prolog: None, declaration: Some(declaration.clone()), doctype: None, root: None },
@@ -142,7 +145,7 @@ impl Mutation<XmlSnapshot> for XmlMutation {
                 diff_at_path(&path.0, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: Some(attrs_diff), children: None }))
             }
             XmlMutation::SetText { path, text } => diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }),
-        }
+        })
     }
 
     fn inverse(&self, base: &XmlSnapshot) -> Vec<Self> {
@@ -253,7 +256,7 @@ fn parse_xml_mutation(line: &str) -> Result<XmlMutation, String> {
     }
 }
 
-impl protocol::OpText for XmlMutation {
+impl OpText for XmlMutation {
     fn print_op(&self) -> String {
         print_xml_mutation(self)
     }

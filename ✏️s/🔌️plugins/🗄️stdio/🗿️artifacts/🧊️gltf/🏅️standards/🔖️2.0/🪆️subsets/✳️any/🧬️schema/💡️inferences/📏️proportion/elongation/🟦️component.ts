@@ -7,3 +7,18 @@ export const gltfElongationInference = {
 } as const;
 export type GltfElongationInference = typeof gltfElongationInference;
 
+import {
+  exact,
+  sortedExtents,
+  unavailable,
+  type GltfTsGeometryContext,
+  type GltfTsMeasure,
+} from '../../🔨️geometry-core/🟦️component.ts';
+
+export const inferGltfElongation = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
+  const extent = sortedExtents(context);
+  return context.valid && extent ? exact(context, extent[0] > 0 ? extent[1] / extent[0] : 0, 'unitless') : unavailable(context, 'unitless');
+};
+
+export const unavailableGltfElongation = (context: GltfTsGeometryContext): GltfTsMeasure<number> =>
+  unavailable(context, 'unitless');

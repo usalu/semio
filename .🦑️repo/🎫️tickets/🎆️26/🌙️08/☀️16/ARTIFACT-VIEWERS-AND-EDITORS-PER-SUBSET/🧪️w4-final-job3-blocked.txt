@@ -1,0 +1,63 @@
+W4-FINAL — Job 3 (browser end-to-end) — BLOCKED, evidence
+
+Attempted via .claude/launch.json "cad-react-dev" (port 6020, equivalent to .vscode/launch.json's
+"🛠️dev📐️cad⚛️react": command `bun ./📜️script.ts dev cad`, SEMIO_RENDERER=react), using the preview
+browser tooling (mcp__Claude_Browser__preview_start/preview_logs), per the rule to never run a dev
+server via Bash directly.
+
+Sequence observed (server id bd6edc5a-a754-497d-8934-fdf8b60d057d, port 6020):
+
+1. Vite dev server for the React shell started fine ("VITE v7.3.6 ready in 1092ms",
+   http://127.0.0.1:6020/).
+2. `[DEBUG] program build scope: cad, stdio` — the plugin build pipeline correctly resolved that
+   cad's playground needs both the cad and stdio wasm plugin crates.
+3. `semio-framework-plugin` (wasm32 target) compiled cleanly (warnings only) — confirms this lane's
+   own fix (the dispatch_typed_command_inner kind-guard change) does not block the wasm build.
+4. `semio-s-plugin-stdio` (wasm32 target) FAILED: "error: could not compile `semio-s-plugin-stdio`
+   (lib) due to 164 previous errors; 752 warnings emitted" — identical error class and count to the
+   plain `cargo check -p semio-s-plugin-stdio` run on the host target (see 🧪️w4-final-gates.txt §8):
+   `error[E0053]: method 'absorb' has an incompatible type for trait` (expected
+   `Result<T, MutationApplyError>`, found bare `T`) plus `error[E0433]: cannot find type 'HashSet'`,
+   across dozens of stdio format artifacts (avi, mp3, wav, zip, docx, pdf, dwg, …).
+5. Critically: the SAME error class hits the CAD artifact's own schema, because
+   `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/.../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/…`
+   is glued into the stdio crate (the shared semio-format artifact tree lives there). Sample:
+
+   error[E0053]: method `absorb` has an incompatible type for trait
+      --> …/🗄️stdio/…/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🦀️component.rs:111:50
+       |
+   111 |         fn absorb(mut self, diff: Self::Diff) -> Self {
+       |                                                  ^^^^ expected `Result<SemioCadBuilderConstruction, ...>`, found `SemioCadBuilderConstruction`
+
+   error[E0308]: mismatched types
+      --> …/🗄️stdio/…/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🦀️component.rs:112:29
+   112 |             self.snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, &self.snapshot);
+       |             -------------   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `SemioCadSnapshot`, found `Result<…>`
+
+6. The dev tooling's own error, verbatim:
+
+   error: plugin build failed: stdio
+         at buildPlugin (…/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:783:15)
+         at async buildPluginsStreaming (…/📜️script.ts:886:13)
+         at async run (…/📜️script.ts:1336:13)
+
+   The dev tooling degrades gracefully ("[DEBUG] program build failed, continuing with remaining
+   targets: stdio" / "[DEBUG] watching plugin crates for hot-swap rebuilds") rather than crashing the
+   whole process, but the cad example's own artifact instance cannot be opened without a working
+   stdio+cad wasm plugin, so the browser flow (open cad example -> editor -> "Open with... -> Viewer"
+   -> read-only chrome -> mutation-attempt fault -> set default viewer -> reload -> resolver check)
+   cannot proceed past plugin load.
+
+Attribution: `semio-s-plugin-stdio` — 1520 files under `✏️s/🔌️plugins/🗄️stdio` show as uncommitted
+`git status --porcelain` changes right now, matching this ticket's own 📌️important.md and the
+brief's named peer ticket `26/08/16/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS`
+(mid-flight — a `MutationDiff::absorb`/`apply` signature migration to `Result<_, MutationApplyError>`
+that has not yet been propagated to every format's trait impl). Zero errors reference
+`🔌️plugin/🦀️component.rs` (this lane's only edit) or any other file this ticket touched.
+
+CONCLUSION: Job 3 is BLOCKED by a live peer ticket's mid-flight refactor in semio-s-plugin-stdio,
+not by anything in this ticket's own work. Not faked, not skipped silently — attempted for real via
+the preview browser tooling, confirmed blocked at the wasm plugin build step, evidence captured
+above. No [DEBUG] logging was added by this lane (the [DEBUG] lines above are the dev tool's own
+pre-existing instrumentation, not something this lane introduced, so there is nothing of this lane's
+own to remove).

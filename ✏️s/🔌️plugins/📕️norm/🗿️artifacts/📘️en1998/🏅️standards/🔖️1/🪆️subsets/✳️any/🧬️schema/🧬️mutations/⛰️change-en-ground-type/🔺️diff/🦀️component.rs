@@ -5,7 +5,10 @@ use crate::artifacts::en1998::mutations::change_en_ground_type::mutation::Change
 use crate::artifacts::en1998::En1998Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeEnGroundType, _base: &En1998Snapshot) -> En1998Diff {
-    En1998Diff { en_ground_type: Some(payload.new_en_ground_type.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeEnGroundType, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
+    if base.en_ground_type == payload.new_en_ground_type {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("EN ground type is already \"{}\".", payload.new_en_ground_type));
+    }
+    protocol::MutationOutcome::new(En1998Diff { en_ground_type: Some(payload.new_en_ground_type.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

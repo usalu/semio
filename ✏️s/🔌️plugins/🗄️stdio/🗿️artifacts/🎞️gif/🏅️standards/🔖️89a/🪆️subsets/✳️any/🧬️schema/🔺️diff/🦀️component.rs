@@ -11,9 +11,8 @@
 
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot};
 use protocol::os_spr::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -647,7 +646,16 @@ impl GifDiff {
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
-    fn apply(&self, base: &GifSnapshot) -> GifSnapshot {
+    fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
+        if let Some(frames) = &self.frames {
+            validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"])?;
+        }
+        if let Some(comments) = &self.comments {
+            validate_gif_triple(base.comments.len(), comments.removed.as_slice(), comments.modified.iter().map(|entry| entry.index), comments.added.iter().map(|entry| entry.index), ["comments"])?;
+        }
+        if let Some(extensions) = &self.app_extensions {
+            validate_gif_triple(base.app_extensions.len(), extensions.removed.as_slice(), extensions.modified.iter().map(|entry| entry.index), extensions.added.iter().map(|entry| entry.index), ["appExtensions"])?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -676,7 +684,7 @@ impl MutationDiff<GifSnapshot> for GifDiff {
         if let Some(d) = &self.app_extensions {
             next.app_extensions = d.apply(&next.app_extensions);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -714,6 +722,37 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             _ => {}
         }
     }
+}
+
+fn validate_gif_triple<I, J, K>(base_len: usize, removed: &[usize], modified: I, added: J, path: K) -> MutationApplyResult<()>
+where
+    I: IntoIterator<Item = usize>,
+    J: IntoIterator<Item = usize>,
+    K: IntoIterator,
+    K::Item: AsRef<str>,
+{
+    let path: Vec<String> = path.into_iter().map(|part| part.as_ref().to_owned()).collect();
+    let mut removed_set = std::collections::HashSet::new();
+    for &index in removed {
+        if index >= base_len || !removed_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    let mut modified_set = std::collections::HashSet::new();
+    for index in modified {
+        if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
+        }
+    }
+    let added: Vec<usize> = added.into_iter().collect();
+    let final_len = base_len.saturating_sub(removed.len()).saturating_add(added.len());
+    let mut added_set = std::collections::HashSet::new();
+    for index in added {
+        if index > final_len || !added_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+        }
+    }
+    Ok(())
 }
 
 impl DiffAlgebra<GifSnapshot> for GifDiff {
@@ -1472,7 +1511,7 @@ fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for GifDiff {
+impl DiffCodec for GifDiff {
     fn print_diff(&self) -> String {
         print_gif_diff(self)
     }
@@ -1606,7 +1645,7 @@ mod tests {
         let mut d1 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &mid);
         let d2 = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), after);
+        assert_eq!(d1.apply(&base).unwrap(), after);
     }
 
     #[test]
@@ -1614,9 +1653,9 @@ mod tests {
         let a = GifSnapshot { width: 4, height: 4, frames: vec![frame(1, 4, 4)], ..GifSnapshot::default() };
         let b = GifSnapshot { width: 4, height: 4, frames: vec![frame(1, 4, 4), frame(2, 2, 2)], loop_count: Some(0), ..GifSnapshot::default() };
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &b);
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).unwrap(), b);
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&b, &a);
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).unwrap(), a);
         assert!(<GifDiff as DiffAlgebra<GifSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -1634,9 +1673,9 @@ mod tests {
             s
         };
         let d = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&base, &next);
-        let mutated = d.apply(&base);
+        let mutated = d.apply(&base).unwrap();
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&mutated), base);
+        assert_eq!(inv.apply(&mutated).unwrap(), base);
     }
 
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
@@ -1678,7 +1717,7 @@ mod tests {
         };
 
         let ab = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(ab.apply(&sweep_a), sweep_b);
+        assert_eq!(ab.apply(&sweep_a).unwrap(), sweep_b);
         assert!(ab.width.is_some());
         assert!(ab.height.is_some());
         assert_eq!(ab.gct, Some(None), "gct going Some->None must be tri-state Some(None)");
@@ -1699,7 +1738,7 @@ mod tests {
         assert!(!app_ext_ab.removed.is_empty(), "sweep must exercise a removed app extension (b has none)");
 
         let ba = <GifDiff as DiffAlgebra<GifSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(ba.apply(&sweep_b), sweep_a);
+        assert_eq!(ba.apply(&sweep_b).unwrap(), sweep_a);
         let frames_ba = ba.frames.as_ref().expect("frames must differ");
         assert!(!frames_ba.removed.is_empty(), "reverse direction must exercise a removed frame (a is shorter)");
         let comments_ba = ba.comments.as_ref().expect("comments must differ");

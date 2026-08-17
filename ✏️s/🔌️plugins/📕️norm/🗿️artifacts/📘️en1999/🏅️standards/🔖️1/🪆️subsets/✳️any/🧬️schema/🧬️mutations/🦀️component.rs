@@ -162,10 +162,14 @@ mod tests {
     }
 
     fn round_trip(base: &En1999Snapshot, mutation: &En1999Mutation) -> En1999Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -195,7 +199,9 @@ mod tests {
         let _ = &mut target;
         let mut projected = base.clone();
         for mutation in En1999Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation);
+            projected = vcs::apply_mutation(&projected, &mutation)
+                .expect("snapshot mutation applies")
+                .0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
@@ -209,8 +215,8 @@ mod tests {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -218,8 +224,8 @@ mod tests {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeNEdKn(change_n_ed_kn::mutation::ChangeNEdKn { new_n_ed_kn: 95.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1999Mutation::ChangeNCycles(change_n_cycles::mutation::ChangeNCycles { new_n_cycles: 600_000.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1999Mutation::ChangeNCycles(change_n_cycles::mutation::ChangeNCycles { new_n_cycles: 600_000.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -227,8 +233,8 @@ mod tests {
         let base = En1999Snapshot::default();
         let mutation = En1999Mutation::ChangeAlloy(change_alloy::mutation::ChangeAlloy { new_alloy: "aw6082t6".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1999Mutation::ChangeChi(change_chi::mutation::ChangeChi { new_chi: 0.8 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1999Mutation::ChangeChi(change_chi::mutation::ChangeChi { new_chi: 0.8 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

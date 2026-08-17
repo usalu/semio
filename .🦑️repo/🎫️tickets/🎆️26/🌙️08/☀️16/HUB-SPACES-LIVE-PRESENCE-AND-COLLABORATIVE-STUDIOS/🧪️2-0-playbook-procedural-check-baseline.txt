@@ -1,0 +1,61 @@
+### playbook-procedural check @ 2026-08-17T01:00:05+02:00
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+3 - extern crate flow;
+  |
+
+warning: unused extern crate
+ --> ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/📦️glue.rs:4:1
+  |
+4 | extern crate semio_framework_os_kernel as vcs;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+4 - extern crate semio_framework_os_kernel as vcs;
+  |
+
+warning: unused import: `ViewModel`
+  --> ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/../../🦀️component.rs:12:5
+   |
+12 |     ViewModel, WorldSunConfig,
+   |     ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0277]: the trait bound `ModulePayloadMutation: SemanticMutation<ModuleRenderPayload>` is not satisfied
+   --> ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/../../🦀️component.rs:806:167
+    |
+806 | ...uleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()).try_build()
+    |                                                   ^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `SemanticMutation<ModuleRenderPayload>` is not implemented for `ModulePayloadMutation`
+   --> ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/../../🦀️component.rs:186:1
+    |
+186 | enum ModulePayloadMutation {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: the following other types implement trait `SemanticMutation<P>`:
+              `SemioBrepMutation` implements `SemanticMutation<SemioBrepSnapshot>`
+              `SemioDrawingMutation` implements `SemanticMutation<SemioDrawingSnapshot>`
+              `SemioGraphMutation` implements `SemanticMutation<SemioGraphSnapshot>`
+              `SemioKitMutation` implements `SemanticMutation<SemioKitSnapshot>`
+              `SemioMeshMutation` implements `SemanticMutation<SemioMeshSnapshot>`
+              `SemioObjectMutation` implements `SemanticMutation<SemioObjectSnapshot>`
+              `SemioTableMutation` implements `SemanticMutation<SemioTableSnapshot>`
+              `SemioTextMutation` implements `SemanticMutation<SemioTextSnapshot>`
+note: required by a bound in `PluginBuilder::<semio_framework_plugin::app::Ready>::document_app`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:204:22
+    |
+202 |     pub fn document_app<A: ArtifactApp>(mut self, app: App) -> Self
+    |            ------------ required by a bound in this associated function
+203 |     where
+204 |         A::Mutation: protocol::SemanticMutation<A::Snapshot>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `PluginBuilder::<Ready>::document_app`
+    = note: the full name for the type has been written to '/Users/ueli/Documents/semio/target/debug/deps/semio_s_plugin_playbook_procedural-709994693794508c.long-type-17457288303744473572.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+For more information about this error, try `rustc --explain E0277`.
+warning: `semio-s-plugin-playbook-procedural` (lib) generated 3 warnings
+error: could not compile `semio-s-plugin-playbook-procedural` (lib) due to 1 previous error; 3 warnings emitted

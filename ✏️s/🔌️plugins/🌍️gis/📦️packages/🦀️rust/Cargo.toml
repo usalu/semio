@@ -17,14 +17,14 @@ role = "plugin"
 [[package.metadata.semio.playground]]
 variant = "gis2d"
 aliases = ["gis 2d"]
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 ports = { react = 6040, wgpu = 6140 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
 aliases = ["gis 3d"]
-app = "gis3d-play"
+app = "s.gis.gisterrain@1/*#editor"
 ports = { react = 6083, wgpu = 6183 }
 engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
 
@@ -37,21 +37,21 @@ engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/�
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/osm"
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 cache = "osm-tiles"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/vt"
-app = "gis2d-play"
+app = "s.gis.gismap@1/*#editor"
 upstream = "https://tiles.openfreemap.org/planet"
 cache = "openfreemap-vt"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/dem"
-app = "gis3d-play"
+app = "s.gis.gisterrain@1/*#editor"
 upstream = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
 cache = "terrarium-dem"
 

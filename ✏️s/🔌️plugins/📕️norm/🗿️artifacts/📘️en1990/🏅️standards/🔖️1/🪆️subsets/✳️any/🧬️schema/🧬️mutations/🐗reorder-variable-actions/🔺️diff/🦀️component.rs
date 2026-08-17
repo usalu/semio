@@ -6,13 +6,17 @@ use super::mutation::ReorderVariableActions;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReorderVariableActions, base: &En1990Snapshot) -> En1990Diff {
+pub fn diff(payload: &ReorderVariableActions, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
     let mut q_k = en1990_qk(base);
-    if payload.from < q_k.len() {
-        let item = q_k.remove(payload.from);
-        let at = payload.to.min(q_k.len());
-        q_k.insert(at, item);
+    if payload.from >= q_k.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Variable action #{} does not exist.", payload.from), [payload.from.to_string()]);
     }
-    En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() }
+    let at = payload.to.min(q_k.len() - 1);
+    if at == payload.from {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Variable action #{} is already at position #{}.", payload.from, at));
+    }
+    let item = q_k.remove(payload.from);
+    q_k.insert(at, item);
+    protocol::MutationOutcome::new(En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() })
 }
 //#endregion 🔖️Diff

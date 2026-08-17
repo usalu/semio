@@ -5,7 +5,13 @@ use crate::artifacts::en1999::mutations::change_weld_throat_mm::mutation::Change
 use crate::artifacts::en1999::En1999Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeWeldThroatMm, _base: &En1999Snapshot) -> En1999Diff {
-    En1999Diff { weld_throat_mm: Some(payload.new_weld_throat_mm.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeWeldThroatMm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
+    if !payload.new_weld_throat_mm.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Weld throat thickness [mm] must be a finite number, got {}.", payload.new_weld_throat_mm), Vec::<String>::new());
+    }
+    if base.weld_throat_mm == payload.new_weld_throat_mm {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Weld throat thickness [mm] is already {}.", payload.new_weld_throat_mm));
+    }
+    protocol::MutationOutcome::new(En1999Diff { weld_throat_mm: Some(payload.new_weld_throat_mm.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

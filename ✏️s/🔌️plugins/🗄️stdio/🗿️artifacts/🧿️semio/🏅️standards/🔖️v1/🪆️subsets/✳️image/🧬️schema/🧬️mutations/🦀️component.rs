@@ -12,7 +12,7 @@ use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code (was missing entirely, even test-gated) (W2b closer fix).
-use protocol::{OpBinary, OpText};
+use protocol::OpText;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -75,8 +75,8 @@ impl Default for SemioImageMutation {
 impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     type Diff = SemioImageDiff;
 
-    fn diff(&self, base: &SemioImageSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
             SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioImageMutation::SetDimensions { width, height } => SemioImageDiff { width: (base.width != *width).then_some(*width), height: (base.height != *height).then_some(*height), ..Default::default() },
@@ -104,7 +104,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
                 SemioImageDiff { metadata: Some(metadata), ..Default::default() }
             }
             SemioImageMutation::RemoveMetadataEntry { key } => SemioImageDiff { metadata: Some(SemioImageMetadataDiff { removed: vec![key.clone()], ..Default::default() }), ..Default::default() },
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
@@ -143,10 +143,9 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
-pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> SemioImageDiff {
-    let diff = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioImageDiff as protocol::MutationDiff<SemioImageSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
+    let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -260,7 +259,7 @@ fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
     }
 }
 
-impl protocol::OpText for SemioImageMutation {
+impl OpText for SemioImageMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
@@ -410,7 +409,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_image_mutation(&mut via_apply, &mutation);
@@ -435,9 +434,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }

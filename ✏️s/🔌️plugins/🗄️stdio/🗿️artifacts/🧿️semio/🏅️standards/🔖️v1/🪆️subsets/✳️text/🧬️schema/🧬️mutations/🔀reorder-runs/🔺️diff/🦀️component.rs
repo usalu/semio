@@ -1,17 +1,22 @@
-//! 🔺️ `reorder-runs` — sparse diff construction; an out-of-range BASE `from` is a no-op clone.
+//! 🔺️ `reorder-runs` — sparse diff construction; an out-of-range BASE `from` is
+//! `mutation.target-missing`, and `from == to` (already in place) is `mutation.no-op`.
 
 use super::mutation::ReorderRuns;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunList};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ReorderRuns, base: &SemioTextSnapshot) -> SemioTextDiff {
-    let mut runs = base.runs.clone();
-    if payload.from < runs.len() {
-        let item = runs.remove(payload.from);
-        let at = payload.to.min(runs.len());
-        runs.insert(at, item);
+pub fn diff(payload: &ReorderRuns, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
+    if payload.from >= base.runs.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.from), [payload.from.to_string()]);
     }
-    SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) }
+    if payload.from == payload.to {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Run #{} is already at position #{}.", payload.from, payload.to));
+    }
+    let mut runs = base.runs.clone();
+    let item = runs.remove(payload.from);
+    let at = payload.to.min(runs.len());
+    runs.insert(at, item);
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) })
 }
 //#endregion 🔖️Diff

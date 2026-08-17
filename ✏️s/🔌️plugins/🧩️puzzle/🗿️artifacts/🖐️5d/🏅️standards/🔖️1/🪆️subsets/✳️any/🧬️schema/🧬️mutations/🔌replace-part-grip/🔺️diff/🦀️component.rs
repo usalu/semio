@@ -8,18 +8,18 @@ pub fn diff(payload: &super::mutation::ReplacePartGrip, base: &Puzzle5dSnapshot)
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "part-grip", payload.part_id), vec![payload.part_id.clone()]);
     };
     if !part.grips.iter().any(|grip| grip.id == payload.grip_id) {
-        return Puzzle5dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Grip \"{}\" not found on part \"{}\".", payload.grip_id, payload.part_id), vec![payload.grip_id.clone()]);
     }
     let mut next = part.clone();
     if next == *part {
         return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(vec![payload.part_id.clone()])]);
     }
-    protocol::MutationOutcome::new(for grip in next.grips.iter_mut() {
+    for grip in next.grips.iter_mut() {
         if grip.id == payload.grip_id {
             *grip = payload.new_grip.clone();
         }
     }
-    Puzzle5dDiff {
+    protocol::MutationOutcome::new(Puzzle5dDiff {
         parts: Some(Puzzle5dPartsDelta { patched: vec![Puzzle5dPartPatchEntry { id: payload.part_id.clone(), patch: Puzzle5dPartPatch { replacement: Some(next) } }], ..Default::default() }),
         ..Default::default()
     })

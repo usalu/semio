@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// mutations over the id-keyed, z-order-meaningful, group-nestable block tree (create/delete(s)/
 /// duplicate(s)/reparent/drag/rename/visible/locked/move/resize, plus per-kind content edits for
 /// text/math/ink, plus table row/column insert/remove). Whole-document replace has NO replacement
-/// here — see `crate::apps::note::reset_document_effect`, which goes through
+/// here — see `crate::editor::note::reset_document_effect`, which goes through
 /// `HostEffect::LoadDocument` outside undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
@@ -99,8 +99,12 @@ pub use super::resize_block::mutation::{resize_block, ResizeBlock};
 
 //#region 🔖️Helpers
 /// ▶️ Applies `mutation` via its diff — the sole apply path now (no hand-written match dispatch).
-pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
-    MutationDiff::apply(&mutation.diff(snapshot), snapshot)
+pub fn apply_note_mutation(
+    snapshot: &NoteSnapshot,
+    mutation: &NoteMutation,
+) -> protocol::MutationApplyResult<NoteSnapshot> {
+    let (diff, _messages) = mutation.diff(snapshot).into_parts();
+    MutationDiff::apply(&diff, snapshot)
 }
 
 pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Vec<NoteMutation> {
@@ -113,7 +117,7 @@ pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -
 mod tests {
     use super::*;
     use crate::artifacts::note::{NoteBlockNode, NoteImageAsset};
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
     fn sample_snapshot() -> NoteSnapshot {
@@ -140,10 +144,10 @@ mod tests {
     }
 
     fn round_trip(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> NoteSnapshot {
-        let forward = apply_note_mutation(snapshot, mutation);
+        let forward = apply_note_mutation(snapshot, mutation).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {
-            restored = apply_note_mutation(&restored, &back);
+            restored = apply_note_mutation(&restored, &back).expect("valid inverse mutation diff");
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot for {mutation:?}");
         forward
@@ -175,9 +179,9 @@ mod tests {
         ] {
             assert_mutation_inverse_law(&base, &mutation);
         }
-        let d1 = change_grid_spacing(Some(10.0)).diff(&base);
-        let mid = MutationDiff::apply(&d1, &base);
-        let d2 = change_grid_spacing(Some(20.0)).diff(&mid);
+        let d1 = change_grid_spacing(Some(10.0)).diff(&base).into_parts().0;
+        let mid = MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+        let d2 = change_grid_spacing(Some(20.0)).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -256,5 +260,122 @@ mod tests {
         round_trip(&base, &delete_block("b1".into()));
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error`/Fatal check per verb family this facet implements
+    /// (create/delete(s)/rename/change/move/resize/drag/duplicate/insert/remove/edit/replace).
+    #[test]
+    fn create_block_duplicate_id_is_fatal() {
+        let base = sample_snapshot();
+        let existing = NoteBlockNode::Text {
+            id: "b1".into(), name: "Dup".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b1", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+        };
+        let outcome = create_block(existing, None, None).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn delete_block_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &delete_block("ghost".into()));
+    }
+
+    #[test]
+    fn delete_blocks_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &delete_blocks(vec!["ghost".into()]));
+    }
+
+    #[test]
+    fn rename_block_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &rename_block("ghost".into(), "x".into()));
+    }
+
+    #[test]
+    fn change_block_locked_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &change_block_locked("ghost".into(), true));
+    }
+
+    #[test]
+    fn move_block_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &move_block("ghost".into(), 1.0, 1.0));
+    }
+
+    #[test]
+    fn move_block_non_finite_is_fatal() {
+        let base = sample_snapshot();
+        let outcome = move_block("b1".into(), f64::NAN, 0.0).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn resize_block_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &resize_block("ghost".into(), 10.0, 10.0));
+    }
+
+    #[test]
+    fn drag_blocks_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &drag_blocks(vec!["ghost".into()], 1.0, 1.0));
+    }
+
+    #[test]
+    fn duplicate_block_missing_source_is_error() {
+        let base = sample_snapshot();
+        let block = NoteBlockNode::Text {
+            id: "b101".into(), name: "New".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, visible: true, locked: false,
+            content: crate::artifacts::note::note_text_child_handle_and_cache("b101", &[]), font_size: 18.0, font_weight: "normal".into(), align: "left".into(),
+        };
+        assert_missing_target_is_error(&base, &duplicate_block("ghost".into(), block));
+    }
+
+    #[test]
+    fn insert_table_row_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &insert_table_row("ghost".into()));
+    }
+
+    #[test]
+    fn remove_table_row_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &remove_table_row("ghost".into()));
+    }
+
+    #[test]
+    fn edit_block_text_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &edit_block_text("ghost".into(), Vec::new()));
+    }
+
+    #[test]
+    fn replace_asset_payload_missing_target_is_error() {
+        let base = sample_snapshot();
+        let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
+        assert_missing_target_is_error(&base, &replace_asset_payload("ghost".into(), asset));
+    }
+
+    #[test]
+    fn create_asset_duplicate_id_is_fatal() {
+        let base = sample_snapshot();
+        let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
+        let outcome = create_asset("asset-1".into(), asset).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn delete_asset_missing_target_is_error() {
+        let base = sample_snapshot();
+        assert_missing_target_is_error(&base, &delete_asset("ghost".into()));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

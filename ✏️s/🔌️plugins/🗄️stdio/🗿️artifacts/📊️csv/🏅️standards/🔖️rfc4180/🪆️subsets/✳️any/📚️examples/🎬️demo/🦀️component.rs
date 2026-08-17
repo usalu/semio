@@ -28,7 +28,7 @@ mod tests {
     use crate::artifacts::csv::standards::v_rfc4180::subsets::any::schema::inferences::CsvInference;
     use crate::artifacts::csv::{CsvMutation, CsvSnapshot};
     use protocol::Inference;
-    use semio_framework_plugin::{Dialect, StandardId, SubsetId};
+    
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};
 
     #[test]

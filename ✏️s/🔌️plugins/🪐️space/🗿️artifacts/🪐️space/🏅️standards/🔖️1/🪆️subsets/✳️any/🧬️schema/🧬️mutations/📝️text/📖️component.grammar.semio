@@ -1,0 +1,11 @@
+dialect grammar
+grammar space.mutations
+extension sspace
+start line
+
+line = create-artifact | delete-artifact | rename-artifact | touch-artifact
+
+create-artifact = "create-artifact" SP block
+delete-artifact = "delete-artifact" SP identifier
+rename-artifact = "rename-artifact" SP identifier SP string
+touch-artifact = "touch-artifact" SP identifier SP number SP identifier

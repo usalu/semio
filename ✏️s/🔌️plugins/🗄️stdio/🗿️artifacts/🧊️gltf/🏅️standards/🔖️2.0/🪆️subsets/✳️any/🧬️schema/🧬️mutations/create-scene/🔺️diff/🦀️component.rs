@@ -1,50 +1,55 @@
-//! 🔺️ Exact create-scene insertion delta with forward stale-state protection.
-use crate::artifacts::gltf::schema::mutations::top_level_collections_private::{reject, repair, Change, GltfTopLevelFamily, GltfTopLevelMutationRejection};
+//! 🔺️ Exact create-scene insertion delta with exhaustive pre-state protection.
+
+use crate::artifacts::gltf::schema::mutations::create_scene::private::{default_after, default_scene, insert_empty_scene, insertion_position, reject, scene_count, GltfCreateSceneRejection};
 use crate::artifacts::gltf::schema::snapshot::GltfScene;
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
+
 pub const ID: &str = "s.stdio.gltf.mutation.create-scene.v1";
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum GltfCreateSceneDiffPhase {
     Diff,
 }
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfCreateSceneDiff {
     pub id: String,
     pub version: u32,
     pub phase: GltfCreateSceneDiffPhase,
     pub touched_paths: Vec<String>,
-    pub position: usize,
-    pub expected_scene_count: usize,
-    pub expected_default_scene_before: Option<usize>,
-    pub expected_next_scene: Option<GltfScene>,
+    pub position: u32,
+    pub expected_scene_count: u32,
+    pub expected_default_scene_before: Option<u32>,
+    pub expected_scenes_before: Vec<GltfScene>,
     pub scene: GltfScene,
 }
-fn default_after(default_scene: Option<usize>, position: usize) -> Result<Option<usize>, GltfTopLevelMutationRejection> {
-    default_scene.map(|scene| if scene >= position { scene.checked_add(1).ok_or_else(|| reject("gltf.mutation.reference-overflow", "document/scene", "default scene cannot be remapped beyond usize")) } else { Ok(scene) }).transpose()
+
+fn paths(position: u32, default_scene_before: Option<u32>) -> Result<Vec<String>, GltfCreateSceneRejection> {
+    Ok(if default_scene_before == default_after(default_scene_before, position)? { vec![format!("document/scenes/{position}")] } else { vec![format!("document/scenes/{position}"), "document/scene".into()] })
 }
-fn paths(base: &GltfSnapshot, position: usize) -> Result<Vec<String>, GltfTopLevelMutationRejection> {
-    Ok(if base.document.scene == default_after(base.document.scene, position)? { vec![format!("document/scenes/{}", position)] } else { vec![format!("document/scenes/{}", position), "document/scene".into()] })
+
+pub fn touched_paths(diff: &GltfCreateSceneDiff, _base: &GltfSnapshot) -> Result<Vec<String>, GltfCreateSceneRejection> {
+    paths(diff.position, diff.expected_default_scene_before)
 }
-pub fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
+
+pub fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
     if diff.id != ID || diff.version != 1 || diff.phase != GltfCreateSceneDiffPhase::Diff {
         return Err(reject("gltf.mutation.invalid-diff-envelope", "diff", "canonical identity or phase does not match"));
     }
-    if diff.position > base.document.scenes.len() {
-        return Err(reject("gltf.mutation.insert-out-of-range", "document/scenes", "position must be within the collection"));
-    }
-    if diff.expected_scene_count != base.document.scenes.len() {
+    insertion_position(diff.position, base)?;
+    if diff.expected_scene_count != scene_count(&base.document.scenes)? {
         return Err(reject("gltf.mutation.stale-diff", "diff/expectedSceneCount", "scene collection no longer matches the planned pre-state"));
     }
-    if diff.expected_default_scene_before != base.document.scene {
+    if diff.expected_default_scene_before != default_scene(base)? {
         return Err(reject("gltf.mutation.stale-diff", "document/scene", "default scene no longer matches the planned pre-state"));
     }
-    if diff.expected_next_scene != base.document.scenes.get(diff.position).cloned() {
-        return Err(reject("gltf.mutation.stale-diff", format!("document/scenes/{}", diff.position), "insertion anchor no longer matches the planned pre-state"));
+    if diff.expected_scenes_before != base.document.scenes {
+        return Err(reject("gltf.mutation.stale-diff", "document/scenes", "scene sequence no longer matches the planned pre-state"));
     }
-    if diff.touched_paths != paths(base, diff.position)? {
+    if diff.touched_paths != touched_paths(diff, base)? {
         return Err(reject("gltf.mutation.invalid-touched-paths", "diff/touchedPaths", "paths must name every concrete changed location"));
     }
     if diff.scene != GltfScene::default() {
@@ -52,29 +57,31 @@ pub fn validate(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<(), G
     }
     Ok(())
 }
-pub fn apply(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
+
+pub fn apply(diff: &GltfCreateSceneDiff, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
     validate(diff, base)?;
     let mut next = base.clone();
-    repair(&mut next.document, GltfTopLevelFamily::Scenes, &Change::Insert(diff.position))?;
-    next.document.scenes.insert(diff.position, diff.scene.clone());
+    insert_empty_scene(&mut next, insertion_position(diff.position, base)?)?;
     Ok(next)
 }
-pub fn encode(diff: &GltfCreateSceneDiff) -> Result<Vec<u8>, GltfTopLevelMutationRejection> {
+
+pub fn encode(diff: &GltfCreateSceneDiff) -> Result<Vec<u8>, GltfCreateSceneRejection> {
     serde_json::to_vec(diff).map_err(|error| reject("gltf.mutation.encode-failed", "diff", error.to_string()))
 }
-pub fn derive(base: &GltfSnapshot, position: usize) -> Result<GltfCreateSceneDiff, GltfTopLevelMutationRejection> {
-    if position > base.document.scenes.len() {
-        return Err(reject("gltf.mutation.insert-out-of-range", "document/scenes", "position must be within the collection"));
-    }
-    Ok(GltfCreateSceneDiff {
+
+pub fn derive(base: &GltfSnapshot, position: u32) -> Result<GltfCreateSceneDiff, GltfCreateSceneRejection> {
+    insertion_position(position, base)?;
+    let mut diff = GltfCreateSceneDiff {
         id: ID.into(),
         version: 1,
         phase: GltfCreateSceneDiffPhase::Diff,
-        touched_paths: paths(base, position)?,
+        touched_paths: Vec::new(),
         position,
-        expected_scene_count: base.document.scenes.len(),
-        expected_default_scene_before: base.document.scene,
-        expected_next_scene: base.document.scenes.get(position).cloned(),
+        expected_scene_count: scene_count(&base.document.scenes)?,
+        expected_default_scene_before: default_scene(base)?,
+        expected_scenes_before: base.document.scenes.clone(),
         scene: GltfScene::default(),
-    })
+    };
+    diff.touched_paths = touched_paths(&diff, base)?;
+    Ok(diff)
 }

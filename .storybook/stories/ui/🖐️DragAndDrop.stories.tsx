@@ -8,9 +8,7 @@
 
 // #endregion 🧲️Header
 
-// 🫳️ `DraggableAvatar` already has dedicated coverage in `Avatar.stories.tsx` (DraggableAvatarDefault) — this file
-// only stories the still-uncovered `DragHandle` affordance, plus one composition showing both together.
-import { DragHandle, DraggableAvatar } from "@semio-tech/ui-react";
+import { DragHandle } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
@@ -53,7 +51,7 @@ export const Transfer: Story = {
 // #region 🧺️ReorderableList
 const initialRows = ["Capsule J", "Capsule L", "Capsule P", "Balcony J"];
 
-/** @emoji 🧺️ Pointer-driven reorder demo pairing {@link DragHandle} with {@link DraggableAvatar} rows — no dnd-kit wiring required for the story, just local list state. */
+/** @emoji 🧺️ Pointer-driven reorder demo pairing {@link DragHandle} with local row initials — no dnd-kit wiring required for the story, just local list state. */
 const ReorderableList = () => {
   const [rows, setRows] = useState(initialRows);
   const [draggedRow, setDraggedRow] = useState<string | null>(null);
@@ -81,7 +79,9 @@ const ReorderableList = () => {
         >
           <DragHandle labelId="ui.tree.drag.sort" />
           <DragHandle labelId="ui.tree.drag.transfer" iconKind="move" />
-          <DraggableAvatar content={row.slice(0, 2).toUpperCase()} title={row} isSelected={draggedRow === row} />
+          <span aria-hidden className={`flex size-small shrink-0 items-center justify-center rounded-full border text-xs ${draggedRow === row ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : "bg-muted"}`}>
+            {row.slice(0, 2).toUpperCase()}
+          </span>
           <span className="text-sm">{row}</span>
         </div>
       ))}

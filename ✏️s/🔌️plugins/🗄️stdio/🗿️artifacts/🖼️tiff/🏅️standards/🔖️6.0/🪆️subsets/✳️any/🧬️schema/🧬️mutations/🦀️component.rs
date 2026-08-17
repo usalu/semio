@@ -20,7 +20,6 @@ use crate::artifacts::tiff::schema::diff::{
 };
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffTag, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -71,10 +70,15 @@ pub enum TiffMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv/png precedent).
-pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> TiffDiff {
-    let d = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <TiffDiff as MutationDiff<TiffSnapshot>>::apply(&d, snapshot);
-    d
+pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation) -> protocol::MutationOutcome<TiffDiff> {
+    let outcome = <TiffMutation as Mutation<TiffSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -82,8 +86,8 @@ pub fn apply_tiff_mutation(snapshot: &mut TiffSnapshot, mutation: &TiffMutation)
 impl Mutation<TiffSnapshot> for TiffMutation {
     type Diff = TiffDiff;
 
-    fn diff(&self, base: &TiffSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             TiffMutation::NoMutation => TiffDiff::default(),
             TiffMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             TiffMutation::SetByteOrder { byte_order } => diff::diff_set_byte_order(base, *byte_order),
@@ -92,7 +96,7 @@ impl Mutation<TiffSnapshot> for TiffMutation {
             TiffMutation::SetTag { ifd_index, tag, kind, values } => diff::diff_set_tag(base, *ifd_index, *tag, *kind, values.clone()),
             TiffMutation::RemoveTag { ifd_index, tag } => diff::diff_remove_tag(base, *ifd_index, *tag),
             TiffMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
-        }
+        })
     }
 
     /// ↩️ Handcrafted, index/tag-aware mutation-level inverses. Out-of-range targets invert to
@@ -217,7 +221,7 @@ fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffSnapshot, 
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `TiffMutation` variant ordinal, in the same 0-7 order `print_tiff_mutation`'s own keyword
 /// match uses.
-impl protocol::OpBinary for TiffMutation {
+impl OpBinary for TiffMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             TiffMutation::NoMutation => 0,
@@ -390,7 +394,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_tiff_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_tiff_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.apply(base), applied_snapshot, "diff.apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     fn all_variants(base: &TiffSnapshot) -> Vec<TiffMutation> {
@@ -442,9 +446,9 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.apply(&base);
-            let inv_d = d.inverse(&base);
-            assert_eq!(inv_d.apply(&mutated), base, "diff-level inverse must restore base for {m:?}");
+            let mutated = d.diff().apply(&base).unwrap();
+            let inv_d = d.diff().inverse(&base);
+            assert_eq!(inv_d.apply(&mutated).unwrap(), base, "diff-level inverse must restore base for {m:?}");
         }
     }
     //#endregion 🔖️inverse_law
@@ -452,13 +456,13 @@ mod tests {
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &TiffSnapshot, m1: TiffMutation, m2: TiffMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.apply(base);
+        let mid = d1.diff().apply(base).unwrap();
         let d2 = m2.diff(&mid);
-        let sequential = d2.apply(&mid);
+        let sequential = d2.diff().apply(&mid).unwrap();
 
-        let mut merged = d1.clone();
-        merged.absorb(d2.clone());
-        assert_eq!(merged.apply(base), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+        let mut merged = d1.diff().clone();
+        merged.absorb(d2.diff().clone());
+        assert_eq!(merged.apply(base).unwrap(), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
     #[test]
@@ -495,26 +499,26 @@ mod tests {
     fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a".into()) }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = TiffMutation::SetTag { ifd_index: 0, tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("a2".into()) }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = TiffMutation::RemoveTag { ifd_index: 0, tag: 296 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).unwrap();
 
         // (d1∘d2)∘d3
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must associate");
+        assert_eq!(left.apply(&base).unwrap(), s3);
+        assert_eq!(right.apply(&base).unwrap(), s3);
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must associate");
     }
     //#endregion 🔖️absorb_law
 
@@ -528,9 +532,9 @@ mod tests {
         b.pixels = vec![5u8; a.pixels.len()];
 
         let d = TiffDiff::between(&a, &b);
-        assert_eq!(d.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(d.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
         let d_rev = TiffDiff::between(&b, &a);
-        assert_eq!(d_rev.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(d_rev.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
         assert!(TiffDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }
     //#endregion 🔖️between_roundtrip_law
@@ -558,9 +562,9 @@ mod tests {
         let b = sweep_b();
 
         let forward = TiffDiff::between(&a, &b);
-        assert_eq!(forward.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(forward.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
         let backward = TiffDiff::between(&b, &a);
-        assert_eq!(backward.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(backward.apply(&b).unwrap(), a, "between(b,a).apply(&b) must equal a");
         assert!(TiffDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         assert_eq!(forward.byte_order, Some(TiffByteOrder::BigEndian));

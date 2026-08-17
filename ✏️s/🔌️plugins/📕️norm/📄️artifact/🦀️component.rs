@@ -520,10 +520,11 @@ pub struct ArtifactDiff<D> {
 }
 
 impl<D: Clone + Default + Serialize + DeserializeOwned> MutationDiff<D> for ArtifactDiff<D> {
-    fn apply(&self, projection: &D) -> D {
-        self.document.clone().unwrap_or_else(|| projection.clone())
+    fn apply(&self, projection: &D) -> protocol::MutationApplyResult<D> {
+        Ok({
+            self.document.clone().unwrap_or_else(|| projection.clone())
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.document.is_some() {
             self.document = other.document;
@@ -541,9 +542,14 @@ pub enum SetArtifactMutation<D> {
 impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Mutation<D> for SetArtifactMutation<D> {
     type Diff = ArtifactDiff<D>;
 
-    fn diff(&self, _projection: &D) -> ArtifactDiff<D> {
+    fn diff(&self, projection: &D) -> protocol::MutationOutcome<ArtifactDiff<D>> {
         match self {
-            Self::SetArtifact { document } => ArtifactDiff { document: Some(document.clone()) },
+            Self::SetArtifact { document } => {
+                if document == projection {
+                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Document already has this content.");
+                }
+                protocol::MutationOutcome::new(ArtifactDiff { document: Some(document.clone()) })
+            }
         }
     }
 
@@ -580,9 +586,12 @@ impl<F: NormFamily> NormHost<F> {
         &self.report
     }
 
-    pub fn apply(&mut self, mutation: &F::Mutation) {
-        self.document = vcs::apply_mutation(&self.document, mutation);
-        self.report = F::evaluate(&self.document);
+    pub fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()> {
+        let (document, _) = vcs::apply_mutation(&self.document, mutation)?;
+        let report = F::evaluate(&document);
+        self.document = document;
+        self.report = report;
+        Ok(())
     }
 
     pub fn replace_document(&mut self, document: F::Document) {
@@ -864,7 +873,7 @@ mod tests {
     fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
-        host.apply(&SetArtifactMutation::SetArtifact { document: DemoDocument { value: 2.0 } });
+        host.apply(&SetArtifactMutation::SetArtifact { document: DemoDocument { value: 2.0 } }).expect("valid artifact replacement");
         assert!(host.report().checks[0].utilization > 1.0);
     }
 

@@ -152,7 +152,7 @@ mod tests {
         use protocol::Mutation;
         let base = default_snapshot();
         let d1 = create_step(PathRef::default(), step("step-97", "log.print")).diff(&base).into_parts().0;
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = create_step(PathRef::default(), step("step-98", "log.print")).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

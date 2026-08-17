@@ -19,7 +19,7 @@ pub struct ChangeSchema {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ChangeSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "schema", kind: "change-schema", record: "ChangedSchema" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::change_schema::diff::diff(self, base)
     }
 

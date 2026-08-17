@@ -13,75 +13,78 @@ use protocol::MutationDiff;
 
 //#region 🔖️Apply
 impl Iso16757Diff {
-    pub fn apply_to_artifact(&self, artifact: &Iso16757Artifact) -> Iso16757Artifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.catalogue {
-            next.catalogue = value.clone();
-        }
-        if let Some(value) = &self.dictionary {
-            next.dictionary = value.clone();
-        }
-        if let Some(value) = &self.geometry {
-            next.geometry = value.clone();
-        }
-        if let Some(value) = &self.selection {
-            next.selection = value.clone();
-        }
-        if let Some(value) = &self.part_number_rule {
-            next.part_number_rule = value.clone();
-        }
-        if let Some(value) = &self.part_number_inputs {
-            next.part_number_inputs = value.clone();
-        }
-        if let Some(value) = &self.script_limits {
-            next.script_limits = value.clone();
-        }
-        if let Some(value) = &self.exchange_process {
-            next.exchange_process = value.clone();
-        }
-        if let Some(value) = &self.selected_check_index {
-            next.selected_check_index = *value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Iso16757Artifact) -> protocol::MutationApplyResult<Iso16757Artifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = &self.catalogue {
+                next.catalogue = value.clone();
+            }
+            if let Some(value) = &self.dictionary {
+                next.dictionary = value.clone();
+            }
+            if let Some(value) = &self.geometry {
+                next.geometry = value.clone();
+            }
+            if let Some(value) = &self.selection {
+                next.selection = value.clone();
+            }
+            if let Some(value) = &self.part_number_rule {
+                next.part_number_rule = value.clone();
+            }
+            if let Some(value) = &self.part_number_inputs {
+                next.part_number_inputs = value.clone();
+            }
+            if let Some(value) = &self.script_limits {
+                next.script_limits = value.clone();
+            }
+            if let Some(value) = &self.exchange_process {
+                next.exchange_process = value.clone();
+            }
+            if let Some(value) = &self.selected_check_index {
+                next.selected_check_index = *value;
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<Iso16757Snapshot> for Iso16757Diff {
-    fn apply(&self, snapshot: &Iso16757Snapshot) -> Iso16757Snapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.catalogue {
-            next.catalogue = value.clone();
-        }
-        if let Some(value) = &self.dictionary {
-            next.dictionary = value.clone();
-        }
-        if let Some(value) = &self.geometry {
-            next.geometry = value.clone();
-        }
-        if let Some(value) = &self.selection {
-            next.selection = value.clone();
-        }
-        if let Some(value) = &self.part_number_rule {
-            next.part_number_rule = value.clone();
-        }
-        if let Some(value) = &self.part_number_inputs {
-            next.part_number_inputs = value.clone();
-        }
-        if let Some(value) = &self.script_limits {
-            next.script_limits = value.clone();
-        }
-        if let Some(value) = &self.exchange_process {
-            next.exchange_process = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &Iso16757Snapshot) -> protocol::MutationApplyResult<Iso16757Snapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.catalogue {
+                next.catalogue = value.clone();
+            }
+            if let Some(value) = &self.dictionary {
+                next.dictionary = value.clone();
+            }
+            if let Some(value) = &self.geometry {
+                next.geometry = value.clone();
+            }
+            if let Some(value) = &self.selection {
+                next.selection = value.clone();
+            }
+            if let Some(value) = &self.part_number_rule {
+                next.part_number_rule = value.clone();
+            }
+            if let Some(value) = &self.part_number_inputs {
+                next.part_number_inputs = value.clone();
+            }
+            if let Some(value) = &self.script_limits {
+                next.script_limits = value.clone();
+            }
+            if let Some(value) = &self.exchange_process {
+                next.exchange_process = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

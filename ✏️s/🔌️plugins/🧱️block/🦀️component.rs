@@ -151,11 +151,17 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .artifact(crate::artifacts::block3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::block5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::block2d::Block2dPlayApp>(crate::editor::block2d::create_block2d_app())
+        .editor_mutation_roster::<crate::editor::block2d::Block2dPlayApp>()
         .viewer::<crate::viewer::block2d::Block2dViewer>(crate::viewer::block2d::create_block2d_viewer())
+        .viewer_mutation_roster::<crate::viewer::block2d::Block2dViewer>()
         .editor::<crate::editor::block3d::Block3dPlayApp>(crate::editor::block3d::create_block3d_app())
+        .editor_mutation_roster::<crate::editor::block3d::Block3dPlayApp>()
         .viewer::<crate::viewer::block3d::Block3dViewer>(crate::viewer::block3d::create_block3d_viewer())
+        .viewer_mutation_roster::<crate::viewer::block3d::Block3dViewer>()
         .editor::<crate::editor::block5d::Block5dPlayApp>(crate::editor::block5d::create_block5d_app())
+        .editor_mutation_roster::<crate::editor::block5d::Block5dPlayApp>()
         .viewer::<crate::viewer::block5d::Block5dViewer>(crate::viewer::block5d::create_block5d_viewer())
+        .viewer_mutation_roster::<crate::viewer::block5d::Block5dViewer>()
         .try_build()
 }
 //#endregion 🔌️Registration

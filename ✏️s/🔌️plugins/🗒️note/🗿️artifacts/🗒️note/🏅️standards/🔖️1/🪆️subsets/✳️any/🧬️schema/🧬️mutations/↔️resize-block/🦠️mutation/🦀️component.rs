@@ -24,7 +24,7 @@ pub fn resize_block(id: String, new_width: f64, new_height: f64) -> NoteMutation
 impl MutationKind<NoteSnapshot, NoteMutation> for ResizeBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "block", kind: "resize-block", record: "ResizedBlock" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

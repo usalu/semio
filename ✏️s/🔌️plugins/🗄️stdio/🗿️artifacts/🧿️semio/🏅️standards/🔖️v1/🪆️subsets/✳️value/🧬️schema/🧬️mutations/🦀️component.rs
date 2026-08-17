@@ -16,7 +16,7 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{dec_semio_value_snapshot, enc_semio_value_snapshot, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation, MutationDiff, OpText};
+use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SemioValuePath
@@ -140,10 +140,9 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: it's computed
 /// once from the pre-mutation state, applied to produce the new state, and returned.
-pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> SemioValueTreeDiff {
-    let diff = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioValueTreeDiff as MutationDiff<SemioValueSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
+    let outcome = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -151,8 +150,8 @@ pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &
 impl Mutation<SemioValueSnapshot> for SemioValueMutation {
     type Diff = SemioValueTreeDiff;
 
-    fn diff(&self, base: &SemioValueSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioValueSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioValueMutation::NoMutation => SemioValueTreeDiff::default(),
             SemioValueMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
 
@@ -212,7 +211,7 @@ impl Mutation<SemioValueSnapshot> for SemioValueMutation {
                     SemioValueTreeDiff::default()
                 }
             }
-        }
+        })
     }
 
     /// ↩️ Handcrafted mutation-level inverse, key/index/id-aware — reads the pre-mutation `base`
@@ -582,6 +581,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+    use protocol::MutationDiff;
 
     fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
@@ -611,13 +611,13 @@ mod tests {
         snap(mapv(vec![("a", intv("1")), ("list", listv(vec![intv("1"), intv("2")]))]), vec![node("n1", strv("hello"))])
     }
 
-    fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, SemioValueTreeDiff) {
+    fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, protocol::MutationOutcome<SemioValueTreeDiff>) {
         let mut via_apply = base.clone();
         let returned = apply_semio_value_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
         assert_eq!(returned, expected_diff, "apply_semio_value_mutation must return mutation.diff(base)");
-        let via_diff_apply = expected_diff.apply(base);
-        assert_eq!(via_apply, via_diff_apply, "m.diff(base).apply(base) must equal apply_semio_value_mutation's result");
+        let via_diff_apply = expected_diff.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_semio_value_mutation's result");
         (via_apply, returned)
     }
 
@@ -651,7 +651,7 @@ mod tests {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let (result, diff) = apply_and_check(&base, SemioValueMutation::RemoveMapEntry { path: vec![], key: "missing".into() });
         assert_eq!(result, base);
-        assert!(diff.is_empty());
+        assert!(diff.diff().is_empty());
     }
 
     #[test]
@@ -699,9 +699,9 @@ mod tests {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mutation = SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") };
         let diff = mutation.diff(&base);
-        let mid = diff.apply(&base);
-        let inv = diff.inverse(&base);
-        assert_eq!(inv.apply(&mid), base);
+        let mid = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let inv = diff.diff().inverse(&base);
+        assert_eq!(inv.apply(&mid).expect("apply must succeed for a well-formed fixture"), base);
     }
     //#endregion inverse_law
 

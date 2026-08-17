@@ -1,0 +1,145 @@
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🎚️config/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🎮️commands/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/👥️presence/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🫧️transient/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/📦️glue.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/⚙️engine/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🔗️component.graphql -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔗️component.graphql
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🔣️component.json -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️component.json
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🛰️component.proto -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️component.proto
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🟦️component.ts -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️component.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎚️config/🧬️schema/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️config/📌️empty.md
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/📌️empty.md
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/👥️presence/📌️empty.md
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🎚️config/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🎚️config/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🎚️options/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🎚️options/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🎬️actions/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🎬️actions/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/👥️presence/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/👥️presence/📌️empty.md
+A  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🟦️component.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🪛️utilities/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🪛️utilities/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🪟️windows/🌐️model/🫧️transient/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🫧️transient/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component.ts
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🫧️transient/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🎚️config/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🎚️config/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🎮️commands/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🎮️commands/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/👥️presence/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/👥️presence/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎚️config/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎚️config/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎚️options/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎚️options/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎬️actions/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🎬️actions/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/👥️presence/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/👥️presence/📌️empty.md
+A  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🟦️component.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🪛️utilities/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🪛️utilities/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🫧️transient/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🪟️windows/🖼️uv/🫧️transient/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎭️modes/✏️edit/🫧️transient/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🎨️paint/🫧️transient/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/✏️patch-object/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-object/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/➕️add-primitive/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-primitive/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🌞️sun/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🎥️camera/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/👁️chrome/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️chrome/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/💬️engagement/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💬️engagement/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️fixture/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🔷️mesh-edit/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🖌️paint/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🗂️selection/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️selection/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🧰️utility/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🧲️transform/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/🧵️uv/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🔗️component.graphql -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🔗️component.graphql
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🔣️component.json -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🔣️component.json
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🛰️component.proto -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🛰️component.proto
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🟦️component.ts -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🟦️component.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/👥️presence/🧬️schema/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📌️panels/📄️artifact/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📌️panels/🔍️inspection/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📌️panels/🗂️layers/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️layers/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📌️panels/🛍️catalogue/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🖼️assets/🎮️demo.cmd.semio
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🟦️component.ts -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🟦️component.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🧪️tests/🟦️test.ts -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️test.ts
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️test.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🖌️session/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🗣️terminology/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/🌞️sun/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🌞️sun/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/👁️show-edges/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/👁️show-edges/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/🖌️paint-params-brush/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🖌️paint-params-brush/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/🗂️select/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🗂️select/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/🧲️snap/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧲️snap/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🛠️options/🧽️paint-params-eraser/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🛠️options/🧽️paint-params-eraser/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🟦️component.ts
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🧭️view/🦀️component.rs -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/📌️empty.md
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🎚️config/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🎚️config/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🎚️options/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🎚️options/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🎬️actions/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🎬️actions/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/👥️presence/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/👥️presence/📌️empty.md
+A  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🟦️component.ts
+A  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🦀️component.rs
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🪛️utilities/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🪛️utilities/📌️empty.md
+R  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🫧️transient/📌️empty.md -> ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️model/🫧️transient/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎚️config/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎚️options/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎬️actions/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/👥️presence/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🟦️component.ts
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🪛️utilities/📌️empty.md
+D  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🫧️transient/📌️empty.md
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🟦️component.ts
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️move-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-paint-layer/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-paint-layer/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️edit-paint-layer/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💀️delete-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️scale-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-objects/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-object/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️rename-paint-layer/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🔺️diff/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-mesh/🦠️mutation/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs
+M  ✏️s/🔌️plugins/💠️lowpoly/🦀️component.rs

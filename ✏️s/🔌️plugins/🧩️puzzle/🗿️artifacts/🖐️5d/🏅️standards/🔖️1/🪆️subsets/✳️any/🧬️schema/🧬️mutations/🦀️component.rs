@@ -216,8 +216,11 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
 //#endregion 🔖️SnapshotDelta
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_puzzle5d_mutation(projection: &mut Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzle5dMutation) -> Vec<Puzzle5dMutation> {
@@ -231,7 +234,7 @@ pub fn inverse_puzzle5d_mutation(projection: &Puzzle5dSnapshot, mutation: &Puzzl
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`'s bridge exactly.
 //
 // 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `Puzzle5dDocument.kind_catalogs:
-// Option<Value>` (the app's own untyped scratch fixture, `🎛️apps/🖐️5d/🦀️component.rs`) still carries
+// Option<Value>` (the app's own untyped scratch fixture, `✏️editor/🦀️component.rs`) still carries
 // the LEGACY embedded-catalog shape end to end — the catalogue panel / mesh-resolution UI reads it
 // directly and `kit:in` media import writes it directly, both untouched by this migration since they
 // never round-trip through the typed `Puzzle5dSnapshot`. But `serde_json::to_value(a_document)` DOES
@@ -258,12 +261,15 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
 }
 
 impl MutationDiff<Value> for Puzzle5dDiff {
-    fn apply(&self, projection: &Value) -> Value {
-        let base: Puzzle5dSnapshot = serde_json::from_value(normalize_kind_catalogs_for_snapshot_value(projection)).unwrap_or_default();
-        let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base);
-        serde_json::to_value(next).unwrap_or_else(|_| projection.clone())
+    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+        let base: Puzzle5dSnapshot = serde_json::from_value(projection.clone()).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"])
+        })?;
+        let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        serde_json::to_value(next).map_err(|error| {
+            protocol::MutationApplyError::new("mutation.apply.invalid-result", error.to_string()).at(["document"])
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
     }
@@ -337,10 +343,10 @@ impl store::ArtifactPack for Puzzle5dPlaySnapshot {
 }
 
 impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
-    fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> Puzzle5dPlaySnapshot {
-        Puzzle5dPlaySnapshot(MutationDiff::<Value>::apply(self, &projection.0))
+    fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
+        MutationDiff::<Value>::apply(self, &projection.0)
+            .map(Puzzle5dPlaySnapshot)
     }
-
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
     }
@@ -355,6 +361,27 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 
     fn inverse(&self, projection: &Puzzle5dPlaySnapshot) -> Vec<Puzzle5dMutation> {
         Mutation::<Value>::inverse(self, &projection.0)
+    }
+}
+
+/// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
+/// `SemanticMutation<Puzzle5dSnapshot>` impl above never actually reads `Puzzle5dSnapshot` data in
+/// any of the four), so this bridges the same vocabulary onto `Puzzle5dPlaySnapshot` by forwarding
+/// straight through — the `SemanticMutation` twin of the `Mutation<Puzzle5dPlaySnapshot>` bridge
+/// immediately above, needed so `.editor_mutation_roster::<Puzzle5dPlayApp>()` can register this
+/// dialect's real semantic vocabulary against the play app's own `Snapshot` type.
+impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::kinds()
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::semantics(self)
+    }
+    fn label(&self) -> String {
+        <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::label(self)
+    }
+    fn target(&self) -> Vec<String> {
+        <Self as protocol::SemanticMutation<Puzzle5dSnapshot>>::target(self)
     }
 }
 //#endregion 🔖️PlaySnapshot
@@ -393,11 +420,11 @@ mod tests {
         let mut inverses = Vec::new();
         for operation in &operations {
             inverses.extend(Mutation::<Value>::inverse(operation, &forward));
-            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&after));
         for inverse in inverses.iter().rev() {
-            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward);
+            forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward).expect("valid mutation diff");
         }
         assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
     }

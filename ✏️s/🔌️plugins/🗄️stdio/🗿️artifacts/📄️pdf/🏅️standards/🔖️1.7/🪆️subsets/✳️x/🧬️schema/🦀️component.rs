@@ -83,14 +83,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
@@ -435,8 +435,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PdfXBuilderFacets {
-        construction: derived_construction::PdfXBuilderConstruction,
-        analysis: derived_analysis::PdfXAnalyzerAnalysis,
+        construction: PdfXBuilderConstruction,
+        analysis: PdfXAnalyzerAnalysis,
         composition: super::io::derived_composition::PdfXComposerComposition,
     }
     builder: PdfXBuilder,

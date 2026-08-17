@@ -17,8 +17,10 @@ use store::ArtifactPack;
 pub struct Block5dPresence {}
 
 impl protocol::MutationDiff<Block5dPresence> for Block5dPresence {
-    fn apply(&self, _base: &Block5dPresence) -> Block5dPresence {
-        self.clone()
+    fn apply(&self, _base: &Block5dPresence) -> protocol::MutationApplyResult<Block5dPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

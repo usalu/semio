@@ -1,0 +1,8 @@
+export PLUGIN="✏️s/🔌️plugins/🏭️process"
+export APPDIR="✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d"
+export EDITORDIR="✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"
+export VIEWERDIR="✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer"
+export ARTIFACTROOT="✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️component.rs"
+export ARTIFACTANY="✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+export PLUGINROOT="✏️s/🔌️plugins/🏭️process/🦀️component.rs"
+export MANIFESTROOT="✏️s/🔌️plugins/🏭️process/🛂️manifest/🦀️component.rs"

@@ -1,0 +1,81 @@
+### framework-plugin check @ 2026-08-17T01:01:21+02:00
+     |
+2794 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2812 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2813 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: type `TransactionProposalDraft` is more private than the item `assert_proposes_transaction`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5912:9
+     |
+5912 | ...   pub fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command) -> super::TransactionProposalDraft {
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function `assert_proposes_transaction` is reachable at visibility `pub`
+     |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9949:5
+     |
+9949 |     pub(crate) struct TransactionProposalDraft {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3822:9
+     |
+3820 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3821 |         definitions: ArtifactDefinitionRegistry,
+3822 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3823 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3824 |         inference_services: ArtifactInferenceServiceRegistry,
+3825 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3826 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: function `encode_contributed_wire` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4227:19
+     |
+4227 |     pub(crate) fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `commit_owner_mutation_roster` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4250:19
+     |
+4250 |     pub(crate) fn commit_owner_mutation_roster(providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])]) ->...
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `has_window_action`, `has_app_command`, and `has_mode_command` are never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9648:12
+     |
+9633 |     impl AppActionRegistry {
+     |     ---------------------- methods in this implementation
+...
+9648 |         fn has_window_action(&self, window_kind_id: &str, action_id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^^
+...
+9664 |         fn has_app_command(&self, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^
+...
+9672 |         fn has_mode_command(&self, mode_id: &str, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: type `TransactionProposalDraft` is more private than the item `<VcsArtifactApp<A> as PluginApp>::take_pending_transaction_proposal`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11784:9
+      |
+11784 |         fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `<VcsArtifactApp<A> as PluginApp>::take_pending_transaction_proposal` is reachable at visibility `pub`
+      |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9949:5
+      |
+ 9949 |     pub(crate) struct TransactionProposalDraft {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 84 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 70 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 3.89s

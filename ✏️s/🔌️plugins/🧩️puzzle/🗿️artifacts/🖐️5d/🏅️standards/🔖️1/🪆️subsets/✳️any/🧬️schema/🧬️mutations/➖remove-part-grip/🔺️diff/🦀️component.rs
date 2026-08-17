@@ -9,7 +9,7 @@ pub fn diff(payload: &super::mutation::RemovePartGrip, base: &Puzzle5dSnapshot) 
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "part-grip", payload.part_id), vec![payload.part_id.clone()]);
     };
     if !part.grips.iter().any(|grip| grip.id == payload.grip_id) {
-        return Puzzle5dDiff::default();
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Grip \"{}\" not found on part \"{}\".", payload.grip_id, payload.part_id), vec![payload.grip_id.clone()]);
     }
     let mut next = part.clone();
     next.grips.retain(|grip| grip.id != payload.grip_id);

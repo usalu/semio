@@ -31,6 +31,9 @@ pub enum TrinityRamError {
     /// 🧭️ VCS store/dispatch failure.
     #[error(transparent)]
     Vcs(#[from] vcs::VcsError),
+    /// 🧬️ Persisted mutation diff rejection.
+    #[error(transparent)]
+    MutationApply(#[from] protocol::MutationApplyError),
     /// 📜️ Compile-time manifest validation failure (path-qualified).
     #[error("{}: {}", .0.path, .0.message)]
     Manifest(ManifestValidationError),

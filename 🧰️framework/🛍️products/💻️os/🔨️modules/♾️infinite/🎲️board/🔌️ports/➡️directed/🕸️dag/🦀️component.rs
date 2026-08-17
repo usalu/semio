@@ -7828,91 +7828,142 @@ pub struct DagDiff {
 }
 
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> DagSnapshot {
+    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
         let mut next = snapshot.clone();
-        if let Some(node) = &self.created_node {
-            let at = self.created_node_at.unwrap_or(next.nodes.len()).min(next.nodes.len());
+        if self.created_node.is_some() != self.created_node_at.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").at(["createdNode"]));
+        }
+        if let (Some(node), Some(at)) = (&self.created_node, self.created_node_at) {
+            if next.nodes.iter().any(|entry| entry.id == node.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").at(["nodes", node.id.as_str()]));
+            }
+            if at > next.nodes.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("created node final index {at} is out of range for length {}", next.nodes.len())).at(["createdNodeAt"]));
+            }
             next.nodes.insert(at, node.clone());
         }
         if let Some(ids) = &self.deleted_node_ids {
+            let mut seen = HashSet::new();
+            for id in ids {
+                if !seen.insert(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").at(["nodes", id.as_str()]));
+                }
+                if !next.nodes.iter().any(|node| node.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").at(["nodes", id.as_str()]));
+                }
+            }
             next.nodes.retain(|node| !ids.contains(&node.id));
         }
         if let Some(renamed) = &self.renamed_node {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == renamed.id) {
-                node.id = renamed.new_id.clone();
+            if next.nodes.iter().any(|node| node.id == renamed.new_id && node.id != renamed.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").at(["nodes", renamed.new_id.as_str()]));
             }
+            let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").at(["nodes", renamed.id.as_str()]))?;
+            node.id = renamed.new_id.clone();
         }
         if let Some(moved) = &self.moved_node {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == moved.id) {
-                node.x = moved.x;
-                node.y = moved.y;
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").at(["nodes", moved.id.as_str()]))?;
+            node.x = moved.x;
+            node.y = moved.y;
         }
         if let Some(resized) = &self.resized_node {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == resized.id) {
-                node.width = resized.width;
-                node.height = resized.height;
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == resized.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "resized node does not exist").at(["nodes", resized.id.as_str()]))?;
+            node.width = resized.width;
+            node.height = resized.height;
         }
         if let Some(changed) = &self.changed_node_name {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
-                node.name = changed.new_name.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            node.name = changed.new_name.clone();
         }
         if let Some(changed) = &self.changed_node_icon {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
-                node.icon = changed.new_icon.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            node.icon = changed.new_icon.clone();
         }
         if let Some(changed) = &self.changed_node_abbreviation {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
-                node.abbreviation = changed.new_abbreviation.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            node.abbreviation = changed.new_abbreviation.clone();
         }
         if let Some(changed) = &self.changed_node_operator_kind {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == changed.id) {
-                node.operator_kind = changed.new_operator_kind.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            node.operator_kind = changed.new_operator_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_kind {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == replaced.id) {
-                node.kind = replaced.new_kind.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
+            node.kind = replaced.new_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_properties {
-            if let Some(node) = next.nodes.iter_mut().find(|node| node.id == replaced.id) {
-                node.properties = replaced.new_properties.clone();
-            }
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
+            node.properties = replaced.new_properties.clone();
         }
         if let Some(order) = &self.reordered_nodes {
-            let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
+            if order.len() != next.nodes.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).at(["reorderedNodes"]));
+            }
+            let mut seen = HashSet::new();
             for id in order {
-                if let Some(at) = next.nodes.iter().position(|node| &node.id == id) {
-                    reordered.push(next.nodes.remove(at));
+                if !seen.insert(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").at(["reorderedNodes", id.as_str()]));
+                }
+                if !next.nodes.iter().any(|node| node.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]));
                 }
             }
-            reordered.extend(next.nodes.drain(..));
+            let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
+            for id in order {
+                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]))?;
+                reordered.push(next.nodes.remove(at));
+            }
             next.nodes = reordered;
         }
         if let Some(edge) = &self.connected_edge {
+            if next.edges.iter().any(|entry| entry.id == edge.id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").at(["edges", edge.id.as_str()]));
+            }
+            for endpoint in [&edge.source, &edge.target] {
+                let node_id = split_dag_endpoint(endpoint).0;
+                if !next.nodes.iter().any(|node| node.id == node_id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").at(["edges", edge.id.as_str(), node_id.as_str()]));
+                }
+            }
             next.edges.push(edge.clone());
         }
         if let Some(ids) = &self.disconnected_edge_ids {
+            let mut seen = HashSet::new();
+            for id in ids {
+                if !seen.insert(id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge is disconnected more than once").at(["edges", id.as_str()]));
+                }
+                if !next.edges.iter().any(|edge| edge.id == *id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "disconnected edge does not exist").at(["edges", id.as_str()]));
+                }
+            }
             next.edges.retain(|edge| !ids.contains(&edge.id));
         }
         if let Some(rewrites) = &self.rewritten_edge_endpoints {
+            let mut seen = HashSet::new();
             for rewrite in rewrites {
-                if let Some(edge) = next.edges.iter_mut().find(|edge| edge.id == rewrite.id) {
-                    if let Some(source) = &rewrite.new_source {
-                        edge.source = source.clone();
+                if !seen.insert(&rewrite.id) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").at(["edges", rewrite.id.as_str()]));
+                }
+                if rewrite.new_source.is_none() && rewrite.new_target.is_none() {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").at(["edges", rewrite.id.as_str()]));
+                }
+                for endpoint in [rewrite.new_source.as_ref(), rewrite.new_target.as_ref()].into_iter().flatten() {
+                    let node_id = split_dag_endpoint(endpoint).0;
+                    if !next.nodes.iter().any(|node| node.id == node_id) {
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").at(["edges", rewrite.id.as_str(), node_id.as_str()]));
                     }
-                    if let Some(target) = &rewrite.new_target {
-                        edge.target = target.clone();
-                    }
+                }
+                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").at(["edges", rewrite.id.as_str()]))?;
+                if let Some(source) = &rewrite.new_source {
+                    edge.source = source.clone();
+                }
+                if let Some(target) = &rewrite.new_target {
+                    edge.target = target.clone();
                 }
             }
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -8592,9 +8643,9 @@ mod wasm_bridge {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    DagStore::new(envelope)
+                    DagStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)),
+                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -8636,10 +8687,10 @@ mod dag_vcs_tests {
     }
 
     fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
-        let forward = vcs::apply_mutation(document, operation);
+        let forward = vcs::apply_mutation(document, operation).expect("valid DAG diff").0;
         let mut restored = forward.clone();
         for back in operation.inverse(document) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse DAG diff").0;
         }
         assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
         forward
@@ -8747,7 +8798,7 @@ mod dag_vcs_tests {
     fn move_node_diff_is_consistent_with_direct_field_mutation() {
         let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
         let mutation = DagMutation::MoveNode { id: "n1".into(), x: 5.0, y: 6.0 };
-        let via_diff = Mutation::diff(&mutation, &document).apply(&document);
+        let via_diff = Mutation::diff(&mutation, &document).diff().apply(&document).expect("valid DAG diff");
         let mut via_direct = document.clone();
         via_direct.nodes[0].x = 5.0;
         via_direct.nodes[0].y = 6.0;
@@ -8758,10 +8809,10 @@ mod dag_vcs_tests {
     fn move_node_diff_absorb_law_holds() {
         let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
         let mut d1 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }, &document);
-        let mid = d1.apply(&document);
+        let mid = d1.apply(&document).expect("valid first DAG diff");
         let d2 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }, &mid);
         d1.absorb(d2);
-        let absorbed = d1.apply(&document);
+        let absorbed = d1.apply(&document).expect("valid absorbed DAG diff");
         assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
         assert_eq!(absorbed.nodes[0].y, 30.0);
     }

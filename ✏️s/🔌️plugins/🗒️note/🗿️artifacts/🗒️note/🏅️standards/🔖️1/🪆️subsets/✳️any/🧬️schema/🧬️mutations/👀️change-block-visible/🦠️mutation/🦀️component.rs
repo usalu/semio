@@ -23,7 +23,7 @@ pub fn change_block_visible(id: String, new_visible: bool) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockVisible {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-visible", kind: "change-block-visible", record: "ChangedBlockVisible" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

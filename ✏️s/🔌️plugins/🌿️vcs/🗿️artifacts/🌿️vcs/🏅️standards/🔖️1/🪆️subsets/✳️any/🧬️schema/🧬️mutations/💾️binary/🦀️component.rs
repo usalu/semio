@@ -1,8 +1,9 @@
 //! ⚖️ VCS artifact — state-patch-representation wire codec + laws (was: constitutional `protocol`).
 //!
 //! The app's typed `VcsCommand` enum — which used to share the old `📡️protocol` crate with this codec —
-//! is an APP concern, not an artifact one: it now lives in `🎛️apps/🌿️vcs/🦀️component.rs`, assembled from
-//! the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! is a SURFACE concern, not an artifact one: it now lives in the editor surface's
+//! `✏️editor/🦀️component.rs`, assembled from the `🎮️commands/*` payload modules by
+//! `semio_framework_plugin::app_commands!`.
 
 
 //#region 📡️SemioProtocol

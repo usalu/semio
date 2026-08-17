@@ -10,7 +10,6 @@ use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::{
     wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -87,10 +86,9 @@ pub enum SemioCadMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
 /// applied.
-pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> SemioCadDiff {
-    let diff = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
+    let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -98,8 +96,8 @@ pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &Semi
 impl Mutation<SemioCadSnapshot> for SemioCadMutation {
     type Diff = SemioCadDiff;
 
-    fn diff(&self, base: &SemioCadSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioCadSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioCadMutation::NoMutation => SemioCadDiff::default(),
             SemioCadMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioCadMutation::AddLayer { layer } => SemioCadDiff { layers: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![layer.clone()] }), blocks: None, entities: None },
@@ -116,7 +114,7 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
             SemioCadMutation::RemoveBlockEntity { block_name, handle } => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) }),
             SemioCadMutation::SetBlockEntityLayer { block_name, handle, layer } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
             SemioCadMutation::SetBlockEntityGeometry { block_name, handle, entity } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<Self> {
@@ -323,7 +321,7 @@ fn print_cad_mutation_args(m: &SemioCadMutation) -> String {
 /// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_cad_mutation`/`parse_cad_mutation` text codec rather than re-deriving a second
 /// independent encoding.
-impl protocol::OpBinary for SemioCadMutation {
+impl OpBinary for SemioCadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
@@ -400,7 +398,7 @@ mod tests {
 
     //#region 🧪️Law1_MutationDiffLaw
     /// ⚖️ Law 1 — `mutation_diff_law`: for every variant, `apply_semio_cad_mutation`'s returned
-    /// diff equals `m.diff(base)`, and applying it matches `diff.apply(base)`.
+    /// diff equals `m.diff(base)`, and applying it matches `diff.diff().apply(base)`.
     #[test]
     fn mutation_diff_law() {
         let base = fixture();
@@ -409,14 +407,14 @@ mod tests {
             let returned = apply_semio_cad_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(snap, protocol::MutationDiff::apply(&expected_diff, &base), "apply mismatch for {m:?}");
+            assert_eq!(snap, protocol::MutationDiff::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
         }
     }
     //#endregion
 
     //#region 🧪️Law2_InverseLaw
     /// ⚖️ Law 2 — `inverse_law`: every mutation round-trips (mutation-level) and every diff
-    /// round-trips (diff-level `d.inverse(base).apply(&d.apply(base)) == base`).
+    /// round-trips (diff-level `d.diff().inverse(base).apply(&d.diff().apply(base)) == base`).
     #[test]
     fn inverse_law() {
         use protocol::command::DiffAlgebra;
@@ -431,9 +429,9 @@ mod tests {
             }
 
             let d = m.diff(&base);
-            let after = protocol::MutationDiff::apply(&d, &base);
-            let d_inv = d.inverse(&base);
-            assert_eq!(protocol::MutationDiff::apply(&d_inv, &after), base, "diff-level inverse mismatch for {m:?}");
+            let after = protocol::MutationDiff::apply(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let d_inv = d.diff().inverse(&base);
+            assert_eq!(protocol::MutationDiff::apply(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
         }
     }
     //#endregion

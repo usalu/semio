@@ -14,7 +14,7 @@ pub struct UpdatePlatedInputs {
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePlatedInputs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "plated-inputs", kind: "update-plated-inputs", record: "UpdatedPlatedInputs" };
 
-    fn diff(&self, base: &En1993Snapshot) -> <En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff {
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {

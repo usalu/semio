@@ -27,7 +27,7 @@ pub fn edit_block_ink_stroke(id: String, new_points: Vec<[f64; 2]>, new_x: f64, 
 impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockInkStroke {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-ink-stroke", kind: "edit-block-ink-stroke", record: "EditedBlockInkStroke" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

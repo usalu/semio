@@ -17,7 +17,7 @@
 
 use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -41,7 +41,7 @@ pub struct PdfDiff {
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot) -> PdfSnapshot {
+    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.page.width = v;
@@ -52,7 +52,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
         if let Some(v) = &self.text {
             next.page.text = v.clone();
         }
-        next
+        Ok(next)
     }
 
     /// ➕️ Structural, total, base-free, sequential-coalesce (`## Absorb` contract) -- flat
@@ -73,7 +73,7 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction).
     fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = self.apply(base);
+        let mid = self.apply(base).unwrap();
         Self::between(&mid, base)
     }
 
@@ -109,8 +109,8 @@ mod tests {
     fn between_roundtrip_law() {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
-        assert_eq!(PdfDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(PdfDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
     //#endregion between_roundtrip_law
@@ -121,9 +121,9 @@ mod tests {
         let a = snap(612.0, 792.0, "hello");
         let b = snap(300.0, 400.0, "world");
         let d = PdfDiff::between(&a, &b);
-        let mid = d.apply(&a);
+        let mid = d.apply(&a).unwrap();
         assert_eq!(mid, b);
-        assert_eq!(d.inverse(&a).apply(&mid), a);
+        assert_eq!(d.inverse(&a).apply(&mid).unwrap(), a);
     }
     //#endregion inverse_law
 
@@ -135,10 +135,10 @@ mod tests {
         let s2 = snap(300.0, 400.0, "b"); // height + text changed
         let d1 = PdfDiff::between(&s0, &s1);
         let d2 = PdfDiff::between(&s1, &s2);
-        let sequential = d2.apply(&d1.apply(&s0));
+        let sequential = d2.apply(&d1.apply(&s0).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&s0), sequential);
+        assert_eq!(combined.apply(&s0).unwrap(), sequential);
         assert_eq!(sequential, s2);
     }
 
@@ -158,8 +158,8 @@ mod tests {
         right_tail.absorb(d3.clone());
         let mut right = d1.clone();
         right.absorb(right_tail);
-        assert_eq!(left.apply(&s0), s3);
-        assert_eq!(right.apply(&s0), s3);
+        assert_eq!(left.apply(&s0).unwrap(), s3);
+        assert_eq!(right.apply(&s0).unwrap(), s3);
         assert_eq!(left, right);
     }
     //#endregion absorb_law
@@ -175,8 +175,8 @@ mod tests {
     #[test]
     fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
-        assert_eq!(PdfDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(PdfDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
 

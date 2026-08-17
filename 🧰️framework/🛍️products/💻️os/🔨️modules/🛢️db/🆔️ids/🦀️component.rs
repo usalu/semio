@@ -100,6 +100,15 @@ pub enum DbError {
     Unimplemented(&'static str),
     #[error("internal error: {0}")]
     Internal(String),
+    /// @emoji ⚖️ `db_artifact::ArtifactEngine::submit`'s outcome-step gate (contract
+    /// `MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C9): `policy` rejected the
+    /// batch's `worst` graded `Severity` before anything reached the WAL — `messages` is every
+    /// graded `protocol::MutationMessage` the caller (`db_engine`/`semio_hub`) needs to explain why,
+    /// carried end-to-end rather than flattened to a string (the one deliberate exception to this
+    /// enum's usual protocol-free identity types, since a rejection's whole point is to surface the
+    /// graded messages verbatim to the submitter).
+    #[error("submit rejected by merge policy: worst={worst:?}")]
+    Rejected { policy: protocol::MergePolicy, worst: protocol::Severity, messages: Vec<protocol::MutationMessage> },
 }
 
 impl From<pack::PackError> for DbError {

@@ -7,3 +7,18 @@ export const gltfSlendernessInference = {
 } as const;
 export type GltfSlendernessInference = typeof gltfSlendernessInference;
 
+import {
+  exact,
+  sortedExtents,
+  unavailable,
+  type GltfTsGeometryContext,
+  type GltfTsMeasure,
+} from '../../🔨️geometry-core/🟦️component.ts';
+
+export const inferGltfSlenderness = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
+  const extent = sortedExtents(context);
+  return context.valid && extent ? exact(context, extent[1] > 0 ? extent[0] / extent[1] : 0, 'unitless') : unavailable(context, 'unitless');
+};
+
+export const unavailableGltfSlenderness = (context: GltfTsGeometryContext): GltfTsMeasure<number> =>
+  unavailable(context, 'unitless');

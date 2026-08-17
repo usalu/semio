@@ -16,66 +16,123 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl CadDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &CadArtifact) -> CadArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(id) = &self.id { next.id = id.clone(); }
-        if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
-        if let Some(value) = &self.building_model { next.building_model = value.clone(); }
-        if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
-        if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
-        if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
-        if let Some(references) = &self.references_by_model_definition_id {
-            for (key, rows) in references {
-                next.references_by_model_definition_id.insert(key.clone(), rows.clone());
+    pub fn apply_to_artifact(&self, artifact: &CadArtifact) -> protocol::MutationApplyResult<CadArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
             }
-        }
-        if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta); }
-        if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
-        if let Some(list) = &self.selected_object_ids { next.selected_object_ids = list.values.clone(); }
-        if let Some(list) = &self.selected_node_ids { next.selected_node_ids = list.values.clone(); }
-        if let Some(value) = &self.active_object_id { next.active_object_id = value.clone(); }
-        if let Some(value) = &self.component_selection { next.component_selection = value.clone(); }
-        if let Some(value) = &self.selected_reference_model_definition_id { next.selected_reference_model_definition_id = value.clone(); }
-        if let Some(value) = &self.selected_reference_id { next.selected_reference_id = value.clone(); }
-        if let Some(value) = &self.selected_primitive_id { next.selected_primitive_id = value.clone(); }
-        if let Some(value) = &self.selected_primitive_kind { next.selected_primitive_kind = value.clone(); }
-        if let Some(value) = &self.active_utility_id { next.active_utility_id = value.clone(); }
-        if let Some(value) = &self.active_example_id { next.active_example_id = value.clone(); }
-        if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
-        if let Some(value) = &self.engagement_input { next.engagement_input = value.clone(); }
-        if let Some(value) = &self.engagement_step { next.engagement_step = value.clone(); }
-        if let Some(value) = &self.engagement_pane { next.engagement_pane = value.clone(); }
-        if let Some(value) = &self.engagement_session_json { next.engagement_session_json = value.clone(); }
-        if let Some(value) = &self.last_finalized_interaction_id { next.last_finalized_interaction_id = value.clone(); }
-        if let Some(value) = self.sun_enabled { next.sun_enabled = value; }
-        if let Some(value) = self.sun_azimuth { next.sun_azimuth = value; }
-        if let Some(value) = self.sun_elevation { next.sun_elevation = value; }
-        if let Some(value) = self.sun_intensity { next.sun_intensity = value; }
-        if let Some(value) = &self.sun_color { next.sun_color = value.clone(); }
-        if let Some(value) = &self.camera { next.camera = value.clone(); }
-        if let Some(value) = &self.camera_building { next.camera_building = value.clone(); }
-        if let Some(value) = &self.camera_energy { next.camera_energy = value.clone(); }
-        if let Some(value) = &self.camera_structure_classic { next.camera_structure_classic = value.clone(); }
-        if let Some(value) = self.dislocate_shape { next.dislocate_shape = value; }
-        if let Some(value) = self.dislocate_building { next.dislocate_building = value; }
-        if let Some(value) = self.dislocate_energy { next.dislocate_energy = value; }
-        if let Some(value) = self.dislocate_structure_classic { next.dislocate_structure_classic = value; }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
-        if let Some(value) = &self.terminology { next.terminology = value.clone(); }
-        if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
-        if let Some(value) = &self.hovered_object_id { next.hovered_object_id = value.clone(); }
-        if let Some(value) = &self.hovered_target_object_id { next.hovered_target_object_id = value.clone(); }
-        if let Some(value) = &self.hovered_target_mode { next.hovered_target_mode = value.clone(); }
-        if let Some(value) = &self.hovered_target_id { next.hovered_target_id = *value; }
-        next
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(id) = &self.id { next.id = id.clone(); }
+            if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
+            if let Some(value) = &self.building_model { next.building_model = value.clone(); }
+            if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
+            if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
+            if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
+            if let Some(references) = &self.references_by_model_definition_id {
+                for (key, rows) in references {
+                    next.references_by_model_definition_id.insert(key.clone(), rows.clone());
+                }
+            }
+            if let Some(delta) = &self.nodes {
+                next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
+            }
+            if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
+            if let Some(list) = &self.selected_object_ids { next.selected_object_ids = list.values.clone(); }
+            if let Some(list) = &self.selected_node_ids { next.selected_node_ids = list.values.clone(); }
+            if let Some(value) = &self.active_object_id { next.active_object_id = value.clone(); }
+            if let Some(value) = &self.component_selection { next.component_selection = value.clone(); }
+            if let Some(value) = &self.selected_reference_model_definition_id { next.selected_reference_model_definition_id = value.clone(); }
+            if let Some(value) = &self.selected_reference_id { next.selected_reference_id = value.clone(); }
+            if let Some(value) = &self.selected_primitive_id { next.selected_primitive_id = value.clone(); }
+            if let Some(value) = &self.selected_primitive_kind { next.selected_primitive_kind = value.clone(); }
+            if let Some(value) = &self.active_utility_id { next.active_utility_id = value.clone(); }
+            if let Some(value) = &self.active_example_id { next.active_example_id = value.clone(); }
+            if let Some(value) = &self.selection_method { next.selection_method = value.clone(); }
+            if let Some(value) = &self.engagement_input { next.engagement_input = value.clone(); }
+            if let Some(value) = &self.engagement_step { next.engagement_step = value.clone(); }
+            if let Some(value) = &self.engagement_pane { next.engagement_pane = value.clone(); }
+            if let Some(value) = &self.engagement_session_json { next.engagement_session_json = value.clone(); }
+            if let Some(value) = &self.last_finalized_interaction_id { next.last_finalized_interaction_id = value.clone(); }
+            if let Some(value) = self.sun_enabled { next.sun_enabled = value; }
+            if let Some(value) = self.sun_azimuth { next.sun_azimuth = value; }
+            if let Some(value) = self.sun_elevation { next.sun_elevation = value; }
+            if let Some(value) = self.sun_intensity { next.sun_intensity = value; }
+            if let Some(value) = &self.sun_color { next.sun_color = value.clone(); }
+            if let Some(value) = &self.camera { next.camera = value.clone(); }
+            if let Some(value) = &self.camera_building { next.camera_building = value.clone(); }
+            if let Some(value) = &self.camera_energy { next.camera_energy = value.clone(); }
+            if let Some(value) = &self.camera_structure_classic { next.camera_structure_classic = value.clone(); }
+            if let Some(value) = self.dislocate_shape { next.dislocate_shape = value; }
+            if let Some(value) = self.dislocate_building { next.dislocate_building = value; }
+            if let Some(value) = self.dislocate_energy { next.dislocate_energy = value; }
+            if let Some(value) = self.dislocate_structure_classic { next.dislocate_structure_classic = value; }
+            if let Some(value) = &self.locale { next.locale = value.clone(); }
+            if let Some(value) = &self.terminology { next.terminology = value.clone(); }
+            if let Some(value) = &self.contributions_json { next.contributions_json = value.clone(); }
+            if let Some(value) = &self.hovered_object_id { next.hovered_object_id = value.clone(); }
+            if let Some(value) = &self.hovered_target_object_id { next.hovered_target_object_id = value.clone(); }
+            if let Some(value) = &self.hovered_target_mode { next.hovered_target_mode = value.clone(); }
+            if let Some(value) = &self.hovered_target_id { next.hovered_target_id = *value; }
+            next
+        })
     }
 }
 
-fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> Vec<CadNode> {
+fn apply_nodes_delta(
+    nodes: &[CadNode],
+    delta: &CadNodesDelta,
+) -> protocol::MutationApplyResult<Vec<CadNode>> {
+    for (index, id) in delta.removed.iter().enumerate() {
+        if !nodes.iter().any(|node| &node.id == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed node does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if delta.removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "node is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, item) in delta.added.iter().enumerate() {
+        if nodes.iter().any(|node| node.id == item.id)
+            || delta.added[..index].iter().any(|prior| prior.id == item.id)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added node identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        if !nodes.iter().any(|node| node.id == entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched node does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.removed.contains(&entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "node cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if delta.patched[..index].iter().any(|prior| prior.id == entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "node is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
     let mut next = nodes.to_vec();
     for id in &delta.removed {
         next.retain(|node| &node.id != id);
@@ -83,25 +140,45 @@ fn apply_nodes_delta(nodes: &[CadNode], delta: &CadNodesDelta) -> Vec<CadNode> {
     for item in &delta.added {
         next.push(item.clone());
     }
-    for entry in &delta.patched {
-        if let Some(node) = next.iter_mut().find(|node| node.id == entry.id) {
-            if let Some(label) = &entry.patch.label {
-                node.label = label.clone();
-            }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        let node = next.iter_mut().find(|node| node.id == entry.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched node does not exist after structural edits",
+            )
+            .at(["patched".to_string(), index.to_string()])
+        })?;
+        if let Some(label) = &entry.patch.label {
+            node.label = label.clone();
         }
     }
     if let Some(order) = &delta.reordered {
-        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|node| (node.id.clone(), node)).collect();
+        if order.len() != next.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id) || !next.iter().any(|node| &node.id == id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "node reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
+        let mut by_id: BTreeMap<_, _> =
+            next.into_iter().map(|node| (node.id.clone(), node)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(node) = by_id.remove(id) {
-                ordered.push(node);
-            }
+            ordered.push(by_id.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered node does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        ordered.extend(by_id.into_values());
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
 pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferencePatch) {
@@ -117,28 +194,31 @@ pub fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferenceP
 }
 
 impl MutationDiff<CadSnapshot> for CadDiff {
-    fn apply(&self, snapshot: &CadSnapshot) -> CadSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(id) = &self.id { next.id = id.clone(); }
-        if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
-        if let Some(value) = &self.building_model { next.building_model = value.clone(); }
-        if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
-        if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
-        if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
-        if let Some(references) = &self.references_by_model_definition_id {
-            for (key, rows) in references {
-                next.references_by_model_definition_id.insert(key.clone(), rows.clone());
+    fn apply(&self, snapshot: &CadSnapshot) -> protocol::MutationApplyResult<CadSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
             }
-        }
-        if let Some(delta) = &self.nodes { next.nodes = apply_nodes_delta(&next.nodes, delta); }
-        if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
-        next
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(id) = &self.id { next.id = id.clone(); }
+            if let Some(value) = &self.shape_model { next.shape_model = value.clone(); }
+            if let Some(value) = &self.building_model { next.building_model = value.clone(); }
+            if let Some(value) = &self.energy_model { next.energy_model = value.clone(); }
+            if let Some(value) = &self.structure_classic_model { next.structure_classic_model = value.clone(); }
+            if let Some(list) = &self.drawings { next.drawings = list.values.clone(); }
+            if let Some(references) = &self.references_by_model_definition_id {
+                for (key, rows) in references {
+                    next.references_by_model_definition_id.insert(key.clone(), rows.clone());
+                }
+            }
+            if let Some(delta) = &self.nodes {
+                next.nodes = apply_nodes_delta(&next.nodes, delta).map_err(|error| error.under(["nodes"]))?;
+            }
+            if let Some(value) = &self.active_model_definition_id { next.active_model_definition_id = value.clone(); }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -231,7 +311,7 @@ mod tests {
         let mut diff = CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }).diff(&base).diff().clone();
         let replacement = CadDiff { artifact: Some(Box::new(crate::artifacts::cad::schema::CadArtifact::from_snapshot(base.clone()))), ..Default::default() };
         diff.absorb(replacement);
-        assert_eq!(diff.apply(&base), base, "a whole-artifact diff wins over anything absorbed before it");
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base, "a whole-artifact diff wins over anything absorbed before it");
     }
 
     #[test]
@@ -239,9 +319,26 @@ mod tests {
         let base = sample_scene();
         let mut diff = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-9".into(), label: "Fresh".into(), kind: "group".into() } }).diff(&base).diff().clone();
         diff.absorb(CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }).diff(&base).diff().clone());
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         assert!(next.nodes.iter().any(|node| node.id == "node-9"));
         assert_eq!(next.nodes.iter().find(|node| node.id == "node-1").expect("node-1").label, "Renamed");
+    }
+
+    #[test]
+    fn malformed_named_diff_rejects_without_changing_the_base() {
+        let base = sample_scene();
+        let original = base.clone();
+        let diff = CadDiff {
+            nodes: Some(CadNodesDelta {
+                removed: vec!["missing-node".into()],
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let error = diff.apply(&base).expect_err("missing named target must reject");
+        assert_eq!(error.code, "mutation.apply.missing-target");
+        assert_eq!(error.target, ["nodes", "removed", "0"]);
+        assert_eq!(base, original);
     }
 }
 //#endregion 🧪️Tests

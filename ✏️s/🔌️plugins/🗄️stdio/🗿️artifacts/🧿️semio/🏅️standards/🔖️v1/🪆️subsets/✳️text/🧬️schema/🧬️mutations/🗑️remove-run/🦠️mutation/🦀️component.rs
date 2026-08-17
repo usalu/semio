@@ -13,7 +13,7 @@ pub struct RemoveRun {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run", kind: "remove-run", record: "RemovedRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {

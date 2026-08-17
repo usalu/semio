@@ -91,11 +91,11 @@ mod tests {
     }
 
     fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapshot {
-        let forward = operation.diff(doc).apply(doc);
+        let forward = operation.diff(doc).diff().apply(doc).expect("valid mutation diff");
         let backs = operation.inverse(doc);
         let mut restored = forward.clone();
         for back in &backs {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, doc, "inverse must restore the pre-operation document");
         forward
@@ -251,7 +251,7 @@ mod tests {
     fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
         let doc = sample_doc();
         let add = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
-        let with_text = add.diff(&doc).apply(&doc);
+        let with_text = add.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
 
         let wrap = LayoutMutation::ChangeFrameWrapMode(change_frame_wrap_mode::mutation::ChangeFrameWrapMode { page_id: "page-1".into(), frame_id: "frame-text".into(), new_wrap_mode: "column".into() });
         let wrapped = round_trip(&with_text, &wrap);
@@ -266,7 +266,7 @@ mod tests {
         // 🖼️ Fill/stroke are Rect-only fields — a change against a text frame is a no-op, and its
         // inverse (nothing captured) is therefore empty.
         let fill_on_text = LayoutMutation::ChangeFrameFill(change_frame_fill::mutation::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
-        let unchanged = fill_on_text.diff(&columned).apply(&columned);
+        let unchanged = fill_on_text.diff(&columned).diff().apply(&columned).expect("valid mutation diff");
         assert_eq!(unchanged, columned, "fill patch on a text frame must be a no-op");
         assert!(fill_on_text.inverse(&columned).is_empty());
     }
@@ -274,7 +274,7 @@ mod tests {
     #[test]
     fn frame_mutations_are_no_ops_when_target_missing() {
         let doc = sample_doc();
-        let apply = |operation: &LayoutMutation| operation.diff(&doc).apply(&doc);
+        let apply = |operation: &LayoutMutation| operation.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
 
         let missing_page_create = LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: Some(0), layer_id: None });
         assert_eq!(apply(&missing_page_create), doc, "creating on a missing page must be a no-op");
@@ -315,9 +315,9 @@ mod tests {
         page_2.id = "page-9".into();
         let create = LayoutMutation::CreatePage(create_page::mutation::CreatePage { page: page_2, index: None });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
-        let d1 = create.diff(&base);
-        let after = d1.apply(&base);
-        let d2 = LayoutMutation::RenamePage(rename_page::mutation::RenamePage { id: "page-9".into(), new_name: "Renamed".into() }).diff(&after);
+        let d1 = create.diff(&base).diff().clone();
+        let after = d1.apply(&base).expect("valid mutation diff");
+        let d2 = LayoutMutation::RenamePage(rename_page::mutation::RenamePage { id: "page-9".into(), new_name: "Renamed".into() }).diff(&after).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -400,5 +400,64 @@ mod tests {
         assert_eq!(mutation.semantics().kind, "rename-layout");
         assert_eq!(mutation.semantics().record, "RenamedLayout");
     }
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error` per verb family this facet implements
+    /// (create/delete/move-or-resize/reorder/rename/change/edit), plus one `assert_fatal_never_applies`
+    /// case. `reorder-pages`' payload is a single `{id, to_index}` move (no explicit order list), so
+    /// unlike `🕸️dag`'s `reorder_nodes` it can never produce a non-permutation — its Fatal-never-applies
+    /// coverage is carried by `create-page`'s duplicate-id case instead (see `🧪️w3-layout-log.txt`).
+    #[test]
+    fn create_frame_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::CreateFrame(create_frame::mutation::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: None, layer_id: None }));
+    }
+
+    #[test]
+    fn delete_frame_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::DeleteFrame(delete_frame::mutation::DeleteFrame { page_id: "page-1".into(), frame_id: "ghost".into() }));
+    }
+
+    #[test]
+    fn move_frame_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::MoveFrame(move_frame::mutation::MoveFrame { page_id: "page-1".into(), frame_id: "ghost".into(), new_x: 1.0, new_y: 1.0 }));
+    }
+
+    #[test]
+    fn reorder_pages_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ReorderPages(reorder_pages::mutation::ReorderPages { id: "ghost".into(), to_index: 0 }));
+    }
+
+    #[test]
+    fn rename_page_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::RenamePage(rename_page::mutation::RenamePage { id: "ghost".into(), new_name: "x".into() }));
+    }
+
+    #[test]
+    fn change_page_height_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::ChangePageHeight(change_page_height::mutation::ChangePageHeight { id: "ghost".into(), new_height: 1.0 }));
+    }
+
+    #[test]
+    fn edit_story_missing_target_is_error() {
+        let base = sample_doc();
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &LayoutMutation::EditStory(edit_story::mutation::EditStory { id: "ghost".into(), new_content: "x".into() }));
+    }
+
+    #[test]
+    fn create_page_duplicate_id_is_fatal() {
+        let base = sample_doc();
+        let duplicate = base.pages[0].clone();
+        let outcome = LayoutMutation::CreatePage(create_page::mutation::CreatePage { page: duplicate, index: None }).diff(&base);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

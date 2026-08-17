@@ -1234,6 +1234,111 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
  * used by every other os-dev variant/launch.json entry. */
 const FRAMEWORK_OS_MULTI_HARNESS_PORT = "6071";
 
+//#region 🔖️PluginBuildLease
+/** @emoji 🔐️ One `target/semio-dev-leases/plugin-build-<variant>.json` lease file: the single `dev`
+ * process (identified by `pid`) currently doing the ~30-crate `ensurePluginRegistry` +
+ * `buildEngineWasm` + `buildPluginsStreaming` + `watchPluginRebuilds` sequence for one playground
+ * variant. `registryReady` flips once that holder has the registry catalog and engine wasm on disk —
+ * the point at which a second `dev` process for the same variant (a different user/port) can safely
+ * start its own Vite against the same `🔌️plugin-modules/` output without repeating any cargo work. */
+type PluginBuildLease = { readonly pid: number; readonly port: number; readonly startedAt: number; registryReady: boolean };
+
+/** @emoji ⏳️ Follower poll budget for `registryReady` — generous relative to the registry-generate +
+ * engine-wasm-reuse-path holder does before setting it (seconds, not the ~30-crate streaming build). */
+const PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS = 60_000;
+
+function pluginBuildLeaseDir(): string {
+  return join(repoRoot, "target/semio-dev-leases");
+}
+
+function pluginBuildLeasePath(variant: string): string {
+  return join(pluginBuildLeaseDir(), `plugin-build-${variant}.json`);
+}
+
+/** @emoji 💀️ True when `pid` no longer exists on this machine (cross-platform: `process.kill(pid, 0)`
+ * is a liveness probe on POSIX and Windows alike, never an actual kill). */
+function isPidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readPluginBuildLease(path: string): PluginBuildLease | undefined {
+  try {
+    return JSON.parse(readFileSync(path, "utf8")) as PluginBuildLease;
+  } catch {
+    return undefined;
+  }
+}
+
+/** @emoji 🔐️ Claims the plugin-build lease for `variant`: atomically creates the lease file (`wx` —
+ * fails with `EEXIST` when another live holder exists) or takes over a stale one (dead `pid`) in
+ * place. Returns `"holder"` for this process, or the live `"follower"` lease otherwise. */
+function acquirePluginBuildLease(variant: string, port: number): { readonly role: "holder" } | { readonly role: "follower"; readonly lease: PluginBuildLease } {
+  mkdirSync(pluginBuildLeaseDir(), { recursive: true });
+  const path = pluginBuildLeasePath(variant);
+  for (;;) {
+    try {
+      writeFileSync(path, JSON.stringify({ pid: process.pid, port, startedAt: Date.now(), registryReady: false } satisfies PluginBuildLease, null, 2), { flag: "wx" });
+      return { role: "holder" };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    }
+    const existing = readPluginBuildLease(path);
+    if (!existing || !isPidAlive(existing.pid)) {
+      try {
+        rmSync(path, { force: true });
+      } catch {
+        // 🏁️ Raced with another taker's own stale-cleanup; the atomic `wx` retry above is the real gate.
+      }
+      continue;
+    }
+    return { role: "follower", lease: existing };
+  }
+}
+
+/** @emoji ✅️ Flips `registryReady` once the holder's registry catalog + engine wasm are on disk. No-op
+ * if this process no longer owns the lease (lost to a stale-takeover race). */
+function markPluginBuildLeaseReady(variant: string): void {
+  const path = pluginBuildLeasePath(variant);
+  const lease = readPluginBuildLease(path);
+  if (!lease || lease.pid !== process.pid) return;
+  writeFileSync(path, JSON.stringify({ ...lease, registryReady: true } satisfies PluginBuildLease, null, 2));
+}
+
+/** @emoji 🕰️ Follower-side wait for the holder's `registryReady` flag, capped at
+ * `PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS`. Returns early (treats the lease as ready-enough) if the lease
+ * file vanishes (holder released/finished) or its `pid` dies mid-wait — either way nothing is left to
+ * wait on. */
+async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number): Promise<void> {
+  const path = pluginBuildLeasePath(variant);
+  const deadline = Date.now() + deadlineMs;
+  while (Date.now() < deadline) {
+    const lease = readPluginBuildLease(path);
+    if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return;
+    await Bun.sleep(500);
+  }
+  throw new Error(`plugin-build lease for "${variant}" did not become ready within ${deadlineMs}ms`);
+}
+
+/** @emoji 🔓️ Releases this process's own plugin-build lease (no-op if it was never the holder, or lost
+ * the lease to a stale-takeover race) — called from `exit`/`SIGINT` so the next `dev` process for the
+ * same variant can immediately claim the lease instead of waiting out a dead holder's timeout. */
+function releasePluginBuildLease(variant: string): void {
+  const path = pluginBuildLeasePath(variant);
+  const lease = readPluginBuildLease(path);
+  if (!lease || lease.pid !== process.pid) return;
+  try {
+    rmSync(path, { force: true });
+  } catch {
+    // 🏁️ Best-effort: a vanished lease file is already the desired end state.
+  }
+}
+//#endregion 🔖️PluginBuildLease
+
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     ensureAppleDeveloperDir();
@@ -1258,6 +1363,7 @@ class DevScript extends BundleScript {
     const filterPlugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const plugin = filterPlugin;
+    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     // 🌊️ React serves over Vite, which only needs the fast (no-`cargo`) registry + playground session
     // regenerated before it starts (`⚙️vite.config.ts` imports the generated catalog at config-eval
     // time) — the ~37-crate plugin build itself streams in AFTER Vite is already listening
@@ -1266,13 +1372,29 @@ class DevScript extends BundleScript {
     // installs into) and `SKIP_PLUGIN_BUILD=1` (explicitly asks to skip building) keep the original
     // build-then-serve order.
     const streamPluginBuilds = renderer === "react" && process.env.SKIP_PLUGIN_BUILD !== "1";
-    if (streamPluginBuilds || process.env.SKIP_PLUGIN_BUILD === "1") {
+    // 🔐️ Two `dev s` processes for the same variant (the hub `users` launchers) must not both run the
+    // ~30-crate `buildPluginsStreaming` — only the lease holder does; a follower waits for the holder's
+    // registry catalog + engine wasm and then serves its own Vite off the same `🔌️plugin-modules/`.
+    const pluginBuildLease = streamPluginBuilds ? acquirePluginBuildLease(plugin, Number(process.env.S_OS_PORT ?? defaultPort)) : undefined;
+    if (pluginBuildLease) {
+      const release = (): void => releasePluginBuildLease(plugin);
+      process.once("exit", release);
+      process.once("SIGINT", () => {
+        release();
+        process.exit(130);
+      });
+    }
+    if (pluginBuildLease?.role === "follower") {
+      console.log(`[dev] plugin builds owned by pid ${pluginBuildLease.lease.pid} (port ${pluginBuildLease.lease.port}); serving only`);
+      await waitForPluginBuildLeaseReady(plugin, PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS);
+    } else if (streamPluginBuilds || process.env.SKIP_PLUGIN_BUILD === "1") {
       await ensurePluginRegistry(filterPlugin);
+      await buildEngineWasm(plugin, renderer);
+      if (pluginBuildLease?.role === "holder") markPluginBuildLeaseReady(plugin);
     } else {
       await buildPlugins(filterPlugin);
+      await buildEngineWasm(plugin, renderer);
     }
-    await buildEngineWasm(plugin, renderer);
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(playgroundCatalog, plugin, renderer));
     if (renderer === "wgpu") {
       const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
       const port = Number(process.env.S_OS_PORT ?? defaultPort);
@@ -1332,7 +1454,7 @@ class DevScript extends BundleScript {
         ...frameworkOsLockedPrefsEnv(),
       },
     });
-    if (streamPluginBuilds) {
+    if (pluginBuildLease?.role === "holder") {
       await buildPluginsStreaming(filterPlugin);
       const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
       const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
@@ -2033,11 +2155,673 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
 }
 //#endregion 🔖️SpaceE2eVerify
 
+//#region 🔖️CollabE2e
+/** 🤝️ Two-user hub+shell end-to-end collaboration proof — ticket
+ * `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS`, lane 3-C. Boots the real hub plus two
+ * independent `s` react dev servers (one per user) and drives them as two separate Playwright browser
+ * contexts through the ticket's whole collaboration story: space creation replication, sharing, artifact
+ * creation replication, live co-editing, presence, check-in, admin visibility, and hub-restart
+ * persistence. Every scenario step is reported individually (`STEP n: PASS/FAIL`) and the run continues
+ * past a failing step where it safely can — see the ticket's worker-brief "Reality check" section for
+ * why several steps are expected to hit real, still-open upstream gaps this lane does not own. */
+const COLLAB_E2E_PORT_MIN = 7400;
+const COLLAB_E2E_PORT_MAX = 7498;
+const COLLAB_E2E_HUB_BOOT_BUDGET_MS = Number(process.env.COLLAB_E2E_HUB_BOOT_BUDGET_MS ?? 300_000);
+const COLLAB_E2E_PREBUILD_BUDGET_MS = Number(process.env.COLLAB_E2E_PREBUILD_BUDGET_MS ?? 1_800_000);
+const COLLAB_E2E_DEV_BOOT_BUDGET_MS = Number(process.env.COLLAB_E2E_DEV_BOOT_BUDGET_MS ?? 300_000);
+const COLLAB_E2E_ADMIN_TOKEN = "e2e-admin";
+const COLLAB_E2E_USER1_EMAIL = "user1@semio.dev";
+const COLLAB_E2E_USER2_EMAIL = "user2@semio.dev";
+
+const COLLAB_E2E_STEP_NAMES = [
+  "user1 creates a public studio space from Home; user2's Home shows the same row",
+  "user1 shares the space with user2 as author; user2 opens /spaces/{id}",
+  "user1 creates a writer artifact; the row appears in both tables and opens an editor for user1",
+  "user2 opens the same artifact; user1 types and user2 sees the text",
+  "#s-presence-peers shows 2 peers in both shells",
+  "user1 checks in with a message; history shows it and the space table's updated column moves for both",
+  "admin: /admin/api/connections lists both connections with their surfaces; /admin returns HTML",
+  "hub restarts against the same OS_HUB_DATA; user2 reloads and the space + artifact are still there",
+] as const;
+
+type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean; readonly detail: string };
+
+/** 📁️ Ticket folder — scratch logs/screenshots for this lane's own probes, per the worker-brief. */
+function collabOutDir(): string {
+  const dir = join(repoRoot, ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** 🔌️ Resolves one collab-e2e port: an explicit env override, else the first free port in
+ * `[COLLAB_E2E_PORT_MIN, COLLAB_E2E_PORT_MAX]` not already claimed by an earlier call this run. */
+function collabScanPort(envVar: string, taken: Set<number>): number {
+  const override = process.env[envVar];
+  if (override) {
+    const port = Number(override);
+    taken.add(port);
+    return port;
+  }
+  for (let port = COLLAB_E2E_PORT_MIN; port <= COLLAB_E2E_PORT_MAX; port++) {
+    if (taken.has(port) || isDevPortInUse("127.0.0.1", port)) continue;
+    taken.add(port);
+    return port;
+  }
+  throw new Error(`collab e2e: no free port in ${COLLAB_E2E_PORT_MIN}-${COLLAB_E2E_PORT_MAX} for ${envVar}`);
+}
+
+/** 🚀️ Spawns the real hub (`bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts dev`, i.e. `cargo run` against the
+ * default (sqlite) feature set — never `--all-features`, contract-freeze Amendment 2) on `port` against
+ * a fresh `dataDir`, and waits for a real HTTP response before returning. */
+async function collabStartHub(port: number, dataDir: string, logPath: string): Promise<SpawnDaemonHandle> {
+  const hubScript = join(repoRoot, "./🌎️hub/📦️packages/🦀️rust/📜️script.ts");
+  const logStream = createWriteStream(logPath);
+  const daemon = spawnDaemon("bun", [hubScript, "dev"], {
+    cwd: join(repoRoot, "./🌎️hub/📦️packages/🦀️rust"),
+    env: { ...process.env, OS_HUB_PORT: String(port), OS_HUB_DATA: dataDir, OS_HUB_ADMIN_TOKEN: COLLAB_E2E_ADMIN_TOKEN },
+    stdio: "pipe",
+  });
+  daemon.child.stdout?.pipe(logStream);
+  daemon.child.stderr?.pipe(logStream);
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const deadline = Date.now() + COLLAB_E2E_HUB_BOOT_BUDGET_MS;
+  while (Date.now() < deadline) {
+    if (daemon.child.exitCode !== null) throw new Error(`hub exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
+    try {
+      await fetch(`${baseUrl}/admin/api/overview`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
+      return daemon;
+    } catch {
+      await Bun.sleep(500);
+    }
+  }
+  daemon.kill();
+  logStream.end();
+  throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
+}
+
+/** 🎯️ The ONLY plugin crates this scenario touches: `"s"` is the space plugin's own registry
+ * `pluginId` (verified: `🤖️generated/🟦️playgrounds.ts`'s `variant: "s"` row carries `pluginId: "s"`,
+ * NOT `"space"` — it hosts both the Home and Space apps and is host-first in registry order) and
+ * `"writer"` is the stdio-free artifact kind this scenario creates (the brief's other suggestion,
+ * `"note"`, is a confirmed pre-existing break — see `collabPrebuildPlugins`'s own doc comment). Building
+ * only these two (not the full ~58-crate catalog `buildPluginsStreaming("s")` would otherwise attempt)
+ * turns a 20-40 minute run into a sub-minute one and matches the coordinator's own guidance: build just
+ * what the scenario needs, per-crate try/catch, then gate on the artifacts actually existing. */
+const COLLAB_E2E_REQUIRED_PLUGIN_IDS: readonly string[] = ["s", "writer"];
+
+/** 📁️ The exact `.core.wasm` path `buildPlugin` (this same file, `🔖️PluginSizeMeasurement` region's
+ * neighbor) writes for `target` — mirrors its own `jsBase`/`componentBase` derivation so this check
+ * looks for precisely what a successful build would have produced, not a guess. */
+function collabPluginArtifactPath(target: PluginRegistryEntry): string {
+  const jsBase = target.wasmOut.replace(/\.wasm$/, "");
+  return join(pluginOutRoot, target.pluginId, `${jsBase}_component.core.wasm`);
+}
+
+/** 🧱️ Builds ONLY the plugin crates `COLLAB_E2E_REQUIRED_PLUGIN_IDS` needs, once, in-process — still
+ * reuses the SAME `PluginBuildLease` a real `dev` process would (mutual exclusion against a peer
+ * session's own `bun dev s`), still per-crate try/catch (continues past one target's failure to attempt
+ * the other — matters when, as observed, `"s"` itself fails: without the try/catch `"writer"` would
+ * never even get attempted). `preparePluginBuildTargets("s")` still does the necessary prep (registry
+ * regen, wasm target ensure, shim vendor, stale-output cleanup) `buildPlugin` depends on — only the
+ * ITERATION is narrowed from "all ~58 catalog entries" to just the two this scenario touches; unlike the
+ * catalog-wide `buildPluginsStreaming`/non-streaming `buildPlugins`, this never even attempts `animate`/
+ * `gis`/`draw`/`fem`/etc., so their many pre-existing, unrelated breakages (confirmed via one full
+ * catalog-wide run during this lane's own iteration, `🧪️3-c-collab-e2e-run2.txt`) cost nothing here.
+ *
+ * **Hard gate, per the coordinator's explicit instruction**: after building, this asserts BOTH required
+ * artifacts exist on disk. If `"s"` (the space plugin — Home AND Space apps) is missing, that is a
+ * genuine, scenario-fatal blocker (neither app can load in a browser) and this throws with the real
+ * compiler error already printed above by the per-target `catch`, never silently continuing to start a
+ * browser against a build that cannot possibly serve anything. Confirmed (this lane, this session, via
+ * `cargo check -p semio-s-plugin-space --target wasm32-wasip2`, reproduced standalone, see
+ * `🧪️3-c-cargo-check-space-wasm.txt`): `semio-s-plugin-space`'s own Cargo.toml requests
+ * `semio-framework-os = { features = ["os-host-full"] }` UNCONDITIONALLY (line 37, unchanged since
+ * commit `19b970280` 2026-08-11 — `git diff HEAD` on that file shows only lane 1-F's later, unrelated
+ * `user_ports` addition, so this is NOT something this ticket introduced); `os-host-full` (`🖥️host/
+ * 📦️packages/🦀️rust/Cargo.toml:62`) turns on `semio-framework-os-kernel/sync`, which turns on
+ * `tokio/net` (`sync = [..., "tokio/net", ...]`), and `tokio/net` is not one of the five features
+ * (`sync,macros,io-util,rt,time`) tokio 1.52.3 supports on any wasm target — `cargo tree -e features -p
+ * semio-s-plugin-space --target wasm32-wasip2 -i tokio` traces the exact edge. A host-only capability
+ * feature is being requested by a wasm GUEST plugin crate, unconditionally — this is a pre-existing,
+ * standing architecture gap in `semio-s-plugin-space`'s own dependency declaration, outside this lane's
+ * lease (`🧑️‍💻️dev/📦️packages/🟦️typescript/{📜️script.ts,⚙️vite.config.ts}` + `project.json` only) and
+ * squarely lanes 1-E/2-A/2-B's crate, not touched here.
+ *
+ * `FLOW_CORE_SKIP_WASM_BUILD=1` (flow-core's own pre-existing escape hatch, `🌊️flow/🫀️core/📦️packages/
+ * 🦀️rust/📜️script.ts`'s `WasmScript`) is set here, defaulted only — a SEPARATE, real, confirmed,
+ * pre-existing, unrelated defect blocks that ONE wasm build too: `semio-framework-os-flow`'s Cargo.toml
+ * depends on `semio-framework-ui` with `features = ["wgpu", "wgpu-engine"]`, which pulls in `wgpu`/
+ * `vello_encoding`/`hayro-interpret`, which pull `getrandom` 0.3.4 — nothing in that graph enables
+ * `getrandom`'s own `wasm_js` Cargo feature for the `wasm32-unknown-unknown` target (`.cargo/config.toml`
+ * sets the `--cfg getrandom_backend="wasm_js"` compiler flag, but that alone is not enough; getrandom 0.3
+ * also needs the crate-level feature). Confirmed via `git status`/`git log --date=iso` that none of
+ * `🌊️flow/**`, `◻2d/**`, `🖱️ui/**` Cargo.toml files are mid-edit right now, so this is standing too, not
+ * transient churn — outside this lane's lease and outside `🌊️flow`/`🖱️ui`'s wgpu-NATIVE-renderer
+ * breakage the coordinator already flagged as "irrelevant to you" (that one is the native wgpu target;
+ * this is the WASM build the REACT renderer needs). Safe to skip for this scenario specifically: the
+ * React renderer's own import of `@semio-tech/flow-core` (`buildEngineWasm`'s own comment) is a lazy
+ * `import("@semio-tech/flow-core")` inside `createFlowSession`, never called by Home/Space/Writer — so a
+ * missing `flow_core_bg.wasm` is inert for every step this harness exercises. Flow/DAG functionality
+ * itself stays unverified and broken; flagged precisely here, never silently masked. */
+async function collabPrebuildPlugins(): Promise<void> {
+  ensureAppleDeveloperDir();
+  process.env.FLOW_CORE_SKIP_WASM_BUILD = process.env.FLOW_CORE_SKIP_WASM_BUILD ?? "1";
+  const lease = acquirePluginBuildLease("s", 0);
+  if (lease.role === "follower") {
+    console.log(`[collab-e2e] plugin builds owned by pid ${lease.lease.pid}; waiting for ready`);
+    await waitForPluginBuildLeaseReady("s", COLLAB_E2E_PREBUILD_BUDGET_MS);
+  } else {
+    try {
+      await ensurePluginRegistry("s");
+      await buildEngineWasm("s", "react");
+      const targets = await preparePluginBuildTargets("s");
+      const required = targets.filter((target) => COLLAB_E2E_REQUIRED_PLUGIN_IDS.includes(target.pluginId));
+      const foundIds = new Set(required.map((target) => target.pluginId));
+      for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
+        if (!foundIds.has(pluginId)) console.error(`[collab-e2e] WARNING: no registry entry for required plugin "${pluginId}" at all — catalog may have changed`);
+      }
+      for (const target of required) {
+        try {
+          await buildPlugin(target);
+        } catch (error) {
+          console.error(`[collab-e2e] required plugin build failed: ${target.pluginId}`, error);
+        }
+      }
+      markPluginBuildLeaseReady("s");
+    } finally {
+      releasePluginBuildLease("s");
+    }
+  }
+  const targets = await preparePluginBuildTargets("s");
+  const missing: string[] = [];
+  for (const pluginId of COLLAB_E2E_REQUIRED_PLUGIN_IDS) {
+    const target = targets.find((entry) => entry.pluginId === pluginId);
+    if (!target || !existsSync(collabPluginArtifactPath(target))) missing.push(pluginId);
+  }
+  if (missing.length > 0) {
+    throw new Error(`collab e2e: required plugin wasm artifact(s) missing after build: ${missing.join(", ")} — see the compiler error printed above (search "required plugin build failed: ${missing[0]}")`);
+  }
+}
+
+/** ▶️ Spawns one user's `s` react dev server (`SKIP_PLUGIN_BUILD=1` — never touches cargo, only serves
+ * whatever `collabPrebuildPlugins` already produced) and waits for its port to accept connections. */
+async function collabStartUserDevServer(opts: { readonly port: number; readonly hubUrl: string; readonly user: string; readonly dataDir: string; readonly logPath: string }): Promise<SpawnDaemonHandle> {
+  const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
+  const logStream = createWriteStream(opts.logPath);
+  const daemon = spawnDaemon("bun", [devScript, "dev"], {
+    cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript"),
+    env: { ...process.env, SKIP_PLUGIN_BUILD: "1", SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
+    stdio: "pipe",
+  });
+  daemon.child.stdout?.pipe(logStream);
+  daemon.child.stderr?.pipe(logStream);
+  const deadline = Date.now() + COLLAB_E2E_DEV_BOOT_BUDGET_MS;
+  while (Date.now() < deadline) {
+    if (isDevPortInUse("127.0.0.1", opts.port)) return daemon;
+    if (daemon.child.exitCode !== null) throw new Error(`dev server for ${opts.user} exited early (code ${daemon.child.exitCode}) — see ${opts.logPath}`);
+    await Bun.sleep(500);
+  }
+  daemon.kill();
+  logStream.end();
+  throw new Error(`dev server for ${opts.user} did not open port ${opts.port} within ${COLLAB_E2E_DEV_BOOT_BUDGET_MS}ms — see ${opts.logPath}`);
+}
+
+//#region 🔖️CollabE2eDom
+/** 🕹️ Clicks a shell-frozen toolbar-button id (contract §C0: `#s-home-create-space`,
+ * `#s-space-create-artifact`) directly — lane 4-F wired these as real, always-present `UiNode::Button`
+ * elements above their respective tables (dispatching with no args, which each command's own handler
+ * treats as "open the dialog"), replacing the earlier command-palette hunt this harness used before
+ * that landed: the palette's arg-carrying-command path opens the bottom-middle command PANEL form, not
+ * a `[data-slot="dialog-box"]` modal, so it could never have satisfied `collabWaitForDialog` anyway. */
+async function collabClickToolbarButton(page: import("playwright").Page, elementId: string): Promise<void> {
+  const button = page.locator(`[id="${elementId}"]`);
+  spaceE2eAssert((await button.count()) > 0, `toolbar button #${elementId} does not exist`);
+  await button.click();
+}
+
+async function collabWaitForDialog(page: import("playwright").Page): Promise<void> {
+  await page.locator('[data-slot="dialog-box"]').waitFor({ state: "visible", timeout: 15_000 });
+}
+
+async function collabSubmitDialog(page: import("playwright").Page): Promise<void> {
+  await page.locator('[id="ui.dialog.submit"]').click();
+  await page.locator('[data-slot="dialog-box"]').waitFor({ state: "hidden", timeout: 15_000 });
+}
+
+/** 🕹️ Opens a `<Select id={triggerId}>` (Radix, portal-rendered) and clicks the option with `optionText`. */
+async function collabSelectOption(page: import("playwright").Page, triggerId: string, optionText: string): Promise<void> {
+  await page.locator(`#${triggerId}`).click();
+  await page.getByRole("option", { name: optionText, exact: true }).click();
+  await page.waitForTimeout(150);
+}
+
+async function collabRowIds(page: import("playwright").Page, prefix: "space" | "artifact"): Promise<Set<string>> {
+  const ids = await page.locator(`[data-row-id^="${prefix}:"]`).evaluateAll((elements) => elements.map((element) => element.getAttribute("data-row-id") ?? ""));
+  return new Set(ids);
+}
+
+/** ⏳️ Polls `page` until a `data-row-id` with `prefix` appears that was not in `before`, returning the
+ * bare id (prefix stripped). Used for both same-page ("the row appears") and cross-page ("user2 sees the
+ * same row") assertions — the caller decides which page to poll. */
+async function collabWaitForNewRow(page: import("playwright").Page, prefix: "space" | "artifact", before: ReadonlySet<string>, deadlineMs: number): Promise<string> {
+  const deadline = Date.now() + deadlineMs;
+  while (Date.now() < deadline) {
+    const current = await collabRowIds(page, prefix);
+    for (const id of current) {
+      if (!before.has(id)) return id.slice(prefix.length + 1);
+    }
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`timeout waiting for a new ${prefix}: row`);
+}
+
+async function collabWaitForRow(page: import("playwright").Page, prefix: "space" | "artifact", id: string, deadlineMs: number): Promise<void> {
+  const deadline = Date.now() + deadlineMs;
+  while (Date.now() < deadline) {
+    if ((await page.locator(`[data-row-id="${prefix}:${id}"]`).count()) > 0) return;
+    await page.waitForTimeout(500);
+  }
+  throw new Error(`timeout waiting for [data-row-id="${prefix}:${id}"]`);
+}
+
+async function collabScreenshot(page: import("playwright").Page, label: string): Promise<void> {
+  try {
+    await page.screenshot({ path: join(collabOutDir(), `🧪️3-c-${label}.png`) });
+  } catch {
+    // 🏁️ Best-effort — a screenshot failure must never mask the real assertion failure it was taken for.
+  }
+}
+//#endregion 🔖️CollabE2eDom
+
+/** 🎬️ The whole 8-step scenario, run against two already-booted `s` react dev servers and a live hub.
+ * Each step is wrapped so a failure is recorded and the run continues to the next step wherever the
+ * remaining steps can still be meaningfully attempted. */
+async function collabRunScenario(
+  user1: import("playwright").Page,
+  user2: import("playwright").Page,
+  hubBaseUrl: string,
+): Promise<{ readonly results: CollabStepOutcome[]; readonly spaceId: string | undefined; readonly artifactId: string | undefined }> {
+  const results: CollabStepOutcome[] = [];
+  const record = (step: number, pass: boolean, detail: string): void => {
+    results.push({ step, name: COLLAB_E2E_STEP_NAMES[step - 1]!, pass, detail });
+    console.log(`STEP ${step}: ${pass ? "PASS" : "FAIL"}: ${COLLAB_E2E_STEP_NAMES[step - 1]} — ${detail}`);
+  };
+
+  let spaceId: string | undefined;
+  let artifactId: string | undefined;
+
+  // STEP 1
+  try {
+    const beforeUser1 = await collabRowIds(user1, "space");
+    const spaceName = `Collab Studio ${Date.now()}`;
+    await collabClickToolbarButton(user1, "s-home-create-space");
+    await collabWaitForDialog(user1);
+    await user1.locator("#name").fill(spaceName);
+    await collabSelectOption(user1, "kind", "Studio");
+    await collabSelectOption(user1, "visibility", "Public");
+    await collabSubmitDialog(user1);
+    spaceId = await collabWaitForNewRow(user1, "space", beforeUser1, 30_000);
+    await collabWaitForRow(user2, "space", spaceId, 60_000);
+    record(1, true, `space ${spaceId} created and replicated to user2's Home within budget`);
+  } catch (error) {
+    await collabScreenshot(user1, "step1-user1");
+    await collabScreenshot(user2, "step1-user2");
+    record(1, false, error instanceof Error ? error.message : String(error));
+  }
+
+  // STEP 2
+  if (spaceId) {
+    try {
+      const row = user1.locator(`[data-row-id="space:${spaceId}"]`);
+      await row.getByTitle(/share/i).click();
+      await collabWaitForDialog(user1);
+      await user1.locator("#email").fill(COLLAB_E2E_USER2_EMAIL);
+      await collabSelectOption(user1, "role", "Author");
+      await collabSubmitDialog(user1);
+      await user2.goto(`${new URL(user2.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await user2.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 30_000 });
+      record(2, true, `user2 opened /spaces/${spaceId} and the Space app's artifact table rendered`);
+    } catch (error) {
+      await collabScreenshot(user1, "step2-user1");
+      await collabScreenshot(user2, "step2-user2");
+      record(2, false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    record(2, false, "skipped — no space id from STEP 1");
+  }
+
+  // STEP 3
+  if (spaceId) {
+    try {
+      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await user1.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 30_000 });
+      const beforeUser1 = await collabRowIds(user1, "artifact");
+      await collabClickToolbarButton(user1, "s-space-create-artifact");
+      await collabWaitForDialog(user1);
+      await user1.locator("#name").fill("Collab Writer");
+      await collabSelectOption(user1, "kindId", "Writer");
+      await collabSubmitDialog(user1);
+      artifactId = await collabWaitForNewRow(user1, "artifact", beforeUser1, 30_000);
+      await collabWaitForRow(user2, "artifact", artifactId, 30_000);
+      const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
+      spaceE2eAssert(editorOpened, "no editable text surface appeared for user1 after createArtifact — HostEffect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️component.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)");
+      record(3, true, `artifact ${artifactId} created, row replicated to user2, editor surface present for user1`);
+    } catch (error) {
+      await collabScreenshot(user1, "step3-user1");
+      await collabScreenshot(user2, "step3-user2");
+      record(3, false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    record(3, false, "skipped — no space id from STEP 1");
+  }
+
+  // STEP 4
+  if (spaceId && artifactId) {
+    try {
+      const row2 = user2.locator(`[data-row-id="artifact:${artifactId}"]`);
+      await row2.getByTitle(/open/i).click();
+      await user2.waitForTimeout(1_000);
+      const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
+      const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
+      spaceE2eAssert((await editor1.count()) > 0, "user1 has no editable text surface open (see STEP 3)");
+      spaceE2eAssert((await editor2.count()) > 0, "user2 has no editable text surface open after clicking the artifact row's open button");
+      const probeText = `collab-probe-${Date.now()}`;
+      await editor1.click();
+      await editor1.type(probeText);
+      const deadline = Date.now() + 30_000;
+      let seen = "";
+      while (Date.now() < deadline) {
+        seen = (await editor2.inputValue().catch(() => editor2.innerText().catch(() => ""))) ?? "";
+        if (seen.includes(probeText)) break;
+        await user2.waitForTimeout(500);
+      }
+      spaceE2eAssert(seen.includes(probeText), `user2's editor never showed user1's typed text ${JSON.stringify(probeText)} (last seen: ${JSON.stringify(seen.slice(-200))}) — both editors are likely unbound ephemeral instances rather than the same hub-synced document (same root cause as STEP 3)`);
+      record(4, true, "user1's typed text propagated to user2's editor");
+    } catch (error) {
+      await collabScreenshot(user1, "step4-user1");
+      await collabScreenshot(user2, "step4-user2");
+      record(4, false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    record(4, false, "skipped — no artifact id from STEP 3");
+  }
+
+  // STEP 5
+  try {
+    const peers1 = user1.locator('[id="s-presence-peers"]');
+    const peers2 = user2.locator('[id="s-presence-peers"]');
+    spaceE2eAssert((await peers1.count()) > 0, '#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️component.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)');
+    spaceE2eAssert((await peers2.count()) > 0, "#s-presence-peers does not exist in user2's shell either");
+    const roster1 = await peers1.locator('[data-row-id^="peer:"]').count();
+    const roster2 = await peers2.locator('[data-row-id^="peer:"]').count();
+    spaceE2eAssert(roster1 === 2, `user1's presence roster has ${roster1} peer(s), expected 2`);
+    spaceE2eAssert(roster2 === 2, `user2's presence roster has ${roster2} peer(s), expected 2`);
+    record(5, true, "both shells show a 2-peer presence roster");
+  } catch (error) {
+    await collabScreenshot(user1, "step5-user1");
+    await collabScreenshot(user2, "step5-user2");
+    record(5, false, error instanceof Error ? error.message : String(error));
+  }
+
+  // STEP 6
+  if (spaceId && artifactId) {
+    try {
+      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabWaitForRow(user1, "artifact", artifactId, 30_000);
+      const rowBefore1 = (await user1.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+      const rowBefore2 = (await user2.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+      const historyTab = user1.locator('[data-tab-id="framework.panel.history"]');
+      spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — cannot reach #s-checkin");
+      await historyTab.click();
+      const checkinButton = user1.locator('[id="s-checkin"]');
+      await checkinButton.waitFor({ state: "visible", timeout: 10_000 });
+      await checkinButton.click();
+      const message = `collab check-in ${Date.now()}`;
+      await user1.locator('[id="s-checkin-message"]').fill(message);
+      const historyEntryVisible = user1.getByText(message, { exact: false });
+      await user1.locator('[id="s-checkin-message"]').press("Enter");
+      await historyEntryVisible.first().waitFor({ state: "visible", timeout: 15_000 });
+      await user1.goto(`${new URL(user1.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabWaitForRow(user1, "artifact", artifactId, 30_000);
+      const rowAfter1Deadline = Date.now() + 30_000;
+      let rowAfter1 = rowBefore1;
+      while (Date.now() < rowAfter1Deadline) {
+        rowAfter1 = (await user1.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+        if (rowAfter1 !== rowBefore1) break;
+        await user1.waitForTimeout(1_000);
+      }
+      spaceE2eAssert(rowAfter1 !== rowBefore1, `user1's space table row for ${artifactId} did not change after check-in (before: ${JSON.stringify(rowBefore1)}, after: ${JSON.stringify(rowAfter1)})`);
+      await user2.goto(`${new URL(user2.url()).origin}/spaces/${spaceId}`, { waitUntil: "domcontentloaded" });
+      await collabWaitForRow(user2, "artifact", artifactId, 30_000);
+      const rowAfter2Deadline = Date.now() + 30_000;
+      let rowAfter2 = rowBefore2;
+      while (Date.now() < rowAfter2Deadline) {
+        rowAfter2 = (await user2.locator(`[data-row-id="artifact:${artifactId}"]`).innerText().catch(() => "")) ?? "";
+        if (rowAfter2 !== rowBefore2) break;
+        await user2.waitForTimeout(1_000);
+      }
+      spaceE2eAssert(rowAfter2 !== rowBefore2, `user2's space table row for ${artifactId} did not change after user1's check-in (before: ${JSON.stringify(rowBefore2)}, after: ${JSON.stringify(rowAfter2)})`);
+      record(6, true, "check-in dispatched and the space table's row changed for both users");
+    } catch (error) {
+      await collabScreenshot(user1, "step6-user1");
+      await collabScreenshot(user2, "step6-user2");
+      record(6, false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    record(6, false, "skipped — no space/artifact id from earlier steps");
+  }
+
+  // STEP 7
+  try {
+    const connectionsRes = await fetch(`${hubBaseUrl}/admin/api/connections`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
+    spaceE2eAssert(connectionsRes.ok, `GET /admin/api/connections returned ${connectionsRes.status}`);
+    const connections = (await connectionsRes.json()) as readonly Record<string, unknown>[];
+    const text = JSON.stringify(connections);
+    spaceE2eAssert(text.includes(COLLAB_E2E_USER1_EMAIL) || text.includes("user1"), `/admin/api/connections does not mention user1: ${text.slice(0, 500)}`);
+    spaceE2eAssert(text.includes(COLLAB_E2E_USER2_EMAIL) || text.includes("user2"), `/admin/api/connections does not mention user2: ${text.slice(0, 500)}`);
+    const adminRes = await fetch(`${hubBaseUrl}/admin`, { headers: { authorization: `Bearer ${COLLAB_E2E_ADMIN_TOKEN}` } });
+    spaceE2eAssert(adminRes.ok, `GET /admin returned ${adminRes.status}`);
+    const contentType = adminRes.headers.get("content-type") ?? "";
+    spaceE2eAssert(contentType.includes("html"), `GET /admin content-type is ${contentType}, expected html`);
+    record(7, true, "/admin/api/connections names both users; /admin returns HTML — note: /admin is a client-rendered SPA shell, so the raw HTML byte stream itself does not literally embed the user names (verified via /admin/api/connections instead)");
+  } catch (error) {
+    record(7, false, error instanceof Error ? error.message : String(error));
+  }
+
+  return { results, spaceId, artifactId };
+}
+
+/** 🔁️ STEP 8 — restarts the hub against the SAME `dataDir` and the SAME port, then reloads `user2` and
+ * confirms the space + artifact rows survive. Deliberately the SAME port (not a fresh one, unlike lane
+ * 3-E's Node-only harness): the browser's `S_HUB_URL` is baked into its bundle at Vite `define`-time
+ * (contract §C0), so only a same-port restart lets a plain page reload — not a dev-server restart —
+ * reconnect; the temp `dataDir` is what actually proves persistence here, matching the brief's own
+ * "restart the hub against the same `OS_HUB_DATA`" wording literally. Runs at the orchestration level
+ * (not inside `collabRunScenario`) since it needs the hub daemon handle, not just a base URL. */
+async function collabRunRestartStep(opts: {
+  readonly record: (step: number, pass: boolean, detail: string) => void;
+  readonly hubDaemon: SpawnDaemonHandle;
+  readonly hubPort: number;
+  readonly hubDataDir: string;
+  readonly user2: import("playwright").Page;
+  readonly spaceId: string | undefined;
+  readonly artifactId: string | undefined;
+}): Promise<SpawnDaemonHandle> {
+  if (!opts.spaceId || !opts.artifactId) {
+    opts.record(8, false, "skipped — no space/artifact id from earlier steps");
+    return opts.hubDaemon;
+  }
+  try {
+    opts.hubDaemon.kill();
+    const exitDeadline = Date.now() + 30_000;
+    while (Date.now() < exitDeadline && opts.hubDaemon.child.exitCode === null) await Bun.sleep(250);
+    spaceE2eAssert(opts.hubDaemon.child.exitCode !== null, "hub process did not exit within 30s of being killed");
+    const portFreeDeadline = Date.now() + 30_000;
+    while (Date.now() < portFreeDeadline && isDevPortInUse("127.0.0.1", opts.hubPort)) await Bun.sleep(250);
+    spaceE2eAssert(!isDevPortInUse("127.0.0.1", opts.hubPort), `port ${opts.hubPort} never freed up after the hub exited`);
+    const newHubDaemon = await collabStartHub(opts.hubPort, opts.hubDataDir, join(collabOutDir(), "🧪️3-c-hub-restart.txt"));
+    await opts.user2.reload({ waitUntil: "domcontentloaded" });
+    await opts.user2.goto(`${new URL(opts.user2.url()).origin}/spaces/${opts.spaceId}`, { waitUntil: "domcontentloaded" });
+    await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 60_000);
+    opts.record(8, true, `hub restarted against the same OS_HUB_DATA (${opts.hubDataDir}) on the same port; user2 still sees space ${opts.spaceId} and artifact ${opts.artifactId} after reload`);
+    return newHubDaemon;
+  } catch (error) {
+    await collabScreenshot(opts.user2, "step8-user2");
+    opts.record(8, false, error instanceof Error ? error.message : String(error));
+    return opts.hubDaemon;
+  }
+}
+
+/** 🎬️ Orchestrates the full harness: port scan, temp data dirs, hub boot, plugin prebuild, two `s`
+ * react dev servers, two independent Playwright browser contexts, the 8-step scenario, and teardown of
+ * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
+ * lines plus a final summary, and sets a non-zero exit code if any step failed. */
+async function runCollabE2eVerify(): Promise<void> {
+  const outDir = collabOutDir();
+  const taken = new Set<number>();
+  const hubPort = collabScanPort("S_COLLAB_HUB_PORT", taken);
+  const user1Port = collabScanPort("S_COLLAB_USER1_PORT", taken);
+  const user2Port = collabScanPort("S_COLLAB_USER2_PORT", taken);
+  console.log(`[collab-e2e] ports: hub=${hubPort} user1=${user1Port} user2=${user2Port}`);
+
+  const hubDataDir = mkdtempSync(join(tmpdir(), "semio-collab-hub-"));
+  const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
+  const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
+
+  let hubDaemon: SpawnDaemonHandle | undefined;
+  let user1Daemon: SpawnDaemonHandle | undefined;
+  let user2Daemon: SpawnDaemonHandle | undefined;
+  let browser: import("playwright").Browser | undefined;
+  const results: CollabStepOutcome[] = [];
+  const record = (step: number, pass: boolean, detail: string): void => {
+    results.push({ step, name: COLLAB_E2E_STEP_NAMES[step - 1]!, pass, detail });
+    console.log(`STEP ${step}: ${pass ? "PASS" : "FAIL"}: ${COLLAB_E2E_STEP_NAMES[step - 1]} — ${detail}`);
+  };
+
+  const teardown = async (): Promise<void> => {
+    try {
+      await browser?.close();
+    } catch {
+      // 🏁️ Best-effort.
+    }
+    for (const daemon of [user1Daemon, user2Daemon, hubDaemon]) {
+      try {
+        daemon?.kill();
+      } catch {
+        // 🏁️ Best-effort — a teardown failure must never mask the real run's outcome.
+      }
+    }
+  };
+
+  try {
+    try {
+      hubDaemon = await collabStartHub(hubPort, hubDataDir, join(outDir, "🧪️3-c-hub-boot.txt"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[collab-e2e] hub failed to boot — every scenario step is reported FAIL: ${message}`);
+      for (let step = 1; step <= 8; step++) record(step, false, `blocked — hub never became ready: ${message}`);
+      throw error;
+    }
+
+    try {
+      await collabPrebuildPlugins();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[collab-e2e] plugin prebuild failed — every scenario step is reported FAIL: ${message}`);
+      for (let step = 1; step <= 8; step++) record(step, false, `blocked — plugin prebuild failed: ${message}`);
+      throw error;
+    }
+
+    const hubBaseUrl = `http://127.0.0.1:${hubPort}`;
+    try {
+      [user1Daemon, user2Daemon] = await Promise.all([
+        collabStartUserDevServer({ port: user1Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER1_EMAIL, dataDir: user1DataDir, logPath: join(outDir, "🧪️3-c-user1-dev.txt") }),
+        collabStartUserDevServer({ port: user2Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER2_EMAIL, dataDir: user2DataDir, logPath: join(outDir, "🧪️3-c-user2-dev.txt") }),
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[collab-e2e] a shell dev server never booted — every scenario step is reported FAIL: ${message}`);
+      for (let step = 1; step <= 8; step++) record(step, false, `blocked — shells did not boot: ${message}`);
+      throw error;
+    }
+
+    // 🎭️ Matches `SetupScript`'s own install location (`node_modules/.cache/ms-playwright`) — without
+    // this, Playwright falls back to the OS default cache (`~/Library/Caches/ms-playwright`), which can
+    // hold a different/older browser revision than the one this repo's `playwright` version expects
+    // (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this repo's
+    // `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
+    process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? join(repoRoot, "node_modules", ".cache", "ms-playwright");
+    const { chromium } = await import("playwright");
+    browser = await chromium.launch({ headless: true });
+    const context1 = await browser.newContext();
+    const context2 = await browser.newContext();
+    const user1Page = await context1.newPage();
+    const user2Page = await context2.newPage();
+    const pageErrors: string[] = [];
+    /** 🔬️ Full browser-side visibility for whichever page this is attached to: every `console.*` level
+     * (not just uncaught exceptions), failed HTTP requests, and the lifecycle + received frames of every
+     * WebSocket the page opens (the `/directory/ws` subscription in particular) — printed immediately so
+     * they interleave chronologically with the harness's own `STEP n:` lines in the run log, instead of
+     * being buffered and dumped out of order at the end. Added per the ticket's w4-h diagnosis: the prior
+     * harness only captured `pageerror`, so a silently-caught `console.warn`/`console.error` inside
+     * `ShellHost` was invisible even though it was the only place the real failing branch could show up. */
+    const attachBrowserDiagnostics = (page: import("playwright").Page, label: string): void => {
+      page.on("pageerror", (err) => pageErrors.push(`${label}: ${String(err)}`));
+      page.on("console", (msg) => console.log(`[collab-e2e:console] ${label} [${msg.type()}] ${msg.text()}`));
+      page.on("requestfailed", (request) => console.log(`[collab-e2e:network] ${label} requestfailed: ${request.method()} ${request.url()} — ${request.failure()?.errorText ?? "unknown"}`));
+      page.on("response", (response) => {
+        const url = response.url();
+        if (!url.includes("/auth/") && !url.includes("/directory/")) return;
+        const status = response.status();
+        const auth = response.request().headers()["authorization"] ?? "none";
+        const postData = response.request().postData() ?? "";
+        console.log(`[collab-e2e:network] ${label} response: ${response.request().method()} ${url} auth=${auth} body=${postData.slice(0, 300)} — ${status}`);
+      });
+      page.on("websocket", (ws) => {
+        console.log(`[collab-e2e:ws] ${label} opened: ${ws.url()}`);
+        ws.on("framereceived", (frame) => console.log(`[collab-e2e:ws] ${label} recv: ${(typeof frame.payload === "string" ? frame.payload : "<binary>").slice(0, 800)}`));
+        ws.on("close", () => console.log(`[collab-e2e:ws] ${label} closed: ${ws.url()}`));
+        ws.on("socketerror", (error) => console.log(`[collab-e2e:ws] ${label} socketerror: ${ws.url()} — ${error}`));
+      });
+    };
+    attachBrowserDiagnostics(user1Page, "user1");
+    attachBrowserDiagnostics(user2Page, "user2");
+
+    await user1Page.goto(`http://127.0.0.1:${user1Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+    await user1Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
+    await user2Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
+    await user1Page.waitForTimeout(2_000);
+    await user2Page.waitForTimeout(2_000);
+
+    const scenario = await collabRunScenario(user1Page, user2Page, hubBaseUrl);
+    for (const outcome of scenario.results) results.push(outcome);
+
+    hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+
+    const ignorableGpuFragments = ["NoCompatibleDevice"];
+    const criticalErrors = pageErrors.filter((message) => !ignorableGpuFragments.some((fragment) => message.includes(fragment)));
+    if (criticalErrors.length > 0) console.warn(`[collab-e2e] page errors observed (not a step on their own, informational): ${criticalErrors.join(" | ")}`);
+  } finally {
+    await teardown();
+  }
+
+  const passed = results.filter((outcome) => outcome.pass).length;
+  console.log(`[collab-e2e] summary: ${passed}/${results.length} steps passed`);
+  for (const outcome of results) console.log(`  STEP ${outcome.step}: ${outcome.pass ? "PASS" : "FAIL"}: ${outcome.name}`);
+  if (passed !== results.length) process.exitCode = 1;
+}
+//#endregion 🔖️CollabE2e
+
 class VerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const port = process.env.S_OS_PORT ?? "6070";
     const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
     const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
+    if (segments[0] === "collab") {
+      await runCollabE2eVerify();
+      return;
+    }
     if (segments[0] === "e2e") {
       await runStudioE2eVerify(studioUrl, timeoutMs);
       console.log(`[DEBUG] s studio e2e verify passed (${studioUrl})`);

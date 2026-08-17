@@ -6,11 +6,12 @@
 
 use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::artifacts::bmp::BmpSnapshot;
+use std::collections::HashSet;
 // 🔗 `DiffAlgebra` (spine S-1) isn't in the `protocol` facade's curated re-export list yet —
 // reach it via the same crate's directly-mounted `command` module (F1 precedent, see
 // `f1-csv-report.md` `## Deviations`).
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -269,7 +270,10 @@ pub struct BmpDiff {
 }
 
 impl MutationDiff<BmpSnapshot> for BmpDiff {
-    fn apply(&self, base: &BmpSnapshot) -> BmpSnapshot {
+    fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
+        if let Some(palette) = &self.palette {
+            validate_bmp_palette(base.palette.len(), palette)?;
+        }
         let mut next = base.clone();
         if let Some(v) = self.header_size {
             next.header_size = v;
@@ -334,7 +338,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         if let Some(v) = &self.pixels {
             next.pixels = v.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -386,9 +390,32 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
     }
 }
 
+fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> MutationApplyResult<()> {
+    let mut removed = HashSet::new();
+    for &index in &diff.removed {
+        if index >= base_len || !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").at(["palette", "removed"]));
+        }
+    }
+    let mut modified = HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").at(["palette", "modified"]));
+        }
+    }
+    let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
+    let mut added = HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len || !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").at(["palette", "added"]));
+        }
+    }
+    Ok(())
+}
+
 impl DiffAlgebra<BmpSnapshot> for BmpDiff {
     fn inverse(&self, base: &BmpSnapshot) -> Self {
-        let applied = self.apply(base);
+        let applied = self.apply(base).unwrap();
         Self::between(&applied, base)
     }
 

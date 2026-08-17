@@ -15,7 +15,7 @@ pub struct ReorderSynapses {
 impl MutationKind<FlowSnapshot, FlowMutation> for ReorderSynapses {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "synapse", kind: "reorder-synapses", record: "ReorderedSynapses" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

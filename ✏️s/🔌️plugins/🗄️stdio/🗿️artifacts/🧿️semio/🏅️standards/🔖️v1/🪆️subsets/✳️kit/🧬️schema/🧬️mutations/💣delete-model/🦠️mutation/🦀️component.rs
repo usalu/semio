@@ -14,7 +14,7 @@ pub struct DeleteModel {
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for DeleteModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "model", kind: "delete-model", record: "DeletedModel" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {

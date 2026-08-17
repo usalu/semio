@@ -131,6 +131,23 @@ pub struct ArtifactSession {
     pub document: SessionLanePack,
     pub config: SessionLanePack,
     pub draft: SessionLanePack,
+    /// ⚖️ This session's own view of its local/authority `MergePolicy`, mirrored from the last
+    /// `AppCommand::SetMergePolicy` this session's `exchange` calls have sent (`Normal` — the wire
+    /// default — until the first one). See `WasmPluginRuntime::hello`/`set_merge_policy`.
+    pub merge_policy: protocol::MergePolicy,
+    /// 📨 The most recent dispatch's `protocol::MutationMessage`s — mirrored from whichever of
+    /// `AppFrame::Invocation.messages` (success) or `AppFrame::Error.report` (rejected) last carried
+    /// a non-empty packed `protocol::DispatchReport`. Ticket 26/08/16/MUTATION-OUTCOMES-MERGE-
+    /// POLICIES-AND-FIRST-CLASS-CONFLICTS (C9): mirrors `diagnostics`'s own DSL-diagnostics
+    /// surfacing convention exactly (see `AppFrame::Emit`'s `diagnostics` field, `push_app_fault`'s
+    /// `fault` field) rather than a second event/callback mechanism.
+    pub last_dispatch_messages: Vec<protocol::MutationMessage>,
+    /// 🔀 The most recent unsolicited `AppFrame::MergeReport`, if this session has seen one.
+    pub last_merge_report: Option<protocol::MergeReport>,
+    /// ⚔️ This artifact's currently open conflicts, mirrored from the most recent
+    /// `AppFrame::Conflicts` (pushed unsolicited after every ingest, and the reply to
+    /// `AppCommand::ReadConflicts`).
+    pub open_conflicts: Vec<protocol::Conflict>,
 }
 
 impl ArtifactSession {
@@ -142,6 +159,47 @@ impl ArtifactSession {
 
 const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
 //#endregion 🔖️ArtifactSession
+
+//#region 🔖️MutationReports
+/// 🧾 Decodes a packed `protocol::DispatchReport` off the wire — the shape `AppFrame::Invocation`'s
+/// trailing `messages` and `AppFrame::Error`'s trailing `report` both carry (contract-freeze.md
+/// §C8/C9). Empty bytes (a pre-CHANNEL_VERSION-11 peer, or a frame that legitimately carries none)
+/// decode to a message-free report under this session's own tracked policy rather than erroring —
+/// callers that need to distinguish "no report" from "empty report" should check `bytes.is_empty()`
+/// themselves first.
+pub fn decode_dispatch_report(bytes: &[u8]) -> Result<protocol::DispatchReport, PluginHostError> {
+    if bytes.is_empty() {
+        return Ok(protocol::DispatchReport { policy: protocol::MergePolicy::default(), worst: None, messages: Vec::new() });
+    }
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+}
+
+/// 🔀 Decodes a packed `protocol::MergeReport` — `AppFrame::MergeReport.report`.
+pub fn decode_merge_report(bytes: &[u8]) -> Result<protocol::MergeReport, PluginHostError> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+}
+
+/// ⚔️ Decodes a packed `Vec<protocol::Conflict>` — `AppFrame::Conflicts.conflicts`.
+pub fn decode_conflicts(bytes: &[u8]) -> Result<Vec<protocol::Conflict>, PluginHostError> {
+    if bytes.is_empty() {
+        return Ok(Vec::new());
+    }
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
+}
+
+/// 🔢️ One shared, monotonic `seq` source for every host-INITIATED `AppCommand` this crate sends on
+/// a caller's behalf (`context_menu`, `hello`, `set_merge_policy`, `resolve_conflict`,
+/// `read_conflicts`) — a single counter, not one static per call site, so two host-initiated
+/// commands issued back to back (e.g. `hello`'s batched `Hello` + `SetMergePolicy`) never collide.
+fn next_host_seq() -> u64 {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEQ: AtomicU64 = AtomicU64::new(1);
+    SEQ.fetch_add(1, Ordering::Relaxed)
+}
+//#endregion 🔖️MutationReports
 
 //#region 🔖️IoRouter
 /// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): the host
@@ -1551,7 +1609,7 @@ mod host_transaction_coordinator_tests {
                     }
                     other => {
                         instance.pending = other;
-                        protocol::AppFrame::Error { in_reply_to: None, fault: host_fault_bytes("transaction.commit-failed", "no matching pending transaction") }
+                        protocol::AppFrame::Error { in_reply_to: None, fault: host_fault_bytes("transaction.commit-failed", "no matching pending transaction"), report: Vec::new() }
                     }
                 },
                 protocol::AppCommand::TransactionRollback { txn_id, .. } => {
@@ -1875,14 +1933,16 @@ impl AppRouter {
         state.registered_refs.retain(|(owner, _)| owner != plugin_id);
     }
 
-    /// 🩺️ Contract §3 (W1 soft gate — item 3 of this lane's brief): every dialect with AT LEAST ONE
-    /// registered surface, whose `artifact_kind` has a known owner, must resolve for BOTH roles. Pure
-    /// and total, never panics — the caller decides whether to log (W1, today's zero-surface reality)
-    /// or hard-fail (W3, once `policySubsetSurfaceCompletenessBreaches` + the W2 scaffolder have
-    /// populated real surfaces). Deliberately scoped to what the router can actually see: full
-    /// taxonomy-disk subset completeness (all 143 subsets, including ones with zero surfaces at all)
-    /// is `policySubsetSurfaceCompletenessBreaches`'s job in `📜️script.ts` (lane 1-E), not a host
-    /// runtime concern — a wasm plugin host cannot walk the repo filesystem.
+    /// 🩺️ Contract §3: every dialect with AT LEAST ONE registered surface, whose `artifact_kind` has a
+    /// known owner, must resolve for BOTH roles. Pure and total, never panics — the caller decides
+    /// whether to log or hard-fail. W1 logged this as a soft diagnostic while every plugin still had
+    /// zero surfaces; W3 (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, now that
+    /// `policySubsetSurfaceCompletenessBreaches` + the W2 scaffolder have populated all 286 real
+    /// surfaces) flips `load_runtime_recursive`'s caller to hard-fail the load instead. Deliberately
+    /// scoped to what the router can actually see: full taxonomy-disk subset completeness (all 143
+    /// subsets, including ones with zero surfaces at all) is `policySubsetSurfaceCompletenessBreaches`'s
+    /// job in `📜️script.ts`, not a host runtime concern — a wasm plugin host cannot walk the repo
+    /// filesystem.
     pub fn owned_surface_gaps(&self) -> Vec<semio_framework::Fault> {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut dialects: Vec<semio_framework::ArtifactDialect> = state.surfaces.keys().map(|(dialect, _)| dialect.clone()).collect();
@@ -2652,6 +2712,14 @@ impl WasmPluginRuntime {
                         host.adopt_draft(instance_id, draft, draft_spr, String::new());
                     }
                 }
+                // ⚖️ Mirrors this session's own view of its local/authority `MergePolicy` the exact
+                // moment the command that sets it is SENT, not once the reply comes back — same
+                // "mirror on the way past" convention `LoadDocument`/`LoadConfig` above already use.
+                AppCommand::SetMergePolicy { policy, .. } => {
+                    if let Some(policy) = protocol::MergePolicy::from_u8(policy) {
+                        host.ensure_session(instance_id).merge_policy = policy;
+                    }
+                }
                 _ => {}
             }
         }
@@ -2682,6 +2750,33 @@ impl WasmPluginRuntime {
                     session.command_log_len = session.command_log_len.saturating_add(1);
                     session.generation = session.generation.saturating_add(1);
                 }
+                // 🧾 Mirrors a successful dispatch's `DispatchReport` messages — the trailing
+                // CHANNEL_VERSION 11 addition on `AppFrame::Invocation` (contract-freeze.md §C8/C9).
+                AppFrame::Invocation { messages, .. } if !messages.is_empty() => {
+                    if let Ok(report) = decode_dispatch_report(&messages) {
+                        host.ensure_session(instance_id).last_dispatch_messages = report.messages;
+                    }
+                }
+                // 🧾 Mirrors a REJECTED dispatch's `DispatchReport` messages — `AppFrame::Error`'s
+                // trailing `report`, present whenever `fault.code == "mutation.rejected"`.
+                AppFrame::Error { report, .. } if !report.is_empty() => {
+                    if let Ok(dispatch_report) = decode_dispatch_report(&report) {
+                        host.ensure_session(instance_id).last_dispatch_messages = dispatch_report.messages;
+                    }
+                }
+                // 🔀 Mirrors the unsolicited merge report pushed after every ingest.
+                AppFrame::MergeReport { report, .. } => {
+                    if let Ok(merge_report) = decode_merge_report(&report) {
+                        host.ensure_session(instance_id).last_merge_report = Some(merge_report);
+                    }
+                }
+                // ⚔️ Mirrors this artifact's open-conflict projection — pushed unsolicited after every
+                // ingest, and also the reply to `AppCommand::ReadConflicts`.
+                AppFrame::Conflicts { conflicts, .. } => {
+                    if let Ok(list) = decode_conflicts(&conflicts) {
+                        host.ensure_session(instance_id).open_conflicts = list;
+                    }
+                }
                 _ => {}
             }
         }
@@ -2690,9 +2785,7 @@ impl WasmPluginRuntime {
     /// 🖱️ On-demand context menu via `AppCommand::ContextMenu` on the plugin exchange channel.
     pub fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, PluginHostError> {
         use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
-        use std::sync::atomic::{AtomicU64, Ordering};
-        static SEQ: AtomicU64 = AtomicU64::new(1);
-        let seq = SEQ.fetch_add(1, Ordering::Relaxed);
+        let seq = next_host_seq();
         let request_dsl = dsl::to_dsl_value(&request).map_err(|error| PluginHostError::Plugin(error))?;
         let request_bytes = store::pack_rt::encode_wire_value(&request_dsl);
         let command = AppCommand::ContextMenu { seq, request: request_bytes };
@@ -2704,11 +2797,82 @@ impl WasmPluginRuntime {
                     let value = store::pack_rt::decode_wire_value(&items).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
                     return dsl::from_dsl_value(value).map_err(|error| PluginHostError::Plugin(error));
                 }
-                AppFrame::Error { in_reply_to, fault } if in_reply_to == Some(seq) => {
+                AppFrame::Error { in_reply_to, fault, .. } if in_reply_to == Some(seq) => {
                     let decoded = dsl::decode_fault_bytes(&fault);
                     return Err(PluginHostError::Plugin(decoded.message));
                 }
                 _ => {}
+            }
+        }
+        Ok(Vec::new())
+    }
+
+    /// 🤝️ The instance handshake: `AppCommand::Hello` (channel-version negotiation + optional
+    /// initial config) batched with an immediate `AppCommand::SetMergePolicy`, in the SAME `exchange`
+    /// call — this session's local/authority `MergePolicy` is established before any other command
+    /// can reach the instance, satisfying contract-freeze.md §C9's "`Hello.config` seeds policy"
+    /// without a second wire mechanism (the frozen §C8 tag table adds no policy field to `Hello`
+    /// itself; `SetMergePolicy` already IS the wire command for this — see `📋️contract-freeze.md`).
+    /// Returns every decoded reply frame (`Welcome` plus the policy command's `Done`/`Error`).
+    pub fn hello(&self, instance_id: u32, app_id: &str, actor: &str, config: Vec<u8>, merge_policy: protocol::MergePolicy) -> Result<Vec<protocol::AppFrame>, PluginHostError> {
+        use protocol::{decode_app_frame, encode_app_command, AppCommand};
+        let policy_seq = next_host_seq();
+        let commands = vec![
+            encode_app_command(&AppCommand::Hello { channel_version: protocol::CHANNEL_VERSION, app_id: app_id.to_string(), actor: actor.to_string(), config }),
+            encode_app_command(&AppCommand::SetMergePolicy { seq: policy_seq, policy: merge_policy.as_u8() }),
+        ];
+        let frames = self.exchange(instance_id, commands)?;
+        frames.iter().map(|bytes| decode_app_frame(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))).collect()
+    }
+
+    /// ⚖️ Sends `AppCommand::SetMergePolicy` on its own (outside the initial handshake — e.g. a
+    /// mid-session policy change from a settings toggle). See `hello` for the handshake-time form.
+    pub fn set_merge_policy(&self, instance_id: u32, policy: protocol::MergePolicy) -> Result<(), PluginHostError> {
+        use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
+        let seq = next_host_seq();
+        let command = AppCommand::SetMergePolicy { seq, policy: policy.as_u8() };
+        let frames = self.exchange(instance_id, vec![encode_app_command(&command)])?;
+        for bytes in frames {
+            if let Ok(AppFrame::Error { in_reply_to: Some(reply), fault, .. }) = decode_app_frame(&bytes) {
+                if reply == seq {
+                    return Err(PluginHostError::Plugin(dsl::decode_fault_bytes(&fault).message));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// ⚔️ `AppCommand::ResolveConflict` pass-through — returns the authoritative `MergeReport` this
+    /// resolution produced (contract-freeze.md §C5/C6/C9).
+    pub fn resolve_conflict(&self, instance_id: u32, conflict_id: &str, resolution: protocol::ConflictResolution) -> Result<protocol::MergeReport, PluginHostError> {
+        use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
+        let seq = next_host_seq();
+        let resolution_wire = match resolution {
+            protocol::ConflictResolution::Accept => 0,
+            protocol::ConflictResolution::Discard => 1,
+        };
+        let command = AppCommand::ResolveConflict { seq, conflict_id: conflict_id.to_string(), resolution: resolution_wire };
+        let frames = self.exchange(instance_id, vec![encode_app_command(&command)])?;
+        for bytes in &frames {
+            match decode_app_frame(bytes) {
+                Ok(AppFrame::MergeReport { in_reply_to: Some(reply), report }) if reply == seq => return decode_merge_report(&report),
+                Ok(AppFrame::Error { in_reply_to: Some(reply), fault, .. }) if reply == seq => return Err(PluginHostError::Plugin(dsl::decode_fault_bytes(&fault).message)),
+                _ => {}
+            }
+        }
+        Err(PluginHostError::Plugin(format!("no MergeReport reply for seq {seq}")))
+    }
+
+    /// ⚔️ `AppCommand::ReadConflicts` pass-through — this artifact's currently open conflicts.
+    pub fn read_conflicts(&self, instance_id: u32) -> Result<Vec<protocol::Conflict>, PluginHostError> {
+        use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
+        let seq = next_host_seq();
+        let frames = self.exchange(instance_id, vec![encode_app_command(&AppCommand::ReadConflicts { seq })])?;
+        for bytes in &frames {
+            if let Ok(AppFrame::Conflicts { in_reply_to: Some(reply), conflicts }) = decode_app_frame(bytes) {
+                if reply == seq {
+                    return decode_conflicts(&conflicts);
+                }
             }
         }
         Ok(Vec::new())
@@ -3332,4 +3496,147 @@ mod tests {
         //#endregion 🔖️ExtensionComponentE2e
     }
     //#endregion 🔖️W2aPluginDependencyE2e
+
+    //#region 🔖️MergePolicyE2e
+    /// ⚖️ Ticket 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS (W2-B): the real
+    /// wasmtime proof that a merge-policy-rejected dispatch surfaces through `AppFrame::Error`'s
+    /// trailing `report` (contract-freeze.md §C8/C9), and that flipping the session's policy to
+    /// `LaissezFaire` (via `WasmPluginRuntime::set_merge_policy`) changes the outcome from rejected to
+    /// applied while the SAME `mutation.target-missing` message still surfaces — this time on
+    /// `AppFrame::Invocation.messages`. Uses the real `block` plugin's block2d editor
+    /// (`removeHandle{id}` -> the `delete-handle` mutation kind, whose `🔺️diff` returns
+    /// `MutationOutcome::error("mutation.target-missing", ..)` for an absent handle id — see
+    /// `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/
+    /// ❌️delete-handle/🔺️diff/🦀️component.rs`) — no new plugin crate, no in-process fake: a real
+    /// dispatch through a real sandboxed wasm component, the exact `create_app`/`exchange` calling
+    /// convention `WasmtimeNodeHost`/`ProgramBridge` already use.
+    #[test]
+    fn merge_policy_gates_a_real_dispatch_and_laissez_faire_still_surfaces_its_message() {
+        let block_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/block/semio_s_plugin_block_component.core.wasm");
+        if !block_path.exists() {
+            // 🧊️ Same convention as every other real-component test in this file: stays green on a
+            // fresh clone / no-wasm-toolchain CI run.
+            return;
+        }
+        let runtime = WasmPluginRuntime::load(block_path).expect("load real block.wasm");
+
+        // 🪪️ The block2d editor's real manifest app id — never hardcoded (`AppDefinition.id` is
+        // derived via `semio_framework::manifest::surface_app_id`, not a stable hand-picked constant).
+        let editor_app_id = runtime
+            .manifest
+            .apps
+            .iter()
+            .find(|app| app.dialect.artifact_kind == "s.block.block2d" && app.role == semio_framework::manifest::AppRole::Editor)
+            .expect("block plugin declares a block2d editor surface")
+            .id
+            .clone();
+
+        let instance_id = runtime.create_app(&editor_app_id).expect("create a real block2d editor instance");
+
+        let mut seq: u64 = 0;
+        let mut next_seq = || {
+            seq += 1;
+            seq
+        };
+
+        let hello_frames = runtime
+            .exchange(instance_id, vec![protocol::encode_app_command(&protocol::AppCommand::Hello { channel_version: protocol::CHANNEL_VERSION, app_id: editor_app_id.clone(), actor: "w2b-e2e".into(), config: Vec::new() })])
+            .expect("Hello exchange succeeds");
+        assert!(hello_frames.iter().any(|bytes| matches!(protocol::decode_app_frame(bytes), Ok(protocol::AppFrame::Welcome { .. }))), "real block2d instance must welcome a valid Hello");
+
+        let view_state = ViewModel { active_mode_id: Some("edit".into()), ..Default::default() };
+        let view_state_bytes = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&view_state).expect("view state encodes"));
+
+        let action_frame = |seq: u64, action_id: &str, arguments: Vec<(&str, serde_json::Value)>| -> Vec<u8> {
+            let invocation = semio_framework::manifest::ActionInvocation {
+                address: semio_framework::manifest::ActionAddress {
+                    plugin_id: "block".into(),
+                    app_id: editor_app_id.clone(),
+                    mode_id: "edit".into(),
+                    window_kind_id: "block2d-board".into(),
+                    window_instance_id: "w2b-e2e-window".into(),
+                    action_id: action_id.into(),
+                },
+                arguments: arguments.into_iter().map(|(key, value)| (key.to_string(), value)).collect(),
+            };
+            let command_bytes = store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&invocation).expect("action invocation encodes"));
+            protocol::encode_app_command(&protocol::AppCommand::Command { seq, command: command_bytes, view_state: view_state_bytes.clone() })
+        };
+
+        // 🌱️ Mint one real handle so this artifact's document is genuinely non-trivial (not needed for
+        // the missing-id assertion itself, but proves the wasm document store is real, not a stub that
+        // accepts everything).
+        let add_kind_seq = next_seq();
+        let add_kind_frames = runtime.exchange(instance_id, vec![action_frame(add_kind_seq, "addHandleKind", vec![])]).expect("addHandleKind exchange succeeds");
+        assert!(add_kind_frames.iter().any(|bytes| matches!(protocol::decode_app_frame(bytes), Ok(protocol::AppFrame::Invocation { in_reply_to, .. }) if in_reply_to == add_kind_seq)), "addHandleKind must produce a real Invocation frame, not an Error");
+
+        let add_handle_seq = next_seq();
+        let add_handle_frames = runtime.exchange(instance_id, vec![action_frame(add_handle_seq, "addHandle", vec![])]).expect("addHandle exchange succeeds");
+        assert!(add_handle_frames.iter().any(|bytes| matches!(protocol::decode_app_frame(bytes), Ok(protocol::AppFrame::Invocation { in_reply_to, .. }) if in_reply_to == add_handle_seq)), "addHandle must produce a real Invocation frame, not an Error");
+
+        let read_seq_before = next_seq();
+        let before_frames = runtime.exchange(instance_id, vec![protocol::encode_app_command(&protocol::AppCommand::ReadDocument { seq: read_seq_before })]).expect("ReadDocument exchange succeeds");
+        let document_before = before_frames
+            .iter()
+            .find_map(|bytes| match protocol::decode_app_frame(bytes) {
+                Ok(protocol::AppFrame::Document { in_reply_to, pack, spr, .. }) if in_reply_to == read_seq_before => Some((pack, spr)),
+                _ => None,
+            })
+            .expect("ReadDocument must reply with a real Document frame");
+        assert!(!document_before.0.is_empty(), "a document with one real handle must not be an empty pack");
+
+        //#region 🔖️Normal
+        // ⚖️ Default policy is `Normal` (never set explicitly here) — `Normal.rejects(Error)` is true
+        // (contract-freeze.md's policy table), so `removeHandle` on a missing id must be REJECTED.
+        let reject_seq = next_seq();
+        let reject_frames = runtime.exchange(instance_id, vec![action_frame(reject_seq, "removeHandle", vec![("id", serde_json::json!("nonexistent-handle-id"))])]).expect("removeHandle exchange succeeds (rejection is a frame, not a wasmtime error)");
+        let (fault, report) = reject_frames
+            .iter()
+            .find_map(|bytes| match protocol::decode_app_frame(bytes) {
+                Ok(protocol::AppFrame::Error { in_reply_to: Some(reply), fault, report }) if reply == reject_seq => Some((fault, report)),
+                _ => None,
+            })
+            .expect("Normal policy must reject a delete-missing-id dispatch with a real AppFrame::Error");
+        assert_eq!(dsl::decode_fault_bytes(&fault).code.0, "mutation.rejected", "the rejection fault must be the real mutation.rejected code, not a generic one");
+        let dispatch_report = decode_dispatch_report(&report).expect("Error.report must decode to a real packed DispatchReport");
+        assert_eq!(dispatch_report.policy, protocol::MergePolicy::Normal);
+        assert!(dispatch_report.messages.iter().any(|message| message.code.0 == "mutation.target-missing"), "the rejected dispatch's real messages must name mutation.target-missing, got {:?}", dispatch_report.messages);
+
+        let read_seq_after_reject = next_seq();
+        let after_reject_frames = runtime.exchange(instance_id, vec![protocol::encode_app_command(&protocol::AppCommand::ReadDocument { seq: read_seq_after_reject })]).expect("ReadDocument exchange succeeds");
+        let document_after_reject = after_reject_frames
+            .iter()
+            .find_map(|bytes| match protocol::decode_app_frame(bytes) {
+                Ok(protocol::AppFrame::Document { in_reply_to, pack, spr, .. }) if in_reply_to == read_seq_after_reject => Some((pack, spr)),
+                _ => None,
+            })
+            .expect("ReadDocument must reply with a real Document frame");
+        assert_eq!(document_after_reject, document_before, "a rejected dispatch must leave the document byte-for-byte unchanged");
+        //#endregion 🔖️Normal
+
+        //#region 🔖️LaissezFaire
+        // ⚖️ `LaissezFaire.rejects` is true only for `Fatal` — `mutation.target-missing` is `Error`, so
+        // switching this session's policy must let the SAME dispatch apply (an `Invocation` frame, not
+        // `Error`), while its real message still surfaces — now on `Invocation.messages`.
+        runtime.set_merge_policy(instance_id, protocol::MergePolicy::LaissezFaire).expect("set_merge_policy(LaissezFaire) succeeds against a real instance");
+
+        let apply_seq = next_seq();
+        let apply_frames = runtime.exchange(instance_id, vec![action_frame(apply_seq, "removeHandle", vec![("id", serde_json::json!("nonexistent-handle-id"))])]).expect("removeHandle exchange succeeds under LaissezFaire");
+        assert!(
+            !apply_frames.iter().any(|bytes| matches!(protocol::decode_app_frame(bytes), Ok(protocol::AppFrame::Error { in_reply_to: Some(reply), .. }) if reply == apply_seq)),
+            "LaissezFaire must not reject an Error-level (non-Fatal) dispatch"
+        );
+        let messages = apply_frames
+            .iter()
+            .find_map(|bytes| match protocol::decode_app_frame(bytes) {
+                Ok(protocol::AppFrame::Invocation { in_reply_to, messages, .. }) if in_reply_to == apply_seq => Some(messages),
+                _ => None,
+            })
+            .expect("LaissezFaire must apply the dispatch as a real Invocation frame");
+        let applied_report = decode_dispatch_report(&messages).expect("Invocation.messages must decode to a real packed DispatchReport");
+        assert_eq!(applied_report.policy, protocol::MergePolicy::LaissezFaire);
+        assert!(applied_report.messages.iter().any(|message| message.code.0 == "mutation.target-missing"), "the applied dispatch's real messages must STILL name mutation.target-missing under LaissezFaire, got {:?}", applied_report.messages);
+        //#endregion 🔖️LaissezFaire
+    }
+    //#endregion 🔖️MergePolicyE2e
 }

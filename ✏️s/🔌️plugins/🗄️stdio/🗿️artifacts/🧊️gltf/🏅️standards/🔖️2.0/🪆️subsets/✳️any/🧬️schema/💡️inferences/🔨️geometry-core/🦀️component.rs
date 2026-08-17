@@ -381,7 +381,7 @@ pub(crate) fn pair_geometry(first: &RawPart, second: &RawPart, policy: &GltfAnal
     let second_samples = sampled_points(&second.points, point_limit).collect::<Vec<_>>();
     let minimum_distance = first_samples.iter().flat_map(|a| second_samples.iter().map(move |b| norm(sub(*a, *b)))).fold(f64::INFINITY, f64::min);
     let sample_count = first_samples.len().saturating_mul(second_samples.len());
-    let tolerance = ((norm(sub(first_hi, first_lo)).max(norm(sub(second_hi, second_lo))) * policy.relative_tolerance).max(policy.absolute_length_tolerance));
+    let tolerance = (norm(sub(first_hi, first_lo)).max(norm(sub(second_hi, second_lo))) * policy.relative_tolerance).max(policy.absolute_length_tolerance);
     let overlap_dimensions =
         [(first_hi[0].min(second_hi[0]) - first_lo[0].max(second_lo[0])).max(0.0), (first_hi[1].min(second_hi[1]) - first_lo[1].max(second_lo[1])).max(0.0), (first_hi[2].min(second_hi[2]) - first_lo[2].max(second_lo[2])).max(0.0)];
     let overlap_volume = overlap_dimensions.iter().product::<f64>();

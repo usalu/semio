@@ -85,7 +85,10 @@ describe("window completeness policy", () => {
   test("requires item-only capability facets and their language mirrors", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-window-policy-"));
     const ownerRel = "🧪️owner";
-    const window = join(root, ownerRel, "🎛️apps", "🧪️app", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
+    // 👁️✏️ Windows now live under a subset's surface (👁️viewer/✏️editor), not 🎛️apps (W3 dissolution,
+    // ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) — mirrors the on-disk shape every other
+    // fixture in this file already uses for 🏅️standards/🪆️subsets.
+    const window = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
     const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(window, { recursive: true });
@@ -124,7 +127,9 @@ describe("window completeness policy", () => {
   test("requires every mode to declare its windows collection and its three state lanes", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-mode-policy-"));
     const ownerRel = "🧪️owner";
-    const mode = join(root, ownerRel, "🎛️apps", "🧪️app", "🎭️modes", "🧪️mode");
+    // 👁️✏️ Modes now live under a subset's surface, not 🎛️apps (W3 dissolution) — see the sibling
+    // window-completeness test above for the same shape rationale.
+    const mode = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode");
     const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(mode, { recursive: true });
@@ -1342,11 +1347,11 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.modeRequiredChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.pluginRequiredChildDirs).toEqual(["🎮️commands"]);
     expect(taxonomy.osRequiredChildDirs).toEqual(["🎮️commands"]);
-    expect(taxonomy.appComponentDirs).toContain("🎮️commands");
+    expect(taxonomy.surfaceRequiredChildDirs).toContain("🎮️commands");
     expect(taxonomy.transientChildDirs).toEqual(["🧬️schema"]);
-    expect(taxonomy.appComponentDirs).toContain("🫧️transient");
-    expect(taxonomy.appChildDirs).toContain("🫧️transient");
-    expect(taxonomy.appSchemaSpecFilenames["🫧️transient/🧬️schema"]).toBe("🔣️component.json");
+    expect(taxonomy.surfaceRequiredChildDirs).toContain("🫧️transient");
+    expect(taxonomy.surfaceChildDirs).toContain("🫧️transient");
+    expect(taxonomy.surfaceSchemaSpecFilenames["🫧️transient/🧬️schema"]).toBe("🔣️component.json");
     expect(taxonomy.windowComponentLangs).toEqual(["🦀️rust", "🟦️typescript"]);
     expect(taxonomy.windowEmptyFacetFilename).toBe("📌️empty.md");
     expect(taxonomy.taxonomyLeafFilenames["🦀️rust"]).toBe("🦀️component.rs");
@@ -1361,7 +1366,7 @@ describe("loadTaxonomy", () => {
   test("declares direct plugin-root facets without a nested directory taxonomy field", () => {
     const taxonomy = loadTaxonomy();
     expect("pluginDirName" in taxonomy).toBe(false);
-    expect(taxonomy.pluginChildDirs).toEqual(["🎛️apps", "🎮️commands"]);
+    expect(taxonomy.pluginChildDirs).toEqual(["🎮️commands"]);
     expect(taxonomy.osChildDirs).toEqual(["🎮️commands"]);
   });
 
@@ -1419,7 +1424,7 @@ describe("loadTaxonomy", () => {
     });
     expect(taxonomy.forbiddenExampleSlugs).toEqual(["♻️reuse", "♻️default", "📕️default", "♻️semio"]);
     expect(taxonomy.forbiddenExamplePluralDirs).toEqual(["🎒️packs", "🗣️dsls", "🔧️ops", "📡️sprs"]);
-    expect(taxonomy.appChildDirs).toContain("📚️examples");
+    expect(taxonomy.surfaceChildDirs).toContain("📚️examples");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🎒️packs");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🗣️dsls");
     expect(taxonomy.taxonomyLeafParentDirs).not.toContain("🔧️ops");
@@ -1616,7 +1621,7 @@ describe("validateTaxonomy", () => {
 
   test("requires a commands facet at every command-owning scope", () => {
     const taxonomy = loadTaxonomy();
-    for (const key of ["appChildDirs", "modeChildDirs", "pluginChildDirs", "osChildDirs"] as const) {
+    for (const key of ["surfaceChildDirs", "modeChildDirs", "pluginChildDirs", "osChildDirs"] as const) {
       const broken = { ...taxonomy, [key]: taxonomy[key].filter((dir) => dir !== "🎮️commands") };
       expect(validateTaxonomy(broken).some((problem) => problem.includes(`${key} must include "🎮️commands"`))).toBe(true);
     }

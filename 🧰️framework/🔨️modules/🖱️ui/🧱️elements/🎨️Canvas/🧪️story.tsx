@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Canvas, DiagramNode, DiagramSkeleton, HorizontalWindows, Window } from "@semio-tech/ui-react";
+import { Canvas, DiagramSkeleton, HorizontalWindows, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷️#region ⚙️Canvas
@@ -55,21 +55,6 @@ export const Default: Story = {
 };
 
 // #endregion ⚙️Canvas
-
-// 🌿️#region 🔓️DiagramNode
-export const DiagramNodeDefault: Story = {
-  args: { children: null },
-  render: () => (
-    <div className="flex items-center gap-4 p-8">
-      <DiagramNode content="Capsule J" />
-      <DiagramNode content="Selected" selected />
-      <DiagramNode content="Hovered" hovered />
-      <DiagramNode content="Placeholder" isPlaceholder />
-      <DiagramNode content="Clickable" onClick={() => {}} />
-    </div>
-  ),
-};
-// #endregion 🔓️DiagramNode
 
 // 🔷️#region 🧫️DiagramSkeleton
 export const DiagramSkeletonDefault: Story = {

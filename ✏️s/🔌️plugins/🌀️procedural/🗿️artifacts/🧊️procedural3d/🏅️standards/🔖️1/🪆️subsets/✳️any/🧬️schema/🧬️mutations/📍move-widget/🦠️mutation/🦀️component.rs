@@ -21,7 +21,7 @@ pub struct MoveWidget {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for MoveWidget {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::move_widget::diff::diff(self, base)
     }
 

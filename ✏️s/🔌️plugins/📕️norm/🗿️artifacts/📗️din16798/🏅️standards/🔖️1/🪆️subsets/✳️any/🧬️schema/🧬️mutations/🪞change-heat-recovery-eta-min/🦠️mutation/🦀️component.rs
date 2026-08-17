@@ -15,7 +15,7 @@ pub struct ChangeHeatRecoveryEtaMin {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHeatRecoveryEtaMin {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "heat-recovery-eta-min", kind: "change-heat-recovery-eta-min", record: "ChangedHeatRecoveryEtaMin" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_heat_recovery_eta_min::diff::diff(self, base)
     }
 

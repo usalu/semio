@@ -20,7 +20,6 @@ use crate::artifacts::ply::schema::diff::{
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
 use protocol::Mutation;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::OpText;
 use serde::{Deserialize, Serialize};
@@ -73,10 +72,15 @@ pub enum PlyMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source
 /// (`let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`).
-pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> PlyDiff {
-    let diff = <PlyMutation as protocol::Mutation<PlySnapshot>>::diff(mutation, snapshot);
-    *snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
+    let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -85,8 +89,8 @@ impl Mutation<PlySnapshot> for PlyMutation {
     type Diff = PlyDiff;
 
     /// 🔺️ Every variant handcrafted directly — never apply-and-capture.
-    fn diff(&self, base: &PlySnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             PlyMutation::NoMutation => PlyDiff::default(),
             PlyMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             PlyMutation::SetFormat { format } => diff_set_format(*format),
@@ -108,7 +112,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
             PlyMutation::InsertRow { element_name, index, row } => diff_insert_row(element_name, *index, row.clone()),
             PlyMutation::RemoveRow { element_name, index } => diff_remove_row(element_name, *index),
             PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => diff_set_row_property(element_name, *row_index, property_name, value.clone()),
-        }
+        })
     }
 
     /// ↩️ Handcrafted per-variant undo, key/index-aware (resolves against `base` so e.g. a
@@ -213,7 +217,7 @@ fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
     }
 }
 
-impl protocol::OpText for PlyMutation {
+impl OpText for PlyMutation {
     fn print_op(&self) -> String {
         print_ply_mutation(self)
     }
@@ -249,7 +253,7 @@ fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
 }
 
-impl protocol::OpBinary for PlyMutation {
+impl OpBinary for PlyMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         w.write_u8(store::pack_rt::OP_BINARY_FORMAT);

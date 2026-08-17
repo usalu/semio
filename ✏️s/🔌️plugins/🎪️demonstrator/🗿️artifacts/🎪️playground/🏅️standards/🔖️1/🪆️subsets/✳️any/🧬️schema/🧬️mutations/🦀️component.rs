@@ -51,14 +51,14 @@ mod tests {
     fn change_schema_inverse_round_trips() {
         let base = PlaygroundSnapshot::default();
         let mutation = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.custom".into() });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.schema, "playground.custom");
 
         let undo = mutation.inverse(&base);
         assert_eq!(undo, vec![PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: base.schema.clone() })]);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(state, base);
     }
@@ -81,7 +81,7 @@ mod tests {
         let change = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &change);
         let d1 = change.diff(&base).into_parts().0;
-        let after = d1.apply(&base);
+        let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = PlaygroundMutation::ChangeSchema(super::super::change_schema::mutation::ChangeSchema { new_schema: "playground.changed-again".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }

@@ -7,3 +7,12 @@ export const gltfHandlesInference = {
 } as const;
 export type GltfHandlesInference = typeof gltfHandlesInference;
 
+import { exact, unavailable, type GltfTsGeometryContext, type GltfTsMeasure } from '../../🔨️geometry-core/🟦️component.ts';
+
+export const inferGltfHandles = (context: GltfTsGeometryContext): GltfTsMeasure<number> => {
+  if (!context.valid) return unavailable(context, 'unitless');
+  const value = context.topology?.genus;
+  return value !== undefined ? exact(context, value, 'unitless') : unavailable(context, 'unitless', 'nonManifold');
+};
+
+export const unavailableGltfHandles = (context: GltfTsGeometryContext): GltfTsMeasure<number> => unavailable(context, 'unitless');

@@ -1,0 +1,22 @@
+//! 💬️ 💬️ Writer play app commands command — `engagement-input`.
+
+use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
+use crate::artifacts::writer::op::{EditText, WriterMutation};
+use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ConfigView, ArtifactView, Emit, Fault};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[dsl(keyword = "engagement-input")]
+pub struct EngagementInput {
+    pub value: String,
+}
+
+pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
+    let config = cfg.snapshot;
+    if payload.value != config.engagement_input {
+        Ok(Emit::config(vec![WriterConfigMutation::SetEngagementInput { value: payload.value.clone() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
+    } else {
+        Ok(Emit::default())
+    }
+}

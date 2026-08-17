@@ -8,7 +8,6 @@
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::diff::{self, GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff, GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff};
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
-#[cfg(test)]
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -177,10 +176,15 @@ pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range frame/comment/extension indices are no-ops
 /// rather than panics -- a stale index (e.g. from a concurrent edit) should degrade gracefully.
-pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> GifDiff {
-    let __diff = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
-    *snapshot = __diff.apply(snapshot);
-    __diff
+pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
+    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -188,8 +192,8 @@ pub fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) ->
 impl Mutation<GifSnapshot> for GifMutation {
     type Diff = GifDiff;
 
-    fn diff(&self, base: &GifSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             GifMutation::NoMutation => GifDiff::default(),
             GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
             GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
@@ -242,7 +246,7 @@ impl Mutation<GifSnapshot> for GifMutation {
                 GifDiff { app_extensions: Some(GifAppExtensionsDiff { added: vec![GifAppExtensionAdded { index: (*index).min(base.app_extensions.len()), extension: extension.clone() }], ..Default::default() }), ..Default::default() }
             }
             GifMutation::RemoveAppExtension { index } => GifDiff { app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() },
-        }
+        })
     }
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
@@ -319,7 +323,7 @@ impl Mutation<GifSnapshot> for GifMutation {
 //#region OpCodecs
 /// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — the same ~15-line body
 /// every `DslOps`-derived enum's `OpText` impl uses.
-impl protocol::OpText for GifMutation {
+impl OpText for GifMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -340,7 +344,7 @@ impl protocol::OpText for GifMutation {
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
-impl protocol::OpBinary for GifMutation {
+impl OpBinary for GifMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -389,12 +393,12 @@ mod tests {
 
     fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         let diff = mutation.diff(base);
-        let mutated = diff.apply(base);
+        let mutated = diff.diff().apply(base).expect("diff must apply to base");
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
             let inv_diff = inv.diff(&restored);
-            restored = inv_diff.apply(&restored);
+            restored = inv_diff.diff().apply(&restored).expect("inverse diff must apply to restored");
         }
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
@@ -430,7 +434,7 @@ mod tests {
             let returned_diff = apply_gif_mutation(&mut snap, &mutation);
             let expected_diff = mutation.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-            assert_eq!(snap, expected_diff.apply(&base), "apply_gif_mutation must match diff.apply(base) for {mutation:?}");
+            assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply_gif_mutation must match diff.diff().apply(base) for {mutation:?}");
         }
     }
 

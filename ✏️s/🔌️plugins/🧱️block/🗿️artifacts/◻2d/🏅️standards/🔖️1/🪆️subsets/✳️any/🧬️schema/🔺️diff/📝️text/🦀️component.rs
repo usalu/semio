@@ -22,100 +22,133 @@ fn apply_identified_delta<T: Clone>(
     patched: &[(String, Option<T>)],
     reordered: &Option<Vec<String>>,
     id_of: impl Fn(&T) -> &str,
-) -> Vec<T> {
+) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
+    let mut seen = std::collections::HashSet::new();
     for id in removed {
-        next.retain(|item| id_of(item) != id);
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
+        }
+        let position = next.iter().position(|item| id_of(item) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
+        })?;
+        next.remove(position);
     }
+    seen.clear();
     for item in added {
-        if let Some(pos) = next.iter().position(|entry| id_of(entry) == id_of(item)) {
-            next[pos] = item.clone();
-        } else {
-            next.push(item.clone());
+        let id = id_of(item);
+        if !seen.insert(id.to_string()) || next.iter().any(|entry| id_of(entry) == id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added", id]));
         }
+        next.push(item.clone());
     }
+    seen.clear();
     for (id, replacement) in patched {
-        if let (Some(pos), Some(value)) = (next.iter().position(|entry| id_of(entry) == id), replacement) {
-            next[pos] = value.clone();
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
         }
+        let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
+        })?;
+        let value = replacement.as_ref().ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "item patch has no replacement").at(["patched", id.as_str()])
+        })?;
+        let replacement_id = id_of(value);
+        if replacement_id != id && next.iter().enumerate().any(|(index, entry)| index != position && id_of(entry) == replacement_id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched item identity already exists").at(["patched", replacement_id]));
+        }
+        next[position] = value.clone();
     }
     if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> =
-            next.into_iter().map(|item| (id_of(&item).to_string(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
+        if order.len() != next.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
+        }
+        seen.clear();
         for id in order {
-            if let Some(item) = by_id.remove(id) {
-                ordered.push(item);
+            if !seen.insert(id.clone()) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item appears more than once in order").at(["reordered", id.as_str()]));
+            }
+            if !next.iter().any(|entry| id_of(entry) == id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]));
             }
         }
-        ordered.extend(by_id.into_values());
+        let mut ordered = Vec::with_capacity(next.len());
+        for id in order {
+            let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
+            })?;
+            ordered.push(next.remove(position));
+        }
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
-fn apply_handle_kinds_delta(items: &[Block2dHandleKind], delta: &Block2dHandleKindsDelta) -> Vec<Block2dHandleKind> {
+fn apply_handle_kinds_delta(items: &[Block2dHandleKind], delta: &Block2dHandleKindsDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleKind>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_handles_delta(items: &[Block2dHandleTemplate], delta: &Block2dHandlesDelta) -> Vec<Block2dHandleTemplate> {
+fn apply_handles_delta(items: &[Block2dHandleTemplate], delta: &Block2dHandlesDelta) -> protocol::MutationApplyResult<Vec<Block2dHandleTemplate>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_compatibility_delta(items: &[BlockCompatibilityRule], delta: &Block2dCompatibilityDelta) -> Vec<BlockCompatibilityRule> {
+fn apply_compatibility_delta(items: &[BlockCompatibilityRule], delta: &Block2dCompatibilityDelta) -> protocol::MutationApplyResult<Vec<BlockCompatibilityRule>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.id.as_str())
 }
 
-fn apply_attributes_delta(items: &[BlockAttribute], delta: &Block2dAttributesDelta) -> Vec<BlockAttribute> {
+fn apply_attributes_delta(items: &[BlockAttribute], delta: &Block2dAttributesDelta) -> protocol::MutationApplyResult<Vec<BlockAttribute>> {
     let patched: Vec<_> = delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
     apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| item.key.as_str())
 }
 
 impl Block2dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Block2dArtifact) -> Block2dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(node_kind) = &self.node_kind { next.node_kind = node_kind.clone(); }
-        if let Some(presentation) = &self.presentation { next.presentation = presentation.clone(); }
-        if let Some(delta) = &self.handle_kinds { next.handle_kinds = apply_handle_kinds_delta(&next.handle_kinds, delta); }
-        if let Some(delta) = &self.handles { next.handles = apply_handles_delta(&next.handles, delta); }
-        if let Some(delta) = &self.compatibility { next.compatibility = apply_compatibility_delta(&next.compatibility, delta); }
-        if let Some(delta) = &self.attributes { next.attributes = apply_attributes_delta(&next.attributes, delta); }
-        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
-        if let Some(camera2d) = &self.camera2d { next.camera2d = camera2d.clone(); }
-        if let Some(meta) = &self.meta { next.meta = meta.clone(); }
-        if let Some(list) = &self.selected_ids { next.selected_ids = list.values.clone(); }
-        if let Some(locale) = &self.locale { next.locale = locale.clone(); }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Block2dArtifact) -> protocol::MutationApplyResult<Block2dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(node_kind) = &self.node_kind { next.node_kind = node_kind.clone(); }
+            if let Some(presentation) = &self.presentation { next.presentation = presentation.clone(); }
+            if let Some(delta) = &self.handle_kinds { next.handle_kinds = apply_handle_kinds_delta(&next.handle_kinds, delta).map_err(|error| error.under(["handleKinds"]))?; }
+            if let Some(delta) = &self.handles { next.handles = apply_handles_delta(&next.handles, delta).map_err(|error| error.under(["handles"]))?; }
+            if let Some(delta) = &self.compatibility { next.compatibility = apply_compatibility_delta(&next.compatibility, delta).map_err(|error| error.under(["compatibility"]))?; }
+            if let Some(delta) = &self.attributes { next.attributes = apply_attributes_delta(&next.attributes, delta).map_err(|error| error.under(["attributes"]))?; }
+            if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+            if let Some(camera2d) = &self.camera2d { next.camera2d = camera2d.clone(); }
+            if let Some(meta) = &self.meta { next.meta = meta.clone(); }
+            if let Some(list) = &self.selected_ids { next.selected_ids = list.values.clone(); }
+            if let Some(locale) = &self.locale { next.locale = locale.clone(); }
+            next
+        })
     }
 }
 
 impl MutationDiff<Block2dSnapshot> for Block2dDiff {
-    fn apply(&self, snapshot: &Block2dSnapshot) -> Block2dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema { next.schema = schema.clone(); }
-        if let Some(node_kind) = &self.node_kind { next.node_kind = node_kind.clone(); }
-        if let Some(presentation) = &self.presentation { next.presentation = presentation.clone(); }
-        if let Some(delta) = &self.handle_kinds { next.handle_kinds = apply_handle_kinds_delta(&next.handle_kinds, delta); }
-        if let Some(delta) = &self.handles { next.handles = apply_handles_delta(&next.handles, delta); }
-        if let Some(delta) = &self.compatibility { next.compatibility = apply_compatibility_delta(&next.compatibility, delta); }
-        if let Some(delta) = &self.attributes { next.attributes = apply_attributes_delta(&next.attributes, delta); }
-        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
-        if let Some(camera2d) = &self.camera2d { next.camera2d = camera2d.clone(); }
-        if let Some(meta) = &self.meta { next.meta = meta.clone(); }
-        next
+    fn apply(&self, snapshot: &Block2dSnapshot) -> protocol::MutationApplyResult<Block2dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema { next.schema = schema.clone(); }
+            if let Some(node_kind) = &self.node_kind { next.node_kind = node_kind.clone(); }
+            if let Some(presentation) = &self.presentation { next.presentation = presentation.clone(); }
+            if let Some(delta) = &self.handle_kinds { next.handle_kinds = apply_handle_kinds_delta(&next.handle_kinds, delta).map_err(|error| error.under(["handleKinds"]))?; }
+            if let Some(delta) = &self.handles { next.handles = apply_handles_delta(&next.handles, delta).map_err(|error| error.under(["handles"]))?; }
+            if let Some(delta) = &self.compatibility { next.compatibility = apply_compatibility_delta(&next.compatibility, delta).map_err(|error| error.under(["compatibility"]))?; }
+            if let Some(delta) = &self.attributes { next.attributes = apply_attributes_delta(&next.attributes, delta).map_err(|error| error.under(["attributes"]))?; }
+            if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+            if let Some(camera2d) = &self.camera2d { next.camera2d = camera2d.clone(); }
+            if let Some(meta) = &self.meta { next.meta = meta.clone(); }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

@@ -101,10 +101,9 @@ pub enum SemioPresentationMutation {
 //#region 🔖️Apply
 /// ▶️ `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d` -- the diff is the
 /// single semantics source, never a separate imperative apply path (apply-and-capture is banned).
-pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> SemioPresentationDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -124,8 +123,8 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
     type Diff = SemioPresentationDiff;
 
-    fn diff(&self, base: &SemioPresentationSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioPresentationMutation::NoMutation => SemioPresentationDiff::default(),
             SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioPresentationMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
@@ -141,7 +140,7 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
             SemioPresentationMutation::InsertLayout { layout } => diff_insert_layout(layout.clone()),
             SemioPresentationMutation::RemoveLayout { id } => diff_remove_layout(id),
             SemioPresentationMutation::SetLayoutMaster { id, master_id } => diff_set_layout_master(id, master_id),
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<Self> {
@@ -316,7 +315,7 @@ fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
 /// second independent encoding (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the
 /// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
 /// 📡️component.protocol.semio` uses).
-impl protocol::OpBinary for SemioPresentationMutation {
+impl OpBinary for SemioPresentationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
@@ -476,12 +475,16 @@ mod tests {
         ]
     }
 
+    fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
+        MutationDiff::apply(diff, base).expect("valid Semio presentation diff fixture")
+    }
+
     #[test]
     fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_presentation_mutation(&mut via_apply, &mutation);
@@ -506,9 +509,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = apply_valid(diff.diff(), &base);
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = apply_valid(&inverse_diff, &next);
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -516,10 +519,10 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &SemioPresentationSnapshot, d1: &SemioPresentationDiff, d2: &SemioPresentationDiff) -> SemioPresentationDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = apply_valid(d2, &apply_valid(d1, base));
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(apply_valid(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -534,9 +537,9 @@ mod tests {
             let base = fixture();
             let new_slide = || Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: new_slide() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_triple(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -550,9 +553,9 @@ mod tests {
             let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_f.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_g.clone() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_triple(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == slide_f));
@@ -564,9 +567,9 @@ mod tests {
             let base = fixture();
             let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 1, slide: slide_f }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout { index: 1, layout_id: Some("patched".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_triple(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -577,9 +580,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout { index: 1, layout_id: Some("x".into()) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_triple(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -591,23 +594,23 @@ mod tests {
             let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let slide_g = Slide { id: "g".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
             let d1 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_f }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = apply_valid(d1.diff(), &base);
             let d2 = Mutation::diff(&SemioPresentationMutation::InsertSlide { index: 2, slide: slide_g }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = apply_valid(d2.diff(), &mid1);
             let d3 = Mutation::diff(&SemioPresentationMutation::RemoveSlide { index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = apply_valid(d3.diff(), &mid2);
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(apply_valid(&left, &base), sequential, "absorb associativity (left) failed");
+            assert_eq!(apply_valid(&right, &base), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -617,19 +620,19 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b), &a), b);
+        assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a), &b), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&sample, &sample), &sample), sample);
 
         // "Real" fixture leg: a realistic small deck diffed against a mutated variant.
         let real = fixture();
         let mut mutated = real.clone();
         apply_semio_presentation_mutation(&mut mutated, &SemioPresentationMutation::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("Chapter Two")] });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&real, &mutated), &real), mutated);
+        assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&mutated, &real), &mutated), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -653,9 +656,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(apply_valid(&diff_ab, &a), b);
         let diff_ba = <SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(apply_valid(&diff_ba, &b), a);
         assert!(<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&a, &a).is_empty());
 
         let masters = diff_ab.masters.as_ref().expect("masters diff present");

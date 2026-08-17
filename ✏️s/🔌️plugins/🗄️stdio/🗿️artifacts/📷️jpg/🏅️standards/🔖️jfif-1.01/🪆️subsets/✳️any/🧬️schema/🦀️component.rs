@@ -111,13 +111,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::jpg::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <JpgDiff as protocol::MutationDiff<JpgSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <JpgDiff as protocol::MutationDiff<JpgSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -223,8 +223,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec JpgBuilderFacets {
-        construction: derived_construction::JpgBuilderConstruction,
-        analysis: derived_analysis::JpgAnalyzerAnalysis,
+        construction: JpgBuilderConstruction,
+        analysis: JpgAnalyzerAnalysis,
         composition: super::super::io::derived_composition::JpgComposerComposition,
     }
     builder: JpgBuilder,
@@ -241,8 +241,8 @@ semio_framework_plugin::derive_artifact_facets!(
 // cluster (superseded by `declaration()` in the artifact root, zero real callers) deleted
 // outright; the real codec (`encode_jpg`/`decode_jpg`/`JpgError` + every pure format algorithm)
 // and `io_registry` moved to `../🚪️io`; tests moved beside what they now test.
-pub fn empty_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
-    crate::artifacts::jpg::JpgSnapshot::default()
+pub fn empty_jpg_snapshot() -> JpgSnapshot {
+    JpgSnapshot::default()
 }
 
 /// 🧪️ P2-FG2: the demo `JpgSnapshot` used by `conformance_laws::protocol_walk_law`/
@@ -256,7 +256,7 @@ pub fn empty_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
 /// gaps `../🚪️io/🦀️component.rs`'s own `📡️component.protocol.semio` documents (thumbnail-size =
 /// width*height*3 needs a two-field product; other_segments' body length needs `Lp - 2`, neither
 /// expressible by this dialect's `Field`/`Array` primitives).
-pub(crate) fn demo_jpg_snapshot() -> crate::artifacts::jpg::JpgSnapshot {
+pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
     use crate::artifacts::jpg::JpgSnapshot;
     use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
     let (w, h) = (16u32, 16u32);

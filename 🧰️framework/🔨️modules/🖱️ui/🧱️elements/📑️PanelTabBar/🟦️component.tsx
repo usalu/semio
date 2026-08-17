@@ -10,16 +10,17 @@ import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
 import { type DockSkeleton, type DockTabSkeleton } from "@semio-tech/framework";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️component.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 import { Ribbon, type RibbonRow } from "../🎀️Ribbon/🟦️component.tsx";
-import { type FlowBlock, FlowProvider, useFlow } from "../🧭️Flow/🟦️component.tsx";
+import { type FlowBlock, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { useLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
 import { useLevel, useSurfaceActive } from "../🌈️Surface/🟦️component.tsx";
-import { interactiveActiveFillClass } from "../🏷️ClassNames/🟦️component.tsx";
-import { type Anchor, flowFromAnchor, ChromeControlHint, useNativeDragArm, usePanelDockContext, useUiDriverDragSurface, panelTabIconSlotClass, panelTabLabelClass, chromeControlTabItemClass, panelTabButtonClass, panelTabBarClass, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockTabClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass, PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue, type UiStatus, type TreePanelSource, ANCHORS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️component.tsx";
+import { type Anchor, flowFromAnchor, useNativeDragArm, usePanelDockContext, useUiDriverDragSurface, panelTabIconSlotClass, panelTabLabelClass, chromeControlTabItemClass, panelTabButtonClass, panelTabBarClass, panelTabButtonDividerClass, panelWindowInactiveTabClass, modeDockInactiveTabBeforeGapClass, modeDockInactiveTabClass, modeDockTabClassName, modeDockActiveTabClass, modeDockActiveTabFillClass, modeDockTabLabelClassName, dropZoneReadyClass, panelAnchorTabBarClass, mobilePanelTabBarClass, mobilePanelTabButtonClass, panelAnchorTabButtonClass, PANEL_TREE_UNIT_MIME, beginPanelTreeUnitDrag, endPanelTreeUnitDrag, readActivePanelTreeUnitDrag, usePanelTreeUnitDragActive, type PanelDockContextValue, type UiStatus, type TreePanelSource, ANCHORS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 📑️PanelTabBar
@@ -162,7 +163,7 @@ export function progressPanelTabSelection(tabs: readonly PanelTabNode[], current
   return { path, memory: nextMemory, fold: false };
 }
 
-/** @emoji 🌱️ Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, {@link MobilePanel}). */
+/** @emoji 🌱️ Controlled/uncontrolled selection state shared by every {@link PanelTabBar} host ({@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel). */
 export interface PanelTabSelectionOptions {
   readonly tabs: readonly PanelTabNode[];
   readonly visible: boolean;
@@ -545,7 +546,7 @@ export interface PanelTabBarProps {
   readonly showActiveColor?: boolean;
 }
 
-/** @emoji 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar} and {@link MobilePanel} — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
+/** @emoji 📑️ Panel tab strip shared by {@link Panel}, {@link PanelChromeTabBar}, and Layout's private mobile panel — one {@link PanelTabRow} per tree level (within `[startDepth, startDepth + maxRows)`), stacked in a {@link Ribbon}. */
 export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs, activePath, onActivePathChange, direction = "down", startDepth = 0, maxRows = Infinity, showActiveColor = true }) => {
   const rows: RibbonRow[] = [];
   let level = tabs;

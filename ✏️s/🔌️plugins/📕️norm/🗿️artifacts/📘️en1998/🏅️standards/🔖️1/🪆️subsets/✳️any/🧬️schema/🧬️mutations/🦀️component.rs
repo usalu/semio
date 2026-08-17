@@ -254,10 +254,14 @@ mod tests {
     }
 
     fn round_trip(base: &En1998Snapshot, mutation: &En1998Mutation) -> En1998Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let forward = vcs::apply_mutation(base, mutation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -287,7 +291,9 @@ mod tests {
         let _ = &mut target;
         let mut projected = base.clone();
         for mutation in En1998Mutation::from_snapshot(&target) {
-            projected = vcs::apply_mutation(&projected, &mutation);
+            projected = vcs::apply_mutation(&projected, &mutation)
+                .expect("snapshot mutation applies")
+                .0;
         }
         assert_eq!(projected, target, "from_snapshot must reconstruct every persistent field");
     }
@@ -301,8 +307,8 @@ mod tests {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeSeismicZone(change_seismic_zone::mutation::ChangeSeismicZone { new_seismic_zone: 3 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1998Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: "en".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1998Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: "en".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -310,8 +316,8 @@ mod tests {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::mutation::ChangeMultipleResistingSystems { new_multiple_resisting_systems: false });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1998Mutation::ChangeT1S(change_t1_s::mutation::ChangeT1S { new_t1_s: 0.35 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1998Mutation::ChangeT1S(change_t1_s::mutation::ChangeT1S { new_t1_s: 0.35 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -319,8 +325,8 @@ mod tests {
         let base = En1998Snapshot::default();
         let mutation = En1998Mutation::ChangeGroundType(change_ground_type::mutation::ChangeGroundType { new_ground_type: "c".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1998Mutation::ChangeMassT(change_mass_t::mutation::ChangeMassT { new_mass_t: 550.0 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1998Mutation::ChangeMassT(change_mass_t::mutation::ChangeMassT { new_mass_t: 550.0 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws

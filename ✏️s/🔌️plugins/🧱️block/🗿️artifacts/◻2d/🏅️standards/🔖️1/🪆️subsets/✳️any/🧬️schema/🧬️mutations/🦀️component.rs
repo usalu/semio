@@ -87,8 +87,11 @@ pub use super::scale_camera2d::mutation::{scale_camera2d, ScaleCamera2d};
 pub use super::update_presentation::mutation::{update_presentation, UpdatePresentation};
 
 /// ▶️ Applies `mutation` via its diff, mutating `projection` in place.
-pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+pub fn apply_block2d_mutation(projection: &mut Block2dSnapshot, mutation: &Block2dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2dMutation) -> Vec<Block2dMutation> {
@@ -106,12 +109,12 @@ mod tests {
     use protocol::MutationDiff;
 
     fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
-        let forward = mutation.diff(base).diff().apply(base);
+        let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(base);
         backward.reverse();
         for undo in &backward {
-            restored = undo.diff(&restored).diff().apply(&restored);
+            restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
         forward
@@ -248,7 +251,7 @@ mod tests {
     fn change_node_kind_label_diff_absorb_law() {
         let base = empty_block2d_snapshot();
         let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_node_kind_label("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -259,7 +262,7 @@ mod tests {
         base.handle_kinds.push(crate::artifacts::block2d::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
         base.handles.push(crate::artifacts::block2d::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
         let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

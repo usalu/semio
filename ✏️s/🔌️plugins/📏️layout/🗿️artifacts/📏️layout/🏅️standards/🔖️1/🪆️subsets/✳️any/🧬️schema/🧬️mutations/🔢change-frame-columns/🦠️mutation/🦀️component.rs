@@ -15,7 +15,7 @@ pub struct ChangeFrameColumns {
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameColumns {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "frame-columns", kind: "change-frame-columns", record: "ChangedFrameColumns" };
-    fn diff(&self, base: &LayoutSnapshot) -> LayoutDiff {
+    fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         super::diff::diff_change_frame_columns(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {

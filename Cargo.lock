@@ -7140,6 +7140,7 @@ name = "semio-s-plugin-cad"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "getrandom 0.3.4",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-graph",
@@ -7930,12 +7931,14 @@ name = "semio-s-plugin-stdio"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "base64 0.22.1",
  "blake3",
  "criterion",
  "flate2",
  "libz-sys",
  "miniz_oxide",
  "pollster",
+ "semio-framework",
  "semio-framework-3d",
  "semio-framework-geometry",
  "semio-framework-graph",

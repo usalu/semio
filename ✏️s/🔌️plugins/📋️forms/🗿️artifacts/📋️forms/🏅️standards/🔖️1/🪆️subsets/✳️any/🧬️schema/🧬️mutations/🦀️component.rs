@@ -44,7 +44,10 @@ pub enum FormMutation {
 //#region 🔖️CompatDelegates
 /// ⚖️ Whole-document apply — a thin delegation to the derive-generated `Mutation::diff`+`apply`
 /// (see file-level doc for why the free function itself stays, not its old hand-rolled match body).
-pub fn apply_form_edit_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> FormsSnapshot {
+pub fn apply_form_edit_mutation(
+    spec: &FormsSnapshot,
+    mutation: &FormMutation,
+) -> protocol::MutationApplyResult<FormsSnapshot> {
     <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(mutation.diff(spec).diff(), spec)
 }
 
@@ -123,14 +126,14 @@ mod tests {
     fn create_then_delete_step_round_trips() {
         let base = base_snapshot();
         let create = FormMutation::CreateStep(create_step::mutation::CreateStep { step: sample_step("s3"), index: None });
-        let after_create = create.diff(&base).diff().apply(&base);
+        let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(steps_of(&after_create).iter().any(|step| step.id == "s3"));
 
         let undo = create.inverse(&base);
         assert_eq!(undo, vec![FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "s3".into() })]);
         let mut state = after_create;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -141,7 +144,7 @@ mod tests {
         step1.blocks.push(sample_block("b1"));
         let base = base_snapshot_with_steps(vec![step1, sample_step("s2")]);
         let delete = FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: "s1".into() });
-        let after_delete = delete.diff(&base).diff().apply(&base);
+        let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(!steps_of(&after_delete).iter().any(|step| step.id == "s1"));
 
         let undo = delete.inverse(&base);
@@ -154,7 +157,7 @@ mod tests {
         }
         let mut state = after_delete;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base), "delete-step's inverse must restore the step and its blocks");
     }
@@ -163,13 +166,13 @@ mod tests {
     fn reorder_step_round_trips() {
         let base = base_snapshot();
         let mutation = FormMutation::ReorderStep(reorder_step::mutation::ReorderStep { id: "s2".into(), to_index: 0 });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after)[0].id, "s2");
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -178,22 +181,22 @@ mod tests {
     fn rename_step_and_change_description_round_trip() {
         let base = base_snapshot();
         let rename = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "Renamed".into() });
-        let after_rename = rename.diff(&base).diff().apply(&base);
+        let after_rename = rename.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after_rename)[0].title, "Renamed");
         let undo = rename.inverse(&base);
         let mut state = after_rename;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
 
         let change = FormMutation::ChangeStepDescription(change_step_description::mutation::ChangeStepDescription { id: "s1".into(), new_description: Some("desc".into()) });
-        let after_change = change.diff(&base).diff().apply(&base);
+        let after_change = change.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after_change)[0].description.as_deref(), Some("desc"));
         let undo = change.inverse(&base);
         let mut state = after_change;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -202,14 +205,14 @@ mod tests {
     fn create_then_delete_block_round_trips() {
         let base = base_snapshot();
         let create = FormMutation::CreateBlock(create_block::mutation::CreateBlock { step_id: "s1".into(), block: sample_block("b1"), index: None });
-        let after_create = create.diff(&base).diff().apply(&base);
+        let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(steps_of(&after_create)[0].blocks.iter().any(|block| block.id == "b1"));
 
         let undo = create.inverse(&base);
         assert_eq!(undo, vec![FormMutation::DeleteBlock(delete_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() })]);
         let mut state = after_create;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -220,7 +223,7 @@ mod tests {
         step1.blocks = vec![sample_block("b1"), sample_block("b2")];
         let base = base_snapshot_with_steps(vec![step1, sample_step("s2")]);
         let delete = FormMutation::DeleteBlock(delete_block::mutation::DeleteBlock { step_id: "s1".into(), id: "b1".into() });
-        let after_delete = delete.diff(&base).diff().apply(&base);
+        let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after_delete)[0].blocks.len(), 1);
 
         let undo = delete.inverse(&base);
@@ -230,7 +233,7 @@ mod tests {
         }
         let mut state = after_delete;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -241,14 +244,14 @@ mod tests {
         step1.blocks = vec![sample_block("b1")];
         let base = base_snapshot_with_steps(vec![step1, sample_step("s2")]);
         let mutation = FormMutation::MoveBlockToStep(move_block_to_step::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b1".into(), to_step_id: "s2".into(), index: 0 });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(steps_of(&after)[0].blocks.is_empty());
         assert!(steps_of(&after)[1].blocks.iter().any(|block| block.id == "b1"));
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -259,13 +262,13 @@ mod tests {
         step1.blocks = vec![sample_block("b1"), sample_block("b2")];
         let base = base_snapshot_with_steps(vec![step1, sample_step("s2")]);
         let mutation = FormMutation::MoveBlockToStep(move_block_to_step::mutation::MoveBlockToStep { step_id: "s1".into(), block_id: "b2".into(), to_step_id: "s1".into(), index: 0 });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after)[0].blocks.iter().map(|block| block.id.clone()).collect::<Vec<_>>(), vec!["b2".to_string(), "b1".to_string()]);
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -278,13 +281,13 @@ mod tests {
         let mut replacement = sample_block("b1");
         replacement.label = "Renamed block".into();
         let mutation = FormMutation::ReplaceBlock(replace_block::mutation::ReplaceBlock { step_id: "s1".into(), block: replacement });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(steps_of(&after)[0].blocks[0].label, "Renamed block");
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&state).diff().apply(&state);
+            state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(steps_of(&state), steps_of(&base));
     }
@@ -293,18 +296,18 @@ mod tests {
     fn change_form_title_round_trips_including_clearing() {
         let base = base_snapshot();
         let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Renamed".into()) });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.title.as_deref(), Some("Renamed"));
 
         let undo = mutation.inverse(&base);
         let mut state = after.clone();
         for step in &undo {
-            state = step.diff(&after).diff().apply(&state);
+            state = step.diff(&after).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(state, base);
 
         let clear = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: None });
-        assert_eq!(clear.diff(&base).diff().apply(&base).title, None);
+        assert_eq!(clear.diff(&base).diff().apply(&base).expect("valid mutation diff").title, None);
     }
 
     #[test]
@@ -319,7 +322,13 @@ mod tests {
     fn apply_form_edit_mutation_and_inverse_form_mutation_delegate_to_the_derive() {
         let base = base_snapshot();
         let mutation = FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: Some("Delegated".into()) });
-        assert_eq!(apply_form_edit_mutation(&base, &mutation).title.as_deref(), Some("Delegated"));
+        assert_eq!(
+            apply_form_edit_mutation(&base, &mutation)
+                .expect("valid mutation diff")
+                .title
+                .as_deref(),
+            Some("Delegated")
+        );
         assert_eq!(inverse_form_mutation(&base, &mutation), mutation.inverse(&base));
     }
 

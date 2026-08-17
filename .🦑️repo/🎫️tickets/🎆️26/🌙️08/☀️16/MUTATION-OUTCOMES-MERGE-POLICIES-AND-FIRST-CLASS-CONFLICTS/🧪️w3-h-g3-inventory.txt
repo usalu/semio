@@ -1,23 +1,239 @@
-Lane 3-H, Group G3 — mutation outcome fan-out inventory
-Plugins: mathematical, gis, vcs, imperative
+Lane 3-H, Group G3 — mutation outcome fan-out — final report
+Plugins: ➗️mathematical, 🌍️gis, 🌿️vcs, 📜️imperative
 
-=== ➗️mathematical (15 mutation kinds, 1 root schema-diff-struct dir excluded from leaf count) ===
-create-node        create      -> Fatal duplicate-id on existing id
-delete-node         delete      -> Error target-missing / Info cascade (incident edges)
-delete-nodes        delete(plural) -> Error target-missing (all missing) / Warning partial (some missing) / Info cascade
-insert-point        insert      -> Warning clamped (index out of range)
-remove-point        remove      -> Error target-missing (index out of range)
-replace-points       replace(edit/replace) -> Warning no-op (unchanged)
-move-point          move        -> Error target-missing / Warning no-op / Fatal invariant (non-finite)
-change-node-label     change      -> Error target-missing / Warning no-op (same label)
-change-graph-directed  change      -> Warning no-op (unchanged), root-scoped bool
-replace-graph        replace     -> Warning no-op (unchanged), root-scoped whole replace
-change-coefficient     change      -> Error target-missing (label unresolved/non-numeric) / Warning no-op (same value) / Fatal invariant (zero denominator)
-connect-nodes        connect     -> Fatal duplicate-id (dup edge id) / Error target-missing (missing endpoint) / Warning no-op (parallel edge forbidden)
-disconnect-nodes      disconnect  -> Error target-missing
-move-node           move        -> Error target-missing / Warning no-op / Fatal invariant (non-finite)
-update-graph-algorithm  update(change)  -> Warning no-op (unchanged), root-scoped
+=== SUMMARY (leaves compiled / real verb-family messages / bare wraps) ===
+➗️mathematical : 15 / 15 / 0
+🌍️gis          : 14 / 14 / 0
+🌿️vcs          :  6 /  6 / 0
+📜️imperative   :  4 /  4 / 0
+TOTAL          : 39 / 39 / 0   (plus 8 hand-written config/presence impl Mutation<> blocks converted:
+                                 2 mathematical, 4 gis (gis3d config+presence, gis2d config+presence), 2 vcs, 2 imperative)
 
-Hand-written impl Mutation/MutationKind outside triads:
-  🎛️apps/➗️mathematical/🎚️config/🦀️component.rs (config mutation enum)
-  🎛️apps/➗️mathematical/👥️presence/🦀️component.rs (presence mutation enum)
+Every leaf got real Error/Warning/Fatal verb-family logic in one pass (no bare
+`MutationOutcome::new(diff)` left as a placeholder) — Pass 1 and Pass 2 were done together per leaf
+rather than sequentially across the whole inventory first, since the domain context needed to write
+real semantics was already loaded while reading each leaf.
+
+=== ➗️mathematical (15 mutation kinds; root 🧬️schema/🔺️diff is the Diff struct itself, not a leaf) ===
+create-node             create              Fatal duplicate-id on existing id
+delete-node             delete              Error target-missing / Info cascade (incident edges)
+delete-nodes            delete (plural)     Error target-missing (all missing) / Warning partial (some missing, survivors-only diff) / Info cascade
+insert-point            insert              Warning clamped (index out of range, clamped to len)
+remove-point            remove              Error target-missing (index out of range)
+replace-points          replace             Warning no-op (points unchanged) — whole-collection replace, no target-missing concept
+move-point              move                Error target-missing / Warning no-op (unchanged) / Fatal invariant (non-finite x/y)
+change-node-label       change              Error target-missing / Warning no-op (label unchanged)
+change-graph-directed   change              Warning no-op (unchanged) — root-scoped bool
+replace-graph           replace             Warning no-op (unchanged) — root-scoped whole replace
+change-coefficient      change              Error target-missing (label unresolved / non-numeric leaf) / Warning no-op (value unchanged) / Fatal invariant (zero denominator — domain choice, see below)
+connect-nodes           connect             Fatal duplicate-id (dup edge id) / Error target-missing (missing endpoint node) / Warning no-op (parallel edge forbidden)
+disconnect-nodes        disconnect          Error target-missing
+move-node               move                Error target-missing / Warning no-op (unchanged) / Fatal invariant (non-finite x/y)
+update-graph-algorithm  update (change)     Warning no-op (unchanged) — root-scoped algorithm+seed pair
+
+Domain-verb mapping notes:
+- change-coefficient: "change" family. Fatal invariant chosen for denom == "0" (a rational with a
+  zero denominator is not a representable number) — the closest analogue to the family's "Fatal on
+  domain violation" clause; no other domain invariant was evident from the EquationNodeKind enum.
+- replace-points / replace-graph: mapped to "edit/replace" family's no-op rule rather than "delete/
+  target-missing" since both are whole-collection/whole-value swaps with nothing that can be
+  "missing" — matches the contract's shrink-only allowlist spirit even though they aren't literally
+  root `change-<artifact>-<field>`/`clear-*` kinds.
+- connect-nodes: distinguished Fatal `duplicate-id` (same edge *id* reused) from Warning `no-op`
+  (same source/target pair under a *fresh* id — parallel edges forbidden) per the family's own two
+  distinct sub-cases.
+Hand-written impl Mutation<> outside triads (both converted): 🎛️apps/➗️mathematical/🎚️config,
+🎛️apps/➗️mathematical/👥️presence (SetCamera/SetLocale → Warning no-op when unchanged; presence
+Noop stays message-free per its own semantics).
+
+=== 🌍️gis (16 🔺️diff dirs total: 2 are root Diff-struct dirs, 14 are mutation kinds) ===
+gisterrain (2):
+change-exaggeration        change   Warning no-op (unchanged) — root-scoped scalar field
+change-imported-features   change   Warning no-op (unchanged) — root-scoped scalar field
+  (both are legitimately root change-<artifact>-<field> kinds per the contract's shrink-only
+  allowlist; added the no-op check anyway for consistency with every other change-family leaf
+  rather than leaving them message-free, since base was available to compare against.)
+
+gismap (12), id-keyed positions/routes/regions collections, same four-verb recipe per collection:
+create-position    create    Fatal duplicate-id
+create-region      create    Fatal duplicate-id
+create-route       create    Fatal duplicate-id
+delete-position    delete    Error target-missing
+delete-region      delete    Error target-missing
+delete-route       delete    Error target-missing
+reorder-positions  reorder   Error target-missing (unknown id) / Warning no-op (order unchanged after clamp)
+reorder-regions    reorder   Error target-missing (unknown id) / Warning no-op (order unchanged after clamp)
+reorder-routes     reorder   Error target-missing (unknown id) / Warning no-op (order unchanged after clamp)
+replace-position-data  replace  Error target-missing / Warning no-op (data unchanged)
+replace-region-data    replace  Error target-missing / Warning no-op (data unchanged)
+replace-route-data     replace  Error target-missing / Warning no-op (data unchanged)
+
+Hand-written impl Mutation<> outside triads (all 4 converted): 🎛️apps/🧊️3d/🎚️config (SetCamera/
+SetLocale → Warning no-op), 🎛️apps/🧊️3d/👥️presence (Snapshot → Warning no-op when identical),
+🎛️apps/◻2d/🎚️config (7 variants: SetLayerVisibility/SetCamera/SetRenderMode/SetVectorStyle/
+SetLodMode/SetLayerStrokeScale/SetLocale, each → Warning no-op when unchanged — the two map-valued
+variants compare against the same default-aware `unwrap_or` read `layer_visible`/stroke-scale
+helpers already used for their inverse, not a raw `.get()`), 🎛️apps/◻2d/👥️presence (Snapshot →
+Warning no-op).
+Also fixed: `vcs::apply_mutation` call sites in both facets' dispatch/test files (now returns
+`(P, Vec<MutationMessage>)`, destructured); `assert_mutation_diff_absorb_law` call sites (now feed
+`.into_parts().0`, since that law still takes a bare `D`, not `MutationOutcome<D>`).
+
+=== 🌿️vcs (7 🔺️diff dirs: 1 root Diff-struct dir + 6 mutation kinds) ===
+**Domain-verb reasoning**: this plugin's actual mutation vocabulary is rename-vcs / add-tag /
+change-notes / change-counter / remove-tag / change-status — a generic demo artifact (title/counter/
+notes/status scalars + a tag set), NOT real version-control semantics (no commit/branch/checkout/
+merge verbs exist anywhere in this facet). Mapped each to the closest literal verb family:
+rename-vcs       rename    Warning no-op (title unchanged) — root-scoped identity field, no target-missing concept
+add-tag          add       Warning no-op (tag already present) — no "owner" concept, tag set lives directly on the root
+remove-tag       remove    Error target-missing (tag absent)
+change-notes     change    Warning no-op (notes unchanged)
+change-counter   change    Warning no-op (counter unchanged)
+change-status    change    Warning no-op (status unchanged)
+
+This facet introduces exactly one Error path (remove-tag) and zero Fatal paths — no duplicate-id or
+invariant verb exists in its vocabulary, so `assert_fatal_never_applies` has no meaningful call site
+here (noted in the Pass-3 test doc comment rather than called against a trivial non-Fatal case).
+
+Hand-written impl Mutation<> outside triads (both converted): 🎛️apps/🌿️vcs/🎚️config (Snapshot/
+SetLocale → Warning no-op when unchanged), 🎛️apps/🌿️vcs/👥️presence (empty struct, message-free).
+Also fixed: `MutationKind::diff(&payload, &base)` test assertion comparing directly to a bare
+`VcsDiff` (now reads `.diff()` + asserts a `mutation.no-op` message is present); `.diff(&base).apply(`
+chains in the dispatch test file's `assert_mutation_diff_absorb_law` call sites.
+
+=== 📜️imperative (5 🔺️diff dirs: 1 root Diff-struct dir + 4 mutation kinds) ===
+create-step        create    Fatal invariant (path_ref.owner names a step that doesn't exist — unknown container) / Fatal duplicate-id (step.id already exists within the target list)
+delete-step         delete    Error target-missing
+reorder-steps       reorder   Error target-missing (unknown id) / Warning no-op (order unchanged after clamp)
+edit-step-params    edit      Error target-missing / Warning no-op (params unchanged)
+
+Domain-scope note on create-step's duplicate-id check: checked uniqueness within the *target list*
+resolved by `path_ref` (mirrors every other id-keyed-collection leaf in this fan-out), not globally
+across the whole nested `bodies` tree — `imperative_engine::{Path,Step}` are foreign kernel types
+outside this lease's 4 plugin trees, and no existing helper in this facet already does a global
+recursive id search, so extending into that crate's internals to build one was out of scope. Flagging
+this as a deliberate scope choice, not an oversight, in case a future lane wants global uniqueness.
+
+Hand-written impl Mutation<> outside triads (both converted): 🏅️standards/…/✏️editor/🎚️config
+(Snapshot/SetRunOutput/SetLocale/SetContributions → Warning no-op when unchanged; SetContributions
+keeps its `imperative_engine::sync_imperative_module_contributions` side effect unconditional, only
+gating the *diff message*, since re-syncing identical JSON is idempotent and safe, while skipping a
+real config write on no-op preserves prior behavior for the common case), 🏅️standards/…/✏️editor/
+👥️presence (empty struct, message-free).
+Also fixed 3 tests in the dispatch file that asserted `assert_mutation_inverse_law` against a
+*missing-target* mutation (that law now fails on any forward Error/Fatal message, per the frozen
+law's own updated doc comment) — rewrote them to `assert_missing_target_is_error` instead:
+`delete_step_missing_target_is_error`, `reorder_steps_missing_target_is_error`,
+`edit_step_params_missing_target_is_error`. Added `create_step_duplicate_id_fatal_never_applies`.
+Fixed `create_step_diff_absorb_law`'s `.diff(&base)` → `.diff(&base).into_parts().0`.
+
+=== `fn validate` sweep ===
+Zero real trait-override `fn validate` matches in any of the 4 plugin trees (grepped after every
+conversion pass). The scout census's 62-count didn't attribute any to mathematical/gis/vcs/
+imperative (stdio 55, energy 3, procedural 3, flow 1) — confirmed empirically, not just by scout
+count.
+
+=== Pass 3 — facet tests using landed testkit laws ===
+Grep result (ran before writing any new tests, per instructions):
+  `assert_missing_target_is_error`  — LANDED (📡️spr/🧪️testkit/🦀️component.rs:653)
+  `assert_fatal_never_applies`      — LANDED (📡️spr/🧪️testkit/🦀️component.rs:666)
+  `assert_outcome_policy_matrix`    — NOT landed under that literal name. Only a differently-shaped
+                                       `assert_policy_matrix(rejects, is_applicable)` exists
+                                       (📡️spr/🧪️testkit/🦀️component.rs:705), which asserts the frozen
+                                       3×4 policy table directly against `MergePolicy::rejects`/an
+                                       `is_applicable` probe — it is not a per-verb-family, per-facet
+                                       outcome test and isn't a drop-in substitute for the frozen name
+                                       the brief asked to grep for. Did not call it (would test
+                                       something structurally different, not "one per verb family per
+                                       facet"); flagging for the coordinator rather than improvising.
+  `assert_outcome_deterministic`    — also landed (bonus, not asked for, not used here) — noted only
+                                       for completeness, not called.
+
+Added tests calling the two landed laws by their frozen names, one per applicable verb family per
+facet (Error/Fatal-bearing families only — a family with no Error/Fatal branch has no meaningful call
+site and was skipped, documented inline):
+  ➗️mathematical: 7× assert_missing_target_is_error (delete-node, delete-nodes, remove-point,
+    move-node, change-node-label, connect-nodes, disconnect-nodes — one per Error family),
+    4× assert_fatal_never_applies (create-node, connect-nodes, move-point, change-coefficient)
+  🌍️gis (gismap): 3× assert_missing_target_is_error (delete-position, reorder-positions,
+    replace-route-data), 1× assert_fatal_never_applies (create-position)
+  🌿️vcs: 1× assert_missing_target_is_error (remove-tag) — no Fatal path exists in this facet
+  📜️imperative: 3× assert_missing_target_is_error (delete-step, reorder-steps, edit-step-params),
+    1× assert_fatal_never_applies (create-step)
+No `assert_outcome_policy_matrix` TODO comments were needed since the two laws that ARE landed cover
+every facet; a one-line doc comment in each facet's new test region records the
+`assert_outcome_policy_matrix` name-mismatch finding instead.
+
+=== cargo check / cargo test — raw output in 🧪️w3-h-g3-cargo.txt ===
+| Crate                        | cargo check                                    | cargo test --lib                        |
+|-------------------------------|-------------------------------------------------|-------------------------------------------|
+| semio-s-plugin-mathematical   | BLOCKED — semio-framework-plugin E0004 (below)  | BLOCKED — semio-s-plugin-stdio (below)    |
+| semio-s-plugin-gis            | BLOCKED — semio-framework-plugin E0004 (below)  | BLOCKED — semio-s-plugin-stdio (below)    |
+| semio-s-plugin-vcs            | BLOCKED — semio-framework-plugin E0004 (below)  | BLOCKED — semio-s-plugin-stdio (below)    |
+| semio-s-plugin-imperative     | BLOCKED — semio-s-plugin-stdio (below)          | BLOCKED — semio-s-plugin-stdio (below)    |
+
+Both blockers are 100% outside this lease (never touched `🧰️framework/`, never touched
+`✏️s/🔌️plugins/🗄️stdio/`) — verified by grepping every `-->` file path in every error across all 8
+runs: **zero** error locations fall under `➗️mathematical`, `🌍️gis`, `🌿️vcs`, or `📜️imperative`.
+
+Blocker 1 (hit by mathematical/gis/vcs's `cargo check`):
+  error[E0004]: non-exhaustive patterns: `AppCommand::SetMergePolicy { .. }`,
+  `AppCommand::ResolveConflict { .. }` and `AppCommand::ReadConflicts { .. }` not covered
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14633:19
+  This is exactly the C9 "SetMergePolicy/ResolveConflict/ReadConflicts handled" guest-dispatch work
+  item the W0 barrier's debt list assigns to lane 2-A (`Severity::Hint` survivor is nearby in the same
+  file per that report) — not this lane's to fix.
+
+Blocker 2 (hit by all four crates' `cargo test --lib`, and by imperative's `cargo check`):
+  270 errors (269 real + 1 summary), all `error[E0053]: method `diff` has an incompatible type for
+  trait` (plus E0277/E0308/E0599 downstream), every single one under
+  `✏️s/🔌️plugins/🗄️stdio/…/🧬️mutations/🦀️component.rs` (34 distinct legacy artifact enums — las, ply,
+  html, epw, zip, gif×2, pptx, mp4, svg, mp3, ifc×2, bcf, binary, txt, pdf×2, csv, step, …). This is
+  FULL-STDIO's charter per the fan-out recipe ("stdio's legacy enums are FULL-STDIO's charter — our
+  lane wraps them minimally"); `semio-s-plugin-imperative` and (for the `test` build target) all four
+  of my crates transitively depend on `semio-s-plugin-stdio`, so the compile never reaches my own
+  crate's test binary. Not mine to fix, not touched.
+
+No test count could be obtained for any of the 4 crates — the workspace as a whole is legitimately
+red between the W0 barrier and other lanes' (1-C/2-A/FULL-STDIO) landings, exactly as
+`📋️contract-freeze.md`'s "No improvisation clause" anticipates ("Plugin crates are legitimately red
+between the W0 barrier and their W3 lane"). Will re-run once those land if asked.
+
+=== Files touched (created none; edited only) ===
+➗️mathematical (17 files): 15× 🔺️diff/🦀️component.rs, 15× 🦠️mutation/🦀️component.rs (listed together
+  per triad below), plus 🧬️mutations/🦀️component.rs (dispatch+tests), 🎚️config/🦀️component.rs,
+  👥️presence/🦀️component.rs — triads: create-node, delete-node, delete-nodes, insert-point,
+  remove-point, replace-points, move-point, change-node-label, change-graph-directed, replace-graph,
+  change-coefficient, connect-nodes, disconnect-nodes, move-node, update-graph-algorithm (all under
+  ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/).
+
+🌍️gis: gisterrain triads change-exaggeration, change-imported-features (🔺️diff + 🦠️mutation each);
+  gismap triads create-position, create-region, create-route, delete-position, delete-region,
+  delete-route, reorder-positions, reorder-regions, reorder-routes, replace-position-data,
+  replace-region-data, replace-route-data (🔺️diff + 🦠️mutation each); both artifacts' dispatch/test
+  files (🗿️artifacts/{🏔️gisterrain,🗺️gismap}/…/🧬️mutations/🦀️component.rs); 🎛️apps/🧊️3d/🎚️config,
+  🎛️apps/🧊️3d/👥️presence, 🎛️apps/◻2d/🎚️config, 🎛️apps/◻2d/👥️presence.
+
+🌿️vcs: triads rename-vcs, add-tag, change-notes, change-counter, remove-tag, change-status (🔺️diff +
+  🦠️mutation each); 🗿️artifacts/🌿️vcs/…/🧬️mutations/🦀️component.rs (dispatch+tests); 🎛️apps/🌿️vcs/
+  🎚️config, 🎛️apps/🌿️vcs/👥️presence.
+
+📜️imperative: triads create-step, delete-step, reorder-steps, edit-step-params (🔺️diff + 🦠️mutation
+  each); 🗿️artifacts/📜️imperative/…/🧬️schema/🧬️mutations/🦀️component.rs (dispatch+tests);
+  ✏️editor/🎚️config, ✏️editor/👥️presence.
+
+Scratch/logs (this ticket folder): 🧪️w3-h-g3-inventory.txt (this file), 🧪️w3-h-g3-cargo.txt (raw
+cargo check/test output, ~69k lines).
+
+=== Blockers / deviations ===
+1. Both cargo blockers above (framework AppCommand match, stdio legacy `impl Mutation` returns) are
+   outside this lease and pre-existing — reported, not fixed.
+2. `assert_outcome_policy_matrix` is not landed under that literal name — reported to the coordinator
+   via this file rather than calling a non-existent function or a structurally-different landed one.
+3. create-step's duplicate-id check is scoped to the target list, not a global recursive search
+   across `imperative_engine::Path`'s nested `bodies` tree (foreign-crate internals, out of lease) —
+   documented as a deliberate scope choice above.
+4. No other deviations. All 39 mutation triads + 8 hand-written config/presence impls across all 4
+   plugins are converted with real verb-family Error/Warning/Fatal logic (not bare wraps); every
+   `.diff(...).apply(...)` / `vcs::apply_mutation` / testkit-law call site discovered by grep across
+   all 4 trees was fixed to match the new `MutationOutcome`-returning signature.

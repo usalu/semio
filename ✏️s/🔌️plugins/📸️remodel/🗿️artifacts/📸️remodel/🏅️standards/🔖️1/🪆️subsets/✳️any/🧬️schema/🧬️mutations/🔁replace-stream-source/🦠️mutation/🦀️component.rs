@@ -25,7 +25,7 @@ pub fn replace_stream_source(id: String, source: Option<VideoSource>) -> Remodel
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceStreamSource {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "stream", kind: "replace-stream-source", record: "ReplacedStreamSource" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

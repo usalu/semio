@@ -20,7 +20,7 @@ pub struct ReplacePrimitiveGeometry {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplacePrimitiveGeometry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "primitive-geometry", kind: "replace-primitive-geometry", record: "ReplacedPrimitiveGeometry" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {

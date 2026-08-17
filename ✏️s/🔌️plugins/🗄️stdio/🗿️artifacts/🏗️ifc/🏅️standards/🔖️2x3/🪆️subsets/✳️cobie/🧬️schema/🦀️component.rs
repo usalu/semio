@@ -12,6 +12,17 @@ pub mod derived_construction {
     use dsl::{Diagnostic, Severity};
     use semio_framework_plugin::ArtifactBuilder;
 
+    fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
+        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+            code: message.code.clone(),
+            severity: message.level,
+            span: dsl::TextSpan::at(1, 1),
+            message: if message.target.is_empty() { message.message.clone() } else { format!("{} at {}", message.message, message.target.join("/")) },
+            expected: None,
+            scope: dsl::FaultScope::default(),
+        }));
+    }
+
     fn seeded_document() -> Part21Document {
         let header = Part21Header {
             file_description: vec![Part21Value::List(vec![Part21Value::Str("ViewDefinition [FMHandOverView]".into())]), Part21Value::Str("2;1".into())],
@@ -30,11 +41,12 @@ pub mod derived_construction {
     pub struct Ifc2x3CobieBuilderConstruction {
         snapshot: Ifc2x3Snapshot,
         next_id: u64,
+        diagnostics: Vec<Diagnostic>,
     }
 
     impl Ifc2x3CobieBuilderConstruction {
         pub fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100 }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
@@ -42,7 +54,8 @@ pub mod derived_construction {
             let id = self.next_id;
             self.next_id += 1;
             let instance = Part21Instance { id, entities: vec![("IFCSPACE".into(), vec![Part21Value::Str(format!("guid-{id}")), Part21Value::Unset, Part21Value::Str(name.to_string())])] };
-            apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance { instance });
+            stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
     }
@@ -62,7 +75,7 @@ pub mod derived_construction {
             Self::new()
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, next_id: 100 }
+            Self { snapshot, next_id: 100, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, store::TextError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
@@ -70,20 +83,21 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let hard: Vec<Diagnostic> = check_cobie_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
+            let Self { snapshot, mut diagnostics, .. } = self;
+            diagnostics.extend(check_cobie_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)));
+            if diagnostics.is_empty() {
+                Ok(snapshot)
             } else {
-                Err(hard)
+                Err(diagnostics)
             }
         }
     }
@@ -103,7 +117,7 @@ pub mod derived_construction {
         fn wrong_schema_via_raw_mutate_still_fails_build() {
             let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
             let mut bad = snapshot.clone();
-            bad.document.header.file_schema = vec![crate::artifacts::step::engine::part21::Part21Value::List(vec![crate::artifacts::step::engine::part21::Part21Value::Str("IFC4".into())])];
+            bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
             let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot: bad });
             let err = mutated.build().expect_err("a non-IFC2X3 FILE_SCHEMA must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::CODE_FILE_SCHEMA));
@@ -284,8 +298,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3CobieBuilderFacets {
-        construction: derived_construction::Ifc2x3CobieBuilderConstruction,
-        analysis: derived_analysis::Ifc2x3CobieAnalyzerAnalysis,
+        construction: Ifc2x3CobieBuilderConstruction,
+        analysis: Ifc2x3CobieAnalyzerAnalysis,
         composition: super::io::derived_composition::Ifc2x3CobieComposerComposition,
     }
     builder: Ifc2x3CobieBuilder,

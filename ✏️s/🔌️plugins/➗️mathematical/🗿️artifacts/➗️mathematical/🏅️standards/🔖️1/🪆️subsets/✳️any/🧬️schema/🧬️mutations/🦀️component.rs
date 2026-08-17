@@ -1,7 +1,7 @@
 //! 🧬️ Mathematical artifact — document mutation dispatch. Semantic vocabulary derived from
 //! `📸️snapshot/🦀️component.rs`'s `MathematicalSnapshot` shape (a `graph` playground and a
 //! `geometry` point-cloud playground) plus the real app gestures in
-//! `🎛️apps/➗️mathematical/🎮️commands/{🕸️graph,📐️geometry,📄️artifact}/🦀️component.rs`
+//! `✏️editor/🎮️commands/{🕸️graph,📐️geometry,📄️artifact}/🦀️component.rs`
 //! (`addNode`/`move`/`connect`/`deleteSelection`, `SetAlgorithm`, `SetDirected`, `SetPoints`,
 //! `SetArtifact`) — see `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/`
 //! `📓️taxonomy.md`/`📓️derivation-rules.md`. `impl protocol::Mutation`/`SemanticMutation` below are
@@ -67,7 +67,7 @@ mod tests {
         assert!(diff.notation.is_some());
         assert!(diff.results.is_some());
         assert!(diff.computed.is_some());
-        let applied = diff.apply(&base);
+        let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(mathematical_graph(&applied).algorithm, "bfs");
     }
 
@@ -75,14 +75,14 @@ mod tests {
     fn create_then_delete_node_round_trips() {
         let base = MathematicalSnapshot::default();
         let create = MathematicalMutation::CreateNode(create_node::mutation::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0 });
-        let after_create = create.diff(&base).diff().apply(&base);
+        let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(mathematical_graph(&after_create).nodes.iter().any(|node| node.id == "z"));
 
         let undo = create.inverse(&base);
         assert_eq!(undo, vec![MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "z".into() })]);
         let mut state = after_create.clone();
         for step in &undo {
-            state = step.diff(&after_create).diff().apply(&state);
+            state = step.diff(&after_create).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
         assert_eq!(mathematical_geometry(&state), mathematical_geometry(&base));
@@ -92,7 +92,7 @@ mod tests {
     fn delete_node_inverse_recreates_node_and_severed_edges() {
         let base = MathematicalSnapshot::default();
         let delete = MathematicalMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "a".into() });
-        let after_delete = delete.diff(&base).diff().apply(&base);
+        let after_delete = delete.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(!mathematical_graph(&after_delete).nodes.iter().any(|node| node.id == "a"));
         assert!(!mathematical_graph(&after_delete).edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
 
@@ -125,7 +125,7 @@ mod tests {
         let undo = delete.inverse(&base);
         let mut state = after_delete;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_graph(&state), base_graph, "delete-node's inverse must restore the node and every severed edge");
     }
@@ -135,13 +135,13 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let original = mathematical_geometry(&base).points[0].clone();
         let mutation = MathematicalMutation::MovePoint(move_point::mutation::MovePoint { index: 0, x: 999.0, y: 999.0 });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(mathematical_geometry(&after).points[0], MathematicalPoint { x: 999.0, y: 999.0 });
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_geometry(&state).points[0], original);
     }
@@ -150,13 +150,13 @@ mod tests {
     fn insert_point_inverse_is_remove_point_at_same_index() {
         let base = MathematicalSnapshot::default();
         let mutation = MathematicalMutation::InsertPoint(insert_point::mutation::InsertPoint { index: 1, x: 5.0, y: 6.0 });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(mathematical_geometry(&after).points.len(), mathematical_geometry(&base).points.len() + 1);
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_geometry(&state), mathematical_geometry(&base));
     }
@@ -166,14 +166,14 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let ids = vec!["a".to_string(), "b".to_string()];
         let mutation = MathematicalMutation::DeleteNodes(delete_nodes::mutation::DeleteNodes { ids: ids.clone() });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(mathematical_graph(&after).nodes.iter().all(|node| !ids.contains(&node.id)));
         assert!(mathematical_graph(&after).edges.iter().all(|edge| !ids.contains(&edge.source) && !ids.contains(&edge.target)));
 
         let undo = mutation.inverse(&base);
         let mut state = after;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
     }
@@ -190,13 +190,13 @@ mod tests {
     fn connect_then_disconnect_nodes_round_trips() {
         let base = MathematicalSnapshot::default();
         let connect = MathematicalMutation::ConnectNodes(connect_nodes::mutation::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into() });
-        let after_connect = connect.diff(&base).diff().apply(&base);
+        let after_connect = connect.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(mathematical_graph(&after_connect).edges.iter().any(|edge| edge.id == "e-new"));
 
         let undo = connect.inverse(&base);
         let mut state = after_connect;
         for step in &undo {
-            state = step.diff(&base).diff().apply(&state);
+            state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
         }
         assert_eq!(mathematical_graph(&state), mathematical_graph(&base));
     }
@@ -249,7 +249,7 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let label = base.equation.expr.label;
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(
             after.equation.find(label).map(|node| node.kind.clone()),
             Some(crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() })
@@ -263,7 +263,7 @@ mod tests {
         let base = MathematicalSnapshot::default();
         let unknown_label = crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
         let mutation = MathematicalMutation::ChangeCoefficient(change_coefficient::mutation::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });
-        let after = mutation.diff(&base).diff().apply(&base);
+        let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.equation, base.equation);
         assert_eq!(mutation.inverse(&base), Vec::new(), "no target ⇒ nothing to undo");
     }

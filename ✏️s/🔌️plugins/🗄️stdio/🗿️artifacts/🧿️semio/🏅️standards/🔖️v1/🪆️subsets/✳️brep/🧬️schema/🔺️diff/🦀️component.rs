@@ -407,27 +407,33 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
-    fn apply(&self, base: &SemioBrepSnapshot) -> SemioBrepSnapshot {
+    fn apply(&self, base: &SemioBrepSnapshot) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.vertices {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |item| item.id.clone(), ["vertices"])?;
             apply_named(&mut next.vertices, d, |v: &BrepVertex| v.id.clone(), apply_vertex);
         }
         if let Some(d) = &self.edges {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |item| item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e: &BrepEdge| e.id.clone(), apply_edge);
         }
         if let Some(d) = &self.loops {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.loops, d, |item| item.id.clone(), |item| item.id.clone(), ["loops"])?;
             apply_named(&mut next.loops, d, |l: &BrepLoop| l.id.clone(), apply_loop);
         }
         if let Some(d) = &self.faces {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.faces, d, |item| item.id.clone(), |item| item.id.clone(), ["faces"])?;
             apply_named(&mut next.faces, d, |f: &BrepFace| f.id.clone(), apply_face);
         }
         if let Some(d) = &self.shells {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.shells, d, |item| item.id.clone(), |item| item.id.clone(), ["shells"])?;
             apply_named(&mut next.shells, d, |s: &BrepShell| s.id.clone(), apply_shell);
         }
         if let Some(d) = &self.solids {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.solids, d, |item| item.id.clone(), |item| item.id.clone(), ["solids"])?;
             apply_named(&mut next.solids, d, |s: &BrepSolid| s.id.clone(), apply_solid);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1063,9 +1069,9 @@ mod tests {
     fn between_roundtrip_law_and_field_sweep_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         let d_ab = SemioBrepDiff::between(&a, &b);
-        assert_eq!(d_ab.apply(&a), b);
+        assert_eq!(d_ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let d_ba = SemioBrepDiff::between(&b, &a);
-        assert_eq!(d_ba.apply(&b), a);
+        assert_eq!(d_ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(SemioBrepDiff::between(&a, &a).is_empty());
     }
     //#endregion 🔖️between_roundtrip_law
@@ -1116,7 +1122,7 @@ mod tests {
         let (a, b) = (sweep_a(), sweep_b());
         let d = SemioBrepDiff::between(&a, &b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&d.apply(&a)), a);
+        assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
     }
     //#endregion 🔖️inverse_law
 
@@ -1128,10 +1134,10 @@ mod tests {
         d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }] });
         let mut d2 = SemioBrepDiff::default();
         d2.vertices = Some(BrepVerticesDiff { removed: vec!["v-new".into()], modified: vec![], added: vec![] });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), sequential);
-        assert_eq!(d1.apply(&base), base, "add-then-remove-of-same-key must net to a no-op");
+        assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
     }
 
     #[test]
@@ -1141,9 +1147,9 @@ mod tests {
         d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: "v-new".into(), point: SemioPoint3::default() }] });
         let mut d2 = SemioBrepDiff::default();
         d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }) } }], added: vec![] });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         d1.absorb(d2);
-        let result = d1.apply(&base);
+        let result = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(result, sequential);
         assert_eq!(result.vertices[0].point, SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 });
     }
@@ -1156,9 +1162,9 @@ mod tests {
         d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }) } }], added: vec![] });
         let mut d2 = SemioBrepDiff::default();
         d2.vertices = Some(BrepVerticesDiff { removed: vec!["v1".into()], modified: vec![], added: vec![] });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
         d1.absorb(d2);
-        let result = d1.apply(&base);
+        let result = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(result, sequential);
         assert!(result.vertices.is_empty());
     }
@@ -1173,8 +1179,8 @@ mod tests {
         let d2 = SemioBrepDiff::between(&mid, &after);
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        assert_eq!(absorbed.apply(&base), after);
-        assert_eq!(absorbed.apply(&base), d2.apply(&d1.apply(&base)));
+        assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+        assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"));
     }
     //#endregion 🔖️absorb_law
 

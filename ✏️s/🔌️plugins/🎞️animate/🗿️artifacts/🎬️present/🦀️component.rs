@@ -11,6 +11,16 @@ pub use crate::artifacts::present::schema::diff::PresentDiff;
 pub const PRESENT_DOCUMENT_SCHEMA: &str = "animate.present";
 pub use crate::artifacts::present::snapshot::schema::{default_snapshot, PresentSnapshot};
 
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 — the one canonical
+/// `(artifact_kind, standard, subset)` coordinate shared by BOTH `✏️editor::animate::AnimatePresentPlayApp`
+/// and `👁️viewer::animate::AnimatePresentViewer`. Lives at the ARTIFACT level (not under either surface
+/// module) specifically so the viewer can read it without ever importing through the editor. Matches
+/// `definition()`'s own `s.present.schema.artifact` capability descriptor (`s.animate.present`) and this
+/// file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location — canonical surface id `s.animate.present@1/*#editor`
+/// / `s.animate.present@1/*#viewer`.
+pub const ANIMATE_DIALECT: semio_framework_plugin::Dialect =
+    semio_framework_plugin::Dialect { artifact_kind: "s.animate.present", standard: semio_framework_plugin::StandardId("1"), subset: semio_framework_plugin::SubsetId::ANY };
+
 //#region 🔖️Domain
 /// 📐️ Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
 /// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
@@ -61,7 +71,7 @@ pub fn default_present_snapshot() -> PresentSnapshot {
 /// slide-deck structure instead of inline `source`/`tiles` fields on `PresentSnapshot`. `animation`
 /// is composed too, per the design mapping's `animate→C:presentation,animation` line, but carries no
 /// content today — this artifact's persisted document has no time-based data at all (the Manim-class
-/// scene/keyframe engine under `🎛️apps/🎬️present/⚙️engine` constructs its scenes in Rust code at
+/// scene/keyframe engine under `✏️editor/⚙️engine` constructs its scenes in Rust code at
 /// render/export time, never from persisted document state — see `animation_child_handle`'s own doc
 /// comment for the honest gap this leaves).
 pub type PresentationChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot>;
@@ -374,7 +384,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::present::schema::present_artifact_schema_descriptor())
         .inferences([crate::artifacts::present::standards::v1::subsets::any::schema::inferences::present_artifact_inference_descriptor()])
         .composers(crate::artifacts::present::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::present::AnimatePresentPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

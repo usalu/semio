@@ -12,7 +12,7 @@ pub struct ChangeCorrectionAsOf {
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeCorrectionAsOf {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "correction-as-of", kind: "change-correction-as-of", record: "ChangedCorrectionAsOf" };
 
-    fn diff(&self, base: &Vdi3805Snapshot) -> <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff {
+    fn diff(&self, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<<Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

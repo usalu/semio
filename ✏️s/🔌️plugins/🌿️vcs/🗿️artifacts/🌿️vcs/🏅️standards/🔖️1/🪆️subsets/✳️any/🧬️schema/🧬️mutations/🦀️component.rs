@@ -72,7 +72,7 @@ mod tests {
     fn change_notes_diff_absorb_law_holds() {
         let base = empty_vcs_snapshot();
         let d1 = change_notes("first".into()).diff(&base).into_parts().0;
-        let mid = d1.apply(&base);
+        let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = change_notes("second".into()).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

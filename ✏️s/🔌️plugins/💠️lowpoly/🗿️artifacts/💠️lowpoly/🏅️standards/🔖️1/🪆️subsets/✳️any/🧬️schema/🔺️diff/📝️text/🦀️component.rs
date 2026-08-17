@@ -21,123 +21,125 @@ use crate::artifacts::lowpoly::schema::diff::*;
 //#region 🔖️Apply
 impl LowpolyDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &LowpolyArtifact) -> LowpolyArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.objects {
-            next.objects = apply_objects_delta(&next.objects, delta);
-        }
-        if let Some(value) = &self.active_object_id {
-            next.active_object_id = value.clone();
-        }
-        if let Some(value) = &self.selection {
-            next.selection = value.clone();
-        }
-        if let Some(list) = &self.selected_object_ids {
-            next.selected_object_ids = list.values.clone();
-        }
-        if let Some(value) = &self.paint_utility {
-            next.paint_utility = value.clone();
-        }
-        if let Some(value) = self.active_paint_layer {
-            next.active_paint_layer = value;
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = self.show_edges {
-            next.show_edges = value;
-        }
-        if let Some(value) = self.sun_enabled {
-            next.sun_enabled = value;
-        }
-        if let Some(value) = self.sun_azimuth {
-            next.sun_azimuth = value;
-        }
-        if let Some(value) = self.sun_elevation {
-            next.sun_elevation = value;
-        }
-        if let Some(value) = self.sun_intensity {
-            next.sun_intensity = value;
-        }
-        if let Some(value) = &self.sun_color {
-            next.sun_color = value.clone();
-        }
-        if let Some(value) = self.world_camera_position_x {
-            next.world_camera_position_x = value;
-        }
-        if let Some(value) = self.world_camera_position_y {
-            next.world_camera_position_y = value;
-        }
-        if let Some(value) = self.world_camera_position_z {
-            next.world_camera_position_z = value;
-        }
-        if let Some(value) = self.world_camera_target_x {
-            next.world_camera_target_x = value;
-        }
-        if let Some(value) = self.world_camera_target_y {
-            next.world_camera_target_y = value;
-        }
-        if let Some(value) = self.world_camera_target_z {
-            next.world_camera_target_z = value;
-        }
-        if let Some(value) = self.world_camera_fov {
-            next.world_camera_fov = value;
-        }
-        if let Some(value) = &self.utility_params_json {
-            next.utility_params_json = value.clone();
-        }
-        if let Some(value) = self.paint_color_r {
-            next.paint_color_r = value;
-        }
-        if let Some(value) = self.paint_color_g {
-            next.paint_color_g = value;
-        }
-        if let Some(value) = self.paint_color_b {
-            next.paint_color_b = value;
-        }
-        if let Some(value) = self.paint_color_a {
-            next.paint_color_a = value;
-        }
-        if let Some(value) = &self.selection_method {
-            next.selection_method = value.clone();
-        }
-        if let Some(value) = &self.selection_mode_default {
-            next.selection_mode_default = value.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.hovered_object_id {
-            next.hovered_object_id = value.clone();
-        }
-        if let Some(value) = &self.hovered_target_object_id {
-            next.hovered_target_object_id = value.clone();
-        }
-        if let Some(value) = &self.hovered_target_mode {
-            next.hovered_target_mode = value.clone();
-        }
-        if let Some(value) = &self.hovered_target_id {
-            next.hovered_target_id = *value;
-        }
-        if let Some(value) = self.stroke_drag_active {
-            next.stroke_drag_active = value;
-        }
-        if let Some(value) = self.transform_drag_active {
-            next.transform_drag_active = value;
-        }
-        if let Some(value) = self.preview_seq {
-            next.preview_seq = value;
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &LowpolyArtifact) -> protocol::MutationApplyResult<LowpolyArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(delta) = &self.objects {
+                next.objects = apply_objects_delta(&next.objects, delta).map_err(|error| error.under(["objects"]))?;
+            }
+            if let Some(value) = &self.active_object_id {
+                next.active_object_id = value.clone();
+            }
+            if let Some(value) = &self.selection {
+                next.selection = value.clone();
+            }
+            if let Some(list) = &self.selected_object_ids {
+                next.selected_object_ids = list.values.clone();
+            }
+            if let Some(value) = &self.paint_utility {
+                next.paint_utility = value.clone();
+            }
+            if let Some(value) = self.active_paint_layer {
+                next.active_paint_layer = value;
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = self.show_edges {
+                next.show_edges = value;
+            }
+            if let Some(value) = self.sun_enabled {
+                next.sun_enabled = value;
+            }
+            if let Some(value) = self.sun_azimuth {
+                next.sun_azimuth = value;
+            }
+            if let Some(value) = self.sun_elevation {
+                next.sun_elevation = value;
+            }
+            if let Some(value) = self.sun_intensity {
+                next.sun_intensity = value;
+            }
+            if let Some(value) = &self.sun_color {
+                next.sun_color = value.clone();
+            }
+            if let Some(value) = self.world_camera_position_x {
+                next.world_camera_position_x = value;
+            }
+            if let Some(value) = self.world_camera_position_y {
+                next.world_camera_position_y = value;
+            }
+            if let Some(value) = self.world_camera_position_z {
+                next.world_camera_position_z = value;
+            }
+            if let Some(value) = self.world_camera_target_x {
+                next.world_camera_target_x = value;
+            }
+            if let Some(value) = self.world_camera_target_y {
+                next.world_camera_target_y = value;
+            }
+            if let Some(value) = self.world_camera_target_z {
+                next.world_camera_target_z = value;
+            }
+            if let Some(value) = self.world_camera_fov {
+                next.world_camera_fov = value;
+            }
+            if let Some(value) = &self.utility_params_json {
+                next.utility_params_json = value.clone();
+            }
+            if let Some(value) = self.paint_color_r {
+                next.paint_color_r = value;
+            }
+            if let Some(value) = self.paint_color_g {
+                next.paint_color_g = value;
+            }
+            if let Some(value) = self.paint_color_b {
+                next.paint_color_b = value;
+            }
+            if let Some(value) = self.paint_color_a {
+                next.paint_color_a = value;
+            }
+            if let Some(value) = &self.selection_method {
+                next.selection_method = value.clone();
+            }
+            if let Some(value) = &self.selection_mode_default {
+                next.selection_mode_default = value.clone();
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.hovered_object_id {
+                next.hovered_object_id = value.clone();
+            }
+            if let Some(value) = &self.hovered_target_object_id {
+                next.hovered_target_object_id = value.clone();
+            }
+            if let Some(value) = &self.hovered_target_mode {
+                next.hovered_target_mode = value.clone();
+            }
+            if let Some(value) = &self.hovered_target_id {
+                next.hovered_target_id = *value;
+            }
+            if let Some(value) = self.stroke_drag_active {
+                next.stroke_drag_active = value;
+            }
+            if let Some(value) = self.transform_drag_active {
+                next.transform_drag_active = value;
+            }
+            if let Some(value) = self.preview_seq {
+                next.preview_seq = value;
+            }
+            next
+        })
     }
 }
 
@@ -145,7 +147,55 @@ impl LowpolyDiff {
 pub fn apply_objects_delta(
     objects: &[crate::artifacts::lowpoly::LowpolyObject],
     delta: &LowpolyObjectsDelta,
-) -> Vec<crate::artifacts::lowpoly::LowpolyObject> {
+) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
+    let mut removed = std::collections::BTreeSet::new();
+    for (index, id) in delta.removed.iter().enumerate() {
+        if !removed.insert(id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "object is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if !objects.iter().any(|object| &object.id == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed object does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    let mut identities: std::collections::BTreeSet<_> =
+        objects.iter().map(|object| object.id.clone()).collect();
+    for id in &delta.removed {
+        identities.remove(id);
+    }
+    for (index, object) in delta.added.iter().enumerate() {
+        if !identities.insert(object.id.clone()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added object identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
+    let mut patched = std::collections::BTreeSet::new();
+    for (index, entry) in delta.patched.iter().enumerate() {
+        if !patched.insert(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "object is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if removed.contains(entry.id.as_str()) || !identities.contains(&entry.id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched object does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+    }
     let mut next = objects.to_vec();
     for id in &delta.removed {
         next.retain(|object| &object.id != id);
@@ -153,45 +203,66 @@ pub fn apply_objects_delta(
     for item in &delta.added {
         next.push(item.clone());
     }
-    for entry in &delta.patched {
-        if let Some(object) = next.iter_mut().find(|object| object.id == entry.id) {
-            use protocol::Patchable;
-            object.apply_patch(&entry.patch);
-            if let Some(paint) = &entry.paint_layers {
-                apply_paint_layers_delta(object, paint);
-            }
+    for (index, entry) in delta.patched.iter().enumerate() {
+        let object = next.iter_mut().find(|object| object.id == entry.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched object does not exist after structural edits",
+            )
+            .at(["patched".to_string(), index.to_string()])
+        })?;
+        use protocol::Patchable;
+        object.apply_patch(&entry.patch);
+        if let Some(paint) = &entry.paint_layers {
+            apply_paint_layers_delta(object, paint)
+                .map_err(|error| error.under(["patched".to_string(), index.to_string(), "paintLayers".to_string()]))?;
         }
     }
     if let Some(order) = &delta.reordered {
+        if order.len() != next.len()
+            || order.iter().enumerate().any(|(index, id)| {
+                order[..index].contains(id) || !next.iter().any(|object| &object.id == id)
+            })
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-order",
+                "object reorder must be a complete unique permutation",
+            )
+            .at(["reordered"]));
+        }
         let mut by_id: std::collections::BTreeMap<_, _> =
             next.into_iter().map(|object| (object.id.clone(), object)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
-            if let Some(object) = by_id.remove(id) {
-                ordered.push(object);
-            }
+            ordered.push(by_id.remove(id).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.missing-target",
+                    "reordered object does not exist",
+                )
+                .at(["reordered".to_string(), id.clone()])
+            })?);
         }
-        ordered.extend(by_id.into_values());
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
 impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
-    fn apply(&self, snapshot: &LowpolySnapshot) -> LowpolySnapshot {
-        if let Some(replacement) = &self.artifact {
-            return LowpolySnapshot { schema: replacement.schema.clone(), objects: replacement.objects.clone() };
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(delta) = &self.objects {
-            next.objects = apply_objects_delta(&next.objects, delta);
-        }
-        next
+    fn apply(&self, snapshot: &LowpolySnapshot) -> protocol::MutationApplyResult<LowpolySnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(LowpolySnapshot { schema: replacement.schema.clone(), objects: replacement.objects.clone() });
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(delta) = &self.objects {
+                next.objects = apply_objects_delta(&next.objects, delta).map_err(|error| error.under(["objects"]))?;
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

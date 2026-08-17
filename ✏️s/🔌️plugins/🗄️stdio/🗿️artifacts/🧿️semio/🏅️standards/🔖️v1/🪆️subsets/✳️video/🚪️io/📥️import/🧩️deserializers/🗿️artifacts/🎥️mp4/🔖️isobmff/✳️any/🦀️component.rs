@@ -13,7 +13,6 @@
 //!   `SemioVideoSample` has no separate decode/presentation timestamp pair.
 //! - `Mp4Snapshot.ftyp` has no video-subset counterpart and is dropped.
 
-use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Codec;
 use crate::artifacts::mp4::Mp4Snapshot;
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -57,7 +56,7 @@ impl ArtifactDeserializer for SemioVideoFromMp4 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Ftyp, Mp4Sample, Mp4Track};
+    use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Track};
 
     fn real_world_mp4() -> Mp4Snapshot {
         Mp4Snapshot {

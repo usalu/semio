@@ -68,6 +68,36 @@ mod wasm_program_exchange {
         format!("{}: {}", fault.code.0, fault.message)
     }
 
+    /// 🧾 Formats an `AppFrame::Error`'s trailing `report` (a packed `protocol::DispatchReport`,
+    /// present whenever `fault.code == "mutation.rejected"` — contract-freeze.md §C8/C9) into a short
+    /// `code: message [target]` list, mirroring `framework/products/os/modules/run/component.rs`'s
+    /// own `dispatch_report_summary`. Empty for a pre-CHANNEL_VERSION-11 peer or a rejection whose
+    /// report genuinely carries no messages.
+    fn dispatch_report_summary(report: &[u8]) -> String {
+        if report.is_empty() {
+            return String::new();
+        }
+        let Ok(value) = pack_rt::decode_wire_value(report) else { return String::new() };
+        let Ok(decoded) = from_dsl_value::<protocol::DispatchReport>(value) else { return String::new() };
+        decoded
+            .messages
+            .iter()
+            .map(|message| if message.target.is_empty() { format!("{}: {}", message.code.0, message.message) } else { format!("{}: {} [{}]", message.code.0, message.message, message.target.join("/")) })
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
+
+    /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`
+    /// carries real `mutation.*` messages — `` — code: text [target]; ...`` appended.
+    fn app_frame_error_message(fault: &[u8], report: &[u8]) -> String {
+        let mut message = app_frame_fault_summary(fault);
+        let summary = dispatch_report_summary(report);
+        if !summary.is_empty() {
+            message.push_str(&format!(" — {summary}"));
+        }
+        message
+    }
+
     fn exchange(runtime: &WasmPluginRuntime, instance_id: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, String> {
         let encoded: Vec<Vec<u8>> = commands.iter().map(encode_app_command).collect();
         let response = runtime.exchange(instance_id, encoded).map_err(|error| error.to_string())?;
@@ -75,8 +105,8 @@ mod wasm_program_exchange {
     }
 
     fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), String> {
-        if let Some(AppFrame::Error { fault, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: Some(reply), .. } if *reply == seq)) {
-            return Err(app_frame_fault_summary(fault));
+        if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: Some(reply), .. } if *reply == seq)) {
+            return Err(app_frame_error_message(fault, report));
         }
         if frames.iter().any(|frame| matches!(frame, AppFrame::Done { in_reply_to } if *in_reply_to == seq)) {
             return Ok(());
@@ -126,8 +156,8 @@ mod wasm_program_exchange {
                 AppFrame::Events { in_reply_to: Some(reply), events: evs } if *reply == seq => {
                     events = evs.iter().map(|bytes| decode_wire::<AppEvent>(bytes)).collect::<Result<Vec<_>, _>>()?;
                 }
-                AppFrame::Error { in_reply_to, fault } if in_reply_to == &Some(seq) => {
-                    return Err(app_frame_fault_summary(fault));
+                AppFrame::Error { in_reply_to, fault, report } if in_reply_to == &Some(seq) => {
+                    return Err(app_frame_error_message(fault, report));
                 }
                 _ => {}
             }
@@ -218,9 +248,9 @@ mod wasm_program_exchange {
                     return decode_wire(body);
                 }
             }
-            if let AppFrame::Error { in_reply_to, fault } = frame {
+            if let AppFrame::Error { in_reply_to, fault, report } = frame {
                 if in_reply_to == &Some(seq) {
-                    return Err(app_frame_fault_summary(fault));
+                    return Err(app_frame_error_message(fault, report));
                 }
             }
         }
@@ -247,9 +277,9 @@ mod wasm_program_exchange {
                     };
                 }
             }
-            if let AppFrame::Error { in_reply_to, fault } = frame {
+            if let AppFrame::Error { in_reply_to, fault, report } = frame {
                 if in_reply_to == &Some(seq) {
-                    return Err(app_frame_fault_summary(fault));
+                    return Err(app_frame_error_message(fault, report));
                 }
             }
         }

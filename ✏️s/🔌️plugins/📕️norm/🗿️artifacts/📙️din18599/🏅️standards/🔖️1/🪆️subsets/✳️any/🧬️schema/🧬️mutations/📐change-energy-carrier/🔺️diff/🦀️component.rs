@@ -5,7 +5,10 @@ use crate::artifacts::din18599::mutations::change_energy_carrier::mutation::Chan
 use crate::artifacts::din18599::Din18599Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeEnergyCarrier, _base: &Din18599Snapshot) -> Din18599Diff {
-    Din18599Diff { energy_carrier: Some(payload.new_energy_carrier.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeEnergyCarrier, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
+    if base.energy_carrier == payload.new_energy_carrier {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Energy carrier already has this value.");
+    }
+    protocol::MutationOutcome::new(Din18599Diff { energy_carrier: Some(payload.new_energy_carrier.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -7,11 +7,18 @@ use super::mutation::ChangeVariableActionValue;
 use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeVariableActionValue, base: &En1990Snapshot) -> En1990Diff {
-    let mut q_k = en1990_qk(base);
-    if let Some(entry) = q_k.get_mut(payload.index) {
-        entry.value = payload.new_value;
+pub fn diff(payload: &ChangeVariableActionValue, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
+    if !payload.new_value.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Variable action value must be a finite number.", [payload.index.to_string()]);
     }
-    En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() }
+    let mut q_k = en1990_qk(base);
+    let Some(entry) = q_k.get_mut(payload.index) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Variable action #{} does not exist.", payload.index), [payload.index.to_string()]);
+    };
+    if entry.value == payload.new_value {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Variable action #{} already has this value.", payload.index));
+    }
+    entry.value = payload.new_value;
+    protocol::MutationOutcome::new(En1990Diff { q_k: Some(en1990_qk_child_from_entries(&q_k)), ..Default::default() })
 }
 //#endregion 🔖️Diff

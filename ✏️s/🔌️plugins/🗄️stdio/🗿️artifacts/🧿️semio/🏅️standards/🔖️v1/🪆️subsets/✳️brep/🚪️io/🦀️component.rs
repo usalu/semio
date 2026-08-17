@@ -227,7 +227,7 @@ pub mod derived_composition {
         /// `register()` calls (no test module of its own, and out of this ticket's `✳️brep/`-only edit
         /// scope anyway).
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::brep::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

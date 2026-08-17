@@ -1,5 +1,6 @@
-//! 🔺️ `create-vertex` — sparse diff construction; if a vertex with this `id` already exists in
-//! `base`, this is a no-op (real entity-lifecycle safety — never a duplicate id).
+//! 🔺️ `create-vertex` — sparse diff construction; a vertex with this `id` already present in
+//! `base` is `mutation.duplicate-id` (Fatal, empty diff — real entity-lifecycle safety, never a
+//! silent duplicate).
 
 use super::mutation::CreateVertex;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::NamedTripleDiff;
@@ -7,10 +8,10 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::SemioBr
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepVertex, SemioBrepSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateVertex, base: &SemioBrepSnapshot) -> SemioBrepDiff {
+pub fn diff(payload: &CreateVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if base.vertices.iter().any(|x| x.id == payload.id) {
-        return SemioBrepDiff::default();
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A vertex with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: payload.id.clone(), point: payload.point }] }), ..Default::default() }
+    protocol::MutationOutcome::new(SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { id: payload.id.clone(), point: payload.point }] }), ..Default::default() })
 }
 //#endregion 🔖️Diff

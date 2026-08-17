@@ -5,9 +5,17 @@ pub use crate::artifacts::procedural2d::schema::mutations::Procedural2dMutation;
 pub use crate::artifacts::procedural2d::schema::snapshot::Procedural2dSnapshot;
 
 use flow::Widget;
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
+
+/// 🪪️ This artifact's canonical `s.procedural.procedural2d@1/*` dialect — lives at the ARTIFACT level
+/// (not under `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling editor module (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1).
+/// `artifact_kind` matches `definition()`'s own `s.procedural2d.schema.artifact` capability descriptor
+/// (`s.procedural.procedural2d`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const PROCEDURAL2D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.procedural2d", standard: StandardId("1"), subset: SubsetId::ANY };
 
 //#region 🔖️Helpers
 /// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
@@ -28,7 +36,7 @@ pub fn widget_id(widget: &Widget) -> &str {
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::procedural2d::create_procedural2d_app`'s `🔖️Manifest` region.
+/// `crate::editor::procedural2d::create_procedural2d_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.procedural".into(),
@@ -121,7 +129,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .schema(crate::artifacts::procedural2d::schema::procedural2d_artifact_schema_descriptor())
         .inferences([crate::artifacts::procedural2d::standards::v1::subsets::any::schema::inferences::procedural2d_artifact_inference_descriptor()])
         .composers(crate::artifacts::procedural2d::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<crate::apps::procedural2d::Procedural2dPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::procedural2d::Procedural2dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

@@ -56,8 +56,11 @@ pub enum RasterMutation {
 /// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
-pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
-    protocol::MutationDiff::apply(&protocol::Mutation::diff(mutation, snapshot), snapshot)
+pub fn apply_raster_mutation(
+    snapshot: &RasterSnapshot,
+    mutation: &RasterMutation,
+) -> protocol::MutationApplyResult<RasterSnapshot> {
+    protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
@@ -93,10 +96,12 @@ mod tests {
     const ABC_ASSET_PNG: &[u8] = &[137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 56, 49, 45, 229, 63, 0, 6, 174, 2, 194, 232, 197, 127, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130];
 
     fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(snapshot, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(snapshot) {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot");

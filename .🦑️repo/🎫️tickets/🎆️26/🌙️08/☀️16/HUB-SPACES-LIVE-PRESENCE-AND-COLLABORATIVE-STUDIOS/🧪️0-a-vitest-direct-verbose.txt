@@ -1,0 +1,331 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > round-trips an MutationEnvelope through toWireEnvelope/fromWireEnvelope
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > rollbackEnvelope synthesizes an undo from the original inverse
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > encodeClientFrame/decodeClientFrame round-trip a Hello frame
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > round-trips an MutationEnvelope through toWireEnvelope/fromWireEnvelope
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > rollbackEnvelope synthesizes an undo from the original inverse
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > encodeClientFrame/decodeClientFrame round-trip a Hello frame
+ ↓ |@semio-tech/framework-os| ../../🟦️backbone-worker.ts > backbone-worker wire bridge > decodes the Rust-generated binary wire fixtures byte-identically
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > classifies backbone uri kinds
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds and parses backbone uris
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > packs and unpacks document bundles
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > round-trips backbone snapshot messages
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > applies a snapshot backbone message by overwriting the stored bundle
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations without native store
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations before a snapshot exists
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws on an unknown backbone message tag
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds sync utilities reflecting the active backbone kind
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a single delivery across one dirty edge
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a chain in topological order when only the root is dirty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a diamond with one delivery per incoming edge
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing when no instance is dirty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing for a dirty node with no outgoing edges
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for null
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_true
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_false
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_zero
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_negative_one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_pi
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_whole_number
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_escapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_ints
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_mixed
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for nested_deep
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for null
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_true
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_false
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_zero
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_negative_one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_pi
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_whole_number
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_escapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_ints
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_mixed
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for nested_deep
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips null through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_true through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_false through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_zero through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_negative_one through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_pi through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_whole_number through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_escapes through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_ints through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_mixed through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips nested_deep through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips the app-typed presence pack through the document-presence wire
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"Hello":{"channel_version":3,"app_id":"app.demo","actor":"actor-1","config":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ConfigCommand":{"seq":1,"command":[4,5]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"Command":{"seq":2,"command":[1],"view_state":[2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"CommandText":{"seq":3,"line":"move 1 2"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"RefreshUi":{"seq":4,"sections":[{"kind":1,"key":"panel-a","hash":42},{"kind":2,"key":"panel-b","hash":null}],"view_state":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ContextMenu":{"seq":5,"request":[9,9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ArtifactCommand":{"seq":6,"command":[7]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ApplyEnvelopes":{"seq":7,"envelopes":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadDocument":{"seq":8,"pack":[1,2,3],"spr":[4,5,6]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadDocument":{"seq":9}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadConfig":{"seq":10,"pack":[1],"spr":[2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadConfig":{"seq":11}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"AttachBackbone":{"seq":12,"uri":"file:///tmp/a.json"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"DetachBackbone":{"seq":13}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaIn":{"seq":14,"port":"in-1","descriptor":[1],"data":[2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaOut":{"seq":15,"port":"out-1","request":[4]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaFingerprint":{"seq":16,"port":"fp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"PureCommand":{"seq":17,"command":[1],"document":[2],"document_spr":[3],"config":[4],"config_spr":[5],"draft":[6],"draft_spr":[7]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadChildren":{"seq":18,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadChildren":{"seq":19}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadHistory":{"seq":20}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":21,"txn_id":"txn-1","mutation_id":"s.demo#kind","payload":[1,2],"prepared_ops":[],"label":"","origin":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":22,"txn_id":"txn-1","mutation_id":"","payload":[],"prepared_ops":[[1],[2,2]],"label":"step-1","origin":[9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionCommit":{"seq":23,"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRollback":{"seq":24,"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionUndo":{"seq":25,"group_id":"grp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRedo":{"seq":26,"group_id":"grp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":27,"artifact_ref":"s.cad.cad@1/*#viewer","role":0,"plugin_id":"","app_id":""}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":28,"artifact_ref":"s.cad.cad@1/*#editor","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setDefaultApp":{"seq":29,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"clearDefaultApp":{"seq":30,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":0}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setMergePolicy":{"seq":31,"policy":1}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"resolveConflict":{"seq":32,"conflict_id":"conflict-1","resolution":0}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"readConflicts":{"seq":33}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand "Bye"
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Welcome":{"channel_version":8,"instance":7,"manifest":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Done":{"in_reply_to":1}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiSection":{"in_reply_to":3,"kind":1,"key":"panel-a","hash":42,"body":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiSection":{"in_reply_to":null,"kind":1,"key":"panel-b","hash":0,"body":null}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Effects":{"in_reply_to":4,"effects":[[1],[2,3]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Effects":{"in_reply_to":null,"effects":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Events":{"in_reply_to":5,"events":[[9]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"DocumentChanged":{"envelopes":[[1,2]],"origin":"remote"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Document":{"in_reply_to":6,"pack":[1,2],"spr":[3,4],"ops":"op-log"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"ContextMenu":{"in_reply_to":7,"items":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Media":{"in_reply_to":8,"port":"out-1","descriptor":[1],"data":[2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MediaFingerprint":{"in_reply_to":9,"port":"fp-1","fingerprint":[1,2,3,4]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":10,"fault":[1,2,3],"report":[6]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":null,"fault":[4,5],"report":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Emit":{"in_reply_to":11,"document_ops":[1],"config_ops":[2],"draft_ops":[3],"output":[4],"diagnostics":[5]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Draft":{"in_reply_to":12,"pack":[1],"spr":[2],"ops":"d"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Children":{"in_reply_to":13,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Ephemeral":{"presence":[1,2],"presence_generation":3,"transient_generation":4}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"HistorySnapshot":{"in_reply_to":14,"history_patch":[1]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionProposal":{"in_reply_to":15,"proposal_id":"prop-1","local_ops":[[1]],"description":"move","coalesce_key":"k-1","foreign":[[2,3]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[[1]],"rejection":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[],"rejection":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionCommitted":{"txn_id":"txn-1","edit_id":"edit-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionRolledBack":{"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":16,"report":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":null,"report":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":17,"conflicts":[3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":null,"conflicts":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadConflicts=32)
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppFrame variant per the agreed contract order (Welcome=0 ... Conflicts=24)
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches protocol_channel's own golden hex fixture corpus, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > pins APP_CHANNEL_VERSION against the shared cross-language channel version
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language transaction fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language opening fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language merge fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() throws when the exchange returns no frame
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command() allocates an incrementing seq and returns every frame the batch produced
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > refreshUi()/configure()/readDocument()/loadDocument() frame the right AppCommand variant
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > drain() sends an empty batch and decodes whatever frames come back
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from loadDocument()'s own arguments before any reply arrives
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from every AppFrame::Document reply, most recent wins
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > transactionPrepareOwner()/transactionPreparePlanned()/transactionCommit()/transactionRollback()/transactionUndo()/transactionRedo() frame the right AppCommand variant
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > setMergePolicy()/resolveConflict()/readConflicts() match the shared cross-language merge command vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command()/drain() surface unsolicited MergeReport/Conflicts frames and the extended Invocation.messages/Error.report fields verbatim
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > faultMessages()/decodeDispatchReportFromWire()/decodeMergeReportFromWire()/decodeConflictsFromWire() decode the frozen TS report shapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > validates a graph with every dependency present and version-satisfying
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a missing dependency
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a version mismatch
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > resolves a diamond load order deterministically, tie-broken lexicographically
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > names every member of a cycle
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > versionSatisfies matches the frozen grammar (*, =, ^, ~, >=), including caret's leading-zero tiers
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > orderPluginRegistryEntries drops only the blocked entries, dependency-orders the rest
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > pluginGraphErrorMessage renders a real English and a real German message
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > PluginGraph.canUnload refuses while a loaded dependent exists, allows once it's gone
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > InstanceDirectory registers, resolves, and unregisters
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter accepts a byte-identical re-registration, rejects a conflicting one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter.registerContributed rejects a contributor that doesn't depend on the owner
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter enforces owner === contributor and orders the depends_on DAG
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter.registerContributed rejects owner !== contributor
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > folds the golden fixture into the expected projection (parity with the Rust twin) 4ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > is idempotent on replay 1ms
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > classifies backbone uri kinds
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds and parses backbone uris
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > packs and unpacks document bundles
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > round-trips backbone snapshot messages
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > applies a snapshot backbone message by overwriting the stored bundle
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations without native store
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws when applying operations before a snapshot exists
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > throws on an unknown backbone message tag
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os backbone > builds sync utilities reflecting the active backbone kind
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a single delivery across one dirty edge
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a chain in topological order when only the root is dirty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans a diamond with one delivery per incoming edge
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing when no instance is dirty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > plans nothing for a dirty node with no outgoing edges
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for null
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_true
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for bool_false
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_zero
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for int_negative_one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_pi
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for float_whole_number
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for string_escapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for array_ints
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for object_mixed
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > decodes real Rust encode_wire_value bytes for nested_deep
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for null
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_true
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for bool_false
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_zero
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for int_negative_one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_pi
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for float_whole_number
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for string_escapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for array_ints
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_empty
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for object_mixed
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > encodes byte-exact against real Rust encode_wire_value output for nested_deep
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips null through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_true through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips bool_false through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_zero through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips int_negative_one through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_pi through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips float_whole_number through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips string_escapes through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips array_ints through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_empty through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips object_mixed through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os PackValueCodec > round-trips nested_deep through encodePackValue/decodePackValue
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips the app-typed presence pack through the document-presence wire
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"Hello":{"channel_version":3,"app_id":"app.demo","actor":"actor-1","config":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ConfigCommand":{"seq":1,"command":[4,5]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"Command":{"seq":2,"command":[1],"view_state":[2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"CommandText":{"seq":3,"line":"move 1 2"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"RefreshUi":{"seq":4,"sections":[{"kind":1,"key":"panel-a","hash":42},{"kind":2,"key":"panel-b","hash":null}],"view_state":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ContextMenu":{"seq":5,"request":[9,9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ArtifactCommand":{"seq":6,"command":[7]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ApplyEnvelopes":{"seq":7,"envelopes":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadDocument":{"seq":8,"pack":[1,2,3],"spr":[4,5,6]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadDocument":{"seq":9}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadConfig":{"seq":10,"pack":[1],"spr":[2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadConfig":{"seq":11}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"AttachBackbone":{"seq":12,"uri":"file:///tmp/a.json"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"DetachBackbone":{"seq":13}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaIn":{"seq":14,"port":"in-1","descriptor":[1],"data":[2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaOut":{"seq":15,"port":"out-1","request":[4]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"MediaFingerprint":{"seq":16,"port":"fp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"PureCommand":{"seq":17,"command":[1],"document":[2],"document_spr":[3],"config":[4],"config_spr":[5],"draft":[6],"draft_spr":[7]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"LoadChildren":{"seq":18,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadChildren":{"seq":19}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"ReadHistory":{"seq":20}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":21,"txn_id":"txn-1","mutation_id":"s.demo#kind","payload":[1,2],"prepared_ops":[],"label":"","origin":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionPrepare":{"seq":22,"txn_id":"txn-1","mutation_id":"","payload":[],"prepared_ops":[[1],[2,2]],"label":"step-1","origin":[9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionCommit":{"seq":23,"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRollback":{"seq":24,"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionUndo":{"seq":25,"group_id":"grp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"transactionRedo":{"seq":26,"group_id":"grp-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":27,"artifact_ref":"s.cad.cad@1/*#viewer","role":0,"plugin_id":"","app_id":""}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"openArtifact":{"seq":28,"artifact_ref":"s.cad.cad@1/*#editor","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setDefaultApp":{"seq":29,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":1,"plugin_id":"cad","app_id":"s.cad.cad@1/*#editor"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"clearDefaultApp":{"seq":30,"artifact_kind":"s.cad.cad","standard":"1","subset":"*","role":0}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"setMergePolicy":{"seq":31,"policy":1}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"resolveConflict":{"seq":32,"conflict_id":"conflict-1","resolution":0}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand {"readConflicts":{"seq":33}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppCommand "Bye"
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Welcome":{"channel_version":8,"instance":7,"manifest":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Done":{"in_reply_to":1}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Invocation":{"in_reply_to":2,"output":[1],"diagnostics":[],"ui_scope":[],"history_patch":[],"messages":[9]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiSection":{"in_reply_to":3,"kind":1,"key":"panel-a","hash":42,"body":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"UiSection":{"in_reply_to":null,"kind":1,"key":"panel-b","hash":0,"body":null}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Effects":{"in_reply_to":4,"effects":[[1],[2,3]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Effects":{"in_reply_to":null,"effects":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Events":{"in_reply_to":5,"events":[[9]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"DocumentChanged":{"envelopes":[[1,2]],"origin":"remote"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Document":{"in_reply_to":6,"pack":[1,2],"spr":[3,4],"ops":"op-log"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"ContextMenu":{"in_reply_to":7,"items":[1,2,3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Media":{"in_reply_to":8,"port":"out-1","descriptor":[1],"data":[2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MediaFingerprint":{"in_reply_to":9,"port":"fp-1","fingerprint":[1,2,3,4]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":10,"fault":[1,2,3],"report":[6]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Error":{"in_reply_to":null,"fault":[4,5],"report":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Emit":{"in_reply_to":11,"document_ops":[1],"config_ops":[2],"draft_ops":[3],"output":[4],"diagnostics":[5]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Draft":{"in_reply_to":12,"pack":[1],"spr":[2],"ops":"d"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Children":{"in_reply_to":13,"entries":[{"slot":"s","child_id":"c","dialect":"d","envelope_pack":[1]}]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Ephemeral":{"presence":[1,2],"presence_generation":3,"transient_generation":4}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"HistorySnapshot":{"in_reply_to":14,"history_patch":[1]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionProposal":{"in_reply_to":15,"proposal_id":"prop-1","local_ops":[[1]],"description":"move","coalesce_key":"k-1","foreign":[[2,3]]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[[1]],"rejection":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionPrepared":{"txn_id":"txn-1","foreign":[],"rejection":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionCommitted":{"txn_id":"txn-1","edit_id":"edit-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"transactionRolledBack":{"txn_id":"txn-1"}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":16,"report":[1,2]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"MergeReport":{"in_reply_to":null,"report":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":17,"conflicts":[3]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > round-trips AppFrame {"Conflicts":{"in_reply_to":null,"conflicts":[]}}
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppCommand variant per the agreed contract order (Hello=0 ... ReadConflicts=32)
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > tags every AppFrame variant per the agreed contract order (Welcome=0 ... Conflicts=24)
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches protocol_channel's own golden hex fixture corpus, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > pins APP_CHANNEL_VERSION against the shared cross-language channel version
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language transaction fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language opening fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelCodec > matches the shared cross-language merge fixture vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > hello() throws when the exchange returns no frame
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command() allocates an incrementing seq and returns every frame the batch produced
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > refreshUi()/configure()/readDocument()/loadDocument() frame the right AppCommand variant
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > drain() sends an empty batch and decodes whatever frames come back
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from loadDocument()'s own arguments before any reply arrives
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > caches the document pack from every AppFrame::Document reply, most recent wins
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > transactionPrepareOwner()/transactionPreparePlanned()/transactionCommit()/transactionRollback()/transactionUndo()/transactionRedo() frame the right AppCommand variant
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > setMergePolicy()/resolveConflict()/readConflicts() match the shared cross-language merge command vectors, byte-for-byte
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > command()/drain() surface unsolicited MergeReport/Conflicts frames and the extended Invocation.messages/Error.report fields verbatim
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os AppChannelClient > faultMessages()/decodeDispatchReportFromWire()/decodeMergeReportFromWire()/decodeConflictsFromWire() decode the frozen TS report shapes
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > validates a graph with every dependency present and version-satisfying
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a missing dependency
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > reports a version mismatch
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > resolves a diamond load order deterministically, tie-broken lexicographically
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > names every member of a cycle
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > versionSatisfies matches the frozen grammar (*, =, ^, ~, >=), including caret's leading-zero tiers
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > orderPluginRegistryEntries drops only the blocked entries, dependency-orders the rest
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > pluginGraphErrorMessage renders a real English and a real German message
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework PluginGraph > PluginGraph.canUnload refuses while a loaded dependent exists, allows once it's gone
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > InstanceDirectory registers, resolves, and unregisters
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter accepts a byte-identical re-registration, rejects a conflicting one
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactMutationRouter.registerContributed rejects a contributor that doesn't depend on the owner
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter enforces owner === contributor and orders the depends_on DAG
+ ↓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework InstanceDirectory and ArtifactRouters > ArtifactInferenceRouter.registerContributed rejects owner !== contributor
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > folds the golden fixture into the expected projection (parity with the Rust twin) 5ms
+ ✓ |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os directory > is idempotent on replay 0ms
+
+ Test Files  2 passed | 2 skipped (4)
+      Tests  4 passed | 318 skipped (322)
+   Start at  22:21:50
+   Duration  1.51s (transform 3.43s, setup 0ms, import 4.67s, tests 13ms, environment 0ms)
+

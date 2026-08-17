@@ -1,7 +1,7 @@
 //! 🧮️ Mathematical artifact — the document entities this plugin's app edits: a graph playground
 //! (nodes/edges/algorithm) and a geometry playground (a point cloud), combined into one snapshot.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
@@ -13,6 +13,17 @@ use std::collections::HashMap;
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
 /// `crate::artifacts::mathematical::declaration`.
 pub const MATH_DOCUMENT_SCHEMA: &str = "semio.mathematical/v1";
+
+/// 🎯️ This artifact's dialect coordinate (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §1) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a viewer
+/// file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind = "s.mathematical.mathematical"` matches this file's own `definition()`'s
+/// `"s.mathematical.schema.artifact"` capability row descriptor AND the subset schema's own
+/// `#[artifact_schema(id = "s.mathematical.mathematical")]`
+/// (`🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`) — never guessed. `standard`/`subset`
+/// match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location, i.e. the canonical surface id is
+/// `s.mathematical.mathematical@1/*#editor` / `s.mathematical.mathematical@1/*#viewer`.
+pub const MATHEMATICAL_DIALECT: Dialect = Dialect { artifact_kind: "s.mathematical.mathematical", standard: StandardId("1"), subset: SubsetId::ANY };
 //#endregion 🔖️Constants
 
 //#region 🔖️Document
@@ -360,7 +371,7 @@ pub fn mathematical_snapshot_with_state(graph: MathematicalGraph, geometry: Math
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::apps::mathematical::create_mathematical_app`'s `🔖️Manifest` region.
+/// `crate::editor::mathematical::create_mathematical_app`'s `🔖️Manifest` region.
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.mathematical".into(),
@@ -447,7 +458,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — replaces
 /// the old side-effecting `register()`, which called five different global registries directly from a
 /// plugin `.setup()` callback (see `🗒️note`'s exemplar conversion, same shape).
-/// `crate::apps::mathematical::config::schema::register_app_schema()` is the one exception, still called
+/// `crate::editor::mathematical::config::schema::register_app_schema()` is the one exception, still called
 /// from this file's own `.setup()`: it registers the `MathematicalPlayApp` CONFIG/PRESENCE schema, an
 /// app-scope concern `ArtifactDeclaration` deliberately has no field for (see that struct's own doc) —
 /// `register_app_schema_descriptor` is not in the §6 artifact-scoped set.
@@ -489,7 +500,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
         .inferences([crate::artifacts::mathematical::standards::v1::subsets::any::schema::inferences::mathematical_artifact_inference_descriptor()])
         .composers(crate::artifacts::mathematical::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<crate::apps::mathematical::MathematicalPlayApp>()
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

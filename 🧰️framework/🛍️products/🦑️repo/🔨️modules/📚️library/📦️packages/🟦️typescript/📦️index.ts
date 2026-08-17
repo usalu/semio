@@ -1948,8 +1948,9 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
   return ports;
 }
 
-/** @emoji 🔌️ OS hub service dev port. */
-export const OS_HUB_PORT = 6070;
+/** @emoji 🔌️ OS hub service dev port. 8787, not 6070 — 6070 is the `s` react playground's port,
+ * see `✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` `[[package.metadata.semio.playground]]`. */
+export const OS_HUB_PORT = 8787;
 
 /** @emoji 🔌️ Process env var for {@link OS_HUB_PORT}. */
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";

@@ -90,10 +90,9 @@ pub enum SemioFlowMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (mirrors docx/gif convention).
-pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> SemioFlowDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -113,8 +112,8 @@ fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Optio
 impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
     type Diff = SemioFlowDiff;
 
-    fn diff(&self, base: &SemioFlowSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             SemioFlowMutation::NoMutation => SemioFlowDiff::default(),
             SemioFlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             SemioFlowMutation::InsertNode { node } => diff_insert_node(node.clone()),
@@ -128,7 +127,7 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
             SemioFlowMutation::RemoveEdge { id } => diff_remove_edge(id),
             SemioFlowMutation::SetEdgeEndpoints { id, from, to } => diff_set_edge_endpoints(id, from.clone(), to.clone()),
             SemioFlowMutation::SetEdgeKind { id, kind } => diff_set_edge_kind(id, kind),
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
@@ -237,7 +236,7 @@ fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
     }
 }
 
-impl protocol::OpText for SemioFlowMutation {
+impl OpText for SemioFlowMutation {
     fn print_op(&self) -> String {
         print_flow_mutation(self)
     }
@@ -283,7 +282,7 @@ fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 /// follows as one opaque trailing `bytes` chain — reusing the already-real, already-tested
 /// `print_flow_mutation`/`parse_flow_mutation` text codec rather than re-deriving a second
 /// independent encoding.
-impl protocol::OpBinary for SemioFlowMutation {
+impl OpBinary for SemioFlowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
@@ -362,7 +361,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = protocol::MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = protocol::MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_flow_mutation(&mut via_apply, &mutation);
@@ -387,9 +386,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = protocol::MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = protocol::MutationDiff::apply(&inverse_diff, &next);
+            let next = protocol::MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = protocol::MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }

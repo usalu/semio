@@ -35,12 +35,12 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self(JpgAnyBuilder::from_binary(bytes)?))
         }
-        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
-        fn absorb(self, diff: Self::Diff) -> Self {
-            Self(self.0.absorb(diff))
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however the wrapped snapshot got here, a hard baseline
@@ -305,8 +305,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec JpgBaselineBuilderFacets {
-        construction: derived_construction::JpgBaselineBuilderConstruction,
-        analysis: derived_analysis::JpgBaselineAnalyzerAnalysis,
+        construction: JpgBaselineBuilderConstruction,
+        analysis: JpgBaselineAnalyzerAnalysis,
         composition: super::io::derived_composition::JpgBaselineComposerComposition,
     }
     builder: JpgBaselineBuilder,

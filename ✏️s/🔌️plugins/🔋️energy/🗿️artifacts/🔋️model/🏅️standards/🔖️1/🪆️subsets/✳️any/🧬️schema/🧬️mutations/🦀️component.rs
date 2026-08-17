@@ -60,10 +60,10 @@ mod tests {
     }
 
     fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
-        let forward = mutation.diff(base).diff().apply(base);
+        let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = back.diff(&restored).diff().apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward

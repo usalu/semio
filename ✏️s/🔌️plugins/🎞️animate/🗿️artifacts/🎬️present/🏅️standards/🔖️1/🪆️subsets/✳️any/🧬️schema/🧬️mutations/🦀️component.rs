@@ -59,12 +59,14 @@ mod tests {
     }
 
     fn round_trip(base: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut backward = mutation.inverse(base);
         backward.reverse();
         let mut restored = forward.clone();
         for undo in &backward {
-            let (next, _messages) = vcs::apply_mutation(&restored, undo);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, undo).expect("valid inverse mutation");
             restored = next;
         }
         // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`
@@ -234,8 +236,11 @@ mod tests {
 
 //#region 🔖️Apply
 /// 📦️ Applies `mutation` onto `snapshot`, returning the resulting snapshot.
-pub fn apply_present_mutation(snapshot: &PresentSnapshot, mutation: &PresentMutation) -> PresentSnapshot {
-    vcs::apply_mutation(snapshot, mutation).0
+pub fn apply_present_mutation(
+    snapshot: &PresentSnapshot,
+    mutation: &PresentMutation,
+) -> protocol::MutationApplyResult<PresentSnapshot> {
+    vcs::apply_mutation(snapshot, mutation).map(|(next, _messages)| next)
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).

@@ -15,7 +15,7 @@ pub struct ChangeDeltaSigmaEd {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeDeltaSigmaEd {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "delta-sigma-ed", kind: "change-delta-sigma-ed", record: "ChangedDeltaSigmaEd" };
 
-    fn diff(&self, base: &En1999Snapshot) -> En1999Diff {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_delta_sigma_ed::diff::diff(self, base)
     }
 

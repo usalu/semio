@@ -97,10 +97,13 @@ pub use super::update_sfm_params::mutation::{update_sfm_params, UpdateSfmParams}
 
 //#region 🔖️ApplyInverse
 /// ▶️ Applies `mutation` via its diff — kept as a free-function wrapper (matching
-/// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (`🎛️apps/📸️remodel`) still call it
+/// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it
 /// by this name.
-pub fn apply_remodel_mutation(snapshot: &RemodelSnapshot, mutation: &RemodelMutation) -> RemodelSnapshot {
-    protocol::MutationDiff::apply(&mutation.diff(snapshot), snapshot)
+pub fn apply_remodel_mutation(
+    snapshot: &RemodelSnapshot,
+    mutation: &RemodelMutation,
+) -> protocol::MutationApplyResult<RemodelSnapshot> {
+    protocol::MutationDiff::apply(&mutation.diff(snapshot).into_parts().0, snapshot)
 }
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
@@ -308,7 +311,7 @@ mod tests {
     fn move_step_style_diff_absorb_law() {
         let base = populated_scene_fixture();
         let d1 = change_stream_sync("stream-1".into(), 10.0).diff(&base);
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = change_stream_sync("stream-1".into(), 20.0).diff(&mid);
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -336,8 +339,10 @@ mod tests {
         let op_a = create_asset("frame-a".into(), asset_a.clone());
         let op_b = create_asset("frame-b".into(), asset_b.clone());
 
-        let a_then_b = apply_remodel_mutation(&apply_remodel_mutation(&base, &op_a), &op_b);
-        let b_then_a = apply_remodel_mutation(&apply_remodel_mutation(&base, &op_b), &op_a);
+        let a = apply_remodel_mutation(&base, &op_a).expect("valid mutation diff");
+        let b = apply_remodel_mutation(&base, &op_b).expect("valid mutation diff");
+        let a_then_b = apply_remodel_mutation(&a, &op_b).expect("valid mutation diff");
+        let b_then_a = apply_remodel_mutation(&b, &op_a).expect("valid mutation diff");
 
         assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
         // 🎯️ Both assets are `image/jpeg` (unsupported by the real png bridge today, see
@@ -358,8 +363,10 @@ mod tests {
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
         let op_gcp = create_gcp(gcp.clone());
 
-        let feature_then_gcp = apply_remodel_mutation(&apply_remodel_mutation(&base, &op_feature), &op_gcp);
-        let gcp_then_feature = apply_remodel_mutation(&apply_remodel_mutation(&base, &op_gcp), &op_feature);
+        let feature = apply_remodel_mutation(&base, &op_feature).expect("valid mutation diff");
+        let gcp = apply_remodel_mutation(&base, &op_gcp).expect("valid mutation diff");
+        let feature_then_gcp = apply_remodel_mutation(&feature, &op_gcp).expect("valid mutation diff");
+        let gcp_then_feature = apply_remodel_mutation(&gcp, &op_feature).expect("valid mutation diff");
 
         assert_eq!(feature_then_gcp, gcp_then_feature);
         assert_eq!(feature_then_gcp.params.feature.target_count, 9000);

@@ -18,7 +18,7 @@ import { type IconName } from "@semio-tech/assets";
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️component.tsx";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../↕️Collapsible/🟦️component.tsx";
@@ -27,13 +27,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Slider } from "../🎚️Slider/🟦️component.tsx";
 import { Stepper } from "../🪜️Stepper/🟦️component.tsx";
 import { Textarea } from "../📄️Textarea/🟦️component.tsx";
-import { Toggle } from "../🎛️ToggleGroup/🟦️component.tsx";
+import { Toggle } from "../🎚️Toggle/🟦️component.tsx";
 import { childElementId } from "../🆔️ElementId/🟦️component.tsx";
-import { borderNormalClass, interactiveActiveFillClass, interactiveControlTransitionClass, surfaceClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { interactiveActiveFillClass, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
+import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 import { dropZoneReadyFillClass, dropZoneReadyTextClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
-import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../🧭️Flow/🟦️component.tsx";
-import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { usePanelGhost, useUiDriverDragSurface, TREE_SECTION_REORDER_MIME, interactionMergeFromModifiers } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Icon, renderControlIcon, type ControlIcon, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️component.tsx";

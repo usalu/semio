@@ -22,90 +22,133 @@ fn apply_identified_delta<T: Clone>(
     patched: &[(String, Option<T>)],
     reordered: &Option<Vec<String>>,
     id_of: impl Fn(&T) -> &str,
-) -> Vec<T> {
+) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
-    for id in removed { next.retain(|item| id_of(item) != id); }
-    for item in added {
-        if let Some(pos) = next.iter().position(|entry| id_of(entry) == id_of(item)) { next[pos] = item.clone(); }
-        else { next.push(item.clone()); }
-    }
-    for (id, replacement) in patched {
-        if let (Some(pos), Some(value)) = (next.iter().position(|entry| id_of(entry) == id), replacement) {
-            next[pos] = value.clone();
+    let mut seen = std::collections::HashSet::new();
+    for id in removed {
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is removed more than once").at(["removed", id.as_str()]));
         }
+        let position = next.iter().position(|item| id_of(item) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "removed item does not exist").at(["removed", id.as_str()])
+        })?;
+        next.remove(position);
+    }
+    seen.clear();
+    for item in added {
+        let id = id_of(item);
+        if !seen.insert(id.to_string()) || next.iter().any(|entry| id_of(entry) == id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added item identity already exists").at(["added", id]));
+        }
+        next.push(item.clone());
+    }
+    seen.clear();
+    for (id, replacement) in patched {
+        if !seen.insert(id.clone()) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item is patched more than once").at(["patched", id.as_str()]));
+        }
+        let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.missing-target", "patched item does not exist").at(["patched", id.as_str()])
+        })?;
+        let value = replacement.as_ref().ok_or_else(|| {
+            protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "item patch has no replacement").at(["patched", id.as_str()])
+        })?;
+        let replacement_id = id_of(value);
+        if replacement_id != id && next.iter().enumerate().any(|(index, entry)| index != position && id_of(entry) == replacement_id) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patched item identity already exists").at(["patched", replacement_id]));
+        }
+        next[position] = value.clone();
     }
     if let Some(order) = reordered {
-        let mut by_id: std::collections::BTreeMap<_, _> = next.into_iter().map(|item| (id_of(&item).to_string(), item)).collect();
-        let mut ordered = Vec::with_capacity(order.len());
-        for id in order { if let Some(item) = by_id.remove(id) { ordered.push(item); } }
-        ordered.extend(by_id.into_values());
+        if order.len() != next.len() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("order has length {}, expected {}", order.len(), next.len())).at(["reordered"]));
+        }
+        seen.clear();
+        for id in order {
+            if !seen.insert(id.clone()) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "item appears more than once in order").at(["reordered", id.as_str()]));
+            }
+            if !next.iter().any(|entry| id_of(entry) == id) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()]));
+            }
+        }
+        let mut ordered = Vec::with_capacity(next.len());
+        for id in order {
+            let position = next.iter().position(|entry| id_of(entry) == id).ok_or_else(|| {
+                protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered item does not exist").at(["reordered", id.as_str()])
+            })?;
+            ordered.push(next.remove(position));
+        }
         next = ordered;
     }
-    next
+    Ok(next)
 }
 
 macro_rules! apply_delta {
-    ($items:expr, $delta:expr, $id:expr) => {{
+    ($target:literal, $items:expr, $delta:expr, $id:expr) => {{
         let patched: Vec<_> = $delta.patched.iter().map(|e| (e.id.clone(), e.patch.replacement.clone())).collect();
-        apply_identified_delta($items, &$delta.removed, &$delta.added, &patched, &$delta.reordered, $id)
+        apply_identified_delta($items, &$delta.removed, &$delta.added, &patched, &$delta.reordered, $id).map_err(|error| error.under([$target]))?
     }};
 }
 
 impl Block3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Block3dArtifact) -> Block3dArtifact {
-        if let Some(replacement) = &self.artifact { return (**replacement).clone(); }
-        let mut next = artifact.clone();
-        if let Some(v) = &self.schema { next.schema = v.clone(); }
-        if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
-        if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
-        if let Some(d) = &self.vortex_kinds {
-            let current = crate::artifacts::block3d::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
-            let merged = apply_delta!(&current, d, |i: &Block3dVortexKind| i.id.as_str());
-            crate::artifacts::block3d::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
-        }
-        if let Some(d) = &self.vortices { next.vortices = apply_delta!(&next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
-        if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
-        if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
-        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
-        if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
-        if let Some(v) = &self.meta { next.meta = v.clone(); }
-        if let Some(list) = &self.selected_ids { next.selected_ids = list.values.clone(); }
-        if let Some(v) = &self.active_representation_id { next.active_representation_id = v.clone(); }
-        if let Some(list) = &self.wanted_tags { next.wanted_tags = list.values.clone(); }
-        if let Some(v) = &self.locale { next.locale = v.clone(); }
-        if let Some(list) = &self.windows { next.windows = list.values.clone(); }
-        if let Some(v) = &self.brush_vortex_kind_id { next.brush_vortex_kind_id = v.clone(); }
-        if let Some(v) = self.brush_radius { next.brush_radius = v; }
-        if let Some(v) = self.brush_flip { next.brush_flip = v; }
-        if let Some(v) = &self.brush_preview { next.brush_preview = v.clone(); }
-        if let Some(v) = &self.camera { next.camera = v.clone(); }
-        if let Some(v) = &self.hovered_vortex_full_id { next.hovered_vortex_full_id = v.clone(); }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Block3dArtifact) -> protocol::MutationApplyResult<Block3dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact { return Ok((**replacement).clone()); }
+            let mut next = artifact.clone();
+            if let Some(v) = &self.schema { next.schema = v.clone(); }
+            if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
+            if let Some(d) = &self.representations { next.representations = apply_delta!("representations", &next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
+            if let Some(d) = &self.vortex_kinds {
+                let current = crate::artifacts::block3d::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
+                let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
+                crate::artifacts::block3d::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
+            }
+            if let Some(d) = &self.vortices { next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
+            if let Some(d) = &self.compatibility { next.compatibility = apply_delta!("compatibility", &next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
+            if let Some(d) = &self.attributes { next.attributes = apply_delta!("attributes", &next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
+            if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+            if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
+            if let Some(v) = &self.meta { next.meta = v.clone(); }
+            if let Some(list) = &self.selected_ids { next.selected_ids = list.values.clone(); }
+            if let Some(v) = &self.active_representation_id { next.active_representation_id = v.clone(); }
+            if let Some(list) = &self.wanted_tags { next.wanted_tags = list.values.clone(); }
+            if let Some(v) = &self.locale { next.locale = v.clone(); }
+            if let Some(list) = &self.windows { next.windows = list.values.clone(); }
+            if let Some(v) = &self.brush_vortex_kind_id { next.brush_vortex_kind_id = v.clone(); }
+            if let Some(v) = self.brush_radius { next.brush_radius = v; }
+            if let Some(v) = self.brush_flip { next.brush_flip = v; }
+            if let Some(v) = &self.brush_preview { next.brush_preview = v.clone(); }
+            if let Some(v) = &self.camera { next.camera = v.clone(); }
+            if let Some(v) = &self.hovered_vortex_full_id { next.hovered_vortex_full_id = v.clone(); }
+            next
+        })
     }
 }
 
 impl MutationDiff<Block3dSnapshot> for Block3dDiff {
-    fn apply(&self, snapshot: &Block3dSnapshot) -> Block3dSnapshot {
-        if let Some(replacement) = &self.artifact { return replacement.to_snapshot(); }
-        let mut next = snapshot.clone();
-        if let Some(v) = &self.schema { next.schema = v.clone(); }
-        if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
-        if let Some(d) = &self.representations { next.representations = apply_delta!(&next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
-        if let Some(d) = &self.vortex_kinds {
-            let current = crate::artifacts::block3d::vortex_kinds_of(&next);
-            let merged = apply_delta!(&current, d, |i: &Block3dVortexKind| i.id.as_str());
-            crate::artifacts::block3d::set_vortex_kinds(&mut next, merged);
-        }
-        if let Some(d) = &self.vortices { next.vortices = apply_delta!(&next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
-        if let Some(d) = &self.compatibility { next.compatibility = apply_delta!(&next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
-        if let Some(d) = &self.attributes { next.attributes = apply_delta!(&next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
-        if let Some(list) = &self.authors { next.authors = list.values.clone(); }
-        if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
-        if let Some(v) = &self.meta { next.meta = v.clone(); }
-        next
+    fn apply(&self, snapshot: &Block3dSnapshot) -> protocol::MutationApplyResult<Block3dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact { return Ok(replacement.to_snapshot()); }
+            let mut next = snapshot.clone();
+            if let Some(v) = &self.schema { next.schema = v.clone(); }
+            if let Some(v) = &self.object_kind { next.object_kind = v.clone(); }
+            if let Some(d) = &self.representations { next.representations = apply_delta!("representations", &next.representations, d, |i: &BlockRepresentation| i.id.as_str()); }
+            if let Some(d) = &self.vortex_kinds {
+                let current = crate::artifacts::block3d::vortex_kinds_of(&next);
+                let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
+                crate::artifacts::block3d::set_vortex_kinds(&mut next, merged);
+            }
+            if let Some(d) = &self.vortices { next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str()); }
+            if let Some(d) = &self.compatibility { next.compatibility = apply_delta!("compatibility", &next.compatibility, d, |i: &BlockCompatibilityRule| i.id.as_str()); }
+            if let Some(d) = &self.attributes { next.attributes = apply_delta!("attributes", &next.attributes, d, |i: &BlockAttribute| i.key.as_str()); }
+            if let Some(list) = &self.authors { next.authors = list.values.clone(); }
+            if let Some(v) = &self.camera3d { next.camera3d = v.clone(); }
+            if let Some(v) = &self.meta { next.meta = v.clone(); }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() { *self = other; return; }
         macro_rules! take { ($f:ident) => { if other.$f.is_some() { self.$f = other.$f; } }; }

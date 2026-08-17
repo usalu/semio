@@ -175,19 +175,6 @@ fn xml_escape_attr(s: &str) -> String {
     out
 }
 
-fn xml_escape_attr_single(s: &str) -> String {
-    let mut out = String::new();
-    for ch in s.chars() {
-        match ch {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '\'' => out.push_str("&apos;"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
 /// 🔓️ Decode the five predefined XML entities plus numeric character references (`&#NNN;`,
 /// `&#xHHHH;`/`&#XHHHH;`) into their literal characters. This is the read-side half that was
 /// entirely missing before: without it, `&amp;` in a source document is kept as the 5 literal
@@ -241,18 +228,18 @@ fn xml_unescape_text(s: &str) -> Result<String, String> {
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
     let mut out = String::new();
     if let Some(decl) = &doc.declaration {
-        out.push_str("<?xml version='");
+        out.push_str("<?xml version=\"");
         out.push_str(&decl.version);
-        out.push('\'');
+        out.push('\"');
         if let Some(encoding) = &decl.encoding {
-            out.push_str(" encoding='");
+            out.push_str(" encoding=\"");
             out.push_str(encoding);
-            out.push('\'');
+            out.push('\"');
         }
         if let Some(standalone) = decl.standalone {
-            out.push_str(" standalone='");
+            out.push_str(" standalone=\"");
             out.push_str(if standalone { "yes" } else { "no" });
-            out.push('\'');
+            out.push('\"');
         }
         out.push_str("?>\n");
     }
@@ -276,16 +263,16 @@ fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
     if let Some(external_id) = &doctype.external_id {
         match external_id {
             XmlExternalId::System { system_id } => {
-                out.push_str(" SYSTEM '");
-                out.push_str(&xml_escape_attr_single(system_id));
-                out.push('\'');
+                out.push_str(" SYSTEM \"");
+                out.push_str(&xml_escape_attr(system_id));
+                out.push('\"');
             }
             XmlExternalId::Public { public_id, system_id } => {
-                out.push_str(" PUBLIC '");
-                out.push_str(&xml_escape_attr_single(public_id));
-                out.push_str("' '");
-                out.push_str(&xml_escape_attr_single(system_id));
-                out.push('\'');
+                out.push_str(" PUBLIC \"");
+                out.push_str(&xml_escape_attr(public_id));
+                out.push_str("\" \"");
+                out.push_str(&xml_escape_attr(system_id));
+                out.push('\"');
             }
         }
     }
@@ -299,9 +286,9 @@ fn xml_doctype_to_text(doctype: &XmlDoctype, out: &mut String) {
                         out.push_str("% ");
                     }
                     out.push_str(name);
-                    out.push_str(" '");
-                    out.push_str(&xml_escape_attr_single(value));
-                    out.push_str("'>");
+                    out.push_str(" \"");
+                    out.push_str(&xml_escape_attr(value));
+                    out.push_str("\">");
                 }
             }
         }
@@ -340,10 +327,10 @@ fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
             out.push('<');
             out.push_str(name);
             for (index, attr) in attrs.iter().enumerate() {
-                let rendered = format!("{}='{}'", attr.name, xml_escape_attr_single(&attr.value));
+                let rendered = format!("{}=\"{}\"", attr.name, xml_escape_attr(&attr.value));
                 let closing_width = if index + 1 == attrs.len() {
                     match children.as_slice() {
-                        [] => 3,
+                        [] => 2,
                         [XmlNode::Text { text }] => xml_escape_text(text).chars().count() + name.len() + 4,
                         _ => 1,
                     }
@@ -359,7 +346,7 @@ fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
                 out.push_str(&rendered);
             }
             if children.is_empty() {
-                out.push_str(" />");
+                out.push_str("/>");
                 return;
             }
             out.push('>');

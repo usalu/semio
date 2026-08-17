@@ -233,9 +233,14 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artif
 //#region 🔖️BatchHelpers
 /// ▶️ Diff-based apply of one mutation — thin `Mutation::diff` + `MutationDiff::apply` delegate (P6:
 /// no per-variant hand match here anymore; each kind's real logic lives in its own triad `🔺️diff` leaf).
-pub fn apply_trinity_graph_mutation(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) {
+pub fn apply_trinity_graph_mutation(
+    snapshot: &mut JackSnapshot,
+    mutation: &TrinityGraphMutation,
+) -> protocol::MutationApplyResult<()> {
     let outcome = mutation.diff(snapshot);
-    *snapshot = protocol::MutationDiff::apply(outcome.diff(), snapshot);
+    let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<TrinityGraphMutation> {
@@ -247,7 +252,7 @@ pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[Trinit
     let mut snapshot = fixture;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
-        apply_trinity_graph_mutation(&mut snapshot, operation);
+        apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
     Ok(snapshot)
 }
@@ -260,7 +265,7 @@ pub fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operation
     let mut snapshot = store.snapshot()?;
     for operation in &operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
-        apply_trinity_graph_mutation(&mut snapshot, operation);
+        apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
     store
         .dispatch(ArtifactCommand::Apply { mutations: operations, description: None })

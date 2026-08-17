@@ -88,7 +88,7 @@ function removeElementAlias(element: Element, id: string): void {
 
 /** 🆔️ Stamps `alias` (a logical element id) onto the first draggable tree row inside `containerRef`, in
  * document order — the generic mechanism behind teaching catalogue drag-and-drop without any component
- * hardcoding "first draggable row" semantics: the Panel/MobilePanel decide the alias value (their own tab
+ * hardcoding "first draggable row" semantics: Panel and Layout's private mobile panel decide the alias value (their own tab
  * id + `.firstDraggable`), this hook just keeps it stamped on whichever row is first as the tree changes.
  * Re-scans on `data-draggable` mutations (not `data-element-alias`, which would self-trigger the observer). */
 export function useFirstDraggableElementAlias(containerRef: React.RefObject<HTMLElement | null>, alias: string | null): void {

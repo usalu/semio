@@ -15,7 +15,7 @@ pub struct ChangeSolarGainsKwh {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeSolarGainsKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "solar-gains-kwh", kind: "change-solar-gains-kwh", record: "ChangedSolarGainsKwh" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_solar_gains_kwh::diff::diff(self, base)
     }
 

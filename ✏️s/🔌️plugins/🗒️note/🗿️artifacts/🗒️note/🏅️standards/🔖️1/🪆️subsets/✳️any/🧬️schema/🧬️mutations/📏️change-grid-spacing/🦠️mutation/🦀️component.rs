@@ -22,7 +22,7 @@ pub fn change_grid_spacing(new_spacing: Option<f64>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSpacing {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-spacing", kind: "change-grid-spacing", record: "ChangedGridSpacing" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

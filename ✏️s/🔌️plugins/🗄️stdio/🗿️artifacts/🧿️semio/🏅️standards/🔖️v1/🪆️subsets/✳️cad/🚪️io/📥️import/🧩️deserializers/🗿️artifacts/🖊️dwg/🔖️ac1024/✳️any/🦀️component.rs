@@ -42,8 +42,7 @@ mod tests {
     use super::*;
 
     fn sample_dwg() -> DwgSnapshot {
-        let mut bytes = vec![b'A', b'C', b'1', b'0', b'3', b'2'];
-        bytes.resize(0x15, 0);
+        let bytes = crate::artifacts::dwg::dwg_to_bytes(&crate::artifacts::dwg::DwgDrawing::default()).expect("encode sample");
         crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::decode_dwg(&bytes).expect("decode sample")
     }
 

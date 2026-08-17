@@ -3,7 +3,7 @@
 use crate::artifacts::raster::schema::diff::{
     RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta,
 };
-use crate::artifacts::raster::schema::layer_node_id;
+use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::schema::RasterArtifact;
 use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 use protocol::MutationDiff;
@@ -31,25 +31,55 @@ pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str
     None
 }
 
-pub fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) {
+pub fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
     match parent_id {
         None => {
-            let at = index.min(layers.len());
-            layers.insert(at, layer);
+            if index > layers.len() {
+                return false;
+            }
+            layers.insert(index, layer);
+            true
         }
         Some(parent_id) => {
             for node in layers.iter_mut() {
                 if let RasterLayerNode::Group { id, children, .. } = node {
                     if id == parent_id {
-                        let at = index.min(children.len());
-                        children.insert(at, layer);
-                        return;
+                        if index > children.len() {
+                            return false;
+                        }
+                        children.insert(index, layer);
+                        return true;
                     }
-                    insert_layer(children, Some(parent_id), index, layer.clone());
+                    if insert_layer(children, Some(parent_id), index, layer.clone()) {
+                        return true;
+                    }
                 }
             }
+            false
         }
     }
+}
+
+fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
+    layer_node_id(node) == target_id
+        || matches!(node, RasterLayerNode::Group { children, .. } if children.iter().any(|child| contains_layer(child, target_id)))
+}
+
+fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
+    let invalid = match node {
+        RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
+        RasterLayerNode::Group { .. } => patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
+        RasterLayerNode::Adjustment { .. } => {
+            patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some()
+        }
+    };
+    if invalid {
+        return Err(protocol::MutationApplyError::new(
+            "mutation.apply.invalid-target",
+            "layer patch contains fields unsupported by the target layer kind",
+        ));
+    }
+    Ok(())
 }
 
 fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
@@ -159,125 +189,294 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
 //#region 🔖️Apply
 impl RasterDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> RasterArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(delta) = &self.layers {
-            next.layers = apply_layers_delta(&next.layers, delta);
-        }
-        if let Some(assets) = &self.assets {
-            for (key, value) in &assets.entries {
-                match value {
-                    Some(asset) => {
-                        next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
-                    }
-                    None => {
-                        next.assets.remove(key);
+    pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(delta) = &self.layers {
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+            }
+            if let Some(assets) = &self.assets {
+                validate_assets_delta(&next.assets, assets).map_err(|error| error.under(["assets"]))?;
+                for (key, value) in &assets.entries {
+                    match value {
+                        Some(asset) => {
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
+                        }
+                        None => {
+                            next.assets.remove(key);
+                        }
                     }
                 }
             }
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = self.brush_size {
-            next.brush_size = value;
-        }
-        if let Some(value) = self.brush_opacity {
-            next.brush_opacity = value;
-        }
-        if let Some(value) = &self.composite_viewport {
-            next.composite_viewport = value.clone();
-        }
-        if let Some(value) = self.camera_x {
-            next.camera_x = value;
-        }
-        if let Some(value) = self.camera_y {
-            next.camera_y = value;
-        }
-        if let Some(value) = self.camera_zoom {
-            next.camera_zoom = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.hovered_id {
-            next.hovered_id = value.clone();
-        }
-        next
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = self.brush_size {
+                next.brush_size = value;
+            }
+            if let Some(value) = self.brush_opacity {
+                next.brush_opacity = value;
+            }
+            if let Some(value) = &self.composite_viewport {
+                next.composite_viewport = value.clone();
+            }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.hovered_id {
+                next.hovered_id = value.clone();
+            }
+            next
+        })
     }
 }
 
-pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta) -> Vec<RasterLayerNode> {
+pub fn apply_layers_delta(
+    layers: &[RasterLayerNode],
+    delta: &RasterLayersDelta,
+) -> protocol::MutationApplyResult<Vec<RasterLayerNode>> {
+    let mut removed = std::collections::BTreeSet::new();
+    for (index, id) in delta.removed.iter().enumerate() {
+        if !removed.insert(id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "layer is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if find_layer(layers, id).is_none() {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed layer does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    let mut patched = std::collections::BTreeSet::new();
+    for (index, entry) in delta.patched.iter().enumerate() {
+        if !patched.insert(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "layer is patched more than once",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        if removed.contains(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "layer cannot be removed and patched",
+            )
+            .at(["patched".to_string(), index.to_string()]));
+        }
+        let node = find_layer(layers, &entry.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched layer does not exist",
+            )
+            .at(["patched".to_string(), index.to_string()])
+        })?;
+        validate_layer_patch(node, &entry.patch)
+            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+    }
+    let mut moved = std::collections::BTreeSet::new();
+    for (index, entry) in delta.moved.iter().enumerate() {
+        if !moved.insert(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "layer is moved more than once",
+            )
+            .at(["moved".to_string(), index.to_string()]));
+        }
+        if removed.contains(entry.id.as_str()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "layer cannot be removed and moved",
+            )
+            .at(["moved".to_string(), index.to_string()]));
+        }
+        let node = find_layer(layers, &entry.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "moved layer does not exist",
+            )
+            .at(["moved".to_string(), index.to_string()])
+        })?;
+        if entry.parent_id.as_deref().is_some_and(|parent_id| contains_layer(node, parent_id)) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-target",
+                "layer cannot be moved beneath itself",
+            )
+            .at(["moved".to_string(), index.to_string(), "parentId".to_string()]));
+        }
+    }
+    let mut identities: std::collections::BTreeSet<String> = crate::artifacts::raster::schema::flatten_raster_layers(layers)
+        .into_iter()
+        .map(|node| layer_node_id(node).to_string())
+        .collect();
+    for id in &delta.removed {
+        identities.remove(id);
+    }
+    for (index, insertion) in delta.added.iter().enumerate() {
+        let id = layer_node_id(&insertion.layer);
+        if !identities.insert(id.to_string()) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "added layer identity already exists",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
+    }
     let mut next = layers.to_vec();
     for id in &delta.removed {
-        remove_layer_from_tree(&mut next, id);
+        remove_layer_from_tree(&mut next, id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed layer does not exist after structural edits",
+            )
+            .at(["removed", id.as_str()])
+        })?;
     }
-    for entry in &delta.patched {
-        apply_layer_patch_entry(&mut next, entry);
+    for (index, entry) in delta.patched.iter().enumerate() {
+        apply_layer_patch_entry(&mut next, entry)
+            .map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
-    for mv in &delta.moved {
-        if let Some(node) = remove_layer_from_tree(&mut next, &mv.id) {
-            insert_layer(&mut next, mv.parent_id.as_deref(), mv.index, node);
+    for (index, mv) in delta.moved.iter().enumerate() {
+        let node = remove_layer_from_tree(&mut next, &mv.id).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "moved layer does not exist after structural edits",
+            )
+            .at(["moved".to_string(), index.to_string()])
+        })?;
+        if !insert_layer(&mut next, mv.parent_id.as_deref(), mv.index, node) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "moved layer parent or index is invalid",
+            )
+            .at(["moved".to_string(), index.to_string()]));
         }
     }
-    for insertion in &delta.added {
-        insert_layer(&mut next, insertion.parent_id.as_deref(), insertion.index, insertion.layer.clone());
+    for (index, insertion) in delta.added.iter().enumerate() {
+        if !insert_layer(
+            &mut next,
+            insertion.parent_id.as_deref(),
+            insertion.index,
+            insertion.layer.clone(),
+        ) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "added layer parent or index is invalid",
+            )
+            .at(["added".to_string(), index.to_string()]));
+        }
     }
-    next
+    let next_ids: Vec<_> = crate::artifacts::raster::schema::flatten_raster_layers(&next)
+        .into_iter()
+        .map(layer_node_id)
+        .collect();
+    if next_ids
+        .iter()
+        .enumerate()
+        .any(|(index, id)| next_ids[..index].contains(id))
+    {
+        return Err(protocol::MutationApplyError::new(
+            "mutation.apply.duplicate-target",
+            "resulting layer tree contains duplicate identities",
+        )
+        .at(["identities"]));
+    }
+    Ok(next)
 }
 
-fn apply_layer_patch_entry(layers: &mut Vec<RasterLayerNode>, entry: &RasterLayerPatchEntry) {
-    patch_layer_in_tree(layers, &entry.id, &entry.patch);
+fn apply_layer_patch_entry(
+    layers: &mut [RasterLayerNode],
+    entry: &RasterLayerPatchEntry,
+) -> protocol::MutationApplyResult<()> {
+    patch_layer_in_tree(layers, &entry.id, &entry.patch)
+        .map(|_| ())
+        .ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "patched layer does not exist",
+            )
+        })
+}
+
+fn validate_assets_delta<T>(
+    assets: &std::collections::BTreeMap<String, T>,
+    delta: &RasterAssetsDelta,
+) -> protocol::MutationApplyResult<()> {
+    for (key, value) in &delta.entries {
+        if value.is_none() && !assets.contains_key(key) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed asset does not exist",
+            )
+            .at([key.as_str()]));
+        }
+    }
+    Ok(())
 }
 
 impl MutationDiff<RasterSnapshot> for RasterDiff {
-    fn apply(&self, snapshot: &RasterSnapshot) -> RasterSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(delta) = &self.layers {
-            next.layers = apply_layers_delta(&next.layers, delta);
-        }
-        if let Some(assets) = &self.assets {
-            for (key, value) in &assets.entries {
-                match value {
-                    Some(asset) => {
-                        next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
-                    }
-                    None => {
-                        next.assets.remove(key);
+    fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(delta) = &self.layers {
+                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+            }
+            if let Some(assets) = &self.assets {
+                validate_assets_delta(&next.assets, assets).map_err(|error| error.under(["assets"]))?;
+                for (key, value) in &assets.entries {
+                    match value {
+                        Some(asset) => {
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
+                        }
+                        None => {
+                            next.assets.remove(key);
+                        }
                     }
                 }
             }
-        }
-        next
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

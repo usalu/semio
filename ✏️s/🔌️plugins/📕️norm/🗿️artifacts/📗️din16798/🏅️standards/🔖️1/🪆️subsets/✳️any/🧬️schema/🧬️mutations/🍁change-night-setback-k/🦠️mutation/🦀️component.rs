@@ -15,7 +15,7 @@ pub struct ChangeNightSetbackK {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeNightSetbackK {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "night-setback-k", kind: "change-night-setback-k", record: "ChangedNightSetbackK" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_night_setback_k::diff::diff(self, base)
     }
 

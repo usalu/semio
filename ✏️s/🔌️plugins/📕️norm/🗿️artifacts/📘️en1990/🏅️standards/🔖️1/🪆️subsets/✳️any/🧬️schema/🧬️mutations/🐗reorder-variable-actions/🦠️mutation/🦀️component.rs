@@ -14,7 +14,7 @@ pub struct ReorderVariableActions {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ReorderVariableActions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "variable-action", kind: "reorder-variable-actions", record: "ReorderedVariableActions" };
 
-    fn diff(&self, base: &En1990Snapshot) -> <En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {

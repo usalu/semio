@@ -40,8 +40,10 @@ impl Default for CadPresence {
 }
 
 impl protocol::MutationDiff<CadPresence> for CadPresence {
-    fn apply(&self, _base: &CadPresence) -> CadPresence {
-        self.clone()
+    fn apply(&self, _base: &CadPresence) -> protocol::MutationApplyResult<CadPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

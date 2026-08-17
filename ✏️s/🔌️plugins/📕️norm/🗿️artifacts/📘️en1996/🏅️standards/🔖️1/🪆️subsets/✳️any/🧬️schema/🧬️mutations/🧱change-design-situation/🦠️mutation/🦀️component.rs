@@ -15,7 +15,7 @@ pub struct ChangeDesignSituation {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeDesignSituation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "design-situation", kind: "change-design-situation", record: "ChangedDesignSituation" };
 
-    fn diff(&self, base: &En1996Snapshot) -> En1996Diff {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_design_situation::diff::diff(self, base)
     }
 

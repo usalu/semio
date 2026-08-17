@@ -8,13 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { type VariantProps } from "class-variance-authority";
-import { type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
 import { type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌩️Button
-// Single-item Button and cycling Button built on ButtonGroup.
+// Single-item Button built on ButtonGroup.
 // Consumers MUST provide an icon for each Button.
 
 /**
@@ -30,27 +29,6 @@ type ButtonProps = React.ComponentProps<"button"> &
   };
 
 /**
- * ButtonCycleItem holds the data fields for a ButtonCycleItem record.
- **/
-interface ButtonCycleItem<T extends string> {
-  value: T;
-  label: string;
-  icon: ControlIcon;
-  text?: string;
-  id?: string;
-}
-
-/**
- * ButtonCycleProps holds the data fields for a ButtonCycleProps record.
- **/
-interface ButtonCycleProps<T extends string> extends Omit<React.ComponentProps<"button">, "children" | "id">, ElementProps {
-  value?: T;
-  onValueChange?: (value: T) => void;
-  items: ButtonCycleItem<T>[];
-  showLabel?: boolean;
-}
-
-/**
  **/
 function Button({ className, asChild = false, id, icon, text, children, ...props }: ButtonProps) {
   return (
@@ -62,26 +40,6 @@ function Button({ className, asChild = false, id, icon, text, children, ...props
   );
 }
 
-/**
- * ButtonCycle holds the data fields for a ButtonCycle record.
- **/
-function ButtonCycle<T extends string = string>({ className, id, showLabel, value, onValueChange, items, ...props }: ButtonCycleProps<T>) {
-  const currentIndex = items.findIndex((item) => item.value === value);
-  const currentItem = currentIndex >= 0 ? items[currentIndex] : items[0];
-  const cycleText = typeof currentItem?.text === "string" ? currentItem.text : typeof currentItem?.label === "string" ? currentItem.label : undefined;
-
-  const handleCycle = () => {
-    const nextIndex = (currentIndex + 1) % items.length;
-    if (onValueChange) onValueChange(items[nextIndex].value);
-  };
-
-  return (
-    <ButtonGroup id={id} showLabel={showLabel} className={className}>
-      <ButtonGroupItem id={id} onClick={handleCycle} icon={currentItem.icon} text={cycleText} {...props} />
-    </ButtonGroup>
-  );
-}
-
-export { Button, ButtonCycle };
-export type { ButtonCycleProps, ButtonProps };
+export { Button };
+export type { ButtonProps };
 // #endregion 🌩️Button

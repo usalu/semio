@@ -7,15 +7,10 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../🧱️elements/☑️Select/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
-import { shellFloorPaints, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️component.ts";
 import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
-import { Label, useLabel } from "../🏷️Label/🟦️component.tsx";
-import { NavbarTrailingFullscreenSlot, type IconName } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { Icon } from "../🔣️Icons/🟦️component.tsx";
+import { NavbarTrailingFullscreenSlot } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar
@@ -104,77 +99,11 @@ export function ShellBrandLogo({ svg, className, style }: { svg: string; classNa
 //#endregion 🏷️ShellBrandLogo
 
 /** @emoji ↔ Flex grow class that pushes trailing navbar chrome to the right edge. */
-export const navbarFillClassName = "flex-1 min-w-0";
+const navbarFillClassName = "flex-1 min-w-0";
 
 /** @emoji ↔ Invisible navbar filler; use before trailing toggles when no center slot consumes the flex region. */
 export function navbarFillItem(key = "navbarFill"): NavbarItem {
   return { key, className: navbarFillClassName, content: null };
 }
-
-/** @emoji ↔ Navbar trailing control footprint (fullscreen toggle slot + flex gap). */
-export const shellNavbarTrailingEndReserveCss = "calc(var(--size-medium) + var(--spacing-single))";
-
-/** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
-export const NAVBAR_NO_EXAMPLE_ID = "__none__";
-
-/** @emoji 🧹️ Maps navbar sentinel / legacy empty ids to the canonical blank example id (`""`). */
-export function normalizePlaygroundExampleId(exampleId: string): string {
-  return !exampleId || exampleId === NAVBAR_NO_EXAMPLE_ID || exampleId === "empty" ? "" : exampleId;
-}
-
-/** @emoji 🧪️ One selectable example row for {@link NavbarExampleSelect}. */
-export interface NavbarExampleOption {
-  readonly id: string;
-  readonly label: string;
-  readonly icon: IconName;
-}
-
-/** @emoji 🧪️ Props for {@link NavbarExampleSelect}. */
-export interface NavbarExampleSelectProps {
-  readonly id: string;
-  readonly label?: UiLabel;
-  readonly value: string;
-  readonly options: readonly NavbarExampleOption[];
-  readonly onValueChange: (exampleId: string) => void;
-  readonly className?: string;
-  readonly includeNoExample?: boolean;
-}
-
-/** @emoji 🧪️ Center-navbar dropdown for switching playground examples (kits, graphs, shape sources). */
-function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
-  const exampleLabel = useLabel("ui.common.example");
-  const noExampleLabel = useLabel("ui.common.noExample");
-  const resolvedLabel = label ?? exampleLabel;
-  const resolvedOptions = reactHostPort.useMemo(() => {
-    const withoutSentinels = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID && row.id !== "empty");
-    if (!includeNoExample) return withoutSentinels;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel, icon: "eye-off" as IconName }, ...withoutSentinels];
-  }, [includeNoExample, options, noExampleLabel]);
-  if (resolvedOptions.length === 0) return null;
-  const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
-  const selectedOption = resolvedOptions.find((row) => row.id === resolvedValue);
-  return (
-    <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
-      <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
-      <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
-        <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
-          <span className="flex min-w-0 flex-1 items-center gap-single">
-            {selectedOption ? <span data-slot="navbar-example-icon" className="inline-flex shrink-0"><Icon icon={selectedOption.icon} size="small" /></span> : null}
-            <SelectValue placeholder={resolvedLabel} />
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          {resolvedOptions.map((row) => (
-            <SelectItem key={row.id} value={row.id} icon={row.icon}>
-              <span className="truncate">{row.label}</span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-export { NavbarExampleSelect };
 
 // #endregion 🩺️Navbar

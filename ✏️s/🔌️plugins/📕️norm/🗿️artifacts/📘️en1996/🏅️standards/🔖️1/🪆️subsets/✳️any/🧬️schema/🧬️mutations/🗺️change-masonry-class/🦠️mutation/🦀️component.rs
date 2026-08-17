@@ -15,7 +15,7 @@ pub struct ChangeMasonryClass {
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMasonryClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "masonry-class", kind: "change-masonry-class", record: "ChangedMasonryClass" };
 
-    fn diff(&self, base: &En1996Snapshot) -> En1996Diff {
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
         crate::artifacts::en1996::mutations::change_masonry_class::diff::diff(self, base)
     }
 

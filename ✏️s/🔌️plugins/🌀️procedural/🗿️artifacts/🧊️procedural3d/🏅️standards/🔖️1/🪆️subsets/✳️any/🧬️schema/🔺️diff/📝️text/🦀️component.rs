@@ -104,72 +104,75 @@ pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMu
 //#region 🔖️Apply
 impl Procedural3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &Procedural3dArtifact) -> Procedural3dArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(fixture) = &self.fixture {
-            next.fixture = fixture.clone();
-        }
-        if let Some(generation) = &self.generation {
-            next.generation = generation.clone();
-        }
-        if let Some(list) = &self.selected_node_ids {
-            next.selected_node_ids = list.values.clone();
-        }
-        if let Some(value) = &self.lod_mode {
-            next.lod_mode = value.clone();
-        }
-        if let Some(value) = &self.show_mode {
-            next.show_mode = value.clone();
-        }
-        if let Some(value) = &self.selection_method {
-            next.selection_method = value.clone();
-        }
-        if let Some(value) = &self.hovered_node_id {
-            next.hovered_node_id = value.clone();
-        }
-        if let Some(value) = &self.graph_camera {
-            next.graph_camera = value.clone();
-        }
-        if let Some(value) = &self.preview_camera {
-            next.preview_camera = value.clone();
-        }
-        if let Some(value) = &self.sun_json {
-            next.sun_json = value.clone();
-        }
-        if let Some(value) = &self.selected_generation_id {
-            next.selected_generation_id = value.clone();
-        }
-        if let Some(value) = &self.generation_preview_text {
-            next.generation_preview_text = value.clone();
-        }
-        if let Some(value) = &self.active_utility_id {
-            next.active_utility_id = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &Procedural3dArtifact) -> protocol::MutationApplyResult<Procedural3dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(fixture) = &self.fixture {
+                next.fixture = fixture.clone();
+            }
+            if let Some(generation) = &self.generation {
+                next.generation = generation.clone();
+            }
+            if let Some(list) = &self.selected_node_ids {
+                next.selected_node_ids = list.values.clone();
+            }
+            if let Some(value) = &self.lod_mode {
+                next.lod_mode = value.clone();
+            }
+            if let Some(value) = &self.show_mode {
+                next.show_mode = value.clone();
+            }
+            if let Some(value) = &self.selection_method {
+                next.selection_method = value.clone();
+            }
+            if let Some(value) = &self.hovered_node_id {
+                next.hovered_node_id = value.clone();
+            }
+            if let Some(value) = &self.graph_camera {
+                next.graph_camera = value.clone();
+            }
+            if let Some(value) = &self.preview_camera {
+                next.preview_camera = value.clone();
+            }
+            if let Some(value) = &self.sun_json {
+                next.sun_json = value.clone();
+            }
+            if let Some(value) = &self.selected_generation_id {
+                next.selected_generation_id = value.clone();
+            }
+            if let Some(value) = &self.generation_preview_text {
+                next.generation_preview_text = value.clone();
+            }
+            if let Some(value) = &self.active_utility_id {
+                next.active_utility_id = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<Procedural3dSnapshot> for Procedural3dDiff {
-    fn apply(&self, snapshot: &Procedural3dSnapshot) -> Procedural3dSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(fixture) = &self.fixture {
-            next.fixture = fixture.clone();
-        }
-        if let Some(generation) = &self.generation {
-            next.generation = generation.clone();
-        }
-        next
+    fn apply(&self, snapshot: &Procedural3dSnapshot) -> protocol::MutationApplyResult<Procedural3dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(fixture) = &self.fixture {
+                next.fixture = fixture.clone();
+            }
+            if let Some(generation) = &self.generation {
+                next.generation = generation.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;

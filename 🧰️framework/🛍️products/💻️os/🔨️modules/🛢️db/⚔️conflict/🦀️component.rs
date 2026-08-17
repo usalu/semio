@@ -1,24 +1,28 @@
 //! 🗄️🤝️ `db_conflict` — conflict detection for concurrent commands against the same document
 //! frontier: touched-region intersection (built on `db_state::TouchedSet`), a bloom-filter
 //! pre-filter so a large batch doesn't pay the full intersection cost pairwise, a declarative
-//! command-kind matrix for structural (non-region-derived) commutativity knowledge, constraint
-//! conflicts (unique name, single parent, non-overlapping intervals — see `Constraint`), and
-//! deterministic resolution planning derived from `protocol::ConflictRule`. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
-//! (`## db crate family`, `db_conflict` row).
+//! command-kind matrix for structural (non-region-derived) commutativity knowledge, and constraint
+//! conflicts (unique name, single parent, non-overlapping intervals — see `Constraint`). Frozen
+//! contract: `.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+//! 📋️contract-freeze.md` §C9 (db/conflict bullet), superseding
+//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`.
 //!
 //! 🎯️ Design choice: per the contract's hard rule ("command payloads are opaque
 //! `protocol::MutationEnvelope`/binary bytes below `db_artifact` — no db crate below it
 //! interprets operation semantics"), this crate never sees a concrete `Mutation<P>`/`MutationDiff<P>`
-//! type and therefore never calls `protocol_crdt::merge_concurrent_diffs` itself (that function is
-//! generic over the concrete diff type, which only `db_artifact` knows). What this crate DOES own
-//! is the *decision*: given two commands' declared `protocol::ConflictRule`s, it produces a
-//! `ResolutionPlan` describing which class of reconciliation `db_artifact` must perform (commute
-//! as-is / operational-transform / merge with a named strategy / CRDT-merge with a named strategy)
-//! — `db_artifact` is the extension seam that actually executes that plan against the concrete
-//! diff. This is a deliberate, documented boundary, not a hollow stub: everything on this crate's
-//! own side of that boundary (detection, prioritization, the matrix, the bloom filter, constraint
-//! conflicts) is real and tested.
+//! type. What this crate DOES own is the *detection*: given a batch of commands' touched regions and
+//! structural claims, it reports WHAT conflicted (`ConflictKind::TouchedRegion`/`Constraint` on a
+//! `ConflictRecord`) — `db_artifact` is the seam one layer up that turns a `ConflictRecord` into a
+//! severity-graded `protocol::MutationMessage` (region intersection = `Warning`, constraint
+//! violation = `Fatal`) and lets `protocol::MergePolicy` decide whether to reject. This crate never
+//! grades severity or decides resolution itself — that decision-making moved out with the deleted
+//! CRDT-era per-conflict combinator surface (CLAUDE.md forbids CRDTs outright, and the merge
+//! dispatch it fed was unreachable from the real store path). This crate DOES reuse
+//! — never reinvents — the C5 conflict-lifecycle vocabulary (`protocol::ConflictKind::{Quarantined,
+//! Degraded}` / `protocol::ConflictResolution::{Accept, Discard}`, defined in `📡️spr/⚔️conflict`);
+//! see `🔖️Lifecycle` below for the one place this crate touches it. Everything on this crate's own
+//! side of the detection boundary (detection, prioritization, the matrix, the bloom filter,
+//! constraint conflicts) is real and tested.
 
 use crate::*;
 use crate::db_durability::Frontier;
@@ -39,16 +43,15 @@ impl From<&str> for CommandKind {
 }
 
 /// @emoji 👣️ One command's accumulated read/write footprint against a document's overlay, plus
-/// enough declared metadata (`kind`, `conflict_rule`, `timestamp`) to classify and prioritize any
-/// conflict it's found to have with a concurrent sibling. `db_artifact` builds one of these per
-/// admitted command (from the `TouchedSet` its `OverlayRoot` mutations accumulated) before handing
-/// a batch to `ConflictDetector::detect`.
+/// enough declared metadata (`kind`, `timestamp`) to classify and prioritize any conflict it's
+/// found to have with a concurrent sibling. `db_artifact` builds one of these per admitted command
+/// (from the `TouchedSet` its `OverlayRoot` mutations accumulated) before handing a batch to
+/// `ConflictDetector::detect`.
 #[derive(Clone, Debug)]
 pub struct CommandTouch {
     pub command_id: protocol::MutationId,
     pub actor: protocol::ActorId,
     pub kind: CommandKind,
-    pub conflict_rule: protocol::ConflictRule,
     pub timestamp: protocol::HybridLogicalTimestamp,
     pub touched: TouchedSet,
     /// @emoji 🔐️ Structural `Constraint`s this command claims (unique name / single parent /
@@ -60,8 +63,8 @@ pub struct CommandTouch {
 }
 
 impl CommandTouch {
-    pub fn new(command_id: protocol::MutationId, actor: protocol::ActorId, kind: CommandKind, conflict_rule: protocol::ConflictRule, timestamp: protocol::HybridLogicalTimestamp) -> Self {
-        CommandTouch { command_id, actor, kind, conflict_rule, timestamp, touched: TouchedSet::new(), claims: Vec::new() }
+    pub fn new(command_id: protocol::MutationId, actor: protocol::ActorId, kind: CommandKind, timestamp: protocol::HybridLogicalTimestamp) -> Self {
+        CommandTouch { command_id, actor, kind, timestamp, touched: TouchedSet::new(), claims: Vec::new() }
     }
 
     /// @emoji ✏️ Builder-style: records one touched region (builds `touched` up incrementally as
@@ -239,9 +242,9 @@ impl CommandKindMatrix {
 
 //#region 🔖️Constraint
 /// @emoji 🧱️ A structural database invariant a command declares it upholds — independent of
-/// `protocol::ConflictRule` (which governs CRDT-style concurrent-diff resolution over touched
-/// regions). Two commands violating the same constraint can never be reconciled by any merge
-/// strategy, so `detect_constraint_conflicts` always resolves a violation to `ResolutionPlan::Reject`.
+/// touched-region overlap (two commands can violate a constraint while writing to entirely
+/// different overlay paths). Two commands violating the same constraint can never both stand, so
+/// `db_artifact` always grades a `ConflictKind::Constraint` record `Fatal` (see module doc).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Constraint {
     /// @emoji 🏷️ Exclusive ownership of a name/key within some caller-chosen scope, encoded
@@ -263,54 +266,11 @@ fn intervals_overlap(start_a: u64, end_a: u64, start_b: u64, end_b: u64) -> bool
 }
 //#endregion 🔖️Constraint
 
-//#region 🔖️Resolution
-/// @emoji ⚖️ What `db_artifact` must do to reconcile two concurrent commands this crate found to
-/// conflict — the executable-shaped twin of `protocol::ConflictRule` (see module doc for why this
-/// crate stops at the decision and never executes it). `Reject` is this crate's own addition beyond
-/// `ConflictRule`'s four variants: a `ConflictKind::Constraint` violation has no CRDT-style merge
-/// (two commands cannot both hold the same uniqueness key), so it always resolves to `Reject` of
-/// the lower-priority side.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ResolutionPlan {
-    Commutes,
-    Transform,
-    Merge(protocol::MergeStrategyKind),
-    Crdt(protocol::MergeStrategyKind),
-    Reject,
-}
-
-impl From<protocol::ConflictRule> for ResolutionPlan {
-    fn from(rule: protocol::ConflictRule) -> Self {
-        match rule {
-            protocol::ConflictRule::Commutes => ResolutionPlan::Commutes,
-            protocol::ConflictRule::Transform => ResolutionPlan::Transform,
-            protocol::ConflictRule::Merge(strategy) => ResolutionPlan::Merge(strategy),
-            protocol::ConflictRule::Crdt(strategy) => ResolutionPlan::Crdt(strategy),
-        }
-    }
-}
-
-/// @emoji 🤝️ Combines two (possibly differing) declared `ConflictRule`s from the two sides of a
-/// touched-region conflict into one `ResolutionPlan`.
-///
-/// 🎯️ Design choice: the contract ties `ConflictRule` to an operation KIND, not to a conflicting
-/// PAIR, so two commands of different kinds may legitimately declare different rules; there is no
-/// principled "combine" defined by the contract. When both sides agree, use that rule outright. When
-/// they disagree, fall back to `Transform` — the one mechanism in this family (`protocol_causal
-/// ::MutationTransform`) that is defined generically over any `Mutation<P>` regardless of its
-/// declared merge strategy, making it the safest default for a genuinely mixed-kind conflict.
-pub fn combine_conflict_rules(a: protocol::ConflictRule, b: protocol::ConflictRule) -> ResolutionPlan {
-    if a == b {
-        ResolutionPlan::from(a)
-    } else {
-        ResolutionPlan::Transform
-    }
-}
-//#endregion 🔖️Resolution
-
 //#region 🔖️ConflictRecord
 /// @emoji 🗺️ What was found to conflict: either an intersecting touched-region set, or a shared
-/// uniqueness-constraint claim.
+/// uniqueness-constraint claim. Purely structural — grading this into a
+/// `crate::os_dsl::Severity`/`protocol::MutationMessage` (region intersection = `Warning`,
+/// constraint violation = `Fatal`) is `db_artifact`'s job, one layer up (see module doc).
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConflictKind {
     TouchedRegion(Vec<TouchedRegion>),
@@ -321,15 +281,38 @@ pub enum ConflictKind {
 /// `CommandReceipt.conflicts` (the `db` facade's frozen `Vec<ConflictRecord>` field) is built from.
 /// `command_id` is always the lower-priority side (per `CommandTouch::order_key`) so a reader can
 /// treat "the command this record is attached to" as the one that needed reconciling against
-/// `conflicting_with`, which already held (or would otherwise hold) priority.
+/// `conflicting_with`, which already held (or would otherwise hold) priority. Carries no resolution
+/// of its own — `db_artifact` decides what to do about a `ConflictRecord` via `protocol::MergePolicy`,
+/// not this crate.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConflictRecord {
     pub command_id: protocol::MutationId,
     pub conflicting_with: protocol::MutationId,
     pub kind: ConflictKind,
-    pub resolution: ResolutionPlan,
 }
 //#endregion 🔖️ConflictRecord
+
+//#region 🔖️Lifecycle
+/// @emoji ⚖️ Once `db_artifact` has graded a batch's `ConflictRecord`s into `protocol::
+/// MutationMessage`s and judged their worst `protocol::Severity` against its
+/// `protocol::MergePolicy`, THIS is how it should file the outcome — reusing, never reinventing,
+/// the C5 conflict-lifecycle vocabulary `📡️spr/⚔️conflict` already defines
+/// (`protocol::ConflictKind::{Quarantined, Degraded}` / `protocol::ConflictResolution::{Accept,
+/// Discard}`). `Quarantined` when the policy rejects the worst level (nothing durable yet, the
+/// whole batch's envelopes are the evidence); `Degraded` when the batch was still accepted but its
+/// worst level reached `Warning` or above (already durable, `edit_ids` names what's worth a human's
+/// attention). `None` when the batch was clean.
+pub fn classify(worst: Option<protocol::Severity>, policy: protocol::MergePolicy, envelopes: Vec<protocol::MutationEnvelope>, edit_ids: Vec<String>) -> Option<protocol::ConflictKind> {
+    let level = worst?;
+    if policy.rejects(level) {
+        Some(protocol::ConflictKind::Quarantined { envelopes })
+    } else if level >= protocol::Severity::Warning {
+        Some(protocol::ConflictKind::Degraded { edit_ids })
+    } else {
+        None
+    }
+}
+//#endregion 🔖️Lifecycle
 
 //#region 🔖️Detector
 /// @emoji 🕵️ Detects every conflict within one batch of concurrent `CommandTouch`es (all assumed
@@ -373,8 +356,7 @@ impl ConflictDetector {
                     continue;
                 }
                 if let Some(overlap) = touched_overlap(&earlier.touched, &later.touched) {
-                    let resolution = combine_conflict_rules(earlier.conflict_rule, later.conflict_rule);
-                    records.push(ConflictRecord { command_id: later.command_id.clone(), conflicting_with: earlier.command_id.clone(), kind: ConflictKind::TouchedRegion(overlap), resolution });
+                    records.push(ConflictRecord { command_id: later.command_id.clone(), conflicting_with: earlier.command_id.clone(), kind: ConflictKind::TouchedRegion(overlap) });
                 }
             }
         }
@@ -411,8 +393,8 @@ fn touched_overlap(a: &TouchedSet, b: &TouchedSet) -> Option<Vec<TouchedRegion>>
 /// `NonOverlappingInterval` claims never conflict across variants — different namespaces). Each
 /// table follows the same "first holder wins, every later violator conflicts against it" shape: a
 /// later command that violates an earlier command's claim gets a `ConflictRecord` against that
-/// earlier (higher-priority) holder, resolving to `Reject` unconditionally (see
-/// `ResolutionPlan::Reject`'s doc) — a claim that doesn't violate the current holder (same unique
+/// earlier (higher-priority) holder (`db_artifact` grades every `ConflictKind::Constraint` record
+/// `Fatal` — see module doc) — a claim that doesn't violate the current holder (same unique
 /// key re-claimed by the same command's own priority slot, same `(child, parent)`, or a
 /// non-overlapping interval) is folded in without producing a record.
 fn detect_constraint_conflicts(ordered: &[&CommandTouch]) -> Vec<ConflictRecord> {
@@ -457,9 +439,9 @@ fn detect_constraint_conflicts(ordered: &[&CommandTouch]) -> Vec<ConflictRecord>
 }
 
 /// @emoji 🧾️ Shared `ConflictRecord` builder for every `Constraint` violation branch in
-/// `detect_constraint_conflicts` — always `ResolutionPlan::Reject` (see `Constraint`'s doc).
+/// `detect_constraint_conflicts` (see `Constraint`'s doc).
 fn constraint_record(command: &CommandTouch, holder: &CommandTouch, description: String) -> ConflictRecord {
-    ConflictRecord { command_id: command.command_id.clone(), conflicting_with: holder.command_id.clone(), kind: ConflictKind::Constraint(description), resolution: ResolutionPlan::Reject }
+    ConflictRecord { command_id: command.command_id.clone(), conflicting_with: holder.command_id.clone(), kind: ConflictKind::Constraint(description) }
 }
 //#endregion 🔖️Detector
 
@@ -473,16 +455,16 @@ mod tests {
         protocol::HybridLogicalTimestamp { actor, physical_ms, logical: 0 }
     }
 
-    fn command(id: &str, actor: u64, physical_ms: u64, kind: &str, rule: protocol::ConflictRule) -> CommandTouch {
-        CommandTouch::new(protocol::MutationId(id.into()), protocol::ActorId(format!("actor-{actor}")), CommandKind::from(kind), rule, hlt(physical_ms, actor))
+    fn command(id: &str, actor: u64, physical_ms: u64, kind: &str) -> CommandTouch {
+        CommandTouch::new(protocol::MutationId(id.into()), protocol::ActorId(format!("actor-{actor}")), CommandKind::from(kind), hlt(physical_ms, actor))
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️CommandTouch
     #[test]
     fn order_key_breaks_ties_on_command_id_when_timestamps_are_equal() {
-        let a = command("cmd-a", 1, 1000, "write", protocol::ConflictRule::Commutes);
-        let b = command("cmd-b", 1, 1000, "write", protocol::ConflictRule::Commutes);
+        let a = command("cmd-a", 1, 1000, "write");
+        let b = command("cmd-b", 1, 1000, "write");
         assert!(a.order_key() < b.order_key(), "same timestamp -> command_id is the final tiebreak");
     }
     //#endregion 🔖️CommandTouch
@@ -574,41 +556,39 @@ mod tests {
     }
     //#endregion 🔖️KindMatrix
 
-    //#region 🔖️Resolution
+    //#region 🔖️Lifecycle
     #[test]
-    fn combine_conflict_rules_uses_the_shared_rule_when_both_sides_agree() {
-        let rule = protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister);
-        assert_eq!(combine_conflict_rules(rule, rule), ResolutionPlan::Merge(protocol::MergeStrategyKind::LwwRegister));
+    fn classify_is_quarantined_when_the_policy_rejects_the_worst_level() {
+        let envelopes = Vec::new();
+        let kind = classify(Some(protocol::Severity::Fatal), protocol::MergePolicy::LaissezFaire, envelopes.clone(), Vec::new());
+        assert_eq!(kind, Some(protocol::ConflictKind::Quarantined { envelopes }));
     }
 
     #[test]
-    fn combine_conflict_rules_falls_back_to_transform_on_disagreement() {
-        let a = protocol::ConflictRule::Commutes;
-        let b = protocol::ConflictRule::Crdt(protocol::MergeStrategyKind::TextSequence);
-        assert_eq!(combine_conflict_rules(a, b), ResolutionPlan::Transform);
+    fn classify_is_degraded_when_accepted_but_still_warning_or_above() {
+        let edit_ids = vec!["e1".to_string()];
+        let kind = classify(Some(protocol::Severity::Warning), protocol::MergePolicy::Normal, Vec::new(), edit_ids.clone());
+        assert_eq!(kind, Some(protocol::ConflictKind::Degraded { edit_ids }));
     }
 
     #[test]
-    fn resolution_plan_from_conflict_rule_covers_every_variant() {
-        assert_eq!(ResolutionPlan::from(protocol::ConflictRule::Commutes), ResolutionPlan::Commutes);
-        assert_eq!(ResolutionPlan::from(protocol::ConflictRule::Transform), ResolutionPlan::Transform);
-        assert_eq!(ResolutionPlan::from(protocol::ConflictRule::Merge(protocol::MergeStrategyKind::OrderedSequence)), ResolutionPlan::Merge(protocol::MergeStrategyKind::OrderedSequence));
-        assert_eq!(ResolutionPlan::from(protocol::ConflictRule::Crdt(protocol::MergeStrategyKind::TombstonedGraphSet)), ResolutionPlan::Crdt(protocol::MergeStrategyKind::TombstonedGraphSet));
+    fn classify_is_none_when_clean_or_below_warning() {
+        assert_eq!(classify(None, protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
+        assert_eq!(classify(Some(protocol::Severity::Info), protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
     }
-    //#endregion 🔖️Resolution
+    //#endregion 🔖️Lifecycle
 
     //#region 🔖️Detector
     #[test]
     fn detects_write_write_touched_region_conflict() {
-        let a = command("cmd-a", 1, 1000, "write", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/title"));
-        let b = command("cmd-b", 2, 2000, "write", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/title"));
+        let a = command("cmd-a", 1, 1000, "write").touch(TouchedRegion::write("artifacts/doc-1/title"));
+        let b = command("cmd-b", 2, 2000, "write").touch(TouchedRegion::write("artifacts/doc-1/title"));
 
         let detector = ConflictDetector::new();
         let records = detector.detect(&[a, b]);
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].command_id, protocol::MutationId("cmd-b".into()), "the later command carries the record");
         assert_eq!(records[0].conflicting_with, protocol::MutationId("cmd-a".into()));
-        assert_eq!(records[0].resolution, ResolutionPlan::Merge(protocol::MergeStrategyKind::LwwRegister));
         match &records[0].kind {
             ConflictKind::TouchedRegion(regions) => assert_eq!(regions.len(), 1),
             other => panic!("expected TouchedRegion, got {other:?}"),
@@ -617,22 +597,22 @@ mod tests {
 
     #[test]
     fn read_read_never_conflicts() {
-        let a = command("cmd-a", 1, 1000, "read", protocol::ConflictRule::Commutes).touch(TouchedRegion::read("artifacts/doc-1/title"));
-        let b = command("cmd-b", 2, 2000, "read", protocol::ConflictRule::Commutes).touch(TouchedRegion::read("artifacts/doc-1/title"));
+        let a = command("cmd-a", 1, 1000, "read").touch(TouchedRegion::read("artifacts/doc-1/title"));
+        let b = command("cmd-b", 2, 2000, "read").touch(TouchedRegion::read("artifacts/doc-1/title"));
         assert!(ConflictDetector::new().detect(&[a, b]).is_empty());
     }
 
     #[test]
     fn disjoint_paths_never_conflict() {
-        let a = command("cmd-a", 1, 1000, "write", protocol::ConflictRule::Commutes).touch(TouchedRegion::write("artifacts/doc-1/title"));
-        let b = command("cmd-b", 2, 2000, "write", protocol::ConflictRule::Commutes).touch(TouchedRegion::write("artifacts/doc-1/body"));
+        let a = command("cmd-a", 1, 1000, "write").touch(TouchedRegion::write("artifacts/doc-1/title"));
+        let b = command("cmd-b", 2, 2000, "write").touch(TouchedRegion::write("artifacts/doc-1/body"));
         assert!(ConflictDetector::new().detect(&[a, b]).is_empty());
     }
 
     #[test]
     fn kind_matrix_override_suppresses_an_otherwise_conflicting_pair() {
-        let a = command("cmd-a", 1, 1000, "counter.increment", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/counter"));
-        let b = command("cmd-b", 2, 2000, "counter.increment", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/counter"));
+        let a = command("cmd-a", 1, 1000, "counter.increment").touch(TouchedRegion::write("artifacts/doc-1/counter"));
+        let b = command("cmd-b", 2, 2000, "counter.increment").touch(TouchedRegion::write("artifacts/doc-1/counter"));
 
         let mut matrix = CommandKindMatrix::new();
         matrix.declare_commuting(&CommandKind::from("counter.increment"), &CommandKind::from("counter.increment"));
@@ -642,50 +622,47 @@ mod tests {
 
     #[test]
     fn constraint_conflict_detected_across_disjoint_touched_paths() {
-        let a = command("cmd-a", 1, 1000, "create-user", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-1")).claim("unique/email/alice@example.com");
-        let b = command("cmd-b", 2, 2000, "create-user", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-2")).claim("unique/email/alice@example.com");
+        let a = command("cmd-a", 1, 1000, "create-user").touch(TouchedRegion::write("artifacts/doc-1")).claim("unique/email/alice@example.com");
+        let b = command("cmd-b", 2, 2000, "create-user").touch(TouchedRegion::write("artifacts/doc-2")).claim("unique/email/alice@example.com");
 
         let records = ConflictDetector::new().detect(&[a, b]);
         assert_eq!(records.len(), 1, "disjoint overlay paths must not mask the shared constraint claim");
-        assert_eq!(records[0].resolution, ResolutionPlan::Reject);
         assert_eq!(records[0].kind, ConflictKind::Constraint("unique:unique/email/alice@example.com".to_string()));
     }
 
     #[test]
     fn single_parent_constraint_conflicts_only_on_diverging_parent() {
-        let a = command("cmd-a", 1, 1000, "reparent", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-1")).claim_parent("node-1", "parent-a");
-        let b = command("cmd-b", 2, 2000, "reparent", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-2")).claim_parent("node-1", "parent-b");
+        let a = command("cmd-a", 1, 1000, "reparent").touch(TouchedRegion::write("artifacts/doc-1")).claim_parent("node-1", "parent-a");
+        let b = command("cmd-b", 2, 2000, "reparent").touch(TouchedRegion::write("artifacts/doc-2")).claim_parent("node-1", "parent-b");
         let records = ConflictDetector::new().detect(&[a, b]);
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].resolution, ResolutionPlan::Reject);
         assert_eq!(records[0].kind, ConflictKind::Constraint("single-parent:node-1".to_string()));
 
-        let c = command("cmd-c", 1, 1000, "reparent", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-3")).claim_parent("node-1", "parent-a");
-        let d = command("cmd-d", 2, 2000, "reparent", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-4")).claim_parent("node-1", "parent-a");
+        let c = command("cmd-c", 1, 1000, "reparent").touch(TouchedRegion::write("artifacts/doc-3")).claim_parent("node-1", "parent-a");
+        let d = command("cmd-d", 2, 2000, "reparent").touch(TouchedRegion::write("artifacts/doc-4")).claim_parent("node-1", "parent-a");
         assert!(ConflictDetector::new().detect(&[c, d]).is_empty(), "the same (child, parent) claimed twice is not a conflict");
     }
 
     #[test]
     fn non_overlapping_interval_constraint_conflicts_only_when_ranges_actually_overlap() {
-        let a = command("cmd-a", 1, 1000, "schedule", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-1")).claim_interval("track-1", 0, 10);
-        let overlapping = command("cmd-b", 2, 2000, "schedule", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-2")).claim_interval("track-1", 5, 15);
+        let a = command("cmd-a", 1, 1000, "schedule").touch(TouchedRegion::write("artifacts/doc-1")).claim_interval("track-1", 0, 10);
+        let overlapping = command("cmd-b", 2, 2000, "schedule").touch(TouchedRegion::write("artifacts/doc-2")).claim_interval("track-1", 5, 15);
         let records = ConflictDetector::new().detect(&[a.clone(), overlapping]);
         assert_eq!(records.len(), 1);
-        assert_eq!(records[0].resolution, ResolutionPlan::Reject);
         assert_eq!(records[0].kind, ConflictKind::Constraint("interval:track-1".to_string()));
 
-        let touching = command("cmd-c", 3, 3000, "schedule", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-3")).claim_interval("track-1", 10, 20);
+        let touching = command("cmd-c", 3, 3000, "schedule").touch(TouchedRegion::write("artifacts/doc-3")).claim_interval("track-1", 10, 20);
         assert!(ConflictDetector::new().detect(&[a.clone(), touching]).is_empty(), "touching (non-overlapping) intervals must not conflict");
 
-        let other_track = command("cmd-d", 4, 4000, "schedule", protocol::ConflictRule::Transform).touch(TouchedRegion::write("artifacts/doc-4")).claim_interval("track-2", 0, 10);
+        let other_track = command("cmd-d", 4, 4000, "schedule").touch(TouchedRegion::write("artifacts/doc-4")).claim_interval("track-2", 0, 10);
         assert!(ConflictDetector::new().detect(&[a, other_track]).is_empty(), "different tracks never conflict");
     }
 
     #[test]
     fn detection_result_is_independent_of_input_order() {
-        let a = command("cmd-a", 1, 1000, "write", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/x"));
-        let b = command("cmd-b", 2, 2000, "write", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/x"));
-        let c = command("cmd-c", 3, 3000, "write", protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister)).touch(TouchedRegion::write("artifacts/doc-1/x"));
+        let a = command("cmd-a", 1, 1000, "write").touch(TouchedRegion::write("artifacts/doc-1/x"));
+        let b = command("cmd-b", 2, 2000, "write").touch(TouchedRegion::write("artifacts/doc-1/x"));
+        let c = command("cmd-c", 3, 3000, "write").touch(TouchedRegion::write("artifacts/doc-1/x"));
 
         let forward = ConflictDetector::new().detect(&[a.clone(), b.clone(), c.clone()]);
         let shuffled = ConflictDetector::new().detect(&[c, a, b]);
@@ -695,8 +672,8 @@ mod tests {
 
     #[test]
     fn priority_side_is_the_earlier_command_by_timestamp_regardless_of_batch_order() {
-        let later = command("cmd-later", 1, 5000, "write", protocol::ConflictRule::Commutes).touch(TouchedRegion::write("p"));
-        let earlier = command("cmd-earlier", 1, 1000, "write", protocol::ConflictRule::Commutes).touch(TouchedRegion::write("p"));
+        let later = command("cmd-later", 1, 5000, "write").touch(TouchedRegion::write("p"));
+        let earlier = command("cmd-earlier", 1, 1000, "write").touch(TouchedRegion::write("p"));
 
         let records = ConflictDetector::new().detect(&[later, earlier]);
         assert_eq!(records.len(), 1);

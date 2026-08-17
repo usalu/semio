@@ -7,8 +7,8 @@
 //! scratch, while decoded packages preserve their logical XML documents.
 
 use super::super::super::{
-    attr, PptxError, A_NS, MINIMAL_SLIDE_LAYOUT_XML, MINIMAL_SLIDE_MASTER_XML, MINIMAL_THEME_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, P_NS, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, REL_TYPE_THEME, R_NS,
-    SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART,
+    attr, resolve_office_document_relationship, PptxError, A_NS, MINIMAL_SLIDE_LAYOUT_XML, MINIMAL_SLIDE_MASTER_XML, MINIMAL_THEME_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, P_NS, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER,
+    REL_TYPE_THEME, R_NS, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART,
 };
 use crate::artifacts::pptx::{
     schema::snapshot::{pptx_part_is_xml, PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform},
@@ -242,7 +242,7 @@ fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &PptxPresen
     let presentation_bytes = xml_document_to_text(&presentation_to_xml(&master_rid, &sld_id_entries)).into_bytes();
     opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, presentation_bytes);
 
-    if opc.relationships_for("").iter().all(|r| r.rel_type != REL_TYPE_OFFICE_DOCUMENT) {
+    if resolve_office_document_relationship(opc).is_none() {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, PRESENTATION_PART);
     }
 }
@@ -398,7 +398,7 @@ pub fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
             return Err(PptxError::Malformed(format!("part {} has both XML and binary authorities", part.path)));
         }
     }
-    let presentation_path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT);
+    let presentation_path = resolve_office_document_relationship(&opc);
     let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
     let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
     if !has_authoritative_presentation_xml || presentation_changed {

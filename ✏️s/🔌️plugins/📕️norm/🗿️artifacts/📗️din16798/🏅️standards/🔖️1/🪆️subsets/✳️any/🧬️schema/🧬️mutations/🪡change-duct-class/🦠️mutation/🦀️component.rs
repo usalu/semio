@@ -15,7 +15,7 @@ pub struct ChangeDuctClass {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDuctClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "duct-class", kind: "change-duct-class", record: "ChangedDuctClass" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_duct_class::diff::diff(self, base)
     }
 

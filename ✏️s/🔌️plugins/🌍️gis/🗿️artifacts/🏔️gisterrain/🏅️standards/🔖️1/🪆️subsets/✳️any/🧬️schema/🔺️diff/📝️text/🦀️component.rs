@@ -14,45 +14,48 @@ use protocol::MutationDiff;
 //#region 🔹Apply
 impl GisTerrainDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> GisTerrainArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = self.exaggeration {
-            next.exaggeration = value;
-        }
-        if let Some(value) = &self.imported_features_json {
-            next.imported_features_json = value.clone();
-        }
-        if let Some(value) = &self.camera_json {
-            next.camera_json = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(value) = self.exaggeration {
+                next.exaggeration = value;
+            }
+            if let Some(value) = &self.imported_features_json {
+                next.imported_features_json = value.clone();
+            }
+            if let Some(value) = &self.camera_json {
+                next.camera_json = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
-    fn apply(&self, snapshot: &GisTerrainSnapshot) -> GisTerrainSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = self.exaggeration {
-            next.exaggeration = value;
-        }
-        if let Some(value) = &self.imported_features_json {
-            next.imported_features_json = value.clone();
-        }
-        // 🕸️ Keep `mesh` a pure function of the two fields above — mirrors
-        // `apply_gis_terrain_mutation`'s identical re-derivation (see `GisTerrainSnapshot.mesh`'s doc).
-        next = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
-        next
+    fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = self.exaggeration {
+                next.exaggeration = value;
+            }
+            if let Some(value) = &self.imported_features_json {
+                next.imported_features_json = value.clone();
+            }
+            // 🕸️ Keep `mesh` a pure function of the two fields above — mirrors
+            // `apply_gis_terrain_mutation`'s identical re-derivation (see `GisTerrainSnapshot.mesh`'s doc).
+            next = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -101,7 +104,7 @@ mod tests {
         let base = GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: String::new(), ..Default::default() };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(GisTerrainDiff { exaggeration: Some(3.0), imported_features_json: Some("null".into()), ..Default::default() });
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(next.exaggeration, 3.0);
         assert_eq!(next.imported_features_json, "null");
     }
@@ -120,7 +123,7 @@ mod tests {
         };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));
-        assert_eq!(diff.apply(&base), replacement);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);
     }
 }
 //#endregion 🔹Tests

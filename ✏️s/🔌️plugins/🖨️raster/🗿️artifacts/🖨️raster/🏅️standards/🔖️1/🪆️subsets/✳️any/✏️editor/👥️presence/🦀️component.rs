@@ -32,8 +32,10 @@ impl Default for RasterPresence {
 }
 
 impl protocol::MutationDiff<RasterPresence> for RasterPresence {
-    fn apply(&self, _base: &RasterPresence) -> RasterPresence {
-        self.clone()
+    fn apply(&self, _base: &RasterPresence) -> protocol::MutationApplyResult<RasterPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

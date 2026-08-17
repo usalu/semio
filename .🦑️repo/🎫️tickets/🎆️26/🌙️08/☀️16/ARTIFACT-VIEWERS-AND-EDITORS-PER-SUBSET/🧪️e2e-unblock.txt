@@ -1,0 +1,151 @@
+=== 1. cargo check -p semio-s-plugin-cad --all-targets --keep-going (BASELINE, pre-fix) ===
+error[E0425]: cannot find type `EditorApp` in this scope
+error[E0609]: no field `definition` on type `AppDefinition`
+error[E0609]: no field `definition` on type `AppDefinition`
+error[E0609]: no field `definition` on type `AppDefinition`
+error[E0609]: no field `definition` on type `AppDefinition`
+error[E0609]: no field `definition` on type `AppDefinition`
+error[E0599]: no method named `snapshot` found for enum `Result<T, E>` in the current scope
+error[E0599]: no method named `dispatch` found for enum `Result<T, E>` in the current scope
+error[E0599]: no method named `snapshot` found for enum `Result<T, E>` in the current scope
+error: could not compile `semio-s-plugin-cad` (lib test) due to 9 previous errors; 45 warnings emitted
+
+=== 2. cargo check -p semio-s-plugin-cad --all-targets --keep-going (AFTER FIX, run 2) ===
+
+warning: `semio-s-plugin-cad` (lib test) generated 83 warnings (16 duplicates) (run `cargo fix --lib -p semio-s-plugin-cad --tests` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.92s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`
+
+=== 3. cargo check -p semio-s-plugin-cad --all-targets --keep-going (FINAL confirm, run 3) ===
+warning: `semio-s-plugin-cad` (lib) generated 67 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 14 suggestions)
+warning: `semio-s-plugin-cad` (lib test) generated 83 warnings (16 duplicates) (run `cargo fix --lib -p semio-s-plugin-cad --tests` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.34s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`
+
+=== 4. cargo test -p semio-s-plugin-cad --no-run ===
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-cad` (lib) generated 67 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 14 suggestions)
+warning: `semio-s-plugin-cad` (lib test) generated 83 warnings (16 duplicates) (run `cargo fix --lib -p semio-s-plugin-cad --tests` to apply 5 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 1m 24s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-cad v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 5`
+  Executable unittests 📦️glue.rs (target/debug/deps/semio_s_plugin_cad-069d1967e4da55d4)
+
+=== 5. cargo build -p semio-s-plugin-cad --target wasm32-unknown-unknown --lib (BEFORE getrandom fix) ===
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+error: The "wasm_js" backend requires the `wasm_js` feature for `getrandom`. For more information see: https://docs.rs/getrandom/0.3.4/#webassembly-support
+  --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/getrandom-0.3.4/src/backends.rs:40:17
+   |
+40 | /                 compile_error!(concat!(
+41 | |                     "The \"wasm_js\" backend requires the `wasm_js` feature \
+42 | |                     for `getrandom`. For more information see: \
+43 | |                     https://docs.rs/getrandom/", env!("CARGO_PKG_VERSION"), "/#webassembly-support"
+44 | |                 ));
+   | |__________________^
+
+   Compiling futures-util v0.3.32
+   Compiling fraction v0.15.4
+error: could not compile `getrandom` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+
+=== 6. cargo build -p semio-s-plugin-cad --target wasm32-unknown-unknown --lib (AFTER getrandom fix, wasm-only bridge bug found) ===
+
+error[E0308]: mismatched types
+   --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/././../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:29:43
+    |
+ 29 |             Ok(Self { store: RefCell::new(store) })
+    |                              ------------ ^^^^^ expected `ArtifactStore<CadSnapshot, CadMutation>`, found `Result<ArtifactStore<..., ...>, ...>`
+    |                              |
+    |                              arguments to this function are incorrect
+    |
+    = note: expected struct `ArtifactStore<_, _>`
+                 found enum `Result<ArtifactStore<_, _>, VcsError>`
+note: associated function defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/cell.rs:971:18
+    |
+971 |     pub const fn new(value: T) -> RefCell<T> {
+    |                  ^^^
+help: use the `?` operator to extract the `Result<ArtifactStore<artifacts::cad::standards::v1::subsets::any::schema::snapshot::component::CadSnapshot, artifacts::cad::standards::v1::subsets::any::schema::mutations::component::CadMutation>, VcsError>` value, propagating a `Result::Err` value to the caller
+    |
+ 29 |             Ok(Self { store: RefCell::new(store?) })
+    |                                                +
+
+warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:22:9
+   |
+22 |     use semio_framework_plugin::ArtifactAnalyzer as _;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `semio-s-plugin-cad` (lib) generated 17 warnings
+error: could not compile `semio-s-plugin-cad` (lib) due to 1 previous error; 17 warnings emitted
+
+=== 7. cargo build -p semio-s-plugin-cad --target wasm32-unknown-unknown --lib (FINAL, after wasm bridge fix) ===
+ 37 | pub(crate) struct CadGeometry {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-cad` (lib) generated 67 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 14 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 8.54s
+
+=== 8. cargo build -p (cad's 4 extensions) --target wasm32-unknown-unknown --lib ===
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-cad` (lib) generated 68 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 14 suggestions)
+   Compiling semio-s-plugin-cad-aec-building v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 9.51s
+
+=== 9. cargo check -p (cad's 4 extensions) --all-targets --keep-going (native) ===
+ 37 | pub(crate) struct CadGeometry {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-plugin-cad` (lib) generated 68 warnings (run `cargo fix --lib -p semio-s-plugin-cad` to apply 14 suggestions)
+    Checking semio-s-plugin-cad-aec-building v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 2.23s
+
+=== 10. cargo check -p semio-s-plugin-demonstrator --all-targets --keep-going (koordinator playground, OUT OF SCOPE, blocked upstream) ===
+error: expected one of `)`, `,`, `.`, `?`, `else`, or an operator, found `Puzzle2dDiff`
+error: expected one of `)`, `,`, `.`, `?`, or an operator, found `Puzzle2dDiff`
+error: expected one of `)`, `,`, `.`, `?`, `else`, or an operator, found `Puzzle5dDiff`
+error: expected one of `)`, `,`, `.`, `?`, or an operator, found `Puzzle5dDiff`
+error: expected one of `)`, `,`, `.`, `?`, `else`, or an operator, found `Puzzle3dDiff`
+error: expected one of `)`, `,`, `.`, `?`, or an operator, found `Puzzle3dDiff`
+error: expected one of `)`, `,`, `.`, `?`, `else`, or an operator, found `Puzzle3dDiff`
+error: expected one of `)`, `,`, `.`, `?`, `else`, or an operator, found `Puzzle3dDiff`
+error[E0615]: attempted to take value of method `id` on type `&artifact::Widget`
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error: could not compile `semio-framework-os-flow` (lib) due to 1 previous error; 126 warnings emitted
+error: could not compile `semio-s-plugin-gis` (lib) due to 2 previous errors; 59 warnings emitted
+error[E0277]: the trait bound `Puzzle2dMutation: SemanticMutation<Puzzle2dPlaySnapshot>` is not satisfied
+error[E0277]: the trait bound `Puzzle3dMutation: SemanticMutation<Puzzle3dPlaySnapshot>` is not satisfied
+error[E0277]: the trait bound `Puzzle5dMutation: SemanticMutation<Puzzle5dPlaySnapshot>` is not satisfied
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+error[E0308]: mismatched types
+error[E0308]: mismatched types
+error: could not compile `semio-s-plugin-puzzle` (lib) due to 36 previous errors; 266 warnings emitted

@@ -10,11 +10,12 @@ import * as React from "react";
 import { closestCenter, DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { Scrollable } from "../📜️Scrollable/🟦️component.tsx";
-import { borderNormalBottomClass, surfaceClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
-import { tableRowInteractiveClass, tableRowSelectedClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { interactiveActiveFillClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️component.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -22,6 +23,12 @@ import { DragHandle } from "../🧱️DragHandle/🟦️component.tsx";
 // #region 🛎️Table
 // Sortable, hierarchical data table with drag-drop support.
 // Consumers MUST provide columns and data arrays.
+
+/** @emoji 📊️ Private interactive table-row presentation. */
+const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
+
+/** @emoji 📊️ Private selected table-row presentation. */
+const tableRowSelectedClass = interactiveActiveFillClass;
 
 /**
  * Union type for ascending or descending sort order.

@@ -76,7 +76,7 @@ impl SemioKitDiff {
 }
 
 impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
-    fn apply(&self, base: &SemioKitSnapshot) -> SemioKitSnapshot {
+    fn apply(&self, base: &SemioKitSnapshot) -> protocol::MutationApplyResult<SemioKitSnapshot> {
         let mut next = base.clone();
         if let Some(t) = &self.types {
             next.types = t.values.clone();
@@ -96,7 +96,7 @@ impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
         if let Some(r) = &self.representations {
             next.representations = r.values.clone();
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -297,7 +297,7 @@ mod tests {
     fn apply_replaces_touched_fields_only() {
         let base = demo_kit_snapshot();
         let diff = SemioKitDiff { properties: Some(None), ..Default::default() };
-        let next = diff.apply(&base);
+        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
         assert!(next.properties.is_none());
         assert_eq!(next.types, base.types, "untouched fields must be preserved");
     }

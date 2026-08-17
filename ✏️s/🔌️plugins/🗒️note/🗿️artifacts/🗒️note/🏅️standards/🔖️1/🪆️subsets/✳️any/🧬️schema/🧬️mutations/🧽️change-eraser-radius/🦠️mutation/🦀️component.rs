@@ -22,7 +22,7 @@ pub fn change_eraser_radius(new_radius: Option<f64>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeEraserRadius {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "eraser-radius", kind: "change-eraser-radius", record: "ChangedEraserRadius" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

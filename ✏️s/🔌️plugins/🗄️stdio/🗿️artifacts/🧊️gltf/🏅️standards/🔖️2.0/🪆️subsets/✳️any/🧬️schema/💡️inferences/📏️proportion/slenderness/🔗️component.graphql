@@ -1,11 +1,32 @@
-# 💡️ slenderness glTF inference leaf GraphQL facet.
-type GltfSlendernessInferenceV1 {
-  id: ID!
+# 💡️ Typed slenderness glTF inference result.
+type GltfSlendernessQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: Int!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfSlendernessProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfSlendernessInferenceV1 {
+  value: Float
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfSlendernessQualityV1!
+  provenance: GltfSlendernessProvenanceV1!
 }

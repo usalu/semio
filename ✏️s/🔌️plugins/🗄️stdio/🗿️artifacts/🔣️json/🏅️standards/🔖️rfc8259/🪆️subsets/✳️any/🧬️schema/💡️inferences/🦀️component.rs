@@ -23,7 +23,7 @@ pub struct JsonInference {
     pub outline: JsonOutline,
 }
 
-impl protocol::Inference<JsonSnapshot> for JsonInference {
+impl Inference<JsonSnapshot> for JsonInference {
     fn infer(snapshot: &JsonSnapshot) -> Self {
         Self { outline: JsonOutline::compute(snapshot) }
     }

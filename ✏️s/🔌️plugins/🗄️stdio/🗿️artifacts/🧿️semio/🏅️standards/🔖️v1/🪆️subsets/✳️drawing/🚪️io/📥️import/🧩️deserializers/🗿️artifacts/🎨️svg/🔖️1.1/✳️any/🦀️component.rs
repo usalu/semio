@@ -34,10 +34,10 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use crate::artifacts::svg::{
-    schema::snapshot::{svg_element_from_xml_node, transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, TransformOp, ViewBox},
+    schema::snapshot::{svg_element_from_xml_node, transform_ops_to_matrix, Matrix2D, PathCommand, SvgElement, ViewBox},
     SvgSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
+use crate::artifacts::xml::schema::snapshot::XmlAttr;
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
@@ -366,7 +366,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::svg::schema::snapshot::{CommonAttrs, PresentationAttrs};
+    use crate::artifacts::svg::schema::snapshot::{CommonAttrs, PresentationAttrs, TransformOp};
     use crate::artifacts::xml::schema::snapshot::XmlDocument;
 
     fn sample_svg() -> SvgSnapshot {

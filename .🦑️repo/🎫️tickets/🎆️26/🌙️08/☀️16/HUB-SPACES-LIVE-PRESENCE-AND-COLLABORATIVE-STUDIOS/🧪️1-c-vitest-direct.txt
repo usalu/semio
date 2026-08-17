@@ -1,0 +1,23 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (160 tests | 1 failed) 48ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 14ms
+ ❯ |@semio-tech/framework-os| ../../🟦️component.ts (160 tests | 1 failed) 55ms
+     × matches the Rust plan_workflow across shared fixtures decoded via wasm 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+ FAIL  |@semio-tech/framework-os| ../../🟦️component.ts > @semio-tech/framework-os workflow > matches the Rust plan_workflow across shared fixtures decoded via wasm
+Error: Cannot find module 'file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproducts/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%96%A5%EF%B8%8Fhost/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust/pkg/semio_framework_os.js' imported from /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️component.ts
+ ❯ ../../ð¦ï¸component.ts:2888:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  2 failed | 2 passed (4)
+      Tests  2 failed | 334 passed (336)
+   Start at  22:48:29
+   Duration  1.47s (transform 2.84s, setup 0ms, import 3.42s, tests 494ms, environment 0ms)
+

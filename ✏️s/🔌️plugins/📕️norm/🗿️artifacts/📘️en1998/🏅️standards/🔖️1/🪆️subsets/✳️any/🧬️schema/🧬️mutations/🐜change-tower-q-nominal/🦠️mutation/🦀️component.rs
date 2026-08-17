@@ -15,7 +15,7 @@ pub struct ChangeTowerQNominal {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerQNominal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "tower-q-nominal", kind: "change-tower-q-nominal", record: "ChangedTowerQNominal" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_tower_q_nominal::diff::diff(self, base)
     }
 

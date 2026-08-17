@@ -8,8 +8,8 @@
 import { ephemeralBox, ephemeralSet } from "@semio-tech/framework";
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { glassClass, surfaceClass, veilClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { glassClass, surfaceClass, veilClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎈️Surface

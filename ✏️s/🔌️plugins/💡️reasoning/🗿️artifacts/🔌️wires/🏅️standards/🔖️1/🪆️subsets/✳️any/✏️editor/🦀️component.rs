@@ -278,7 +278,8 @@ pub(crate) mod testkit {
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub fn metabolism_app() -> WiresApp {
         let mut app = new_app();
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
+            .expect("valid metabolism fixture mutations");
         let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         let files = store::print_document_pack(&envelope).expect("print document pack");
         app.load_document_pack(&files).expect("load metabolism");
@@ -444,7 +445,8 @@ mod tests {
 
     #[test]
     fn metabolism_board_fixture_uses_mindmap_schema() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot();
+        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot()
+            .expect("valid metabolism fixture mutations");
         let board = crate::artifacts::wires::wires_working_board(&document);
         assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
         assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&board).len(), 7);
@@ -490,8 +492,12 @@ mod tests {
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = crate::artifacts::wires::empty_wires_snapshot();
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1")));
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2")));
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1")))
+            .expect("valid mutation")
+            .0;
+        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2")))
+            .expect("valid mutation")
+            .0;
         let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
         instance_a.load_document_pack(&base_files).expect("load a");

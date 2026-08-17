@@ -149,10 +149,13 @@ mod tests {
     }
 
     fn round_trip(base: &En1996Snapshot, mutation: &En1996Mutation) -> En1996Snapshot {
-        let forward = vcs::apply_mutation(base, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
-            restored = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            restored = next;
         }
         assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
         forward
@@ -185,8 +188,8 @@ mod tests {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -194,8 +197,8 @@ mod tests {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1996Mutation::ChangeStoreys(change_storeys::mutation::ChangeStoreys { new_storeys: 4 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1996Mutation::ChangeStoreys(change_storeys::mutation::ChangeStoreys { new_storeys: 4 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     #[test]
@@ -203,10 +206,41 @@ mod tests {
         let base = En1996Snapshot::default();
         let mutation = En1996Mutation::ChangeUnit(change_unit::mutation::ChangeUnit { new_unit: "calcium_silicate".to_string() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let d2 = En1996Mutation::ChangeFKMpa(change_f_k_mpa::mutation::ChangeFKMpa { new_f_k_mpa: 6.5 }).diff(&base);
+        let d1 = mutation.diff(&base).diff().clone();
+        let d2 = En1996Mutation::ChangeFKMpa(change_f_k_mpa::mutation::ChangeFKMpa { new_f_k_mpa: 6.5 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
     //#endregion 🧪️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
+    /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
+    /// don't apply/aren't landed yet.
+    #[test]
+    fn change_m_ed_knm_non_finite_is_fatal() {
+        let base = En1996Snapshot::default();
+        let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
+        let outcome = mutation.diff(&base);
+        protocol::os_spr::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_masonry_class_same_value_is_no_op() {
+        let base = En1996Snapshot::default();
+        let mutation = En1996Mutation::ChangeMasonryClass(change_masonry_class::mutation::ChangeMasonryClass { new_masonry_class: base.masonry_class });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert_eq!(outcome.diff(), &En1996Diff::default());
+    }
+
+    #[test]
+    fn change_m_ed_knm_is_deterministic() {
+        let base = En1996Snapshot::default();
+        let mutation = En1996Mutation::ChangeMEdKnm(change_m_ed_knm::mutation::ChangeMEdKnm { new_m_ed_knm: 12.5 });
+        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

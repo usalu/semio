@@ -1,0 +1,178 @@
+    Blocking waiting for file lock on build directory
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19
+     |
+4256 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4257 | | where
+4258 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4259 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4445 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+warning: unused imports: `FaultCode`, `FaultScope`, `Severity`, and `TextSpan`
+ --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:7:23
+  |
+7 | use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+  |                       ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `is_left` and `is_right` are never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1463:8
+     |
+1462 | impl IntroductionPointerButton {
+     | ------------------------------ methods in this implementation
+1463 |     fn is_left(&self) -> bool {
+     |        ^^^^^^^
+...
+1467 |     fn is_right(&self) -> bool {
+     |        ^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `introduction_orbit_modifiers_is_default` is never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1472:4
+     |
+1472 | fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]) -> bool {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework` to apply 1 suggestion)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📦️glue.rs:2:1
+  |
+2 | extern crate semio_framework_os_kernel as dsl_core;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+2 - extern crate semio_framework_os_kernel as dsl_core;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📦️glue.rs:3:1
+  |
+3 | extern crate semio_framework_os_kernel as vcs;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+3 - extern crate semio_framework_os_kernel as vcs;
+  |
+
+warning: unused import: `DefaultApp`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:13:20
+   |
+13 | use super::super::{DefaultApp, OpeningPreferences};
+   |                    ^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `error`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:109:17
+    |
+109 |             Err(error) => {
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_error`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin-host` (lib) generated 4 warnings (run `cargo fix --lib -p semio-framework-plugin-host` to apply 4 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 42.35s

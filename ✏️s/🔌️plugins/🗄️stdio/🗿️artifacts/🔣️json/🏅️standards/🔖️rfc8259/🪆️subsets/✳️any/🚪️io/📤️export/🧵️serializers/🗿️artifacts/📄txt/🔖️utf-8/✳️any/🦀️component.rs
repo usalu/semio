@@ -1,7 +1,7 @@
 //! ser json to txt
 use crate::artifacts::json::schema::snapshot::write_json_pretty;
 use crate::artifacts::json::JsonSnapshot;
-use crate::artifacts::txt::{TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::TxtSnapshot;
 pub fn register() {}
 pub fn serialize(from: &JsonSnapshot) -> Result<TxtSnapshot, store::PackError> {
     let text = write_json_pretty(&from.value);

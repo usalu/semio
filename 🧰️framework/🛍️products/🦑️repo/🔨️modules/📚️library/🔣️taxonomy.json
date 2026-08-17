@@ -76,9 +76,6 @@
     },
     "🎮️commands": {
       "kind": "command"
-    },
-    "🎛️apps": {
-      "kind": "app"
     }
   },
   "roles": [
@@ -246,7 +243,6 @@
     ".config.json"
   ],
   "artifactsDirName": "🗿️artifacts",
-  "appsDirName": "🎛️apps",
   "viewerDirName": "👁️viewer",
   "editorDirName": "✏️editor",
   "surfaceRoles": [
@@ -413,25 +409,6 @@
     "🔧️ops",
     "📡️sprs"
   ],
-  "appComponentDirs": [
-    "⚙️engine",
-    "🎮️commands",
-    "🎚️config",
-    "👥️presence",
-    "🫧️transient"
-  ],
-  "appChildDirs": [
-    "⚙️engine",
-    "🎭️modes",
-    "🎮️commands",
-    "📌️panels",
-    "🎚️config",
-    "👥️presence",
-    "🫧️transient",
-    "🗣️terminology",
-    "🌉️wasm",
-    "📚️examples"
-  ],
   "modeChildDirs": [
     "🪟️windows",
     "🎮️commands",
@@ -464,11 +441,6 @@
     "🧬️schema/💡️inferences": "🔣️component.json",
     "🚪️io/💡️inferences/📝️text": "🔣️component.json",
     "🚪️io/🧬️mutations/📝️text": "🔣️component.json"
-  },
-  "appSchemaSpecFilenames": {
-    "🎚️config/🧬️schema": "🔣️component.json",
-    "👥️presence/🧬️schema": "🔣️component.json",
-    "🫧️transient/🧬️schema": "🔣️component.json"
   },
   "windowChildDirs": [
     "🍱️panes",
@@ -550,7 +522,6 @@
     "⚡️implementation"
   ],
   "pluginChildDirs": [
-    "🎛️apps",
     "🎮️commands"
   ],
   "pluginRequiredChildDirs": [

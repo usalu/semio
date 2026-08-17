@@ -15,7 +15,7 @@ pub struct ChangeComfortCategory {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeComfortCategory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "comfort-category", kind: "change-comfort-category", record: "ChangedComfortCategory" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_comfort_category::diff::diff(self, base)
     }
 

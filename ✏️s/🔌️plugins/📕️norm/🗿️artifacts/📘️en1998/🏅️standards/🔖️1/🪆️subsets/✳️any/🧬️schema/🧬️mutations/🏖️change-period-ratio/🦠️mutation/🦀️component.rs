@@ -15,7 +15,7 @@ pub struct ChangePeriodRatio {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangePeriodRatio {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "period-ratio", kind: "change-period-ratio", record: "ChangedPeriodRatio" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_period_ratio::diff::diff(self, base)
     }
 

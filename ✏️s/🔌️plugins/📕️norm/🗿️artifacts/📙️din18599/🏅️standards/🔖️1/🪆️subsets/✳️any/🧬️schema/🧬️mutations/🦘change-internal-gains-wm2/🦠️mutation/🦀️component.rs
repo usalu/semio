@@ -15,7 +15,7 @@ pub struct ChangeInternalGainsWM2 {
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeInternalGainsWM2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "internal-gains-wm2", kind: "change-internal-gains-wm2", record: "ChangedInternalGainsWM2" };
 
-    fn diff(&self, base: &Din18599Snapshot) -> Din18599Diff {
+    fn diff(&self, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {
         crate::artifacts::din18599::mutations::change_internal_gains_w_m2::diff::diff(self, base)
     }
 

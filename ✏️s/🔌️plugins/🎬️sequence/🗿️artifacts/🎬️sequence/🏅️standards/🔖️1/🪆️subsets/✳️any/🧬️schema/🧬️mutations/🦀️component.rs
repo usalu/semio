@@ -24,7 +24,7 @@ pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation
 /// 🧮️ Semantic sequence document mutation vocabulary: id-keyed step create/delete/move/edit-params/
 /// change-collapsed, plus relationship connect/disconnect between steps, plus duplicate-step. The
 /// canvas camera is session-only runtime state now (never a document field — see
-/// `crate::apps::sequence::config`).
+/// `crate::editor::sequence::config`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = SequenceSnapshot, diff = SequenceDiff, schema = "sequence.sequence")]
@@ -94,7 +94,10 @@ pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFix
 }
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
+pub fn apply_sequence_mutation(
+    snapshot: &SequenceSnapshot,
+    mutation: &SequenceMutation,
+) -> protocol::MutationApplyResult<SequenceSnapshot> {
     protocol::MutationDiff::apply(mutation.diff(snapshot).diff(), snapshot)
 }
 
@@ -112,12 +115,14 @@ mod tests {
     use store::{create_document_envelope, ArtifactCommand};
 
     fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> SequenceSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(snapshot, mutation);
+        let (forward, _messages) =
+            vcs::apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
         backward.reverse();
         for back in backward {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back);
+            let (next, _messages) =
+                vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");
@@ -146,7 +151,7 @@ mod tests {
     #[test]
     fn snapshot_mutations_capture_move_and_connect() {
         // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
-        // `crate::apps::sequence` — an artifact must never depend on an app): a step add is enough
+        // `the sibling editor module` — an artifact must never depend on an app): a step add is enough
         // to exercise `sequence_snapshot_mutations`'s before/after diff directly.
         let before = default_snapshot().to_fixture();
         let id = "step-99".to_string();
@@ -206,7 +211,7 @@ mod tests {
         use protocol::Mutation;
         let base = default_snapshot();
         let d1 = move_step("step-1".into(), 10.0, 10.0).diff(&base).into_parts().0;
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = move_step("step-1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }

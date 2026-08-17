@@ -5,8 +5,7 @@ use crate::artifacts::txt::schema::diff::{diff_set_snapshot, TxtDiff, TxtLineAdd
 use crate::artifacts::txt::schema::snapshot::LineEnding;
 use crate::artifacts::txt::TxtSnapshot;
 use protocol::Mutation;
-#[cfg(test)]
-use protocol::{DiffCodec, OpBinary, OpText};
+use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -50,10 +49,15 @@ pub enum TxtMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
 /// applied once, returned once.
-pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> TxtDiff {
-    let d = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
-    *snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&d, snapshot);
-    d
+pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
+    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -61,8 +65,8 @@ pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) ->
 impl Mutation<TxtSnapshot> for TxtMutation {
     type Diff = TxtDiff;
 
-    fn diff(&self, base: &TxtSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             TxtMutation::NoMutation => TxtDiff::default(),
             TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             TxtMutation::SetTrailingNewline { value } => {
@@ -94,7 +98,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
                     TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: *index, text: text.clone() }], added: vec![] }), ..Default::default() }
                 }
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &TxtSnapshot) -> Vec<Self> {
@@ -125,7 +129,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
 /// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
 /// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl`, and this pilot's own
 /// `BinaryMutation`/`GifMutation` for precedent this copies verbatim).
-impl protocol::OpText for TxtMutation {
+impl OpText for TxtMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -148,7 +152,7 @@ impl protocol::OpText for TxtMutation {
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
 /// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
 /// type. Zero per-artifact logic.
-impl protocol::OpBinary for TxtMutation {
+impl OpBinary for TxtMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -189,7 +193,7 @@ mod tests {
             let returned = apply_txt_mutation(&mut via_apply, &m);
             let expected_diff = m.diff(&b);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(via_apply, expected_diff.apply(&b), "apply mismatch for {m:?}");
+            assert_eq!(via_apply, expected_diff.diff().apply(&b).unwrap(), "apply mismatch for {m:?}");
         }
     }
 
@@ -205,9 +209,9 @@ mod tests {
             assert_eq!(mutated, b, "mutation-level inverse round-trip failed for {m:?}");
 
             let d = m.diff(&b);
-            let next = d.apply(&b);
-            let inv = d.inverse(&b);
-            assert_eq!(inv.apply(&next), b, "diff-level inverse round-trip failed for {m:?}");
+            let next = d.diff().apply(&b).unwrap();
+            let inv = d.diff().inverse(&b);
+            assert_eq!(inv.apply(&next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
         }
     }
 
@@ -217,13 +221,13 @@ mod tests {
         let variants = all_variants(&b);
         for m1 in &variants {
             let d1 = m1.diff(&b);
-            let mid = d1.apply(&b);
+            let mid = d1.diff().apply(&b).unwrap();
             for m2 in &variants {
                 let d2 = m2.diff(&mid);
-                let after = d2.apply(&mid);
-                let mut merged = d1.clone();
-                merged.absorb(d2.clone());
-                assert_eq!(merged.apply(&b), after, "absorb({m1:?}, {m2:?}) mismatch");
+                let after = d2.diff().apply(&mid).unwrap();
+                let mut merged = d1.diff().clone();
+                merged.absorb(d2.diff().clone());
+                assert_eq!(merged.apply(&b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
             }
         }
     }

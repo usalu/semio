@@ -8,12 +8,13 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { effectiveActionArgs, missingRequiredArgs, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { veilClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { veilClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
+import { useControlKeybinding } from "../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { Surface } from "../🌈️Surface/🟦️component.tsx";
-import { useControlKeybinding, GLASS_OVERLAY_BOX_CLASS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { GLASS_OVERLAY_BOX_CLASS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Button } from "../🔘️Button/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -34,8 +35,7 @@ export type UIDialogProps = {
 export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderField, onSubmit, onCancel }) => {
   const cancelLabel = useLabel("ui.common.cancel");
   const [staged, setStaged] = reactHostPort.useState<Record<string, unknown>>({});
-  const buffer = reactHostPort.useMemo(() => ({ ...seedArgs, ...staged }), [seedArgs, staged]);
-  const effective = reactHostPort.useMemo(() => effectiveActionArgs(dialog.args, buffer), [dialog.args, buffer]);
+  const effective = reactHostPort.useMemo(() => effectiveActionArgs(dialog.args, staged, seedArgs), [dialog.args, staged, seedArgs]);
   const missing = reactHostPort.useMemo(() => missingRequiredArgs(dialog.args, effective), [dialog.args, effective]);
   const canSubmit = missing.length === 0;
 

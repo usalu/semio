@@ -143,10 +143,10 @@ pub fn frame_flags(compressed: bool, critical: bool, codec: u8) -> u8 {
 
 //#region 🔖️Policies
 // UndoPolicy moved from vcs/rs (unchanged variants), untouched by
-// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`. `MergeStrategyKind`/
-// `ConflictRule` (the CRDT-era per-operation conflict declaration surface, `protocol_crdt`'s five
-// blind merge combinators) are GONE — CLAUDE.md forbids CRDTs outright, and the mechanism was
-// unreachable from the real store path. `MergePolicy` replaces them: authority-local state (never
+// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`. The CRDT-era per-operation
+// conflict-declaration surface (five blind merge combinators) is GONE — CLAUDE.md forbids CRDTs
+// outright, and the mechanism was unreachable from the real store path. `MergePolicy` replaces it:
+// authority-local state (never
 // carried on a `MutationEnvelope`/`BackboneMessage`, never part of shared history) that decides
 // whether a `MutationOutcome`'s worst `crate::os_dsl::Severity` gets accepted or quarantined as a
 // `Conflict` (`📡️spr/⚔️conflict`).

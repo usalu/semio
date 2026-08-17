@@ -95,14 +95,14 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
 
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
 
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
 
         /// 🛡️ The real construction gate: however `self.snapshot` got here (`new`+`add_page`,
@@ -337,10 +337,10 @@ pub mod derived_analysis {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
-    /// ℹ️ Informational-only diagnostic (`detect_pdfa_level`'s report) -- lowered to `Severity::Hint`,
-    /// the softest severity this fault model has, since there is no distinct `Info` variant.
+    /// ℹ️ Informational-only diagnostic (`detect_pdfa_level`'s report) -- `Severity::Info`,
+    /// the softest severity this fault model has.
     fn info(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Hint, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
+        Diagnostic { code: FaultCode::new(code), severity: Severity::Info, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
     /// 🛡️ Real ISO 19005-2/-3 (PDF/A-2, PDF/A-3) conformance checks against one already-decoded
@@ -449,9 +449,9 @@ pub mod derived_analysis {
         fn conforming_snapshot_with_output_intent_reports_only_level_info() {
             let snapshot = PdfSnapshot { objects: output_intent_objects("sRGB IEC61966-2.1"), ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
-            assert_eq!(diagnostics.len(), 1, "expected exactly the level-detection Hint diagnostic, got {diagnostics:?}");
+            assert_eq!(diagnostics.len(), 1, "expected exactly the level-detection Info diagnostic, got {diagnostics:?}");
             assert_eq!(diagnostics[0].code.0, CODE_LEVEL);
-            assert_eq!(diagnostics[0].severity, Severity::Hint);
+            assert_eq!(diagnostics[0].severity, Severity::Info);
         }
 
         #[test]
@@ -583,8 +583,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PdfABuilderFacets {
-        construction: derived_construction::PdfABuilderConstruction,
-        analysis: derived_analysis::PdfAAnalyzerAnalysis,
+        construction: PdfABuilderConstruction,
+        analysis: PdfAAnalyzerAnalysis,
         composition: super::io::derived_composition::PdfAComposerComposition,
     }
     builder: PdfABuilder,

@@ -32,6 +32,10 @@ const outDir = join(repoRoot, ".🦑️repo/⚡️cache/📺️renderer-modules/
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
 
 //#region 🌐️ DevServer
+/** @emoji 👥️ Full `process.env` passthrough for the spawned `trunk` child — raw (unprefixed)
+ * `S_HUB_URL`/`S_USER`/`S_DATA_DIR` reach it exactly as set by the launching `dev` process (the wgpu
+ * user launchers in `.vscode/🧩️launch.seed.jsonc`'s `devLaunchers.s.users`), since native/wasm-in-trunk
+ * code reads `std::env` directly rather than through a `import.meta.env.VITE_*` compile-time define. */
 function trunkEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
   delete env.NO_COLOR;

@@ -14,7 +14,7 @@ pub struct EditRun {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for EditRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "run", kind: "edit-run", record: "EditedRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {

@@ -10,8 +10,8 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
     use dsl::{Diagnostic, TextSpan};
     use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition, ArtifactDeserializer as _, ArtifactSerializer as _,
-        ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactAnalyzer as _, ArtifactComposition,
+        ArtifactDeserializer as _, ArtifactSerializer as _, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
@@ -138,6 +138,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};
+        use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         fn clean_snapshot() -> SemioPresentationSnapshot {
             SemioPresentationSnapshot {
@@ -230,7 +231,7 @@ pub mod derived_composition {
         /// aggregates all 14 subsets' `register()` calls (no test module of its own, and out of this
         /// ticket's `✳️presentation/`-only edit scope anyway).
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::presentation::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

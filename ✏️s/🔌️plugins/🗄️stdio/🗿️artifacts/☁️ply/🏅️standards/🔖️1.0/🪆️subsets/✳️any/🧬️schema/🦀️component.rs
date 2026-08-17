@@ -118,13 +118,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PlySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ply::schema::mutations::apply_ply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PlyDiff as protocol::MutationDiff<PlySnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -264,8 +264,8 @@ pub fn demo_ply_snapshot() -> PlySnapshot {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PlyBuilderFacets {
-        construction: derived_construction::PlyBuilderConstruction,
-        analysis: derived_analysis::PlyAnalyzerAnalysis,
+        construction: PlyBuilderConstruction,
+        analysis: PlyAnalyzerAnalysis,
         composition: super::super::io::derived_composition::PlyComposerComposition,
     }
     builder: PlyBuilder,

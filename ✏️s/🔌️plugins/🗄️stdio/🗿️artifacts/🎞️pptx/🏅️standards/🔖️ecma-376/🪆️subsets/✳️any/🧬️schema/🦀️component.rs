@@ -120,13 +120,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -320,8 +320,8 @@ pub fn demo_pptx_snapshot() -> PptxSnapshot {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PptxBuilderFacets {
-        construction: derived_construction::PptxBuilderConstruction,
-        analysis: derived_analysis::PptxAnalyzerAnalysis,
+        construction: PptxBuilderConstruction,
+        analysis: PptxAnalyzerAnalysis,
         composition: super::super::io::derived_composition::PptxComposerComposition,
     }
     builder: PptxBuilder,
@@ -708,16 +708,16 @@ mod tests {
         assert_eq!(1 + relationship_parts + snapshot.xml_parts.len() + snapshot.opc.parts.len(), 211, "every native member must map to exactly one logical authority");
         let mut duplicate_authority = snapshot.clone();
         let duplicated = duplicate_authority.xml_parts.first().expect("fixture XML part");
-        duplicate_authority.opc.parts.push(crate::artifacts::zip::opc::OpcPart { path: duplicated.path.clone(), content_type: duplicated.content_type.clone(), bytes: b"<shadow/>".to_vec() });
+        duplicate_authority.opc.parts.push(opc::OpcPart { path: duplicated.path.clone(), content_type: duplicated.content_type.clone(), bytes: b"<shadow/>".to_vec() });
         assert!(encode_pptx(&duplicate_authority).is_err(), "export must reject XML stored as opaque OPC bytes");
         assert_exact_export(&snapshot, &exact_bytes);
 
-        let analysis = derived_analysis::PptxAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&exact_bytes)]);
+        let analysis = PptxAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&exact_bytes)]);
         let analyzed = analysis.parts.snapshot.expect("analyze native PPTX fixture");
         assert_eq!(analyzed, snapshot);
         assert_exact_export(&analyzed, &exact_bytes);
 
-        let dialect = <derived_analysis::PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+        let dialect = <PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
         let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
         assert_eq!(composition.snapshot, snapshot);
         assert_exact_export(&composition.snapshot, &exact_bytes);
@@ -744,11 +744,11 @@ mod tests {
 
         let self_diff = PptxDiff::between(&snapshot, &snapshot);
         assert!(self_diff.is_empty());
-        assert_exact_export(&self_diff.apply(&snapshot), &exact_bytes);
+        assert_exact_export(&self_diff.apply(&snapshot).unwrap(), &exact_bytes);
 
         let mut no_op = snapshot.clone();
         let no_op_diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut no_op, &PptxMutation::NoMutation);
-        assert!(no_op_diff.is_empty());
+        assert!(no_op_diff.diff().is_empty());
         assert_exact_export(&no_op, &exact_bytes);
 
         let (slide_index, shape_index, position) = first_positioned_shape(&snapshot);
@@ -764,25 +764,25 @@ mod tests {
         assert_eq!(changed, snapshot);
         assert_exact_export(&changed, &exact_bytes);
 
-        let mid = forward.apply(&snapshot);
-        let inverse = forward.inverse(&snapshot);
-        let mut absorbed = forward.clone();
+        let mid = forward.diff().apply(&snapshot).unwrap();
+        let inverse = forward.diff().inverse(&snapshot);
+        let mut absorbed = forward.diff().clone();
         absorbed.absorb(inverse.clone());
-        let restored = inverse.apply(&mid);
+        let restored = inverse.apply(&mid).unwrap();
         assert_eq!(restored, snapshot);
-        assert_eq!(absorbed.apply(&snapshot), snapshot);
+        assert_eq!(absorbed.apply(&snapshot).unwrap(), snapshot);
         assert_exact_export(&restored, &exact_bytes);
-        assert_exact_export(&absorbed.apply(&snapshot), &exact_bytes);
+        assert_exact_export(&absorbed.apply(&snapshot).unwrap(), &exact_bytes);
 
         let mut without_xml_parts = snapshot.clone();
         without_xml_parts.xml_parts.clear();
         let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
         let printed_diff = xml_parts_diff.print_diff();
         let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
-        assert_exact_export(&parsed_diff.apply(&without_xml_parts), &exact_bytes);
+        assert_exact_export(&parsed_diff.apply(&without_xml_parts).unwrap(), &exact_bytes);
         let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
         let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
-        assert_exact_export(&decoded_diff.apply(&without_xml_parts), &exact_bytes);
+        assert_exact_export(&decoded_diff.apply(&without_xml_parts).unwrap(), &exact_bytes);
 
         let set_snapshot = PptxMutation::SetSnapshot { snapshot: snapshot.clone() };
         let printed_op = set_snapshot.print_op();

@@ -24,7 +24,7 @@ pub fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelMutati
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceTrajectory {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "trajectory", kind: "replace-trajectory", record: "ReplacedTrajectory" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

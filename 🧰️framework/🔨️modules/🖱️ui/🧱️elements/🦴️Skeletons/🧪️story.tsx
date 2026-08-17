@@ -9,15 +9,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { CanvasSkeleton, createIconComponent, DiagramSkeleton, elementSkeleton, LoadingRow, SceneSkeleton, TableSkeleton, WindowBodySkeleton, type TableColumn } from "@semio-tech/ui-react";
+import { CanvasSkeleton, DiagramSkeleton, elementSkeleton, SceneSkeleton, TableSkeleton, WindowBodySkeleton, type TableColumn } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 // #endregion 🔌️Adapters
 
 // 💀️#region 💀️Skeletons
 // One file for every loading-placeholder component in the barrel — none of these are interactive, so
 // there is little value in four separate one-story files; grouped here per the ticket's explicit scope.
-const FileIcon = createIconComponent("file-text");
-
 const skeletonColumns: TableColumn[] = [
   { id: "name", header: "Name", accessor: () => null, width: "50%" },
   { id: "role", header: "Role", accessor: () => null, width: "30%" },
@@ -51,16 +49,6 @@ export const Diagram: Story = {
   render: () => (
     <div className="h-64 w-full">
       <DiagramSkeleton nodeCount={5} edgeCount={4} />
-    </div>
-  ),
-};
-
-export const LoadingRowStory: Story = {
-  name: "LoadingRow",
-  render: () => (
-    <div className="flex w-64 flex-col gap-single">
-      <LoadingRow name="Loading document.json…" icon={<FileIcon size={12} />} />
-      <LoadingRow name="Loading kit.json…" icon={<FileIcon size={12} />} />
     </div>
   ),
 };

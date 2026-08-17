@@ -5,7 +5,13 @@ use crate::artifacts::en1996::mutations::change_wall_thickness_mm::mutation::Cha
 use crate::artifacts::en1996::En1996Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeWallThicknessMm, _base: &En1996Snapshot) -> En1996Diff {
-    En1996Diff { wall_thickness_mm: Some(payload.new_wall_thickness_mm.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeWallThicknessMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    if !payload.new_wall_thickness_mm.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Wall thickness mm must be a finite number.", Vec::<String>::new());
+    }
+    if base.wall_thickness_mm == payload.new_wall_thickness_mm {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Wall thickness mm already has this value.");
+    }
+    protocol::MutationOutcome::new(En1996Diff { wall_thickness_mm: Some(payload.new_wall_thickness_mm.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

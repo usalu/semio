@@ -227,47 +227,95 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
 }
 
 /// 🖌️ Applies a paint-layers sub-delta onto one object.
-pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta) {
-    for index in delta.removed.iter().copied().rev() {
-        let i = index as usize;
-        if i < object.paint_layers.len() {
-            object.paint_layers.remove(i);
+pub fn apply_paint_layers_delta(
+    object: &mut LowpolyObject,
+    delta: &crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayersDelta,
+) -> protocol::MutationApplyResult<()> {
+    let mut layers = object.paint_layers.clone();
+    let mut removed = std::collections::BTreeSet::new();
+    for (position, index) in delta.removed.iter().copied().enumerate() {
+        if !removed.insert(index) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "paint layer is removed more than once",
+            )
+            .at(["removed".to_string(), position.to_string()]));
+        }
+        if index as usize >= layers.len() {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "removed paint layer index is out of range",
+            )
+            .at(["removed".to_string(), position.to_string()]));
         }
     }
-    for entry in &delta.added {
-        let i = (entry.index as usize).min(object.paint_layers.len());
-        object.paint_layers.insert(i, entry.layer.clone());
+    let mut removed_indices: Vec<_> = delta.removed.iter().map(|index| *index as usize).collect();
+    removed_indices.sort_unstable_by(|left, right| right.cmp(left));
+    for i in removed_indices {
+        layers.remove(i);
     }
-    for entry in &delta.patched {
+    for (position, entry) in delta.added.iter().enumerate() {
         let i = entry.index as usize;
-        if let Some(layer) = object.paint_layers.get_mut(i) {
-            let p = &entry.patch;
-            if let Some(value) = &p.name {
-                layer.name = value.clone();
-            }
-            if let Some(value) = p.visible {
-                layer.visible = value;
-            }
-            if let Some(value) = p.opacity {
-                layer.opacity = value;
-            }
-            if let Some(value) = &p.blend_mode {
-                layer.blend_mode = value.clone();
-            }
+        if i > layers.len() {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "added paint layer index is out of range",
+            )
+            .at(["added".to_string(), position.to_string()]));
+        }
+        layers.insert(i, entry.layer.clone());
+    }
+    for (position, entry) in delta.patched.iter().enumerate() {
+        let i = entry.index as usize;
+        let layer = layers.get_mut(i).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "patched paint layer index is out of range",
+            )
+            .at(["patched".to_string(), position.to_string()])
+        })?;
+        let p = &entry.patch;
+        if let Some(value) = &p.name {
+            layer.name = value.clone();
+        }
+        if let Some(value) = p.visible {
+            layer.visible = value;
+        }
+        if let Some(value) = p.opacity {
+            layer.opacity = value;
+        }
+        if let Some(value) = &p.blend_mode {
+            layer.blend_mode = value.clone();
         }
     }
-    for stroke in &delta.strokes {
+    for (position, stroke) in delta.strokes.iter().enumerate() {
         let i = stroke.layer_index as usize;
-        if let Some(layer) = object.paint_layers.get_mut(i) {
-            for run in &stroke.runs {
-                let start = run.offset as usize;
-                let end = (start + run.bytes.len()).min(layer.pixels.len());
-                if start < layer.pixels.len() {
-                    layer.pixels[start..end].copy_from_slice(&run.bytes[..end - start]);
-                }
-            }
+        let layer = layers.get_mut(i).ok_or_else(|| {
+            protocol::MutationApplyError::new(
+                "mutation.apply.invalid-index",
+                "paint stroke layer index is out of range",
+            )
+            .at(["strokes".to_string(), position.to_string(), "layerIndex".to_string()])
+        })?;
+        for (run_index, run) in stroke.runs.iter().enumerate() {
+            let start = run.offset as usize;
+            let end = start.checked_add(run.bytes.len()).filter(|end| *end <= layer.pixels.len()).ok_or_else(|| {
+                protocol::MutationApplyError::new(
+                    "mutation.apply.invalid-index",
+                    "paint stroke byte range is out of bounds",
+                )
+                .at([
+                    "strokes".to_string(),
+                    position.to_string(),
+                    "runs".to_string(),
+                    run_index.to_string(),
+                ])
+            })?;
+            layer.pixels[start..end].copy_from_slice(&run.bytes);
         }
     }
+    object.paint_layers = layers;
+    Ok(())
 }
 //#endregion 🔖️Patches
 

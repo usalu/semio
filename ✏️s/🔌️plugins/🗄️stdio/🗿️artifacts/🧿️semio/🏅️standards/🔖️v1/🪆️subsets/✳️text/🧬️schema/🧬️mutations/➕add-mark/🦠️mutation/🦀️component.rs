@@ -16,7 +16,7 @@ pub struct AddMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "mark", kind: "add-mark", record: "AddedMarkToRun" };
 
-    fn diff(&self, base: &SemioTextSnapshot) -> <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {

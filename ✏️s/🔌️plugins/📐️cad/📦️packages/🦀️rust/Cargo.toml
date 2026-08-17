@@ -25,7 +25,7 @@ sourceRoots = ["🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️sub
 
 [[package.metadata.semio.playground]]
 variant = "cad"
-app = "cad-play"
+app = "s.cad.cad@1/*#editor"
 ports = { react = 6020, wgpu = 6120 }
 
 # 🎪️ The `koordinator` demonstrator row moved to
@@ -36,7 +36,7 @@ ports = { react = 6020, wgpu = 6120 }
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/cad-fixture"
-app = "cad-play"
+app = "s.cad.cad@1/*#editor"
 root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧫️fixtures"
 
 [lib]
@@ -68,6 +68,7 @@ base64 = "0.22.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true
+getrandom = { version = "0.3.4", features = ["wasm_js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

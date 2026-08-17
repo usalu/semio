@@ -15,7 +15,7 @@ pub struct ChangeGenerationReferenceKwh {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeGenerationReferenceKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "generation-reference-kwh", kind: "change-generation-reference-kwh", record: "ChangedGenerationReferenceKwh" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_generation_reference_kwh::diff::diff(self, base)
     }
 

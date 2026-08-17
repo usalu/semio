@@ -19,40 +19,57 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl RewriteDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &RewriteArtifact) -> RewriteArtifact {
-        let mut next = artifact.clone();
-        if let Some(value) = &self.before_fixture_json {
-            next.before_fixture_json = value.clone();
-        }
-        if let Some(value) = &self.lhs_json {
-            next.lhs_json = value.clone();
-        }
-        if let Some(value) = &self.rhs_json {
-            next.rhs_json = value.clone();
-        }
-        if let Some(bindings) = &self.parameter_bindings {
-            apply_map_delta(&mut next.parameter_bindings, bindings);
-        }
-        if let Some(layout) = &self.rule_layout {
-            apply_map_delta(&mut next.rule_layout, layout);
-        }
-        if let Some(modes) = &self.lod_mode_by_window {
-            apply_map_delta(&mut next.lod_mode_by_window, modes);
-        }
-        if let Some(value) = &self.before_pane_camera {
-            next.before_pane_camera = value.clone();
-        }
-        if let Some(value) = self.reorganize_epoch {
-            next.reorganize_epoch = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &RewriteArtifact) -> protocol::MutationApplyResult<RewriteArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(value) = &self.before_fixture_json {
+                next.before_fixture_json = value.clone();
+            }
+            if let Some(value) = &self.lhs_json {
+                next.lhs_json = value.clone();
+            }
+            if let Some(value) = &self.rhs_json {
+                next.rhs_json = value.clone();
+            }
+            if let Some(bindings) = &self.parameter_bindings {
+                apply_map_delta(&mut next.parameter_bindings, bindings)
+                    .map_err(|error| error.under(["parameterBindings"]))?;
+            }
+            if let Some(layout) = &self.rule_layout {
+                apply_map_delta(&mut next.rule_layout, layout)
+                    .map_err(|error| error.under(["ruleLayout"]))?;
+            }
+            if let Some(modes) = &self.lod_mode_by_window {
+                apply_map_delta(&mut next.lod_mode_by_window, modes)
+                    .map_err(|error| error.under(["lodModeByWindow"]))?;
+            }
+            if let Some(value) = &self.before_pane_camera {
+                next.before_pane_camera = value.clone();
+            }
+            if let Some(value) = self.reorganize_epoch {
+                next.reorganize_epoch = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
-fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<String, Option<V>>) {
+fn apply_map_delta<V: Clone>(
+    target: &mut BTreeMap<String, V>,
+    delta: &BTreeMap<String, Option<V>>,
+) -> protocol::MutationApplyResult<()> {
+    for (key, value) in delta {
+        if value.is_none() && !target.contains_key(key) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed map entry does not exist",
+            )
+            .at([key.as_str()]));
+        }
+    }
     for (key, value) in delta {
         match value {
             Some(v) => {
@@ -63,6 +80,7 @@ fn apply_map_delta<V: Clone>(target: &mut BTreeMap<String, V>, delta: &BTreeMap<
             }
         }
     }
+    Ok(())
 }
 
 /// 🪢 Merges a per-key map delta into `self`'s accumulated delta (per-key upsert of the newer
@@ -77,26 +95,29 @@ fn merge_map_delta<V>(dst: &mut Option<BTreeMap<String, Option<V>>>, src: Option
 }
 
 impl MutationDiff<RewriteSnapshot> for RewriteDiff {
-    fn apply(&self, snapshot: &RewriteSnapshot) -> RewriteSnapshot {
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.before_fixture_json {
-            next.before_fixture_json = value.clone();
-        }
-        if let Some(value) = &self.lhs_json {
-            next.lhs_json = value.clone();
-        }
-        if let Some(value) = &self.rhs_json {
-            next.rhs_json = value.clone();
-        }
-        if let Some(bindings) = &self.parameter_bindings {
-            apply_map_delta(&mut next.parameter_bindings, bindings);
-        }
-        if let Some(layout) = &self.rule_layout {
-            apply_map_delta(&mut next.rule_layout, layout);
-        }
-        next
+    fn apply(&self, snapshot: &RewriteSnapshot) -> protocol::MutationApplyResult<RewriteSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.before_fixture_json {
+                next.before_fixture_json = value.clone();
+            }
+            if let Some(value) = &self.lhs_json {
+                next.lhs_json = value.clone();
+            }
+            if let Some(value) = &self.rhs_json {
+                next.rhs_json = value.clone();
+            }
+            if let Some(bindings) = &self.parameter_bindings {
+                apply_map_delta(&mut next.parameter_bindings, bindings)
+                    .map_err(|error| error.under(["parameterBindings"]))?;
+            }
+            if let Some(layout) = &self.rule_layout {
+                apply_map_delta(&mut next.rule_layout, layout)
+                    .map_err(|error| error.under(["ruleLayout"]))?;
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {

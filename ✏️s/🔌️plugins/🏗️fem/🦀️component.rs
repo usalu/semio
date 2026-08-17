@@ -4,16 +4,54 @@ use semio_framework_plugin::Plugin;
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(register_all_engines)`
-/// escape hatch for both artifacts; `.setup()` itself is gone (W1c) — `Fem2dPlayApp::app_schema()`/
-/// `Fem3dPlayApp::app_schema()` now answer the one thing it used to survive for, registered
-/// automatically by each `register_document_app` call below.
+/// escape hatch for both artifacts; `.setup()` itself is gone (W1c). Ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET dissolved `apps::fem2d`/`apps::fem3d` into
+/// `editor::fem2d`/`editor::fem3d` (each still `Fem2dPlayApp`/`Fem3dPlayApp: ArtifactEditor`) plus new
+/// `viewer::fem2d`/`viewer::fem3d` (`Fem2dViewer`/`Fem3dViewer: ArtifactViewer`) — every subset now
+/// registers one editor and one viewer surface instead of one document app.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("fem")
         .label("FEM")
         .version("0.1.0")
         .artifact(crate::artifacts::fem2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .artifact(crate::artifacts::fem3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .document_app::<crate::apps::fem2d::Fem2dPlayApp>(crate::apps::fem2d::create_fem2d_app())
-        .document_app::<crate::apps::fem3d::Fem3dPlayApp>(crate::apps::fem3d::create_fem3d_app())
+        .editor::<crate::editor::fem2d::Fem2dPlayApp>(crate::editor::fem2d::create_fem2d_app())
+        .editor_mutation_roster::<crate::editor::fem2d::Fem2dPlayApp>()
+        .viewer::<crate::viewer::fem2d::Fem2dViewer>(crate::viewer::fem2d::create_fem2d_viewer())
+        .viewer_mutation_roster::<crate::viewer::fem2d::Fem2dViewer>()
+        .editor::<crate::editor::fem3d::Fem3dPlayApp>(crate::editor::fem3d::create_fem3d_app())
+        .editor_mutation_roster::<crate::editor::fem3d::Fem3dPlayApp>()
+        .viewer::<crate::viewer::fem3d::Fem3dViewer>(crate::viewer::fem3d::create_fem3d_viewer())
+        .viewer_mutation_roster::<crate::viewer::fem3d::Fem3dViewer>()
         .try_build()
 }
+
+//#region 🧪️SurfaceTests
+/// 🧪️ Contract §2.3/§2.5: each artifact's editor and viewer share one `Dialect`, and the viewer can
+/// never mutate the document store. Uses the real framework testkit helpers (w0-f gap 2 closure), not
+/// local stand-ins.
+#[cfg(test)]
+mod surface_tests {
+    use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+
+    #[test]
+    fn fem2d_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::fem2d::Fem2dViewer>();
+    }
+
+    #[test]
+    fn fem2d_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::fem2d::Fem2dPlayApp, crate::viewer::fem2d::Fem2dViewer>();
+    }
+
+    #[test]
+    fn fem3d_viewer_never_mutates() {
+        assert_viewer_never_mutates::<crate::viewer::fem3d::Fem3dViewer>();
+    }
+
+    #[test]
+    fn fem3d_editor_and_viewer_share_dialect() {
+        assert_editor_and_viewer_share_dialect::<crate::editor::fem3d::Fem3dPlayApp, crate::viewer::fem3d::Fem3dViewer>();
+    }
+}
+//#endregion 🧪️SurfaceTests

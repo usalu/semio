@@ -1,0 +1,9 @@
+{
+  "artifact": "s.space.space",
+  "standard": "1",
+  "subsets": {
+    "*": {
+      "name": "Unconstrained space index 1"
+    }
+  }
+}

@@ -19,7 +19,7 @@
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -114,8 +114,7 @@ impl PdfPagesDiff {
 }
 
 /// ▶️ Apply semantics (normative): `removed`/`modified` indices refer to BASE state (removals
-/// processed descending); `added` indices refer to FINAL state (ascending insert at
-/// `min(index,len)`). Out-of-range indices are graceful no-ops.
+/// processed descending); `added` indices refer to FINAL state (ascending insert).
 fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> Vec<PdfPage> {
     let mut pages: Vec<PdfPage> = base.to_vec();
     for m in &diff.modified {
@@ -134,8 +133,7 @@ fn apply_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> Vec<PdfPage> {
     let mut added_sorted: Vec<&PdfPageAdded> = diff.added.iter().collect();
     added_sorted.sort_by_key(|a| a.index);
     for a in added_sorted {
-        let at = a.index.min(pages.len());
-        pages.insert(at, a.page.clone());
+        pages.insert(a.index, a.page.clone());
     }
     pages
 }
@@ -330,8 +328,7 @@ fn apply_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> Vec<PdfDictEntr
     let mut added_sorted = diff.added.clone();
     added_sorted.sort_by_key(|a| a.index);
     for a in added_sorted {
-        let pos = a.index.min(entries.len());
-        entries.insert(pos, PdfDictEntry { key: a.key, value: a.item });
+        entries.insert(a.index, PdfDictEntry { key: a.key, value: a.item });
     }
     entries
 }
@@ -457,8 +454,7 @@ fn apply_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> Vec<PdfObject> {
     let mut added_sorted = diff.added.clone();
     added_sorted.sort_by_key(|a| a.index);
     for a in added_sorted {
-        let pos = a.index.min(items.len());
-        items.insert(pos, a.item);
+        items.insert(a.index, a.item);
     }
     items
 }
@@ -828,8 +824,7 @@ fn apply_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> Vec<
     let mut added_sorted = diff.added.clone();
     added_sorted.sort_by_key(|a| a.index);
     for a in added_sorted {
-        let pos = a.index.min(objects.len());
-        objects.insert(pos, PdfIndirectObject { id: a.id, value: a.value });
+        objects.insert(a.index, PdfIndirectObject { id: a.id, value: a.value });
     }
     objects
 }
@@ -975,29 +970,184 @@ pub struct PdfDiff {
     pub trailer: Option<PdfDictDiff>,
 }
 
-impl MutationDiff<PdfSnapshot> for PdfDiff {
-    fn apply(&self, base: &PdfSnapshot) -> PdfSnapshot {
-        let mut next = base.clone();
-        if let Some(v) = &self.declared_version {
-            next.declared_version = v.clone();
+fn validate_index_triple(base_len: usize, removed: &[usize], modified: &[usize], added: &[usize], field: &str) -> MutationApplyResult<()> {
+    let mut removed_set = HashSet::new();
+    for &index in removed {
+        if index >= base_len {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec![field.to_string(), index.to_string()]));
         }
-        if let Some(v) = &self.info {
-            next.info = v.clone();
+        if !removed_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec![field.to_string(), index.to_string()]));
         }
-        if let Some(pd) = &self.pages {
-            next.pages = apply_pages_diff(pd, &base.pages);
-            if self.objects.is_none() {
-                next.objects.clear();
-                next.trailer.clear();
+    }
+    let mut modified_set = HashSet::new();
+    for &index in modified {
+        if index >= base_len {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec![field.to_string(), index.to_string()]));
+        }
+        if removed_set.contains(&index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec![field.to_string(), index.to_string()]));
+        }
+        if !modified_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec![field.to_string(), index.to_string()]));
+        }
+    }
+    let final_len = base_len - removed_set.len() + added.len();
+    let mut added_set = HashSet::new();
+    for &index in added {
+        if index >= final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec![field.to_string(), index.to_string()]));
+        }
+        if !added_set.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec![field.to_string(), index.to_string()]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> MutationApplyResult<()> {
+    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "pages")
+}
+
+fn validate_named_keys<K: Eq + std::hash::Hash + Clone>(base: &[K], removed: &[K], modified: &[K], added: &[K], field: &str) -> MutationApplyResult<()> {
+    let base_set: HashSet<K> = base.iter().cloned().collect();
+    if base_set.len() != base.len() {
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "base collection contains duplicate keys").at([field]));
+    }
+    let mut removed_set = HashSet::new();
+    for key in removed {
+        if !base_set.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at([field]));
+        }
+        if !removed_set.insert(key.clone()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at([field]));
+        }
+    }
+    let mut modified_set = HashSet::new();
+    for key in modified {
+        if !base_set.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at([field]));
+        }
+        if removed_set.contains(key) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at([field]));
+        }
+        if !modified_set.insert(key.clone()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at([field]));
+        }
+    }
+    let mut added_set = HashSet::new();
+    for key in added {
+        if base_set.contains(key) || !added_set.insert(key.clone()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at([field]));
+        }
+    }
+    Ok(())
+}
+
+fn validate_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> MutationApplyResult<()> {
+    validate_named_keys(
+        &base.iter().map(|entry| entry.key.clone()).collect::<Vec<_>>(),
+        &diff.removed,
+        &diff.modified.iter().map(|item| item.key.clone()).collect::<Vec<_>>(),
+        &diff.added.iter().map(|item| item.key.clone()).collect::<Vec<_>>(),
+        "dict",
+    )?;
+    for modified in &diff.modified {
+        let entry = base.iter().find(|entry| entry.key == modified.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "dictionary modification target does not exist").at(vec!["dict".to_string(), modified.key.clone()]))?;
+        validate_value_diff(&modified.diff, &entry.value).map_err(|error| error.under(vec!["dict".to_string(), modified.key.clone()]))?;
+    }
+    let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
+    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "dict")
+}
+
+fn validate_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> MutationApplyResult<()> {
+    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "array")?;
+    for modified in &diff.modified {
+        let item = base.get(modified.index).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist").at(vec!["array".to_string(), modified.index.to_string()]))?;
+        validate_value_diff(&modified.diff, item).map_err(|error| error.under(vec!["array".to_string(), modified.index.to_string()]))?;
+    }
+    Ok(())
+}
+
+fn validate_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> MutationApplyResult<()> {
+    match diff {
+        PdfValueDiff::Replace { .. } => Ok(()),
+        PdfValueDiff::Bool { .. } if matches!(base, PdfObject::Bool(_)) => Ok(()),
+        PdfValueDiff::Int { .. } if matches!(base, PdfObject::Int(_)) => Ok(()),
+        PdfValueDiff::Real { .. } if matches!(base, PdfObject::Real(_)) => Ok(()),
+        PdfValueDiff::Str { .. } if matches!(base, PdfObject::Str(_)) => Ok(()),
+        PdfValueDiff::Name { .. } if matches!(base, PdfObject::Name(_)) => Ok(()),
+        PdfValueDiff::Ref { .. } if matches!(base, PdfObject::Ref(_)) => Ok(()),
+        PdfValueDiff::Array { diff } => match base {
+            PdfObject::Array(items) => validate_array_diff(diff, items),
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value")),
+        },
+        PdfValueDiff::Dict { diff } => match base {
+            PdfObject::Dict(entries) => validate_dict_diff(diff, entries),
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "dictionary diff targets a non-dictionary value")),
+        },
+        PdfValueDiff::Stream { dict, .. } => match base {
+            PdfObject::Stream { dict: entries, .. } => {
+                if let Some(dict) = dict {
+                    validate_dict_diff(dict, entries)?;
+                }
+                Ok(())
             }
-        }
-        if let Some(od) = &self.objects {
-            next.objects = apply_objects_diff(od, &base.objects);
-        }
-        if let Some(td) = &self.trailer {
-            next.trailer = apply_dict_diff(td, &base.trailer);
-        }
-        next
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "stream diff targets a non-stream value")),
+        },
+        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a value of another kind")),
+    }
+}
+
+fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> MutationApplyResult<()> {
+    let keys: Vec<ObjRef> = base.iter().map(|object| object.id).collect();
+    validate_named_keys(&keys, &diff.removed, &diff.modified.iter().map(|item| item.id).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.id).collect::<Vec<_>>(), "objects")?;
+    let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
+    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "objects")?;
+    for modified in &diff.modified {
+        let object = base.iter().find(|object| object.id == modified.id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist").at(["objects"]))?;
+        validate_value_diff(&modified.diff, &object.value).map_err(|error| error.under(["objects"]))?;
+    }
+    Ok(())
+}
+
+fn validate_pdf_diff(diff: &PdfDiff, base: &PdfSnapshot) -> MutationApplyResult<()> {
+    if let Some(pages) = &diff.pages {
+        validate_pages_diff(pages, &base.pages).map_err(|error| error.under(["pages"]))?;
+    }
+    if let Some(objects) = &diff.objects {
+        validate_objects_diff(objects, &base.objects).map_err(|error| error.under(["objects"]))?;
+    }
+    if let Some(trailer) = &diff.trailer {
+        validate_dict_diff(trailer, &base.trailer).map_err(|error| error.under(["trailer"]))?;
+    }
+    Ok(())
+}
+
+fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {
+    let mut next = base.clone();
+    if let Some(v) = &diff.declared_version {
+        next.declared_version = v.clone();
+    }
+    if let Some(v) = &diff.info {
+        next.info = v.clone();
+    }
+    if let Some(pd) = &diff.pages {
+        next.pages = apply_pages_diff(pd, &base.pages);
+    }
+    if let Some(od) = &diff.objects {
+        next.objects = apply_objects_diff(od, &base.objects);
+    }
+    if let Some(td) = &diff.trailer {
+        next.trailer = apply_dict_diff(td, &base.trailer);
+    }
+    next
+}
+
+impl MutationDiff<PdfSnapshot> for PdfDiff {
+    fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
+        validate_pdf_diff(self, base)?;
+        Ok(apply_pdf_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce absorb (`## Absorb` contract).
@@ -1053,7 +1203,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction): the
     /// state delta from `self.apply(base)` back to `base`.
     fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = self.apply(base);
+        let mid = apply_pdf_diff_unchecked(self, base);
         Self::between(&mid, base)
     }
 
@@ -2445,6 +2595,14 @@ mod handcrafted_diff_codec_tests {
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
+    #[test]
+    fn rejects_missing_page_target_without_mutating_base() {
+        let base = PdfSnapshot::default();
+        let diff = PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff::default() }], ..Default::default() }), ..Default::default() };
+        let result = diff.apply(&base);
+        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(base, PdfSnapshot::default());
+    }
 }
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
@@ -2516,8 +2674,8 @@ mod tests {
     #[test]
     fn between_roundtrip_law_snapshot_level() {
         let (a, b) = (base_snapshot(), sweep_b());
-        assert_eq!(PdfDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(PdfDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
     }
 
     #[test]
@@ -2532,10 +2690,10 @@ mod tests {
     fn inverse_law_diff_level() {
         let (a, b) = (base_snapshot(), sweep_b());
         let d = PdfDiff::between(&a, &b);
-        let mid = d.apply(&a);
+        let mid = d.apply(&a).unwrap();
         assert_eq!(mid, b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&mid), a);
+        assert_eq!(inv.apply(&mid).unwrap(), a);
     }
     //#endregion inverse_law
 
@@ -2550,10 +2708,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b"), page([0.0; 4], None, 0, "c")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert_eq!(p.removed, vec![0]);
@@ -2569,10 +2727,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "g") }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => assert_eq!(p.added.len(), 2, "both inserts must survive"),
             None => panic!("expected pages diff"),
@@ -2584,10 +2742,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 0, page: page([0.0; 4], None, 0, "x") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(90), ..Default::default() } }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert!(p.modified.is_empty(), "the patch must land INSIDE the carried added payload");
@@ -2602,10 +2760,10 @@ mod tests {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(180), ..Default::default() } }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.pages {
             Some(p) => {
                 assert_eq!(p.removed, vec![0]);
@@ -2631,8 +2789,8 @@ mod tests {
         right_tail.absorb(d3.clone());
         let mut right = d1.clone();
         right.absorb(right_tail);
-        assert_eq!(left.apply(&s0), s3);
-        assert_eq!(right.apply(&s0), s3);
+        assert_eq!(left.apply(&s0).unwrap(), s3);
+        assert_eq!(right.apply(&s0).unwrap(), s3);
         assert_eq!(left, right);
     }
     //#endregion absorb_law (pages / index-keyed)
@@ -2650,10 +2808,10 @@ mod tests {
             modified: vec![PdfObjectModified { id: oref(5, 0), diff: PdfValueDiff::Dict { diff: PdfDictDiff { added: vec![PdfDictAdded { index: 1, key: "Y".into(), item: PdfObject::Int(2) }], ..Default::default() } } }],
             ..Default::default()
         });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => {
                 assert!(o.modified.is_empty());
@@ -2668,10 +2826,10 @@ mod tests {
         let base = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { modified: vec![PdfObjectModified { id: oref(1, 0), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { removed: vec![oref(1, 0)], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => {
                 assert_eq!(o.removed, vec![oref(1, 0)]);
@@ -2686,10 +2844,10 @@ mod tests {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: PdfObject::Int(1) }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 1, id: oref(6, 0), value: PdfObject::Int(2) }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.objects {
             Some(o) => assert_eq!(o.added.len(), 2),
             None => panic!("expected objects diff"),
@@ -2712,8 +2870,8 @@ mod tests {
         right_tail.absorb(d3.clone());
         let mut right = d1.clone();
         right.absorb(right_tail);
-        assert_eq!(left.apply(&s0), s3);
-        assert_eq!(right.apply(&s0), s3);
+        assert_eq!(left.apply(&s0).unwrap(), s3);
+        assert_eq!(right.apply(&s0).unwrap(), s3);
         assert_eq!(left, right);
     }
     //#endregion absorb_law (objects / id-keyed)
@@ -2730,10 +2888,10 @@ mod tests {
             }),
             ..Default::default()
         };
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.trailer {
             Some(t) => {
                 assert!(t.modified.is_empty());
@@ -2748,10 +2906,10 @@ mod tests {
         let base = PdfSnapshot { trailer: vec![entry("A", PdfObject::Int(1)), entry("B", PdfObject::Int(2))], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { modified: vec![PdfDictModified { key: "A".into(), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() }), ..Default::default() };
         let d2 = PdfDiff { trailer: Some(PdfDictDiff { removed: vec!["A".into()], ..Default::default() }), ..Default::default() };
-        let sequential = d2.apply(&d1.apply(&base));
+        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base), sequential);
+        assert_eq!(combined.apply(&base).unwrap(), sequential);
         match &combined.trailer {
             Some(t) => {
                 assert_eq!(t.removed, vec!["A".to_string()]);
@@ -2791,8 +2949,8 @@ mod tests {
     #[test]
     fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
-        assert_eq!(PdfDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(PdfDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
 

@@ -34,7 +34,7 @@ use store::ArtifactDsl;
 /// does not implement either, and it is out of this plugin's scope to add them there. `MathematicalGraphDsl`
 /// below — the only place this type is ever nested inside something serde-derived (`app_commands!`
 /// unconditionally derives `Serialize`/`Deserialize` on the generated `MathematicalCommand` enum, even though
-/// its actual wire codec is `dsl::DslOps`, never `serde_json`; see `crate::apps::mathematical`'s
+/// its actual wire codec is `dsl::DslOps`, never `serde_json`; see `crate::editor::mathematical`'s
 /// `🔖️Commands` doc comment) — hand-implements those traits by round-tripping through the fully
 /// serde-able `MathematicalGraph`/`MathematicalEdge` JSON shape instead of deriving them field-by-field.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]

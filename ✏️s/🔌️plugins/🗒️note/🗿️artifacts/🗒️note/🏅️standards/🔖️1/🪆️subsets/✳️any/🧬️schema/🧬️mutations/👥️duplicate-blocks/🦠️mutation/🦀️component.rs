@@ -24,7 +24,7 @@ pub fn duplicate_blocks(source_ids: Vec<String>, blocks: Vec<crate::artifacts::n
 impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlocks {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "blocks", kind: "duplicate-blocks", record: "DuplicatedBlocks" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

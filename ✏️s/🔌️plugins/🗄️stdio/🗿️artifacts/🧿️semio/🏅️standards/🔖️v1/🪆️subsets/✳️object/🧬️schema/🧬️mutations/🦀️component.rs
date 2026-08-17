@@ -61,11 +61,11 @@ mod tests {
     /// stale pre-operation `base` — same fix `✳️text`'s corrected `round_trip` helper established
     /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
     fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(&restored).apply(&restored);
+            restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -110,7 +110,7 @@ mod tests {
         base.brep = None;
         let delete = SemioObjectMutation::DeleteBrep(delete_brep::mutation::DeleteBrep {});
         assert!(delete.inverse(&base).is_empty(), "deleting an already-absent slot has nothing to undo");
-        assert_eq!(delete.diff(&base).apply(&base), base, "deleting an absent slot is a no-op");
+        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
     }
 
     #[test]

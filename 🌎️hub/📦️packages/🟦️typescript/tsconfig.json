@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
+    "noEmit": true,
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@semio-tech/framework-os": ["../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "📤️dist"]
+}

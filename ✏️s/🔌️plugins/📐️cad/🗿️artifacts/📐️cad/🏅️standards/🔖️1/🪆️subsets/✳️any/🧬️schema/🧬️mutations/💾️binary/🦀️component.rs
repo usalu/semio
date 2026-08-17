@@ -47,13 +47,13 @@ mod tests {
 
     #[test]
     fn cad_projection_defaults() {
-        let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
+        let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).expect("store");
         assert_eq!(store.snapshot().expect("projection").id, "cad");
     }
 
     #[test]
     fn create_shape_model_round_trips_through_store() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).expect("store");
         let sample = sample_model_child("store-round-trip-1");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() })], description: None }).expect("apply");
         let scene = store.snapshot().expect("projection");

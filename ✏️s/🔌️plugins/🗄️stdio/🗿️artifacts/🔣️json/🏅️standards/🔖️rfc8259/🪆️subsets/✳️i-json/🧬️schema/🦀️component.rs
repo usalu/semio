@@ -43,13 +43,13 @@ pub mod derived_construction {
             Ok(Self(JsonAnyBuilder::from_binary(bytes)?))
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.0.mutate(mutation);
             (Self(inner), diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> Self {
-            Self(self.0.absorb(diff))
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self(self.0.absorb(diff)?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard RFC 7493
@@ -366,8 +366,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec JsonIJsonBuilderFacets {
-        construction: derived_construction::JsonIJsonBuilderConstruction,
-        analysis: derived_analysis::JsonIJsonAnalyzerAnalysis,
+        construction: JsonIJsonBuilderConstruction,
+        analysis: JsonIJsonAnalyzerAnalysis,
         composition: crate::artifacts::json::standards::v_rfc8259::subsets::i_json::io::derived_composition::JsonIJsonComposerComposition,
     }
     builder: JsonIJsonBuilder,

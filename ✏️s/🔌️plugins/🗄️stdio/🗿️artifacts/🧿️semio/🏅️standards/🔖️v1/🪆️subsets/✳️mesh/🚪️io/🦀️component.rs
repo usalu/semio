@@ -227,7 +227,7 @@ pub mod derived_composition {
         /// (`ws-codec-workflow-report.md`) — same 6 test names, same shape, only the facet modules and
         /// demo-case helpers differ.
         mod conformance_laws {
-            use super::*;
+            
             use crate::artifacts::semio::standards::v1::subsets::mesh::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 
@@ -254,7 +254,7 @@ pub mod derived_composition {
             fn grammar_conformance_law() {
                 let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
                 let recognizer = dsl::Recognizer::compile(&grammar);
-                let text = crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::print_mesh_dsl(&crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::demo_mesh_snapshot());
+                let text = snapshot::print_mesh_dsl(&snapshot::demo_mesh_snapshot());
                 let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
                 let reconstructed = format!("{}\n{body}", envelope.envelope_id());
                 assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -291,7 +291,7 @@ pub mod derived_composition {
             #[test]
             fn protocol_walk_law() {
                 let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-                let packed = crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::encode_mesh_pack(&crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::demo_mesh_snapshot());
+                let packed = snapshot::encode_mesh_pack(&snapshot::demo_mesh_snapshot());
                 let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
                 let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -320,7 +320,7 @@ pub mod derived_composition {
                 const FIXTURE_DSL: &str = include_str!("../📚️examples/🧊️cube/🖼️assets/🗣️example.dsl.semio");
                 const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🧊️cube/🖼️assets/🎒️example.pack.semio");
 
-                let demo = crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::demo_mesh_snapshot();
+                let demo = snapshot::demo_mesh_snapshot();
 
                 let parsed = <snapshot::SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_mesh_snapshot()");

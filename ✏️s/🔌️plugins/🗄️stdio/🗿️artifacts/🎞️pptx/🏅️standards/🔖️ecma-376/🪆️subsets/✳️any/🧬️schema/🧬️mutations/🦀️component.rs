@@ -6,14 +6,13 @@ use crate::artifacts::pptx::schema::diff::{
     enc_xml_parts, split_top_level, strip_brackets,
 };
 use crate::artifacts::pptx::schema::diff::{
-    dec_paragraph_bin, dec_part_bin, dec_rel_bin, dec_shape_bin, dec_slide_bin, dec_transform_bin, dec_xml_parts_bin, enc_paragraph_bin, enc_part_bin, enc_rel_bin, enc_shape_bin, enc_slide_bin, enc_transform_bin, enc_xml_parts_bin, read_str_lp,
+    dec_paragraph_bin, dec_part_bin, dec_rel_bin, dec_slide_bin, dec_xml_parts_bin, enc_paragraph_bin, enc_part_bin, enc_rel_bin, enc_slide_bin, enc_xml_parts_bin, read_str_lp,
     write_str_lp,
 };
 use crate::artifacts::pptx::schema::diff::{diff_insert_shape, diff_insert_slide, diff_move_slide, diff_remove_shape, diff_remove_slide, diff_set_shape_position, diff_set_shape_text, diff_set_snapshot, PptxDiff};
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxShape, PptxSlide, PptxSnapshotRecord, PptxTransform};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -86,10 +85,15 @@ pub enum PptxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> PptxDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -107,8 +111,8 @@ fn shape_at<'a>(base: &'a PptxSnapshot, slide_index: usize, shape_index: usize) 
 impl Mutation<PptxSnapshot> for PptxMutation {
     type Diff = PptxDiff;
 
-    fn diff(&self, base: &PptxSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             PptxMutation::NoMutation => PptxDiff::default(),
             PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             PptxMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
@@ -118,7 +122,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
             PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
             PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone()),
             PptxMutation::SetShapePosition { slide_index, shape_index, position } => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
-        }
+        })
     }
 
     fn inverse(&self, base: &PptxSnapshot) -> Vec<Self> {
@@ -258,7 +262,7 @@ struct PptxMutationRecord {
     snapshot: Option<PptxSnapshotRecord>,
 }
 
-impl protocol::OpText for PptxMutation {
+impl OpText for PptxMutation {
     fn print_op(&self) -> String {
         let record = match self {
             PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
@@ -392,7 +396,7 @@ fn dec_text_frame_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PptxPara
 /// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
 /// match uses.
-impl protocol::OpBinary for PptxMutation {
+impl OpBinary for PptxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
         Ok(store::pack_rt::encode_wire_value(&value))
@@ -557,7 +561,7 @@ mod tests {
         base.presentation.slides[0].shapes.push(PptxShape::Picture { blip_rel_id: "rId5".into(), position: PptxTransform::default() });
         let mutation = PptxMutation::SetShapeText { slide_index: 0, shape_index: 1, text_frame: vec![PptxParagraph::text("nope")] };
         let diff = Mutation::diff(&mutation, &base);
-        assert!(<PptxDiff as DiffAlgebra<PptxSnapshot>>::is_empty(&diff));
+        assert!(<PptxDiff as DiffAlgebra<PptxSnapshot>>::is_empty(diff.diff()));
     }
 
     //#region 🔖️Fixtures
@@ -685,7 +689,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_pptx_mutation(&mut via_apply, &mutation);
@@ -710,9 +714,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -720,10 +724,10 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &PptxSnapshot, d1: &PptxDiff, d2: &PptxDiff) -> PptxDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -738,9 +742,9 @@ mod tests {
             let base = fixture();
             let slide = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("f")], position: PptxTransform::default() }] };
             let d1 = Mutation::diff(&PptxMutation::InsertSlide { index: 2, slide: slide.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&PptxMutation::RemoveSlide { index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -754,9 +758,9 @@ mod tests {
             let f = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("f")], position: PptxTransform::default() }] };
             let g = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("g")], position: PptxTransform::default() }] };
             let d1 = Mutation::diff(&PptxMutation::InsertSlide { index: 2, slide: f.clone() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&PptxMutation::InsertSlide { index: 2, slide: g.clone() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == f));
@@ -768,9 +772,9 @@ mod tests {
             let base = fixture();
             let f = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("f")], position: PptxTransform::default() }] };
             let d1 = Mutation::diff(&PptxMutation::InsertSlide { index: 1, slide: f }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&PptxMutation::SetShapeText { slide_index: 1, shape_index: 0, text_frame: vec![PptxParagraph::text("patched")] }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -782,9 +786,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&PptxMutation::SetShapeText { slide_index: 1, shape_index: 0, text_frame: vec![PptxParagraph::text("patched")] }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&PptxMutation::RemoveSlide { index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = slides_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -796,23 +800,23 @@ mod tests {
             let f = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("f")], position: PptxTransform::default() }] };
             let g = PptxSlide { shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("g")], position: PptxTransform::default() }] };
             let d1 = Mutation::diff(&PptxMutation::InsertSlide { index: 2, slide: f }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&PptxMutation::InsertSlide { index: 2, slide: g }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&PptxMutation::RemoveSlide { index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -822,11 +826,11 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&a, &b), &a).unwrap(), b);
+        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-slide presentation diffed against a mutated variant.
         let real = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(PptxPresentation {
@@ -838,8 +842,8 @@ mod tests {
         let mut mutated = real.clone();
         apply_pptx_mutation(&mut mutated, &PptxMutation::SetShapeText { slide_index: 0, shape_index: 0, text_frame: vec![PptxParagraph::text("Chapter Two")] });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
+        assert_eq!(MutationDiff::apply(&<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -881,9 +885,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
         let diff_ba = <PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
         assert!(<PptxDiff as DiffAlgebra<PptxSnapshot>>::between(&a, &a).is_empty());
 
         // opc: content_types (both defaults+overrides), parts, relationships all populated.

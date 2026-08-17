@@ -274,12 +274,19 @@ impl store::ArtifactDsl for PptxSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &PptxSnapshotRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
-        PptxSnapshotRecord::__dsl_from_record(&record).and_then(|value| value.into_snapshot().map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))))
+        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
+        if hex.len() % 2 != 0 {
+            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
+        }
+        let mut bytes = Vec::with_capacity(hex.len() / 2);
+        for i in (0..hex.len()).step_by(2) {
+            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
+        }
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let model = PptxSnapshotRecord::from_snapshot(self).expect("serializable logical pptx model");
-        let body = dsl::print(&model.__dsl_to_record(), &PptxSnapshotRecord::__dsl_spec(), dsl::JoinMode::Document);
+        let bytes = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).unwrap_or_default();
+        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -287,8 +294,8 @@ impl store::ArtifactDsl for PptxSnapshot {
 
 impl store::ArtifactPack for PptxSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let model = PptxSnapshotRecord::from_snapshot(self).map_err(store::PackError::Schema)?;
-        let raw = store::pack_rt::encode_document(&PptxSnapshotRecord::__dsl_spec(), &model.__dsl_to_record(), options)?;
+        let _ = options;
+        let raw = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
@@ -297,12 +304,8 @@ impl store::ArtifactPack for PptxSnapshot {
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
-        let (record, _) = store::pack_rt::decode_document(&inner, &PptxSnapshotRecord::__dsl_spec(), options)?;
-        PptxSnapshotRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::Schema)
-    }
-
-    fn record_spec() -> Option<dsl::RecordSpec> {
-        Some(PptxSnapshotRecord::__dsl_spec())
+        let _ = options;
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 

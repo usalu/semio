@@ -90,10 +90,10 @@ mod tests {
     }
 
     fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
-        let (forward, _messages) = apply_mutation(snapshot, operation);
+        let (forward, _messages) = apply_mutation(snapshot, operation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
-            let (next, _messages) = apply_mutation(&restored, &back);
+            let (next, _messages) = apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation snapshot");
@@ -156,8 +156,12 @@ mod tests {
     #[test]
     fn connect_disconnect_nodes_round_trip() {
         let mut snapshot = empty_wires_snapshot();
-        snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).0;
-        snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).0;
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A")))
+            .expect("valid mutation")
+            .0;
+        snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B")))
+            .expect("valid mutation")
+            .0;
         let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
         let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));

@@ -393,21 +393,21 @@ mod wasm_bridge {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DrawEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    DrawStore::new(envelope)
+                    DrawStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)),
+                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
         pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
         pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]

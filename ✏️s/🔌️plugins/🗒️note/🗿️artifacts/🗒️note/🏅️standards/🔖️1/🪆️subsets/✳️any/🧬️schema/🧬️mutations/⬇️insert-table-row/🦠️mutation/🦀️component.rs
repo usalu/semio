@@ -22,7 +22,7 @@ pub fn insert_table_row(id: String) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableRow {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertedTableRow" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

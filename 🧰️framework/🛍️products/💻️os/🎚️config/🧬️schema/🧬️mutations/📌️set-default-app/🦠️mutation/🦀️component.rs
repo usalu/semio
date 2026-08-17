@@ -26,10 +26,8 @@ pub fn set_default_app(dialect: ArtifactDialect, role: AppRole, app: AppRef) -> 
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "default-app", kind: "set-default-app", record: "Set" };
 
-    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
-    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
-        MutationOutcome::new(super::diff::diff(self, base))
+        super::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {

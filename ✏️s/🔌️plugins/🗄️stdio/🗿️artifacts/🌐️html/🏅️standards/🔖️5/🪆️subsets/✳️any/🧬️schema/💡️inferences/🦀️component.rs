@@ -23,7 +23,7 @@ pub struct HtmlInference {
     pub outline: HtmlOutline,
 }
 
-impl protocol::Inference<HtmlSnapshot> for HtmlInference {
+impl Inference<HtmlSnapshot> for HtmlInference {
     fn infer(snapshot: &HtmlSnapshot) -> Self {
         Self { outline: HtmlOutline::compute(snapshot) }
     }

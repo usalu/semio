@@ -9,7 +9,6 @@ use crate::artifacts::step::schema::diff::{
 };
 use crate::artifacts::step::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::artifacts::step::StepSnapshot;
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -64,10 +63,15 @@ pub enum StepMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot` — diff is the single semantics source: computed first,
 /// then applied, never re-derived by hand.
-pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> StepDiff {
-    let diff = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <StepDiff as MutationDiff<StepSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
+    let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -75,8 +79,8 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 impl Mutation<StepSnapshot> for StepMutation {
     type Diff = StepDiff;
 
-    fn diff(&self, base: &StepSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             StepMutation::NoMutation => StepDiff::default(),
 
             StepMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
@@ -137,7 +141,7 @@ impl Mutation<StepSnapshot> for StepMutation {
                 },
                 _ => StepDiff::default(),
             },
-        }
+        })
     }
 
     fn inverse(&self, base: &StepSnapshot) -> Vec<Self> {
@@ -246,7 +250,7 @@ impl OpText for StepMutation {
 /// Reuses `StepDiff`'s `pub(crate)` recursive `enc_value_bin`/`enc_entity_bin`/
 /// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported
 /// above) — same intra-artifact-reuse split the TEXT codec above already uses.
-impl protocol::OpBinary for StepMutation {
+impl OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             StepMutation::NoMutation => 0,
@@ -424,11 +428,11 @@ mod tests {
         }
     }
 
-    /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).apply(base) == { apply(&mut s, m); s }`
+    /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base) == { apply(&mut s, m); s }`
     /// and the returned diff equals `m.diff(base)`.
     fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
         let expected_diff = <StepMutation as Mutation<StepSnapshot>>::diff(&m, base);
-        let expected_state = expected_diff.apply(base);
+        let expected_state = expected_diff.diff().apply(base).expect("valid mutation diff");
         let mut actual_state = base.clone();
         let actual_diff = apply_step_mutation(&mut actual_state, &m);
         assert_eq!(actual_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
@@ -442,19 +446,27 @@ mod tests {
         let mut next = base.clone();
         next.entities[0].name = "X".into();
         assert_mutation_diff_law(&base, StepMutation::SetSnapshot { snapshot: next });
-        assert_mutation_diff_law(&base, StepMutation::SetFileDescription { file_description: crate::artifacts::step::schema::snapshot::StepFileDescription { description: vec!["d".into()], implementation_level: "2;1".into() } });
-        assert_mutation_diff_law(&base, StepMutation::SetFileName { file_name: crate::artifacts::step::schema::snapshot::StepFileName { name: "n".into(), ..Default::default() } });
-        assert_mutation_diff_law(&base, StepMutation::SetFileSchema { file_schema: crate::artifacts::step::schema::snapshot::StepFileSchema { schemas: vec!["X".into()] } });
+        assert_mutation_diff_law(&base, StepMutation::SetFileDescription { file_description: StepFileDescription { description: vec!["d".into()], implementation_level: "2;1".into() } });
+        assert_mutation_diff_law(&base, StepMutation::SetFileName { file_name: StepFileName { name: "n".into(), ..Default::default() } });
+        assert_mutation_diff_law(&base, StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["X".into()] } });
         assert_mutation_diff_law(&base, StepMutation::InsertEntity { index: 1, entity: entity(50, "NEW", vec![]) });
         assert_mutation_diff_law(&base, StepMutation::RemoveEntity { id: 2 });
         assert_mutation_diff_law(&base, StepMutation::SetEntityName { id: 1, name: "RENAMED".into() });
         assert_mutation_diff_law(&base, StepMutation::SetEntityArg { id: 1, arg_index: 1, value: SV::Real(9.0) });
         assert_mutation_diff_law(&base, StepMutation::InsertEntityArg { id: 1, arg_index: 2, value: SV::Enum("T".into()) });
         assert_mutation_diff_law(&base, StepMutation::RemoveEntityArg { id: 1, arg_index: 0 });
-        // Graceful no-ops on missing keys must never panic.
-        assert_mutation_diff_law(&base, StepMutation::RemoveEntity { id: 999 });
-        assert_mutation_diff_law(&base, StepMutation::SetEntityArg { id: 999, arg_index: 0, value: SV::Unset });
-        assert_mutation_diff_law(&base, StepMutation::RemoveEntityArg { id: 1, arg_index: 99 });
+    }
+
+    #[test]
+    fn missing_and_out_of_range_targets_are_rejected_without_mutating() {
+        let base = base_snapshot();
+        let mut snapshot = base.clone();
+        let outcome = apply_step_mutation(&mut snapshot, &StepMutation::RemoveEntity { id: 999 });
+        assert_eq!(snapshot, base);
+        assert_eq!(outcome.messages()[0].target, vec!["entities", "999"]);
+        let outcome = apply_step_mutation(&mut snapshot, &StepMutation::RemoveEntityArg { id: 1, arg_index: 99 });
+        assert_eq!(snapshot, base);
+        assert_eq!(outcome.messages()[0].target, vec!["entities", "1", "args", "99"]);
     }
 
     /// 🧪️ `inverse_law` (mutation level): every variant's `inverse()` round-trips.
@@ -462,7 +474,7 @@ mod tests {
     fn inverse_law_mutation_level_round_trips_every_variant() {
         let base = base_snapshot();
         let variants = vec![
-            StepMutation::SetFileSchema { file_schema: crate::artifacts::step::schema::snapshot::StepFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] } },
+            StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] } },
             StepMutation::InsertEntity { index: 1, entity: entity(50, "NEW", vec![SV::Integer(3)]) },
             StepMutation::RemoveEntity { id: 2 },
             StepMutation::SetEntityName { id: 1, name: "RENAMED".into() },
@@ -492,9 +504,9 @@ mod tests {
         let mutations = vec![
             StepMutation::NoMutation,
             StepMutation::SetSnapshot { snapshot: base.clone() },
-            StepMutation::SetFileDescription { file_description: crate::artifacts::step::schema::snapshot::StepFileDescription { description: vec!["d1".into(), "d2".into()], implementation_level: "2;1".into() } },
+            StepMutation::SetFileDescription { file_description: StepFileDescription { description: vec!["d1".into(), "d2".into()], implementation_level: "2;1".into() } },
             StepMutation::SetFileName {
-                file_name: crate::artifacts::step::schema::snapshot::StepFileName {
+                file_name: StepFileName {
                     name: "n.step".into(),
                     timestamp: "2026-08-10T00:00:00".into(),
                     author: vec!["A".into()],
@@ -504,7 +516,7 @@ mod tests {
                     authorization: "auth".into(),
                 },
             },
-            StepMutation::SetFileSchema { file_schema: crate::artifacts::step::schema::snapshot::StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into(), "CONFIG_CONTROL_DESIGN".into()] } },
+            StepMutation::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into(), "CONFIG_CONTROL_DESIGN".into()] } },
             StepMutation::InsertEntity {
                 index: 1,
                 entity: entity(

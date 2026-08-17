@@ -16,7 +16,7 @@ pub struct SetPrimitiveTopology {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for SetPrimitiveTopology {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "primitive", kind: "set-primitive-topology", record: "SetPrimitiveTopology" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {

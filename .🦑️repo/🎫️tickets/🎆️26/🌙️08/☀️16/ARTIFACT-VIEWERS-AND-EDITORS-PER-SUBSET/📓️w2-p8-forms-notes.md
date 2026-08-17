@@ -189,9 +189,9 @@ compile dependency from another plugin. Unlike cad's pilot (which had `🎪️de
 ## Verification
 
 - `RUSTC_WRAPPER="" cargo check -p semio-s-plugin-forms --all-targets --keep-going`, output appended
-  across four runs to `🧪️w2-p8-forms-cargo.txt`:
-  - Every run: **0 errors anchored inside `📋️forms` files** (`grep -B2 -A8 "^error" … | grep -c
-    "📋️forms"` reads 0 every time — confirmed explicitly, not assumed).
+  across SIX runs (over roughly 20 minutes) to `🧪️w2-p8-forms-cargo.txt`:
+  - **Every single run: 0 errors anchored inside `📋️forms` files** (`grep -B2 -A8 "^error" … | grep -c
+    "📋️forms"` reads 0 every time — confirmed explicitly on each run, not assumed once and extrapolated).
   - Run 1: 3 errors, all inside `semio-framework-plugin`'s own `🔌️plugin/🦀️component.rs` (missing
     `messages`/`report` fields on `AppFrame`, missing `snapshot_with_conflicts` method) — confirmed
     live-edited (`git status --porcelain` shows ` M`, `git log --date=iso` shows a commit at
@@ -200,41 +200,64 @@ compile dependency from another plugin. Unlike cad's pilot (which had `🎪️de
   - Run 2: failure moved upstream to `semio-framework-os-kernel`'s `🏪️store/🦀️component.rs` (missing
     `edit_messages` field, `Conflict`/`HistoryConflict` type mismatch) — same live-edit fingerprint
     confirmed (`git status` ` M`, same day's commits).
-  - Run 3/4: failure moved back into `semio-framework-plugin`'s own file with a different symptom
+  - Runs 3–4: failure moved back into `semio-framework-plugin`'s own file with a different symptom
     (`AppCommand::SetMergePolicy`/`ResolveConflict`/`ReadConflicts` non-exhaustive match) — same file,
-    still ` M`, still today — the churn is genuinely still in flight, moving between the two crates
-    exactly as the pilot's report and the w0-f-report both predicted for this exact class of concurrent
-    refactor.
-  - This packet's own crate never got a chance to finish a full `--all-targets` pass to completion
-    during this session purely because of this upstream churn — not because of anything in `📋️forms`'s
-    own files, confirmed on every single run.
-- `cargo test -p semio-s-plugin-forms` — not run to a pass/fail result; blocked by the same upstream
-  compile failure (a crate that fails `cargo check` cannot be tested). Output (the same compile failure)
-  captured in `🧪️w2-p8-forms-test.txt`.
-- Repo-wide grep for `apps::forms` / `🎛️apps/📋️forms` (outside-lease referrers) — see above, 0 real
-  hits.
-- `policyViewerPurityBreaches` self-check (manual grep, `bun ./📜️script.ts policy` not run this
-  session — see Handoff): 0 hits for `::editor::`, `.mutation(`, `Emit::mutations`,
-  `artifact_mutations` anywhere under the `👁️viewer` tree.
+    still ` M`, still today.
+  - Runs 5–6 (background-polled): failure moved a third time, now 165 errors inside
+    `semio-s-plugin-stdio`'s own `💾️binary` artifact (`fn diff(...) -> Self::Diff` returning a bare
+    `BinaryDiff` where the trait now expects `MutationOutcome<BinaryDiff>`) — the exact
+    `protocol::Mutation` trait-shape sweep w0-f-report's own account describes landing across "~15 other
+    pre-existing impls"; `semio-s-plugin-stdio` is one of the two crates this packet's own brief
+    pre-warned as "known-broken by live peer sessions." **0 errors in `📋️forms` on this run either.**
+  - Net: the failure genuinely migrated through FOUR different files across THREE different crates over
+    six consecutive runs — `semio-framework-plugin` → `semio-framework-os-kernel` → `semio-framework-plugin`
+    (different symptom) → `semio-s-plugin-stdio` — never once settling inside `📋️forms`'s own files. This
+    is the textbook "concurrent workspace churn" pattern the pilot's report and w0-f-report both
+    predicted for this exact class of in-flight refactor (a THIRD ticket,
+    MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS, changing `protocol::Mutation`'s
+    `diff()` return shape repo-wide while this packet was running). `📋️forms` itself never got a chance
+    to finish a full `--all-targets` pass to completion during this session purely because of this
+    upstream churn.
+- `cargo test -p semio-s-plugin-forms` — run once, blocked by the same upstream chain: 269 errors, all
+  inside `semio-s-plugin-stdio` (0 in `📋️forms`, confirmed by the same grep). Output captured in
+  `🧪️w2-p8-forms-test.txt`. A crate whose own dependency fails `cargo check` cannot be tested; this is
+  not a `📋️forms` test failure.
+- Repo-wide grep for `apps::forms` / `🎛️apps/📋️forms` (outside-lease referrers) — 0 real hits (every
+  match is inside an already-closed ticket's historical scratch/report file); also confirmed no other
+  crate's `Cargo.toml` depends on `semio-s-plugin-forms` at all.
+- `policyViewerPurityBreaches` self-check: manual grep for `::editor::`, `.mutation(`,
+  `Emit::mutations`, `artifact_mutations` anywhere under the `👁️viewer` tree — 0 hits.
+- `bun ./📜️script.ts policy` — run to completion this session (full repo-wide run, output summarized in
+  `🧪️w2-p8-forms-policy.txt`). Cross-checked against `.🦑️repo/⚡️cache/breaches/compose.json` directly
+  (the same way the cad pilot did):
+  - `taxonomy/surface-completeness`: 2 total repo-wide (both `🔱️trinity`, unrelated to this packet),
+    **0 for `📋️forms`**.
+  - `taxonomy/surface-scaffold-residue`: 222 total repo-wide (other subsets not yet migrated, expected,
+    not this packet's job), **0 for `📋️forms`**.
+  - `taxonomy/viewer-purity`, `plugin-dependency/contributed-surface-target`, `taxonomy/os-config-shape`:
+    0 hits repo-wide of any kind in this cache generation.
+  - The one `📋️forms`-scoped hit in the whole policy run is `artifact-io/sniff-reality` on
+    `🧬️schema/🦀️component.rs` (an underscore-prefixed unused `sniff()` parameter) — pre-existing, shared
+    by essentially every artifact's schema file repo-wide (dozens of identical hits for other plugins in
+    the same run), not introduced by or related to this migration.
+  - **Target met**: `s.forms.forms@1/*` shows 0 breaches and 0 scaffold-residue rows across all three
+    new surface policies, matching the cad pilot's own result.
 - Glue path resolution: 101/101 `#[path]` attributes resolve on disk (recipe's own Python script,
-  final run).
+  final run, after fixing the typo-trap incident below).
 
 ## Handoff
 
 1. Re-run `cargo check -p semio-s-plugin-forms --all-targets --keep-going` and
-   `cargo test -p semio-s-plugin-forms` once `semio-framework-plugin`'s live `AppCommand`/`AppFrame`/
-   `snapshot_with_conflicts` churn (MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS ticket)
-   settles — expected clean based on every run this packet saw (zero errors ever attributed to
-   `📋️forms`'s own files across four consecutive runs, each catching the churn at a different point).
+   `cargo test -p semio-s-plugin-forms` once the MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS
+   ticket's `protocol::Mutation` sweep finishes landing across `semio-s-plugin-stdio` (confirmed still
+   actively in flight as of this report, having already passed through `semio-framework-plugin` and
+   `semio-framework-os-kernel` earlier in this same session) — expected clean for `📋️forms` based on
+   every one of six runs this packet saw (zero errors ever attributed to `📋️forms`'s own files).
 2. Once `cargo test` can run, swap the root viewer test module's hand-written role/dialect assertions
    for the canonical `testkit::assert_viewer_never_mutates::<FormsViewer>()` /
    `testkit::assert_editor_and_viewer_share_dialect::<FormsPlayApp, FormsViewer>()` (SDK gap 3 above) —
    low-risk, not done here only because the compile blocker made it unverifiable in this session.
-3. `bun ./📜️script.ts policy` was not run this session (bun/nx invocation was judged lower priority than
-   exhausting the cargo-check retry budget given the session's time budget); the manual grep above is a
-   reasonable proxy for `taxonomy/viewer-purity` but not a substitute for the real policy run, which the
-   next session touching this ticket should do before final close-out.
-4. The viewer's Try window is deliberately a flat, non-interactive read of every step's questions today
+3. The viewer's Try window is deliberately a flat, non-interactive read of every step's questions today
    (no per-step wizard cursor, since `Config = NoConfig`) — a real follow-up (a small viewer-owned
    `Config`/`Command` pair carrying just `current_step_index`, dispatched through `ViewEmit`'s
    `config_mutations`, contract §2.2 explicitly allows this) could give the viewer the same step-by-step
@@ -265,4 +288,4 @@ Deleted:
 - `✏️s/🔌️plugins/📋️forms/🎛️apps/` (whole tree — the plugin's only app, plus a one-line doc-only
   top-level marker file)
 
-Scratch (ticket folder): `🧪️w2-p8-forms-cargo.txt`, `🧪️w2-p8-forms-test.txt`.
+Scratch (ticket folder): `🧪️w2-p8-forms-cargo.txt`, `🧪️w2-p8-forms-test.txt`, `🧪️w2-p8-forms-policy.txt`.

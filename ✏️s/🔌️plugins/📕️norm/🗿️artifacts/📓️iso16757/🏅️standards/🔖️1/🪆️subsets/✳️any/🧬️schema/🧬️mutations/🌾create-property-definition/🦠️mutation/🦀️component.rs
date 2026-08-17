@@ -14,7 +14,7 @@ pub struct CreatePropertyDefinition {
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for CreatePropertyDefinition {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "property-definition", kind: "create-property-definition", record: "CreatedPropertyDefinition" };
 
-    fn diff(&self, base: &Iso16757Snapshot) -> <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff {
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {

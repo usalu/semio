@@ -6,6 +6,6 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ScaleObject, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
-    vec![SemioObjectMutation::ScaleObject(super::mutation::ScaleObject { scale: base.transform.scale })]
+    vec![SemioObjectMutation::ScaleObject(ScaleObject { scale: base.transform.scale })]
 }
 //#endregion 🔖️Inverse

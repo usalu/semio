@@ -39,7 +39,7 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 /// re-exporting it here plus wrapping `encode_op`/`decode_op` mirrors exactly how `Puzzle3dMutation`
 /// (declared in `🔧️op`) is surfaced above. Relocated off the former `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — the stateful session that dispatches this
-/// envelope now lives app-side, at `crate::apps::puzzle3d::precompute`, but the envelope itself is
+/// envelope now lives app-side, at `crate::editor::puzzle3d::precompute`, but the envelope itself is
 /// pure data and stays schema-side.
 pub use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 
@@ -84,7 +84,7 @@ mod tests {
     /// `#[serde(rename = ...)]` attrs) — deserialized rather than struct-literal-built since
     /// `SceneConfig`'s fields are `pub(crate)` (this node only needs the type nameable, not its
     /// fields, to carry it inside `Puzzle3dEngineCommand::SetScene`). A byte-identical copy of this
-    /// helper also lives in `crate::apps::puzzle3d::precompute`'s own test module, for the two
+    /// helper also lives in `crate::editor::puzzle3d::precompute`'s own test module, for the two
     /// dispatch tests that moved there (a schema test file must not depend on the app).
     pub(crate) fn sample_scene_config() -> crate::artifacts::puzzle3d::schema::SceneConfig {
         let json = r#"{
@@ -129,7 +129,7 @@ mod tests {
 
     // 🎯️ Behavioral-parity dispatch tests (`dispatch_set_scene_then_apply_and_compose_fill_count_round_trip`,
     // `dispatch_brush_preview_without_scene_returns_none`) relocated to
-    // `crate::apps::puzzle3d::precompute`'s own test module (ticket
+    // `crate::editor::puzzle3d::precompute`'s own test module (ticket
     // 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): they construct
     // `Puzzle3dPrecomputeSession`, which is now an app type this schema test file must not depend on.
 }

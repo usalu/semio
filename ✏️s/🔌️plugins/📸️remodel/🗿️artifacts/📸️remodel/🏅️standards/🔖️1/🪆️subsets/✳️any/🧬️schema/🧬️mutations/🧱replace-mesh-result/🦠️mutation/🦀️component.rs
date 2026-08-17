@@ -24,7 +24,7 @@ pub fn replace_mesh_result(mesh: Box<RemodelMesh>) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for ReplaceMeshResult {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "mesh-result", kind: "replace-mesh-result", record: "ReplacedMeshResult" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

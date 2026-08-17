@@ -1,0 +1,1586 @@
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_envelope` is never used
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19
+     |
+4256 | / impl<P, Mutation> ArtifactStore<P, Mutation>
+4257 | | where
+4258 | |     P: Clone + Serialize + DeserializeOwned + ArtifactPack,
+4259 | |     Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText,
+     | |___________________________________________________________________________________________- method in this implementation
+...
+4445 |       pub(crate) fn set_envelope(&mut self, envelope: ArtifactEnvelope<P, Mutation>, applied_edit_ids: Vec<String>) -> Result<(), ...
+     |                     ^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+warning: unused imports: `FaultCode`, `FaultScope`, `Severity`, and `TextSpan`
+ --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:7:23
+  |
+7 | use dsl::{Diagnostic, FaultCode, FaultScope, Severity, TextSpan};
+  |                       ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: methods `is_left` and `is_right` are never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1463:8
+     |
+1462 | impl IntroductionPointerButton {
+     | ------------------------------ methods in this implementation
+1463 |     fn is_left(&self) -> bool {
+     |        ^^^^^^^
+...
+1467 |     fn is_right(&self) -> bool {
+     |        ^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `introduction_orbit_modifiers_is_default` is never used
+    --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:1472:4
+     |
+1472 | fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]) -> bool {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework` to apply 1 suggestion)
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:6:1
+  |
+6 | extern crate semio_framework_os_kernel as pack;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate semio_framework_os_kernel as pack;
+  |
+
+warning: unused extern crate
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️glue.rs:7:1
+  |
+7 | extern crate semio_framework_os_kernel as spr;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+help: remove the unused `extern crate`
+  |
+7 - extern crate semio_framework_os_kernel as spr;
+  |
+
+warning: unused imports: `FlowExtensionExecutableIdentity` and `FlowExtensionManifest`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:4:120
+  |
+4 | ...onRegistry, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin,...
+  |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `ChildGenesis`, `GroupReceipt`, `OwnerRef`, and `SpaceConflict`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:349:164
+    |
+349 | ...story_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildGenesis, C...
+    |                                                                                                                                                       ^^^^^^^^^^^^
+350 | ...a, GroupReceipt, HistoryColumn, HistoryLane, Mutation, MutationDiff, OwnerRef, SpaceConflict, SpaceMember,
+    |       ^^^^^^^^^^^^                                                      ^^^^^^^^  ^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:407:24
+    |
+407 |         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+407 -         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+407 +         let mut nodes: BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:407:85
+    |
+407 |         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+    |                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+407 -         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = std::collections::BTreeMap::new();
+407 +         let mut nodes: std::collections::BTreeMap<String, protocol::TopologyNode> = BTreeMap::new();
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:686:31
+    |
+686 |         fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+686 |         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+    |                                            ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:695:22
+    |
+695 |         C::Snapshot: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+695 -         C::Snapshot: store::ArtifactPack,
+695 +         C::Snapshot: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:699:26
+    |
+699 |             C::Snapshot: store::ArtifactPack,
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+699 -             C::Snapshot: store::ArtifactPack,
+699 +             C::Snapshot: ArtifactPack,
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:701:36
+    |
+701 |             let typed_sources: Vec<ComposeSource> = sources
+    |                                    ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+701 |             let typed_sources: Vec<ComposeSource<'_>> = sources
+    |                                                 ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:712:25
+    |
+712 |             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+712 -             let bytes = store::ArtifactPack::encode_pack(&composed.snapshot);
+712 +             let bytes = ArtifactPack::encode_pack(&composed.snapshot);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:728:18
+    |
+728 |         D::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+728 -         D::From: store::ArtifactPack,
+728 +         D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:729:18
+    |
+729 |         D::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+729 -         D::Into: store::ArtifactPack,
+729 +         D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:733:22
+    |
+733 |             D::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+733 -             D::From: store::ArtifactPack,
+733 +             D::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:734:22
+    |
+734 |             D::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+734 -             D::Into: store::ArtifactPack,
+734 +             D::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:749:17
+    |
+749 | ...   <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed ...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+749 -                 <D::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+749 +                 <D::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed to decode source: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:751:25
+    |
+751 |             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+751 -             let bytes = <D::Into as store::ArtifactPack>::encode_pack(&into);
+751 +             let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:762:18
+    |
+762 |         S::From: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+762 -         S::From: store::ArtifactPack,
+762 +         S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:763:18
+    |
+763 |         S::Into: store::ArtifactPack,
+    |                  ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+763 -         S::Into: store::ArtifactPack,
+763 +         S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:767:22
+    |
+767 |             S::From: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+767 -             S::From: store::ArtifactPack,
+767 +             S::From: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:768:22
+    |
+768 |             S::Into: store::ArtifactPack,
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+768 -             S::Into: store::ArtifactPack,
+768 +             S::Into: ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:782:24
+    |
+782 | ...   let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{...
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+782 -             let from = <S::From as store::ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+782 +             let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:784:25
+    |
+784 |             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+784 -             let bytes = <S::Into as store::ArtifactPack>::encode_pack(&into);
+784 +             let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:799:24
+    |
+799 |         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+799 -         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+799 +         type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:837:33
+    |
+837 |         fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+    |                                 ^^^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+837 |         fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
+    |                                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:849:27
+    |
+849 |         fn sniff(source: &AnalyzeSource) -> IoConfidence;
+    |                           ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+849 |         fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:850:31
+    |
+850 |         fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
+    |                               ^^^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+850 |         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
+    |                                            ++++
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:925:24
+    |
+925 |         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+925 -         type Mutation: protocol::Mutation<Self::Snapshot, Diff = Self::Diff>;
+925 +         type Mutation: Mutation<Self::Snapshot, Diff = Self::Diff>;
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:926:20
+    |
+926 |         type Diff: protocol::MutationDiff<Self::Snapshot>;
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+926 -         type Diff: protocol::MutationDiff<Self::Snapshot>;
+926 +         type Diff: MutationDiff<Self::Snapshot>;
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1567:77
+     |
+1567 |     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::Once...
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1567 -     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
+1567 +     static ACTIVE_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1568:80
+     |
+1568 |     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::O...
+     |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1568 -     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<std::collections::BTreeSet<String>>> = std::sync::OnceLock::new();
+1568 +     static CANCELLED_ARTIFACT_INFERENCES: std::sync::OnceLock<std::sync::Mutex<BTreeSet<String>>> = std::sync::OnceLock::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1570:66
+     |
+1570 |     fn active_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+     |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1570 -     fn active_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+1570 +     fn active_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1571:73
+     |
+1571 |         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1571 -         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+1571 +         ACTIVE_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1574:69
+     |
+1574 |     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1574 -     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<std::collections::BTreeSet<String>> {
+1574 +     fn cancelled_artifact_inferences() -> &'static std::sync::Mutex<BTreeSet<String>> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1575:76
+     |
+1575 |         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+     |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1575 -         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(std::collections::BTreeSet::new()))
+1575 +         CANCELLED_ARTIFACT_INFERENCES.get_or_init(|| std::sync::Mutex::new(BTreeSet::new()))
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:1637:31
+     |
+1637 |         let mut identifiers = std::collections::BTreeSet::new();
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1637 -         let mut identifiers = std::collections::BTreeSet::new();
+1637 +         let mut identifiers = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2429:23
+     |
+2429 |         capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2429 -         capabilities: std::collections::BTreeMap<ArtifactIdentity, ArtifactCapability>,
+2429 +         capabilities: BTreeMap<ArtifactIdentity, ArtifactCapability>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2440:44
+     |
+2440 |             Self { identity, capabilities: std::collections::BTreeMap::new() }
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2440 -             Self { identity, capabilities: std::collections::BTreeMap::new() }
+2440 +             Self { identity, capabilities: BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2605:30
+     |
+2605 |             let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2605 -             let mut claims = std::collections::BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+2605 +             let mut claims = BTreeMap::<ArtifactIdentityClaim, ArtifactIdentity>::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2693:22
+     |
+2693 |         definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2693 -         definitions: std::collections::BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+2693 +         definitions: BTreeMap<ArtifactIdentity, ArtifactDefinition>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2694:17
+     |
+2694 |         claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2694 -         claims: std::collections::BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+2694 +         claims: BTreeMap<ArtifactIdentityClaim, ArtifactIdentity>,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2706:33
+     |
+2706 |             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2706 -             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+2706 +             Self { definitions: BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2706:76
+     |
+2706 |             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+     |                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2706 -             Self { definitions: std::collections::BTreeMap::new(), claims: std::collections::BTreeMap::new() }
+2706 +             Self { definitions: std::collections::BTreeMap::new(), claims: BTreeMap::new() }
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2966:86
+     |
+2966 | ...   ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coo...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2966 -                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
+2966 +                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate()).map(|claim| vec![claim]),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2998:86
+     |
+2998 | ...   ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_co...
+     |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2998 -                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+2998 +                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate()).map(|claim| vec![claim]),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3191:171
+     |
+3191 | ...::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate())?]));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3191 -             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.writes).to_coordinate())?]));
+3191 +             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate())?]));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3205:87
+     |
+3205 | ...   vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect)....
+     |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3205 -                 vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), semio_framework::ArtifactDialect::from(entry.dialect).to_coordinate())?],
+3205 +                 vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.dialect).to_coordinate())?],
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3322:28
+     |
+3322 |         pub artifact_kind: semio_framework::ArtifactKindSpec,
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3322 -         pub artifact_kind: semio_framework::ArtifactKindSpec,
+3322 +         pub artifact_kind: ArtifactKindSpec,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3333:24
+     |
+3333 |         artifact_kind: semio_framework::ArtifactKindSpec,
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3333 -         artifact_kind: semio_framework::ArtifactKindSpec,
+3333 +         artifact_kind: ArtifactKindSpec,
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3347:70
+     |
+3347 | ...   pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<S...
+     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3347 -         pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+3347 +         pub fn mesh_dwg_bridge(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, importer: MeshDwgDocumentImporter) -> Result<Self, PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3361:71
+     |
+3361 | ...   pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<...
+     |                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3361 -         pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: semio_framework::ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+3361 +         pub fn two_d_svg_export(id: impl Into<String>, artifact_kind: ArtifactKindSpec, document_schema: impl Into<String>, file_stem: impl Into<String>, renderer: TwoDSvgDocumentRenderer) -> Result<Self, PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3403:93
+     |
+3403 | ...   pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> R...
+     |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3403 -         pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, semio_framework::ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+3403 +         pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:8150:38
+     |
+8150 |     pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+8150 -     pub type InteractionHoverState = std::collections::BTreeMap<String, protocol::DomainHover>;
+8150 +     pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9198:61
+     |
+9198 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+     |                                                             ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9198 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+9198 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9226:119
+     |
+9226 | ...: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9226 -         fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+9226 +         fn copy_fragment(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9229:120
+     |
+9229 | ...: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9229 -         fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &crate::app::InteractionView<'_>) -> Vec<Self::Mutation> {
+9229 +         fn cut_operations(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>) -> Vec<Self::Mutation> {
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10218:64
+      |
+10218 | ...   pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clon...
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10218 -                     pins.push(vcs::CompositionPin { child_ref: store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+10218 +                     pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11169:31
+      |
+11169 |             let mut domains = std::collections::BTreeMap::new();
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11169 -             let mut domains = std::collections::BTreeMap::new();
+11169 +             let mut domains = BTreeMap::new();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11193:97
+      |
+11193 | ...   let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), acti...
+      |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11193 -             let persisted = protocol::InteractionState { selection: validated.selection, hover: std::collections::BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+11193 +             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12909:61
+      |
+12909 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                             ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12909 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+12909 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13042:61
+      |
+13042 |         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                             ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13042 -         fn command_from_action(action: &str, _args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13042 +         fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13199:60
+      |
+13199 |         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13199 -         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13199 +         fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13338:60
+      |
+13338 |         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                            ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13338 -         fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+13338 +         fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13575:41
+      |
+13575 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13575 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+13575 +         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13575:96
+      |
+13575 |         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+      |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13575 -         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+13575 +         static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(HashMap::new());
+      |
+
+warning: unused import: `ChildStoreFactory`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:349:178
+    |
+349 | ...ifactPack, ArtifactStore, ChildDispatch, ChildGenesis, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
+    |                                                           ^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12116:34
+      |
+12116 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+      |
+      = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12127:34
+      |
+12127 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12141:34
+      |
+12141 |             let VcsArtifactApp { app, cache, registry, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11665:38
+      |
+11665 |                 let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12151:34
+      |
+12151 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12166:34
+      |
+12166 |             let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                  ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11609:38
+      |
+11609 |                 let VcsArtifactApp { app, cache, children, presence_store, transient_store, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12082:38
+      |
+12082 |                 let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                      ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11509:42
+      |
+11509 |                     let VcsArtifactApp { app, cache, children, .. } = self;
+      |                                          ^^^ help: try ignoring the field: `app: _`
+
+warning: unused variable: `app`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5801:17
+     |
+5801 |             let app = A::default();
+     |                 ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2811:9
+     |
+2793 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2811 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2812 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3821:9
+     |
+3819 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3820 |         definitions: ArtifactDefinitionRegistry,
+3821 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3822 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3823 |         inference_services: ArtifactInferenceServiceRegistry,
+3824 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3825 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: function `encode_contributed_wire` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4226:19
+     |
+4226 |     pub(crate) fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `commit_owner_mutation_roster` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:4249:19
+     |
+4249 |     pub(crate) fn commit_owner_mutation_roster(providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])]) ->...
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `has_window_action`, `has_app_command`, and `has_mode_command` are never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9647:12
+     |
+9632 |     impl AppActionRegistry {
+     |     ---------------------- methods in this implementation
+...
+9647 |         fn has_window_action(&self, window_kind_id: &str, action_id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^^
+...
+9663 |         fn has_app_command(&self, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^
+...
+9671 |         fn has_mode_command(&self, mode_id: &str, id: &str) -> bool {
+     |            ^^^^^^^^^^^^^^^^
+
+warning: type `TransactionProposalDraft` is more private than the item `PluginApp::take_pending_transaction_proposal`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9454:9
+     |
+9454 |         fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft>;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `PluginApp::take_pending_transaction_proposal` is reachable at visibility `pub`
+     |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9948:5
+     |
+9948 |     pub(crate) struct TransactionProposalDraft {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `TransactionProposalDraft` is more private than the item `<VcsArtifactApp<A> as PluginApp>::take_pending_transaction_proposal`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11783:9
+      |
+11783 |         fn take_pending_transaction_proposal(&mut self) -> Option<TransactionProposalDraft> {
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `<VcsArtifactApp<A> as PluginApp>::take_pending_transaction_proposal` is reachable at visibility `pub`
+      |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9948:5
+      |
+ 9948 |     pub(crate) struct TransactionProposalDraft {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `TransactionProposalDraft` is more private than the item `assert_proposes_transaction`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5911:9
+     |
+5911 | ...   pub fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command) -> super::TransactionProposalDraft {
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ function `assert_proposes_transaction` is reachable at visibility `pub`
+     |
+note: but type `TransactionProposalDraft` is only usable at visibility `pub(crate)`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9948:5
+     |
+9948 |     pub(crate) struct TransactionProposalDraft {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 84 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 70 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1956:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2010:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1414:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:179:6: error[E0405]: cannot find trait `OpText` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:224:6: error[E0405]: cannot find trait `OpBinary` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:943:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1515:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🔺️diff/🦀️component.rs:678:6: error[E0405]: cannot find trait `DiffCodec` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:218:6: error[E0405]: cannot find trait `OpText` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:351:6: error[E0405]: cannot find trait `OpBinary` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:353:32: error[E0405]: cannot find trait `OpText` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs:371:18: error[E0405]: cannot find trait `OpText` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:28:29: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:32:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:731:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:761:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:790:39: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:189:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:198:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:209:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:225:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🚪️io/🦀️component.rs:38:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:38:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:36:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:121:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🚪️io/🦀️component.rs:29:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🚪️io/🦀️component.rs:27:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🚪️io/🦀️component.rs:27:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2185:29: warning: ambiguous glob re-exports: the name `inferences` in the type namespace is first re-exported here
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:2185:29: warning: ambiguous glob re-exports: the name `mutations` in the type namespace is first re-exported here
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2665:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2672:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2686:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2686:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2708:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2708:90: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2722:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2722:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2735:63: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2745:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2751:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2757:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2766:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2805:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2819:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2831:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2848:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2867:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2882:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2898:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2913:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2931:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2949:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2965:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2974:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:2991:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3021:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3049:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3063:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3073:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3083:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3097:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3104:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3112:53: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3129:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3159:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3181:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3191:57: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3201:60: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3213:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3237:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3265:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3290:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3300:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3319:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3341:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3358:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3377:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3396:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3415:62: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3424:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3434:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3444:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3458:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3469:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3485:55: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3498:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3519:18: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3520:34: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3521:34: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3548:34: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3549:34: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3584:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:3613:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:504:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:307:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1092:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1099:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1109:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1109:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1127:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1127:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1141:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1161:49: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1218:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1249:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1259:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1268:45: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1284:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1308:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1314:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1328:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1346:39: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:181:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:97:34: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:113:36: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:135:30: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:142:33: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1169:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1515:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1524:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1533:41: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1554:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1572:52: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1580:51: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1591:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1612:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1648:48: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1655:43: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1683:50: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1711:47: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1711:93: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1724:44: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1724:92: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1755:46: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1821:42: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1929:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1929:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:40:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:36:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:21:161: warning: unused import: `PdfStreamFilter`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:42:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🚪️io/🦀️component.rs:34:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:398:26: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:747:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:754:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:763:31: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:776:32: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:789:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:789:82: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:802:33: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:802:81: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:825:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:825:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:854:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1174:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1181:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1190:31: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1197:30: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1204:35: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1218:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1245:32: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1266:40: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1281:36: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1281:82: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1294:33: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1294:81: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1316:38: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1316:84: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1350:37: warning: hidden lifetime parameters in types are deprecated
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:83:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:5207:21: warning: ambiguous glob re-exports: the name `artifacts` in the type namespace is first re-exported here
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:178:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:131:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:37:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:44:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:46:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:39:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:35:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:33:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:37:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:40:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:28:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:39:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:29:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:31:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:30:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:32:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:27:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:24:31: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:578:59: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:592:44: error[E0433]: cannot find type `GltfJson` in this scope: use of undeclared type `GltfJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:628:113: error[E0425]: cannot find type `GltfAccessor` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:629:9: error[E0422]: cannot find struct, variant or union type `GltfAccessor` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:631:86: error[E0425]: cannot find type `GltfBufferView` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:632:9: error[E0422]: cannot find struct, variant or union type `GltfBufferView` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:649:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:664:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:677:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:679:29: error[E0422]: cannot find struct, variant or union type `GltfAccessor` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:688:30: error[E0422]: cannot find struct, variant or union type `GltfSparseAccessor` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:688:70: error[E0422]: cannot find struct, variant or union type `GltfSparseIndices` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:688:181: error[E0422]: cannot find struct, variant or union type `GltfSparseValues` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:719:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:721:29: error[E0422]: cannot find struct, variant or union type `GltfAccessor` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:730:30: error[E0422]: cannot find struct, variant or union type `GltfSparseAccessor` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:730:70: error[E0422]: cannot find struct, variant or union type `GltfSparseIndices` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:730:181: error[E0422]: cannot find struct, variant or union type `GltfSparseValues` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/👁️viewer/🦀️component.rs:49:21: error[E0277]: the trait bound `animation::schema::mutations::component::SemioAnimationMutation: OpBinary` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:49:21: error[E0277]: the trait bound `StlMutation: OpBinary` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:780:13: error[E0433]: cannot find type `GltfJson` in this scope: use of undeclared type `GltfJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/👁️viewer/🦀️component.rs:49:21: error[E0277]: the trait bound `animation::schema::mutations::component::SemioAnimationMutation: OpText` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:49:21: error[E0277]: the trait bound `StlMutation: OpText` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️component.rs:51:21: error[E0277]: the trait bound `StlMutation: OpBinary` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️component.rs:51:21: error[E0277]: the trait bound `StlMutation: OpText` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:782:13: error[E0433]: cannot find type `GltfJson` in this scope: use of undeclared type `GltfJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:783:58: error[E0433]: cannot find type `GltfJson` in this scope: use of undeclared type `GltfJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:801:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:802:32: error[E0422]: cannot find struct, variant or union type `GltfBufferView` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:804:26: error[E0422]: cannot find struct, variant or union type `GltfMesh` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:804:54: error[E0422]: cannot find struct, variant or union type `GltfPrimitive` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/✏️editor/🦀️component.rs:51:21: error[E0277]: the trait bound `animation::schema::mutations::component::SemioAnimationMutation: OpBinary` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/✏️editor/🦀️component.rs:51:21: error[E0277]: the trait bound `animation::schema::mutations::component::SemioAnimationMutation: OpText` is not satisfied: unsatisfied trait bound
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:804:114: error[E0433]: cannot find type `GltfPrimitive` in this scope: use of undeclared type `GltfPrimitive`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:804:145: error[E0433]: cannot find type `GltfMesh` in this scope: use of undeclared type `GltfMesh`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:831:27: error[E0422]: cannot find struct, variant or union type `GltfBuffer` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:832:32: error[E0422]: cannot find struct, variant or union type `GltfBufferView` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:834:26: error[E0422]: cannot find struct, variant or union type `GltfMesh` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:834:54: error[E0422]: cannot find struct, variant or union type `GltfPrimitive` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:834:129: error[E0433]: cannot find type `GltfPrimitive` in this scope: use of undeclared type `GltfPrimitive`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:834:160: error[E0433]: cannot find type `GltfMesh` in this scope: use of undeclared type `GltfMesh`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs:98:47: error[E0425]: cannot find type `PlyElement` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs:99:9: error[E0422]: cannot find struct, variant or union type `PlyElement` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs:111:43: error[E0425]: cannot find type `PlyElement` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️component.rs:112:9: error[E0422]: cannot find struct, variant or union type `PlyElement` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:319:74: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:340:39: error[E0425]: cannot find type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:341:9: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:350:21: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+warning: `semio-s-plugin-stdio` (lib) generated 229 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 20 previous errors; 229 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:351:21: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:375:41: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:385:67: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:531:32: error[E0422]: cannot find struct, variant or union type `TiffTag` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:634:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:635:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:636:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:637:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:638:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:639:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:640:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:641:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:642:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:643:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:644:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:645:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:664:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:665:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:666:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:667:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:668:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:669:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:670:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:671:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:672:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:673:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:674:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:675:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:705:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:707:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:713:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:715:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:726:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:728:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:737:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:739:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:741:18: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:952:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:953:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:954:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:955:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:956:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:957:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:967:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:968:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:969:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:970:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:971:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:972:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:973:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:974:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:975:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:976:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:977:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:978:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:979:13: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:984:26: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:988:27: error[E0433]: cannot find type `BcfMutation` in this scope: use of undeclared type `BcfMutation`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:273:21: error[E0425]: cannot find function `make_box` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:274:20: error[E0425]: cannot find function `solid_volume` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:278:20: error[E0425]: cannot find function `solid_volume` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:286:21: error[E0425]: cannot find function `make_box` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:290:19: error[E0425]: cannot find function `solid_volume` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:298:21: error[E0425]: cannot find function `make_box` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:308:21: error[E0425]: cannot find function `make_box` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:319:21: error[E0425]: cannot find function `make_box` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:490:95: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:535:67: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:561:91: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:581:91: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:311:89: error[E0425]: cannot find type `Vec3` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:349:149: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:350:149: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:360:154: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:361:150: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:362:153: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:363:151: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:364:152: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:365:152: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:375:148: error[E0433]: cannot find type `Vec3` in this scope: use of undeclared type `Vec3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️component.rs:794:25: error[E0425]: cannot find type `CoedgeId` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️component.rs:798:58: error[E0425]: cannot find type `VertexId` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️component.rs:803:157: error[E0425]: cannot find type `VertexId` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️component.rs:803:171: error[E0425]: cannot find type `VertexId` in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📏mass-properties/🦀️component.rs:814:37: error[E0433]: cannot find type `Curve3` in this scope: use of undeclared type `Curve3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs:382:64: error[E0433]: cannot find type `TransformOp` in this scope: use of undeclared type `TransformOp`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:80:108: error[E0433]: cannot find type `PngTextKind` in this scope: use of undeclared type `PngTextKind`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:81:31: error[E0433]: cannot find type `PngChunkMarker` in this scope: use of undeclared type `PngChunkMarker`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:81:53: error[E0433]: cannot find type `PngChunkMarker` in this scope: use of undeclared type `PngChunkMarker`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:81:88: error[E0433]: cannot find type `PngChunkMarker` in this scope: use of undeclared type `PngChunkMarker`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️component.rs:81:110: error[E0433]: cannot find type `PngChunkMarker` in this scope: use of undeclared type `PngChunkMarker`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🖼️bmp/🔖️v3/✳️any/🦀️component.rs:72:75: error[E0433]: cannot find type `BmpRowOrder` in this scope: use of undeclared type `BmpRowOrder`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️component.rs:93:37: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️component.rs:93:77: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️component.rs:93:117: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️component.rs:93:157: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/💡️inferences/🦀️component.rs:110:46: error[E0425]: cannot find function `aabb_key` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:302:22: error[E0422]: cannot find struct, variant or union type `SemioMesh` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:304:30: error[E0422]: cannot find struct, variant or union type `SemioPrimitive` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:306:27: error[E0433]: cannot find type `SemioTopology` in this scope: use of undeclared type `SemioTopology`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:307:33: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:307:73: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:307:113: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:308:31: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:309:27: error[E0422]: cannot find struct, variant or union type `SemioUv` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:315:25: error[E0422]: cannot find struct, variant or union type `SemioMaterial` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:315:73: error[E0422]: cannot find struct, variant or union type `SemioRgba` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:316:24: error[E0422]: cannot find struct, variant or union type `SemioTexture` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:324:81: error[E0422]: cannot find struct, variant or union type `SemioMesh` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:326:127: error[E0422]: cannot find struct, variant or union type `SemioPrimitive` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:328:173: error[E0433]: cannot find type `SemioTopology` in this scope: use of undeclared type `SemioTopology`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:332:29: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:339:97: error[E0422]: cannot find struct, variant or union type `SemioMaterial` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:341:152: error[E0422]: cannot find struct, variant or union type `SemioRgba` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:344:93: error[E0422]: cannot find struct, variant or union type `SemioTexture` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:348:160: error[E0422]: cannot find struct, variant or union type `SemioPoint3` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:390:94: error[E0422]: cannot find struct, variant or union type `SemioMesh` in this scope: not found in this scope
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:414:196: error[E0433]: cannot find type `SemioTopology` in this scope: use of undeclared type `SemioTopology`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:430:170: error[E0433]: cannot find type `SemioRgba` in this scope: use of undeclared type `SemioRgba`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs:434:171: error[E0433]: cannot find type `SemioPoint3` in this scope: use of undeclared type `SemioPoint3`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️pptx/🔖️ecma-376/✳️any/🦀️component.rs:100:50: error[E0433]: cannot find type `XmlNode` in this scope: use of undeclared type `XmlNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs:69:24: error[E0433]: cannot find type `Mp4Codec` in this scope: use of undeclared type `Mp4Codec`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:180:20: error[E0433]: cannot find type `Mp4Movie` in this scope: use of undeclared type `Mp4Movie`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:187:27: error[E0433]: cannot find type `Mp4TrackMetadata` in this scope: use of undeclared type `Mp4TrackMetadata`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:200:158: error[E0433]: cannot find type `Mp4TrackMetadata` in this scope: use of undeclared type `Mp4TrackMetadata`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:225:128: error[E0433]: cannot find type `Mp4TrackMetadata` in this scope: use of undeclared type `Mp4TrackMetadata`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1383:9: warning: duplicated attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:480:5: warning: duplicated attribute
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:406:24: error[E0433]: cannot find module or crate `engine` in this scope: use of unresolved module or unlinked crate `engine`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:410:20: error[E0433]: cannot find module or crate `engine` in this scope: use of unresolved module or unlinked crate `engine`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:414:20: error[E0433]: cannot find module or crate `engine` in this scope: use of unresolved module or unlinked crate `engine`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:180:42: error[E0599]: no associated function or constant named `serialize` found for struct `flow::io::export::serializers::artifacts::json::v_rfc8259::any::component::SemioFlowToJson` in the current scope: associated function or constant not found in `flow::io::export::serializers::artifacts::json::v_rfc8259::any::component::SemioFlowToJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/🦀️component.rs:618:51: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff` in the current scope: method not found in `&semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/🦀️component.rs:701:31: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff` in the current scope: method not found in `&semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:181:45: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioFlowFromJson` in the current scope: associated function or constant not found in `SemioFlowFromJson`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🧬️mutations/🦀️component.rs:703:24: error[E0599]: no method named `apply` found for struct `semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff` in the current scope: method not found in `semio::standards::v1::subsets::value::schema::diff::component::SemioValueTreeDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:217:53: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioPresentationFromPptx` in the current scope: associated function or constant not found in `SemioPresentationFromPptx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:218:50: error[E0599]: no associated function or constant named `serialize` found for struct `SemioPresentationToPptx` in the current scope: associated function or constant not found in `SemioPresentationToPptx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:219:53: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioPresentationFromPptx` in the current scope: associated function or constant not found in `SemioPresentationFromPptx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/🌳bounding-volume/🦀️component.rs:476:49: error[E0599]: no associated function or constant named `from_raw` found for struct `arena::FaceId` in the current scope: associated function or constant not found in `arena::FaceId`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/🌳bounding-volume/🦀️component.rs:526:30: error[E0599]: no associated function or constant named `from_raw` found for struct `arena::SolidId` in the current scope: associated function or constant not found in `arena::SolidId`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:286:49: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromDocx` in the current scope: associated function or constant not found in `SemioDocumentFromDocx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:287:46: error[E0599]: no associated function or constant named `serialize` found for struct `SemioDocumentToDocx` in the current scope: associated function or constant not found in `SemioDocumentToDocx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:288:49: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromDocx` in the current scope: associated function or constant not found in `SemioDocumentFromDocx`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:305:47: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromMd` in the current scope: associated function or constant not found in `SemioDocumentFromMd`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:306:42: error[E0599]: no associated function or constant named `serialize` found for struct `SemioDocumentToMd` in the current scope: associated function or constant not found in `SemioDocumentToMd`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:307:47: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromMd` in the current scope: associated function or constant not found in `SemioDocumentFromMd`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:317:48: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromTxt` in the current scope: associated function or constant not found in `SemioDocumentFromTxt`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:318:44: error[E0599]: no associated function or constant named `serialize` found for struct `SemioDocumentToTxt` in the current scope: associated function or constant not found in `SemioDocumentToTxt`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:319:48: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromTxt` in the current scope: associated function or constant not found in `SemioDocumentFromTxt`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:332:48: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromPdf` in the current scope: associated function or constant not found in `SemioDocumentFromPdf`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:424:30: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:429:30: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:440:30: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:477:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:561:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:585:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:610:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:333:44: error[E0599]: no associated function or constant named `serialize` found for struct `document::io::export::serializers::artifacts::pdf::v1_7::any::component::SemioDocumentToPdf` in the current scope: associated function or constant not found in `document::io::export::serializers::artifacts::pdf::v1_7::any::component::SemioDocumentToPdf`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:634:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:659:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:684:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:708:32: error[E0599]: no method named `apply` found for reference `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff` in the current scope: method not found in `&semio::standards::v1::subsets::any::schema::diff::component::SemioDiff`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:334:48: error[E0599]: no associated function or constant named `deserialize` found for struct `SemioDocumentFromPdf` in the current scope: associated function or constant not found in `SemioDocumentFromPdf`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🚪️io/🦀️component.rs:15:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:16:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:14:45: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🚪️io/🦀️component.rs:10:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🦀️component.rs:14:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🦀️component.rs:22:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:20:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🚪️io/🦀️component.rs:14:105: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:105:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🚪️io/🦀️component.rs:16:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🚪️io/🦀️component.rs:14:105: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/🦀️component.rs:22:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🚪️io/🦀️component.rs:20:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:66:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:487:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs:13:45: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🚪️io/🦀️component.rs:10:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:161:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:291:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🚪️io/🦀️component.rs:12:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🦀️component.rs:12:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🚪️io/🦀️component.rs:12:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🦀️component.rs:164:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/🦀️component.rs:10:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🚪️io/🦀️component.rs:114:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/🦀️component.rs:22:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:173:9: warning: unused import: `protocol::command::DiffAlgebra`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🚪️io/🦀️component.rs:12:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:20:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1153:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:9:49: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/🦀️component.rs:23:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🚪️io/🦀️component.rs:18:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:19:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🚪️io/🦀️component.rs:15:105: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:25:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🚪️io/🦀️component.rs:13:105: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/💡️inferences/🔗connectivity/🦀️component.rs:23:18: warning: unused import: `GraphView`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🚪️io/🦀️component.rs:13:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/🦀️component.rs:27:149: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:29:78: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🚪️io/🦀️component.rs:13:105: warning: unused import: `ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:7:9: warning: unused import: `semio_framework_plugin::ArtifactAnalyzer`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🦀️component.rs:734:21: warning: value assigned to `second` is never read: this value is reassigned later and never used
+warning: `semio-s-plugin-stdio` (lib test) generated 293 warnings (228 duplicates)
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 203 previous errors; 293 warnings emitted

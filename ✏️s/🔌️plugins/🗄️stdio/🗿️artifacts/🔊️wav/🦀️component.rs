@@ -1,6 +1,6 @@
 //! 🎪 `stdio.wav` artifact — new-format artifact (master plan "New format artifacts" table).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::WavDiff;
 pub use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
@@ -12,6 +12,15 @@ pub const STDIO_WAV_DOCUMENT_SCHEMA: &str = "stdio.wav";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const WAV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.wav";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const WAV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

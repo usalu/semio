@@ -15,7 +15,7 @@ pub struct ReorderColumns {
 impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for ReorderColumns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "columns", kind: "reorder-columns", record: "ReorderedColumns" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {

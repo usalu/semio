@@ -7,12 +7,13 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { PropertyValueColumnContext } from "../🪵️Tree/🟦️component.tsx";
 import { formatNumber } from "../✏️Input/🟦️component.tsx";
-import { borderNormalClass, uiFormControlBrowserDefaultProps } from "../🏷️ClassNames/🟦️component.tsx";
-import { useTransaction, type ElementProps } from "../🐹️ElementProps/🟦️component.tsx";
+import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
+import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️component.ts";
+import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useLabel, Label } from "../🏷️Label/🟦️component.tsx";
 import { useInteractionCommands, RemoveIcon, AddIcon } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
@@ -46,7 +47,6 @@ interface StepperProps extends ElementProps {
  * Numeric stepper with increment, decrement, and drag-to-adjust.
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel }) => {
-  const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const mixedLabel = useLabel("ui.common.mixedValues");
   const borderClass = borderNormalClass;
@@ -149,7 +149,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
       if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
       if (!isEditing) {
         setIsEditing(true);
-        transaction?.start?.();
       }
       onPointerDown?.();
       if (increment > 0) {
@@ -166,7 +165,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isEditing) {
       setIsEditing(false);
-      transaction?.finalize?.();
     }
     onPointerUp?.();
   };
@@ -176,7 +174,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isEditing) {
       setIsEditing(false);
-      transaction?.finalize?.();
     }
     onPointerCancel?.();
   };
@@ -221,14 +218,12 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
           if (!hasBeenEdited) setHasBeenEdited(true);
           if (!isEditing) {
             setIsEditing(true);
-            transaction?.start?.();
           }
           onPointerDown?.();
         }}
         onBlur={() => {
           if (isEditing) {
             setIsEditing(false);
-            transaction?.finalize?.();
           }
           onPointerUp?.();
         }}
@@ -237,7 +232,6 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             e.preventDefault();
             if (!isEditing) {
               setIsEditing(true);
-              transaction?.start?.();
             }
             if (e.key === "ArrowUp") {
               handleStepUp();
@@ -248,13 +242,11 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
             if (isEditing) {
               setIsEditing(false);
               setInternalValue(value ?? defaultValue);
-              transaction?.abort?.();
               (e.target as HTMLInputElement).blur();
             }
           } else if (e.key === "Enter") {
             if (isEditing) {
               setIsEditing(false);
-              transaction?.finalize?.();
               (e.target as HTMLInputElement).blur();
             }
           }

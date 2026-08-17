@@ -15,7 +15,7 @@ pub struct ChangeInfiltrationAllowanceM3H {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeInfiltrationAllowanceM3H {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "infiltration-allowance-m3-h", kind: "change-infiltration-allowance-m3-h", record: "ChangedInfiltrationAllowanceM3H" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_infiltration_allowance_m3_h::diff::diff(self, base)
     }
 

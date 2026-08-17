@@ -43,7 +43,7 @@ impl protocol::OpBinary for GltfMutation {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation command id"));
         }
         let command_id = std::str::from_utf8(reader.read_bytes(id_len).map_err(|error| malformed(3, error.to_string()))?).map_err(|error| malformed(3, error.to_string()))?.into();
-        let version = u16::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "version exceeds u16"))?;
+        let version = u32::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "version exceeds u32"))?;
         let payload_len = usize::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "payload length exceeds usize"))?;
         if payload_len > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation payload"));

@@ -15,7 +15,7 @@ pub struct ChangeBetaW {
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeBetaW {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "beta-w", kind: "change-beta-w", record: "ChangedBetaW" };
 
-    fn diff(&self, base: &En1999Snapshot) -> En1999Diff {
+    fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::artifacts::en1999::mutations::change_beta_w::diff::diff(self, base)
     }
 

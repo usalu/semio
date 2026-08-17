@@ -53,9 +53,9 @@ page-lit = "[" box-lit "," opt-box "," INT "," hex "]"
 # creator/producer` declaration order.
 info-lit = "[" opt-hex "," opt-hex "," opt-hex "," opt-hex "," opt-hex "," opt-hex "]"
 
-# `enc_pdf_snapshot`/`dec_pdf_snapshot` -- `[hex(schema),hex(declaredVersion),[pages],info,
-# [indirectObjects],[trailerEntries]]`.
-snapshot-lit = "[" hex "," hex "," "[" page-item* "]" "," info-lit "," "[" indirect-object-item* "]" "," "[" dict-entry-item* "]" "]"
+# `enc_pdf_snapshot`/`dec_pdf_snapshot` -- the full snapshot payload is a binary PDF transport
+# represented as lowercase hexadecimal by `print_op`/`parse_op`.
+snapshot-lit = hex
 page-item = page-lit ","?
 # `enc_indirect_object`/`dec_indirect_object` -- `[objref,pdfObject]`.
 indirect-object-item = indirect-object-lit ","?

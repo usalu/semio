@@ -9,12 +9,12 @@ pub fn diff(payload: &super::mutation::CreatePart, base: &Puzzle5dSnapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "part"), vec![payload.part.id.clone()]);
     }
     let mut delta = Puzzle5dPartsDelta { added: vec![payload.part.clone()], ..Default::default() };
-    protocol::MutationOutcome::new(if let Some(index) = payload.index {
+    if let Some(index) = payload.index {
         let mut order: Vec<String> = base.parts.iter().map(|entry| entry.id.clone()).collect();
         let at = index.min(order.len());
         order.insert(at, payload.part.id.clone());
         delta.reordered = Some(order);
     }
-    Puzzle5dDiff { parts: Some(delta), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle5dDiff { parts: Some(delta), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -509,7 +509,8 @@ where
     P: PartialEq + std::fmt::Debug,
     D: crate::os_spr::MutationDiff<P> + Clone,
 {
-    let sequential = d2.apply(&d1.apply(base));
+    let mid = d1.apply(base).expect("first valid diff must apply");
+    let sequential = d2.apply(&mid);
     let mut absorbed = d1;
     absorbed.absorb(d2);
     let composed = absorbed.apply(base);
@@ -529,11 +530,11 @@ where
     let forward = mutation.diff(base);
     let rejected = forward.messages().iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
     assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {:?}", forward.messages());
-    let mut state = forward.diff().apply(base);
+    let mut state = forward.diff().apply(base).expect("valid forward diff must apply");
     let mut backward = mutation.inverse(base);
     backward.reverse();
     for undo in &backward {
-        state = undo.diff(&state).diff().apply(&state);
+        state = undo.diff(&state).diff().apply(&state).expect("valid inverse diff must apply");
     }
     assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
 }
@@ -546,7 +547,7 @@ where
     D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
     let delta = D::between(a, b);
-    assert_eq!(&delta.apply(a), b, "DiffAlgebra::between(a, b).apply(a) must equal b");
+    assert_eq!(delta.apply(a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
     assert!(D::between(a, a).is_empty(), "DiffAlgebra::between(a, a) must be empty");
 }
 
@@ -557,9 +558,9 @@ where
     P: Clone + PartialEq + std::fmt::Debug,
     D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
-    let after = d.apply(base);
+    let after = d.apply(base).expect("valid diff must apply");
     let restored = d.inverse(base).apply(&after);
-    assert_eq!(&restored, base, "d.inverse(base).apply(&d.apply(base)) must equal base");
+    assert_eq!(restored.as_ref(), Ok(base), "d.inverse(base).apply(&d.apply(base)) must equal base");
 }
 
 fn fisher_yates_shuffle(rng: &mut SplitMix64, items: &mut [usize]) {
@@ -1060,8 +1061,8 @@ mod tests {
         delta: i64,
     }
     impl crate::os_spr::MutationDiff<i64> for AddDiff {
-        fn apply(&self, base: &i64) -> i64 {
-            base + self.delta
+        fn apply(&self, base: &i64) -> crate::os_spr::MutationApplyResult<i64> {
+            Ok(base + self.delta)
         }
         fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
@@ -1177,10 +1178,10 @@ mod tests {
         use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).diff().apply(&base);
+        let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
         let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        assert_eq!(undo.diff(&forward).diff().apply(&forward), base);
+        assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
     }
 
     #[test]

@@ -661,18 +661,20 @@ fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
-    fn apply(&self, base: &SemioDrawingSnapshot) -> SemioDrawingSnapshot {
+    fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
         let mut next = base.clone();
         if let Some(cd) = &self.canvas {
             next.canvas = apply_canvas_diff(&next.canvas, cd);
         }
         if let Some(sd) = &self.styles {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
             next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
         }
         if let Some(ld) = &self.layers {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
             next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1204,8 +1206,8 @@ mod tests {
         assert!(path_diff.segments.is_some());
         assert_eq!(path_diff.style, Some(None)); // tri-state clear on a node-level style ref
 
-        assert_eq!(d.apply(&a), b);
-        assert_eq!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&b, &a).apply(&b), a);
+        assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+        assert_eq!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -1215,7 +1217,7 @@ mod tests {
         let b = sweep_b();
         let d = SemioDrawingDiff::between(&a, &b);
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&d.apply(&a)), a);
+        assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
     }
 
     #[test]
@@ -1228,10 +1230,10 @@ mod tests {
 
         let mut d1 = SemioDrawingDiff::between(&a, &mid);
         let d2 = SemioDrawingDiff::between(&mid, &after);
-        let applied_before_absorb = d1.apply(&a);
+        let applied_before_absorb = d1.apply(&a).expect("apply must succeed for a well-formed fixture");
         d1.absorb(d2.clone());
-        assert_eq!(d1.apply(&a), d2.apply(&applied_before_absorb));
-        assert_eq!(d1.apply(&a), after);
+        assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), d2.apply(&applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
+        assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), after);
     }
 
     #[test]

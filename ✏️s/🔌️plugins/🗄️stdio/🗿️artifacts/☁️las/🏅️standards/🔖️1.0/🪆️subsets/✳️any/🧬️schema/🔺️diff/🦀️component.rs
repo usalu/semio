@@ -4,14 +4,40 @@
 //! a top-level `Option<T>` scalar plus an index-keyed `vlrs` triple and an index-keyed `points`
 //! triple, each entity individually patchable.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::artifacts::las::LasSnapshot;
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
+
+fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, target: &str) -> MutationApplyResult<()> {
+    let mut removed = BTreeSet::new();
+    for &index in removed_indices {
+        if index >= base_len || !removed.insert(index) {
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for index in modified_indices {
+        if index >= base_len || removed.contains(&index) || !modified.insert(index) {
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
+        }
+    }
+    let mut length = base_len - removed.len();
+    let mut additions: Vec<usize> = added_indices.into_iter().collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        if index > length || previous == Some(index) {
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -225,22 +251,27 @@ impl LasVlrsDiff {
 
     /// ▶️ Applies this triple: `modified` by BASE index (no-op if since-removed), then `removed`
     /// (descending order doesn't matter — collected as a set), then `added` ascending, clamped.
-    pub fn apply(&self, base: &[LasVlr]) -> Vec<LasVlr> {
-        let mut items: Vec<Option<LasVlr>> = base.iter().cloned().map(Some).collect();
+    fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
+        let mut items = base.to_vec();
         for m in &self.modified {
-            if let Some(Some(v)) = items.get_mut(m.index) {
-                apply_vlr_diff(v, &m.diff);
-            }
+            apply_vlr_diff(&mut items[m.index], &m.diff);
         }
-        let removed: HashSet<usize> = self.removed.iter().copied().collect();
-        let mut survivors: Vec<LasVlr> = items.into_iter().enumerate().filter(|(i, _)| !removed.contains(i)).filter_map(|(_, v)| v).collect();
+        let mut removed = self.removed.clone();
+        removed.sort_unstable_by(|a, b| b.cmp(a));
+        for index in removed {
+            items.remove(index);
+        }
         let mut added = self.added.clone();
         added.sort_by_key(|a| a.index);
         for a in added {
-            let at = a.index.min(survivors.len());
-            survivors.insert(at, a.vlr.clone());
+            items.insert(a.index, a.vlr);
         }
-        survivors
+        items
+    }
+
+    pub fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
+        Ok(self.apply_unchecked(base))
     }
 
     pub fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
@@ -458,22 +489,27 @@ impl LasPointsDiff {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn apply(&self, base: &[LasPoint]) -> Vec<LasPoint> {
-        let mut items: Vec<Option<LasPoint>> = base.iter().cloned().map(Some).collect();
+    fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
+        let mut items = base.to_vec();
         for m in &self.modified {
-            if let Some(Some(p)) = items.get_mut(m.index) {
-                apply_point_diff(p, &m.diff);
-            }
+            apply_point_diff(&mut items[m.index], &m.diff);
         }
-        let removed: HashSet<usize> = self.removed.iter().copied().collect();
-        let mut survivors: Vec<LasPoint> = items.into_iter().enumerate().filter(|(i, _)| !removed.contains(i)).filter_map(|(_, v)| v).collect();
+        let mut removed = self.removed.clone();
+        removed.sort_unstable_by(|a, b| b.cmp(a));
+        for index in removed {
+            items.remove(index);
+        }
         let mut added = self.added.clone();
         added.sort_by_key(|a| a.index);
         for a in added {
-            let at = a.index.min(survivors.len());
-            survivors.insert(at, a.point.clone());
+            items.insert(a.index, a.point);
         }
-        survivors
+        items
+    }
+
+    pub fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
+        Ok(self.apply_unchecked(base))
     }
 
     pub fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
@@ -682,18 +718,24 @@ fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 }
 
 impl MutationDiff<LasSnapshot> for LasDiff {
-    fn apply(&self, base: &LasSnapshot) -> LasSnapshot {
+    fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
+        if let Some(diff) = &self.vlrs {
+            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
+        }
+        if let Some(diff) = &self.points {
+            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points")?;
+        }
         let mut header = base.header.clone();
         apply_header_diff(&mut header, self);
         let vlrs = match &self.vlrs {
-            Some(vd) => vd.apply(&base.vlrs),
+            Some(vd) => vd.apply_unchecked(&base.vlrs),
             None => base.vlrs.clone(),
         };
         let points = match &self.points {
-            Some(pd) => pd.apply(&base.points),
+            Some(pd) => pd.apply_unchecked(&base.points),
             None => base.points.clone(),
         };
-        LasSnapshot { schema: base.schema.clone(), header, vlrs, points }
+        Ok(LasSnapshot { schema: base.schema.clone(), header, vlrs, points })
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Header
@@ -783,7 +825,16 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
     /// 🔁️ Diff-level undo, derived generically: the state delta from `self.apply(base)` back to
     /// `base` — `between` is the single source of truth for turning a state pair into a diff.
     fn inverse(&self, base: &LasSnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = {
+            let mut header = base.header.clone();
+            apply_header_diff(&mut header, self);
+            LasSnapshot {
+                schema: base.schema.clone(),
+                header,
+                vlrs: self.vlrs.as_ref().map_or_else(|| base.vlrs.clone(), |value| value.apply_unchecked(&base.vlrs)),
+                points: self.points.as_ref().map_or_else(|| base.points.clone(), |value| value.apply_unchecked(&base.points)),
+            }
+        };
         Self::between(&mutated, base)
     }
 
@@ -1901,7 +1952,7 @@ const HDR_POINTS: u32 = 1 << 26;
 //#endregion 🔖️HeaderMaskBits
 //#endregion 🔖️BinaryDiffCodec
 
-impl protocol::DiffCodec for LasDiff {
+impl DiffCodec for LasDiff {
     fn print_diff(&self) -> String {
         print_las_diff(self)
     }
@@ -2293,6 +2344,16 @@ pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn invalid_collection_targets_are_rejected_before_mutation() {
+        let base = LasSnapshot::default();
+        let diff = LasDiff { vlrs: Some(LasVlrsDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
+        let error = diff.apply(&base).expect_err("missing VLR target must be rejected");
+        assert_eq!(error.code, "invalid-remove-index");
+        assert_eq!(error.target, vec!["vlrs", "0"]);
+        assert_eq!(base, LasSnapshot::default());
+    }
 
     /// 🧪️ `DiffCodec` round-trip law for the hand-rolled `LasDiff` text/binary grammar —
     /// exercises every header scalar, both `LasPointDiff` tri-states (`gps_time`/`rgb`, both

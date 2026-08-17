@@ -40,8 +40,10 @@ impl ArtifactPack for PlaybookPresence {
 }
 
 impl protocol::MutationDiff<PlaybookPresence> for PlaybookPresence {
-    fn apply(&self, base: &PlaybookPresence) -> PlaybookPresence {
-        base.clone()
+    fn apply(&self, base: &PlaybookPresence) -> protocol::MutationApplyResult<PlaybookPresence> {
+        Ok({
+            base.clone()
+        })
     }
     fn absorb(&mut self, _other: Self) {}
 }

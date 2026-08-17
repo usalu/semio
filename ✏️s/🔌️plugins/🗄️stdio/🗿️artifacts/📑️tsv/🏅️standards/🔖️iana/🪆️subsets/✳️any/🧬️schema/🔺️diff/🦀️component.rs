@@ -7,9 +7,8 @@
 
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -177,36 +176,9 @@ pub struct TsvDiff {
 }
 
 impl MutationDiff<TsvSnapshot> for TsvDiff {
-    fn apply(&self, base: &TsvSnapshot) -> TsvSnapshot {
-        let mut next = base.clone();
-        if let Some(v) = self.trailing_newline {
-            next.trailing_newline = v;
-        }
-        if let Some(v) = self.line_ending {
-            next.line_ending = v;
-        }
-        if let Some(rdiff) = &self.records {
-            for m in &rdiff.modified {
-                if let Some(row) = next.records.get_mut(m.index) {
-                    *row = m.diff.apply(row);
-                }
-            }
-            let mut removed_desc = rdiff.removed.clone();
-            removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-            removed_desc.dedup();
-            for idx in removed_desc {
-                if idx < next.records.len() {
-                    next.records.remove(idx);
-                }
-            }
-            let mut added_asc = rdiff.added.clone();
-            added_asc.sort_by_key(|a| a.index);
-            for a in added_asc {
-                let at = a.index.min(next.records.len());
-                next.records.insert(at, a.row);
-            }
-        }
-        next
+    fn apply(&self, base: &TsvSnapshot) -> MutationApplyResult<TsvSnapshot> {
+        validate_tsv_diff(self, base)?;
+        Ok(apply_tsv_diff_unchecked(self, base))
     }
 
     fn absorb(&mut self, other: Self) {
@@ -229,6 +201,79 @@ impl MutationDiff<TsvSnapshot> for TsvDiff {
         };
         self.records = Some(absorb_records(d1, d2));
     }
+}
+
+fn validate_tsv_diff(diff: &TsvDiff, base: &TsvSnapshot) -> MutationApplyResult<()> {
+    let Some(records) = &diff.records else { return Ok(()) };
+    let mut removed = std::collections::HashSet::new();
+    for &index in &records.removed {
+        if index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "row removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &records.modified {
+        if entry.index >= base.records.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "row modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "row modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row modification target is repeated"));
+        }
+        if let Some(fields) = &entry.diff.fields {
+            if fields.len() > base.records[entry.index].len() {
+                return Err(MutationApplyError::new("mutation.apply.invalid-index", "row field patch exceeds the base row"));
+            }
+        }
+    }
+    let final_len = base.records.len() - removed.len() + records.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &records.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "row addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
+}
+
+fn apply_tsv_diff_unchecked(diff: &TsvDiff, base: &TsvSnapshot) -> TsvSnapshot {
+    let mut next = base.clone();
+    if let Some(v) = diff.trailing_newline {
+        next.trailing_newline = v;
+    }
+    if let Some(v) = diff.line_ending {
+        next.line_ending = v;
+    }
+    if let Some(rdiff) = &diff.records {
+        for m in &rdiff.modified {
+            if let Some(row) = next.records.get_mut(m.index) {
+                *row = m.diff.apply(row);
+            }
+        }
+        let mut removed_desc = rdiff.removed.clone();
+        removed_desc.sort_unstable_by(|a, b| b.cmp(a));
+        removed_desc.dedup();
+        for idx in removed_desc {
+            if idx < next.records.len() {
+                next.records.remove(idx);
+            }
+        }
+        let mut added_asc = rdiff.added.clone();
+        added_asc.sort_by_key(|a| a.index);
+        for a in added_asc {
+            let at = a.index.min(next.records.len());
+            next.records.insert(at, a.row);
+        }
+    }
+    next
 }
 
 /// ➕️ Structural, total, base-free absorb of two `records` triples (same algorithm as csv's).
@@ -319,7 +364,7 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
 
 impl DiffAlgebra<TsvSnapshot> for TsvDiff {
     fn inverse(&self, base: &TsvSnapshot) -> Self {
-        let applied = self.apply(base);
+        let applied = apply_tsv_diff_unchecked(self, base);
         Self::between(&applied, base)
     }
 
@@ -530,7 +575,7 @@ fn parse_tsv_diff(line: &str) -> Result<TsvDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for TsvDiff {
+impl DiffCodec for TsvDiff {
     fn print_diff(&self) -> String {
         print_tsv_diff(self)
     }

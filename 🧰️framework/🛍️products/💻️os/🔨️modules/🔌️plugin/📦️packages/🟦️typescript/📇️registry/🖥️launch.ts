@@ -27,6 +27,17 @@ const DEV_LAUNCHERS_MARKER =
 /** @emoji 🧩️ One `serverReadyAction` shape with a `"{PORT}"` token substituted at render time. */
 type ServerReadyTemplate = { readonly pattern: string; readonly uriFormat: string };
 
+/** @emoji 👥️ Multi-user expansion template for one playground variant's `@generated:<variant>:users`
+ * placeholder: one launcher per registry `userPorts.react[]`/`userPorts.wgpu[]` slot (1-based `{N}`),
+ * reusing the variant's own `command`/`reactServerReadyAction`/`wgpuServerReadyAction` and offsetting
+ * its `order`/`wgpuOrder` by `0.01 * N`. `env` values may carry `"{N}"`, `"{PORT}"` and `"{EMAIL}"`
+ * tokens; `SEMIO_RENDERER` is set programmatically per renderer, not part of this template. */
+type DevLauncherUsersTemplate = {
+  readonly namePrefixPattern: string;
+  readonly emailPattern: string;
+  readonly env: Readonly<Record<string, string>>;
+};
+
 /** @emoji 🎮️ Hand-curated parts of one playground variant's `3_dev` launch entries that the plugin
  * registry cannot supply (display name, launch command, VS Code presentation order, env/serverReadyAction
  * shape). Registry ports fill any `"{PORT}"` token in `reactEnv`/`wgpuEnv`/`*ServerReadyAction`. */
@@ -39,6 +50,7 @@ type DevLauncherEntry = {
   readonly wgpuOrder?: number;
   readonly wgpuEnv?: Readonly<Record<string, string>>;
   readonly wgpuServerReadyAction?: ServerReadyTemplate;
+  readonly users?: DevLauncherUsersTemplate;
 };
 //#endregion
 
@@ -97,6 +109,49 @@ function reindent(jsonText: string, extraSpaces: number): string {
     .map((line, i) => (i === 0 ? line : pad + line))
     .join("\n");
 }
+
+/** @emoji 🔤️ Substitutes the `users` template's `"{N}"` / `"{PORT}"` / `"{EMAIL}"` tokens in `text`. */
+function substituteUserTokens(text: string, n: number, port: number, email: string): string {
+  return text.replaceAll("{N}", String(n)).replaceAll("{PORT}", String(port)).replaceAll("{EMAIL}", email);
+}
+
+/** @emoji 👥️ Renders one `users` launcher for user slot `n` (1-based) of one renderer, reusing the
+ * variant's own `command`/`serverReadyAction` and offsetting its base `order` by `0.01 * n`. */
+function renderUserEntry(users: DevLauncherUsersTemplate, launcher: DevLauncherEntry, renderer: "react" | "wgpu", n: number, port: number, baseOrder: number, sra: ServerReadyTemplate): object {
+  const email = substituteUserTokens(users.emailPattern, n, port, "");
+  const namePrefix = substituteUserTokens(users.namePrefixPattern, n, port, email);
+  const name = `🛠️dev${namePrefix}${renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm"}`;
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(users.env)) env[key] = substituteUserTokens(value, n, port, email);
+  env.SEMIO_RENDERER = renderer;
+  return {
+    name,
+    type: "node-terminal",
+    request: "launch",
+    command: launcher.command,
+    cwd: "${workspaceFolder}",
+    env,
+    // ↕️ Rounded to 2dp: floating-point addition of `0.01 * n` onto a decimal `baseOrder` (e.g.
+    // `386.2 + 0.02`) otherwise lands on an ugly `386.21999999999997` instead of the clean `386.22`.
+    presentation: { group: "3_dev", order: Math.round((baseOrder + n * 0.01) * 100) / 100 },
+    serverReadyAction: renderServerReadyAction(sra, port),
+  };
+}
+
+/** @emoji 👥️ Renders every launcher for one variant's `@generated:<variant>:users` placeholder: one
+ * per `playground.userPorts.react[]` slot, then one per `playground.userPorts.wgpu[]` slot (only when
+ * the base launcher also declares `wgpuOrder`/`wgpuServerReadyAction`). */
+function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEntry): object[] {
+  const users = launcher.users;
+  if (!users) return [];
+  if (!playground.userPorts) throw new Error(`🖥️launch.ts: devLaunchers["${playground.variant}"] declares "users" but the registry entry has no "userPorts"`);
+  const entries: object[] = [];
+  playground.userPorts.react.forEach((port, index) => entries.push(renderUserEntry(users, launcher, "react", index + 1, port, launcher.order, launcher.reactServerReadyAction)));
+  if (launcher.wgpuOrder !== undefined && launcher.wgpuServerReadyAction) {
+    playground.userPorts.wgpu.forEach((port, index) => entries.push(renderUserEntry(users, launcher, "wgpu", index + 1, port, launcher.wgpuOrder!, launcher.wgpuServerReadyAction!)));
+  }
+  return entries;
+}
 //#endregion
 
 //#region 🔖️Generate
@@ -118,6 +173,14 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
       if (!out.includes(wgpuPlaceholder)) throw new Error(`🖥️launch.ts: seed is missing placeholder ${wgpuPlaceholder}`);
       const wgpuName = `🛠️dev${launcher.namePrefix}🧊️wgpu🌐️wasm`;
       out = out.replace(wgpuPlaceholder, reindent(JSON.stringify(renderEntry(wgpuName, launcher, "wgpu", playground.ports.wgpu), null, 2), 4));
+    }
+    if (launcher.users) {
+      const usersPlaceholder = JSON.stringify(`@generated:${variant}:users`);
+      if (!out.includes(usersPlaceholder)) throw new Error(`🖥️launch.ts: seed is missing placeholder ${usersPlaceholder}`);
+      const userEntriesText = renderUserEntries(launcher, playground)
+        .map((entry) => JSON.stringify(entry, null, 2))
+        .join(",\n");
+      out = out.replace(usersPlaceholder, reindent(userEntriesText, 4));
     }
   }
   if (out.includes("@generated:")) throw new Error("🖥️launch.ts: an @generated placeholder was not resolved (devLaunchers table is missing an entry)");

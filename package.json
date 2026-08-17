@@ -61,7 +61,9 @@
     "🧰️framework/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg"
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg",
+    "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+    "🌎️hub/📦️packages/🟦️typescript"
   ],
   "engines": {
     "bun": ">=1.2.0"

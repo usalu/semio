@@ -9,13 +9,14 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Icon, type IconSource } from "../🔣️Icons/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
-import { useFlow } from "../🧭️Flow/🟦️component.tsx";
-import { floatingMenuItemClass, ContextMenuChrome, formatKeybindingShortcut } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
+import { formatKeybindingShortcut } from "../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
+import { floatingMenuItemClass, ContextMenuChrome } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🖱️ContextMenu
@@ -718,15 +719,6 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     shellScope?.portalLayerRef.current ?? getDocumentBody(),
   );
 };
-
-/** @emoji 🍎️ True on Apple platforms — drives ⌘️ vs Ctrl glyphs in text-selection menu shortcuts. */
-export function isAppleUiPlatform(): boolean {
-  if (typeof navigator === "undefined") return false;
-  if ("userAgentData" in navigator && navigator.userAgentData && typeof navigator.userAgentData === "object" && "platform" in navigator.userAgentData) {
-    return (navigator.userAgentData as { readonly platform?: string }).platform === "macOS";
-  }
-  return /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
-}
 
 /** @emoji 📋️ Non-collapsed DOM text selection string, or empty. */
 export function readDomTextSelection(): string {

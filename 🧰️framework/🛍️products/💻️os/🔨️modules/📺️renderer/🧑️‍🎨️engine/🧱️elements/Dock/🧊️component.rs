@@ -1084,7 +1084,7 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         } else {
             theme.text_element
         };
-        let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, tab_rect, tint);
+        let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, *tab_rect, tint);
         dock_text(ctx, label, tab_rect.x + theme.padding_standard + icon_w, tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
         ctx.input.register_hit(HitTarget { rect: *tab_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
         ctx.draw.end_glass_content();
@@ -1403,12 +1403,14 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
 mod tests {
     use super::*;
     use crate::shell::ShellState;
-    use semio_framework::{AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
+    use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
         AppDefinition {
             id: "test".into(),
+            role: AppRole::Editor,
+            dialect: ArtifactDialect { artifact_kind: "s.test.dock".into(), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data("Test"),
             breadcrumb: vec!["semio".into(), "test".into()],
             icon_id: None,

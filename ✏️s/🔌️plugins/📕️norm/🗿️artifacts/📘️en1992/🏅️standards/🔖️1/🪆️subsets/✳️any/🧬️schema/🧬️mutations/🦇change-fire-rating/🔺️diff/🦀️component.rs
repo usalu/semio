@@ -5,7 +5,10 @@ use crate::artifacts::en1992::mutations::change_fire_rating::mutation::ChangeFir
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeFireRating, _base: &En1992Snapshot) -> En1992Diff {
-    En1992Diff { fire_rating: Some(payload.new_fire_rating.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeFireRating, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    if base.fire_rating == payload.new_fire_rating {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Fire rating already has this value.");
+    }
+    protocol::MutationOutcome::new(En1992Diff { fire_rating: Some(payload.new_fire_rating.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

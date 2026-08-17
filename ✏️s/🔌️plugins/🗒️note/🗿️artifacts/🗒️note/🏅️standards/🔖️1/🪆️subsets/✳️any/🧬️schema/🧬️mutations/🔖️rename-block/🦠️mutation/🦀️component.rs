@@ -23,7 +23,7 @@ pub fn rename_block(id: String, new_name: String) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for RenameBlock {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "block", kind: "rename-block", record: "RenamedBlock" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

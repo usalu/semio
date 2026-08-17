@@ -99,6 +99,7 @@ import {
   type WindowMeasure,
 } from "@semio-tech/framework";
 import {
+  type ArtifactSyncStatus,
   packValueFromBase64,
   packValueToBase64,
 } from "@semio-tech/framework-os";
@@ -290,7 +291,13 @@ function presenceIdentityFromPackBase64(encoded: string): { readonly clientId: s
   return null;
 }
 
-export function presenceClientIdentity(ephemeral = false): { readonly clientId: string; readonly name: string } {
+/** 🪪️ `real`, when given, is the ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
+ * shell's resolved `Identity` presence pair (`user:{userId}#{shellSessionId}` + `displayName`) —
+ * ShellHost's only caller passes it once sign-in resolves, so presence/heartbeat labels show the real
+ * signed-in user instead of a random per-tab `Guest ####`. Absent (no hub env, offline, or not yet
+ * resolved) falls back to the pre-existing session-storage-cached guest identity unchanged. */
+export function presenceClientIdentity(ephemeral = false, real?: { readonly clientId: string; readonly name: string }): { readonly clientId: string; readonly name: string } {
+  if (real) return real;
   if (typeof window === "undefined") return { clientId: "server", name: "Server" };
   if (!ephemeral) {
     const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
@@ -1880,6 +1887,129 @@ export function groupOpenWithEntries(
   return { viewer: forRole("viewer"), editor: forRole("editor") };
 }
 //#endregion 👁️✏️SurfaceRoleLabels
+
+//#region 🔖️CheckInAndSyncStatus
+/** 📌️ ticket `26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS` §C5 — auto check-in
+ * policy constants: an open editor session with uncommitted edits checkpoints once it has been idle
+ * (no new edit) for this long, or immediately once this many uncommitted edits have piled up (never
+ * waiting for an idle period once the threshold is crossed). */
+export const AUTO_CHECKIN_IDLE_MS = 20_000;
+export const AUTO_CHECKIN_EDIT_THRESHOLD = 200;
+
+/** 📌️ A tiny, framework-free debounce scheduler for the auto check-in policy: call {@link notify}
+ * every time the uncommitted-edit count changes for the currently open editor session; it fires
+ * `onCheckpoint` at most once per idle period — immediately once `threshold` is reached (never
+ * waiting out the idle period once crossed), otherwise `idleMs` after the LAST `notify` call, and
+ * never again until `notify(0)` (a landed checkpoint) clears the `pending` latch — the "never a
+ * storm" guard: a `notify` that arrives while a checkpoint is already pending is a no-op. Deliberately
+ * framework-free (`setTimeout`/`clearTimeout` only, no React) so it is unit-testable with vitest's
+ * fake timers without mounting a component tree — `ShellHost`'s own effect is a thin wrapper around
+ * one instance per open editor session, `cancel`ed on unmount/session-switch. */
+export class AutoCheckinScheduler {
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private pending = false;
+
+  constructor(
+    private readonly onCheckpoint: () => void,
+    private readonly idleMs: number = AUTO_CHECKIN_IDLE_MS,
+    private readonly threshold: number = AUTO_CHECKIN_EDIT_THRESHOLD,
+  ) {}
+
+  notify(uncommittedEditCount: number): void {
+    if (uncommittedEditCount === 0) {
+      this.cancel();
+      this.pending = false;
+      return;
+    }
+    if (this.pending) return;
+    if (uncommittedEditCount >= this.threshold) {
+      this.cancel();
+      this.pending = true;
+      this.onCheckpoint();
+      return;
+    }
+    this.cancel();
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.pending = true;
+      this.onCheckpoint();
+    }, this.idleMs);
+  }
+
+  cancel(): void {
+    if (this.timer != null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+}
+
+const CHECKIN_ACTION_LABEL: FrozenLabel = { en: "Check In", de: "Einchecken" };
+/** 📌️ `#s-checkin`'s own label — mirrors `⚛️react/📦️index.tsx`'s `ui.checkin.action` bilingual pair
+ * (that barrel sits downstream of `ShellHost`, so it cannot be imported here without a cycle — see
+ * `SurfaceRoleLabels`'s header doc for the identical constraint). */
+export function checkinActionText(locale: string): string {
+  return frozenLabelText(CHECKIN_ACTION_LABEL, locale);
+}
+
+const CHECKIN_MESSAGE_PLACEHOLDER_LABEL: FrozenLabel = { en: "Check-in message", de: "Check-in-Nachricht" };
+export function checkinMessagePlaceholderText(locale: string): string {
+  return frozenLabelText(CHECKIN_MESSAGE_PLACEHOLDER_LABEL, locale);
+}
+
+const CHECKIN_SUBMIT_LABEL: FrozenLabel = { en: "Commit", de: "Übernehmen" };
+export function checkinSubmitText(locale: string): string {
+  return frozenLabelText(CHECKIN_SUBMIT_LABEL, locale);
+}
+
+const CHECKIN_CANCEL_LABEL: FrozenLabel = { en: "Cancel", de: "Abbrechen" };
+export function checkinCancelText(locale: string): string {
+  return frozenLabelText(CHECKIN_CANCEL_LABEL, locale);
+}
+
+/** 👁️✏️ ticket §C5 item 5 — "viewers never checkpoint": the one predicate gating BOTH the
+ * `#s-checkin` affordance's presence and the auto check-in timer's arming, mirroring
+ * `isMutationKindDefinition`'s "one definition of what counts as an editing verb" precedent —
+ * checkpoint is exactly such a verb. `VcsArtifactApp`'s own host-side guard already rejects a
+ * viewer's `CommitCheckpoint` dispatch regardless; this is the client-side mirror that keeps the
+ * affordance from ever reaching the wire in the first place. */
+export function canCheckIn(role: AppRole | undefined): boolean {
+  return role === "editor";
+}
+
+/** 🚦️ ticket §C5 — the sync status pill's three-way vocabulary, derived from `ArtifactSyncStatus`. A
+ * non-live remote takes priority over a pending-mutation count (the user needs to know the
+ * connection itself is degraded before anything about local pending edits); `null` (no status event
+ * observed yet, e.g. before the document's first `open`) reads as `remote: "detached"`. */
+export type SyncPillState = { readonly kind: "persisted" } | { readonly kind: "pending"; readonly count: number } | { readonly kind: "remote"; readonly remote: "connected" | "connecting" | "backoff" | "detached" };
+
+export function computeSyncPillState(status: ArtifactSyncStatus | null): SyncPillState {
+  if (!status || status.remote.kind !== "live") {
+    return { kind: "remote", remote: !status ? "detached" : status.remote.kind === "live" ? "connected" : status.remote.kind };
+  }
+  if (status.pendingMutations > 0) return { kind: "pending", count: status.pendingMutations };
+  return { kind: "persisted" };
+}
+
+const SYNC_STATUS_PERSISTED_LABEL: FrozenLabel = { en: "Persisted", de: "Gespeichert" };
+const SYNC_STATUS_PENDING_LABEL: FrozenLabel = { en: "Pending", de: "Ausstehend" };
+const SYNC_STATUS_REMOTE_LABEL: FrozenLabel = { en: "Remote", de: "Remote" };
+const SYNC_STATUS_REMOTE_STATE_LABEL: Readonly<Record<"connected" | "connecting" | "backoff" | "detached", FrozenLabel>> = {
+  connected: { en: "connected", de: "verbunden" },
+  connecting: { en: "connecting", de: "verbindet" },
+  backoff: { en: "backoff", de: "erneuter Versuch" },
+  detached: { en: "detached", de: "getrennt" },
+};
+
+/** 🚦️ Localized pill text for `#s-sync-status` — matches contract §C5's own vocabulary (`persisted |
+ * pending(n) | remote(connected|connecting|backoff|detached)`) closely enough that a state can be
+ * read back off the rendered string in either locale, not just English. */
+export function syncPillText(state: SyncPillState, locale: string): string {
+  if (state.kind === "persisted") return frozenLabelText(SYNC_STATUS_PERSISTED_LABEL, locale);
+  if (state.kind === "pending") return `${frozenLabelText(SYNC_STATUS_PENDING_LABEL, locale)} (${state.count})`;
+  return `${frozenLabelText(SYNC_STATUS_REMOTE_LABEL, locale)}: ${frozenLabelText(SYNC_STATUS_REMOTE_STATE_LABEL[state.remote], locale)}`;
+}
+//#endregion 🔖️CheckInAndSyncStatus
 
 /** @emoji 🧭️ The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {

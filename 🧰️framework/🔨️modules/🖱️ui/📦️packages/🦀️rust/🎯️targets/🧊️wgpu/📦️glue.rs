@@ -153,6 +153,13 @@ mod icon_selector;
 #[path = "../../../../🧱️elements/🪵️Tree/🧊️component.rs"]
 mod tree_element;
 
+// 👥️ `PresenceBar` (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 2-F) builds
+// a plain `UiNode` tree via `component::ui`'s declarative types, not a `widgets`/`WidgetContext` chrome
+// renderer like its neighbours above — so it needs only the light `wgpu` feature, never `wgpu-engine`.
+#[cfg(feature = "wgpu")]
+#[path = "../../../../🧱️elements/👥️PresenceBar/🧊️component.rs"]
+pub mod presence_bar;
+
 #[cfg(feature = "wgpu-engine")]
 #[path = "🦀️widgets.rs"]
 pub mod widgets;
@@ -175,6 +182,8 @@ pub use component::ui::*;
 pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use geometry::Rect;
 pub use theme::{GlassStyle, Level, Rgba, Theme};
+#[cfg(feature = "wgpu")]
+pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_hue_for_actor, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
 
 // 🖥️ Retained-mode engine surface (feature = "wgpu-engine" only).
 #[cfg(feature = "wgpu-engine")]

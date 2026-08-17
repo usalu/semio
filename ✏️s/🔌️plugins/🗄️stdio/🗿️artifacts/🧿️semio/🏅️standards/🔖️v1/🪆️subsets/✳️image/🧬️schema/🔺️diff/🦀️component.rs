@@ -417,7 +417,7 @@ impl SemioImageDiff {
 }
 
 impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
-    fn apply(&self, base: &SemioImageSnapshot) -> SemioImageSnapshot {
+    fn apply(&self, base: &SemioImageSnapshot) -> protocol::MutationApplyResult<SemioImageSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;
@@ -435,12 +435,14 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
             next.icc = v.clone();
         }
         if let Some(d) = &self.frames {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
             frames_apply(&mut next.frames, d);
         }
         if let Some(d) = &self.metadata {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |item| item.key.clone(), ["metadata"])?;
             metadata_apply(&mut next.metadata, d);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -702,7 +704,7 @@ fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for SemioImageDiff {
+impl DiffCodec for SemioImageDiff {
     fn print_diff(&self) -> String {
         print_image_diff(self)
     }
@@ -953,7 +955,7 @@ mod tests {
         let mut d1 = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&base, &mid);
         let d2 = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), after);
+        assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
     #[test]
@@ -961,9 +963,9 @@ mod tests {
         let a = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16)], ..SemioImageSnapshot::default() };
         let b = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16), frame(2, 4)], colorspace: SemioColorspace::Grayscale, ..SemioImageSnapshot::default() };
         let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &b);
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let ba = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&b, &a);
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -980,9 +982,9 @@ mod tests {
             s
         };
         let d = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&base, &next);
-        let mutated = d.apply(&base);
+        let mutated = d.apply(&base).expect("apply must succeed for a well-formed fixture");
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&mutated), base);
+        assert_eq!(inv.apply(&mutated).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     /// 🧪️ field_sweep — THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable
@@ -1021,7 +1023,7 @@ mod tests {
         };
 
         let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(ab.apply(&sweep_a), sweep_b);
+        assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
         assert!(ab.width.is_some());
         assert!(ab.height.is_some());
         assert!(ab.colorspace.is_some());
@@ -1037,7 +1039,7 @@ mod tests {
         assert!(!metadata_ab.added.is_empty(), "metadata: added not exercised");
 
         let ba = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(ba.apply(&sweep_b), sweep_a);
+        assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
         assert_eq!(ba.icc, Some(Some(vec![1, 2, 3])), "icc None->Some must be tri-state Some(Some(_))");
         let frames_ba = ba.frames.as_ref().expect("frames must differ");
         assert!(!frames_ba.removed.is_empty(), "reverse direction must exercise a removed frame (a is shorter)");

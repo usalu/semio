@@ -22,7 +22,7 @@ pub fn create_rule(index: usize, rule: AssemblyRule) -> AssemblyMutation {
 impl MutationKind<AssemblySnapshot, AssemblyMutation> for CreateRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreatedRule" };
 
-    fn diff(&self, base: &AssemblySnapshot) -> AssemblyDiff {
+    fn diff(&self, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {

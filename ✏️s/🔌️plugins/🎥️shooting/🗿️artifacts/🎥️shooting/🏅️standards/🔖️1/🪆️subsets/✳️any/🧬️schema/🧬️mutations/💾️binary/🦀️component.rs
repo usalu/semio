@@ -4,9 +4,10 @@
 //! the `ShootingMutationDsl` mirror that lives alongside the operation enum). This component only adds
 //! the thin artifact-facing `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law.
 //!
-//! The app's typed `ShootingCommand` enum — which used to share the old `📡️protocol` crate with this
-//! codec — is an APP concern, not an artifact one: it now lives in `🎛️apps/🎥️shooting/🦀️component.rs`,
-//! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
+//! The editor's typed `ShootingCommand` enum — which used to share the old `📡️protocol` crate with this
+//! codec — is an editor-surface concern, not an artifact one: it now lives in the sibling editor
+//! module's root component, assembled from the `🎮️commands/*` payload modules by
+//! `semio_framework_plugin::app_commands!`.
 
 
 //#region 📡️SemioProtocol

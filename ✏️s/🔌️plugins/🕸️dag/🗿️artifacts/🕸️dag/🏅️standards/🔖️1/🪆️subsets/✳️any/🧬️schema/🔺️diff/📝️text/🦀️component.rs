@@ -31,39 +31,42 @@ pub fn diff_replace_content(nodes: Vec<DagNodeSpec>, edges: Vec<DagFixtureEdge>)
 //#region 🔖️Apply
 impl DagDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> DagArtifact {
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(list) = &self.selected_node_ids {
-            next.selected_node_ids = list.values.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &DagArtifact) -> protocol::MutationApplyResult<DagArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(list) = &self.selected_node_ids {
+                next.selected_node_ids = list.values.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> DagSnapshot {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        next
+    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -101,7 +104,7 @@ mod tests {
         let id = base.nodes().first().expect("fixture has a node").id.clone();
         let mutation = delete_node(id.clone());
         let outcome = mutation.diff(&base);
-        assert!(outcome.diff().apply(&base).nodes().iter().all(|node| node.id != id));
+        assert!(outcome.diff().apply(&base).expect("valid mutation diff").nodes().iter().all(|node| node.id != id));
     }
 }
 //#endregion 🧪️Tests

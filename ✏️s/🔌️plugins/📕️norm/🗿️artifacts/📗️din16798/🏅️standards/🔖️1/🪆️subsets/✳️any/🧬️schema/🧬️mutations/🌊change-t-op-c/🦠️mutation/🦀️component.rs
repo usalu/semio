@@ -15,7 +15,7 @@ pub struct ChangeTOpC {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeTOpC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "t-op-c", kind: "change-t-op-c", record: "ChangedTOpC" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_t_op_c::diff::diff(self, base)
     }
 

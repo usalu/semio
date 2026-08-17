@@ -69,7 +69,7 @@ impl ArtifactSerializer for SemioMeshToDwg {
 
         let mut snapshot = DwgSnapshot::default();
         snapshot.version = DWG_CODEC_VERSION.into();
-        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing);
+        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
 }

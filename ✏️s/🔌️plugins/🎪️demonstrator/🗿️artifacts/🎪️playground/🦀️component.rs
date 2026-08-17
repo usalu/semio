@@ -1,8 +1,19 @@
 //! 🎪️ Playground artifact — demonstrator's owned document entity (minimal schema stub).
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub const PLAYGROUND_DOCUMENT_SCHEMA: &str = "playground.playground";
+
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1 — the one `Dialect`
+/// coordinate `PlaygroundEditor`/`PlaygroundViewer` (`✏️editor`/`👁️viewer`) both read `DIALECT` off,
+/// lives at the ARTIFACT root (not under either surface) so a viewer file can read it without ever
+/// importing through the sibling editor module. `artifact_kind` is the 3-part schema id
+/// `PlaygroundArtifact`/`PlaygroundSnapshot` are keyed under (`#[artifact_schema(id = "…")]`), not the
+/// 2-part `ArtifactIdentity::parse("s.playground")` string `definition()` above uses for a different,
+/// older composer/registration purpose.
+pub const PLAYGROUND_DIALECT: Dialect = Dialect { artifact_kind: "s.demonstrator.playground", standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

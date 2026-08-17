@@ -54,7 +54,7 @@ mod tests {
         use protocol::Mutation;
         let base = SHomeSnapshot::default();
         let d1 = change_catalog_generation(3).diff(&base).diff().clone();
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = change_catalog_generation(9).diff(&mid).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }

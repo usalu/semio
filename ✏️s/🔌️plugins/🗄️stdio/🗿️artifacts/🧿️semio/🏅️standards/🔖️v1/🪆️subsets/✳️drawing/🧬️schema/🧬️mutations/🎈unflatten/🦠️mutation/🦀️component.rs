@@ -16,7 +16,7 @@ pub struct UnflattenNode {
 impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for UnflattenNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unflatten", entity: "node", kind: "unflatten", record: "UnflattenedNode" };
 
-    fn diff(&self, base: &SemioDrawingSnapshot) -> <SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff {
+    fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {

@@ -16,13 +16,13 @@ role = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "fem2d"
-app = "fem2d-play"
+app = "s.fem.fem2d@1/*#editor"
 aliases = ["fem 2d"]
 ports = { react = 6086, wgpu = 6186 }
 
 [[package.metadata.semio.playground]]
 variant = "fem3d"
-app = "fem3d-play"
+app = "s.fem.fem3d@1/*#editor"
 aliases = ["fem 3d"]
 ports = { react = 6087, wgpu = 6187 }
 

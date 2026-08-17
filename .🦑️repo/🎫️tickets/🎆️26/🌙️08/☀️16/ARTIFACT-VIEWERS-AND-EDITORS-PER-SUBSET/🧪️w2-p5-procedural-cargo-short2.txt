@@ -1,0 +1,24 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:684:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:684:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:749:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:6654:57: error[E0053]: method `apply` has an incompatible type for trait: expected `Result<SpaceHistorySnapshot, ...>`, found `SpaceHistorySnapshot`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4995:24: error[E0308]: mismatched types: expected type parameter `P`, found `Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4562:25: error[E0308]: mismatched types: expected type parameter `P`, found `Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1066:26: error[E0308]: mismatched types: expected type parameter `P`, found `Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1135:28: error[E0308]: mismatched types: expected type parameter `P`, found `Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1202:26: error[E0308]: mismatched types: expected type parameter `S`, found `Result<S, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:402:6: error[E0308]: mismatched types: expected type parameter `P`, found `Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:512:31: error[E0308]: mismatched types: expected `&P`, found `&Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:536:27: error[E0308]: mismatched types: expected `&P`, found `&Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:536:48: error[E0308]: mismatched types: expected `&P`, found `&Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:538:5: error[E0277]: can't compare `Result<P, MutationApplyError>` with `P`: no implementation for `Result<P, MutationApplyError> == P`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:549:5: error[E0277]: can't compare `Result<P, MutationApplyError>` with `P`: no implementation for `Result<P, MutationApplyError> == P`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:561:42: error[E0308]: mismatched types: expected `&P`, found `&Result<P, MutationApplyError>`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:562:5: error[E0277]: can't compare `Result<P, MutationApplyError>` with `P`: no implementation for `Result<P, MutationApplyError> == P`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9: warning: variable does not need to be mutable
+warning: `semio-framework-os-kernel` (lib) generated 7 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 14 previous errors; 7 warnings emitted

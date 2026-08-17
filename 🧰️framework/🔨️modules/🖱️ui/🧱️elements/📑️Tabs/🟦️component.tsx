@@ -8,8 +8,8 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
-import { interactiveTabActiveClass, interactiveHoverClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { interactiveTabActiveClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 
 // #endregion 🔌️Adapters
 

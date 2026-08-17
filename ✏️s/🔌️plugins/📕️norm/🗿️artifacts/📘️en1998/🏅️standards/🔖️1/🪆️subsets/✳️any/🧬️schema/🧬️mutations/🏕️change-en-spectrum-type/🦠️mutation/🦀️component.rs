@@ -15,7 +15,7 @@ pub struct ChangeEnSpectrumType {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeEnSpectrumType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "en-spectrum-type", kind: "change-en-spectrum-type", record: "ChangedEnSpectrumType" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_en_spectrum_type::diff::diff(self, base)
     }
 

@@ -1,0 +1,5 @@
+BASE="/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect"
+SUBSET="$BASE/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any"
+APP="$BASE/🎛️apps/🏛️architect"
+EDITOR="$SUBSET/✏️editor"
+VIEWER="$SUBSET/👁️viewer"

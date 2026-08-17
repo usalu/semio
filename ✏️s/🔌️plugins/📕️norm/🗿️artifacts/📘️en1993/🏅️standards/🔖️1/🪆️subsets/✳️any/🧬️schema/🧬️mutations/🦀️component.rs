@@ -197,11 +197,11 @@ mod tests {
     /// from `base`) back onto the forward result — asserts the base fixture is exactly restored, and
     /// returns the forward (post-mutation) snapshot for the caller's own field assertions.
     fn round_trip(base: &En1993Snapshot, operation: &En1993Mutation) -> En1993Snapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -448,7 +448,8 @@ mod tests {
     fn change_annex_diff_is_sparse() {
         let base = En1993Snapshot::default();
         let mutation = En1993Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-        let diff = mutation.diff(&base);
+        let outcome = mutation.diff(&base);
+        let diff = outcome.diff();
         assert_eq!(diff.annex, Some(crate::document::AnnexChoice::En));
         assert_eq!(diff.n_ed_kn, None, "change-annex must not touch unrelated fields");
         assert_eq!(diff.bolt_f_ed_kn, None, "change-annex must not touch unrelated fields");

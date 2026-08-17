@@ -15,7 +15,7 @@ pub struct ChangeDataCenterSupplyC {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDataCenterSupplyC {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "data-center-supply-c", kind: "change-data-center-supply-c", record: "ChangedDataCenterSupplyC" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_data_center_supply_c::diff::diff(self, base)
     }
 

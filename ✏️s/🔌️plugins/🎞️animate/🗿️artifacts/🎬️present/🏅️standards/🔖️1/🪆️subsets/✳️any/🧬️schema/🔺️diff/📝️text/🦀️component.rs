@@ -15,45 +15,48 @@ use crate::artifacts::present::schema::diff::*;
 //#region 🔖️Apply
 impl PresentDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &PresentArtifact) -> PresentArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(presentation) = &self.presentation {
-            next.presentation = presentation.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = &self.engagement_input {
-            next.engagement_input = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &PresentArtifact) -> protocol::MutationApplyResult<PresentArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(presentation) = &self.presentation {
+                next.presentation = presentation.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = &self.engagement_input {
+                next.engagement_input = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<PresentSnapshot> for PresentDiff {
-    fn apply(&self, snapshot: &PresentSnapshot) -> PresentSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(presentation) = &self.presentation {
-            next.presentation = presentation.clone();
-        }
-        next
+    fn apply(&self, snapshot: &PresentSnapshot) -> protocol::MutationApplyResult<PresentSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(presentation) = &self.presentation {
+                next.presentation = presentation.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -104,7 +107,7 @@ mod tests {
         let diff: PresentDiff = operation.diff(&base).into_parts().0;
         assert!(diff.presentation.is_some());
         assert!(diff.artifact.is_none());
-        let (applied_source, _) = crate::artifacts::present::present_working_scene(&diff.apply(&base));
+        let (applied_source, _) = crate::artifacts::present::present_working_scene(&diff.apply(&base).expect("valid mutation diff"));
         assert_eq!(applied_source.kind, "video");
     }
 }

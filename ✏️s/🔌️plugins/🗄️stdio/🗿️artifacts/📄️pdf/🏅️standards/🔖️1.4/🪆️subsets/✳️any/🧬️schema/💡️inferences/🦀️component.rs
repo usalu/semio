@@ -23,7 +23,7 @@ pub struct PdfInference {
     pub outline: PdfOutline,
 }
 
-impl protocol::Inference<PdfSnapshot> for PdfInference {
+impl Inference<PdfSnapshot> for PdfInference {
     fn infer(snapshot: &PdfSnapshot) -> Self {
         Self { outline: PdfOutline::compute(snapshot) }
     }

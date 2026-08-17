@@ -114,13 +114,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -251,8 +251,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3BuilderFacets {
-        construction: derived_construction::Ifc2x3BuilderConstruction,
-        analysis: derived_analysis::Ifc2x3AnalyzerAnalysis,
+        construction: Ifc2x3BuilderConstruction,
+        analysis: Ifc2x3AnalyzerAnalysis,
         composition: super::super::io::derived_composition::Ifc2x3ComposerComposition,
     }
     builder: Ifc2x3Builder,
@@ -320,7 +320,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// calling it a second time here would be a redundant registration, same reasoning gif's
 /// `89a::engine::register` doc comment gives).
 pub fn register() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::ifc2x3_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
     register_artifact_inferences();
     register_pilot_languages();
     store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(

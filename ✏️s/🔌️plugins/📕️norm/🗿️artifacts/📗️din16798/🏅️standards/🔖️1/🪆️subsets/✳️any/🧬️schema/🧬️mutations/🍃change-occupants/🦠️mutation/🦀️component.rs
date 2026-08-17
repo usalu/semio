@@ -15,7 +15,7 @@ pub struct ChangeOccupants {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeOccupants {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "occupants", kind: "change-occupants", record: "ChangedOccupants" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_occupants::diff::diff(self, base)
     }
 

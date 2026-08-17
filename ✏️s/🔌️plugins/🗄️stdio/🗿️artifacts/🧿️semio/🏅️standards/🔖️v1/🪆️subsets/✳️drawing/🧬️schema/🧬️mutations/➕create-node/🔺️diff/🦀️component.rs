@@ -1,5 +1,6 @@
-//! 🔺️ `create-node` — sparse diff construction; a no-op when `parent` does not resolve to a
-//! `Group` (nothing to add children to), matching `node_at`'s own "absent ⇒ `None`" convention.
+//! 🔺️ `create-node` — sparse diff construction; `parent` not resolving to a `Group` (unknown
+//! container reference — `DrawNode` has no stable id, so there is no separate `✅validation-report`
+//! facet in this subset to defer to) is `mutation.invariant` (Fatal, empty diff).
 
 use super::mutation::CreateNode;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexedTripleDiff};
@@ -7,13 +8,13 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{dif
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Diff
-pub fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> SemioDrawingDiff {
+pub fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) => {
             let at = payload.index.min(children.len());
-            diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.node.clone() }] }) }))
+            protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.node.clone() }] }) })))
         }
-        _ => SemioDrawingDiff::default(),
+        _ => protocol::MutationOutcome::fatal("mutation.invariant", format!("Parent at layer #{} does not resolve to a group.", payload.parent.layer), [payload.parent.layer.to_string()]),
     }
 }
 //#endregion 🔖️Diff

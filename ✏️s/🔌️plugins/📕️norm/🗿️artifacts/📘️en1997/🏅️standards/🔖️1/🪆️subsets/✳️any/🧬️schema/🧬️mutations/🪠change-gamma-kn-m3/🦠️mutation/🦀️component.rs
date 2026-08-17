@@ -15,7 +15,7 @@ pub struct ChangeGammaKnM3 {
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeGammaKnM3 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma-kn-m3", kind: "change-gamma-kn-m3", record: "ChangedGammaKnM3" };
 
-    fn diff(&self, base: &En1997Snapshot) -> En1997Diff {
+    fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         crate::artifacts::en1997::mutations::change_gamma_kn_m3::diff::diff(self, base)
     }
 

@@ -16,7 +16,7 @@ use crate::artifacts::svg::{
     schema::snapshot::{svg_element_to_xml_node, CommonAttrs, Matrix2D, PathCommand, PresentationAttrs, SvgElement, TransformOp, ViewBox},
     SvgSnapshot,
 };
-use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };

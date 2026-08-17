@@ -30,14 +30,15 @@ pub enum PdfMutation {
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
-pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> PdfDiff {
-    let __diff = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(mutation, snapshot);
-    match mutation {
-        PdfMutation::NoMutation => {}
-        PdfMutation::SetSnapshot { snapshot: next } => *snapshot = next.clone(),
+pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
+    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
-
-    __diff
 }
 //#endregion 🔖️Apply
 
@@ -45,11 +46,11 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 impl Mutation<PdfSnapshot> for PdfMutation {
     type Diff = PdfDiff;
 
-    fn diff(&self, base: &PdfSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
             PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-        }
+        })
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
@@ -120,7 +121,7 @@ mod tests {
             let returned_diff = apply_pdf_mutation(&mut s, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-            assert_eq!(s, expected_diff.apply(&base));
+            assert_eq!(s, expected_diff.diff().apply(&base).unwrap());
         }
     }
     //#endregion mutation_diff_law
@@ -131,11 +132,11 @@ mod tests {
         let base = snap(612.0, 792.0, "base");
         for m in [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: snap(300.0, 400.0, "next") }] {
             let diff = m.diff(&base);
-            let mutated = diff.apply(&base);
+            let mutated = diff.diff().apply(&base).unwrap();
             let mut restored = mutated;
             for inv in m.inverse(&base) {
                 let inv_diff = inv.diff(&restored);
-                restored = inv_diff.apply(&restored);
+                restored = inv_diff.diff().apply(&restored).unwrap();
             }
             assert_eq!(restored, base, "apply(inverse(m), apply(m, base)) must recover base for {m:?}");
         }

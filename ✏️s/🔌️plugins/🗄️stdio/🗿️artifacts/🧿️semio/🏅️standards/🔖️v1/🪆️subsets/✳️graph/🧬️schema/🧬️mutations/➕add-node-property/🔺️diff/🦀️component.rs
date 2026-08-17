@@ -1,17 +1,23 @@
-//! 🔺️ `add-node-property` — sparse diff construction; an out-of-range BASE `node_id` is a no-op
-//! clone (nothing at that position to attach a property to).
+//! 🔺️ `add-node-property` — sparse diff construction; Error `mutation.target-missing` when the
+//! owning BASE `node_id` is absent, Warning `mutation.no-op` when the node already has a property
+//! with this key.
 
 use super::mutation::AddNodeProperty;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeList};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &AddNodeProperty, base: &SemioGraphSnapshot) -> SemioGraphDiff {
-    let mut nodes = base.nodes.clone();
-    if let Some(node) = nodes.iter_mut().find(|n| n.id == payload.node_id) {
-        let at = payload.index.min(node.properties.len());
-        node.properties.insert(at, payload.property.clone());
+pub fn diff(payload: &AddNodeProperty, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
+    let Some(node) = base.nodes.iter().find(|n| n.id == payload.node_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
+    };
+    if node.properties.iter().any(|p| p.key == payload.property.key) {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has a property \"{}\".", payload.node_id.value, payload.property.key));
     }
-    SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None }
+    let mut nodes = base.nodes.clone();
+    let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");
+    let at = payload.index.min(node.properties.len());
+    node.properties.insert(at, payload.property.clone());
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
 }
 //#endregion 🔖️Diff

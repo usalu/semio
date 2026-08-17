@@ -47,7 +47,10 @@ pub use super::update_step::mutation::{update_step_operation, UpdateStep};
 
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️component.rs`).
-pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> PlaybookSnapshot {
+pub fn apply_playbook_mutation(
+    snapshot: &PlaybookSnapshot,
+    mutation: &PlaybookMutation,
+) -> protocol::MutationApplyResult<PlaybookSnapshot> {
     protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
@@ -172,7 +175,7 @@ mod tests {
     fn move_step_diff_absorb_law() {
         let base = sample_snapshot();
         let d1 = MoveStep { step_id: "s2".into(), index: 0 }.diff(&base).into_parts().0;
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = MoveStep { step_id: "s".into(), index: 0 }.diff(&mid).into_parts().0;
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -182,7 +185,7 @@ mod tests {
         let base = sample_snapshot();
         let diff = MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s".into(), index: 0 }.diff(&base).into_parts().0;
         assert!(diff.artifact.is_none(), "cross-step MoveBlock diff must be a real per-field replacement, not the old whole-artifact fallback");
-        let after = protocol::MutationDiff::apply(&diff, &base);
+        let after = protocol::MutationDiff::apply(&diff, &base).expect("valid mutation diff");
         let after_steps = after.steps();
         assert!(after_steps[0].blocks.iter().any(|block| block.id == "b1"));
         assert!(!after_steps[1].blocks.iter().any(|block| block.id == "b1"));

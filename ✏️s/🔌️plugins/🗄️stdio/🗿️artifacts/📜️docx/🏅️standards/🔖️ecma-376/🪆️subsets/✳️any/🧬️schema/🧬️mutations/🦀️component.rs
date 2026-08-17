@@ -12,7 +12,6 @@ use crate::artifacts::docx::schema::diff::{
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -105,10 +104,15 @@ pub enum DocxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> DocxDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_docx_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxMutation) -> protocol::MutationOutcome<DocxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -131,8 +135,8 @@ fn part_at<'a>(base: &'a DocxSnapshot, path: &str) -> Option<&'a crate::artifact
 impl Mutation<DocxSnapshot> for DocxMutation {
     type Diff = DocxDiff;
 
-    fn diff(&self, base: &DocxSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             DocxMutation::NoMutation => DocxDiff::default(),
             DocxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             DocxMutation::InsertBlock { path, block } => diff_insert_block(path, block.clone()),
@@ -149,7 +153,7 @@ impl Mutation<DocxSnapshot> for DocxMutation {
             DocxMutation::SetStyleBasedOn { id, based_on } => diff_set_style_based_on(id, based_on.clone()),
             DocxMutation::SetPart { path, content_type, bytes } => diff_set_part(&base.opc, path, content_type, bytes.clone()),
             DocxMutation::RemovePart { path } => diff_remove_part(path),
-        }
+        })
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Vec<Self> {
@@ -263,7 +267,7 @@ fn dec_opc_content_types(s: &str) -> Result<OpcContentTypes, String> {
 fn enc_opc_package(pkg: &OpcPackage) -> String {
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
     owners.sort();
-    let rel_entries: Vec<(String, Vec<crate::artifacts::zip::opc::OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
+    let rel_entries: Vec<(String, Vec<OpcRelationship>)> = owners.into_iter().map(|o| (o.clone(), pkg.relationships[o].clone())).collect();
     format!("[{},{},{}]", enc_list(&pkg.parts, enc_opc_part), enc_opc_content_types(&pkg.content_types), enc_list(&rel_entries, enc_rel_owner_entry))
 }
 fn dec_opc_package(s: &str) -> Result<OpcPackage, String> {
@@ -340,7 +344,7 @@ fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     }
 }
 
-impl protocol::OpText for DocxMutation {
+impl OpText for DocxMutation {
     fn print_op(&self) -> String {
         print_docx_mutation(self)
     }
@@ -495,7 +499,7 @@ fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnaps
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `DocxMutation` variant ordinal, in the same 0-12 order `print_docx_mutation`'s own keyword
 /// match uses.
-impl protocol::OpBinary for DocxMutation {
+impl OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             DocxMutation::NoMutation => 0,
@@ -904,7 +908,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_docx_mutation(&mut via_apply, &mutation);
@@ -929,9 +933,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -939,10 +943,10 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &DocxSnapshot, d1: &DocxDiff, d2: &DocxDiff) -> DocxDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -956,9 +960,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -970,9 +974,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("g") }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == DocxBlock::paragraph("f")));
@@ -983,9 +987,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 1 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 1 }, run_index: 0, text: "patched".into() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -996,9 +1000,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 1 }, run_index: 0, text: "patched".into() }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 1 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = body_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -1008,23 +1012,23 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("f") }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&DocxMutation::InsertBlock { path: DocxBlockPath { segments: vec![], index: 2 }, block: DocxBlock::paragraph("g") }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&DocxMutation::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 0 } }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -1034,11 +1038,11 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &b), &a).unwrap(), b);
+        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-paragraph document diffed against a mutated variant.
         let real = crate::artifacts::docx::engine::build_minimal_docx(DocxDocument {
@@ -1048,8 +1052,8 @@ mod tests {
         let mut mutated = real.clone();
         apply_docx_mutation(&mut mutated, &DocxMutation::SetRunText { path: DocxBlockPath { segments: vec![], index: 0 }, run_index: 0, text: "Chapter Two".into() });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
+        assert_eq!(MutationDiff::apply(&<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -1082,9 +1086,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
         let diff_ba = <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
         assert!(<DocxDiff as DiffAlgebra<DocxSnapshot>>::between(&a, &a).is_empty());
 
         // opc: content_types (both defaults+overrides), parts, relationships all populated.

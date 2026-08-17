@@ -95,7 +95,7 @@ mod tests {
         let mut drawing = DwgDrawing::default();
         let layer = drawing.ensure_layer("walls");
         drawing.entities.push(DwgEntity { layer, color: DwgColor::ByLayer, geometry: DwgGeometry::PolyfaceMesh { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], faces: vec![[1, 2, 3, 4]] } });
-        DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing), ..DwgSnapshot::default() }
+        DwgSnapshot { version: "AC1015".into(), drawing: DwgLogicalDrawing::from_native(&drawing).expect("valid sample drawing"), ..DwgSnapshot::default() }
     }
 
     #[test]
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn rejects_malformed_payload() {
-        let bad = DwgSnapshot { drawing: crate::artifacts::dwg::schema::snapshot::DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
+        let bad = DwgSnapshot { drawing: DwgLogicalDrawing { extmax: vec![0.0], ..Default::default() }, ..DwgSnapshot::default() };
         assert!(SemioMeshFromDwg::deserialize(&bad).is_err());
     }
 }

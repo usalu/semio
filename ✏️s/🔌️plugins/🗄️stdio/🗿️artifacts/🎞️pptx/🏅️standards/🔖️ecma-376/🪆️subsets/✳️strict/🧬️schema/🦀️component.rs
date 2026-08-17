@@ -44,13 +44,13 @@ pub mod derived_construction {
             Ok(Self { inner: PptxAnyBuilder::from_binary(bytes)? })
         }
 
-        fn mutate(self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let (inner, diff) = self.inner.mutate(mutation);
             (Self { inner }, diff)
         }
 
-        fn absorb(self, diff: Self::Diff) -> Self {
-            Self { inner: self.inner.absorb(diff) }
+        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            Ok(Self { inner: self.inner.absorb(diff)? })
         }
 
         /// 🛡️ The real construction gate: however `self`'s inner snapshot got here, a hard
@@ -337,8 +337,8 @@ pub use derived_analysis::*;
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec PptxStrictBuilderFacets {
-        construction: derived_construction::PptxStrictBuilderConstruction,
-        analysis: derived_analysis::PptxStrictAnalyzerAnalysis,
+        construction: PptxStrictBuilderConstruction,
+        analysis: PptxStrictAnalyzerAnalysis,
         composition: super::io::derived_composition::PptxStrictComposerComposition,
     }
     builder: PptxStrictBuilder,

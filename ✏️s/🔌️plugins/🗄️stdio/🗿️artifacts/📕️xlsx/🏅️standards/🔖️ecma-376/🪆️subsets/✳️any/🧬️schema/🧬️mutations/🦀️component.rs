@@ -9,7 +9,6 @@ use crate::artifacts::xlsx::schema::diff::{
 use crate::artifacts::xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use crate::artifacts::xlsx::XlsxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship, OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -90,10 +89,15 @@ pub enum XlsxMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> XlsxDiff {
-    let diff = Mutation::diff(mutation, snapshot);
-    *snapshot = protocol::MutationDiff::apply(&diff, snapshot);
-    diff
+pub fn apply_xlsx_mutation(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> protocol::MutationOutcome<XlsxDiff> {
+    let outcome = Mutation::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -111,8 +115,8 @@ fn cell_value_at(base: &XlsxSnapshot, sheet_name: &str, row: u32, col: u32) -> O
 impl Mutation<XlsxSnapshot> for XlsxMutation {
     type Diff = XlsxDiff;
 
-    fn diff(&self, base: &XlsxSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             XlsxMutation::NoMutation => XlsxDiff::default(),
             XlsxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             XlsxMutation::InsertSheet { sheet } => diff_insert_sheet(sheet.clone()),
@@ -129,7 +133,7 @@ impl Mutation<XlsxSnapshot> for XlsxMutation {
             XlsxMutation::InsertSharedString { value } => diff_insert_shared_string(base.workbook.shared_strings.len(), value).1,
             XlsxMutation::RemoveSharedString { index } => diff_remove_shared_string(*index),
             XlsxMutation::SetSharedString { index, value } => diff_set_shared_string(&base.workbook.shared_strings, *index, value),
-        }
+        })
     }
 
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<Self> {
@@ -271,7 +275,7 @@ fn parse_xlsx_mutation(line: &str) -> Result<XlsxMutation, String> {
     }
 }
 
-impl protocol::OpText for XlsxMutation {
+impl OpText for XlsxMutation {
     fn print_op(&self) -> String {
         print_xlsx_mutation(self)
     }
@@ -397,7 +401,7 @@ fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnaps
 /// shortcut live by direct read of this file before this wave, not assumed). `tag` is the
 /// `XlsxMutation` variant ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword
 /// match uses.
-impl protocol::OpBinary for XlsxMutation {
+impl OpBinary for XlsxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             XlsxMutation::NoMutation => 0,
@@ -769,7 +773,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_xlsx_mutation(&mut via_apply, &mutation);
@@ -794,9 +798,9 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -804,10 +808,10 @@ mod tests {
 
     //#region 🔖️AbsorbLaw
     fn assert_absorb_matches_sequential(base: &XlsxSnapshot, d1: &XlsxDiff, d2: &XlsxDiff) -> XlsxDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -823,9 +827,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::Number(1.0) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XlsxMutation::RemoveCell { sheet_name: "Sheet2".into(), row: 5, col: 5 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = cells_diff(&absorbed, "Sheet2");
             assert!(triple.added.is_empty(), "the add must be annihilated by the later remove");
             assert!(triple.removed.is_empty(), "a never-based cell must not appear as a base removal either");
@@ -837,9 +841,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("f".into()) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 6, value: XlsxCellValue::InlineString("g".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = cells_diff(&absorbed, "Sheet2");
             assert_eq!(triple.added.len(), 2, "both cell adds must survive absorb");
         }
@@ -848,9 +852,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("f".into()) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::InlineString("patched".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = cells_diff(&absorbed, "Sheet2");
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -861,9 +865,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet1".into(), row: 1, col: 0, value: XlsxCellValue::Boolean(true) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XlsxMutation::RemoveCell { sheet_name: "Sheet1".into(), row: 1, col: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = cells_diff(&absorbed, "Sheet1");
             assert!(triple.modified.is_empty(), "modify of a since-removed cell must not survive absorb");
             assert_eq!(triple.removed, vec![(1u32, 0u32)]);
@@ -873,23 +877,23 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 5, col: 5, value: XlsxCellValue::Number(1.0) }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XlsxMutation::SetCell { sheet_name: "Sheet2".into(), row: 6, col: 6, value: XlsxCellValue::Number(2.0) }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&XlsxMutation::RemoveCell { sheet_name: "Sheet2".into(), row: 5, col: 5 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -899,11 +903,11 @@ mod tests {
     fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b), &a).unwrap(), b);
+        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
         let sample = fixture();
-        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // "Real" fixture leg: a realistic multi-sheet workbook diffed against a mutated variant.
         let real = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
@@ -913,8 +917,8 @@ mod tests {
         let mut mutated = real.clone();
         apply_xlsx_mutation(&mut mutated, &XlsxMutation::SetSharedString { index: 0, value: "Chapter Two".into() });
         assert_ne!(real, mutated);
-        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&real, &mutated), &real), mutated);
-        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&mutated, &real), &mutated), real);
+        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&real, &mutated), &real).unwrap(), mutated);
+        assert_eq!(MutationDiff::apply(&<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&mutated, &real), &mutated).unwrap(), real);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -950,9 +954,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
         let diff_ba = <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
         assert!(<XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &a).is_empty());
 
         // opc: content_types (both defaults+overrides), parts, relationships all populated.

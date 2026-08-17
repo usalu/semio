@@ -86,7 +86,7 @@ mod tests {
         let create = LowpolyMutation::CreateObject(super::super::create_object::mutation::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
         let d1 = create.diff(&base).into_parts().0;
-        let after = d1.apply(&base);
+        let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = LowpolyMutation::RenameObject(super::super::rename_object::mutation::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -146,4 +146,3 @@ mod tests {
     //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests
-

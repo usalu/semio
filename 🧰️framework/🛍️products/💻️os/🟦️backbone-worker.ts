@@ -6,11 +6,14 @@
  */
 // #endregion Header
 
-import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
-import { decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
+import type { ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactSyncStatus, BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DirectoryCommand, DirectoryStreamMessage, MutationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "./🟦️component";
+import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./🟦️component";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
+/** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
+ * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
+import type { Identity } from "./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component";
 
 type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -73,8 +76,8 @@ void rustHostPromise.then((host) => {
 /** 🛰️ Must match `framework/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */
 const FOLDER_ENDPOINT_PATH = "/semio-backbone";
 const FOLDER_POLL_INTERVAL_MS = 1_500;
-const HUB_RECONNECT_MIN_MS = 500;
-const HUB_RECONNECT_MAX_MS = 30_000;
+// 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️component.ts`'s `🔖️HubBinding` region (imported above)
+// — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
 //#endregion 🔖️Constants
 
 //#region 🔖️DocumentState
@@ -160,6 +163,35 @@ export function foldOpeningPreferencesEvent(base: OpeningPreferences, event: Art
   for (const envelope of event.envelopes) {
     const decoded = decodePayload(envelope.diff.payload);
     if (decoded) next = decoded;
+  }
+  return next;
+}
+
+/** 🪪️ Canonical `documentId`/`schema` for the OS-wide `os.config.identity` facet (contract freeze
+ * §C3) — mirrors {@link OPENING_PREFERENCES_SCHEMA}'s singleton-by-schema-id pattern. */
+export const IDENTITY_CONFIG_SCHEMA = "os.config.identity";
+
+/** 🪪️ Builds the {@link ArtifactActorConfig} that opens the identity facet. Unlike
+ * {@link openingPreferencesActorConfig}'s `bindings: []`, identity binds to the FOLDER lane under
+ * `${dataDir}/os` (contract §C3) so a reload keeps the session token — a browser tab with no
+ * `S_DATA_DIR` (`dataDir` omitted) falls back to opening's local-only-in-memory pattern instead. */
+export function identityActorConfig(actor: string, dataDir?: string): ArtifactActorConfig {
+  const bindings: PersistenceBinding[] = dataDir ? [{ kind: "folder", path: `${dataDir}/os` }] : [];
+  return { documentId: IDENTITY_CONFIG_SCHEMA, schema: IDENTITY_CONFIG_SCHEMA, bindings, actor };
+}
+
+/** 🧮️ Reduces one {@link ArtifactEvent} onto a materialized `Identity | null` — event-sourced,
+ * mirrors {@link foldOpeningPreferencesEvent}: `applyIdentityConfigMutation`'s diff is whole-record
+ * too (`🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts`), so a `remoteMutations` envelope's
+ * already-diffed `diff.payload` IS the next `Identity` (or `null` for a signed-out session) —
+ * folding is "last envelope wins". `decodePayload` returning `undefined` means "not this facet's
+ * payload", distinct from a legit `null` (signed out), so both must be distinguishable. */
+export function foldIdentityEvent(base: Identity | null, event: ArtifactEvent, decodePayload: (payload: unknown) => Identity | null | undefined): Identity | null {
+  if (event.kind !== "remoteMutations") return base;
+  let next = base;
+  for (const envelope of event.envelopes) {
+    const decoded = decodePayload(envelope.diff.payload);
+    if (decoded !== undefined) next = decoded;
   }
   return next;
 }
@@ -340,7 +372,10 @@ function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, {
   if (state.closed) return;
   setRemote(state, { kind: "connecting" });
   const wsBase = binding.baseUrl.replace(/^http/, "ws");
-  const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws`);
+  // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
+  // change (its flag byte is full and the file is peer-leased).
+  const surfaceQuery = binding.surface ? `?surface=${encodeURIComponent(binding.surface)}` : "";
+  const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws${surfaceQuery}`);
   // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
   socket.binaryType = "arraybuffer";
   state.socket = socket;
@@ -420,7 +455,7 @@ function handleAck(state: ArtifactState, batchId: number, stages: readonly WireA
     } else {
       const rollbacks = [...sent].reverse().map(rollbackEnvelope);
       if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteMutations", envelopes: rollbacks });
-      ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason };
+      ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason, messages: outcome.Rejected.messages };
     }
     setStatus(state, { pendingMutations: state.pendingMutations.length });
     emitEvent(state.config.documentId, { kind: "commandOutcome", batchId, outcome: ackOutcome });
@@ -486,6 +521,114 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
   }
 }
 //#endregion 🔖️Hub
+
+//#region 🔖️Directory
+/** 📇️ Directory hub lane (contract §C6) — the shell's only path to the directory control plane;
+ * plugin surfaces never talk to the network, and the shell never opens a directory socket on the UI
+ * thread. Owns exactly one {@link DirectoryClient}/{@link DirectoryStream} at a time. Reuses that
+ * client's own reconnect/backoff (`🔖️HubBinding` in `🟦️component.ts`) rather than a second loop
+ * here — this region's only extra responsibility is the offline command queue. */
+const DIRECTORY_COMMAND_QUEUE_LIMIT = 200;
+
+type QueuedDirectoryCommand = { requestId: string; command: DirectoryCommand };
+
+let directoryClient: DirectoryClient | null = null;
+let directoryStream: { close: () => void } | null = null;
+let directoryFlushing = false;
+const directoryCommandQueue: QueuedDirectoryCommand[] = [];
+
+function directoryStatus(): BackboneWorkerResponse {
+  return { kind: "directory-status", pendingCommands: directoryCommandQueue.length };
+}
+
+function openDirectory(baseUrl: string, token: string | undefined, since: number): void {
+  closeDirectory();
+  const client = new DirectoryClient(baseUrl, token);
+  directoryClient = client;
+  directoryStream = client.stream(since, (message: DirectoryStreamMessage) => {
+    post({ kind: "directory-message", message });
+    void flushDirectoryQueue();
+  });
+  post(directoryStatus());
+}
+
+function closeDirectory(): void {
+  directoryStream?.close();
+  directoryStream = null;
+  directoryClient = null;
+  directoryCommandQueue.length = 0;
+}
+
+/** 🗃️ Pushes a command onto the bounded offline queue, dropping the OLDEST entry past
+ * {@link DIRECTORY_COMMAND_QUEUE_LIMIT} (logged, never silently) — a full queue means a very long
+ * outage, and the newest intent is more likely still relevant than the oldest. */
+function enqueueDirectoryCommand(requestId: string, command: DirectoryCommand): void {
+  directoryCommandQueue.push({ requestId, command });
+  while (directoryCommandQueue.length > DIRECTORY_COMMAND_QUEUE_LIMIT) {
+    const dropped = directoryCommandQueue.shift();
+    console.error("[backbone-worker] directory command queue full, dropped oldest", dropped?.requestId);
+  }
+  post(directoryStatus());
+}
+
+/** 🚨️ `true` for a {@link DirectoryHttpError}-shaped rejection (the hub answered and rejected the
+ * command — authz/validation, never retried); `false` for anything else (network failure — queue
+ * and retry). Structural rather than an `instanceof DirectoryHttpError` check, since this file's
+ * `DirectoryClient` import and the wasm host's own may not share a class identity. */
+function directoryRejectionStatus(error: unknown): number | undefined {
+  return typeof error === "object" && error !== null && "status" in error && typeof (error as { status: unknown }).status === "number" ? (error as { status: number }).status : undefined;
+}
+
+async function submitDirectoryCommand(requestId: string, command: DirectoryCommand): Promise<void> {
+  const client = directoryClient;
+  if (!client) {
+    enqueueDirectoryCommand(requestId, command);
+    return;
+  }
+  try {
+    const result = await client.command(command);
+    post({ kind: "directory-command-result", requestId, ok: true, events: result.events });
+  } catch (error) {
+    const status = directoryRejectionStatus(error);
+    if (status !== undefined) {
+      post({ kind: "directory-command-result", requestId, ok: false, error: error instanceof Error ? error.message : String(error) });
+      return;
+    }
+    console.error("[backbone-worker] directory command unreachable, queued for retry", requestId, error);
+    enqueueDirectoryCommand(requestId, command);
+  }
+}
+
+/** ♻️ Retries the queue in order on every live signal from the stream (contract §C6 "flush on
+ * reconnect") — stops at the first still-unreachable command so ordering is preserved; a definitive
+ * rejection is surfaced and dropped rather than retried forever. Re-entrancy guarded: a burst of
+ * stream messages must not run overlapping flushes. */
+async function flushDirectoryQueue(): Promise<void> {
+  if (directoryFlushing) return;
+  directoryFlushing = true;
+  try {
+    while (directoryCommandQueue.length > 0 && directoryClient) {
+      const next = directoryCommandQueue[0]!;
+      try {
+        const result = await directoryClient.command(next.command);
+        directoryCommandQueue.shift();
+        post({ kind: "directory-command-result", requestId: next.requestId, ok: true, events: result.events });
+      } catch (error) {
+        const status = directoryRejectionStatus(error);
+        if (status !== undefined) {
+          directoryCommandQueue.shift();
+          post({ kind: "directory-command-result", requestId: next.requestId, ok: false, error: error instanceof Error ? error.message : String(error) });
+          continue;
+        }
+        break;
+      }
+    }
+  } finally {
+    directoryFlushing = false;
+    post(directoryStatus());
+  }
+}
+//#endregion 🔖️Directory
 
 //#region 🔖️BlobCache
 /** 📦️ Must match `framework/os/core/js/index.ts`'s `BLOB_ENDPOINT_PATH`. A hub-backed fallback
@@ -733,6 +876,15 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       if (state) void handleLocalMsg(state, request.message);
       break;
     }
+    case "directory-open":
+      openDirectory(request.baseUrl, request.token, request.since);
+      break;
+    case "directory-command":
+      void submitDirectoryCommand(request.requestId, request.command);
+      break;
+    case "directory-close":
+      closeDirectory();
+      break;
   }
 }
 //#endregion 🔖️MessageBridge
@@ -742,7 +894,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 // 🧵️ Whole block stripped from production builds (see this file's header doc) — `node:*` imports
 // below are dynamic specifically so they never get bundled into the actual browser Worker script.
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
 
   function sampleEnvelope(): MutationEnvelope {
     return {
@@ -913,6 +1065,9 @@ if (import.meta.vitest) {
       const ackRejected = loadServer("📦️server-ack-rejected.bin");
       if (typeof ackRejected.frame === "string" || !("Ack" in ackRejected.frame)) throw new Error("expected an Ack frame");
       expect(ackRejected.frame.Ack.batch_id).toBe(3);
+      const rejectedStage = ackRejected.frame.Ack.stages.find((stage) => typeof stage !== "string" && "Applied" in stage);
+      if (typeof rejectedStage === "string" || rejectedStage === undefined || !("Applied" in rejectedStage) || typeof rejectedStage.Applied.outcome === "string" || !("Rejected" in rejectedStage.Applied.outcome)) throw new Error("expected a rejected apply outcome");
+      expect(rejectedStage.Applied.outcome.Rejected.messages).toEqual([1, 2, 3]);
 
       const preview = loadServer("📦️server-preview.bin");
       if (typeof preview.frame === "string" || !("Preview" in preview.frame)) throw new Error("expected a Preview frame");
@@ -936,5 +1091,129 @@ if (import.meta.vitest) {
       expect(error.frame.Error.code).toBe("rejected");
     });
   });
+
+  //#region 🔖️IdentityTests
+  describe("identity config facet", () => {
+    function sampleIdentity(overrides: Partial<Identity> = {}): Identity {
+      return { userId: "u-1", email: "ada@semio.dev", displayName: "Ada", hubBaseUrl: "http://hub.test", sessionToken: "tok-1", issuedAtMs: 1_000, ...overrides };
+    }
+
+    it("identityActorConfig binds the folder lane under `${dataDir}/os` when given a dataDir, else local-only", () => {
+      expect(identityActorConfig("actor-1", "/tmp/s-user1")).toEqual({
+        documentId: IDENTITY_CONFIG_SCHEMA,
+        schema: IDENTITY_CONFIG_SCHEMA,
+        bindings: [{ kind: "folder", path: "/tmp/s-user1/os" }],
+        actor: "actor-1",
+      });
+      expect(identityActorConfig("actor-1")).toEqual({ documentId: IDENTITY_CONFIG_SCHEMA, schema: IDENTITY_CONFIG_SCHEMA, bindings: [], actor: "actor-1" });
+    });
+
+    it("sign-in -> sign-out -> sign-in round-trips through applyIdentityConfigMutation, and each inverts the last", async () => {
+      const { applyIdentityConfigMutation, inverseIdentityConfigMutation, signIn, signOut } = await import("./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component");
+
+      const first = sampleIdentity();
+      const afterFirstSignIn = applyIdentityConfigMutation(null, signIn(first));
+      expect(afterFirstSignIn).toEqual(first);
+
+      const afterSignOut = applyIdentityConfigMutation(afterFirstSignIn, signOut());
+      expect(afterSignOut).toBeNull();
+
+      const second = sampleIdentity({ userId: "u-2", email: "devon@semio.dev", displayName: "Devon", sessionToken: "tok-2", issuedAtMs: 2_000 });
+      const afterSecondSignIn = applyIdentityConfigMutation(afterSignOut, signIn(second));
+      expect(afterSecondSignIn).toEqual(second);
+
+      // ↩️ sign-out's inverse, from the base it cleared, restores exactly the prior session.
+      expect(inverseIdentityConfigMutation(signOut(), afterFirstSignIn)).toEqual([signIn(first)]);
+      // ↩️ sign-out's inverse with no prior session is a no-op.
+      expect(inverseIdentityConfigMutation(signOut(), null)).toEqual([]);
+      // ↩️ sign-in's inverse, from no prior session, is a sign-out.
+      expect(inverseIdentityConfigMutation(signIn(first), null)).toEqual([signOut()]);
+      // ↩️ sign-in's inverse, from a prior session (switching accounts), restores the prior one.
+      expect(inverseIdentityConfigMutation(signIn(second), afterFirstSignIn)).toEqual([signIn(first)]);
+    });
+
+    it("foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events", () => {
+      const first = sampleIdentity();
+      const second = sampleIdentity({ userId: "u-2", sessionToken: "tok-2" });
+      const decodePayload = (payload: unknown): Identity | null | undefined => {
+        if (payload === null) return null;
+        if (typeof payload === "object" && payload !== null && "userId" in payload) return payload as Identity;
+        return undefined;
+      };
+      const envelope = (payload: unknown): ArtifactEvent => ({
+        kind: "remoteMutations",
+        envelopes: [{ id: "e", actor: "a", document: IDENTITY_CONFIG_SCHEMA, schemaVersion: IDENTITY_CONFIG_SCHEMA, payloadHash: "", diff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload }, inverse: { targetOperation: "e", inverseDiff: { schemaId: IDENTITY_CONFIG_SCHEMA, payload: null }, baseVersion: 0, undoPolicy: "exactBaseOnly" } }],
+      });
+
+      let state: Identity | null = null;
+      state = foldIdentityEvent(state, envelope(first), decodePayload);
+      expect(state).toEqual(first);
+      state = foldIdentityEvent(state, envelope(null), decodePayload);
+      expect(state).toBeNull();
+      state = foldIdentityEvent(state, envelope(second), decodePayload);
+      expect(state).toEqual(second);
+      // 🚧️ A non-`remoteMutations` event (e.g. `status`) passes state through unchanged.
+      state = foldIdentityEvent(state, { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "detached" } }, decodePayload);
+      expect(state).toEqual(second);
+    });
+  });
+  //#endregion 🔖️IdentityTests
+
+  //#region 🔖️DirectoryLaneTests
+  describe("backbone-worker directory lane", () => {
+    class FakeDirectoryWebSocket {
+      static instances: FakeDirectoryWebSocket[] = [];
+      readonly url: string;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onclose: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(url: string) {
+        this.url = url;
+        FakeDirectoryWebSocket.instances.push(this);
+      }
+      send(): void {}
+      close(): void {}
+      triggerMessage(message: DirectoryStreamMessage): void {
+        this.onmessage?.({ data: JSON.stringify(message) });
+      }
+    }
+
+    async function flushMicrotasks(): Promise<void> {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    it("queues a directory command while the hub is unreachable, then flushes it in order on the next live signal", async () => {
+      FakeDirectoryWebSocket.instances = [];
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+      let fetchCalls = 0;
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+        fetchCalls += 1;
+        throw new Error("network unreachable");
+      };
+
+      try {
+        handleTsRequest({ kind: "directory-open", baseUrl: "http://hub.test", token: "tok-1", since: 0 });
+        handleTsRequest({ kind: "directory-command", requestId: "r1", command: { kind: "create-space", name: "Atelier", spaceKind: "atelier", visibility: "private" } });
+        await flushMicrotasks();
+        expect(fetchCalls).toBeGreaterThan(0);
+        expect(directoryCommandQueue).toHaveLength(1);
+        expect(directoryCommandQueue[0]!.requestId).toBe("r1");
+
+        // 🟢️ Hub becomes reachable — any live signal on the stream (a heartbeat here) triggers a flush.
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => ({ ok: true, status: 202, json: async () => ({ events: [] }) });
+        const socket = FakeDirectoryWebSocket.instances.at(-1)!;
+        socket.triggerMessage({ kind: "heartbeat", headSeq: 0 });
+        await flushMicrotasks();
+        expect(directoryCommandQueue).toHaveLength(0);
+      } finally {
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        closeDirectory();
+      }
+    });
+  });
+  //#endregion 🔖️DirectoryLaneTests
 }
 //#endregion 🧪️Tests

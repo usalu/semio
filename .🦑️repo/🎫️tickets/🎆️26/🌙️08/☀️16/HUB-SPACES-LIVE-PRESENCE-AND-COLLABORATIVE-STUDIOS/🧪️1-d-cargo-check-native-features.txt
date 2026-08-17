@@ -1,0 +1,254 @@
+    Blocking waiting for file lock on build directory
+    Checking getrandom v0.2.17
+    Checking tungstenite v0.26.2
+    Checking url v2.5.8
+    Checking rusqlite v0.38.0
+    Checking zip v2.4.2
+    Checking ring v0.17.14
+    Checking tokio-tungstenite v0.26.2
+    Checking rustls-webpki v0.103.13
+    Checking rustls v0.23.41
+    Checking ureq v2.12.1
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11
+    |
+350 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+    = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `js`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11
+    |
+356 | #[cfg(all(feature = "js", target_arch = "wasm32"))]
+    |           ^^^^^^^^^^^^^^
+    |
+    = note: expected values for `feature` are: `default`, `deflate`, `dsl-fixture-sweep-full`, `sync`, `typegen`, `ureq`, and `worker`
+    = help: consider adding `js` as a feature in `Cargo.toml`
+    = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:16
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:710:47
+    |
+710 |     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+710 -     V: Clone + crate::os_vcs::Identified<K> + crate::os_vcs::Patchable<Patch>,
+710 +     V: Clone + crate::os_vcs::Identified<K> + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:777:16
+    |
+777 |     V: Clone + crate::os_vcs::Patchable<Patch>,
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+777 -     V: Clone + crate::os_vcs::Patchable<Patch>,
+777 +     V: Clone + Patchable<Patch>,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27
+    |
+170 |     MutationApply(#[from] crate::os_spr::MutationApplyError),
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+170 -     MutationApply(#[from] crate::os_spr::MutationApplyError),
+170 +     MutationApply(#[from] MutationApplyError),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:541:16
+    |
+541 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+541 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+541 +     P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:542:23
+    |
+542 |     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate...
+    |                       ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+542 -     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+542 +     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:552:16
+    |
+552 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+552 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+552 +     P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:553:23
+    |
+553 |     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate...
+    |                       ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     Mutation: Clone + serde::Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+553 +     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:613:41
+    |
+613 |     pub fn receive(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+613 -     pub fn receive(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<(), SyncError> {
+613 +     pub fn receive(&mut self, envelope: MutationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:850:38
+    |
+850 |                     let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+850 -                     let pack_files = crate::os_store::ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+850 +                     let pack_files = ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1323:37
+     |
+1323 | ...   let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope {...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1323 -             let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1323 +             let wire_envelopes: Vec<MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1323:104
+     |
+1323 | ...tionEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut...
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1323 -             let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| crate::os_spr::MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1323 +             let wire_envelopes: Vec<crate::os_spr::MutationEnvelope> = envelopes.iter().map(|envelope| MutationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1390:37
+     |
+1390 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1390 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1390 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:375:39
+    |
+375 |             self.0.send(Message::Text(text)).await.map_err(|error| TransportError::Io(error.to_string()))
+    |                         ------------- ^^^^ expected `Utf8Bytes`, found `String`
+    |                         |
+    |                         arguments to this enum variant are incorrect
+    |
+note: tuple variant defined here
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tungstenite-0.26.2/src/protocol/message.rs:160:5
+    |
+160 |     Text(Utf8Bytes),
+    |     ^^^^
+help: call `Into::into` on this expression to convert `std::string::String` into `Utf8Bytes`
+    |
+375 |             self.0.send(Message::Text(text.into())).await.map_err(|error| TransportError::Io(error.to_string()))
+    |                                           +++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:381:62
+    |
+381 |                     Some(Ok(Message::Text(text))) => Ok(Some(text)),
+    |                                                         ---- ^^^^ expected `String`, found `Utf8Bytes`
+    |                                                         |
+    |                                                         arguments to this enum variant are incorrect
+    |
+help: the type constructed contains `Utf8Bytes` due to the type of the argument passed
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:381:57
+    |
+381 |                     Some(Ok(Message::Text(text))) => Ok(Some(text)),
+    |                                                         ^^^^^----^
+    |                                                              |
+    |                                                              this argument influences the type of `Some`
+note: tuple variant defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+    |
+606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+    |     ^^^^
+help: try using a conversion method
+    |
+381 |                     Some(Ok(Message::Text(text))) => Ok(Some(text.to_string())),
+    |                                                                  ++++++++++++
+
+warning: unused variable: `len`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21
+    |
+585 |                 let len = end_j - i;
+    |                     ^^^ help: if this is intentional, prefix it with an underscore: `_len`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9
+     |
+1221 |     let mut triple = |input: &mut ByteReader<'_>| -> Result<(String, String, String), ProtocolError> { Ok((read_id_field(input, di...
+     |         ----^^^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `semio-framework-os-kernel` (lib) generated 17 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 2 previous errors; 17 warnings emitted

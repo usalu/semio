@@ -14,7 +14,7 @@ pub struct ReorderLayers {
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ReorderLayers {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layers", kind: "reorder-layers", record: "ReorderedLayers" };
 
-    fn diff(&self, base: &Din4108Snapshot) -> <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff {
+    fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

@@ -15,7 +15,7 @@ pub struct ChangeVolumeM3 {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeVolumeM3 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "volume-m3", kind: "change-volume-m3", record: "ChangedVolumeM3" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_volume_m3::diff::diff(self, base)
     }
 

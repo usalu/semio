@@ -1,0 +1,21 @@
+$ bun ./📜️script.ts nx run os-hub-ts:test --skip-nx-cache
+
+> nx run os-hub-ts:test
+
+> bun ./📜️script.ts test
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🌎️hub/📦️packages/🟦️typescript
+
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  03:09:42
+   Duration  375ms (transform 271ms, setup 0ms, import 314ms, tests 0ms, environment 0ms)
+
+
+
+
+ NX   Successfully ran target test for project os-hub-ts
+
+

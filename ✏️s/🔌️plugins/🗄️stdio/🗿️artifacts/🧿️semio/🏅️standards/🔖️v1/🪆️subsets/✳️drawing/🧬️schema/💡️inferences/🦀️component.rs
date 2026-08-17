@@ -87,7 +87,7 @@ pub fn semio_drawing_artifact_inference_descriptor() -> schema::ArtifactInferenc
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioTransform};
-    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+    use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
     use protocol::Inference;
 
     fn fixture() -> SemioDrawingSnapshot {

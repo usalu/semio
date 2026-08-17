@@ -67,69 +67,72 @@ pub fn forms_diff_from_delta(delta: FormsStepsDelta, base: &FormsSnapshot) -> Fo
 
 impl FormsDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> FormsArtifact {
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(version) = &self.version {
-            next.version = version.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(structure) = &self.structure {
-            next.structure = structure.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        if let Some(list) = &self.selected_ids {
-            next.selected_ids = list.values.clone();
-        }
-        if let Some(value) = self.current_step_index {
-            next.current_step_index = value;
-        }
-        if let Some(value) = &self.try_values_json {
-            next.try_values_json = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        if let Some(value) = &self.contributions_json {
-            next.contributions_json = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &FormsArtifact) -> protocol::MutationApplyResult<FormsArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(version) = &self.version {
+                next.version = version.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(structure) = &self.structure {
+                next.structure = structure.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(list) = &self.selected_ids {
+                next.selected_ids = list.values.clone();
+            }
+            if let Some(value) = self.current_step_index {
+                next.current_step_index = value;
+            }
+            if let Some(value) = &self.try_values_json {
+                next.try_values_json = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            if let Some(value) = &self.contributions_json {
+                next.contributions_json = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<FormsSnapshot> for FormsDiff {
-    fn apply(&self, snapshot: &FormsSnapshot) -> FormsSnapshot {
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(id) = &self.id {
-            next.id = id.clone();
-        }
-        if let Some(version) = &self.version {
-            next.version = version.clone();
-        }
-        if let Some(title) = &self.title {
-            next.title = title.clone();
-        }
-        if let Some(structure) = &self.structure {
-            next.structure = structure.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        next
+    fn apply(&self, snapshot: &FormsSnapshot) -> protocol::MutationApplyResult<FormsSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(id) = &self.id {
+                next.id = id.clone();
+            }
+            if let Some(version) = &self.version {
+                next.version = version.clone();
+            }
+            if let Some(title) = &self.title {
+                next.title = title.clone();
+            }
+            if let Some(structure) = &self.structure {
+                next.structure = structure.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {
@@ -228,7 +231,7 @@ mod tests {
     fn empty_diff_is_a_no_operation() {
         let base = FormsSnapshot::default();
         let diff = FormsDiff::default();
-        assert_eq!(diff.apply(&base), base);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 
     #[test]
@@ -237,7 +240,7 @@ mod tests {
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
         let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
         let diff: FormsDiff = operation.diff(&base).into_parts().0;
-        assert_eq!(crate::artifacts::forms::forms_steps(&diff.apply(&base)).len(), 1);
+        assert_eq!(crate::artifacts::forms::forms_steps(&diff.apply(&base).expect("valid mutation diff")).len(), 1);
     }
 }
 //#endregion 🧪️Tests

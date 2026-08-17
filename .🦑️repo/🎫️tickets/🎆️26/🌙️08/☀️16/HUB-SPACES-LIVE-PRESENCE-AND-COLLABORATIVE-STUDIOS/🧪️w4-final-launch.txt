@@ -1,0 +1,26 @@
+### registry check 2026-08-17T04:29:05+02:00
+(eval):1: command not found: timeout
+### launch.json user launchers:
+5
+"name": "🛠️dev🖥️s👤️1⚛️react"
+"name": "🛠️dev🖥️s👤️2⚛️react"
+"name": "🛠️dev🖥️s👤️1🧊️wgpu🌐️wasm"
+"name": "🛠️dev🖥️s👤️2🧊️wgpu🌐️wasm"
+"name": "🧭️compound🖥️s👥️users🗄️os-hub"
+"name": "⚖️gate🌎️collab-e2e"
+"name": "🛠️dev🗄️os-hub🛡️admin"
+  - [manifest-without-marker] "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [ambiguous-lang-shape] "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.
+  - [manifest-without-marker] "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+
+
+
+ NX   Successfully ran target check for project @semio-tech/plugin-registry
+
+

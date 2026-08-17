@@ -25,8 +25,10 @@ impl Default for DagPresence {
 }
 
 impl protocol::MutationDiff<DagPresence> for DagPresence {
-    fn apply(&self, _base: &DagPresence) -> DagPresence {
-        self.clone()
+    fn apply(&self, _base: &DagPresence) -> protocol::MutationApplyResult<DagPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

@@ -7,9 +7,9 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cn } from "../🏷️ClassNames/🟦️component.tsx";
+import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type NavbarItem } from "../🔝️Navbar/🟦️component.tsx";
-import { shellFloorPaints, shellFloorFillClass } from "../🏷️ClassNames/🟦️component.tsx";
+import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️component.ts";
 import { useSurface, SurfaceScope } from "../🌈️Surface/🟦️component.tsx";
 // #endregion 🔌️Adapters
 

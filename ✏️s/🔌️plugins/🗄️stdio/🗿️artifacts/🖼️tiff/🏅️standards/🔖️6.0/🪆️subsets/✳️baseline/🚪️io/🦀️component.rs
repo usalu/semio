@@ -119,7 +119,7 @@ pub mod derived_composition {
         /// conformant-document path exercised above.
         #[test]
         fn no_ifd_diagnostic_is_reachable_via_direct_check_not_through_encode_pack() {
-            let diagnostics = crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::check_tiff_baseline_conformance(&TiffSnapshot::default());
+            let diagnostics = check_tiff_baseline_conformance(&TiffSnapshot::default());
             assert!(diagnostics.iter().any(|d| d.code.0 == crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::CODE_NO_IFD), "got {diagnostics:?}");
         }
     }

@@ -22,7 +22,7 @@ pub fn change_grid_opacity(new_opacity: Option<f64>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridOpacity {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "grid-opacity", kind: "change-grid-opacity", record: "ChangedGridOpacity" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

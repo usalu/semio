@@ -5,7 +5,10 @@ use crate::artifacts::layout::schema::diff::LayoutLinksDelta;
 use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
 
 //#region 🗑️DeleteLink
-pub fn diff_delete_link(payload: &DeleteLink, _base: &LayoutSnapshot) -> LayoutDiff {
-    LayoutDiff { links: Some(LayoutLinksDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() }
+pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    if !base.links.iter().any(|link| link.id == payload.id) {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    }
+    protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteLink

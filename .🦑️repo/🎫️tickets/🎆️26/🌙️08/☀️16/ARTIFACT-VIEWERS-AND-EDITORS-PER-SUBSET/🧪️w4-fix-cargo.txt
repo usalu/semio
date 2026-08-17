@@ -1,0 +1,194 @@
+=== RUSTC_WRAPPER="" cargo check -p semio-framework-plugin --all-targets --keep-going ===
+(errors: 0)
+18851 |     let _ = subset! {
+      |     +++++++
+
+warning: `semio-framework-plugin` (lib test) generated 104 warnings (76 duplicates) (run `cargo fix --lib -p semio-framework-plugin --tests` to apply 17 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 1.76s
+
+=== cargo test -p semio-framework-plugin viewer_rejects_every_contract_mutating_verb -- --nocapture ===
+
+running 1 test
+test component::app::testkit::surface_testkit_tests::viewer_rejects_every_contract_mutating_verb ... ok
+
+
+=== RUSTC_WRAPPER="" cargo check -p semio-s-plugin-demonstrator --all-targets --keep-going ===
+(errors: 164)
+--- last summary line ---
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-s-plugin-stdio` (lib) generated 757 warnings
+error: could not compile `semio-s-plugin-stdio` (lib) due to 164 previous errors; 757 warnings emitted
+
+--- unique error-anchored files (all under ✏️s/🔌️plugins/🗄️stdio, none in files touched by this lane) ---
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🔺️diff/🦀️component.rs
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/🧬️schema/🔺️diff/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/🧬️schema/🦀️component.rs
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs
+
+=== proof stdio errors are live foreign churn (FULL-STDIO-... peer ticket), not this lane's regression ===
+--- git status --porcelain (stdio dir, truncated) ---
+ D ✏️s/🔌️plugins/🗄️stdio/🎛️apps/🦀️component.rs
+ M ✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️component.rs
+ M ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml
+ M ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️component.ts
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🟦️component.ts
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+ M ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs
+--- git log --date=iso for one error-anchored stdio file (last real commit predates today's edits) ---
+commit 638abf6f67c7c32bc6f4cde2b93cafe4124bf3a1
+Author: Ueli Saluz <ueli@semio-tech.com>
+Date:   2026-08-15 15:21:02 +0200
+
+    🐙️ueli🎆️26🌙️06☀️04🚩️514
+    
+    🎆️26🌙️08☀️15⏰️15⌚️18⏱️38
+    ⚡️Preserve signed zero representation in f64 pack component normalization for os value product module
+    📐Audit dwg ac1024 frame writer probes in semio-artifact-lossless-well-known-format-roundtrips tickets
+    🔌️Standardize stdio plugin schema mutations, snapshot, export serializers and import deserializers for semio artifact standards in cargo toml
+    
+    📊️uloc💯️2.5M📈️10.9k➗️0.438➕️22.7k✏️20.3k➖️11.8k🟰️54.8k
+    📊️uloc🦀️rust💯️1.14M📈️10.8k➗️0.961➕️22.2k✏️20.1k➖️11.4k🟰️53.8k
+    📊️uloc🧾️json💯️854k📈️56➗️0.007➕️275✏️81➖️219🟰️575
+    📊️uloc🟦️typescript💯️280k📈️42➗️0.02➕️208✏️81➖️166🟰️455
+    📊️uloc🔵️go💯️94.3k
+    📊️uloc🟣️csharp💯️32.6k
+    📊️uloc🐍️python💯️27.9k
+    📊️uloc🎨️css💯️26.9k
+    📊️uloc📝️markdown💯️15.9k
+    📊️uloc🟨️javascript💯️15k
+    📊️uloc📐️tex💯️9.28k
+    📊️uloc⚙️toml💯️5.01k📈️7➗️0.14➕️7🟰️7
+    📊️uloc🌐️html💯️2.59k
+    📊️uloc🛢️sql💯️1.87k
+    📊️uloc📋️yaml💯️1.23k
+    📊️uloc💠️powershell💯️906
+    📊️uloc🐚️shell💯️590
+    📊️uloc📑️csv💯️70
+    📊️uloc📄️xml💯️17
+    
+    Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
+--- mtime of that same file (recent, uncommitted) ---
+Aug 16 17:59:34 2026 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🦀️component.rs
+
+=== semio-s-plugin-demonstrator itself never reached: cargo check aborted at its dependency semio-s-plugin-stdio ===
+(process/sourcing crates depend directly on semio-s-plugin-stdio per their own Cargo.toml; demonstrator depends on process/sourcing)
+
+=== repo-wide sweep: grep -rn "apps::" ✏️s/🔌️plugins --include='🦀️component.rs' (excluding ticket folders) ===
+✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:857:        let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence");
+✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🎪️demonstrator/🦀️component.rs:8:// `apps::cad` into `editor::cad`/`viewer::cad` (module path read off `cad`'s OWN
+✏️s/🔌️plugins/🎪️demonstrator/🛂️manifest/🎪️demonstrator/🦀️component.rs:102:    /// deleted `apps::`/`document_app` path (`s.demonstrator.playground@1/*#editor`-style ids never
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🦀️component.rs:250:/// `crate::apps::present::create_animate_present_app`'s `🔖️Manifest` region.
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️component.rs:100:        // `apps::procedural3d`'s own tests serialize on — see that module's `test_support`.
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:276:/// `crate::apps::curate::config::SourcingCurateConfig` (session-only view state), so this takes it as a
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:313:/// fixtures/tests) and the `crate::apps::curate::commands::curation` handlers (which must emit a
+✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:9://! through `store::ArtifactStore::reset` (see `crate::apps::curate::reset_document_effect`), same
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:26:/// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2813:/// APA's original relocation off `apps::puzzle3d::register_puzzle3d_exports` reasoned OS-host
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️component.rs:17://! `puzzle::apps::puzzle2d::engine::*`; the framework OS renderer's own call sites were the one real
+✏️s/🔌️plugins/🏗️fem/🦀️component.rs:8:/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET dissolved `apps::fem2d`/`apps::fem3d` into
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️component.rs:229:/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem3d` → `editor::fem3d` rename); it
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🦀️component.rs:277:/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET's `apps::fem2d` → `editor::fem2d` rename); it
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:670:        let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence");
+✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️component.rs:370:/// `crate::apps::lowpoly::config::schema::register_app_schema()` is the one exception, still called
+
+=== cargo test -p semio-framework-plugin --lib (whole crate, informational) ===
+test result: FAILED. 160 passed; 59 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+--- all failures are pre-existing/out-of-scope (see report); none touch files edited by this lane ---
+--- surface_testkit_tests module (this lane's own tests) — all green: ---
+test component::app::testkit::surface_testkit_tests::editor_and_viewer_share_one_dialect ... ok
+test component::app::testkit::surface_testkit_tests::new_viewer_constructs_a_registry_less_wrapper ... ok
+test component::app::testkit::surface_testkit_tests::viewer_rejects_every_contract_mutating_verb ... ok
+test component::app::testkit::surface_testkit_tests::viewer_never_mutates_the_document_or_draft_store ... ok
+test component::app::testkit::surface_testkit_tests::editor_fixture_still_mutates_normally ... ok

@@ -121,11 +121,11 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(base: &En1994Snapshot, operation: &En1994Mutation) -> En1994Snapshot {
-        let forward = operation.diff(base).apply(base);
+        let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = back.diff(base).apply(&restored);
+            restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
         }
         assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
         forward
@@ -219,5 +219,36 @@ mod tests {
         let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
         assert_eq!(mutation.label(), "Change span to 12");
     }
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// this facet is entirely one verb family (root-scoped `change-<field>`) — see en1992's own
+    /// `🔖️OutcomeLaws` note for why `assert_missing_target_is_error`/`assert_outcome_policy_matrix`
+    /// don't apply/aren't landed yet.
+    #[test]
+    fn change_eta_non_finite_is_fatal() {
+        let base = En1994Snapshot::default();
+        let mutation = En1994Mutation::ChangeEta(change_eta::mutation::ChangeEta { new_eta: f64::NAN });
+        let outcome = mutation.diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn change_annex_same_value_is_no_op() {
+        let base = En1994Snapshot::default();
+        let mutation = En1994Mutation::ChangeAnnex(change_annex::mutation::ChangeAnnex { new_annex: base.annex });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
+        assert_eq!(outcome.diff(), &En1994Diff::default());
+    }
+
+    #[test]
+    fn change_span_m_is_deterministic() {
+        let base = En1994Snapshot::default();
+        let mutation = En1994Mutation::ChangeSpanM(change_span_m::mutation::ChangeSpanM { new_span_m: 12.0 });
+        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

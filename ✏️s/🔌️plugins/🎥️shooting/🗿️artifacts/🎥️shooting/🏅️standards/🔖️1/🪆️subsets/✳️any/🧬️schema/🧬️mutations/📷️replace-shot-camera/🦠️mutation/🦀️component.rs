@@ -15,7 +15,7 @@ pub struct ReplaceShotCamera {
 
 impl MutationKind<ShootingSnapshot, ShootingMutation> for ReplaceShotCamera {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "shot-camera", kind: "replace-shot-camera", record: "ReplacedShotCamera" };
-    fn diff(&self, base: &ShootingSnapshot) -> ShootingDiff {
+    fn diff(&self, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {

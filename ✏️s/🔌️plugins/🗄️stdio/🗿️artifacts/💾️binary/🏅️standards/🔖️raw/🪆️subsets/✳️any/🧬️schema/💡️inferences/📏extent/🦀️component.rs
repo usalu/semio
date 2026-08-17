@@ -11,7 +11,7 @@ use std::hash::{Hash, Hasher};
 
 //#region 🔖️Extent
 /// 📏️ binary's real extent over its opaque `bytes` blob.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BinaryExtent {
     pub byte_length: u64,
@@ -26,6 +26,12 @@ pub fn compute_binary_extent(snapshot: &BinarySnapshot) -> BinaryExtent {
     let mut hasher = DefaultHasher::new();
     snapshot.bytes.hash(&mut hasher);
     BinaryExtent { byte_length: snapshot.bytes.len() as u64, is_empty: snapshot.bytes.is_empty(), content_digest: format!("{:016x}", hasher.finish()) }
+}
+
+impl Default for BinaryExtent {
+    fn default() -> Self {
+        compute_binary_extent(&BinarySnapshot::default())
+    }
 }
 //#endregion 🔖️Extent
 

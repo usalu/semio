@@ -306,7 +306,7 @@ impl SemioAudioDiff {
 }
 
 impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
-    fn apply(&self, base: &SemioAudioSnapshot) -> SemioAudioSnapshot {
+    fn apply(&self, base: &SemioAudioSnapshot) -> protocol::MutationApplyResult<SemioAudioSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.sample_rate {
             next.sample_rate = v;
@@ -315,12 +315,14 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             next.format = v;
         }
         if let Some(d) = &self.channels {
+            triples::validate_indexed_triple(d, next.channels.len(), ["channels"])?;
             next.channels = channels_apply(d, &next.channels);
         }
         if let Some(d) = &self.tags {
+            triples::validate_indexed_triple(d, next.tags.len(), ["tags"])?;
             next.tags = tags_apply(d, &next.tags);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -560,7 +562,7 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
-impl protocol::DiffCodec for SemioAudioDiff {
+impl DiffCodec for SemioAudioDiff {
     fn print_diff(&self) -> String {
         print_audio_diff(self)
     }
@@ -750,7 +752,7 @@ mod tests {
         let mut d1 = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&base, &mid);
         let d2 = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&mid, &after);
         d1.absorb(d2);
-        assert_eq!(d1.apply(&base), after);
+        assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
     }
 
     #[test]
@@ -760,9 +762,9 @@ mod tests {
         b.sample_rate = 48_000;
         b.channels.push(channel(3.0, 4));
         let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &b);
-        assert_eq!(ab.apply(&a), b);
+        assert_eq!(ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
         let ba = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&b, &a);
-        assert_eq!(ba.apply(&b), a);
+        assert_eq!(ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
         assert!(<SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&a, &a).is_empty());
     }
 
@@ -779,9 +781,9 @@ mod tests {
             s
         };
         let d = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&base, &next);
-        let mutated = d.apply(&base);
+        let mutated = d.apply(&base).expect("apply must succeed for a well-formed fixture");
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&mutated), base);
+        assert_eq!(inv.apply(&mutated).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
@@ -794,7 +796,7 @@ mod tests {
         let sweep_b = SemioAudioSnapshot { sample_rate: 96_000, format: SemioAudioFormat::Float64, channels: vec![channel(9.0, 4), channel(1.0, 4), channel(2.0, 4)], tags: vec![], ..SemioAudioSnapshot::default() };
 
         let ab = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_a, &sweep_b);
-        assert_eq!(ab.apply(&sweep_a), sweep_b);
+        assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
         assert!(ab.sample_rate.is_some());
         assert!(ab.format.is_some());
         let channels_ab = ab.channels.as_ref().expect("channels must differ");
@@ -804,7 +806,7 @@ mod tests {
         assert!(!tags_ab.removed.is_empty(), "sweep must exercise a removed tag (b has none)");
 
         let ba = <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(&sweep_b, &sweep_a);
-        assert_eq!(ba.apply(&sweep_b), sweep_a);
+        assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
         let channels_ba = ba.channels.as_ref().expect("channels must differ");
         assert!(!channels_ba.removed.is_empty(), "reverse direction must exercise a removed channel (a is shorter)");
         let tags_ba = ba.tags.as_ref().expect("tags must differ");

@@ -24,7 +24,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
 /// `HostEffect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
-/// `apps::fem3d::reset_document_effect`).
+/// `editor::fem3d::reset_document_effect`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem3dSnapshot, diff = Fem3dDiff, schema = "fem.fem3d")]
@@ -95,8 +95,11 @@ pub type Fem3dStore = ArtifactStore<Fem3dSnapshot, Fem3dMutation>;
 /// 🌉️ Thin delegates to the derive-generated `protocol::Mutation` impl — kept because
 /// `🏗️builder/🦀️component.rs` (an artifact-generic caller, no per-variant knowledge) and
 /// `📝️text/🦀️component.rs`'s re-export both call these by name.
-pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) {
-    *snapshot = vcs::apply_mutation(snapshot, mutation);
+pub fn apply_fem3d_mutation(snapshot: &mut Fem3dSnapshot, mutation: &Fem3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(snapshot, mutation)?;
+
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation) -> Vec<Fem3dMutation> {
@@ -162,10 +165,14 @@ mod tests {
 
     // #region 🔖️OpRoundTrip
     fn round_trip(snapshot: &Fem3dSnapshot, operation: &Fem3dMutation) -> Fem3dSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation);
+        let forward = vcs::apply_mutation(snapshot, operation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in operation.inverse(snapshot) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
         forward
@@ -268,7 +275,7 @@ mod tests {
         assert!(Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }).inverse(&base).is_empty());
         assert!(Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }).inverse(&base).is_empty());
         assert!(Fem3dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }).inverse(&base).is_empty());
-        assert_eq!(Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) }).diff(&base), Fem3dDiff::default());
+        assert_eq!(*Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) }).diff(&base).diff(), Fem3dDiff::default());
     }
     // #endregion 🔖️OpRoundTrip
 
@@ -332,9 +339,9 @@ mod tests {
         let base = Fem3dSnapshot::default();
         let mutation = Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 } });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let after = d1.apply(&base);
-        let d2 = Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after);
+        let d1 = mutation.diff(&base).diff().clone();
+        let after = d1.apply(&base).expect("valid mutation diff");
+        let d2 = Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "none".into(), new_self_weight: true }).diff(&after).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -350,9 +357,9 @@ mod tests {
         let (base, ..) = cantilever_fixture();
         let mutation = Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "point".into(), load: Box::new(FemLoad::Area { id: "l9".into(), solid_id: "sol1".into(), pressure: 400.0 }) });
         protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
-        let d1 = mutation.diff(&base);
-        let after = d1.apply(&base);
-        let d2 = Fem3dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "none".into() }).diff(&after);
+        let d1 = mutation.diff(&base).diff().clone();
+        let after = d1.apply(&base).expect("valid mutation diff");
+        let d2 = Fem3dMutation::DeleteCombination(delete_combination::mutation::DeleteCombination { id: "none".into() }).diff(&after).diff().clone();
         protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
     }
 
@@ -366,6 +373,56 @@ mod tests {
         }
     }
     // #endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error` per verb family this facet implements (create/delete/
+    /// replace/add/remove/change), plus one `assert_fatal_never_applies` check for a
+    /// create-duplicate-id case.
+    #[test]
+    fn create_support_missing_node_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::CreateSupport(create_support::mutation::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] } }));
+    }
+
+    #[test]
+    fn delete_node_missing_target_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::DeleteNode(delete_node::mutation::DeleteNode { id: "ghost".into() }));
+    }
+
+    #[test]
+    fn replace_material_missing_target_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceMaterial(replace_material::mutation::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterial { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }));
+    }
+
+    #[test]
+    fn add_load_missing_case_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::AddLoad(add_load::mutation::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) }));
+    }
+
+    #[test]
+    fn remove_load_missing_case_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::RemoveLoad(remove_load::mutation::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() }));
+    }
+
+    #[test]
+    fn change_load_case_self_weight_missing_target_is_error() {
+        let base = Fem3dSnapshot::default();
+        protocol::testkit::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(change_load_case_self_weight::mutation::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true }));
+    }
+
+    #[test]
+    fn create_node_duplicate_id_is_fatal() {
+        let (base, ..) = cantilever_fixture();
+        let outcome = Fem3dMutation::CreateNode(create_node::mutation::CreateNode { node: FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 // #endregion 🧪️Tests
 

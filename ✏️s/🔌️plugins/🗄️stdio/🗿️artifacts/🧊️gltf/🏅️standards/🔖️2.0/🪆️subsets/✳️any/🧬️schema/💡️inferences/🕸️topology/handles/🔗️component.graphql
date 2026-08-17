@@ -1,11 +1,34 @@
-# 💡️ handles glTF inference leaf GraphQL facet.
-type GltfHandlesInferenceV1 {
-  id: ID!
+# 💡️ Typed handles glTF inference result.
+scalar GltfHandlesUInt64V1
+
+type GltfHandlesQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: GltfHandlesUInt64V1!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfHandlesProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfHandlesInferenceV1 {
+  value: GltfHandlesUInt64V1
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfHandlesQualityV1!
+  provenance: GltfHandlesProvenanceV1!
 }

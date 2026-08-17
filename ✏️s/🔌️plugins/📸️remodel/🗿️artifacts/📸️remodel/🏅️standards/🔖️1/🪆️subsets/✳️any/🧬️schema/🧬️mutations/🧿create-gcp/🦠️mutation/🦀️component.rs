@@ -23,7 +23,7 @@ pub fn create_gcp(gcp: GroundControlPoint) -> RemodelMutation {
 impl protocol::MutationKind<RemodelSnapshot, RemodelMutation> for CreateGcp {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "gcp", kind: "create-gcp", record: "CreatedGcp" };
 
-    fn diff(&self, base: &RemodelSnapshot) -> RemodelDiff {
+    fn diff(&self, base: &RemodelSnapshot) -> protocol::MutationOutcome<RemodelDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &RemodelSnapshot) -> Vec<RemodelMutation> {

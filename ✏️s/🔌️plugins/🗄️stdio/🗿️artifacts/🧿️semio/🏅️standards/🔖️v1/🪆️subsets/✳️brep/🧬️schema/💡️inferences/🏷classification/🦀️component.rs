@@ -493,7 +493,7 @@ mod tests {
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-        let sdf = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement: Trsf::IDENTITY };
+        let _sdf = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement: Trsf::IDENTITY };
         assert_classify(&body, solid, Pnt3::new(0.5, 0.5, 0.5), PointClassification::Inside);
         assert_classify(&body, solid, Pnt3::new(3.0, 3.0, 3.0), PointClassification::Outside);
         let _ = ClosedFormMass::box_volume(Pnt3::new(1.0, 1.0, 1.0));

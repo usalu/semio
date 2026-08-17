@@ -15,7 +15,7 @@ pub struct ChangeServiceClass {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeServiceClass {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "service-class", kind: "change-service-class", record: "ChangedServiceClass" };
 
-    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_service_class::diff::diff(self, base)
     }
 

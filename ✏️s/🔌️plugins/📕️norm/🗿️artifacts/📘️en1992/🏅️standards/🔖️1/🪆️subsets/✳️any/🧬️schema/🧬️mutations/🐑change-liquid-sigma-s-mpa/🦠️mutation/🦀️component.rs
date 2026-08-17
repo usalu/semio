@@ -15,7 +15,7 @@ pub struct ChangeLiquidSigmaSMpa {
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSigmaSMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "liquid-sigma-s-mpa", kind: "change-liquid-sigma-s-mpa", record: "ChangedLiquidSigmaSMpa" };
 
-    fn diff(&self, base: &En1992Snapshot) -> En1992Diff {
+    fn diff(&self, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
         crate::artifacts::en1992::mutations::change_liquid_sigma_s_mpa::diff::diff(self, base)
     }
 

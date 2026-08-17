@@ -15,19 +15,9 @@
 //! items as WHOLE VALUES (`D = T = DocBlock`; "modified" carries the complete replacement block).
 //! This is honest per the recipe's weak/strong-entity split: from this subset's point of view
 //! `DocBlock` is a value struct it does not own the internals of, so it is never sub-diffed here.
-//!
-//! Generic collection-triple TYPES are this file's OWN local copy (`IndexedTripleDiff`/
-//! `NamedTripleDiff` below), not the shared `engine::triples` module — **shared-infra gap found
-//! and reported, not fixed here** (out of this file's write scope per this ticket's rules): the
-//! shared module's derive omits the `#[serde(bound(...))]` override docx's own local copy carries
-//! (see docx `🔺️diff/🦀️component.rs` `GenericCollectionTriples` region doc comment), so
-//! `serde_derive`'s conservative per-field-`#[serde(default)]` bound inference spuriously requires
-//! `D: Default`/`T: Default` on EVERY instantiation — a real compile blocker here since neither
-//! `SlideShape` nor (out-of-scope) `document::DocBlock` implements `Default`. `split_top_level`/
-//! `strip_brackets` (plain functions, no generic-bound issue) ARE reused from the shared module.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
-use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
+use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
@@ -41,62 +31,6 @@ use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-
-//#region 🔖️GenericCollectionTriples
-/// 🌳 Index-keyed collection triple (own local copy, see module doc comment for why not the shared
-/// `engine::triples` one). `removed`/`modified` indices refer to BASE state; `added` indices refer
-/// to FINAL state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "D: Serialize, T: Serialize", deserialize = "D: Deserialize<'de>, T: Deserialize<'de>"))]
-pub struct IndexedTripleDiff<D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub modified: Vec<IndexModified<D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub added: Vec<IndexAdded<T>>,
-}
-impl<D, T> Default for IndexedTripleDiff<D, T> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
-    }
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IndexModified<D> {
-    pub index: usize,
-    pub diff: D,
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IndexAdded<T> {
-    pub index: usize,
-    pub item: T,
-}
-
-/// 🏷️ Name-keyed collection triple (own local copy).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "K: Serialize, D: Serialize, T: Serialize", deserialize = "K: Deserialize<'de>, D: Deserialize<'de>, T: Deserialize<'de>"))]
-pub struct NamedTripleDiff<K, D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub removed: Vec<K>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub modified: Vec<NamedModified<K, D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub added: Vec<T>,
-}
-impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
-    }
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NamedModified<K, D> {
-    pub key: K,
-    pub diff: D,
-}
-//#endregion 🔖️GenericCollectionTriples
 
 //#region 🔖️CollectionDiffAliases
 pub type SlideShapesDiff = IndexedTripleDiff<SlideShapeDiff, SlideShape>;
@@ -909,18 +843,21 @@ fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnap
 
 //#region 🔖️Apply
 impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
-    fn apply(&self, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
+    fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
             apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
         }
         if let Some(d) = &self.layouts {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"])?;
             apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
         }
         if let Some(d) = &self.slides {
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
             apply_indexed(&mut next.slides, d, apply_slide);
         }
-        next
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -1652,9 +1589,9 @@ mod handcrafted_diff_codec_tests {
         assert_eq!(shapes_diff.modified.len(), 1);
         assert!(matches!(&shapes_diff.modified[0].diff, SlideShapeDiff::Replace { .. }), "expected Replace for a shape-kind change, got {:?}", shapes_diff.modified[0].diff);
 
-        assert_eq!(MutationDiff::apply(&diff, &a), b);
+        assert_eq!(MutationDiff::apply(&diff, &a).expect("apply must succeed for a well-formed fixture"), b);
         let inv = DiffAlgebra::inverse(&diff, &a);
-        assert_eq!(MutationDiff::apply(&inv, &b), a);
+        assert_eq!(MutationDiff::apply(&inv, &b).expect("apply must succeed for a well-formed fixture"), a);
 
         let printed = diff.print_diff();
         let parsed = SemioPresentationDiff::parse_diff(&printed).expect("parse_diff");

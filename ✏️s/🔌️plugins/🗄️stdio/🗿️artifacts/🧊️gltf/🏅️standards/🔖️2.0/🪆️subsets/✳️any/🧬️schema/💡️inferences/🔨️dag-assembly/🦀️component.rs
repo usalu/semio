@@ -8,7 +8,7 @@ use super::{
     compactness::GltfCompactnessInference,
     concavity::GltfConcavityInference,
     curvature::GltfCurvatureInference,
-    geometry_core::{self, *},
+    geometry_core::*,
     mass_distribution::GltfMassInference,
     orientation::GltfOrientationInference,
     proportion::GltfProportionInference,
@@ -42,7 +42,7 @@ fn empty_indicators(diagnostic_ids: Vec<String>) -> GltfEntityIndicators {
 
 fn assemble_indicators(points: &[V3], triangles: &[[usize; 3]], policy: &GltfAnalysisPolicy) -> (GltfEntityIndicators, Topology) {
     let Some(context) = GltfGeometryContext::new(points, triangles, policy) else {
-        return (empty_indicators(Vec::new()), geometry_core::topology_summary(points, triangles));
+        return (empty_indicators(Vec::new()), topology_summary(points, triangles));
     };
     let topology = context.topology;
     (

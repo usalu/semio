@@ -27,8 +27,10 @@ impl Default for WiresPresence {
 }
 
 impl protocol::MutationDiff<WiresPresence> for WiresPresence {
-    fn apply(&self, _base: &WiresPresence) -> WiresPresence {
-        self.clone()
+    fn apply(&self, _base: &WiresPresence) -> protocol::MutationApplyResult<WiresPresence> {
+        Ok({
+            self.clone()
+        })
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

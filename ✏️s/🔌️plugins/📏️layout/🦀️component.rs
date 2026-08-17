@@ -15,7 +15,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .version("0.1.0")
         .artifact(crate::artifacts::layout::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
         .editor::<crate::editor::layout::LayoutPlayApp>(crate::editor::layout::create_layout_app())
+        .editor_mutation_roster::<crate::editor::layout::LayoutPlayApp>()
         .viewer::<crate::viewer::layout::LayoutViewer>(crate::viewer::layout::create_layout_viewer())
+        .viewer_mutation_roster::<crate::viewer::layout::LayoutViewer>()
         .try_build()
 }
 

@@ -14,8 +14,10 @@ use store::ArtifactPack;
 pub struct NormPresence {}
 
 impl protocol::MutationDiff<NormPresence> for NormPresence {
-    fn apply(&self, base: &NormPresence) -> NormPresence {
-        base.clone()
+    fn apply(&self, base: &NormPresence) -> protocol::MutationApplyResult<NormPresence> {
+        Ok({
+            base.clone()
+        })
     }
     fn absorb(&mut self, _other: Self) {}
 }
@@ -66,8 +68,8 @@ pub enum NormPresenceMutation {
 impl Mutation<NormPresence> for NormPresenceMutation {
     type Diff = NormPresence;
 
-    fn diff(&self, _base: &NormPresence) -> NormPresence {
-        NormPresence::default()
+    fn diff(&self, _base: &NormPresence) -> protocol::MutationOutcome<NormPresence> {
+        protocol::MutationOutcome::new(NormPresence::default())
     }
 
     fn inverse(&self, _base: &NormPresence) -> Vec<Self> {

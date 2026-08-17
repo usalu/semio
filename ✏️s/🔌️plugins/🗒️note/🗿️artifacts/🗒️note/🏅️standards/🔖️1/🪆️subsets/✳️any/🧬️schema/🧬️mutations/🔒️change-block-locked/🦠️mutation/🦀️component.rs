@@ -23,7 +23,7 @@ pub fn change_block_locked(id: String, new_locked: bool) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockLocked {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "block-locked", kind: "change-block-locked", record: "ChangedBlockLocked" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

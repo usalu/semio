@@ -16,7 +16,7 @@ pub struct ChangeRepresentationPin {
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for ChangeRepresentationPin {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "representation-pin", kind: "change-representation-pin", record: "ChangedRepresentationPin" };
 
-    fn diff(&self, base: &SemioKitSnapshot) -> <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff {
+    fn diff(&self, base: &SemioKitSnapshot) -> protocol::MutationOutcome<<SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {

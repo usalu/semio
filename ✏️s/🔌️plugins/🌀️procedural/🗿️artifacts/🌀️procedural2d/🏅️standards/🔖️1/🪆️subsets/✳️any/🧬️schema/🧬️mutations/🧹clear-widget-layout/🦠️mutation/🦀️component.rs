@@ -24,7 +24,7 @@ pub fn clear_widget_layout(id: String) -> Procedural2dMutation {
 impl MutationKind<Procedural2dSnapshot, Procedural2dMutation> for ClearWidgetLayout {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "widget-layout", kind: "clear-widget-layout", record: "ClearedWidgetLayout" };
 
-    fn diff(&self, base: &Procedural2dSnapshot) -> Procedural2dDiff {
+    fn diff(&self, base: &Procedural2dSnapshot) -> protocol::MutationOutcome<Procedural2dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Procedural2dSnapshot) -> Vec<Procedural2dMutation> {

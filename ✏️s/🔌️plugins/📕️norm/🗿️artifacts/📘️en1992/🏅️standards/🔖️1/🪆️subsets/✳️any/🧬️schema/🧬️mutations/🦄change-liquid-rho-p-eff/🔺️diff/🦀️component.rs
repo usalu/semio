@@ -5,7 +5,13 @@ use crate::artifacts::en1992::mutations::change_liquid_rho_p_eff::mutation::Chan
 use crate::artifacts::en1992::En1992Snapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &ChangeLiquidRhoPEff, _base: &En1992Snapshot) -> En1992Diff {
-    En1992Diff { liquid_rho_p_eff: Some(payload.new_liquid_rho_p_eff.clone()), ..Default::default() }
+pub fn diff(payload: &ChangeLiquidRhoPEff, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
+    if !payload.new_liquid_rho_p_eff.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Liquid rho p eff must be a finite number.", Vec::<String>::new());
+    }
+    if base.liquid_rho_p_eff == payload.new_liquid_rho_p_eff {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Liquid rho p eff already has this value.");
+    }
+    protocol::MutationOutcome::new(En1992Diff { liquid_rho_p_eff: Some(payload.new_liquid_rho_p_eff.clone()), ..Default::default() })
 }
 //#endregion 🔖️Diff

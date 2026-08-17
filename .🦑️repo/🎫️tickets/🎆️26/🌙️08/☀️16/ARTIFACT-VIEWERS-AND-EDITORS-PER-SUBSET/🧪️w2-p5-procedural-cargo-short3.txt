@@ -1,0 +1,30 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:350:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs:356:11: warning: unexpected `cfg` condition value: `js`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:684:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:684:47: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:749:16: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:170:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:585:21: warning: unused variable: `len`: help: if this is intentional, prefix it with an underscore: `_len`
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1221:9: warning: variable does not need to be mutable
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4445:19: warning: method `set_envelope` is never used
+warning: `semio-framework-os-kernel` (lib) generated 9 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 6 suggestions)
+    Checking semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+    Checking semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:5:38: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:17:5: warning: unused import: `crate::wgpu::IconName`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:94:52: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:9:26: warning: unused import: `Level`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:438:42: warning: unused import: `render_select_menu`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:789:13: warning: variable does not need to be mutable
+warning: `semio-framework-ui` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-ui` to apply 6 suggestions)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:7:23: warning: unused imports: `FaultCode`, `FaultScope`, `Severity`, and `TextSpan`
+🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:2101:48: error[E0053]: method `apply` has an incompatible type for trait: expected `Result<RunArtifact, MutationApplyError>`, found `RunArtifact`
+🧰️framework/📦️packages/🦀️rust/../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs:1304:53: error[E0053]: method `apply` has an incompatible type for trait: expected `Result<WorkflowSnapshot, ...>`, found `WorkflowSnapshot`
+warning: `semio-framework` (lib) generated 1 warning
+error: could not compile `semio-framework` (lib) due to 2 previous errors; 1 warning emitted

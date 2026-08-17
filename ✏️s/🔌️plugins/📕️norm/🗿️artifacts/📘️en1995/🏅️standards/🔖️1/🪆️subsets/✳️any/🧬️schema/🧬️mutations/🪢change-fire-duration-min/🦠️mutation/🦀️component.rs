@@ -15,7 +15,7 @@ pub struct ChangeFireDurationMin {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFireDurationMin {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fire-duration-min", kind: "change-fire-duration-min", record: "ChangedFireDurationMin" };
 
-    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_fire_duration_min::diff::diff(self, base)
     }
 

@@ -1,6 +1,6 @@
 //! 🎪 `stdio.bmp` artifact — stdio reference format.
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::bmp::schema::diff::BmpDiff;
 pub use crate::artifacts::bmp::schema::mutations::BmpMutation;
@@ -12,6 +12,15 @@ pub const STDIO_BMP_DOCUMENT_SCHEMA: &str = "stdio.bmp";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const BMP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.bmp";
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.

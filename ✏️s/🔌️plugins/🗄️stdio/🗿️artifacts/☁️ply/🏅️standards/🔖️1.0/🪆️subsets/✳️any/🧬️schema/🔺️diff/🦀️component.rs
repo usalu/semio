@@ -15,14 +15,13 @@
 //! `PlyRowFieldChange::value`). `DiffCodec` for `PlyDiff` is hand-rolled below instead, following
 //! the ticket's §5 grammar template (verbatim primitives from the gif89a/svg pilots).
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
 use protocol::command::DiffAlgebra;
-#[cfg(test)]
 use protocol::DiffCodec;
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -65,13 +64,11 @@ impl PlyRowDiff {
 /// (the OWNING element's declared column order) to find the cell index.
 fn apply_row_diff(properties: &[PlyProperty], row: &mut PlyRow, diff: &PlyRowDiff) {
     for change in &diff.fields {
-        if let Some(idx) = properties.iter().position(|p| p.name() == change.name) {
-            if idx >= row.values.len() {
-                row.values.resize(idx + 1, PlyValue::Int(0));
+        for (index, property) in properties.iter().enumerate() {
+            if property.name() == change.name {
+                row.values[index] = change.value.clone();
             }
-            row.values[idx] = change.value.clone();
         }
-        // 🕳️ property name not found on this element: graceful no-op (out-of-range rule).
     }
 }
 
@@ -132,23 +129,17 @@ impl PlyRowsDiff {
 /// indices, ascending, clamped) — apply-order contract from the recipe's `## Diff`.
 fn apply_rows_diff(properties: &[PlyProperty], rows: &mut Vec<PlyRow>, diff: &PlyRowsDiff) {
     for m in &diff.modified {
-        if let Some(row) = rows.get_mut(m.index) {
-            apply_row_diff(properties, row, &m.diff);
-        }
+        apply_row_diff(properties, &mut rows[m.index], &m.diff);
     }
     let mut removed_desc = diff.removed.clone();
     removed_desc.sort_unstable_by(|a, b| b.cmp(a));
-    removed_desc.dedup();
     for idx in removed_desc {
-        if idx < rows.len() {
-            rows.remove(idx);
-        }
+        rows.remove(idx);
     }
     let mut adds: Vec<&PlyRowAdded> = diff.added.iter().collect();
     adds.sort_by_key(|a| a.index);
     for a in adds {
-        let at = a.index.min(rows.len());
-        rows.insert(at, a.row.clone());
+        rows.insert(a.index, a.row.clone());
     }
 }
 
@@ -226,7 +217,7 @@ fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
     let mid_slots = row_simulate_slots(base_len, &d1.removed, &d1_added_indices);
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
-    let mut modified_map: std::collections::BTreeMap<usize, PlyRowDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut modified_map: BTreeMap<usize, PlyRowDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
     let mut added_alive: Vec<Option<PlyRowAdded>> = d1.added.into_iter().map(Some).collect();
 
     for mid_idx in &d2.removed {
@@ -498,31 +489,132 @@ pub struct PlyDiff {
     pub elements: Option<PlyElementsDiff>,
 }
 
-impl MutationDiff<PlySnapshot> for PlyDiff {
-    fn apply(&self, base: &PlySnapshot) -> PlySnapshot {
-        let mut next = base.clone();
-        if let Some(f) = self.format {
-            next.format = f;
+fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
+    MutationApplyError::new(code, message).at(target)
+}
+
+fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRowsDiff, prefix: &[String]) -> MutationApplyResult<()> {
+    let mut property_positions = BTreeMap::new();
+    for (index, property) in properties.iter().enumerate() {
+        if property_positions.insert(property.name(), index).is_some() {
+            let mut target = prefix.to_vec();
+            target.extend(["properties".to_string(), property.name().to_string()]);
+            return Err(target_error("duplicate-base-target", "property names must be unique", target));
         }
-        if let Some(c) = &self.comments {
-            next.comments = c.clone();
+    }
+    let mut removed = BTreeSet::new();
+    for &index in &diff.removed {
+        let mut target = prefix.to_vec();
+        target.extend(["rows".to_string(), index.to_string()]);
+        if index >= rows.len() || !removed.insert(index) {
+            return Err(target_error("invalid-remove-index", "row removal target must exist exactly once", target));
         }
-        if let Some(ed) = &self.elements {
-            for m in &ed.modified {
-                if let Some(el) = next.elements.iter_mut().find(|e| e.name == m.name) {
-                    apply_element_diff(el, &m.diff);
+    }
+    let mut modified = BTreeSet::new();
+    for entry in &diff.modified {
+        let mut row_target = prefix.to_vec();
+        row_target.extend(["rows".to_string(), entry.index.to_string()]);
+        if entry.index >= rows.len() || removed.contains(&entry.index) || !modified.insert(entry.index) {
+            return Err(target_error("invalid-modify-index", "row modification target must exist exactly once and remain present", row_target));
+        }
+        let mut fields = BTreeSet::new();
+        for field in &entry.diff.fields {
+            let mut target = prefix.to_vec();
+            target.extend(["rows".to_string(), entry.index.to_string(), "fields".to_string(), field.name.clone()]);
+            let position = property_positions.get(field.name.as_str()).copied();
+            if !fields.insert(field.name.as_str()) || position.is_none() || position.map_or(false, |value| value >= rows[entry.index].values.len()) {
+                return Err(target_error("invalid-field-target", "row field target must be unique and resolve to an existing cell", target));
+            }
+        }
+    }
+    let mut length = rows.len() - removed.len();
+    let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
+    additions.sort_unstable();
+    let mut previous = None;
+    for index in additions {
+        let mut target = prefix.to_vec();
+        target.extend(["rows".to_string(), index.to_string()]);
+        if index > length || previous == Some(index) {
+            return Err(target_error("invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
+        }
+        previous = Some(index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> MutationApplyResult<()> {
+    let mut base_by_name = BTreeMap::new();
+    for element in base {
+        if base_by_name.insert(element.name.as_str(), element).is_some() {
+            return Err(target_error("duplicate-base-target", "base element names must be unique", vec!["elements".to_string(), element.name.clone()]));
+        }
+    }
+    let mut removed = BTreeSet::new();
+    for name in &diff.removed {
+        if !base_by_name.contains_key(name.as_str()) || !removed.insert(name.as_str()) {
+            return Err(target_error("invalid-remove-target", "element removal target must exist exactly once", vec!["elements".to_string(), name.clone()]));
+        }
+    }
+    let mut modified = BTreeSet::new();
+    for entry in &diff.modified {
+        let base_element = base_by_name.get(entry.name.as_str()).copied();
+        if base_element.is_none() || removed.contains(entry.name.as_str()) || !modified.insert(entry.name.as_str()) {
+            return Err(target_error("invalid-modify-target", "element modification target must exist exactly once and remain present", vec!["elements".to_string(), entry.name.clone()]));
+        }
+        if let (Some(rows), Some(element)) = (&entry.diff.rows, base_element) {
+            let properties = entry.diff.properties.as_deref().unwrap_or(&element.properties);
+            validate_rows_diff(properties, &element.rows, rows, &["elements".to_string(), entry.name.clone()])?;
+        }
+    }
+    let mut length = base.len() - removed.len();
+    let mut additions: Vec<&PlyElementAdded> = diff.added.iter().collect();
+    additions.sort_by_key(|entry| entry.index);
+    let mut added_names = BTreeSet::new();
+    let mut previous = None;
+    for entry in additions {
+        if base_by_name.contains_key(entry.element.name.as_str()) || !added_names.insert(entry.element.name.as_str()) || entry.index > length || previous == Some(entry.index) {
+            return Err(target_error("invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]));
+        }
+        previous = Some(entry.index);
+        length += 1;
+    }
+    Ok(())
+}
+
+fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
+    let mut next = base.clone();
+    if let Some(format) = diff.format {
+        next.format = format;
+    }
+    if let Some(comments) = &diff.comments {
+        next.comments = comments.clone();
+    }
+    if let Some(elements) = &diff.elements {
+        for modified in &elements.modified {
+            for element in &mut next.elements {
+                if element.name == modified.name {
+                    apply_element_diff(element, &modified.diff);
                 }
             }
-            let removed: HashSet<&str> = ed.removed.iter().map(String::as_str).collect();
-            next.elements.retain(|e| !removed.contains(e.name.as_str()));
-            let mut adds: Vec<&PlyElementAdded> = ed.added.iter().collect();
-            adds.sort_by_key(|a| a.index);
-            for a in adds {
-                let at = a.index.min(next.elements.len());
-                next.elements.insert(at, a.element.clone());
-            }
         }
-        next
+        let removed: HashSet<&str> = elements.removed.iter().map(String::as_str).collect();
+        next.elements.retain(|element| !removed.contains(element.name.as_str()));
+        let mut additions: Vec<&PlyElementAdded> = elements.added.iter().collect();
+        additions.sort_by_key(|entry| entry.index);
+        for entry in additions {
+            next.elements.insert(entry.index, entry.element.clone());
+        }
+    }
+    next
+}
+
+impl MutationDiff<PlySnapshot> for PlyDiff {
+    fn apply(&self, base: &PlySnapshot) -> MutationApplyResult<PlySnapshot> {
+        if let Some(diff) = &self.elements {
+            validate_elements_diff(&base.elements, diff)?;
+        }
+        Ok(apply_ply_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
@@ -542,7 +634,7 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
 impl DiffAlgebra<PlySnapshot> for PlyDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) from `between`.
     fn inverse(&self, base: &PlySnapshot) -> Self {
-        let mutated = self.apply(base);
+        let mutated = apply_ply_diff_unchecked(self, base);
         Self::between(&mutated, base)
     }
 
@@ -1318,7 +1410,7 @@ fn parse_ply_diff(line: &str) -> Result<PlyDiff, String> {
     Ok(d)
 }
 
-impl protocol::DiffCodec for PlyDiff {
+impl DiffCodec for PlyDiff {
     fn print_diff(&self) -> String {
         print_ply_diff(self)
     }

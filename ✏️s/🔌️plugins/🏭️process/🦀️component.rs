@@ -8,6 +8,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .label("Process")
         .version("0.1.0")
         .artifact(crate::artifacts::process3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .document_app::<crate::apps::process3d::Process3dPlayApp>(crate::apps::process3d::create_process3d_app())
+        .editor::<crate::editor::process3d::Process3dPlayApp>(crate::editor::process3d::create_process3d_app())
+        .editor_mutation_roster::<crate::editor::process3d::Process3dPlayApp>()
+        .viewer::<crate::viewer::process3d::Process3dViewer>(crate::viewer::process3d::create_process3d_viewer())
+        .viewer_mutation_roster::<crate::viewer::process3d::Process3dViewer>()
         .try_build()
 }

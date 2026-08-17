@@ -109,13 +109,13 @@ pub mod derived_construction {
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, Self::Diff) {
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
-        fn absorb(mut self, diff: Self::Diff) -> Self {
-            self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot);
-            self
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             if self.diagnostics.is_empty() {
@@ -224,8 +224,8 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
 //#region 🧬️DerivedArtifactFacets
 semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlBuilderFacets {
-        construction: derived_construction::XmlBuilderConstruction,
-        analysis: derived_analysis::XmlAnalyzerAnalysis,
+        construction: XmlBuilderConstruction,
+        analysis: XmlAnalyzerAnalysis,
         composition: super::super::io::derived_composition::XmlComposerComposition,
     }
     builder: XmlBuilder,
@@ -373,7 +373,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(&diff_direct, &base);
+            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut via_apply, &mutation);
@@ -400,9 +400,9 @@ mod tests {
 
             // Diff-level round-trip.
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(&diff, &base);
-            let inverse_diff = DiffAlgebra::inverse(&diff, &base);
-            let restored = MutationDiff::apply(&inverse_diff, &next);
+            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
     }
@@ -426,10 +426,10 @@ mod tests {
     }
 
     fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base));
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -446,9 +446,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -461,9 +461,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             let names: Vec<&str> = triple
@@ -482,9 +482,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::SetAttribute { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -496,9 +496,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::SetAttribute { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()) }, &base);
-            let mid = MutationDiff::apply(&d1, &base);
+            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
+            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -508,23 +508,23 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid1 = MutationDiff::apply(&d1, &base);
+            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid1);
-            let mid2 = MutationDiff::apply(&d2, &mid1);
+            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
             let d3 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(&d3, &mid2);
+            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
 
-            let mut left = d1.clone();
-            MutationDiff::absorb(&mut left, d2.clone());
-            MutationDiff::absorb(&mut left, d3.clone());
+            let mut left = d1.diff().clone();
+            MutationDiff::absorb(&mut left, d2.diff().clone());
+            MutationDiff::absorb(&mut left, d3.diff().clone());
 
-            let mut d2_then_d3 = d2.clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.clone());
-            let mut right = d1.clone();
+            let mut d2_then_d3 = d2.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
+            let mut right = d1.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
-            assert_eq!(MutationDiff::apply(&left, &base), sequential, "absorb associativity (left) failed");
-            assert_eq!(MutationDiff::apply(&right, &base), sequential, "absorb associativity (right) failed");
+            assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+            assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
         }
     }
     //#endregion 🔖️AbsorbLaw
@@ -535,11 +535,11 @@ mod tests {
         // Synthetic pairs.
         let a = sweep_a();
         let b = sweep_b();
-        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b), &a), b);
-        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a), &b), a);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b), &a).unwrap(), b);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
         let sample = sample_snapshot();
-        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample), sample);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
         // Real fixture (the demo's `📰️example.xml`) diffed against a mutated variant.
         let fixture_text = include_str!("../📚️examples/🎬️demo/🖼️assets/📰️example.xml");
@@ -548,8 +548,8 @@ mod tests {
         let mut mutated = fixture.clone();
         crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut mutated, &XmlMutation::SetAttribute { path: XmlNodePath::root(), name: "id".into(), value: Some("1".into()) });
         assert_ne!(fixture, mutated);
-        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture), mutated);
-        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated), fixture);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
+        assert_eq!(MutationDiff::apply(&<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
     }
     //#endregion 🔖️BetweenRoundtripLaw
 
@@ -581,9 +581,9 @@ mod tests {
         let b = sweep_b();
 
         let diff_ab = <XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &b);
-        assert_eq!(MutationDiff::apply(&diff_ab, &a), b);
+        assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
         let diff_ba = <XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&b, &a);
-        assert_eq!(MutationDiff::apply(&diff_ba, &b), a);
+        assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
         assert!(<XmlDiff as DiffAlgebra<XmlSnapshot>>::between(&a, &a).is_empty());
 
         // Hand-written per-field assertion: every top-level XmlDiff field is populated, and both

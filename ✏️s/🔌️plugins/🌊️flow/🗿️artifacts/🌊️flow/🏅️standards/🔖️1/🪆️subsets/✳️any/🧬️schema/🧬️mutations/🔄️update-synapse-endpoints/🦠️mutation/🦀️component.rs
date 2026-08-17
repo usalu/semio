@@ -19,7 +19,7 @@ pub struct UpdateSynapseEndpoints {
 impl MutationKind<FlowSnapshot, FlowMutation> for UpdateSynapseEndpoints {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "update", entity: "synapse", kind: "update-synapse-endpoints", record: "UpdatedSynapseEndpoints" };
 
-    fn diff(&self, base: &FlowSnapshot) -> FlowDiff {
+    fn diff(&self, base: &FlowSnapshot) -> protocol::MutationOutcome<FlowDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {

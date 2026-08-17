@@ -19,7 +19,7 @@ pub struct ChangeGenerationValue {
 impl protocol::MutationKind<Procedural3dSnapshot, Procedural3dMutation> for ChangeGenerationValue {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "generation-value", kind: "change-generation-value", record: "ChangedGenerationValue" };
 
-    fn diff(&self, base: &Procedural3dSnapshot) -> Procedural3dDiff {
+    fn diff(&self, base: &Procedural3dSnapshot) -> protocol::MutationOutcome<Procedural3dDiff> {
         crate::artifacts::procedural3d::mutations::change_generation_value::diff::diff(self, base)
     }
 

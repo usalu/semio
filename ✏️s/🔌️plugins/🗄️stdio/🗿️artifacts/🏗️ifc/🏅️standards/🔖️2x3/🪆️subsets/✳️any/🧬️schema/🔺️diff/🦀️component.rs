@@ -7,14 +7,14 @@
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
 use crate::artifacts::step::engine::part21::{Part21Decimal, Part21Header, Part21Instance, Part21Value};
-use protocol::MutationDiff;
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
 // trait but the facade wasn't updated) — reached via the still-public `os_spr::command` path
 // instead, same as `txt`'s own `🔺️diff/🦀️component.rs`.
 use protocol::os_spr::command::DiffAlgebra;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::fmt::Write as _;
 
 //#region 🔖️Diff
@@ -44,39 +44,77 @@ pub struct Ifc2x3Diff {
     pub instance_order: Option<Vec<u64>>,
 }
 
+fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApplyResult<()> {
+    let mut base_ids = BTreeSet::new();
+    for instance in &base.document.instances {
+        if !base_ids.insert(instance.id) {
+            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").at(["instances", &instance.id.to_string()]));
+        }
+    }
+    let mut removed = BTreeSet::new();
+    for &id in &diff.removed_instances {
+        if !base_ids.contains(&id) || !removed.insert(id) {
+            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").at(["instances", &id.to_string()]));
+        }
+    }
+    let mut upserted = BTreeSet::new();
+    for instance in &diff.upserted_instances {
+        if removed.contains(&instance.id) || !upserted.insert(instance.id) {
+            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").at(["instances", &instance.id.to_string()]));
+        }
+    }
+    let mut final_ids = base_ids;
+    for id in removed {
+        final_ids.remove(&id);
+    }
+    final_ids.extend(upserted);
+    if let Some(order) = &diff.instance_order {
+        let mut ordered = BTreeSet::new();
+        for &id in order {
+            if !final_ids.contains(&id) || !ordered.insert(id) {
+                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &id.to_string()]));
+            }
+        }
+        if ordered != final_ids {
+            let missing = final_ids.difference(&ordered).next().copied().unwrap_or_default();
+            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &missing.to_string()]));
+        }
+    }
+    Ok(())
+}
+
+fn apply_ifc2x3_diff_unchecked(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
+    let mut document = base.document.clone();
+    if let Some(header) = &diff.header {
+        document.header = header.clone();
+    }
+    let removed: HashSet<u64> = diff.removed_instances.iter().copied().collect();
+    document.instances.retain(|i| !removed.contains(&i.id));
+    let mut positions = document.instances.iter().enumerate().map(|(position, instance)| (instance.id, position)).collect::<std::collections::HashMap<_, _>>();
+    for instance in &diff.upserted_instances {
+        if let Some(position) = positions.get(&instance.id).copied() {
+            document.instances[position] = instance.clone();
+        } else {
+            positions.insert(instance.id, document.instances.len());
+            document.instances.push(instance.clone());
+        }
+    }
+    if let Some(order) = &diff.instance_order {
+        let mut by_id = document.instances.drain(..).map(|instance| (instance.id, instance)).collect::<std::collections::HashMap<_, _>>();
+        document.instances.reserve(by_id.len());
+        for id in order {
+            if let Some(instance) = by_id.remove(id) {
+                document.instances.push(instance);
+            }
+        }
+    }
+    Ifc2x3Snapshot { schema: diff.schema.clone().unwrap_or_else(|| base.schema.clone()), document, edm_preamble: diff.edm_preamble.clone().unwrap_or_else(|| base.edm_preamble.clone()) }
+}
+
 impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
-    fn apply(&self, base: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
-        let mut document = base.document.clone();
-        if let Some(header) = &self.header {
-            document.header = header.clone();
-        }
-        let removed: HashSet<u64> = self.removed_instances.iter().copied().collect();
-        document.instances.retain(|i| !removed.contains(&i.id));
-        let mut positions = document.instances.iter().enumerate().map(|(position, instance)| (instance.id, position)).collect::<std::collections::HashMap<_, _>>();
-        for instance in &self.upserted_instances {
-            if let Some(position) = positions.get(&instance.id).copied() {
-                document.instances[position] = instance.clone();
-            } else {
-                positions.insert(instance.id, document.instances.len());
-                document.instances.push(instance.clone());
-            }
-        }
-        if let Some(order) = &self.instance_order {
-            let current_order = document.instances.iter().map(|instance| instance.id).collect::<Vec<_>>();
-            let mut by_id = document.instances.drain(..).map(|instance| (instance.id, instance)).collect::<std::collections::HashMap<_, _>>();
-            document.instances.reserve(by_id.len());
-            for id in order {
-                if let Some(instance) = by_id.remove(id) {
-                    document.instances.push(instance);
-                }
-            }
-            for id in current_order {
-                if let Some(instance) = by_id.remove(&id) {
-                    document.instances.push(instance);
-                }
-            }
-        }
-        Ifc2x3Snapshot { schema: self.schema.clone().unwrap_or_else(|| base.schema.clone()), document, edm_preamble: self.edm_preamble.clone().unwrap_or_else(|| base.edm_preamble.clone()) }
+    fn apply(&self, base: &Ifc2x3Snapshot) -> MutationApplyResult<Ifc2x3Snapshot> {
+        validate_ifc2x3_diff(self, base)?;
+        Ok(apply_ifc2x3_diff_unchecked(self, base))
     }
 
     /// ➕️ Structural, base-free (id-keyed collections need no position transport, unlike an
@@ -121,7 +159,7 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
     /// 🔁️ Same `apply`+`between` composition proof `txt::TxtDiff::inverse` uses: `next =
     /// self.apply(base)`, so `between(next, base)` is by definition the diff that restores `base`.
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
-        let next = self.apply(base);
+        let next = apply_ifc2x3_diff_unchecked(self, base);
         Self::between(&next, base)
     }
 
@@ -684,7 +722,7 @@ pub(crate) fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Resul
 /// `print_ifc_diff` shape exactly.
 fn print_ifc2x3_diff(d: &Ifc2x3Diff) -> String {
     let mut out = String::new();
-    let mut separate = |out: &mut String| {
+    let separate = |out: &mut String| {
         if !out.is_empty() {
             out.push(' ');
         }
@@ -891,6 +929,16 @@ pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn invalid_instance_order_is_rejected_before_mutation() {
+        let base = Ifc2x3Snapshot::default();
+        let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
+        let error = diff.apply(&base).expect_err("unknown instance order target must be rejected");
+        assert_eq!(error.code, "invalid-instance-order");
+        assert_eq!(error.target, vec!["instanceOrder", "1"]);
+        assert_eq!(base, Ifc2x3Snapshot::default());
+    }
     use crate::artifacts::step::engine::part21::Part21Value;
 
     fn inst(id: u64, name: &str) -> Part21Instance {
@@ -919,7 +967,7 @@ mod tests {
         assert!(d.header.is_some());
         assert_eq!(d.removed_instances, vec![2]);
         assert_eq!(d.upserted_instances.len(), 2);
-        assert_eq!(d.apply(&base), next);
+        assert_eq!(d.apply(&base).expect("valid between diff"), next);
     }
 
     #[test]
@@ -948,19 +996,19 @@ mod tests {
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
         let sequential = {
-            let mid = d1.apply(&base);
-            d2.apply(&mid)
+            let mid = d1.apply(&base).expect("valid first diff");
+            d2.apply(&mid).expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base), sequential);
+        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
     }
 
     #[test]
     fn inverse_diff_level_roundtrip() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let d = Ifc2x3Diff { removed_instances: vec![2], upserted_instances: vec![inst(1, "IFCWALLSTANDARDCASE"), inst(4, "IFCCOLUMN")], ..Default::default() };
-        let next = d.apply(&base);
+        let next = d.apply(&base).expect("valid forward diff");
         let inv = d.inverse(&base);
-        assert_eq!(inv.apply(&next), base);
+        assert_eq!(inv.apply(&next).expect("valid inverse diff"), base);
     }
 
     #[test]

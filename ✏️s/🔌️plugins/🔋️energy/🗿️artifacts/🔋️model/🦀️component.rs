@@ -4,7 +4,7 @@ pub use crate::artifacts::model::schema::diff::EnergyModelDiff;
 pub use crate::artifacts::model::schema::mutations::EnergyModelMutation;
 pub use crate::artifacts::model::schema::snapshot::EnergyModelSnapshot;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub use crate::artifacts::model::schema::EnergyModelArtifact;
 
@@ -14,6 +14,17 @@ pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
 /// @emoji 🧬️ Artifact schema descriptor id.
 pub const ENERGY_MODEL_ARTIFACT_SCHEMA_ID: &str = "s.energy.model";
+
+//#region 🔖️Dialect
+/// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1: the canonical surface-id
+/// coordinate for this artifact's ONE subset (`✳️any`) — `s.energy.model@1/*`. Lives at the ARTIFACT
+/// root (not under `✏️editor`/`👁️viewer`) so a viewer file can read it without ever importing
+/// through the sibling editor module. `artifact_kind` matches this file's own snapshot schema id
+/// (`EnergyModelSnapshot`'s `#[artifact_schema(id = "s.energy.model")]`, same as
+/// `ENERGY_MODEL_ARTIFACT_SCHEMA_ID` above); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location on disk.
+pub const MODEL_DIALECT: Dialect = Dialect { artifact_kind: ENERGY_MODEL_ARTIFACT_SCHEMA_ID, standard: StandardId("1"), subset: SubsetId::ANY };
+//#endregion 🔖️Dialect
 
 //#region 🔖️Composition
 /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`energy→C:value,table R:model`): the

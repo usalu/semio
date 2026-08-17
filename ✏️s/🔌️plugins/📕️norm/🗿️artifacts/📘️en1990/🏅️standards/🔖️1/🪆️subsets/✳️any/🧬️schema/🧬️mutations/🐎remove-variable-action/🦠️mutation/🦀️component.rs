@@ -13,7 +13,7 @@ pub struct RemoveVariableAction {
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for RemoveVariableAction {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "variable-action", kind: "remove-variable-action", record: "RemovedVariableAction" };
 
-    fn diff(&self, base: &En1990Snapshot) -> <En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff {
+    fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {

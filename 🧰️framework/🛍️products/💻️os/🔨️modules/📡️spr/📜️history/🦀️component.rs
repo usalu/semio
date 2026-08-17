@@ -10,8 +10,8 @@
 
 use crate::os_dsl::schema::{FieldSpec, FieldValue, JoinMode, ParseOptions, RecordLayout, RecordSpec, RecordValue, Shape};
 use crate::os_pack::{ByteReader, ByteWriter, CodecId, PackSink};
+use crate::os_spr::format::{Blake3Hasher, FrameCursor, HEADER_SIZE, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits, RecordHasher};
-use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions, HEADER_SIZE};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
@@ -650,11 +650,7 @@ fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader) -> Result
     let has_op_index = input.read_u8()?;
     let op_index = match has_op_index {
         0 => None,
-        1 => Some(u32::try_from(input.read_varint_u64()?).map_err(|_| ProtocolError::Malformed {
-            what: "history message operation index",
-            offset: input.position() as u64,
-            detail: "exceeds u32".to_string(),
-        })?),
+        1 => Some(u32::try_from(input.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "history message operation index", offset: input.position() as u64, detail: "exceeds u32".to_string() })?),
         value => return Err(ProtocolError::Malformed { what: "history message operation index presence", offset: input.position() as u64 - 1, detail: format!("expected 0 or 1, got {value}") }),
     };
     Ok(HistoryMessage { level, code, message, target, op_index })
@@ -1109,11 +1105,7 @@ pub fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>
         return Err(malformed_fmt("active", format));
     }
     let presence = input.read_u8()?;
-    if presence & 1 != 0 {
-        Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?))
-    } else {
-        Ok(None)
-    }
+    if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?)) } else { Ok(None) }
 }
 //#endregion 🔖️Active
 
@@ -1156,6 +1148,9 @@ pub fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: im
         return Err(malformed_fmt("cursor", format));
     }
     let presence = input.read_u8()?;
+    if presence & !1 != 0 {
+        return Err(ProtocolError::Malformed { what: "cursor presence", offset: input.position() as u64 - 1, detail: format!("unknown presence bits {presence:#010b}") });
+    }
     let applied_count = input.read_varint_u64()?;
     let mut applied_edit_ids = Vec::with_capacity(applied_count as usize);
     for _ in 0..applied_count {
@@ -1167,6 +1162,9 @@ pub fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: im
         redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
     }
     let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
+    if input.remaining() != 0 {
+        return Err(ProtocolError::Malformed { what: "cursor", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+    }
     Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
 }
 //#endregion 🔖️Cursor
@@ -1250,7 +1248,18 @@ pub fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Result<Hi
 /// majority) and for logs predating the record — no frame is written when `conflicts` is empty.
 pub const REC_CONFLICT: u8 = 0x42;
 
+fn validate_conflict_tags(kind: u8, status: u8, offset: u64) -> Result<(), ProtocolError> {
+    if !matches!(kind, 0 | 1) {
+        return Err(ProtocolError::Malformed { what: "conflict", offset, detail: format!("unknown conflict kind {kind}") });
+    }
+    if !matches!(status, 0 | 1 | 2) {
+        return Err(ProtocolError::Malformed { what: "conflict", offset, detail: format!("unknown conflict status {status}") });
+    }
+    Ok(())
+}
+
 fn write_conflict(out: &mut ByteWriter, conflict: &HistoryConflict, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
+    validate_conflict_tags(conflict.kind, conflict.status, 0)?;
     write_id_field(out, &conflict.id, dict, &|_: &str| None)?;
     out.write_u8(conflict.kind);
     out.write_u8(conflict.status);
@@ -1281,6 +1290,7 @@ fn read_conflict<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordinal_t
     let id = read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
     let kind = input.read_u8()?;
     let status = input.read_u8()?;
+    validate_conflict_tags(kind, status, input.position() as u64 - 2)?;
     let actor_count = input.read_varint_u64()?;
     let mut actors = Vec::with_capacity(actor_count as usize);
     for _ in 0..actor_count {
@@ -2148,6 +2158,41 @@ mod tests {
     }
 
     #[test]
+    fn conflict_decoder_rejects_duplicate_ids_and_trailing_payload_bytes() {
+        let conflict = sample_conflicts().remove(0);
+        let mut dict = DictBuilder::new();
+        let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
+        let duplicate_payload = encode_conflicts(&vec![conflict.clone(), conflict], &mut dict, |id| ordinals.get(id).copied()).expect("encode duplicate fixture");
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
+        let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
+        assert!(matches!(decode_conflicts(&duplicate_payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))), Err(ProtocolError::Malformed { .. })));
+
+        let mut trailing_dict = DictBuilder::new();
+        let mut trailing_payload = encode_conflicts(&sample_conflicts(), &mut trailing_dict, |_| None).expect("encode trailing fixture");
+        trailing_payload.push(0);
+        let mut trailing_reader = DictReader::new();
+        trailing_reader.extend(0, trailing_dict.entries_since(0).to_vec()).expect("dictionary");
+        assert!(matches!(decode_conflicts(&trailing_payload, &trailing_reader, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
+    }
+
+    #[test]
+    fn conflict_codec_rejects_unknown_kind_and_status_tags() {
+        let mut dict = DictBuilder::new();
+        let mut conflicts = sample_conflicts();
+        conflicts[0].kind = 9;
+        assert!(matches!(encode_conflicts(&conflicts, &mut dict, |_| None), Err(ProtocolError::Malformed { what: "conflict", .. })));
+
+        let mut dict = DictBuilder::new();
+        let mut payload = encode_conflicts(&sample_conflicts()[..1], &mut dict, |_| None).expect("encode valid conflict");
+        let tag_offset = payload.windows(3).position(|window| window == [0, 0, 2]).expect("kind/status/actor-count tags");
+        payload[tag_offset + 1] = 9;
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
+        assert!(matches!(decode_conflicts(&payload, &reader, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { what: "conflict", .. })));
+    }
+
+    #[test]
     fn a_log_without_conflicts_writes_no_conflict_record() {
         let bytes = encode_history(&sample_log(), &EncodeOptions::default()).expect("encode");
         assert_eq!(decode_history(&bytes, &DecodeOptions::default()).expect("decode").conflicts, Vec::new());
@@ -2217,6 +2262,33 @@ mod tests {
         let mut input = ByteReader::new(&payload);
         let decoded = read_op_meta(&mut input, &reader, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
         assert_eq!(decoded.messages, Vec::new());
+    }
+
+    #[test]
+    fn history_message_decoder_rejects_invalid_severity_presence_and_index_width() {
+        let message = HistoryMessage { level: 1, code: "mutation.clamped".to_string(), message: "clamped".to_string(), target: Vec::new(), op_index: None };
+        let mut dict = DictBuilder::new();
+        let mut out = ByteWriter::new();
+        write_history_message(&mut out, &message, &mut dict).expect("encode message");
+        let encoded = out.into_bytes();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).expect("dictionary");
+
+        let mut invalid_severity = encoded.clone();
+        invalid_severity[0] = 4;
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_severity), &reader), Err(ProtocolError::Malformed { .. })));
+
+        let mut invalid_presence = encoded;
+        *invalid_presence.last_mut().expect("presence byte") = 2;
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_presence), &reader), Err(ProtocolError::Malformed { .. })));
+
+        let indexed = HistoryMessage { op_index: Some(0), ..message };
+        let mut indexed_out = ByteWriter::new();
+        write_history_message(&mut indexed_out, &indexed, &mut dict).expect("encode indexed message");
+        let mut oversized_index = indexed_out.into_bytes();
+        oversized_index.pop();
+        oversized_index.extend_from_slice(&[0x80, 0x80, 0x80, 0x80, 0x10]);
+        assert!(matches!(read_history_message(&mut ByteReader::new(&oversized_index), &reader), Err(ProtocolError::Malformed { .. })));
     }
 
     #[test]
@@ -2458,6 +2530,13 @@ mod tests {
         reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
         let decoded = decode_cursor(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
         assert_eq!(decoded, cursor);
+    }
+
+    #[test]
+    fn cursor_decoder_rejects_unknown_presence_bits_and_trailing_payload() {
+        let dict = DictReader::new();
+        assert!(matches!(decode_cursor(&[1, 2], &dict, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(decode_cursor(&[1, 0, 0, 0, 0], &dict, |_| Err(ProtocolError::DictMiss(0))), Err(ProtocolError::Malformed { .. })));
     }
 
     #[test]

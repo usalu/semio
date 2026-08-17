@@ -1,0 +1,37 @@
+{
+  "name": "os-hub-admin",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*"]
+  },
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

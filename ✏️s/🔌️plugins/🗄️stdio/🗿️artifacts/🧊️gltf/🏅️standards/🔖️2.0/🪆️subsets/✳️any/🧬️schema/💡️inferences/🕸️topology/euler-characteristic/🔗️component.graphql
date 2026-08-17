@@ -1,11 +1,34 @@
-# 💡️ euler-characteristic glTF inference leaf GraphQL facet.
-type GltfEulerCharacteristicInferenceV1 {
-  id: ID!
+# 💡️ Typed euler-characteristic glTF inference result.
+scalar GltfEulerCharacteristicInt64V1
+
+type GltfEulerCharacteristicQualityV1 {
+  method: String!
+  coverage: Float!
+  absoluteError: Float
+  relativeError: Float
+  sampleCount: GltfEulerCharacteristicInt64V1!
+  watertight: Boolean!
+  manifold: Boolean!
+  consistentlyOriented: Boolean!
+  warnings: [String!]!
+}
+
+type GltfEulerCharacteristicProvenanceV1 {
+  algorithm: String!
   algorithmVersion: Int!
-  cacheKey: String!
+  dependencyFingerprints: [String!]!
+  coordinateSpace: String!
+  toleranceFingerprint: String!
+  samplingSeed: String
+  pose: String
+}
+
+type GltfEulerCharacteristicInferenceV1 {
+  value: GltfEulerCharacteristicInt64V1
+  unit: String!
+  availability: String!
   validity: String!
-  quality: String!
-  diagnostics: [String!]!
-  provenance: [String!]!
-  valueJson: String!
+  diagnosticIds: [String!]!
+  quality: GltfEulerCharacteristicQualityV1!
+  provenance: GltfEulerCharacteristicProvenanceV1!
 }

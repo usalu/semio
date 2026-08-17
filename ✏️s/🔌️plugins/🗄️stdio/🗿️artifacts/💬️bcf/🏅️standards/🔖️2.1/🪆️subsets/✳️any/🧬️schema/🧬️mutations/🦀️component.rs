@@ -19,7 +19,7 @@ use crate::artifacts::bcf::schema::diff::{
 use crate::artifacts::bcf::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::artifacts::bcf::BcfSnapshot;
-use protocol::{Mutation, OpText};
+use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
@@ -119,10 +119,15 @@ pub enum BcfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Single semantics source: the returned diff IS what gets
 /// applied.
-pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> BcfDiff {
-    let diff = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <BcfDiff as protocol::MutationDiff<BcfSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
+    let outcome = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
+    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -130,8 +135,8 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
 impl Mutation<BcfSnapshot> for BcfMutation {
     type Diff = BcfDiff;
 
-    fn diff(&self, base: &BcfSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             BcfMutation::NoMutation => BcfDiff::default(),
             BcfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             BcfMutation::SetVersion { version } => BcfDiff { version: Some(version.clone()), topics: None, parts: None },
@@ -163,7 +168,7 @@ impl Mutation<BcfSnapshot> for BcfMutation {
             BcfMutation::SetViewpointCamera { topic_guid, guid, camera } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None }),
             BcfMutation::SetViewpointComponents { topic_guid, guid, components } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }),
             BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot } => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }),
-        }
+        })
     }
 
     fn inverse(&self, base: &BcfSnapshot) -> Vec<Self> {

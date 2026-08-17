@@ -33,7 +33,7 @@ mod tests {
     fn block5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::block5d::schema::mutations::{self as m, Block5dStore};
 
-        let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None));
+        let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None)).expect("valid initial state");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_part_kind("p1".into())], description: None }).expect("apply");
         let projection = store.snapshot().expect("snapshot");
         assert_eq!(projection.part_kind.name, "p1");

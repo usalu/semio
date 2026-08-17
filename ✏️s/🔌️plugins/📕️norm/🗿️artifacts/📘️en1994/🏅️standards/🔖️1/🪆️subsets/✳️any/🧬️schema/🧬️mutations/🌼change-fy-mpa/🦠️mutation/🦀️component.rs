@@ -12,7 +12,7 @@ pub struct ChangeFYMpa {
 impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFYMpa {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fy-mpa", kind: "change-fy-mpa", record: "ChangedFYMpa" };
 
-    fn diff(&self, base: &En1994Snapshot) -> <En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff {
+    fn diff(&self, base: &En1994Snapshot) -> protocol::MutationOutcome<<En1994Mutation as protocol::Mutation<En1994Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {

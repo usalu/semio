@@ -16,54 +16,57 @@ pub use crate::artifacts::mathematical::schema::diff::*;
 //#region 🔖️Apply
 impl MathematicalDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &MathematicalArtifact) -> MathematicalArtifact {
-        let mut next = artifact.clone();
-        if let Some(notation) = &self.notation {
-            next.notation = notation.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        if let Some(computed) = &self.computed {
-            next.computed = computed.clone();
-        }
-        if let Some(equation) = &self.equation {
-            next.equation = equation.clone();
-        }
-        if let Some(value) = self.camera_x {
-            next.camera_x = value;
-        }
-        if let Some(value) = self.camera_y {
-            next.camera_y = value;
-        }
-        if let Some(value) = self.camera_zoom {
-            next.camera_zoom = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &MathematicalArtifact) -> protocol::MutationApplyResult<MathematicalArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(notation) = &self.notation {
+                next.notation = notation.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(computed) = &self.computed {
+                next.computed = computed.clone();
+            }
+            if let Some(equation) = &self.equation {
+                next.equation = equation.clone();
+            }
+            if let Some(value) = self.camera_x {
+                next.camera_x = value;
+            }
+            if let Some(value) = self.camera_y {
+                next.camera_y = value;
+            }
+            if let Some(value) = self.camera_zoom {
+                next.camera_zoom = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<MathematicalSnapshot> for MathematicalDiff {
-    fn apply(&self, snapshot: &MathematicalSnapshot) -> MathematicalSnapshot {
-        let mut next = snapshot.clone();
-        if let Some(notation) = &self.notation {
-            next.notation = notation.clone();
-        }
-        if let Some(results) = &self.results {
-            next.results = results.clone();
-        }
-        if let Some(computed) = &self.computed {
-            next.computed = computed.clone();
-        }
-        if let Some(equation) = &self.equation {
-            next.equation = equation.clone();
-        }
-        next
+    fn apply(&self, snapshot: &MathematicalSnapshot) -> protocol::MutationApplyResult<MathematicalSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(notation) = &self.notation {
+                next.notation = notation.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(computed) = &self.computed {
+                next.computed = computed.clone();
+            }
+            if let Some(equation) = &self.equation {
+                next.equation = equation.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.notation.is_some() {
             self.notation = other.notation;
@@ -122,7 +125,7 @@ mod tests {
         graph.algorithm = "components".into();
         let geometry = crate::artifacts::mathematical::mathematical_geometry(&base);
         let diff = diff_from_state(graph, geometry.clone());
-        let applied = diff.apply(&base);
+        let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(crate::artifacts::mathematical::mathematical_graph(&applied).algorithm, "components");
         assert_eq!(crate::artifacts::mathematical::mathematical_geometry(&applied), geometry);
     }

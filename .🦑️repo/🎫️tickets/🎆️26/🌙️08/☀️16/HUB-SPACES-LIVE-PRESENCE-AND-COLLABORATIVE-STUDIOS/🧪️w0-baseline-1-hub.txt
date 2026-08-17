@@ -1,0 +1,62 @@
+=== baseline-1 cargo check -p semio-hub --all-features @ 2026-08-16T21:46:48+02:00
+error[E0433]: cannot find module or crate `sqlx` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🐘️postgres/🦀️component.rs:580:13
+    |
+580 | ...   sqlx::query("UPDATE db_lease SET expires_at_ms = $1 WHERE resource = $2").bind(to_i64(now_ms.saturating_add(ttl_ms))?).bind(r...
+    |       ^^^^ use of unresolved module or unlinked crate `sqlx`
+    |
+    = help: if you wanted to use a crate named `sqlx`, use `cargo add sqlx` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `sqlx` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🐘️postgres/🦀️component.rs:591:13
+    |
+591 |             sqlx::query("DELETE FROM db_lease WHERE resource = $1").bind(resource).execute(&mut *tx).await.map_err(map_sqlx_error)?;
+    |             ^^^^ use of unresolved module or unlinked crate `sqlx`
+    |
+    = help: if you wanted to use a crate named `sqlx`, use `cargo add sqlx` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `neo4rs` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🌐️neo4j/🦀️component.rs:159:26
+    |
+159 | fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
+    |                          ^^^^^^ use of unresolved module or unlinked crate `neo4rs`
+    |
+    = help: if you wanted to use a crate named `neo4rs`, use `cargo add neo4rs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `neo4rs` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🌐️neo4j/🦀️component.rs:173:26
+    |
+173 | fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
+    |                          ^^^^^^ use of unresolved module or unlinked crate `neo4rs`
+    |
+    = help: if you wanted to use a crate named `neo4rs`, use `cargo add neo4rs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `neo4rs` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🌐️neo4j/🦀️component.rs:187:22
+    |
+187 | fn map_de_error(err: neo4rs::DeError) -> DbError {
+    |                      ^^^^^^ use of unresolved module or unlinked crate `neo4rs`
+    |
+    = help: if you wanted to use a crate named `neo4rs`, use `cargo add neo4rs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `neo4rs` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🌐️neo4j/🦀️component.rs:358:36
+    |
+358 |     fn connect_with_config(config: neo4rs::Config) -> Result<Self, DbError> {
+    |                                    ^^^^^^ use of unresolved module or unlinked crate `neo4rs`
+    |
+    = help: if you wanted to use a crate named `neo4rs`, use `cargo add neo4rs` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `neo4rs` in this scope
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🌐️neo4j/🦀️component.rs:382:58
+    |
+382 |     async fn fetch_one(&self, q: Query) -> Result<Option<neo4rs::Row>, DbError> {
+    |                                                          ^^^^^^ use of unresolved module or unlinked crate `neo4rs`
+    |
+    = help: if you wanted to use a crate named `neo4rs`, use `cargo add neo4rs` to add it to your `Cargo.toml`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `semio-framework-os-kernel-db` (lib) generated 62 warnings
+error: could not compile `semio-framework-os-kernel-db` (lib) due to 76 previous errors; 77 warnings emitted
+EXIT=0

@@ -15,7 +15,7 @@ pub struct ChangeSectionDepthMm {
 impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeSectionDepthMm {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "section-depth-mm", kind: "change-section-depth-mm", record: "ChangedSectionDepthMm" };
 
-    fn diff(&self, base: &En1995Snapshot) -> En1995Diff {
+    fn diff(&self, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
         crate::artifacts::en1995::mutations::change_section_depth_mm::diff::diff(self, base)
     }
 

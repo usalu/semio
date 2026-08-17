@@ -4,7 +4,6 @@
 
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::{dec_row, dec_str, diff_set_snapshot, enc_row, enc_str, split_top_level, strip_brackets, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
-#[cfg(test)]
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 use serde::{Deserialize, Serialize};
@@ -52,10 +51,15 @@ pub enum TsvMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
-pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> TsvDiff {
-    let diff = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <TsvDiff as MutationDiff<TsvSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
+    let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
+    match MutationDiff::apply(outcome.diff(), snapshot) {
+        Ok(next) => {
+            *snapshot = next;
+            outcome
+        }
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+    }
 }
 //#endregion 🔖️Apply
 
@@ -63,8 +67,8 @@ pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) ->
 impl Mutation<TsvSnapshot> for TsvMutation {
     type Diff = TsvDiff;
 
-    fn diff(&self, base: &TsvSnapshot) -> Self::Diff {
-        match self {
+    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<Self::Diff> {
+        protocol::MutationOutcome::new(match self {
             TsvMutation::NoMutation => TsvDiff::default(),
             TsvMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             TsvMutation::SetTrailingNewline { trailing_newline } => TsvDiff { trailing_newline: Some(*trailing_newline), ..TsvDiff::default() },
@@ -76,7 +80,7 @@ impl Mutation<TsvSnapshot> for TsvMutation {
                 fields[*field_index] = Some(value.clone());
                 TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: vec![TsvRowModified { index: *row_index, diff: TsvRowDiff { fields: Some(fields) } }], added: Vec::new() }), ..TsvDiff::default() }
             }
-        }
+        })
     }
 
     fn inverse(&self, base: &TsvSnapshot) -> Vec<Self> {
@@ -161,7 +165,7 @@ impl OpText for TsvMutation {
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `TsvDiff`'s hand-rolled codec.
-impl protocol::OpBinary for TsvMutation {
+impl OpBinary for TsvMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(self.print_op().into_bytes())
     }
@@ -215,7 +219,7 @@ mod tests {
         ];
         for m in variants {
             let diff = m.diff(&base);
-            let expected = diff.apply(&base);
+            let expected = diff.diff().apply(&base).unwrap();
 
             let mut via_apply = base.clone();
             let returned_diff = apply_tsv_mutation(&mut via_apply, &m);
@@ -247,8 +251,8 @@ mod tests {
             assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
             let d = m.diff(&base);
-            let mid = d.apply(&base);
-            let back = d.inverse(&base).apply(&mid);
+            let mid = d.diff().apply(&base).unwrap();
+            let back = d.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -260,59 +264,59 @@ mod tests {
         let base = base_snapshot();
 
         let d1 = TsvMutation::InsertRow { index: 2, row: row(&["ins", "x"]) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::RemoveRow { index: 0 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Remove-before absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         let d1 = TsvMutation::InsertRow { index: 2, row: row(&["f", "x"]) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::InsertRow { index: 2, row: row(&["g", "y"]) }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Insert+Insert-same-index absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
         let d1 = TsvMutation::InsertRow { index: 1, row: row(&["orig", "x"]) }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::SetCell { row_index: 1, field_index: 0, value: "patched".into() }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Add+SetCell absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetCell absorb mismatch");
         assert_eq!(after.records[1][0], "patched");
 
         let d1 = TsvMutation::SetCell { row_index: 1, field_index: 0, value: "will-vanish".into() }.diff(&base);
-        let mid = d1.apply(&base);
+        let mid = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::RemoveRow { index: 1 }.diff(&mid);
-        let after = d2.apply(&mid);
-        let mut composed = d1.clone();
-        composed.absorb(d2.clone());
-        assert_eq!(composed.apply(&base), after, "Modify+Remove absorb mismatch");
+        let after = d2.diff().apply(&mid).unwrap();
+        let mut composed = d1.diff().clone();
+        composed.absorb(d2.diff().clone());
+        assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         let base = base_snapshot();
         let d1 = TsvMutation::InsertRow { index: 0, row: row(&["a", "x"]) }.diff(&base);
-        let s1 = d1.apply(&base);
+        let s1 = d1.diff().apply(&base).unwrap();
         let d2 = TsvMutation::SetCell { row_index: 0, field_index: 0, value: "a2".into() }.diff(&s1);
-        let s2 = d2.apply(&s1);
+        let s2 = d2.diff().apply(&s1).unwrap();
         let d3 = TsvMutation::RemoveRow { index: 2 }.diff(&s2);
-        let s3 = d3.apply(&s2);
+        let s3 = d3.diff().apply(&s2).unwrap();
 
-        let mut left = d1.clone();
-        left.absorb(d2.clone());
-        left.absorb(d3.clone());
+        let mut left = d1.diff().clone();
+        left.absorb(d2.diff().clone());
+        left.absorb(d3.diff().clone());
 
-        let mut d23 = d2.clone();
-        d23.absorb(d3.clone());
-        let mut right = d1.clone();
+        let mut d23 = d2.diff().clone();
+        d23.absorb(d3.diff().clone());
+        let mut right = d1.diff().clone();
         right.absorb(d23);
 
-        assert_eq!(left.apply(&base), s3);
-        assert_eq!(right.apply(&base), s3);
-        assert_eq!(left.apply(&base), right.apply(&base), "absorb must be associative");
+        assert_eq!(left.apply(&base).unwrap(), s3);
+        assert_eq!(right.apply(&base).unwrap(), s3);
+        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
     }
     //#endregion 🔖️AbsorbLaw
 
@@ -321,13 +325,13 @@ mod tests {
     fn between_roundtrip_law() {
         let a = base_snapshot();
         let b = sweep_b();
-        assert_eq!(TsvDiff::between(&a, &b).apply(&a), b);
-        assert_eq!(TsvDiff::between(&b, &a).apply(&b), a);
+        assert_eq!(TsvDiff::between(&a, &b).apply(&a).unwrap(), b);
+        assert_eq!(TsvDiff::between(&b, &a).apply(&b).unwrap(), a);
 
         let mut c = a.clone();
         c.records[0] = row(&["only-one-field"]);
-        assert_eq!(TsvDiff::between(&a, &c).apply(&a), c);
-        assert_eq!(TsvDiff::between(&c, &a).apply(&c), a);
+        assert_eq!(TsvDiff::between(&a, &c).apply(&a).unwrap(), c);
+        assert_eq!(TsvDiff::between(&c, &a).apply(&c).unwrap(), a);
 
         assert!(TsvDiff::between(&a, &a).is_empty());
     }
@@ -340,10 +344,10 @@ mod tests {
         let b = sweep_b();
 
         let d_ab = TsvDiff::between(&a, &b);
-        assert_eq!(d_ab.apply(&a), b, "between(a,b).apply(a) == b");
+        assert_eq!(d_ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
 
         let d_ba = TsvDiff::between(&b, &a);
-        assert_eq!(d_ba.apply(&b), a, "between(b,a).apply(b) == a");
+        assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
 
         assert!(d_ab.trailing_newline.is_some(), "trailing_newline must be populated");
         assert!(d_ab.line_ending.is_some(), "line_ending must be populated");
@@ -369,14 +373,14 @@ mod tests {
         let d_shrink = TsvDiff::between(&a, &shorter);
         let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
         assert!(!shrink_records.removed.is_empty(), "a shorter row list must produce a removed entry");
-        assert_eq!(d_shrink.apply(&a), shorter);
+        assert_eq!(d_shrink.apply(&a).unwrap(), shorter);
 
         let mut longer = a.clone();
         longer.records.push(row(&["extra", "z"]));
         let d_grow = TsvDiff::between(&a, &longer);
         let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
         assert!(!grow_records.added.is_empty(), "a longer row list must produce an added entry");
-        assert_eq!(d_grow.apply(&a), longer);
+        assert_eq!(d_grow.apply(&a).unwrap(), longer);
 
         assert!(TsvDiff::between(&a, &a).is_empty());
     }

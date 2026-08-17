@@ -24,7 +24,7 @@ pub fn move_block_to_container(id: String, new_parent_id: Option<String>, index:
 impl MutationKind<NoteSnapshot, NoteMutation> for MoveBlockToContainer {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "block", kind: "move-block-to-container", record: "MovedBlockToContainer" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

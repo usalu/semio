@@ -5,6 +5,9 @@ use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::diff::{dif
 use crate::artifacts::dwg::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 
 /// 🔺️ Diff helper for set-snapshot — sparse field-by-field `between(base, next)`.
-pub fn diff(base: &DwgSnapshot, snapshot: &DwgSnapshot) -> DwgDiff {
-    diff_set_snapshot(base, snapshot)
+pub fn diff(base: &DwgSnapshot, snapshot: &DwgSnapshot) -> protocol::MutationOutcome<DwgDiff> {
+    if base == snapshot {
+        return protocol::MutationOutcome::new(DwgDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+    }
+    protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

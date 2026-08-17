@@ -16,48 +16,51 @@ use crate::artifacts::sequence::schema::diff::*;
 //#region 🔖️Apply
 impl SequenceDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> SequenceArtifact {
-        if let Some(replacement) = &self.artifact {
-            return (**replacement).clone();
-        }
-        let mut next = artifact.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(value) = &self.last_run_json {
-            next.last_run_json = value.clone();
-        }
-        if let Some(value) = &self.orientation {
-            next.orientation = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(value) = &self.last_run_json {
+                next.last_run_json = value.clone();
+            }
+            if let Some(value) = &self.orientation {
+                next.orientation = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<SequenceSnapshot> for SequenceDiff {
-    fn apply(&self, snapshot: &SequenceSnapshot) -> SequenceSnapshot {
-        if let Some(replacement) = &self.artifact {
-            return replacement.to_snapshot();
-        }
-        let mut next = snapshot.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        next
+    fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
@@ -95,7 +98,7 @@ mod tests {
         let operation = crate::artifacts::sequence::mutations::create_step::mutation::create_step(step);
         let diff: SequenceDiff = operation.diff(&base).into_parts().0;
         assert!(diff.content.is_some(), "CreateStep must produce a content diff: {diff:?}");
-        assert_eq!(diff.apply(&base).to_fixture().steps.len(), base.to_fixture().steps.len() + 1);
+        assert_eq!(diff.apply(&base).expect("valid mutation diff").to_fixture().steps.len(), base.to_fixture().steps.len() + 1);
     }
 }
 //#endregion 🧪️Tests

@@ -1504,7 +1504,7 @@ impl SolidImporter for StepSolidImporter {
     fn format_kind(&self) -> &'static str {
         "step"
     }
-    fn import(&self, kernel: &mut Brep, bytes: &[u8], tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
+    fn import(&self, kernel: &mut Brep, bytes: &[u8], _tolerance: f64) -> Result<Vec<GeometryHandle>, BrepError> {
         let text = std::str::from_utf8(bytes).map_err(|e| BrepError::InvalidInput(e.to_string()))?;
         kernel.import_step_sync(text)
     }

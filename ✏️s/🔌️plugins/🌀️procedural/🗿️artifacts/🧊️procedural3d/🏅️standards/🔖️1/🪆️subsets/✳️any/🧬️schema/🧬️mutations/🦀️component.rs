@@ -221,11 +221,12 @@ pub type Procedural3dEnvelope = ArtifactEnvelope<Procedural3dSnapshot, Procedura
 pub type Procedural3dStore = ArtifactStore<Procedural3dSnapshot, Procedural3dMutation>;
 
 //#region 🔖️Apply
-/// 🎬️ Thin `vcs::apply_mutation` wrapper — signature preserved from the pre-migration version so
-/// `🏗️builder`'s call site needed no change; works generically for any `protocol::Mutation` impl,
-/// including the one `#[derive(dsl::Mutations)]` generates above.
-pub fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) {
-    *projection = vcs::apply_mutation(projection, mutation);
+/// 🎬️ Fallible in-place `vcs::apply_mutation` boundary.
+pub fn apply_procedural3d_mutation(projection: &mut Procedural3dSnapshot, mutation: &Procedural3dMutation) -> protocol::MutationApplyResult<()> {
+    let (next, _) = vcs::apply_mutation(projection, mutation)?;
+
+    *projection = next;
+    Ok(())
 }
 
 pub fn inverse_procedural3d_mutation(projection: &Procedural3dSnapshot, mutation: &Procedural3dMutation) -> Vec<Procedural3dMutation> {
@@ -258,10 +259,14 @@ mod tests {
     use protocol::Mutation;
 
     fn round_trip(projection: &Procedural3dSnapshot, operation: &Procedural3dMutation) -> Procedural3dSnapshot {
-        let forward = vcs::apply_mutation(projection, operation);
+        let forward = vcs::apply_mutation(projection, operation)
+            .expect("valid mutation")
+            .0;
         let mut restored = forward.clone();
         for back in operation.inverse(projection) {
-            restored = vcs::apply_mutation(&restored, &back);
+            restored = vcs::apply_mutation(&restored, &back)
+                .expect("valid inverse mutation")
+                .0;
         }
         assert_eq!(&restored, projection, "inverse(base) must restore the pre-operation document");
         forward

@@ -60,9 +60,11 @@ pub use super::replace_node_properties::mutation::{replace_node_properties, Repl
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
 
 /// ▶️ Applies `mutation` via its diff.
-pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) {
+pub fn apply_dag_mutation(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> protocol::MutationApplyResult<()> {
     use store::MutationDiff;
-    *snapshot = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot);
+    let next = <DagMutation as protocol::Mutation<DagSnapshot>>::diff(mutation, snapshot).diff().apply(snapshot)?;
+    *snapshot = next;
+    Ok(())
 }
 
 pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> Vec<DagMutation> {
@@ -140,18 +142,18 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
 mod tests {
     use super::*;
     use crate::artifacts::dag::default_snapshot;
-    use protocol::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
     use protocol::Mutation;
     use protocol::SemanticMutation;
     use vcs::apply_mutation;
 
     fn round_trip(snapshot: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot {
-        let (forward, _messages) = apply_mutation(snapshot, mutation);
+        let (forward, _messages) = apply_mutation(snapshot, mutation).expect("valid mutation");
         let mut restored = forward.clone();
         let mut backward = mutation.inverse(snapshot);
         backward.reverse();
         for back in backward {
-            let (next, _messages) = apply_mutation(&restored, &back);
+            let (next, _messages) = apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, snapshot, "inverse must restore the pre-mutation snapshot");
@@ -272,7 +274,7 @@ mod tests {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
         let d1 = move_node(id.clone(), 10.0, 10.0).diff(&base).diff().clone();
-        let mid = protocol::MutationDiff::apply(&d1, &base);
+        let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = move_node(id, 20.0, 30.0).diff(&mid).diff().clone();
         assert_mutation_diff_absorb_law(&base, d1, d2);
     }
@@ -286,5 +288,102 @@ mod tests {
         assert_eq!(DagMutation::kinds().len(), 14);
     }
     //#endregion 🔖️MutationLaws
+
+    //#region 🔖️OutcomeLaws
+    /// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
+    /// one `assert_missing_target_is_error`/Fatal/determinism check per verb family this facet
+    /// implements (create/delete/rename/move/resize/change/replace/reorder/connect/disconnect).
+    #[test]
+    fn create_node_duplicate_id_is_fatal() {
+        let base = default_snapshot();
+        let Some(existing_id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+        let outcome = create_node(sample_node(&existing_id, 0.0, 0.0)).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn delete_node_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &delete_node("ghost-node".into()));
+    }
+
+    #[test]
+    fn rename_node_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &rename_node("ghost-node".into(), "x".into()));
+    }
+
+    #[test]
+    fn move_node_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &move_node("ghost-node".into(), 1.0, 1.0));
+    }
+
+    #[test]
+    fn move_node_non_finite_is_fatal() {
+        let base = default_snapshot();
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+        let outcome = move_node(id, f64::NAN, 0.0).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn resize_node_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &resize_node("ghost-node".into(), 10.0, 10.0));
+    }
+
+    #[test]
+    fn change_node_name_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &change_node_name("ghost-node".into(), "x".into()));
+    }
+
+    #[test]
+    fn replace_node_kind_missing_target_is_error() {
+        let base = default_snapshot();
+        let Some(kind) = base.nodes().first().map(|node| node.kind.clone()) else { return };
+        assert_missing_target_is_error(&base, &replace_node_kind("ghost-node".into(), kind));
+    }
+
+    #[test]
+    fn disconnect_nodes_missing_target_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &disconnect_nodes("ghost-edge".into()));
+    }
+
+    #[test]
+    fn connect_nodes_missing_endpoint_is_error() {
+        let base = default_snapshot();
+        assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()));
+    }
+
+    #[test]
+    fn connect_nodes_self_loop_is_fatal() {
+        let base = default_snapshot();
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+        let outcome = connect_nodes("edge-99".into(), format!("{id}@out"), format!("{id}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn reorder_nodes_duplicate_id_is_fatal() {
+        let base = default_snapshot();
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+        let outcome = reorder_nodes(vec![id.clone(), id]).diff(&base);
+        assert_fatal_never_applies(&outcome);
+        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+    }
+
+    #[test]
+    fn move_node_diff_is_deterministic() {
+        let base = default_snapshot();
+        let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+        assert_outcome_deterministic(&base, &move_node(id, 7.0, 8.0));
+    }
+    //#endregion 🔖️OutcomeLaws
 }
 //#endregion 🧪️Tests

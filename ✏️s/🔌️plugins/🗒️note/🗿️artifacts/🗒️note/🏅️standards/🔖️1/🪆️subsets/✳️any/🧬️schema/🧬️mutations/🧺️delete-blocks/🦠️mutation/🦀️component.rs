@@ -22,7 +22,7 @@ pub fn delete_blocks(ids: Vec<String>) -> NoteMutation {
 impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlocks {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "blocks", kind: "delete-blocks", record: "DeletedBlocks" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

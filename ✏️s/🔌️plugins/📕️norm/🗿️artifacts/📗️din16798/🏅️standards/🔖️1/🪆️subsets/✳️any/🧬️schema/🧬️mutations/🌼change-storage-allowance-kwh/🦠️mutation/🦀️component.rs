@@ -15,7 +15,7 @@ pub struct ChangeStorageAllowanceKwh {
 impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeStorageAllowanceKwh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "storage-allowance-kwh", kind: "change-storage-allowance-kwh", record: "ChangedStorageAllowanceKwh" };
 
-    fn diff(&self, base: &Din16798Snapshot) -> Din16798Diff {
+    fn diff(&self, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {
         crate::artifacts::din16798::mutations::change_storage_allowance_kwh::diff::diff(self, base)
     }
 

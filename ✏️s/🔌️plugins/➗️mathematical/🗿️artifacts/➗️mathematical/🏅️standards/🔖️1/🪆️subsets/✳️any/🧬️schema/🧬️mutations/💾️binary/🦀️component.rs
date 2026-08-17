@@ -6,7 +6,7 @@
 //! `encode_op`/`decode_op` wrappers plus the op text↔binary equivalence law and a whole-store round trip.
 //!
 //! The app's typed `MathematicalCommand` enum — which used to share the old `📡️protocol` crate with this codec —
-//! is an APP concern, not an artifact one: it now lives in `🎛️apps/➗️mathematical/🦀️component.rs`,
+//! is an APP concern, not an artifact one: it now lives in `✏️editor/🦀️component.rs`,
 //! assembled from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
 

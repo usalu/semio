@@ -1,0 +1,65 @@
+W3 layout lane — progress log
+Scope: ✏️s/🔌️plugins/📏️layout/** only.
+
+Part A — 25 diff leaves converted (🔺️diff/🦀️component.rs, fn diff_<kind> -> protocol::MutationOutcome<LayoutDiff>):
+1. create-frame — Error target-missing (page absent) / Fatal duplicate-id (frame id exists on page)
+2. delete-frame — Error target-missing (page or frame absent)
+3. move-frame — Error target-missing (page/frame absent) / Fatal invariant (non-finite x/y)
+4. resize-frame — Error target-missing (page/frame absent) / Fatal invariant (non-finite or <=0 width/height)
+5. reorder-pages — Error target-missing (unknown page id) / Warning no-op (order unchanged) — see DEVIATION below
+6. change-page-height — Error target-missing / Warning no-op (same height)
+7. change-page-width — Error target-missing / Warning no-op (same width)
+8. change-link-path — Error target-missing (link absent) / Warning no-op (same path)
+9. update-page-margins — Error target-missing / Warning no-op (all 4 margins equal)
+10. change-print-target — root-scoped, no id: Warning no-op (same value), no Error branch
+11. delete-story — Error target-missing (story absent)
+12. update-page-columns — Error target-missing / Warning no-op (count+gutter equal)
+13. edit-story — Error target-missing (story absent) / Warning no-op (content unchanged)
+14. rename-page — Error target-missing / Warning no-op (same name)
+15. create-link — Fatal duplicate-id (link id exists)
+16. change-frame-columns — Error target-missing (page/frame absent) / Warning no-op only for Text frames (columns field is Text-only; Rect/Image proceed inert, matches existing test comment pattern)
+17. change-data-fields — root-scoped, no id: Warning no-op (same json), no Error branch
+18. delete-page — Error target-missing (page absent)
+19. change-frame-stroke — Error target-missing / Warning no-op only for Rect frames (stroke is Rect-only)
+20. change-frame-wrap-mode — Error target-missing / Warning no-op only for Text frames (wrap_mode is Text-only)
+21. create-page — Fatal duplicate-id (page id exists)
+22. rename-layout — root-scoped, no id: Warning no-op (same name), no Error branch
+23. change-frame-fill — Error target-missing / Warning no-op only for Rect frames (fill is Rect-only)
+24. delete-link — Error target-missing (link absent)
+25. create-story — Fatal duplicate-id (story id exists)
+
+DEVIATION (reorder-pages): the worker-brief's generic reorder rule ("Fatal mutation.invariant if the
+order list is not a permutation") assumes an explicit order-list payload (like dag's reorder_nodes).
+Layout's ReorderPages payload is `{id, to_index}` — a single-item move, not an order list — so there is
+no way for it to produce a non-permutation result; the existing diff logic already clamps to_index into
+range. Implemented only Error target-missing + Warning no-op (order unchanged after the move), no Fatal
+branch. The required "assert_fatal_never_applies" OutcomeLaws coverage uses create-page's duplicate-id
+case instead (contract explicitly allows "create-duplicate-id OR reorder-non-permutation").
+
+Part B — config/presence:
+- ✏️editor/🎚️config/🦀️component.rs: LayoutConfigMutation::diff -> protocol::MutationOutcome<LayoutConfig>,
+  wraps final `next` in MutationOutcome::new(next). Mirrors Fem2dConfigMutation exactly (no Snapshot
+  variant to special-case). Fixed test helper `config_round_trip` to `.diff(base).diff().clone()` /
+  `.diff(&restored).diff().clone()`.
+- ✏️editor/👥️presence/🦀️component.rs: LayoutPresenceMutation::diff -> protocol::MutationOutcome<LayoutPresence>,
+  wraps the Snapshot match arm's result in MutationOutcome::new(..). No test call sites in this file.
+
+Part C — stray call sites outside 🧬️mutations:
+1. 🧬️schema/🔺️diff/📝️text/🦀️component.rs:338 — `operation.diff(&base)` -> `.into_parts().0` to keep
+   `let diff: LayoutDiff = ...` typed as before.
+2. Grepped the whole layout/** tree for other `.diff(` call sites assuming a bare return. All remaining
+   sites were inside 🧬️mutations/🦀️component.rs's own #[cfg(test)] mod (the facet-root file, Part D) —
+   fixed there (round_trip helper, two inline `add.diff(...).apply(...)` calls, the `apply` closure, and
+   the create_page_obeys_the_inverse_and_absorb_laws d1/d2 outcome extraction). No other call sites found
+   outside the mutations facet-root file. mutate() in 🧬️schema/🦀️component.rs:235 was already outcome-aware,
+   left untouched per instructions.
+
+Part D — OutcomeLaws region added to 🧬️mutations/🦀️component.rs's #[cfg(test)] mod tests:
+create_frame_missing_target_is_error, delete_frame_missing_target_is_error,
+move_frame_missing_target_is_error, reorder_pages_missing_target_is_error,
+rename_page_missing_target_is_error, change_page_height_missing_target_is_error,
+edit_story_missing_target_is_error (one per verb family: create/delete/move-or-resize/reorder/
+rename/change/edit), plus create_page_duplicate_id_is_fatal (assert_fatal_never_applies rep).
+
+Also checked: no `fn validate` override anywhere in ✏️s/🔌️plugins/📏️layout/** (grep confirmed zero hits)
+— nothing to delete.

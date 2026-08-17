@@ -1,0 +1,162 @@
+W3-A (dissolution) — verification output
+Ticket: 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+Date: 2026-08-16 (run late session, after all deliverable edits landed)
+
+=====================================================================
+1. Precondition (re-verified before starting)
+=====================================================================
+$ find ✏️s/🔌️plugins -type d -name '🎛️apps' | wc -l
+       0
+$ find ✏️s/🔌️plugins -type d -name '👁️viewer' | wc -l
+     143
+$ find ✏️s/🔌️plugins -type d -name '✏️editor' | wc -l
+     143
+
+=====================================================================
+2. TypeScript compile sanity (tsc --noEmit -p tsconfig.json)
+=====================================================================
+Baseline (unrelated, pre-existing, confirmed unrelated to this lane's files):
+  19 errors total, all in:
+    - ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts (13 errors)
+    - ✏️s/🔌️plugins/🗄️stdio/.../🏗️ifc/.../🧬️schema/🟦️component.ts (2 errors)
+    - ✏️s/🔌️plugins/🗄️stdio/.../📐️step/.../🧬️schema/🟦️component.ts (2 errors)
+    - 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts (1 error)
+
+After every edit in this lane (🔣️taxonomy.json, 🔍️discovery/🟦️component.ts, root 📜️script.ts,
+📇️registry/📜️script.ts, 🧪️index.test.ts):
+  19 errors — IDENTICAL list, zero new, zero fixed. This lane's files: 0 errors.
+
+  (Caught one real bug along the way: my own new `policySurfaceRoots` JSDoc comment contained a
+  literal glob with `*/` inside it, which prematurely closed the `/** */` block comment and broke
+  parsing of everything after it in 📜️script.ts. Fixed by rewording to `<a>`/`<s>`/`<sub>` placeholders
+  instead of `*`. Re-ran tsc clean afterward.)
+
+=====================================================================
+3. RUSTC_WRAPPER="" cargo check -p semio-framework-plugin --all-targets --keep-going
+=====================================================================
+EXIT: 0. Zero `error`-level lines. ~104/84 pre-existing warnings, none new (only the deleted dead
+`assert_constitutional_crates`/`assert_taxonomy_components` region's warnings disappeared).
+The taxonomy gate does NOT panic — because the actual hazard (the "no 🎛️apps/ directory found"
+`panic!`) was deleted outright as unreachable dead code (0 callers repo-wide, confirmed by grep and by
+checking `Plugin::builder` does not call it despite its own stale docstring claim). See §6 report notes.
+
+=====================================================================
+4. bun ./📜️script.ts check  (no literal "check" verb on root script.ts — ran the registry package's
+   own check directly, which is what the ticket text means by "registry + launch.json fresh")
+=====================================================================
+$ bun 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/📜️script.ts check
+EXIT: 0.
+Tail: "plugin registry catalog is fresh (59 plugin crates, 58 playgrounds, 22 framework packages);
+       .vscode/launch.json is fresh."
+1673 non-blocking "plugin taxonomy tree findings" lines printed (area "✏️s/🔌️plugins" is "mixed" —
+findings reported, not failing the gate) — includes real new `surface "<subset>/<role>"` findings from
+the retargeted `validateTaxonomyTree`/`surfaceDirsForPlugin` (confirms the retarget is live and
+walking real surfaces, not silently vacuous).
+
+=====================================================================
+5. bun ./📜️script.ts verify gate
+=====================================================================
+Attempted. Dies at the FIRST step (`bunx dependency-cruiser … --output-type err`), before reaching
+ANY policy this lane touches: 827 pre-existing dependency-boundary violations (650 errors, 177
+warnings) across the whole workspace, then the dependency-cruiser process itself exits 138
+(SIGKILL-class — resource/OOM on this ~10k-module, ~7.5k-dependency workspace scan), independent of
+this lane's edits. None of the printed violations reference `🎛️apps`, `appsDirName`,
+`pluginChildDirs`, or any file this lane touched. Not attributable to this ticket; not retried further
+after confirming the failure predates and is orthogonal to every change here (see §7 live-filesystem
+policy run below, which exercises this lane's actual policies directly and completes cleanly).
+
+=====================================================================
+6. bun nx run @semio-tech/repo-lib:test  (compare against 18-failure baseline from 📓️w0-i-report.md)
+=====================================================================
+First attempt (started as a background job WHILE still editing 🧪️index.test.ts's window/mode-policy
+fixtures) showed 20 fail — a false alarm from my own in-flight edit, not a real regression: the run
+raced my own file save. Re-ran clean after all edits landed:
+
+  170 pass
+  18 fail
+
+Exact same 18 test names as the W0-I baseline (dependency-boundary, ui scrollbar styling, micro-commit,
+playground static sites x2, package boundary guards, command budgets x2, resolveCargoPackageName x2,
+loadTaxonomy x3, discoverPackages x4, computeWorkspaces x1 — 18 total). Zero new failures. Zero of the
+5 test-pin edits I made (appComponentDirs -> surfaceRequiredChildDirs, appChildDirs -> surfaceChildDirs
+x2, appSchemaSpecFilenames -> surfaceSchemaSpecFilenames, pluginChildDirs literal, the commands-facet
+loop key, and the two window/mode-completeness fixture rewrites) were among the 18 — none of my pins
+were part of the pre-existing baseline; all are net-new passing assertions against the surface world.
+
+=====================================================================
+7. Live-filesystem policy run (root 📜️script.ts's aggregate `policy` lint, called directly)
+=====================================================================
+Total breaches across every policy: 32082 (dominated by `handcrafted-grammar/spec-distinctness`:
+22079 — a pre-existing, unrelated-to-this-ticket finding).
+
+Breach counts for rules this lane changed shape, called against the live repo:
+
+  policyTaxonomyDirsBreaches  (kind "taxonomy/dirs"): 217 total
+    - taxonomy-dirs-artifact-*  : 195  (pre-existing scope — artifact-level schema/io representation
+                                         checks, unaffected by the standards/subsets fix)
+    - taxonomy-dirs-surface-*   :  20  (NEW — surfaces with a disallowed extra top-level dir, e.g.
+                                         stray ⚙️engine/, custom renderer/session/chrome dirs a W2
+                                         packet added outside surfaceChildDirs)
+    - taxonomy-dirs-standard-*  :   1  (NEW)
+    - taxonomy-dirs-subset-*    :   1  (NEW)
+    => 22 genuinely NEW breaches surfaced by making the walker descend into
+       🏅️standards/🔖️*/🪆️subsets/* — exactly the ENGINELESS-class "rule that looks installed and
+       never fires" this deliverable targeted. NOT mass-fixed here, per the ticket's own instruction.
+
+  policyWindowCompletenessBreaches (kind "taxonomy/window-completeness"): 35
+    All under real surface window paths (…/👁️viewer|✏️editor/🎭️modes/<mode>/🪟️windows/<window>/…).
+    Pre-existing incompleteness in hand-authored W2 windows that didn't carry every
+    windowRequiredChildDirs facet — every scaffold-only window is complete by construction
+    (scaffoldSurfaceTree writes all six), so these 35 are genuinely real, not scaffold residue.
+
+  policyModeCompletenessBreaches (kind "taxonomy/mode-completeness" + "taxonomy/mode-empty-child"): 0
+    Verified this is correct, not a silent no-op: every real surface's 🎭️modes/<mode>/ on disk already
+    carries all five modeRequiredChildDirs (spot-checked 📐️cad/…/👁️viewer/🎭️modes/👁️view/ — has
+    🪟️windows, 🎮️commands, 🎚️config, 👥️presence, 🫧️transient). The scaffolder create these
+    unconditionally, so 0 is the expected steady state.
+
+  policySemioArtifactExamplesBreaches (kind "taxonomy/semio-examples"): 93
+    - semio-examples-missing-*        : 87  (artifact-level 📚️examples — unchanged scope)
+    - semio-examples-empty-*          :  3
+    - semio-examples-test-*           :  1
+    - semio-examples-plugin-root-*    :  2
+    Surface-level examples are correctly OPTIONAL (contract §7.5 — 📚️examples not in
+    surfaceRequiredChildDirs), so a surface with no 📚️examples/ never appears here; only surfaces that
+    DO carry a 📚️examples/ dir with incomplete/empty contents would, and none currently do.
+
+  app-schema/facet-completeness (via the retargeted `policyDiscoverAppSchemaOwners`/
+  `policyAppSchemaFacetCompletenessBreaches`, now walking 👁️viewer/✏️editor surfaces instead of
+  🎛️apps): 498 — every entry is a real surface (e.g. `✒️writer/…/👁️viewer/🎚️config` missing its
+  `🧬️schema/` facet dir). Confirms the retarget is live (0 would mean it silently found nothing).
+
+  examples verify (`bun ./📜️script.ts examples verify`, exercises the retargeted
+  `collectExampleRoots`): 384 `handcrafted-grammar/empty-example` findings, several explicitly under
+  real `✏️editor/📚️examples/…` and `👁️viewer` surface paths (confirms it now walks real surface
+  example roots, not the old `🎛️apps` root which no longer exists). Content-quality findings, out of
+  scope for this lane.
+
+=====================================================================
+8. Rust crates this lane touched but could NOT reach a clean check on — confirmed unrelated
+=====================================================================
+`semio-framework-plugin-host` and (transitively) `semio-framework-os-run`: currently fail to compile
+with `error[E0027]: pattern does not mention field 'report'` /
+`error[E0063]: missing field 'report' in initializer of 'AppFrame'` at
+🔌️plugin/🖥️host/🦀️component.rs:2709 (an `AppFrame::Error { in_reply_to, fault }` match arm). Traced via
+`git log --date=iso` on 📡️spr/🧵️channel/🦀️component.rs (the `AppFrame` definition): commit
+5a1367dfcc90630c52dc2ec4de9526babe8d70f4, 2026-08-16 14:18:35 +0200 — added a `report: Vec<u8>` field
+to `AppFrame::Error` well before this lane started editing this file (my only edit to
+🖥️host/component.rs is the `owned_surface_gaps` docstring, nowhere near line 2709). This is exactly the
+"Known-broken by live peers" class the ticket brief warned about — a peer's channel-protocol field
+addition that hasn't propagated to every match site yet. Not fixed here (outside this lane's lease; a
+one-line unrelated fix in a contended, actively-mid-edit file risks stepping on live work).
+
+`semio-framework-os-run` additionally shows 164 errors entirely inside
+`✏️s/🔌️plugins/🗄️stdio/…` (`error[E0053]: method 'absorb' has an incompatible type for trait` —
+`Self` vs `Result<…, MutationApplyError>`) and 3 `HashSet` scope errors, all under 🗄️stdio, confirmed
+live via `git status --porcelain` showing dozens of `M`/`D` entries under `✏️s/🔌️plugins/🗄️stdio/` right
+now (the FULL-STDIO peer ticket, explicitly named in the ticket brief's "Known-broken by live peers"
+list). Zero errors reference this lane's files.
+
+Required gate — `RUSTC_WRAPPER="" cargo check -p semio-framework-plugin --all-targets --keep-going` —
+is unaffected by either of the above (clean, §3) since `semio-framework-plugin` does not depend on
+`semio-framework-plugin-host`/`semio-s-plugin-stdio`.

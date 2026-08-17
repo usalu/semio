@@ -15,7 +15,7 @@ pub struct ChangeWallSoilGammaKnM3 {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallSoilGammaKnM3 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "wall-soil-gamma-kn-m3", kind: "change-wall-soil-gamma-kn-m3", record: "ChangedWallSoilGammaKnM3" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_wall_soil_gamma_kn_m3::diff::diff(self, base)
     }
 

@@ -164,9 +164,9 @@ mod tests {
         let b = sweep_b();
 
         let ab = BinaryDiff::between(&a, &b);
-        assert_eq!(ab.apply(&a), b, "between(a,b).apply(a) must equal b");
+        assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
         let ba = BinaryDiff::between(&b, &a);
-        assert_eq!(ba.apply(&b), a, "between(b,a).apply(b) must equal a");
+        assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
         assert!(!ab.splices.is_empty(), "sweep diff must carry at least one splice");
 
         // 🔬️ Exercise insert/remove/replace explicitly via hand-built splices (not just the
@@ -177,7 +177,7 @@ mod tests {
                 crate::artifacts::binary::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
             ],
         };
-        assert_eq!(hand_built.apply(&a), b);
+        assert_eq!(hand_built.apply(&a).unwrap(), b);
 
         assert!(BinaryDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
     }

@@ -8,12 +8,11 @@ use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{d
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
-#[cfg(test)]
+use protocol::{OpBinary, OpText};
 /// 🔧️ `MutationDiff` added — the `#[cfg(test)] mod tests` block below calls `diff.apply(&base)`
-/// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (unlike this
-/// file's own `OpText`/`OpBinary` impls, which use fully-qualified syntax and so don't need the
-/// import) (W2b closer fix).
-use protocol::{MutationDiff, OpBinary, OpText};
+/// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
+#[cfg(test)]
+use protocol::MutationDiff;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
@@ -120,9 +119,9 @@ fn keyframe_at(base: &SemioAnimationSnapshot, ti: usize, ci: usize, ki: usize) -
 impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
     type Diff = SemioAnimationDiff;
 
-    fn diff(&self, base: &SemioAnimationSnapshot) -> Self::Diff {
+    fn diff(&self, base: &SemioAnimationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         use SemioAnimationMutation::*;
-        match self {
+        protocol::MutationOutcome::new(match self {
             NoMutation => SemioAnimationDiff::default(),
             SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
             InsertTimeline { index, timeline } => SemioAnimationDiff { timelines: Some(IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: timeline.clone() }], ..Default::default() }) },
@@ -136,7 +135,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
             RemoveKeyframe { timeline_index, channel_index, index } => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
             SetKeyframeTime { timeline_index, channel_index, index, t } => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: Some(*t), value: None }),
             SetKeyframeValue { timeline_index, channel_index, index, value } => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: None, value: Some(value.clone()) }),
-        }
+        })
     }
 
     fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
@@ -184,10 +183,9 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
-pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> SemioAnimationDiff {
-    let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
-    *snapshot = <SemioAnimationDiff as protocol::MutationDiff<SemioAnimationSnapshot>>::apply(&diff, snapshot);
-    diff
+pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
+    let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
 }
 
 //#region SnapshotLit
@@ -216,7 +214,7 @@ fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
 /// `enc_value`/`enc_interpolation`/hex-string helpers) instead of re-deriving a second parallel
 /// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
 /// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
-impl protocol::OpText for SemioAnimationMutation {
+impl OpText for SemioAnimationMutation {
     fn print_op(&self) -> String {
         use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
         use SemioAnimationMutation::*;
@@ -349,9 +347,9 @@ const OP_BINARY_FORMAT: u8 = 1;
 /// `TAG:` prefix stripped) as one opaque trailing `bytes` chain — reuses the real, tested
 /// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
 /// `OpBinary` upgrade uses.
-impl protocol::OpBinary for SemioAnimationMutation {
+impl OpBinary for SemioAnimationMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let printed = <Self as protocol::OpText>::print_op(self);
+        let printed = <Self as OpText>::print_op(self);
         let args = match printed.split_once(':') {
             Some((_, rest)) => rest,
             None => "",
@@ -369,7 +367,7 @@ impl protocol::OpBinary for SemioAnimationMutation {
         let keyword = OP_KEYWORDS.get(*tag as usize).ok_or_else(|| malformed("op tag", format!("unknown op tag {tag}")))?;
         let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
         let line = if *keyword == "N" { "N".to_string() } else { format!("{keyword}:{args}") };
-        <Self as protocol::OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))
+        <Self as OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))
     }
 }
 //#endregion OpCodecs
@@ -418,13 +416,13 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
 mod tests {
     use super::*;
 
-    /// 🧪️ mutation_diff_law: `m.diff(base).apply(base) == { apply_x_mutation(&mut s, m); s }`.
+    /// 🧪️ mutation_diff_law: `m.diff(base).diff().apply(base) == { apply_x_mutation(&mut s, m); s }`.
     #[test]
     fn mutation_diff_law_covers_every_variant() {
         let base = fixture();
         for m in demo_mutation_cases() {
             let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
-            let via_diff = diff.apply(&base);
+            let via_diff = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
 
             let mut applied = base.clone();
             let returned_diff = apply_semio_animation_mutation(&mut applied, &m);
@@ -453,7 +451,7 @@ mod tests {
     /// variant.
     #[test]
     fn op_text_binary_roundtrip_law() {
-        let base = fixture();
+        let _base = fixture();
         for m in demo_mutation_cases() {
             let printed = m.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

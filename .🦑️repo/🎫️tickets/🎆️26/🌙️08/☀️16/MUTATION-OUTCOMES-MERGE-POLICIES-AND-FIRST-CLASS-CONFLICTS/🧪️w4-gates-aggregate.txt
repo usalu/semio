@@ -1,0 +1,6 @@
+1 | const m = await import("./📜️script.ts"); const b = m.policyMutationOutcomeMergePolicyBreaches(process.cwd()); console.log("COUNT", b.length); for (const x of b.slice(0,15)) console.log(x.kind, "|", x.scope, "|", x.summary); process.exit(0);
+                                                         ^
+TypeError: m.policyMutationOutcomeMergePolicyBreaches is not a function. (In 'm.policyMutationOutcomeMergePolicyBreaches(process.cwd())', 'm.policyMutationOutcomeMergePolicyBreaches' is undefined)
+      at /Users/ueli/Documents/semio/[eval]:1:54
+
+Bun v1.3.14 (macOS arm64)

@@ -66,7 +66,7 @@ wasm-bindgen = "0.2.106"
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
 [dev-dependencies]
-# 🎬️ `EngineComputeTests` (below, in 🎛️apps/🧊️3d/🦀️component.rs) exercises frustum-cull/AABB scene
+# 🎬️ `EngineComputeTests` (below, in the procedural3d editor's root component.rs) exercises frustum-cull/AABB scene
 # math that now lives at `ui_wgpu`'s `kernel_3d_scene` mount (ticket
 # 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH — `semio-framework-3d`
 # no longer has a `scene` module to depend on). Same crate-rename as the normal `["wgpu"]` dependency

@@ -1,0 +1,41 @@
+=== ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [5-56] ===
+  24:store_new: TrinityGraphStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  26:store_new: None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity", empty_trinity_graph_fixture())).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs [680-730] ===
+  698:store_new: TrinityGraphStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  700:store_new: None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity-rewrite", empty_trinity_graph_fixture())).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [5-53] ===
+  24:store_new: Ok(Self { store: RefCell::new(RasterStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?) })
+=== ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [17-69] ===
+  37:store_new: Process3dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  39:store_new: None => Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", crate::artifacts::process3d::empty_process3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [5-47] ===
+  25:store_new: CadStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  27:store_new: None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [12-66] ===
+  37:store_new: Ok(Self { store: RefCell::new(WriterStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?) })
+=== ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [8-60] ===
+  28:store_new: GisMapStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  30:store_new: None => GisMapStore::new(store::create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [13-54] ===
+  32:store_new: ShootingStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  34:store_new: None => ShootingStore::new(store::create_document_envelope(SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::artifacts::shooting::empty_shooting_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [4-55] ===
+  23:store_new: Fem3dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  25:store_new: None => Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", crate::artifacts::fem3d::schema::empty_fem3d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs [4-55] ===
+  23:store_new: Fem2dStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  25:store_new: None => Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs [377-428] ===
+  396:store_new: DrawStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  398:store_new: None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs [865-905] ===
+  883:store_new: FlowStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  885:store_new: None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs [1469-1729] ===
+  1631:crdt_vocab: let _ = self.events.send(ArtifactEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️component.rs [8628-8678] ===
+  8646:store_new: DagStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+  8648:store_new: None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs [359-380] ===
+  375:apply_call: load.apply(&JsValue::NULL, &args).map(|_| ()).map_err(|_| "load_app_document_pack failed".into())

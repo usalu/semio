@@ -50,39 +50,194 @@ fn merge_upserts<T: Clone>(
 //#endregion 🔖️IdKeyedMerge
 
 //#region 🔖️Apply
-/// 🧬 Generic id-keyed collection apply: remove by id, then upsert (replace in place if the id
-/// already exists, else insert at the given index clamped to bounds).
-fn apply_collection<T: Clone>(base: &[T], removed: &[String], upserted: &[(usize, T)], key: impl Fn(&T) -> &str) -> Vec<T> {
-    let mut items: Vec<T> = base.iter().filter(|item| !removed.contains(&key(item).to_string())).cloned().collect();
+/// 🧬 Validates and applies one id-keyed indexed collection delta atomically.
+fn apply_collection<T: Clone>(
+    base: &[T],
+    removed: &[String],
+    upserted: &[(usize, T)],
+    key: impl Fn(&T) -> &str,
+) -> protocol::MutationApplyResult<Vec<T>> {
+    for (index, id) in removed.iter().enumerate() {
+        if !base.iter().any(|item| key(item) == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed item does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (position, (index, value)) in upserted.iter().enumerate() {
+        let value_key = key(value).to_string();
+        if removed.contains(&value_key) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "item cannot be removed and upserted",
+            )
+            .at(["upserted".to_string(), position.to_string()]));
+        }
+        if upserted[..position]
+            .iter()
+            .any(|(_, prior)| key(prior) == value_key)
+        {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is upserted more than once",
+            )
+            .at(["upserted".to_string(), position.to_string()]));
+        }
+        if let Some(existing_index) = base.iter().position(|item| key(item) == value_key) {
+            if *index != existing_index {
+                return Err(protocol::MutationApplyError::new(
+                    "mutation.apply.invalid-index",
+                    "replacement index does not match the existing item",
+                )
+                .at(["upserted".to_string(), position.to_string()]));
+            }
+        } else {
+            let preceding_additions = upserted[..position]
+                .iter()
+                .filter(|(_, prior)| !base.iter().any(|item| key(item) == key(prior)))
+                .count();
+            let available = base.len() - removed.len() + preceding_additions;
+            if *index > available {
+                return Err(protocol::MutationApplyError::new(
+                    "mutation.apply.invalid-index",
+                    format!("insertion index {index} exceeds length {available}"),
+                )
+                .at(["upserted".to_string(), position.to_string()]));
+            }
+            if upserted[..position]
+                .iter()
+                .any(|(prior_index, prior)| {
+                    prior_index == index && !base.iter().any(|item| key(item) == key(prior))
+                })
+            {
+                return Err(protocol::MutationApplyError::new(
+                    "mutation.apply.duplicate-target",
+                    "insertion index is targeted more than once",
+                )
+                .at(["upserted".to_string(), position.to_string()]));
+            }
+        }
+    }
+    let mut items: Vec<T> = base
+        .iter()
+        .filter(|item| !removed.iter().any(|id| id == key(item)))
+        .cloned()
+        .collect();
     for (index, value) in upserted {
         let value_key = key(value).to_string();
         if let Some(existing) = items.iter_mut().find(|item| key(item) == value_key) {
             *existing = value.clone();
         } else {
-            let at = (*index).min(items.len());
-            items.insert(at, value.clone());
+            items.insert(*index, value.clone());
         }
     }
-    items
+    Ok(items)
+}
+
+fn apply_unordered_collection<T: Clone>(
+    base: &[T],
+    removed: &[String],
+    upserted: &[T],
+    key: impl Fn(&T) -> &str,
+) -> protocol::MutationApplyResult<Vec<T>> {
+    for (index, id) in removed.iter().enumerate() {
+        if !base.iter().any(|item| key(item) == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.missing-target",
+                "removed item does not exist",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+        if removed[..index].contains(id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is removed more than once",
+            )
+            .at(["removed".to_string(), index.to_string()]));
+        }
+    }
+    for (index, value) in upserted.iter().enumerate() {
+        let id = key(value);
+        if removed.iter().any(|removed| removed == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.conflicting-target",
+                "item cannot be removed and upserted",
+            )
+            .at(["upserted".to_string(), index.to_string()]));
+        }
+        if upserted[..index].iter().any(|prior| key(prior) == id) {
+            return Err(protocol::MutationApplyError::new(
+                "mutation.apply.duplicate-target",
+                "item is upserted more than once",
+            )
+            .at(["upserted".to_string(), index.to_string()]));
+        }
+    }
+    let mut items: Vec<T> = base
+        .iter()
+        .filter(|item| !removed.iter().any(|id| id == key(item)))
+        .cloned()
+        .collect();
+    for value in upserted {
+        if let Some(existing) = items.iter_mut().find(|item| key(item) == key(value)) {
+            *existing = value.clone();
+        } else {
+            items.push(value.clone());
+        }
+    }
+    Ok(items)
 }
 
 impl protocol::MutationDiff<AssemblySnapshot> for AssemblyDiff {
-    fn apply(&self, base: &AssemblySnapshot) -> AssemblySnapshot {
-        let mut next = base.clone();
-        if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
-        }
-        if let Some(seed) = self.seed {
-            next.seed = seed;
-        }
-        next.slots = apply_collection(&next.slots, &self.slots_removed, &self.slots_upserted, |slot| slot.id.as_str());
-        next.edges = apply_collection(&next.edges, &self.edges_removed, &self.edges_upserted, |edge| edge.id.as_str());
-        next.rules = apply_collection(&next.rules, &self.rules_removed, &self.rules_upserted, |rule| rule.id.as_str());
-        let weights_upserted: Vec<(usize, AssemblyModuleWeight)> = self.weights_upserted.iter().map(|w| (usize::MAX, w.clone())).collect();
-        next.weights = apply_collection(&next.weights, &self.weights_removed, &weights_upserted, |weight| weight.module_id.as_str());
-        next
+    fn apply(&self, base: &AssemblySnapshot) -> protocol::MutationApplyResult<AssemblySnapshot> {
+        Ok({
+            let mut next = base.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(seed) = self.seed {
+                next.seed = seed;
+            }
+            next.slots = apply_collection(
+                &next.slots,
+                &self.slots_removed,
+                &self.slots_upserted,
+                |slot| slot.id.as_str(),
+            )
+            .map_err(|error| error.under(["slots"]))?;
+            next.edges = apply_collection(
+                &next.edges,
+                &self.edges_removed,
+                &self.edges_upserted,
+                |edge| edge.id.as_str(),
+            )
+            .map_err(|error| error.under(["edges"]))?;
+            next.rules = apply_collection(
+                &next.rules,
+                &self.rules_removed,
+                &self.rules_upserted,
+                |rule| rule.id.as_str(),
+            )
+            .map_err(|error| error.under(["rules"]))?;
+            next.weights = apply_unordered_collection(
+                &next.weights,
+                &self.weights_removed,
+                &self.weights_upserted,
+                |weight| weight.module_id.as_str(),
+            )
+            .map_err(|error| error.under(["weights"]))?;
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {
             self.schema = other.schema;
@@ -123,7 +278,7 @@ mod tests {
     #[test]
     fn upsert_by_id_replaces_in_place_never_duplicates() {
         let diff = AssemblyDiff { slots_upserted: vec![(0, AssemblySlot { id: "s1".into(), x: 9.0, y: 9.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
-        let after = diff.apply(&base());
+        let after = diff.apply(&base()).expect("valid mutation diff");
         assert_eq!(after.slots.len(), 1);
         assert_eq!(after.slots[0].x, 9.0);
     }
@@ -131,15 +286,29 @@ mod tests {
     #[test]
     fn insert_at_index_for_a_new_id() {
         let diff = AssemblyDiff { slots_upserted: vec![(1, AssemblySlot { id: "s2".into(), x: 1.0, y: 1.0, z: 0.0, pinned_module_id: None })], ..Default::default() };
-        let after = diff.apply(&base());
+        let after = diff.apply(&base()).expect("valid mutation diff");
         assert_eq!(after.slots.len(), 2);
         assert_eq!(after.slots[1].id, "s2");
     }
 
     #[test]
+    fn malformed_indexed_diff_rejects_without_changing_the_base() {
+        let base = base();
+        let diff = AssemblyDiff {
+            slots_upserted: vec![(99, AssemblySlot { id: "s2".into(), ..Default::default() })],
+            ..Default::default()
+        };
+        let error = diff.apply(&base).expect_err("out-of-range insertion must reject");
+        assert_eq!(error.code, "mutation.apply.invalid-index");
+        assert_eq!(error.target, ["slots", "upserted", "0"]);
+        assert_eq!(base.slots.len(), 1);
+        assert_eq!(base.slots[0].id, "s1");
+    }
+
+    #[test]
     fn remove_drops_the_matching_id_only() {
         let diff = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
-        let after = diff.apply(&base());
+        let after = diff.apply(&base()).expect("valid mutation diff");
         assert!(after.slots.is_empty());
     }
 
@@ -166,12 +335,12 @@ mod tests {
     fn absorb_composes_to_the_same_result_as_applying_sequentially() {
         let start = base();
         let d1 = AssemblyDiff { seed: Some(7), ..Default::default() };
-        let mid = d1.apply(&start);
+        let mid = d1.apply(&start).expect("valid mutation diff");
         let d2 = AssemblyDiff { slots_removed: vec!["s1".into()], ..Default::default() };
-        let after_sequential = d2.apply(&mid);
+        let after_sequential = d2.apply(&mid).expect("valid mutation diff");
         let mut composed = d1.clone();
         composed.absorb(d2);
-        let after_composed = composed.apply(&start);
+        let after_composed = composed.apply(&start).expect("valid mutation diff");
         assert_eq!(after_sequential, after_composed);
     }
 }

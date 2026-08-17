@@ -23,105 +23,117 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl JackDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &JackArtifact) -> JackArtifact {
-        let mut next = artifact.clone();
-        if let Some(value) = &self.schema {
-            next.schema = value.clone();
-        }
-        if let Some(value) = &self.name {
-            next.name = value.clone();
-        }
-        if let Some(value) = &self.manifest_id {
-            next.manifest_id = value.clone();
-        }
-        if let Some(value) = &self.manifest {
-            next.manifest = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(value) = &self.root_node_id {
-            next.root_node_id = value.clone();
-        }
-        if let Some(value) = &self.active_fixture_id {
-            next.active_fixture_id = value.clone();
-        }
-        if let Some(value) = &self.jack_query {
-            next.jack_query = value.clone();
-        }
-        if let Some(modes) = &self.lod_mode_by_window {
-            for (key, value) in modes {
-                match value {
-                    Some(v) => {
-                        next.lod_mode_by_window.insert(key.clone(), v.clone());
+    pub fn apply_to_artifact(&self, artifact: &JackArtifact) -> protocol::MutationApplyResult<JackArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(value) = &self.schema {
+                next.schema = value.clone();
+            }
+            if let Some(value) = &self.name {
+                next.name = value.clone();
+            }
+            if let Some(value) = &self.manifest_id {
+                next.manifest_id = value.clone();
+            }
+            if let Some(value) = &self.manifest {
+                next.manifest = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(value) = &self.root_node_id {
+                next.root_node_id = value.clone();
+            }
+            if let Some(value) = &self.active_fixture_id {
+                next.active_fixture_id = value.clone();
+            }
+            if let Some(value) = &self.jack_query {
+                next.jack_query = value.clone();
+            }
+            if let Some(modes) = &self.lod_mode_by_window {
+                for (key, value) in modes {
+                    if value.is_none() && !next.lod_mode_by_window.contains_key(key) {
+                        return Err(protocol::MutationApplyError::new(
+                            "mutation.apply.missing-target",
+                            "removed window LOD mode does not exist",
+                        )
+                        .at(["lodModeByWindow".to_string(), key.clone()]));
                     }
-                    None => {
-                        next.lod_mode_by_window.remove(key);
+                }
+                for (key, value) in modes {
+                    match value {
+                        Some(v) => {
+                            next.lod_mode_by_window.insert(key.clone(), v.clone());
+                        }
+                        None => {
+                            next.lod_mode_by_window.remove(key);
+                        }
                     }
                 }
             }
-        }
-        if let Some(value) = &self.viewport_camera {
-            next.viewport_camera = value.clone();
-        }
-        if let Some(value) = &self.jack_result_json {
-            next.jack_result_json = value.clone();
-        }
-        if let Some(value) = &self.editor_engagement_input {
-            next.editor_engagement_input = value.clone();
-        }
-        if let Some(value) = &self.graph_engagement_input {
-            next.graph_engagement_input = value.clone();
-        }
-        if let Some(value) = &self.results_engagement_input {
-            next.results_engagement_input = value.clone();
-        }
-        if let Some(value) = self.reorganize_epoch {
-            next.reorganize_epoch = value;
-        }
-        if let Some(value) = &self.editor_selection {
-            next.editor_selection = value.clone();
-        }
-        if let Some(value) = self.revision {
-            next.revision = value;
-        }
-        if let Some(value) = &self.locale {
-            next.locale = value.clone();
-        }
-        next
+            if let Some(value) = &self.viewport_camera {
+                next.viewport_camera = value.clone();
+            }
+            if let Some(value) = &self.jack_result_json {
+                next.jack_result_json = value.clone();
+            }
+            if let Some(value) = &self.editor_engagement_input {
+                next.editor_engagement_input = value.clone();
+            }
+            if let Some(value) = &self.graph_engagement_input {
+                next.graph_engagement_input = value.clone();
+            }
+            if let Some(value) = &self.results_engagement_input {
+                next.results_engagement_input = value.clone();
+            }
+            if let Some(value) = self.reorganize_epoch {
+                next.reorganize_epoch = value;
+            }
+            if let Some(value) = &self.editor_selection {
+                next.editor_selection = value.clone();
+            }
+            if let Some(value) = self.revision {
+                next.revision = value;
+            }
+            if let Some(value) = &self.locale {
+                next.locale = value.clone();
+            }
+            next
+        })
     }
 }
 
 impl MutationDiff<JackSnapshot> for JackDiff {
-    fn apply(&self, snapshot: &JackSnapshot) -> JackSnapshot {
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.schema {
-            next.schema = value.clone();
-        }
-        if let Some(value) = &self.name {
-            next.name = value.clone();
-        }
-        if let Some(value) = &self.manifest_id {
-            next.manifest_id = value.clone();
-        }
-        if let Some(value) = &self.manifest {
-            next.manifest = value.clone();
-        }
-        if let Some(value) = &self.camera {
-            next.camera = value.clone();
-        }
-        if let Some(content) = &self.content {
-            next.content = content.clone();
-        }
-        if let Some(value) = &self.root_node_id {
-            next.root_node_id = value.clone();
-        }
-        next
+    fn apply(&self, snapshot: &JackSnapshot) -> protocol::MutationApplyResult<JackSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.schema {
+                next.schema = value.clone();
+            }
+            if let Some(value) = &self.name {
+                next.name = value.clone();
+            }
+            if let Some(value) = &self.manifest_id {
+                next.manifest_id = value.clone();
+            }
+            if let Some(value) = &self.manifest {
+                next.manifest = value.clone();
+            }
+            if let Some(value) = &self.camera {
+                next.camera = value.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            if let Some(value) = &self.root_node_id {
+                next.root_node_id = value.clone();
+            }
+            next
+        })
     }
-
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
             ($field:ident) => {

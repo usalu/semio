@@ -5,7 +5,7 @@ use crate::artifacts::gltf::schema::mutations::top_level_private::{reject, GltfT
 use crate::artifacts::gltf::GltfSnapshot;
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfBindSceneRootNodeInverse {
     pub scene: usize,
     pub node: usize,

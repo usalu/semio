@@ -433,50 +433,50 @@ pub mod artifacts {
 
 //#endregion 🗿️Artifacts
 
-//#region 🎛️Apps
+//#region ✏️Editor
 #[path = "."]
-pub mod apps {
+pub mod editor {
     #[path = "."]
     pub mod mathematical {
-        #[path = "../../🎛️apps/➗️mathematical/🦀️component.rs"]
+        #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
         mod component;
         pub use component::*;
 
         #[path = "."]
         pub mod config {
-            #[path = "../../🎛️apps/➗️mathematical/🎚️config/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/➗️mathematical/🎚️config/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🎛️apps/➗️mathematical/👥️presence/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs"]
             mod component;
             pub use component::*;
 
-            #[path = "../../🎛️apps/➗️mathematical/👥️presence/🧬️schema/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️component.rs"]
             pub mod schema;
         }
 
         #[path = "."]
         pub mod commands {
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📄️set-artifact/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️set-artifact/🦀️component.rs"]
             pub mod set_artifact;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️set-algorithm/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-algorithm/🦀️component.rs"]
             pub mod set_algorithm;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️set-directed/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-directed/🦀️component.rs"]
             pub mod set_directed;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-edit/🦀️component.rs"]
             pub mod node_graph_edit;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph-viewport/🦀️component.rs"]
             pub mod node_graph_viewport;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/📐️set-points/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-points/🦀️component.rs"]
             pub mod set_points;
-            #[path = "../../🎛️apps/➗️mathematical/🎮️commands/🗣️set-locale/🦀️component.rs"]
+            #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs"]
             pub mod set_locale;
         }
 
@@ -484,22 +484,50 @@ pub mod apps {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "../../🎛️apps/➗️mathematical/🎭️modes/✏️edit/🦀️component.rs"]
+                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                 mod component;
                 pub use component::*;
 
                 #[path = "."]
                 pub mod windows {
-                    #[path = "../../🎛️apps/➗️mathematical/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️component.rs"]
                     pub mod graph;
-                    #[path = "../../🎛️apps/➗️mathematical/🎭️modes/✏️edit/🪟️windows/📐️geometry/🦀️component.rs"]
+                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️geometry/🦀️component.rs"]
                     pub mod geometry;
                 }
             }
         }
     }
 }
-//#endregion 🎛️Apps
+//#endregion ✏️Editor
+
+//#region 👁️Viewer
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod mathematical {
+        #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📐️geometry/🦀️component.rs"]
+                    pub mod geometry;
+                }
+            }
+        }
+    }
+}
+//#endregion 👁️Viewer
 
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
@@ -514,7 +542,7 @@ pub mod examples {
     #[cfg(test)]
     #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
     mod art_mathematical_demo_tests;
-    #[path = "../../🎛️apps/➗️mathematical/📚️examples/🎬️demo-session/🦀️component.rs"]
+    #[path = "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_mathematical_demo_session;
 }
 //#endregion 📚️Examples

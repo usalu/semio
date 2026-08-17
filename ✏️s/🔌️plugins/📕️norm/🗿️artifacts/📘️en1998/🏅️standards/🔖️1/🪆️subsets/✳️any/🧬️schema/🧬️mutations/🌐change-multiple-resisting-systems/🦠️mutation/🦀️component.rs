@@ -15,7 +15,7 @@ pub struct ChangeMultipleResistingSystems {
 impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMultipleResistingSystems {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "multiple-resisting-systems", kind: "change-multiple-resisting-systems", record: "ChangedMultipleResistingSystems" };
 
-    fn diff(&self, base: &En1998Snapshot) -> En1998Diff {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
         crate::artifacts::en1998::mutations::change_multiple_resisting_systems::diff::diff(self, base)
     }
 

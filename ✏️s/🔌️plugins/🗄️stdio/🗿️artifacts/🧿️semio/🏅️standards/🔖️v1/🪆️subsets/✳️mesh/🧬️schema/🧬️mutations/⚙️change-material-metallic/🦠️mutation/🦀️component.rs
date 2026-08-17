@@ -14,7 +14,7 @@ pub struct ChangeMaterialMetallic {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMaterialMetallic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-metallic", kind: "change-material-metallic", record: "ChangedMaterialMetallic" };
 
-    fn diff(&self, base: &SemioMeshSnapshot) -> <SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {

@@ -23,7 +23,7 @@ pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::artifacts::note::N
 impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockText {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "block-text", kind: "edit-block-text", record: "EditedBlockText" };
 
-    fn diff(&self, base: &NoteSnapshot) -> NoteDiff {
+    fn diff(&self, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {

@@ -1,13 +1,19 @@
-//! 🔺️ `unflatten` — delegates straight to `diff_at_path`/`DrawNodeDiff::Replace`; naturally a
-//! no-op when `at` doesn't resolve (the wrapping `Group.children` triple diff skips a missing
-//! index at every level of `diff_at_path`'s nesting).
+//! 🔺️ `unflatten` — delegates to `diff_at_path`/`DrawNodeDiff::Replace`; an absent `at` is
+//! `mutation.target-missing` (Error, empty diff); an `original` identical to the node currently
+//! at `at` is `mutation.no-op` (Warning, empty diff).
 
 use super::mutation::UnflattenNode;
-use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{diff_at_path, DrawNodeDiff, SemioDrawingDiff};
+use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{diff_at_path, node_at, DrawNodeDiff, SemioDrawingDiff};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &UnflattenNode, _base: &SemioDrawingSnapshot) -> SemioDrawingDiff {
-    diff_at_path(&payload.at, DrawNodeDiff::Replace { node: payload.original.clone() })
+pub fn diff(payload: &UnflattenNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
+    let Some(node) = node_at(base, &payload.at) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
+    };
+    if *node == payload.original {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already matches the captured hierarchy.", payload.at.layer));
+    }
+    protocol::MutationOutcome::new(diff_at_path(&payload.at, DrawNodeDiff::Replace { node: payload.original.clone() }))
 }
 //#endregion 🔖️Diff

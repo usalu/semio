@@ -17,7 +17,7 @@ pub struct DeleteElement {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for DeleteElement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "element", kind: "delete-element", record: "DeletedElement" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> crate::artifacts::fem3d::diff::Fem3dDiff {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

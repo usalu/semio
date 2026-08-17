@@ -6,11 +6,44 @@ use semio_framework_plugin::Plugin;
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)` escape
 /// hatch; `.setup()` itself is gone (W1c) — `MathematicalPlayApp::app_schema()` now answers the one
 /// thing it used to survive for, registered automatically by `register_document_app` below.
+///
+/// `.document_app::<…>(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1)
+/// is replaced by two independent surfaces: `.editor::<…>(…)` (mutation-capable) and
+/// `.viewer::<…>(…)` (read-only) for the same `s.mathematical.mathematical@1/*` dialect.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")
         .artifact(crate::artifacts::mathematical::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .document_app::<crate::apps::mathematical::MathematicalPlayApp>(crate::apps::mathematical::create_mathematical_app())
+        .editor::<crate::editor::mathematical::MathematicalPlayApp>(crate::editor::mathematical::create_mathematical_app())
+        .editor_mutation_roster::<crate::editor::mathematical::MathematicalPlayApp>()
+        .viewer::<crate::viewer::mathematical::MathematicalViewer>(crate::viewer::mathematical::create_mathematical_viewer())
+        .viewer_mutation_roster::<crate::viewer::mathematical::MathematicalViewer>()
         .try_build()
 }
+
+//#region 🧪️SurfaceTests
+#[cfg(test)]
+mod surface_tests {
+    //! 🧪️ The editor/viewer pair's own cross-surface guarantees (contract §2.5), using the landed
+    //! framework testkit directly: `semio_framework_plugin::testkit::{assert_viewer_never_mutates,
+    //! assert_editor_and_viewer_share_dialect, new_viewer}`.
+    use crate::editor::mathematical::MathematicalPlayApp;
+    use crate::viewer::mathematical::MathematicalViewer;
+
+    #[test]
+    fn mathematical_viewer_never_mutates() {
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<MathematicalViewer>();
+    }
+
+    #[test]
+    fn mathematical_editor_and_viewer_share_dialect() {
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<MathematicalPlayApp, MathematicalViewer>();
+    }
+
+    #[test]
+    fn mathematical_viewer_instantiates_through_new_viewer() {
+        let _app = semio_framework_plugin::testkit::new_viewer::<MathematicalViewer>();
+    }
+}
+//#endregion 🧪️SurfaceTests

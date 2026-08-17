@@ -218,9 +218,9 @@ impl ConflictOracle for TouchedRegionOracle {
 
 /// @emoji 🔌️ The default `ConflictOracle`, backed by the real `db_conflict::ConflictDetector` now
 /// that `db_conflict` is complete. `db_preview` never sees a landed command's declared
-/// `CommandKind`/`ConflictRule` (per the contract, no crate below `db_artifact` interprets
-/// operation semantics, and a `Preview`/`LandedCommand` here carry only opaque envelopes + touched
-/// sets) — so this oracle builds two synthetic, uniformly-tagged `db_conflict::CommandTouch`es
+/// `CommandKind` (per the contract, no crate below `db_artifact` interprets operation semantics,
+/// and a `Preview`/`LandedCommand` here carry only opaque envelopes + touched sets) — so this
+/// oracle builds two synthetic, uniformly-tagged `db_conflict::CommandTouch`es
 /// wrapping the two touched sets verbatim and asks the real detector whether they conflict. This
 /// still exercises `db_conflict`'s bloom-filter prefilter and touched-region intersection law
 /// exactly as `db_artifact`'s own command-admission path would; only the `CommandKindMatrix`
@@ -255,12 +255,10 @@ const ORACLE_LANDED_TAG: &str = "db-preview::oracle::landed";
 
 impl ConflictOracle for DbConflictOracle {
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool {
-        let synthetic_rule = protocol::ConflictRule::Commutes;
         let mut preview_command = db_conflict::CommandTouch::new(
             protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()),
             protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG),
-            synthetic_rule,
             protocol::HybridLogicalTimestamp::new(0, 0),
         );
         preview_command.touched = preview_touched.clone();
@@ -269,7 +267,6 @@ impl ConflictOracle for DbConflictOracle {
             protocol::MutationId(ORACLE_LANDED_TAG.to_string()),
             protocol::ActorId(ORACLE_LANDED_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_LANDED_TAG),
-            synthetic_rule,
             protocol::HybridLogicalTimestamp::new(1, 0),
         );
         landed_command.touched = landed_touched.clone();

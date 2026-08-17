@@ -1309,6 +1309,13 @@ pub struct DwgViewportEntity {
     pub sun_handle: Option<u64>,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct DwgGeometryEntity {
+    pub common: DwgEntityCommon,
+    pub geometry: DwgLogicalGeometry,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgEntityBody {
@@ -1320,6 +1327,7 @@ pub enum DwgEntityBody {
     Insert(DwgInsertEntity),
     DimensionLinear(DwgLinearDimensionEntity),
     Viewport(DwgViewportEntity),
+    Geometry(DwgGeometryEntity),
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
@@ -2710,7 +2718,17 @@ fn dwg_entity_body_spec() -> dsl::RecordSpec {
             dsl::FieldSpec::new(
                 0,
                 "kind",
-                dsl::Shape::Enum(vec![("line".into(), 0), ("arc".into(), 1), ("lwPolyline".into(), 2), ("blockBegin".into(), 3), ("blockEnd".into(), 4), ("insert".into(), 5), ("dimensionLinear".into(), 6), ("viewport".into(), 7)]),
+                dsl::Shape::Enum(vec![
+                    ("line".into(), 0),
+                    ("arc".into(), 1),
+                    ("lwPolyline".into(), 2),
+                    ("blockBegin".into(), 3),
+                    ("blockEnd".into(), 4),
+                    ("insert".into(), 5),
+                    ("dimensionLinear".into(), 6),
+                    ("viewport".into(), 7),
+                    ("geometry".into(), 8),
+                ]),
             ),
             dsl::FieldSpec::new(1, "line", <DwgLineEntity as dsl::DslField>::shape()).optional(),
             dsl::FieldSpec::new(2, "arc", <DwgArcEntity as dsl::DslField>::shape()).optional(),
@@ -2720,6 +2738,7 @@ fn dwg_entity_body_spec() -> dsl::RecordSpec {
             dsl::FieldSpec::new(6, "insert", <DwgInsertEntity as dsl::DslField>::shape()).optional(),
             dsl::FieldSpec::new(7, "dimension_linear", <DwgLinearDimensionEntity as dsl::DslField>::shape()).optional(),
             dsl::FieldSpec::new(8, "viewport", <DwgViewportEntity as dsl::DslField>::shape()).optional(),
+            dsl::FieldSpec::new(9, "geometry", <DwgGeometryEntity as dsl::DslField>::shape()).optional(),
         ],
     )
 }
@@ -2764,6 +2783,10 @@ impl dsl::DslField for DwgEntityBody {
                 record.fields.insert(0, dsl::FieldValue::Enum(7));
                 record.fields.insert(8, <DwgViewportEntity as dsl::DslField>::to_value(value));
             }
+            Self::Geometry(value) => {
+                record.fields.insert(0, dsl::FieldValue::Enum(8));
+                record.fields.insert(9, <DwgGeometryEntity as dsl::DslField>::to_value(value));
+            }
         }
         dsl::FieldValue::Record(record)
     }
@@ -2779,6 +2802,7 @@ impl dsl::DslField for DwgEntityBody {
             Some(dsl::FieldValue::Enum(5)) => Ok(Self::Insert(<DwgInsertEntity as dsl::DslField>::from_value(record.get(6).ok_or("INSERT body missing")?)?)),
             Some(dsl::FieldValue::Enum(6)) => Ok(Self::DimensionLinear(<DwgLinearDimensionEntity as dsl::DslField>::from_value(record.get(7).ok_or("DIMENSION_LINEAR body missing")?)?)),
             Some(dsl::FieldValue::Enum(7)) => Ok(Self::Viewport(<DwgViewportEntity as dsl::DslField>::from_value(record.get(8).ok_or("VIEWPORT body missing")?)?)),
+            Some(dsl::FieldValue::Enum(8)) => Ok(Self::Geometry(<DwgGeometryEntity as dsl::DslField>::from_value(record.get(9).ok_or("GEOMETRY body missing")?)?)),
             other => Err(format!("unknown entity-body kind {other:?}")),
         }
     }
@@ -3082,18 +3106,46 @@ pub struct DwgLogicalDrawing {
 }
 
 impl DwgLogicalDrawing {
-    pub fn from_native(drawing: &dwg_engine::DwgDrawing) -> Self {
-        let objects = drawing
+    pub fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
+        let mut objects = drawing
+            .layers
+            .iter()
+            .enumerate()
+            .map(|(index, layer)| {
+                let handle = u64::try_from(index).map_err(|_| "DWG layer index exceeds u64")?.checked_add(1).ok_or("DWG layer handle overflow")?;
+                let color_index = u16::from(layer.color);
+                Ok(DwgLogicalObject {
+                    handle,
+                    type_code: 51,
+                    class_name: "LAYER".into(),
+                    category: DwgObjectCategory::TableRecord,
+                    body: Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(DwgLayerTableRecord {
+                        common: DwgTableRecordCommon { name: layer.name.clone(), ..Default::default() },
+                        plottable: true,
+                        lineweight: 29,
+                        color: DwgComplexColor { index: color_index, value: DwgComplexColorValue::ByAci { index: color_index }, ..Default::default() },
+                        ..Default::default()
+                    }))),
+                    ..Default::default()
+                })
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let entity_handle_offset = u64::try_from(objects.len()).map_err(|_| "DWG layer count exceeds u64")?;
+        let entity_objects = drawing
             .entities
             .iter()
             .enumerate()
-            .filter_map(|(index, entity)| {
+            .map(|(index, entity)| {
+                if entity.layer >= drawing.layers.len() {
+                    return Err(format!("DWG entity {index} references missing layer index {}", entity.layer));
+                }
                 let (kind, color_index) = match entity.color {
                     dwg_engine::DwgColor::ByLayer => (DwgEntityColorKind::ByLayer, 256),
                     dwg_engine::DwgColor::ByBlock => (DwgEntityColorKind::ByBlock, 0),
                     dwg_engine::DwgColor::Index(value) => (DwgEntityColorKind::Index, u16::from(value)),
                 };
-                let common = DwgEntityCommon { mode: DwgEntityMode::ModelSpace, color: DwgEntityColor { kind, index: color_index, ..Default::default() }, linetype_scale: 1.0, lineweight: 29, layer_handle: entity.layer as u64, ..Default::default() };
+                let layer_handle = u64::try_from(entity.layer).map_err(|_| format!("DWG entity {index} layer index exceeds u64"))?.checked_add(1).ok_or_else(|| format!("DWG entity {index} layer handle overflow"))?;
+                let common = DwgEntityCommon { mode: DwgEntityMode::ModelSpace, color: DwgEntityColor { kind, index: color_index, ..Default::default() }, linetype_scale: 1.0, lineweight: 29, layer_handle, ..Default::default() };
                 let (type_code, class_name, body) = match &entity.geometry {
                     dwg_engine::DwgGeometry::Line { start, end } => (19, "LINE", DwgEntityBody::Line(DwgLineEntity { common, start: start.to_vec(), end: end.to_vec(), thickness: 0.0, extrusion: vec![0.0, 0.0, 1.0] })),
                     dwg_engine::DwgGeometry::Arc { center, radius, start_angle, end_angle, normal } => {
@@ -3112,12 +3164,27 @@ impl DwgLogicalDrawing {
                             ..Default::default()
                         }),
                     ),
-                    _ => return None,
+                    geometry => {
+                        let (type_code, class_name) = match geometry {
+                            dwg_engine::DwgGeometry::Point { .. } => (27, "POINT"),
+                            dwg_engine::DwgGeometry::Circle { .. } => (18, "CIRCLE"),
+                            dwg_engine::DwgGeometry::Ellipse { .. } => (35, "ELLIPSE"),
+                            dwg_engine::DwgGeometry::Spline { .. } => (36, "SPLINE"),
+                            dwg_engine::DwgGeometry::Text { .. } => (1, "TEXT"),
+                            dwg_engine::DwgGeometry::Face3d { .. } => (28, "3DFACE"),
+                            dwg_engine::DwgGeometry::Polyline3d { .. } => (16, "POLYLINE3D"),
+                            dwg_engine::DwgGeometry::PolyfaceMesh { .. } => (29, "POLYFACEMESH"),
+                            dwg_engine::DwgGeometry::Line { .. } | dwg_engine::DwgGeometry::Arc { .. } | dwg_engine::DwgGeometry::LwPolyline { .. } => unreachable!(),
+                        };
+                        (type_code, class_name, DwgEntityBody::Geometry(DwgGeometryEntity { common, geometry: DwgLogicalGeometry::from_native(geometry) }))
+                    }
                 };
-                Some(DwgLogicalObject { handle: index as u64 + 1, type_code, class_name: class_name.into(), category: DwgObjectCategory::Entity, body: Some(DwgLogicalObjectBody::Entity(body)), ..Default::default() })
+                let handle = entity_handle_offset.checked_add(u64::try_from(index).map_err(|_| "DWG entity index exceeds u64")?).and_then(|value| value.checked_add(1)).ok_or("DWG entity handle overflow")?;
+                Ok(DwgLogicalObject { handle, type_code, class_name: class_name.into(), category: DwgObjectCategory::Entity, body: Some(DwgLogicalObjectBody::Entity(body)), ..Default::default() })
             })
-            .collect();
-        Self { layers: drawing.layers.iter().map(|layer| DwgLogicalLayer { name: layer.name.clone(), color: layer.color }).collect(), objects, extmin: drawing.extmin.to_vec(), extmax: drawing.extmax.to_vec() }
+            .collect::<Result<Vec<_>, String>>()?;
+        objects.extend(entity_objects);
+        Ok(Self { layers: drawing.layers.iter().map(|layer| DwgLogicalLayer { name: layer.name.clone(), color: layer.color }).collect(), objects, extmin: drawing.extmin.to_vec(), extmax: drawing.extmax.to_vec() })
     }
 
     pub fn entities(&self) -> Vec<DwgLogicalEntity> {
@@ -3141,6 +3208,7 @@ impl DwgLogicalDrawing {
                             ..Default::default()
                         },
                     ),
+                    DwgEntityBody::Geometry(value) => (&value.common, value.geometry.clone()),
                     DwgEntityBody::BlockBegin(_) | DwgEntityBody::BlockEnd(_) | DwgEntityBody::Insert(_) | DwgEntityBody::DimensionLinear(_) | DwgEntityBody::Viewport(_) => return None,
                 };
                 let color = match common.color.kind {
@@ -3929,42 +3997,45 @@ fn dwg_version_sentinel(bytes: &[u8]) -> Result<String, String> {
 /// 🗓️🌐 Reads `maint_version` (offset 0x12) and `codepage` (offset 0x13-0x14 LE) from the plain
 /// file-header preamble shared by every AC1015+ DWG file, per LibreDWG's own
 /// `header.spec` field order (`zero_one_or_three@0x0B`, `thumbnail_address@0x0D`,
-/// `dwg_version@0x11`, `maint_version@0x12`, `codepage@0x13`). Graceful zero-defaults when
-/// `bytes` is too short to reach these offsets.
-fn parse_version_header_fields(bytes: &[u8]) -> (u8, u16) {
-    let maintenance_version = bytes.get(0x12).copied().unwrap_or(0);
-    let codepage = bytes.get(0x13..0x15).map(|s| u16::from_le_bytes([s[0], s[1]])).unwrap_or(0);
-    (maintenance_version, codepage)
+/// `dwg_version@0x11`, `maint_version@0x12`, `codepage@0x13`). Truncated headers are rejected.
+fn parse_version_header_fields(bytes: &[u8]) -> Result<(u8, u16), String> {
+    let maintenance_version = *bytes.get(0x12).ok_or("DWG header is too short for maintenance version")?;
+    let codepage = bytes.get(0x13..0x15).ok_or("DWG header is too short for codepage")?;
+    Ok((maintenance_version, u16::from_le_bytes([codepage[0], codepage[1]])))
 }
 
 /// 🗺️ Materializes section pages only while deserializing and projects their standard objects.
-fn decode_drawing(bytes: &[u8]) -> Option<DwgLogicalDrawing> {
-    dwg_engine::decode_r2004_drawing(bytes).ok().map(|value| DwgLogicalDrawing::from_native(&value))
+fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
+    DwgLogicalDrawing::from_native(&dwg_engine::decode_r2004_drawing(bytes)?)
 }
 
 pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let version = dwg_version_sentinel(bytes)?;
-    let (maintenance_version, codepage) = parse_version_header_fields(bytes);
-    let mut drawing = decode_drawing(bytes).or_else(|| dwg_engine::dwg_from_bytes(bytes).ok().map(|value| DwgLogicalDrawing::from_native(&value))).unwrap_or_default();
-    let classes = dwg_engine::decode_r2004_classes(bytes).unwrap_or_default();
+    let (maintenance_version, codepage) = parse_version_header_fields(bytes)?;
+    if version == "AC1015" {
+        let drawing = DwgLogicalDrawing::from_native(&dwg_engine::dwg_from_bytes(bytes)?)?;
+        return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, drawing, ..Default::default() });
+    }
+    let mut drawing = decode_drawing(bytes)?;
+    let classes = dwg_engine::decode_r2004_classes(bytes)?;
     drawing.objects = dwg_engine::decode_r2004_object_identities(bytes, &classes)?;
-    let document = dwg_engine::decode_r2004_document_sections(bytes).ok();
+    let document = dwg_engine::decode_r2004_document_sections(bytes)?;
     Ok(DwgSnapshot {
         schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
         version,
         maintenance_version,
         codepage,
         drawing,
-        header: document.as_ref().map(|value| value.header.clone()).unwrap_or_default(),
+        header: document.header,
         classes,
-        dependencies: document.as_ref().map(|value| value.dependencies.clone()).unwrap_or_default(),
-        summary: document.as_ref().map(|value| value.summary.clone()).unwrap_or_default(),
-        application: document.as_ref().map(|value| value.application.clone()).unwrap_or_default(),
-        template: document.as_ref().map(|value| value.template.clone()).unwrap_or_default(),
-        auxiliary_header: document.as_ref().map(|value| value.auxiliary_header.clone()).unwrap_or_default(),
-        revision_history: document.as_ref().map(|value| value.revision_history.clone()).unwrap_or_default(),
-        preview: document.as_ref().map(|value| value.preview.clone()).unwrap_or_default(),
-        application_history: document.map(|value| value.application_history).unwrap_or_default(),
+        dependencies: document.dependencies,
+        summary: document.summary,
+        application: document.application,
+        template: document.template,
+        auxiliary_header: document.auxiliary_header,
+        revision_history: document.revision_history,
+        preview: document.preview,
+        application_history: document.application_history,
         ..Default::default()
     })
 }
@@ -3999,7 +4070,7 @@ fn validate_export_header(bytes: &[u8], snapshot: &DwgSnapshot) -> Result<(), Dw
     if version != snapshot.version {
         return Err(DwgExportError::HeaderMismatch(format!("version {} != {}", version, snapshot.version)));
     }
-    let (maintenance_version, codepage) = parse_version_header_fields(bytes);
+    let (maintenance_version, codepage) = parse_version_header_fields(bytes).map_err(DwgExportError::Writer)?;
     if maintenance_version != snapshot.maintenance_version {
         return Err(DwgExportError::HeaderMismatch(format!("maintenance version {maintenance_version} != {}", snapshot.maintenance_version)));
     }

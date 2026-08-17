@@ -554,7 +554,7 @@ impl store::ArtifactDsl for JsonSnapshot {
         "stdio.json"
     }
 
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
