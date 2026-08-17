@@ -14,7 +14,7 @@ members = ["semio/py", "semio/engine"]
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",
-    "notebook>=7.3.2",
+    "notebook>=7.6.2",
     "ipykernel>=6.29.5",
     "ruff>=0.15.15",
     "black>=25.1.0",
