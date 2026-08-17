@@ -16,10 +16,10 @@
   },
   "exports": {
     ".": "./📦️index.ts",
-    "./🎨️ui.css": "./🎨️ui.css",
-    "./🎨️palette.css": "./🎨️palette.css",
+    "./🎨️ui.css": "../../🎨️ui.css",
+    "./🎨️palette.css": "../../🎨️palette.css",
     "./tailwind.config": "./🎨️tailwind.config.ts",
-    "./tokens.generated": "./🟦️tokens.generated.ts"
+    "./tokens.generated": "../../🤖️generated/🟦️tokens.generated.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

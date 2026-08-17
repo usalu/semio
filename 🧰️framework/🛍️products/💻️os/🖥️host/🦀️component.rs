@@ -3807,27 +3807,6 @@ pub mod workflow {
         registry_import_media_legacy(artifact_kind, format_kind, data)
     }
 
-    /// @emoji 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 3: what a
-    /// shell should offer for "Export as…" -- every dialect `kind`'s own `ArtifactDialect` can reach
-    /// through the NEW io-mechanism registry directly (`io_entries()`, design.md §3), read live rather
-    /// than a hard-coded format table. Empty today for every real artifact (no subset has migrated
-    /// onto `declare_artifact`/`io_register` yet -- W1-D openQuestion #4) -- callers should treat an
-    /// empty result as "no new-mechanism route registered yet", not "nothing is exportable": the OLD
-    /// `OsArtifactDescriptor.export_formats`/`export_stdio_kinds` remain the fallback list for that
-    /// case, same "coexist, do not merge" shape as `registry_export_media` itself. No shell in this
-    /// repo calls this yet -- see `📓️w1b-report.md` `## openQuestions` for why the wiring stops here,
-    /// at the host boundary, rather than reaching into shell UI or plugin `shell_action` declarations.
-    pub fn os_reachable_export_dialects(kind: &str) -> Vec<ArtifactDialect> {
-        let dialect = crate::registry::os_artifact_dialect(kind);
-        semio_framework::io::io_mechanism::io_entries().into_iter().filter(|entry| entry.from == dialect).map(|entry| entry.into).collect()
-    }
-
-    /// @emoji 🎯️🆕️ Sibling of `os_reachable_export_dialects` for "Open…"/import: every dialect that
-    /// can reach `kind`'s own `ArtifactDialect` through the NEW io-mechanism registry directly.
-    pub fn os_reachable_import_dialects(kind: &str) -> Vec<ArtifactDialect> {
-        let dialect = crate::registry::os_artifact_dialect(kind);
-        semio_framework::io::io_mechanism::io_entries().into_iter().filter(|entry| entry.into == dialect).map(|entry| entry.from).collect()
-    }
     //#endregion 🔖️MediaExport
 
     //#region 🧪️Tests
@@ -4865,7 +4844,7 @@ pub use crate::workflow::{
     MediaContract, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA, Workflow, WorkflowDelivery,
     WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType,
     WorkflowPosition, WorkflowSnapshot, WorkflowValidation, apply_flow_fixture_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot,
-    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_reachable_export_dialects, os_reachable_import_dialects, os_resource_media_capability, os_workflow_to_flow_fixture,
+    export_os_app_instance_media_kind, import_os_app_instance_media_kind, negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_fixture,
     os_workflow_to_node_graph_payload, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot,
     workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value,
 };

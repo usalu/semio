@@ -21,7 +21,7 @@ import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
 const uiCss = readFileSync(resolve(import.meta.dir, "🎨️ui.css"), "utf8");
-const paletteCss = readFileSync(resolve(import.meta.dir, "🎨️palette.css"), "utf8");
+const paletteCss = readFileSync(resolve(import.meta.dir, "../../🎨️palette.css"), "utf8");
 
 describe("palette asset urls", () => {
   it("every @font-face url in palette.css resolves under SEMIO_ASSET_ROOT", () => {

@@ -2208,6 +2208,17 @@
       }
     },
     {
+      "name": "📦️verify📦️package🚦️purity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-package-purity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.15
+      }
+    },
+    {
       "name": "📦️verify🏛️workspace🚦️gate",
       "type": "node-terminal",
       "request": "launch",

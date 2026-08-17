@@ -324,7 +324,7 @@ impl Host {
 pub fn log(level: &str, message: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::log(level, message);
+        crate::component::component::semio::framework::pure::log(level, message);
         return;
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
@@ -335,7 +335,7 @@ pub fn log(level: &str, message: &str) {
 pub fn now_ms() -> i64 {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        return crate::component::now_ms();
+        return crate::component::component::semio::framework::pure::now_ms();
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|elapsed| elapsed.as_millis() as i64).unwrap_or(0)
@@ -345,7 +345,7 @@ pub fn now_ms() -> i64 {
 pub fn trace_span(name: &str) {
     #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::trace_span(name);
+        crate::component::component::semio::framework::pure::trace_span(name);
         return;
     }
     #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]

@@ -85,6 +85,115 @@ pub enum ActionKind {
     Interaction,
 }
 
+//#region 🔖️ArgSchema
+// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6: the
+// stored, engine-neutral shape of one action argument's VALUE. `ActionArgDef.schema` (below, in
+// `🔖️ActionArgs`) is now the ONLY persisted truth; `ActionArgControl` (the renderer's widget
+// vocabulary, unchanged) is DERIVED fresh on every read by `ActionArgDef::control()` — never stored
+// twice. `ArgFormat`'s `ArtifactKind`/`SurfaceApp` variants are this region's one addition beyond
+// `📋️master.md` §3.1's literal format table: the pre-existing host-resolved
+// `ActionArgControl::ArtifactKind`/`SurfaceApp` controls (see `🔖️HostResolvedArgs`) need SOME
+// `ArgSchema` origin now that `control` is derived, not stored, and they are structurally exactly
+// this — a `String` value whose valid set the host resolves from `roles` right before render.
+/// @emoji 🧬️ Semantic refinement of a `String`-typed `ArgSchema` leaf — what KIND of string this is,
+/// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
+/// semantics): a `Color` format could still render as free text in a minimal shell.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ArgFormat {
+    ArtifactRef,
+    WindowId,
+    // 🐛️ `entity_kind`, not `kind`: a struct-variant field literally named `kind` collides with this
+    // enum's own internal tag key (`#[serde(tag = "kind")]`) and serde's derive hard-errors on it.
+    EntityId { entity_kind: String },
+    IconId,
+    Color,
+    Uri,
+    Json,
+    Locale,
+    Terminology,
+    /// 🗂️ Host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind` and
+    /// `ActionArgDef::artifact_kind`.
+    ArtifactKind { roles: Vec<AppRole> },
+    /// 🎭️ Host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp` and
+    /// `ActionArgDef::surface_app`.
+    SurfaceApp { roles: Vec<AppRole>, dialect_arg: String },
+}
+
+/// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
+/// header comment for the D6 stored/derived split.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ArgSchema {
+    String {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        options: Vec<ActionArgOption>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min_len: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max_len: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        pattern: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        format: Option<ArgFormat>,
+    },
+    Number {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[serde(default)]
+        integer: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        unit: Option<String>,
+    },
+    Boolean,
+    Vec3 {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        unit: Option<String>,
+    },
+    Array {
+        items: Box<ArgSchema>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min_items: Option<u32>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max_items: Option<u32>,
+    },
+    Object {
+        fields: Vec<ActionArgDef>,
+    },
+    Any,
+}
+
+/// @emoji 🖼️ How to WIDGET-render an argument beyond what its `ArgSchema` alone implies — consumed by
+/// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
+/// single-bound one needs it to opt in).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ArgPresentation {
+    Slider,
+    IconSelect { classifier_kind: String },
+    Multiline,
+    Hidden,
+}
+//#endregion 🔖️ArgSchema
+
 //#region 🔖️ActionArgs
 /// @emoji 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
@@ -164,8 +273,10 @@ pub enum ActionArgControl {
 }
 
 /// @emoji 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
-/// human `label`, input `control`, whether it is `required`, an optional `default` value, and an optional
-/// `description`. An empty `ActionDefinition.args` (the common case) means a no-argument action.
+/// human `label`, stored value `schema` (see `🔖️ArgSchema` — D6: this is the sole persisted truth,
+/// `control()` below is derived from it), an optional widget `presentation` hint, whether it is
+/// `required`, an optional `default` value, and an optional `description`. An empty
+/// `ActionDefinition.args` (the common case) means a no-argument action.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -174,7 +285,10 @@ pub struct ActionArgDef {
     /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
     #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub label: LocalizedLabel,
-    pub control: ActionArgControl,
+    pub schema: ArgSchema,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub presentation: Option<ArgPresentation>,
     #[serde(default)]
     pub required: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -186,48 +300,54 @@ pub struct ActionArgDef {
 }
 
 impl ActionArgDef {
-    fn with_control(id: impl Into<String>, label: impl Into<LocalizedLabel>, control: ActionArgControl) -> Self {
-        Self { id: id.into(), label: label.into(), control, required: false, default: None, description: None }
+    fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
+        Self { id: id.into(), label: label.into(), schema, presentation: None, required: false, default: None, description: None }
+    }
+
+    fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
+        ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format }
     }
 
     /// @emoji 🔤️ A free-text argument.
     pub fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_control(id, label, ActionArgControl::Text { placeholder: None })
+        Self::with_schema(id, label, Self::plain_string(None))
     }
 
     /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
     pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_control(id, label, ActionArgControl::Number { min: None, max: None, step: None })
+        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
     }
 
     /// @emoji 🎚️ A bounded slider argument.
     pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
-        Self::with_control(id, label, ActionArgControl::Slider { min, max, step: None, unit: None })
+        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
+        def.presentation = Some(ArgPresentation::Slider);
+        def
     }
 
     /// @emoji 🔘️ A boolean toggle argument.
     pub fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_control(id, label, ActionArgControl::Toggle)
+        Self::with_schema(id, label, ArgSchema::Boolean)
     }
 
     /// @emoji 🔽️ A single-choice select argument.
     pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
-        Self::with_control(id, label, ActionArgControl::Select { options })
+        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
     }
 
     /// @emoji 🧭️ A three-component vector argument.
     pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_control(id, label, ActionArgControl::Vec3)
+        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
     }
 
     /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
     pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
-        Self::with_control(id, label, ActionArgControl::ArtifactKind { roles })
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
     }
 
     /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
     pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
-        Self::with_control(id, label, ActionArgControl::SurfaceApp { roles, dialect_arg: dialect_arg.into() })
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
@@ -246,6 +366,167 @@ impl ActionArgDef {
     pub fn describe(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
+    }
+
+    /// @emoji 🎛️ Derives this argument's renderer-facing `ActionArgControl` from its stored `schema` +
+    /// `presentation` — D6 (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
+    /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
+    /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select over
+    /// any format; a `Slider` presentation or a fully-bounded `Number` wins Slider over plain Number.
+    pub fn control(&self) -> ActionArgControl {
+        match &self.schema {
+            ArgSchema::String { options, format, .. } => {
+                if !options.is_empty() {
+                    return ActionArgControl::Select { options: options.clone() };
+                }
+                match format {
+                    Some(ArgFormat::IconId) => ActionArgControl::IconSelect { classifier_kind: "icon".to_string() },
+                    Some(ArgFormat::ArtifactKind { roles }) => ActionArgControl::ArtifactKind { roles: roles.clone() },
+                    Some(ArgFormat::SurfaceApp { roles, dialect_arg }) => ActionArgControl::SurfaceApp { roles: roles.clone(), dialect_arg: dialect_arg.clone() },
+                    _ => ActionArgControl::Text { placeholder: None },
+                }
+            }
+            ArgSchema::Number { min, max, step, unit, .. } => {
+                if matches!(self.presentation, Some(ArgPresentation::Slider)) || (min.is_some() && max.is_some()) {
+                    ActionArgControl::Slider { min: min.unwrap_or(0.0), max: max.unwrap_or(0.0), step: *step, unit: unit.clone() }
+                } else {
+                    ActionArgControl::Number { min: *min, max: *max, step: *step }
+                }
+            }
+            ArgSchema::Boolean => ActionArgControl::Toggle,
+            ArgSchema::Vec3 { .. } => ActionArgControl::Vec3,
+            ArgSchema::Array { .. } | ArgSchema::Object { .. } | ArgSchema::Any => ActionArgControl::Text { placeholder: None },
+        }
+    }
+
+    /// @emoji 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
+    /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
+    /// `description`/`default`.
+    pub fn json_schema(&self) -> serde_json::Value {
+        let mut schema = arg_schema_json_schema(&self.schema);
+        if let Some(map) = schema.as_object_mut() {
+            if let Some(description) = &self.description {
+                map.insert("description".into(), serde_json::Value::String(description.clone()));
+            }
+            if let Some(default) = &self.default {
+                map.insert("default".into(), serde_json::Value::from(default));
+            }
+        }
+        schema
+    }
+}
+
+/// @emoji 🧬️ Tags a leaf/nested `ArgSchema` JSON Schema object with its `ArgFormat` — `x-semio-format`
+/// (the vendor extension every format carries) plus, for the two host-resolved refinements, the
+/// `roles`/`dialect_arg` a host needs to resolve them (`x-semio-roles`/`x-semio-dialect-arg`) — and
+/// the standard `format: "uri"` keyword where JSON Schema already defines one.
+fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
+    let tag = match format {
+        ArgFormat::ArtifactRef => "artifactRef",
+        ArgFormat::WindowId => "windowId",
+        ArgFormat::EntityId { entity_kind } => {
+            map.insert("x-semio-entity-kind".into(), serde_json::Value::String(entity_kind.clone()));
+            "entityId"
+        }
+        ArgFormat::IconId => "iconId",
+        ArgFormat::Color => "color",
+        ArgFormat::Uri => {
+            map.insert("format".into(), serde_json::Value::String("uri".into()));
+            "uri"
+        }
+        ArgFormat::Json => "json",
+        ArgFormat::Locale => "locale",
+        ArgFormat::Terminology => "terminology",
+        ArgFormat::ArtifactKind { roles } => {
+            map.insert("x-semio-roles".into(), serde_json::json!(roles));
+            "artifactKind"
+        }
+        ArgFormat::SurfaceApp { roles, dialect_arg } => {
+            map.insert("x-semio-roles".into(), serde_json::json!(roles));
+            map.insert("x-semio-dialect-arg".into(), serde_json::Value::String(dialect_arg.clone()));
+            "surfaceApp"
+        }
+    };
+    map.insert("x-semio-format".into(), serde_json::Value::String(tag.to_string()));
+}
+
+/// @emoji 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
+/// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
+/// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
+fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
+    match schema {
+        ArgSchema::String { options, min_len, max_len, pattern, format } => {
+            let mut value = serde_json::json!({ "type": "string" });
+            let map = value.as_object_mut().expect("object schema");
+            if !options.is_empty() {
+                map.insert("enum".into(), serde_json::Value::Array(options.iter().map(|option| serde_json::Value::String(option.value.clone())).collect()));
+            }
+            if let Some(min_len) = min_len {
+                map.insert("minLength".into(), serde_json::json!(min_len));
+            }
+            if let Some(max_len) = max_len {
+                map.insert("maxLength".into(), serde_json::json!(max_len));
+            }
+            if let Some(pattern) = pattern {
+                map.insert("pattern".into(), serde_json::Value::String(pattern.clone()));
+            }
+            if let Some(format) = format {
+                apply_arg_format(map, format);
+            }
+            value
+        }
+        ArgSchema::Number { min, max, step, integer, unit } => {
+            let mut value = serde_json::json!({ "type": if *integer { "integer" } else { "number" } });
+            let map = value.as_object_mut().expect("object schema");
+            if let Some(min) = min {
+                map.insert("minimum".into(), serde_json::json!(min));
+            }
+            if let Some(max) = max {
+                map.insert("maximum".into(), serde_json::json!(max));
+            }
+            if let Some(step) = step {
+                map.insert("multipleOf".into(), serde_json::json!(step));
+            }
+            if let Some(unit) = unit {
+                map.insert("x-semio-unit".into(), serde_json::Value::String(unit.clone()));
+            }
+            value
+        }
+        ArgSchema::Boolean => serde_json::json!({ "type": "boolean" }),
+        ArgSchema::Vec3 { unit } => {
+            let mut value = serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 });
+            if let Some(unit) = unit {
+                value.as_object_mut().expect("object schema").insert("x-semio-unit".into(), serde_json::Value::String(unit.clone()));
+            }
+            value
+        }
+        ArgSchema::Array { items, min_items, max_items } => {
+            let mut value = serde_json::json!({ "type": "array", "items": arg_schema_json_schema(items) });
+            let map = value.as_object_mut().expect("object schema");
+            if let Some(min_items) = min_items {
+                map.insert("minItems".into(), serde_json::json!(min_items));
+            }
+            if let Some(max_items) = max_items {
+                map.insert("maxItems".into(), serde_json::json!(max_items));
+            }
+            value
+        }
+        ArgSchema::Object { fields } => {
+            let mut properties = serde_json::Map::new();
+            let mut required = Vec::new();
+            for field in fields {
+                properties.insert(field.id.clone(), field.json_schema());
+                if field.required {
+                    required.push(serde_json::Value::String(field.id.clone()));
+                }
+            }
+            let mut value = serde_json::json!({ "type": "object", "properties": properties, "additionalProperties": false });
+            if !required.is_empty() {
+                value.as_object_mut().expect("object schema").insert("required".into(), serde_json::Value::Array(required));
+            }
+            value
+        }
+        ArgSchema::Any => serde_json::json!({}),
     }
 }
 //#endregion 🔖️ActionArgs
@@ -368,6 +649,200 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
     }
 }
 
+//#region 🔖️ActionSemantics
+// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, §3.1/D5:
+// what an `ActionDefinition`/`CommandDefinition` MEANS to an agent — effects, policy, execution
+// shape, and natural-language framing — kept deliberately separate from `CapabilityDefinition` (the
+// gateway's compiled projection, per D5, which lives in the gateway crate, not here) and from
+// `kernel::Broker`'s own `CapabilityId`/`BrokerCapabilityGrant` (the enforcement primitive
+// `CapabilityPolicy.scopes` below references, never redefines).
+/// @emoji 🎯️ A templated resource-selector string identifying what a capability reads/writes —
+/// documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
+/// `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
+/// resource family never needs a manifest schema change.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ResourceSelector(pub String);
+
+impl ResourceSelector {
+    pub fn new(selector: impl Into<String>) -> Self {
+        Self(selector.into())
+    }
+}
+
+/// @emoji 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
+/// the gateway's policy/preview machinery gates on.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityEffects {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reads: Vec<ResourceSelector>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub writes: Vec<ResourceSelector>,
+    #[serde(default)]
+    pub external: bool,
+    #[serde(default)]
+    pub destructive: bool,
+    #[serde(default)]
+    pub reversible: bool,
+}
+
+/// @emoji 🚦️ When the gateway must pause for human approval before committing an invocation of this
+/// capability.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum ApprovalMode {
+    #[default]
+    Never,
+    WhenDestructive,
+    Always,
+}
+
+/// @emoji 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
+/// `kernel::CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
+/// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
+/// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityPolicy {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scopes: Vec<kernel::CapabilityId>,
+    #[serde(default)]
+    pub approval: ApprovalMode,
+}
+
+/// @emoji 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum PreviewMode {
+    #[default]
+    None,
+    DryRun,
+    Diff,
+}
+
+/// @emoji ↩️ How a committed invocation of this capability can be undone.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum UndoMode {
+    #[default]
+    None,
+    Inverse,
+    /// 🔁️ Undone by invoking a DIFFERENT capability (id, not the gateway's `CapabilityDefinition` —
+    /// that type lives in the gateway crate per D5) rather than a true inverse.
+    Compensate { capability: String },
+}
+
+/// @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IdempotencyMode {
+    Natural,
+    Key,
+    #[default]
+    None,
+}
+
+/// @emoji ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
+/// vs. interactive-call dispatch hint.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum ExecutionClass {
+    #[default]
+    Interactive,
+    Background,
+    Job,
+}
+
+/// @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityExecution {
+    #[serde(default)]
+    pub preview: PreviewMode,
+    #[serde(default)]
+    pub undo: UndoMode,
+    #[serde(default)]
+    pub idempotency: IdempotencyMode,
+    #[serde(default)]
+    pub expected_revision: bool,
+    #[serde(default)]
+    pub cancellable: bool,
+    #[serde(default)]
+    pub class: ExecutionClass,
+}
+
+/// @emoji 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
+/// execution shape, and natural-language framing (`use_when`/`examples`) — everything the MCP
+/// catalog compiler needs beyond the UI-shaped fields already on the definition itself. Defaulted
+/// per-kind by `for_kind` at construction time; `#[serde(default)]` on the owning field additionally
+/// tolerates old serialized manifests with no `semantics` key at all (deserializes to
+/// `ActionSemantics::default()`, the type-level default below — NOT re-derived from `kind`, since
+/// serde field defaults cannot see sibling fields).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ActionSemantics {
+    #[serde(default)]
+    pub effects: CapabilityEffects,
+    #[serde(default)]
+    pub policy: CapabilityPolicy,
+    #[serde(default)]
+    pub execution: CapabilityExecution,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub description: Option<LocalizedLabel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub use_when: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<String>,
+}
+
+impl ActionSemantics {
+    /// @emoji 🏭️ The `📋️master.md` §3.1 defaults table, keyed by `ActionKind`: `Mutation` writes its
+    /// own artifact, is reversible, previews a `Diff`, undoes via `Inverse`, expects a revision, and
+    /// needs `documents.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
+    /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
+    /// `shell.clipboard`; `Shell` is not reversible and needs `shell.navigate`.
+    pub fn for_kind(kind: ActionKind) -> Self {
+        match kind {
+            ActionKind::Mutation => Self {
+                effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], approval: ApprovalMode::WhenDestructive },
+                execution: CapabilityExecution { preview: PreviewMode::Diff, undo: UndoMode::Inverse, expected_revision: true, ..Default::default() },
+                ..Default::default()
+            },
+            ActionKind::View | ActionKind::Interaction => Self {
+                effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}")], ..Default::default() },
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
+                ..Default::default()
+            },
+            ActionKind::History => Self {
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() },
+                ..Default::default()
+            },
+            ActionKind::Clipboard => Self {
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() },
+                ..Default::default()
+            },
+            ActionKind::Shell => Self {
+                effects: CapabilityEffects { reversible: false, ..Default::default() },
+                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() },
+                ..Default::default()
+            },
+        }
+    }
+}
+//#endregion 🔖️ActionSemantics
+
 /// @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -389,6 +864,12 @@ pub struct ActionDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub category: Option<String>,
+    /// 🎯️ Effects/policy/execution/use_when — see `🔖️ActionSemantics`. Defaulted per-`kind` by
+    /// `ActionSemantics::for_kind` in `new`/`new_catalog`; every struct-update-syntax call site
+    /// (`ActionDefinition { .., ..Self::new_catalog(..) }`) inherits it unchanged from the base
+    /// expression, so none of the ~126 declaration sites need touching.
+    #[serde(default)]
+    pub semantics: ActionSemantics,
 }
 
 impl ActionDefinition {
@@ -402,6 +883,7 @@ impl ActionDefinition {
             keys: None,
             in_palette: true,
             category: None,
+            semantics: ActionSemantics::for_kind(kind),
         }
     }
 
@@ -440,6 +922,35 @@ impl ActionDefinition {
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category — see `with_category`.
     pub fn category(self, category: impl Into<String>) -> Self {
         self.with_category(category)
+    }
+
+    /// @emoji 🎯️ Replaces this action's whole `ActionSemantics` wholesale.
+    pub fn semantics(mut self, semantics: ActionSemantics) -> Self {
+        self.semantics = semantics;
+        self
+    }
+
+    /// @emoji ⚠️ Marks this action destructive: sets `effects.destructive` and raises `policy.approval`
+    /// to `WhenDestructive` (a no-op if it was already `Always`).
+    pub fn destructive(mut self) -> Self {
+        self.semantics.effects.destructive = true;
+        if self.semantics.policy.approval == ApprovalMode::Never {
+            self.semantics.policy.approval = ApprovalMode::WhenDestructive;
+        }
+        self
+    }
+
+    /// @emoji 🗣️ Sets the natural-language phrases a capability search should match this action
+    /// against (`ActionSemantics.use_when`).
+    pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// @emoji 📖️ Appends one natural-language usage example (`ActionSemantics.examples`).
+    pub fn example(mut self, example: impl Into<String>) -> Self {
+        self.semantics.examples.push(example.into());
+        self
     }
 }
 
@@ -874,6 +1385,9 @@ pub struct CommandDefinition {
     pub keybindings: Vec<PlatformKeybinding>,
     #[serde(default)]
     pub in_palette: bool,
+    /// 🎯️ See `ActionDefinition.semantics` — same D6/§3.1 field, same defaulting/inheritance story.
+    #[serde(default)]
+    pub semantics: ActionSemantics,
 }
 
 impl CommandDefinition {
@@ -893,6 +1407,7 @@ impl CommandDefinition {
             args: Vec::new(),
             keybindings: Vec::new(),
             in_palette: true,
+            semantics: ActionSemantics::for_kind(kind),
         }
     }
 
@@ -911,6 +1426,33 @@ impl CommandDefinition {
     /// @emoji ⌨️ Attaches one platform-aware command keybinding.
     pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
         self.keybindings.push(keybinding);
+        self
+    }
+
+    /// @emoji 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
+    pub fn semantics(mut self, semantics: ActionSemantics) -> Self {
+        self.semantics = semantics;
+        self
+    }
+
+    /// @emoji ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
+    pub fn destructive(mut self) -> Self {
+        self.semantics.effects.destructive = true;
+        if self.semantics.policy.approval == ApprovalMode::Never {
+            self.semantics.policy.approval = ApprovalMode::WhenDestructive;
+        }
+        self
+    }
+
+    /// @emoji 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
+    pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// @emoji 📖️ Appends one `ActionSemantics.examples` entry — see `ActionDefinition::example`.
+    pub fn example(mut self, example: impl Into<String>) -> Self {
+        self.semantics.examples.push(example.into());
         self
     }
 }
@@ -4546,7 +5088,10 @@ mod app_label_tests {
         RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
         interaction_action_definitions, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
         SELECT_ALL_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID,
+        // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema.
+        ActionSemantics, ApprovalMode, PreviewMode, UndoMode,
     };
+    use crate::ui::kernel;
     use crate::ui::kernel::{Effect, RequestId};
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
     // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
@@ -4565,7 +5110,109 @@ mod app_label_tests {
         assert!(arg.required);
         assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
         assert_eq!(arg.description.as_deref(), Some("scale factor"));
-        assert!(matches!(arg.control, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+        assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+    }
+
+    /// @emoji 🧪️ D6 regression proof (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
+    /// P3-manifest-schema): each of the six `ActionArgDef` builder helpers must still derive EXACTLY
+    /// the `ActionArgControl` it used to construct directly, now that `control` is a stored→derived
+    /// field — this is the whole refactor's regression guard for the ~236 call sites across 33 plugins.
+    #[test]
+    fn six_arg_builder_helpers_derive_the_pre_d6_control() {
+        assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).control(), ActionArgControl::Text { placeholder: None });
+        assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None });
+        assert_eq!(
+            ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).control(),
+            ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None }
+        );
+        assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).control(), ActionArgControl::Toggle);
+        let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X"))];
+        assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).control(), ActionArgControl::Select { options });
+        assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).control(), ActionArgControl::Vec3);
+    }
+
+    /// @emoji 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
+    /// audit) still derive their pre-D6 controls too — `ArgFormat::ArtifactKind`/`SurfaceApp` exist
+    /// solely so these keep working under the new stored/derived split.
+    #[test]
+    fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
+        let roles = vec![AppRole::Viewer];
+        assert_eq!(
+            ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).control(),
+            ActionArgControl::ArtifactKind { roles: roles.clone() }
+        );
+        assert_eq!(
+            ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").control(),
+            ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() }
+        );
+    }
+
+    /// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
+    #[test]
+    fn action_semantics_for_kind_matches_the_defaults_table() {
+        let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
+        assert!(mutation.effects.reversible);
+        assert_eq!(mutation.execution.preview, PreviewMode::Diff);
+        assert_eq!(mutation.execution.undo, UndoMode::Inverse);
+        assert!(mutation.execution.expected_revision);
+        assert_eq!(mutation.policy.approval, ApprovalMode::WhenDestructive);
+        assert_eq!(mutation.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+
+        let view = ActionSemantics::for_kind(ActionKind::View);
+        let interaction = ActionSemantics::for_kind(ActionKind::Interaction);
+        assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
+        assert_eq!(view.policy.scopes, vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())]);
+
+        assert_eq!(ActionSemantics::for_kind(ActionKind::History).policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+        assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
+
+        let shell = ActionSemantics::for_kind(ActionKind::Shell);
+        assert!(!shell.effects.reversible);
+        assert_eq!(shell.policy.scopes, vec![kernel::CapabilityId("shell.navigate".into())]);
+    }
+
+    /// @emoji 🧪️ `ActionDefinition::new`/`new_catalog` populate `semantics` from `kind` automatically,
+    /// and `.destructive()`/`.use_when()`/`.example()` compose on top of it.
+    #[test]
+    fn action_definition_semantics_default_from_kind_and_builders_compose() {
+        let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
+        assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation));
+
+        let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
+            .destructive()
+            .use_when(["delete the selected objects", "remove selection"])
+            .example("deleteSelection removes every currently selected object");
+        assert!(action.semantics.effects.destructive);
+        assert_eq!(action.semantics.policy.approval, ApprovalMode::WhenDestructive);
+        assert_eq!(action.semantics.use_when, vec!["delete the selected objects".to_string(), "remove selection".to_string()]);
+        assert_eq!(action.semantics.examples, vec!["deleteSelection removes every currently selected object".to_string()]);
+    }
+
+    /// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
+    /// leaves for the shapes P3-manifest-schema actually introduces.
+    #[test]
+    fn action_arg_def_json_schema_covers_the_core_shapes() {
+        let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe("a name").json_schema();
+        assert_eq!(text["type"], serde_json::json!("string"));
+        assert_eq!(text["description"], serde_json::json!("a name"));
+
+        let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")), ActionArgOption::new("stl", LocalizedLabel::data("STL"))];
+        let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).json_schema();
+        assert_eq!(select["type"], serde_json::json!("string"));
+        assert_eq!(select["enum"], serde_json::json!(["obj", "stl"]));
+
+        let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).json_schema();
+        assert_eq!(number["type"], serde_json::json!("number"));
+        assert_eq!(number["minimum"], serde_json::json!(0.0));
+        assert_eq!(number["maximum"], serde_json::json!(4.0));
+
+        let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).json_schema();
+        assert_eq!(vec3["type"], serde_json::json!("array"));
+        assert_eq!(vec3["minItems"], serde_json::json!(3));
+        assert_eq!(vec3["maxItems"], serde_json::json!(3));
+
+        let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).json_schema();
+        assert_eq!(toggle["type"], serde_json::json!("boolean"));
     }
 
     #[test]
@@ -5673,7 +6320,7 @@ mod app_label_tests {
         assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
         assert_eq!(action.args.len(), 1);
         assert!(action.args[0].required);
-        match &action.args[0].control {
+        match action.args[0].control() {
             ActionArgControl::Select { options } => {
                 assert_eq!(options.len(), 1);
                 assert_eq!(options[0].value, "welcome-tour");
@@ -6013,7 +6660,26 @@ mod app_label_tests {
         crate::ui::ActionKind::export().unwrap();
         crate::ui::ActionArgOption::export().unwrap();
         crate::ui::ActionArgControl::export().unwrap();
+        // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
+        // `ArgSchema`/`ArgFormat`/`ArgPresentation` are the new stored-truth vocabulary behind
+        // `ActionArgDef.schema`/`.presentation`; `ActionArgControl` above stays exported unchanged
+        // (it is still the renderer's own vocabulary, now derived by `ActionArgDef::control()`).
+        crate::ui::ArgFormat::export().unwrap();
+        crate::ui::ArgSchema::export().unwrap();
+        crate::ui::ArgPresentation::export().unwrap();
         crate::ui::ActionArgDef::export().unwrap();
+        // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing now
+        // carried on every `ActionDefinition`/`CommandDefinition`.
+        crate::ui::ResourceSelector::export().unwrap();
+        crate::ui::CapabilityEffects::export().unwrap();
+        crate::ui::ApprovalMode::export().unwrap();
+        crate::ui::CapabilityPolicy::export().unwrap();
+        crate::ui::PreviewMode::export().unwrap();
+        crate::ui::UndoMode::export().unwrap();
+        crate::ui::IdempotencyMode::export().unwrap();
+        crate::ui::ExecutionClass::export().unwrap();
+        crate::ui::CapabilityExecution::export().unwrap();
+        crate::ui::ActionSemantics::export().unwrap();
         crate::ui::ActionDefinition::export().unwrap();
         crate::ui::ActionRef::export().unwrap();
         crate::ui::ActionAddress::export().unwrap();

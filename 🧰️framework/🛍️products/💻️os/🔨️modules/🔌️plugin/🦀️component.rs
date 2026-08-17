@@ -365,7 +365,7 @@ pub mod app {
         let mut arg_ids = HashSet::new();
         for arg in args {
             assert!(arg_ids.insert(arg.id.clone()), "app {} {} declares duplicate arg id {}", app_id, owner, arg.id);
-            if let semio_framework::ActionArgControl::Select { options } = &arg.control {
+            if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
                 assert!(!options.is_empty(), "app {} {} arg {} is a Select with no options", app_id, owner, arg.id);
             }
         }
@@ -12341,7 +12341,7 @@ pub mod app {
             for arg in &command.args {
                 assert!(!arg.id.trim().is_empty(), "plugin {} command {} has an empty arg id", self.manifest.plugin_id, command.id);
                 assert!(arg_ids.insert(arg.id.clone()), "plugin {} command {} declares duplicate arg id {}", self.manifest.plugin_id, command.id, arg.id);
-                if let semio_framework::ActionArgControl::Select { options } = &arg.control {
+                if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
                     assert!(!options.is_empty(), "plugin {} command {} arg {} is a Select with no options", self.manifest.plugin_id, command.id, arg.id);
                 }
             }

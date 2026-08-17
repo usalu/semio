@@ -1,0 +1,22 @@
+[
+  { "direction": "shell_to_gateway", "variant": "Hello", "frame": {"variant":"hello","bridgeVersion":1,"shellKind":"react","shellSessionId":"shell-1","principalActor":"agent:local","flags":{"relayAppCommands":true,"sharedBackbone":false,"elicit":true}}, "hex": "00010000070000007368656c6c2d310b0000006167656e743a6c6f63616c05" },
+  { "direction": "shell_to_gateway", "variant": "ShellState", "frame": {"variant":"shellState","revision":7,"state":[1,2,3,4]}, "hex": "0107000000000000000400000001020304" },
+  { "direction": "shell_to_gateway", "variant": "ShellStatePatch", "frame": {"variant":"shellStatePatch","revision":8,"baseRevision":7,"patch":[9,9]}, "hex": "0208000000000000000700000000000000020000000909" },
+  { "direction": "shell_to_gateway", "variant": "Instances", "frame": {"variant":"instances","entries":[{"pluginId":"cad","appId":"viewport","instanceId":"inst-1","artifactRef":"cad-1","windowIds":["win-1","win-2"]}]}, "hex": "0301000000030000006361640800000076696577706f727406000000696e73742d31050000006361642d31020000000500000077696e2d310500000077696e2d32" },
+  { "direction": "shell_to_gateway", "variant": "AppFrames", "frame": {"variant":"appFrames","inReplyTo":3,"instanceId":"inst-1","frames":[[1],[2,3]]}, "hex": "04030000000000000006000000696e73742d31020000000100000001020000000203" },
+  { "direction": "shell_to_gateway", "variant": "ShellCommandResult", "frame": {"variant":"shellCommandResult","inReplyTo":5,"ok":true,"fault":null}, "hex": "0505000000000000000100" },
+  { "direction": "shell_to_gateway", "variant": "ShellCommandResult", "frame": {"variant":"shellCommandResult","inReplyTo":6,"ok":false,"fault":"instance-busy"}, "hex": "05060000000000000000010d000000696e7374616e63652d62757379" },
+  { "direction": "shell_to_gateway", "variant": "Approval", "frame": {"variant":"approval","approvalId":"appr_1","decision":"once","note":"looks fine"}, "hex": "0606000000617070725f3101010a0000006c6f6f6b732066696e65" },
+  { "direction": "shell_to_gateway", "variant": "Approval", "frame": {"variant":"approval","approvalId":"appr_2","decision":"deny","note":null}, "hex": "0606000000617070725f320000" },
+  { "direction": "shell_to_gateway", "variant": "Ping", "frame": {"variant":"ping"}, "hex": "07" },
+  { "direction": "shell_to_gateway", "variant": "Bye", "frame": {"variant":"bye"}, "hex": "08" },
+  { "direction": "gateway_to_shell", "variant": "Welcome", "frame": {"variant":"welcome","bridgeVersion":1,"connection":"conn_1","principal":"agent:local"}, "hex": "00010006000000636f6e6e5f310b0000006167656e743a6c6f63616c" },
+  { "direction": "gateway_to_shell", "variant": "ShellCommand", "frame": {"variant":"shellCommand","seq":1,"command":[1,2]}, "hex": "010100000000000000020000000102" },
+  { "direction": "gateway_to_shell", "variant": "AppCommand", "frame": {"variant":"appCommand","seq":2,"instanceId":"inst-1","command":[3]}, "hex": "02020000000000000006000000696e73742d310100000003" },
+  { "direction": "gateway_to_shell", "variant": "ApprovalRequested", "frame": {"variant":"approvalRequested","approvalId":"appr_1","summary":"translate selection by (1,0,0)"}, "hex": "0306000000617070725f311e0000007472616e736c6174652073656c656374696f6e2062792028312c302c3029" },
+  { "direction": "gateway_to_shell", "variant": "ApprovalResolved", "frame": {"variant":"approvalResolved","approvalId":"appr_1","decision":"session"}, "hex": "0406000000617070725f3102" },
+  { "direction": "gateway_to_shell", "variant": "AgentPresence", "frame": {"variant":"agentPresence","active":true,"label":"claude-code","invocationId":"inv-1"}, "hex": "05010b000000636c617564652d636f64650105000000696e762d31" },
+  { "direction": "gateway_to_shell", "variant": "AgentPresence", "frame": {"variant":"agentPresence","active":false,"label":"","invocationId":null}, "hex": "05000000000000" },
+  { "direction": "gateway_to_shell", "variant": "Pong", "frame": {"variant":"pong"}, "hex": "06" },
+  { "direction": "gateway_to_shell", "variant": "Bye", "frame": {"variant":"bye","reason":"shutdown"}, "hex": "070800000073687574646f776e" }
+]

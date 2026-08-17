@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/framework-os-mcp",
+  "version": "0.1.0",
+  "description": "framework · os-mcp — real-client conformance suite for the semio-os-mcp gateway: drives the compiled stdio binary with the installed @modelcontextprotocol/sdk (legacy era) and a hand-rolled raw JSON-RPC client (modern era, D1 dual-era)",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️glue.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "ajv": "^8.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/product/os/modules/mcp"
+  },
+  "bundleKind": "library"
+}

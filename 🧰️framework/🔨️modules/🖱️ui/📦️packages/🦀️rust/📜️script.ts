@@ -9,14 +9,14 @@ import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-const wgpuTargetRoot = join(packageRoot, "🎯️targets", "🧊️wgpu");
+const uiOwnerRoot = join(packageRoot, "..", "..");
 
 //#region 🔖️UiAxesSpec
 type UiAxisEntry = { readonly id: string; readonly variant: string; readonly label?: string };
 type UiAxesSpec = { readonly locales: readonly UiAxisEntry[]; readonly terminologies: readonly UiAxisEntry[] };
 
 function readUiAxes(): UiAxesSpec {
-  return JSON.parse(readFileSync(join(wgpuTargetRoot, "🔣️ui-axes.json"), "utf8")) as UiAxesSpec;
+  return JSON.parse(readFileSync(join(uiOwnerRoot, "🔣️ui-axes.json"), "utf8")) as UiAxesSpec;
 }
 //#endregion 🔖️UiAxesSpec
 

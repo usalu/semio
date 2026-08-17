@@ -3,7 +3,7 @@ name = "semio-framework-os-mcp"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over stdio, the LLM-first entry point into the OS (packet P1a-protocol-core: protocol + errors + schema + transport only, zero dependency on the plugin host/channel/actor crates)"
+description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over stdio + Streamable HTTP, handle table, audit lane, shell bridge codec (packet P1b-http-handles-bridge, extending P1a-protocol-core: zero dependency on the plugin host/channel/actor crates)"
 
 [package.metadata.semio]
 role = "product"
@@ -20,6 +20,20 @@ name = "semio-os-mcp"
 path = "../../📦️bin.rs"
 
 [dependencies]
+# 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the ONLY facet in
+# this crate that depends on `semio-framework` is `🗂️catalog` (it compiles `CapabilityDefinition`s
+# FROM `semio_framework::manifest::{PackageDescriptor, PluginManifest, AppDefinition, …}` — real types
+# P3-manifest-schema landed). Every other facet (protocol/transport/handles/audit/bridge/errors/schema)
+# stays framework-free, per D8/`📓️terra-P1a-report.md` §5 — this dependency does not change that.
+semio-framework = { workspace = true }
+# 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
+# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `📦️glue.rs` lines 15-16, 91-92);
+# they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️component.rs` itself imports them from
+# (its own `use ui_wgpu::wgpu::{…, LocalizedLabel, …, SurfaceKind, …};`). `🧫️fixtures` constructs real
+# `AppDefinition`/`WindowKindDefinition` values and needs both directly, so this crate depends on the
+# SAME workspace-aliased crate manifest does, under its real Rust name (`semio_framework_ui`) — not a
+# new external dependency, an existing internal one already one hop away.
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
 # 🚧️ Default features enable resolve-http/resolve-file, which fail to compile on wasm32 (same
 # rationale as 🧰️framework/🔨️modules/🧬️schema's own Cargo.toml).
 jsonschema = { version = "0.29.1", default-features = false }
@@ -28,3 +42,18 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 blake3 = "1.8.2"
+# 🌐️ Streamable HTTP transport (P1b) — same version/feature style as 🌎️hub's own Cargo.toml, the
+# repo's other axum+tokio product crate.
+axum = { version = "0.8", features = ["ws"] }
+tokio = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+# 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
+# version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).
+tokio-tungstenite = "0.26"
+# 🌊️ `SinkExt`/`StreamExt` for the websocket test client above — same version hub already depends on.
+futures = "0.3"
+# 🧪️ `ServiceExt::oneshot` drives the real `axum::Router` in-process for every HTTP transport test —
+# already in this crate's dependency graph transitively via `axum`; declared directly (util feature
+# only) so tests can `use tower::ServiceExt`.
+tower = { version = "0.5", features = ["util"] }

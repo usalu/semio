@@ -1,0 +1,14 @@
+bun test v1.3.14 (0d9b296a)
+
+🧪️index.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts'
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [70.00ms]

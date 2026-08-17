@@ -1,0 +1,22 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-mcp:test-long --skip-nx-cache
+
+> nx run @semio-tech/framework-os-mcp:test-long
+
+> bun ./📜️script.ts test long
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript
+
+
+ Test Files  5 passed (5)
+      Tests  26 passed (26)
+   Start at  23:16:04
+   Duration  1.12s (transform 1.61s, setup 0ms, import 2.65s, tests 383ms, environment 1ms)
+
+
+
+
+ NX   Successfully ran target test-long for project @semio-tech/framework-os-mcp
+
+
+EXIT:0

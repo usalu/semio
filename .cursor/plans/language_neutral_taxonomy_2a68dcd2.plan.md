@@ -10,37 +10,37 @@ todos:
     status: cancelled
   - id: w1-vocabulary
     content: "W1 (serial, sole writer of taxonomy.json and discovery component.ts): add schemaFormats.wit, schemaFacetKinds with normative-leaf-derived kind resolution, packagingDirNames global plus per-ecosystem, Taxonomy interface fields, validateTaxonomy SchemaFacetKindContract and kebab casing, schemaFacetFormats helper, promote collectPackagingViolations into census problems, extend the taxonomy and burndown tests"
-    status: in_progress
+    status: completed
   - id: w2-policy-engine
     content: "W2 (serial, sole writer of root script.ts): rewrite the five completeness policies to consult schemaFacetFormats, add a wit case to policyLoadSchemaFacetLeaves, add policyPackageLanguagePurityBreaches with its three statutes, register it in export const policy and VerifyScript.runGate, add nx targets; land reporting-only"
-    status: pending
+    status: completed
   - id: m1-plugin-wit
     content: "M1 (parallel): merge the 12 .wit files into plugin/schema/component.wit, repoint all 4 bindgen path literals, fix the dead plugin-world/extension-world references so both crates compile, update the 11 doc-comment path references, and delete the old wit folder"
-    status: pending
+    status: completed
   - id: m2-plugin-ts
     content: "M2 (parallel): hoist registry, window-kits and store out of plugin/packages/typescript to the plugin owner root; update the registry generator output paths, its project.json, plugin-web-materialize.ts and store.ts imports, and request the root script.ts runWorkspaceCodegen path change from the W2 owner"
-    status: pending
+    status: completed
   - id: m3-styling
     content: "M3 (parallel): hoist tokens.json, theme, tailwind, generated, generated.rs, net and vite-elements-assets.ts out of styling/packages/rust and tokens.generated.ts out of the typescript leaf to the styling owner root; update generateStylingArtifacts and the TS and Python generator wrappers"
-    status: pending
+    status: completed
   - id: m4-print
     content: "M4 (parallel): hoist print/packages/typescript/asset to print/assets and print/packages/typescript/template to print/template (29 files) and update the print script.ts path constants"
-    status: pending
+    status: completed
   - id: m5-small-hoists
     content: "M5 (parallel): hoist vscode extension assets, move os/packages/fixtures (20 tracked .bin) to os/fixtures, and move the four non-language sourcing windows package children to sibling dirs under windows"
-    status: pending
+    status: completed
   - id: m6-animate-cache
     content: "M6 (parallel, sole writer of .gitignore): delete the 19 tracked animate partial_movie_files runtime artifacts from the worktree and add an ignore rule; no git commands"
     status: completed
   - id: m7-residual-leaves
     content: "M7 (parallel): hoist the residual neutral leaf files (components.json, ui-axes.json, semio_logo.svg, the css files, the malformed manifest.jsonadapters.manifest.json) and fold dsl/schema/dsl_value_serde.rs into its own folder/component.rs"
-    status: pending
+    status: completed
   - id: w4-flip-and-verify
     content: "W4 (serial, 1 executor plus N parallel Composer 2.5 fixers): flip policyPackageLanguagePurityBreaches to high priority and make census problems fail verify taxonomy enforce; run verify taxonomy enforce, policy, verify-gate, run-many lint, full cargo build and the plugin dev pipeline; dispatch one fixer per independent failure cluster until zero breaches, confirming runtime behaviour with logs"
-    status: pending
+    status: completed
   - id: w5-register-and-close
     content: "W5 (serial, sole writer of launch.json): register the new commands in .vscode/launch.json following existing order, grouping and naming; document the new mechanism in taxonomy.json comments; verify the W0 vs W4 baseline diff shows zero new required leaves; close the ticket with summary and full file list"
-    status: pending
+    status: completed
 isProject: false
 ---
 

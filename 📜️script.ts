@@ -871,6 +871,16 @@ export class VerifyScript extends Script {
         throw new Error(`[verify] ${appSchemaBreaches.length} app-schema policy breach(es)`);
       }
     }
+    console.log("[verify] package language purity…");
+    {
+      const packagePurityBreaches = policyPackageLanguagePurityBreaches(this.root).filter((b) => b.priority === "high");
+      if (packagePurityBreaches.length > 0) {
+        for (const b of packagePurityBreaches) {
+          console.error(`[verify] ${b.kind}: ${b.summary}`);
+        }
+        throw new Error(`[verify] ${packagePurityBreaches.length} package language purity breach(es)`);
+      }
+    }
     console.log("[verify] dissolve-core / plugin-root policies…");
     {
       const dissolveBreaches = [
@@ -2294,15 +2304,18 @@ export class ExamplesScript extends Script {
 
 //#region 🔖️CleanMechanismNewScript
 /**
- * 🏗️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, task 3: permanent taxonomy-v6
- * scaffolders sibling to the framework registry's `new surface` (📇️registry/📜️script.ts, ticket
- * 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) — `new artifact`/`new standard`/`new subset`
- * generate the v6 skeleton design.md §1 describes: a root component with mounts + declaration-fn
- * stub, plus (subset only) 🧬️schema, 🚪️io with the import/export native codec dirs, 👁️viewer,
- * ✏️editor, 📚️examples. Every generated leaf carries the same `SCAFFOLD` marker convention `new
- * surface` uses, so `policyOwnerMountsChildrenBreaches`'s "missing-owner-root" check treats a freshly
- * scaffolded root as what it is — a placeholder, not a finished packet. Idempotent — never overwrites
- * an existing leaf, so re-running after hand-authoring never clobbers real content.
+ * 🏗️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, task 3 (corrected by W1-E per the
+ * ⚠️ CORRECTION in design.md §1): permanent taxonomy-v6 scaffolders sibling to the framework
+ * registry's `new surface` (📇️registry/📜️script.ts, ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET)
+ * — `new artifact`/`new standard`/`new subset` generate the v6 skeleton design.md §1 describes: a
+ * root component with mounts + declaration-fn stub, plus (subset only) 🧬️schema, 🚪️io with the
+ * NATIVE codec dirs directly beneath it (unsplit — `import`/`export` are a FOREIGN-dialect-only
+ * concept and are never scaffolded generically, since a generic scaffolder cannot know which foreign
+ * dialect a not-yet-written subset will consume), 👁️viewer, ✏️editor, 📚️examples. Every generated
+ * leaf carries the same `SCAFFOLD` marker convention `new surface` uses, so
+ * `policyOwnerMountsChildrenBreaches`'s "missing-owner-root" check treats a freshly scaffolded root
+ * as what it is — a placeholder, not a finished packet. Idempotent — never overwrites an existing
+ * leaf, so re-running after hand-authoring never clobbers real content.
  */
 const NEW_SCAFFOLD_MARKER = "SCAFFOLD";
 const NEW_SCAFFOLD_TICKET_PATH = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM";
@@ -2342,25 +2355,23 @@ function newResolveChildDir(parentAbs: string, wantStripped: string): string | u
   return undefined;
 }
 
-/** 🚪️ Scaffolds `${ioRel}` per design.md §1: root leaves, then, per direction/codec pair, one dir per
- * `schemaChildDirs` member — `representationDirs` children for snapshot/diff, a wildcard-slug-ready
- * empty facet marker for mutations/inferences (their real content is per-mutation/per-inference emoji
- * slugs, which `new subset` cannot know in advance). */
+/** 🚪️ Scaffolds `${ioRel}` per the corrected design.md §1 shape: root leaves, then one dir per
+ * `ioSemanticCollectionDirNames` member DIRECTLY under `${ioRel}` (native codec, unsplit — `import`/
+ * `export` express direction and exist only for FOREIGN dialects, which this generic scaffolder
+ * cannot know in advance and therefore never creates) — `representationDirs` children for
+ * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
+ * content is per-mutation/per-inference emoji slugs, which `new subset` also cannot know in advance). */
 function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, created: string[], skipped: string[], dryRun: boolean): void {
   newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/🦀️component.rs`, newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)"), created, skipped, dryRun);
   newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/🟦️component.ts`, newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)"), created, skipped, dryRun);
-  for (const direction of taxonomy.ioDirectionDirs) {
-    const codec = taxonomy.ioDirectionChildDirs[direction];
-    if (!codec) continue;
-    for (const kind of taxonomy.schemaChildDirs ?? []) {
-      const kindRel = `${ioRel}/${direction}/${codec}/${kind}`;
-      if (kind === "🧬️mutations" || kind === "💡️inferences") {
-        newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${taxonomy.windowEmptyFacetFilename}`, newScaffoldEmptyFacetMarkdown(kind), created, skipped, dryRun);
-        continue;
-      }
-      for (const rep of taxonomy.representationDirs ?? []) {
-        newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${rep}/🦀️component.rs`, newScaffoldRustLeaf(`${kind}/${rep} native codec`), created, skipped, dryRun);
-      }
+  for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
+    const kindRel = `${ioRel}/${kind}`;
+    if (kind === "🧬️mutations" || kind === "💡️inferences") {
+      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${taxonomy.windowEmptyFacetFilename}`, newScaffoldEmptyFacetMarkdown(kind), created, skipped, dryRun);
+      continue;
+    }
+    for (const rep of taxonomy.representationDirs ?? []) {
+      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${rep}/🦀️component.rs`, newScaffoldRustLeaf(`${kind}/${rep} native codec`), created, skipped, dryRun);
     }
   }
 }
@@ -15169,7 +15180,7 @@ export function policyCleanArtifactStandardSubsetMechanismBreaches(repoRoot: str
 //#endregion 🔧️PolicyRuleCleanMechanism
 
 /** 📦️ Shape V2 package-folder purity — language-neutral assets must not live inside `📦️packages/<lang>/`. */
-const POLICY_PACKAGE_PURITY_PRIORITY = "medium" as const;
+const POLICY_PACKAGE_PURITY_PRIORITY = "high" as const;
 
 export function policyPackageLanguagePurityBreaches(repoRoot: string): BreachRecord[] {
   const problems = discoverPackageProblems(repoRoot, loadTaxonomy());

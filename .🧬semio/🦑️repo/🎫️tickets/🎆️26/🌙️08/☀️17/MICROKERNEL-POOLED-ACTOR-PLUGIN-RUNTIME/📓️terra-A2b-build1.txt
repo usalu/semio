@@ -1,0 +1,1307 @@
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13: warning: value assigned to `pos` is never read
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+error[E0432]: unresolved import `crate::component::component::exports::semio::framework::reactor::ActivationEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:275:9
+    |
+275 |     use crate::component::component::exports::semio::framework::reactor::ActivationEvent as W;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---------------^^^^^
+    |                                                                          |
+    |                                                                          no `ActivationEvent` in `component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these enums instead
+    |
+275 -     use crate::component::component::exports::semio::framework::reactor::ActivationEvent as W;
+275 +     use crate::component::component::semio::framework::events::ActivationEvent as W;
+    |
+275 -     use crate::component::component::exports::semio::framework::reactor::ActivationEvent as W;
+275 +     use crate::kernel::ActivationEvent as W;
+    |
+275 -     use crate::component::component::exports::semio::framework::reactor::ActivationEvent as W;
+275 +     use semio_framework::kernel::ActivationEvent as W;
+    |
+
+error[E0432]: unresolved import `crate::component::component::exports::semio::framework::reactor::CompletionResult`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:287:9
+    |
+287 |     use crate::component::component::exports::semio::framework::reactor::CompletionResult as W;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------^^^^^
+    |                                                                          |
+    |                                                                          no `CompletionResult` in `component::component::exports::semio::framework::reactor`
+    |
+help: consider importing this enum instead
+    |
+287 -     use crate::component::component::exports::semio::framework::reactor::CompletionResult as W;
+287 +     use crate::component::component::semio::framework::events::CompletionResult as W;
+    |
+
+error[E0432]: unresolved import `crate::component::component::exports::semio::framework::reactor::MessageEndpoint`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:295:9
+    |
+295 |     use crate::component::component::exports::semio::framework::reactor::MessageEndpoint as W;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---------------^^^^^
+    |                                                                          |
+    |                                                                          no `MessageEndpoint` in `component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these items instead
+    |
+295 -     use crate::component::component::exports::semio::framework::reactor::MessageEndpoint as W;
+295 +     use crate::component::component::semio::framework::effects::MessageEndpoint as W;
+    |
+295 -     use crate::component::component::exports::semio::framework::reactor::MessageEndpoint as W;
+295 +     use crate::component::component::semio::framework::events::MessageEndpoint as W;
+    |
+295 -     use crate::component::component::exports::semio::framework::reactor::MessageEndpoint as W;
+295 +     use crate::component::component::semio::framework::types::MessageEndpoint as W;
+    |
+295 -     use crate::component::component::exports::semio::framework::reactor::MessageEndpoint as W;
+295 +     use crate::reactor::MessageEndpoint as W;
+    |
+    = and 1 other candidate
+
+error[E0425]: cannot find type `ActivationEvent` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:274:102
+    |
+274 | ...mework::reactor::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+    |                     ^^^^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::events::ActivationEvent;
+    |
+ 87 +     use crate::kernel::ActivationEvent;
+    |
+ 87 +     use semio_framework::kernel::ActivationEvent;
+    |
+help: if you import `ActivationEvent`, refer to it directly
+    |
+274 - fn wit_activation_to_kernel(reason: crate::component::component::exports::semio::framework::reactor::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+274 + fn wit_activation_to_kernel(reason: ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+    |
+
+error[E0425]: cannot find type `CompletionResult` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:286:102
+    |
+286 | ...ework::reactor::CompletionResult) -> RequestOutcome {
+    |                    ^^^^^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing this enum
+    |
+ 87 +     use crate::component::component::semio::framework::events::CompletionResult;
+    |
+help: if you import `CompletionResult`, refer to it directly
+    |
+286 - fn wit_completion_to_kernel(result: crate::component::component::exports::semio::framework::reactor::CompletionResult) -> RequestOutcome {
+286 + fn wit_completion_to_kernel(result: CompletionResult) -> RequestOutcome {
+    |
+
+error[E0425]: cannot find type `MessageEndpoint` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:294:102
+    |
+294 | ...mework::reactor::MessageEndpoint) -> MessageEndpoint {
+    |                     ^^^^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+294 - fn wit_endpoint_to_kernel(endpoint: crate::component::component::exports::semio::framework::reactor::MessageEndpoint) -> MessageEndpoint {
+294 + fn wit_endpoint_to_kernel(endpoint: MessageEndpoint) -> MessageEndpoint {
+    |
+
+error[E0422]: cannot find struct, variant or union type `SurfaceRef` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:328:23
+    |
+328 |         surface: wit::SurfaceRef { instance, surface: 0 },
+    |                       ^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::events::SurfaceRef;
+    |
+ 87 +     use crate::component::component::semio::framework::ui::SurfaceRef;
+    |
+help: if you import `SurfaceRef`, refer to it directly
+    |
+328 -         surface: wit::SurfaceRef { instance, surface: 0 },
+328 +         surface: SurfaceRef { instance, surface: 0 },
+    |
+
+error[E0425]: cannot find type `PatchOp` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:336:108
+    |
+336 | fn kernel_patch_op_to_wit(op: PatchOp) -> crate::component::component::exports::semio::framework::reactor::PatchOp {
+    |                                                                                                            ^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchOp;
+    |
+ 87 +     use crate::reactor::PatchOp;
+    |
+ 87 +     use semio_framework::kernel::PatchOp;
+    |
+help: if you import `PatchOp`, refer to it directly
+    |
+336 - fn kernel_patch_op_to_wit(op: PatchOp) -> crate::component::component::exports::semio::framework::reactor::PatchOp {
+336 + fn kernel_patch_op_to_wit(op: PatchOp) -> PatchOp {
+    |
+
+error[E0433]: cannot find `PatchOp` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:340:49
+    |
+340 | ...   PatchOp::Replace { path, node } => wit::PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(...
+    |                                               ^^^^^^^ could not find `PatchOp` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchOp;
+    |
+ 87 +     use crate::reactor::PatchOp;
+    |
+ 87 +     use semio_framework::kernel::PatchOp;
+    |
+help: if you import `PatchOp`, refer to it directly
+    |
+340 -         PatchOp::Replace { path, node } => wit::PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
+340 +         PatchOp::Replace { path, node } => PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PatchReplace` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:340:71
+    |
+340 | ...   PatchOp::Replace { path, node } => wit::PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(...
+    |                                                                     ^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchReplace;
+    |
+help: if you import `PatchReplace`, refer to it directly
+    |
+340 -         PatchOp::Replace { path, node } => wit::PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
+340 +         PatchOp::Replace { path, node } => wit::PatchOp::Replace(PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
+    |
+
+error[E0433]: cannot find `PatchOp` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:341:60
+    |
+341 | ...   PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path),...
+    |                                                          ^^^^^^^ could not find `PatchOp` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchOp;
+    |
+ 87 +     use crate::reactor::PatchOp;
+    |
+ 87 +     use semio_framework::kernel::PatchOp;
+    |
+help: if you import `PatchOp`, refer to it directly
+    |
+341 -         PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
+341 +         PatchOp::InsertChild { path, index, node } => PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PatchInsertChild` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:341:86
+    |
+341 | ...   PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path),...
+    |                                                                                    ^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchInsertChild;
+    |
+help: if you import `PatchInsertChild`, refer to it directly
+    |
+341 -         PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
+341 +         PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
+    |
+
+error[E0433]: cannot find `PatchOp` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:342:54
+    |
+342 | ...   PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index...
+    |                                                    ^^^^^^^ could not find `PatchOp` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchOp;
+    |
+ 87 +     use crate::reactor::PatchOp;
+    |
+ 87 +     use semio_framework::kernel::PatchOp;
+    |
+help: if you import `PatchOp`, refer to it directly
+    |
+342 -         PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index }),
+342 +         PatchOp::RemoveChild { path, index } => PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PatchRemoveChild` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:342:80
+    |
+342 | ...   PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index...
+    |                                                                              ^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchRemoveChild;
+    |
+help: if you import `PatchRemoveChild`, refer to it directly
+    |
+342 -         PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index }),
+342 +         PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(PatchRemoveChild { path: path_to_indices(&path), index }),
+    |
+
+error[E0433]: cannot find `PatchOp` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:343:51
+    |
+343 |         PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+    |                                                   ^^^^^^^ could not find `PatchOp` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchOp;
+    |
+ 87 +     use crate::reactor::PatchOp;
+    |
+ 87 +     use semio_framework::kernel::PatchOp;
+    |
+help: if you import `PatchOp`, refer to it directly
+    |
+343 -         PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+343 +         PatchOp::SetProps { path, props } => PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PatchSetProps` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:343:74
+    |
+343 |         PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+    |                                                                          ^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::ui::PatchSetProps;
+    |
+help: if you import `PatchSetProps`, refer to it directly
+    |
+343 -         PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+343 +         PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(PatchSetProps { path: path_to_indices(&path), props }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `OpenWindowEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:365:82
+    |
+365 | ...   Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit::OpenWindowEffect { req: req.0, kind: kind.0, params:...
+    |                                                                                ^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::OpenWindowEffect;
+    |
+help: if you import `OpenWindowEffect`, refer to it directly
+    |
+365 -         Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit::OpenWindowEffect { req: req.0, kind: kind.0, params: pack(&params) }),
+365 +         Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(OpenWindowEffect { req: req.0, kind: kind.0, params: pack(&params) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `CloseWindowEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:366:73
+    |
+366 |         Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit::CloseWindowEffect { window: window.0 as u64 }),
+    |                                                                         ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::CloseWindowEffect;
+    |
+help: if you import `CloseWindowEffect`, refer to it directly
+    |
+366 -         Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit::CloseWindowEffect { window: window.0 as u64 }),
+366 +         Effect::CloseWindow { window } => wit::Effect::CloseWindow(CloseWindowEffect { window: window.0 as u64 }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `NotifyEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:367:64
+    |
+367 |         Effect::Notify { message } => wit::Effect::Notify(wit::NotifyEffect { message }),
+    |                                                                ^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::NotifyEffect;
+    |
+help: if you import `NotifyEffect`, refer to it directly
+    |
+367 -         Effect::Notify { message } => wit::Effect::Notify(wit::NotifyEffect { message }),
+367 +         Effect::Notify { message } => wit::Effect::Notify(NotifyEffect { message }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `ClipboardWriteEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:368:81
+    |
+368 |         Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit::ClipboardWriteEffect { fragment: pack(&fragment) }),
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::ClipboardWriteEffect;
+    |
+help: if you import `ClipboardWriteEffect`, refer to it directly
+    |
+368 -         Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit::ClipboardWriteEffect { fragment: pack(&fragment) }),
+368 +         Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(ClipboardWriteEffect { fragment: pack(&fragment) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `NavigateEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:370:64
+    |
+370 |         Effect::Navigate { uri } => wit::Effect::Navigate(wit::NavigateEffect { uri }),
+    |                                                                ^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::NavigateEffect;
+    |
+help: if you import `NavigateEffect`, refer to it directly
+    |
+370 -         Effect::Navigate { uri } => wit::Effect::Navigate(wit::NavigateEffect { uri }),
+370 +         Effect::Navigate { uri } => wit::Effect::Navigate(NavigateEffect { uri }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `LoadDocumentEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:371:88
+    |
+371 |         Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(wit::LoadDocumentEffect { doc_pack, spr }),
+    |                                                                                        ^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::LoadDocumentEffect;
+    |
+help: if you import `LoadDocumentEffect`, refer to it directly
+    |
+371 -         Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(wit::LoadDocumentEffect { doc_pack, spr }),
+371 +         Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(LoadDocumentEffect { doc_pack, spr }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `OpenExternalUrlEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:372:78
+    |
+372 |         Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(wit::OpenExternalUrlEffect { url }),
+    |                                                                              ^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::OpenExternalUrlEffect;
+    |
+help: if you import `OpenExternalUrlEffect`, refer to it directly
+    |
+372 -         Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(wit::OpenExternalUrlEffect { url }),
+372 +         Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(OpenExternalUrlEffect { url }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SetPanelEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:373:71
+    |
+373 |         Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit::SetPanelEffect { panel_json }),
+    |                                                                       ^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SetPanelEffect;
+    |
+help: if you import `SetPanelEffect`, refer to it directly
+    |
+373 -         Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit::SetPanelEffect { panel_json }),
+373 +         Effect::SetPanel { panel_json } => wit::Effect::SetPanel(SetPanelEffect { panel_json }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `DownloadMediaExportEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:374:118
+    |
+374 | ... => wit::Effect::DownloadMediaExport(wit::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::DownloadMediaExportEffect;
+    |
+help: if you import `DownloadMediaExportEffect`, refer to it directly
+    |
+374 -         Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
+374 +         Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(DownloadMediaExportEffect { filename, mime_type, data, encoding }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `IconRenderExportEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:375:82
+    |
+375 |         Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit::IconRenderExportEffect { items: pack(&items) }),
+    |                                                                                  ^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::IconRenderExportEffect;
+    |
+help: if you import `IconRenderExportEffect`, refer to it directly
+    |
+375 -         Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit::IconRenderExportEffect { items: pack(&items) }),
+375 +         Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(IconRenderExportEffect { items: pack(&items) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `RequestFileOpenEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:376:120
+    |
+376 | ...iple } => wit::Effect::RequestFileOpen(wit::RequestFileOpenEffect { req: req.0, accept, read_as, multiple, import_action }),
+    |                                                ^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RequestFileOpenEffect;
+    |
+help: if you import `RequestFileOpenEffect`, refer to it directly
+    |
+376 -         Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => wit::Effect::RequestFileOpen(wit::RequestFileOpenEffect { req: req.0, accept, read_as, multiple, import_action }),
+376 +         Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => wit::Effect::RequestFileOpen(RequestFileOpenEffect { req: req.0, accept, read_as, multiple, import_action }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `RequestMediaFramesEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:378:50
+    |
+378 | ...   wit::Effect::RequestMediaFrames(wit::RequestMediaFramesEffect { req: req.0, accept, frame_action, done_action, fallback_actio...
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RequestMediaFramesEffect;
+    |
+help: if you import `RequestMediaFramesEffect`, refer to it directly
+    |
+378 -             wit::Effect::RequestMediaFrames(wit::RequestMediaFramesEffect { req: req.0, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) })
+378 +             wit::Effect::RequestMediaFrames(RequestMediaFramesEffect { req: req.0, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) })
+    |
+
+error[E0422]: cannot find struct, variant or union type `SpawnPluginInstanceEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:380:143
+    |
+380 | ... => wit::Effect::SpawnPluginInstance(wit::SpawnPluginInstanceEffect { req: req.0, plugin_id, app_id, os_instance_id, label, docu...
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SpawnPluginInstanceEffect;
+    |
+help: if you import `SpawnPluginInstanceEffect`, refer to it directly
+    |
+380 -         Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => wit::Effect::SpawnPluginInstance(wit::SpawnPluginInstanceEffect { req: req.0, plugin_id, app_id, os_instance_id, label, document_json }),
+380 +         Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => wit::Effect::SpawnPluginInstance(SpawnPluginInstanceEffect { req: req.0, plugin_id, app_id, os_instance_id, label, document_json }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `OpenPluginInstanceEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:381:114
+    |
+381 | ...} => wit::Effect::OpenPluginInstance(wit::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::OpenPluginInstanceEffect;
+    |
+help: if you import `OpenPluginInstanceEffect`, refer to it directly
+    |
+381 -         Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(wit::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
+381 +         Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SetActiveUtilityEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:382:98
+    |
+382 | ...id } => wit::Effect::SetActiveUtility(wit::SetActiveUtilityEffect { window_id, utility_id }),
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SetActiveUtilityEffect;
+    |
+help: if you import `SetActiveUtilityEffect`, refer to it directly
+    |
+382 -         Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(wit::SetActiveUtilityEffect { window_id, utility_id }),
+382 +         Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(SetActiveUtilityEffect { window_id, utility_id }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SetActiveToolEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:383:78
+    |
+383 |         Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(wit::SetActiveToolEffect { tool_id }),
+    |                                                                              ^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SetActiveToolEffect;
+    |
+help: if you import `SetActiveToolEffect`, refer to it directly
+    |
+383 -         Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(wit::SetActiveToolEffect { tool_id }),
+383 +         Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(SetActiveToolEffect { tool_id }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `OpenDialogEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:384:85
+    |
+384 | ...   Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit::OpenDialogEffect { req: req.0, dialog_id, args: a...
+    |                                                                                   ^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::OpenDialogEffect;
+    |
+help: if you import `OpenDialogEffect`, refer to it directly
+    |
+384 -         Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit::OpenDialogEffect { req: req.0, dialog_id, args: args.map(|value| pack(&value)) }),
+384 +         Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(OpenDialogEffect { req: req.0, dialog_id, args: args.map(|value| pack(&value)) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `DispatchActionEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:385:100
+    |
+385 | ...ay_ms } => wit::Effect::DispatchAction(wit::DispatchActionEffect { req: req.0, action, args: args.map(|value| pack(&value)), del...
+    |                                                ^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::DispatchActionEffect;
+    |
+help: if you import `DispatchActionEffect`, refer to it directly
+    |
+385 -         Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit::DispatchActionEffect { req: req.0, action, args: args.map(|value| pack(&value)), delay_ms }),
+385 +         Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(DispatchActionEffect { req: req.0, action, args: args.map(|value| pack(&value)), delay_ms }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `ReplayShellCommandEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:386:96
+    |
+386 | ...} => wit::Effect::ReplayShellCommand(wit::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::ReplayShellCommandEffect;
+    |
+help: if you import `ReplayShellCommandEffect`, refer to it directly
+    |
+386 -         Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
+386 +         Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PatchWorld3dChromeEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:387:159
+    |
+387 | ...} => wit::Effect::PatchWorld3dChrome(wit::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, docum...
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::PatchWorld3dChromeEffect;
+    |
+help: if you import `PatchWorld3dChromeEffect`, refer to it directly
+    |
+387 -         Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => wit::Effect::PatchWorld3dChrome(wit::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids }),
+387 +         Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => wit::Effect::PatchWorld3dChrome(PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `InvokeExtensionEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:388:118
+    |
+388 | ...json } => wit::Effect::InvokeExtension(wit::InvokeExtensionEffect { req: req.0, extension_id, capability, payload: request_json....
+    |                                                ^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::InvokeExtensionEffect;
+    |
+help: if you import `InvokeExtensionEffect`, refer to it directly
+    |
+388 -         Effect::InvokeExtension { req, extension_id, capability, request_json } => wit::Effect::InvokeExtension(wit::InvokeExtensionEffect { req: req.0, extension_id, capability, payload: request_json.into_bytes() }),
+388 +         Effect::InvokeExtension { req, extension_id, capability, request_json } => wit::Effect::InvokeExtension(InvokeExtensionEffect { req: req.0, extension_id, capability, payload: request_json.into_bytes() }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SendMessageEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:389:82
+    |
+389 | ...   Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit::SendMessageEffect { target: kernel_endpoint_to_wit(t...
+    |                                                                                ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SendMessageEffect;
+    |
+help: if you import `SendMessageEffect`, refer to it directly
+    |
+389 -         Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
+389 +         Effect::SendMessage { target, payload } => wit::Effect::SendMessage(SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `PublishEventEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:390:83
+    |
+390 |         Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(wit::PublishEventEffect { topic, payload }),
+    |                                                                                   ^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::PublishEventEffect;
+    |
+help: if you import `PublishEventEffect`, refer to it directly
+    |
+390 -         Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(wit::PublishEventEffect { topic, payload }),
+390 +         Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(PublishEventEffect { topic, payload }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `BlobWriteEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:391:85
+    |
+391 | ...   Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit::BlobWriteEffect { req: req.0, media_type: pack(&m...
+    |                                                                                   ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::BlobWriteEffect;
+    |
+help: if you import `BlobWriteEffect`, refer to it directly
+    |
+391 -         Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit::BlobWriteEffect { req: req.0, media_type: pack(&media_type), bytes }),
+391 +         Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(BlobWriteEffect { req: req.0, media_type: pack(&media_type), bytes }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `BlobLoadEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:392:70
+    |
+392 |         Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit::BlobLoadEffect { req: req.0, hash }),
+    |                                                                      ^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::BlobLoadEffect;
+    |
+help: if you import `BlobLoadEffect`, refer to it directly
+    |
+392 -         Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit::BlobLoadEffect { req: req.0, hash }),
+392 +         Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(BlobLoadEffect { req: req.0, hash }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `HttpRequestEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:393:106
+    |
+393 | ...dy, stream } => wit::Effect::HttpRequest(wit::HttpRequestEffect { req: req.0, method, url, headers, body, streaming: stream }),
+    |                                                  ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::HttpRequestEffect;
+    |
+help: if you import `HttpRequestEffect`, refer to it directly
+    |
+393 -         Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit::HttpRequestEffect { req: req.0, method, url, headers, body, streaming: stream }),
+393 +         Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(HttpRequestEffect { req: req.0, method, url, headers, body, streaming: stream }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `DocumentReadEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:394:83
+    |
+394 | ...   Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(wit::DocumentReadEffect { req: req.0, doc: doc.0 as u64,...
+    |                                                                                 ^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::DocumentReadEffect;
+    |
+help: if you import `DocumentReadEffect`, refer to it directly
+    |
+394 -         Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(wit::DocumentReadEffect { req: req.0, doc: doc.0 as u64, lane }),
+394 +         Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(DocumentReadEffect { req: req.0, doc: doc.0 as u64, lane }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `DocumentWriteEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:395:90
+    |
+395 | ...   Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(wit::DocumentWriteEffect { req: req.0, doc: doc.0...
+    |                                                                                        ^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::DocumentWriteEffect;
+    |
+help: if you import `DocumentWriteEffect`, refer to it directly
+    |
+395 -         Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(wit::DocumentWriteEffect { req: req.0, doc: doc.0 as u64, lane, ops }),
+395 +         Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(DocumentWriteEffect { req: req.0, doc: doc.0 as u64, lane, ops }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `LinkResolveEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:396:76
+    |
+396 |         Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
+    |                                                                            ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::LinkResolveEffect;
+    |
+help: if you import `LinkResolveEffect`, refer to it directly
+    |
+396 -         Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
+396 +         Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(LinkResolveEffect { req: req.0, link: link.into_bytes() }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `RegistryQueryEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:397:88
+    |
+397 | ...   Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit::RegistryQueryEffect { req: req.0, kind, filter...
+    |                                                                                      ^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RegistryQueryEffect;
+    |
+help: if you import `RegistryQueryEffect`, refer to it directly
+    |
+397 -         Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit::RegistryQueryEffect { req: req.0, kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }),
+397 +         Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(RegistryQueryEffect { req: req.0, kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `IoComposeEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:398:80
+    |
+398 | ...   Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit::IoComposeEffect { req: req.0, key: key.into_bytes(), s...
+    |                                                                              ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::IoComposeEffect;
+    |
+help: if you import `IoComposeEffect`, refer to it directly
+    |
+398 -         Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit::IoComposeEffect { req: req.0, key: key.into_bytes(), sources: pack(&sources) }),
+398 +         Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(IoComposeEffect { req: req.0, key: key.into_bytes(), sources: pack(&sources) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `CacheDeriveEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:399:88
+    |
+399 | ...   Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit::CacheDeriveEffect { req: req.0, engine_id, inp...
+    |                                                                                      ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::CacheDeriveEffect;
+    |
+help: if you import `CacheDeriveEffect`, refer to it directly
+    |
+399 -         Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit::CacheDeriveEffect { req: req.0, engine_id, input }),
+399 +         Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(CacheDeriveEffect { req: req.0, engine_id, input }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `CacheReadEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:400:82
+    |
+400 | ...   Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit::CacheReadEffect { req: req.0, engine_id, key: key.in...
+    |                                                                                ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::CacheReadEffect;
+    |
+help: if you import `CacheReadEffect`, refer to it directly
+    |
+400 -         Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit::CacheReadEffect { req: req.0, engine_id, key: key.into_bytes() }),
+400 +         Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(CacheReadEffect { req: req.0, engine_id, key: key.into_bytes() }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SetTimerEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:403:40
+    |
+403 |             wit::Effect::SetTimer(wit::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
+    |                                        ^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SetTimerEffect;
+    |
+help: if you import `SetTimerEffect`, refer to it directly
+    |
+403 -             wit::Effect::SetTimer(wit::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
+403 +             wit::Effect::SetTimer(SetTimerEffect { id, after_ms: after_ms as u32, repeat })
+    |
+
+error[E0422]: cannot find struct, variant or union type `SpawnJobEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:405:88
+    |
+405 | ...   Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit::SpawnJobEffect { job, kind, input, placement: ...
+    |                                                                                      ^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SpawnJobEffect;
+    |
+help: if you import `SpawnJobEffect`, refer to it directly
+    |
+405 -         Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
+405 +         Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `CancelJobEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:406:66
+    |
+406 |         Effect::CancelJob { job } => wit::Effect::CancelJob(wit::CancelJobEffect { job }),
+    |                                                                  ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::CancelJobEffect;
+    |
+help: if you import `CancelJobEffect`, refer to it directly
+    |
+406 -         Effect::CancelJob { job } => wit::Effect::CancelJob(wit::CancelJobEffect { job }),
+406 +         Effect::CancelJob { job } => wit::Effect::CancelJob(CancelJobEffect { job }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `RespondEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:407:70
+    |
+407 | ...   Effect::Respond { req, result } => wit::Effect::Respond(wit::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respo...
+    |                                                                    ^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RespondEffect;
+    |
+help: if you import `RespondEffect`, refer to it directly
+    |
+407 -         Effect::Respond { req, result } => wit::Effect::Respond(wit::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
+407 +         Effect::Respond { req, result } => wit::Effect::Respond(RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `StorageReadEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:408:75
+    |
+408 |         Effect::StorageRead { req, key } => wit::Effect::StorageRead(wit::StorageReadEffect { req: req.0, key }),
+    |                                                                           ^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::StorageReadEffect;
+    |
+help: if you import `StorageReadEffect`, refer to it directly
+    |
+408 -         Effect::StorageRead { req, key } => wit::Effect::StorageRead(wit::StorageReadEffect { req: req.0, key }),
+408 +         Effect::StorageRead { req, key } => wit::Effect::StorageRead(StorageReadEffect { req: req.0, key }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `StorageWriteEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:409:84
+    |
+409 | ...   Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(wit::StorageWriteEffect { req: req.0, key, value: bytes...
+    |                                                                                  ^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::StorageWriteEffect;
+    |
+help: if you import `StorageWriteEffect`, refer to it directly
+    |
+409 -         Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(wit::StorageWriteEffect { req: req.0, key, value: bytes }),
+409 +         Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(StorageWriteEffect { req: req.0, key, value: bytes }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `StorageDeleteEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:410:79
+    |
+410 |         Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(wit::StorageDeleteEffect { req: req.0, key }),
+    |                                                                               ^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::StorageDeleteEffect;
+    |
+help: if you import `StorageDeleteEffect`, refer to it directly
+    |
+410 -         Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(wit::StorageDeleteEffect { req: req.0, key }),
+410 +         Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(StorageDeleteEffect { req: req.0, key }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `RequestCapabilityEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:411:94
+    |
+411 | ...y } => wit::Effect::RequestCapability(wit::RequestCapabilityEffect { req: req.0, id: capability.id.0, scope: capability.scope, r...
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RequestCapabilityEffect;
+    |
+help: if you import `RequestCapabilityEffect`, refer to it directly
+    |
+411 -         Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(wit::RequestCapabilityEffect { req: req.0, id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional }),
+411 +         Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(RequestCapabilityEffect { req: req.0, id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `ReleaseCapabilityEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:412:81
+    |
+412 |         Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit::ReleaseCapabilityEffect { id: id.0 }),
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::ReleaseCapabilityEffect;
+    |
+help: if you import `ReleaseCapabilityEffect`, refer to it directly
+    |
+412 -         Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit::ReleaseCapabilityEffect { id: id.0 }),
+412 +         Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(ReleaseCapabilityEffect { id: id.0 }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SubscribeEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:413:68
+    |
+413 |         Effect::Subscribe { topic } => wit::Effect::Subscribe(wit::SubscribeEffect { topic }),
+    |                                                                    ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SubscribeEffect;
+    |
+help: if you import `SubscribeEffect`, refer to it directly
+    |
+413 -         Effect::Subscribe { topic } => wit::Effect::Subscribe(wit::SubscribeEffect { topic }),
+413 +         Effect::Subscribe { topic } => wit::Effect::Subscribe(SubscribeEffect { topic }),
+    |
+
+error[E0422]: cannot find struct, variant or union type `SubscribeEffect` in module `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:414:72
+    |
+414 |         Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit::SubscribeEffect { topic }),
+    |                                                                        ^^^^^^^^^^^^^^^ not found in `wit`
+    |
+help: consider importing this struct
+    |
+ 87 +     use crate::component::component::semio::framework::effects::SubscribeEffect;
+    |
+help: if you import `SubscribeEffect`, refer to it directly
+    |
+414 -         Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit::SubscribeEffect { topic }),
+414 +         Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(SubscribeEffect { topic }),
+    |
+
+error[E0425]: cannot find type `MessageEndpoint` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:418:122
+    |
+418 | ...mework::reactor::MessageEndpoint {
+    |                     ^^^^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+418 - fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> crate::component::component::exports::semio::framework::reactor::MessageEndpoint {
+418 + fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> MessageEndpoint {
+    |
+
+error[E0433]: cannot find `MessageEndpoint` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:421:53
+    |
+421 |         MessageEndpoint::Shell { instance } => wit::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+    |                                                     ^^^^^^^^^^^^^^^ could not find `MessageEndpoint` in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+421 -         MessageEndpoint::Shell { instance } => wit::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+421 +         MessageEndpoint::Shell { instance } => MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+    |
+
+error[E0433]: cannot find `MessageEndpoint` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:422:51
+    |
+422 |         MessageEndpoint::Backbone { uri } => wit::MessageEndpoint::Backbone(uri),
+    |                                                   ^^^^^^^^^^^^^^^ could not find `MessageEndpoint` in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+422 -         MessageEndpoint::Backbone { uri } => wit::MessageEndpoint::Backbone(uri),
+422 +         MessageEndpoint::Backbone { uri } => MessageEndpoint::Backbone(uri),
+    |
+
+error[E0433]: cannot find `MessageEndpoint` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:423:56
+    |
+423 |         MessageEndpoint::PluginInstance { id } => wit::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+    |                                                        ^^^^^^^^^^^^^^^ could not find `MessageEndpoint` in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+423 -         MessageEndpoint::PluginInstance { id } => wit::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+423 +         MessageEndpoint::PluginInstance { id } => MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+    |
+
+error[E0433]: cannot find `MessageEndpoint` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:424:51
+    |
+424 |         MessageEndpoint::Extension { id } => wit::MessageEndpoint::Extension(id),
+    |                                                   ^^^^^^^^^^^^^^^ could not find `MessageEndpoint` in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+424 -         MessageEndpoint::Extension { id } => wit::MessageEndpoint::Extension(id),
+424 +         MessageEndpoint::Extension { id } => MessageEndpoint::Extension(id),
+    |
+
+error[E0433]: cannot find `MessageEndpoint` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:425:49
+    |
+425 |         MessageEndpoint::Topic { name } => wit::MessageEndpoint::Topic(name),
+    |                                                 ^^^^^^^^^^^^^^^ could not find `MessageEndpoint` in `wit`
+    |
+help: consider importing one of these items
+    |
+ 87 +     use crate::component::component::semio::framework::effects::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::events::MessageEndpoint;
+    |
+ 87 +     use crate::component::component::semio::framework::types::MessageEndpoint;
+    |
+ 87 +     use crate::reactor::MessageEndpoint;
+    |
+    = and 1 other candidate
+help: if you import `MessageEndpoint`, refer to it directly
+    |
+425 -         MessageEndpoint::Topic { name } => wit::MessageEndpoint::Topic(name),
+425 +         MessageEndpoint::Topic { name } => MessageEndpoint::Topic(name),
+    |
+
+error[E0425]: cannot find type `JobPlacement` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:429:146
+    |
+429 | ...amework::reactor::JobPlacement {
+    |                      ^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::effects::JobPlacement;
+    |
+ 87 +     use crate::kernel::JobPlacement;
+    |
+ 87 +     use semio_framework::kernel::JobPlacement;
+    |
+help: if you import `JobPlacement`, refer to it directly
+    |
+429 - fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> crate::component::component::exports::semio::framework::reactor::JobPlacement {
+429 + fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> JobPlacement {
+    |
+
+error[E0433]: cannot find `JobPlacement` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:432:63
+    |
+432 |         semio_framework::kernel::JobPlacement::Inline => wit::JobPlacement::Inline,
+    |                                                               ^^^^^^^^^^^^ could not find `JobPlacement` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::effects::JobPlacement;
+    |
+ 87 +     use crate::kernel::JobPlacement;
+    |
+ 87 +     use semio_framework::kernel::JobPlacement;
+    |
+help: if you import `JobPlacement`, refer to it directly
+    |
+432 -         semio_framework::kernel::JobPlacement::Inline => wit::JobPlacement::Inline,
+432 +         semio_framework::kernel::JobPlacement::Inline => JobPlacement::Inline,
+    |
+
+error[E0433]: cannot find `JobPlacement` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:433:65
+    |
+433 |         semio_framework::kernel::JobPlacement::Isolated => wit::JobPlacement::Isolated,
+    |                                                                 ^^^^^^^^^^^^ could not find `JobPlacement` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::effects::JobPlacement;
+    |
+ 87 +     use crate::kernel::JobPlacement;
+    |
+ 87 +     use semio_framework::kernel::JobPlacement;
+    |
+help: if you import `JobPlacement`, refer to it directly
+    |
+433 -         semio_framework::kernel::JobPlacement::Isolated => wit::JobPlacement::Isolated,
+433 +         semio_framework::kernel::JobPlacement::Isolated => JobPlacement::Isolated,
+    |
+
+error[E0433]: cannot find `JobPlacement` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:434:66
+    |
+434 |         semio_framework::kernel::JobPlacement::Exclusive => wit::JobPlacement::Exclusive,
+    |                                                                  ^^^^^^^^^^^^ could not find `JobPlacement` in `wit`
+    |
+help: consider importing one of these enums
+    |
+ 87 +     use crate::component::component::semio::framework::effects::JobPlacement;
+    |
+ 87 +     use crate::kernel::JobPlacement;
+    |
+ 87 +     use semio_framework::kernel::JobPlacement;
+    |
+help: if you import `JobPlacement`, refer to it directly
+    |
+434 -         semio_framework::kernel::JobPlacement::Exclusive => wit::JobPlacement::Exclusive,
+434 +         semio_framework::kernel::JobPlacement::Exclusive => JobPlacement::Exclusive,
+    |
+
+error[E0425]: cannot find type `RespondResult` in module `crate::component::component::exports::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:438:126
+    |
+438 | ...amework::reactor::RespondResult {
+    |                      ^^^^^^^^^^^^^ not found in `crate::component::component::exports::semio::framework::reactor`
+    |
+help: consider importing this enum
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RespondResult;
+    |
+help: if you import `RespondResult`, refer to it directly
+    |
+438 - fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> crate::component::component::exports::semio::framework::reactor::RespondResult {
+438 + fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> RespondResult {
+    |
+
+error[E0433]: cannot find `RespondResult` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:441:43
+    |
+441 |         RequestOutcome::Ok(bytes) => wit::RespondResult::Ok(bytes),
+    |                                           ^^^^^^^^^^^^^ could not find `RespondResult` in `wit`
+    |
+help: consider importing this enum
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RespondResult;
+    |
+help: if you import `RespondResult`, refer to it directly
+    |
+441 -         RequestOutcome::Ok(bytes) => wit::RespondResult::Ok(bytes),
+441 +         RequestOutcome::Ok(bytes) => RespondResult::Ok(bytes),
+    |
+
+error[E0433]: cannot find `RespondResult` in `wit`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:442:44
+    |
+442 |         RequestOutcome::Err(bytes) => wit::RespondResult::Fault(bytes),
+    |                                            ^^^^^^^^^^^^^ could not find `RespondResult` in `wit`
+    |
+help: consider importing this enum
+    |
+ 87 +     use crate::component::component::semio::framework::effects::RespondResult;
+    |
+help: if you import `RespondResult`, refer to it directly
+    |
+442 -         RequestOutcome::Err(bytes) => wit::RespondResult::Fault(bytes),
+442 +         RequestOutcome::Err(bytes) => RespondResult::Fault(bytes),
+    |
+
+warning: unused import: `crate::component::component::exports::semio::framework::reactor as wit`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:93:9
+   |
+93 |     use crate::component::component::exports::semio::framework::reactor as wit;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0004]: non-exhaustive patterns: `semio_framework::kernel::Event::Activate { .. }` not covered
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:99:15
+    |
+ 99 |         match wit_event_to_kernel(event) {
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^ pattern `semio_framework::kernel::Event::Activate { .. }` not covered
+    |
+note: `semio_framework::kernel::Event` defined here
+   --> 🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/../🎠️kernel/🦀️component.rs:788:1
+    |
+788 | pub enum Event {
+    | ^^^^^^^^^^^^^^
+...
+803 |     Activate { reason: ActivationEvent },
+    |     -------- not covered
+    = note: the matched value is of type `semio_framework::kernel::Event`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+    |
+143 ~             Event::SuspendRequest | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {},
+144 +             semio_framework::kernel::Event::Activate { .. } => todo!()
+    |
+
+Some errors have detailed explanations: E0004, E0422, E0425, E0432, E0433.
+For more information about an error, try `rustc --explain E0004`.
+warning: `semio-framework-plugin` (lib) generated 1 warning
+error: could not compile `semio-framework-plugin` (lib) due to 74 previous errors; 1 warning emitted

@@ -1,0 +1,21 @@
+=== modern tools/list ===
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 107
+date: Mon, 17 Aug 2026 21:19:43 GMT
+
+{"jsonrpc":"2.0","id":1,"result":{"cacheScope":"public","resultType":"complete","tools":[],"ttlMs":300000}}
+=== legacy initialize ===
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 248
+date: Mon, 17 Aug 2026 21:19:43 GMT
+
+{"jsonrpc":"2.0","id":1,"result":{"capabilities":{"prompts":{"listChanged":true},"resources":{"listChanged":true,"subscribe":true},"tools":{"listChanged":true}},"protocolVersion":"2025-11-25","serverInfo":{"name":"semio-os-mcp","version":"0.1.0"}}}
+=== evil origin rejected ===
+HTTP/1.1 403 Forbidden
+content-type: text/plain; charset=utf-8
+content-length: 18
+date: Mon, 17 Aug 2026 21:19:43 GMT
+
+origin not allowed

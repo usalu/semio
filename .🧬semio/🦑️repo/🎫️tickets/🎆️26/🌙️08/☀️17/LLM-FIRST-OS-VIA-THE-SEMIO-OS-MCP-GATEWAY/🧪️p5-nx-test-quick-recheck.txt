@@ -1,0 +1,22 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-mcp:test-quick
+
+> nx run @semio-tech/framework-os-mcp:test-quick
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript
+
+
+ Test Files  5 passed (5)
+      Tests  26 passed (26)
+   Start at  23:15:26
+   Duration  2.13s (transform 2.69s, setup 0ms, import 4.73s, tests 1.81s, environment 1ms)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/framework-os-mcp
+
+
+EXIT:0

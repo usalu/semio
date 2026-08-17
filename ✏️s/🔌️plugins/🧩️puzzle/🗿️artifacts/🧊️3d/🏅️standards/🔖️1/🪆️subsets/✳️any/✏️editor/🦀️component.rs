@@ -3217,8 +3217,8 @@ mod tests {
         assert_eq!(dialog.title.resolve(terminology, locale), "Baukomponente hinzufügen");
         assert_eq!(dialog.submit_label.resolve(terminology, locale), "Hinzufügen");
         let arg = dialog.args.iter().find(|entry| entry.id == "objectKind").expect("objectKind arg");
-        let option = match &arg.control {
-            semio_framework_plugin::ActionArgControl::Select { options } => options.iter().find(|entry| entry.value == "Object").expect("Object option"),
+        let option = match arg.control() {
+            semio_framework_plugin::ActionArgControl::Select { options } => options.iter().find(|entry| entry.value == "Object").cloned().expect("Object option"),
             _ => panic!("objectKind arg is not a select"),
         };
         assert_eq!(option.label.resolve(terminology, locale), "Baukomponente");

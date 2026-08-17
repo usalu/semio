@@ -1,0 +1,33 @@
+   Compiling syn v2.0.117
+   Compiling serde_derive_internals v0.29.1
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling thiserror v2.0.18
+   Compiling serde v1.0.228
+   Compiling schemars_derive v0.8.22
+   Compiling schemars v0.8.22
+   Compiling semio-framework-os-shell v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 58.11s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_framework_os_shell-072346cecfc2b117)
+
+running 11 tests
+test component::tests::dialog_stacking_open_and_close_top ... ok
+test component::tests::dock_reset_clears_override_and_emits_event ... ok
+test component::tests::focus_after_closing_focused_window_reassigns ... ok
+test component::tests::mode_tool_mutual_exclusion_tool_clears_utility ... ok
+test component::tests::panel_path_memory_keys_do_not_clobber_each_other ... ok
+test component::tests::reduce_is_pure_and_increments_revision ... ok
+test component::tests::reduce_rejects_leave_state_and_revision_untouched ... ok
+test component::tests::set_panel_size_rejects_invalid_values ... ok
+test component::tests::write_fixtures ... ignored
+test component::tests::shell_capabilities_declaration_order_matches_enum ... ok
+test component::tests::fixtures_produce_expected_output ... ok
+
+test result: ok. 10 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests semio_framework_os_shell
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

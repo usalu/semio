@@ -1,0 +1,146 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1013:51
+     |
+1013 |         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1013 -         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+1013 +         let meta = serde_json::json!({ "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1014:37
+     |
+1014 |         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1014 -         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+1014 +         let list = server.dispatch(&tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1018:37
+     |
+1018 | ...   let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio:/...
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1018 -         let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1018 +         let read = server.dispatch(&tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1022:43
+     |
+1022 | ...   let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri...
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1022 -         let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1022 +         let subscribed = server.dispatch(&tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: `semio-framework-os-mcp` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-os-mcp --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.29s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_framework_os_mcp-6a45a06064e16bbb)
+
+running 77 tests
+test bridge::quick::decode_rejects_an_unknown_tag ... ok
+test bridge::quick::decode_rejects_trailing_bytes ... ok
+test bridge::quick::decode_rejects_truncated_buffers ... ok
+test audit::quick::default_audit_dir_ends_with_the_frozen_path_suffix ... ok
+test errors::quick::code_serializes_screaming_snake ... ok
+test audit::quick::redact_input_replaces_only_sensitive_keys_case_insensitively ... ok
+test audit::quick::hash_input_is_deterministic_for_the_same_value ... ok
+test errors::quick::implements_std_error_via_thiserror ... ok
+test errors::quick::json_rpc_parts_map_input_invalid_to_invalid_params ... ok
+test errors::quick::every_code_round_trips_through_json ... ok
+test errors::quick::retryable_flag_round_trips ... ok
+test audit::quick::in_memory_sink_preserves_append_order ... ok
+test errors::quick::tool_error_payload_carries_all_fields ... ok
+test audit::quick::sensitive_field_never_reaches_the_sink ... ok
+test bridge::quick::every_gateway_to_shell_variant_round_trips_through_encode_decode ... ok
+test handles::quick::a_handle_past_its_ttl_is_not_found_and_removed ... ok
+test handles::quick::cross_session_resolve_is_permission_denied_not_a_leak ... ok
+test handles::quick::idempotent_replay_reuses_the_cached_report_and_flags_it ... ok
+test handles::quick::gc_expired_removes_only_expired_records_and_reports_the_count ... ok
+test handles::quick::different_idempotency_keys_never_collide ... ok
+test handles::quick::expired_idempotency_entry_recomputes ... ok
+test handles::quick::every_kind_mints_with_its_frozen_prefix ... ok
+test handles::quick::mark_terminal_rejects_a_non_job_handle ... ok
+test handles::quick::mark_terminal_extends_a_job_handle_by_one_hour_from_now ... ok
+test handles::quick::resolving_an_unknown_handle_is_not_found ... ok
+test handles::quick::mint_then_resolve_by_the_owning_session_succeeds ... ok
+test handles::quick::session_handle_ttl_slides_forward_on_every_resolve ... ok
+test protocol::long::batch_of_all_notifications_yields_no_responses ... ok
+test bridge::quick::every_shell_to_gateway_variant_round_trips_through_encode_decode ... ok
+test protocol::quick::calling_an_unregistered_tool_is_a_protocol_error ... ok
+test protocol::long::a_full_modern_session_lists_reads_and_subscribes_resources_end_to_end ... ok
+test protocol::quick::a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true ... ok
+test protocol::quick::era_is_decided_by_the_opening_request_of_the_connection ... ok
+test protocol::quick::absent_id_field_parses_as_a_notification ... ok
+test protocol::quick::batch_round_trips_through_json ... ok
+test protocol::quick::explicit_null_id_is_not_a_notification ... ok
+test protocol::quick::legacy_initialize_handshake_echoes_a_supported_client_version ... ok
+test protocol::quick::legacy_initialize_with_unknown_version_falls_back_to_latest_rather_than_erroring ... ok
+test protocol::quick::modern_request_is_routed_via_meta_version_and_recorded_as_modern_era ... ok
+test protocol::quick::registry_rejects_registration_of_an_invalid_tool_name ... ok
+test protocol::quick::server_discover_shape_carries_protocol_version_capabilities_and_server_info ... ok
+test protocol::quick::server_discover_without_meta_defaults_to_the_newest_supported_version ... ok
+test protocol::quick::single_request_round_trips_through_json ... ok
+test protocol::quick::tool_name_charset_accepts_and_rejects_correctly ... ok
+test protocol::quick::unknown_method_is_method_not_found ... ok
+test protocol::quick::unsupported_meta_version_returns_dash_32022_with_supported_list ... ok
+test root::quick::every_facet_re_export_is_reachable_from_the_crate_root ... ok
+test root::quick::http_options_round_trip_into_a_transport_bind_addr_and_token ... ok
+test root::quick::p1b_facet_re_exports_are_reachable_from_the_crate_root_too ... ok
+test root::quick::stdio_options_default_to_empty ... ok
+test audit::quick::file_sink_appends_one_json_line_per_event_and_creates_its_directory ... ok
+test protocol::quick::catalog_hash_is_stable_under_reordering_and_changes_when_the_name_set_changes ... ok
+test bridge::quick::every_fixture_round_trips_through_the_rust_codec ... ok
+test schema::quick::schemas_cover_exactly_the_seven_gateway_wire_types ... ok
+test transport::long::get_with_no_last_event_id_replays_every_buffered_notification ... ok
+test transport::long::get_with_last_event_id_resumes_after_that_id_only ... ok
+test transport::long::incorrect_bearer_token_is_401 ... ok
+test transport::long::legacy_initialize_over_http_returns_200_and_negotiates_legacy ... ok
+test transport::long::a_notification_over_http_is_202_accepted_with_no_body ... ok
+test transport::long::an_evil_origin_is_rejected_with_403 ... ok
+test transport::long::a_loopback_origin_is_accepted ... ok
+test transport::long::mismatched_protocol_version_header_and_body_is_400_header_mismatch ... ok
+test transport::long::missing_bearer_token_is_401 ... ok
+test transport::quick::a_notification_line_produces_no_output_line_at_all ... ok
+test transport::long::both_eras_are_served_over_the_same_http_endpoint_by_the_same_server ... ok
+test transport::long::missing_protocol_version_header_on_a_modern_request_is_400_header_mismatch ... ok
+test transport::quick::blank_lines_are_skipped_without_producing_output ... ok
+test transport::quick::eof_ends_the_loop_cleanly ... ok
+test transport::quick::constant_time_eq_matches_regular_equality ... ok
+test transport::quick::loopback_and_null_origins_are_always_allowed ... ok
+test transport::long::unsupported_protocol_version_is_400_with_the_supported_list ... ok
+test transport::quick::malformed_json_logs_to_the_log_writer_and_never_pollutes_stdout_with_non_json_text ... ok
+test transport::long::modern_tools_list_over_http_returns_200_with_the_json_rpc_result ... ok
+test transport::quick::origin_allowed_falls_back_to_the_explicit_allowlist ... ok
+test transport::quick::one_request_line_produces_exactly_one_response_line_on_stdout ... ok
+test bridge::long::bridge_websocket_replies_welcome_to_hello ... ok
+test schema::quick::every_schema_compiles_and_validates_its_own_example ... ok
+
+test result: ok. 77 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests ../../📦️bin.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_os_mcp-3b0f68e109ba4c6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_os_mcp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

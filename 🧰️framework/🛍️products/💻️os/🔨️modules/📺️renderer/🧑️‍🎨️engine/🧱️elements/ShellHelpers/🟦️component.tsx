@@ -25,6 +25,9 @@ import {
 import {
   type ActionArgControl,
   type ActionArgDef,
+  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
+  // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
+  argControl,
   type ActionDefinition,
   type ActionDescriptor,
   type ActionInvocation,
@@ -2098,9 +2101,12 @@ export function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKi
 /** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms, a dialog id for dialog args, or a command id for command args. `ActionArgDef.label`/`ActionArgOption.label` are manifest `LocalizedLabel` fields, resolved for `terminology`/`locale` before the overlay's (always-empty, see the `AppLabelsOverlay` deletion note) fallback lookup even applies. */
 function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, resolveManifestLabel(def.label, terminology, locale));
-  if (def.control.kind !== "select") return label === def.label ? def : { ...def, label };
-  const options = def.control.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
-  return { ...def, label, control: { ...def.control, options } };
+  // 🎫️ D6: `argControl(def).kind !== "select"` replaces the old `def.control.kind` check — a
+  // `select` control is now derived from `def.schema` (a `string` schema with non-empty `options`),
+  // so the options being resolved below live at `def.schema.options`, not on a stored `control`.
+  if (argControl(def).kind !== "select" || def.schema.kind !== "string") return label === def.label ? def : { ...def, label };
+  const options = def.schema.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, resolveManifestLabel(option.label, terminology, locale)) }));
+  return { ...def, label, schema: { ...def.schema, options } };
 }
 
 /** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/cancelLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. `title`/`body`/`submitLabel`/`cancelLabel` are all manifest `LocalizedLabel` fields. */
@@ -2796,7 +2802,8 @@ export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, wi
  * (staged ?? default ?? unset).
  */
 export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean): ReactElement {
-  const control: ActionArgControl = def.control;
+  // 🎫️ D6: `def.control` is gone — derive it fresh via `argControl(def)` (mirrors Rust `ActionArgDef::control()`).
+  const control: ActionArgControl = argControl(def);
   switch (control.kind) {
     case "text":
       return <Input id={def.id} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
@@ -2872,6 +2879,14 @@ export function renderStagedArgControl(def: ActionArgDef, value: unknown, onChan
     }
     case "iconSelect":
       return <IconSelector id={def.id} classifyIconSelectorMode={undefined} value={typeof value === "string" ? value : ""} uniform onChange={(next) => onChange(next)} />;
+    // 🎫️ D6: `artifactKind`/`surfaceApp` are HOST-resolved — the host substitutes them with a plain
+    // `select` before a staged form ever renders (see `artifact_kind_choices`/`🔖️HostResolvedArgs`
+    // in the Rust manifest), so neither reaches here in practice; no `ActionArgDef` builder produces
+    // them today either (`artifact_kind`/`surface_app` have zero call sites repo-wide). Kept as an
+    // explicit fallback purely so this switch stays exhaustive over `ActionArgControl.kind`.
+    case "artifactKind":
+    case "surfaceApp":
+      return <Input id={def.id} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
   }
 }
 

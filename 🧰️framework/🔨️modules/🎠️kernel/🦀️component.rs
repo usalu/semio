@@ -969,6 +969,9 @@ pub struct CapabilityRequest {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BrokerCapabilityGrant {
+    /// 🔢️ `u128` has no JavaScript number equivalent, so the mirror carries it as a decimal string —
+    /// same treatment `PluginDependency.version` gets in `🛂️manifest`.
+    #[cfg_attr(feature = "typegen", ts(type = "string"))]
     pub token: CapabilityToken,
     pub id: CapabilityId,
     pub scope: String,

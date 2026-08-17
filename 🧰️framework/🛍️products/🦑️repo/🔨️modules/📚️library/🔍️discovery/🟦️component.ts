@@ -194,7 +194,14 @@ export interface Taxonomy {
   readonly representationDirs: readonly string[];
   /** 🚪️ Top-level dirs under `🚪️io/`: import and export. */
   readonly ioDirectionDirs: readonly string[];
-  /** 🚪️ Exact collection directories below `🚪️io/` for owned coded boundary results. */
+  /**
+   * 🚪️ The NATIVE-codec facet dirs legal directly below `🚪️io/` (unsplit, both directions at once —
+   * see the ⚠️ CORRECTION in design.md §1: `import`/`export` express direction, which exists only for
+   * FOREIGN dialects, never for the single bidirectional native codec). Each member carries
+   * `representationDirs` (`📝️text`/`💾️binary`) leaves and is itself declared in `semanticCollections` as
+   * `"🚪️io/<member>"` with an io direction (`transport` for the bidirectional ones, `export` for
+   * `💡️inferences` since inferences are derived-only, never imported).
+   */
   readonly ioSemanticCollectionDirNames: readonly string[];
   /** 🚪️ Direction to codec folder (import→deserializers, export→serializers). */
   readonly ioDirectionChildDirs: Readonly<Record<string, string>>;
@@ -629,7 +636,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = loadTaxonomy()): string[] 
       names.add(directory);
       if (!taxonomy.taxonomyLeafParentDirs.includes(directory)) problems.push(`ioSemanticCollectionDirNames member ${JSON.stringify(directory)} is missing from taxonomyLeafParentDirs.`);
     }
-    for (const required of ["💡️inferences", "🧬️mutations"] as const) {
+    for (const required of ["📸️snapshot", "🔺️diff", "💡️inferences", "🧬️mutations"] as const) {
       if (!names.has(required)) problems.push(`ioSemanticCollectionDirNames must include ${JSON.stringify(required)}.`);
     }
   }
@@ -1141,7 +1148,7 @@ export function readSemioMarkerSubTable(manifestPath: string, lang: PackageLang,
 }
 //#endregion 🏷️SemioMarkerSubTable
 
-const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".🧬semio", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", "compose"]);
+const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", "📤️dist", ".git", ".🧬semio", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", "compose", ".venv", "coverage", "__pycache__", "client", "client_bin"]);
 
 /** 📁️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir — a helper (rather than an explicit `ReturnType<typeof readdirSync>` annotation) so the `Dirent<string>` element type infers unambiguously from this specific overload. */
 function readdirSafe(absDir: string) {
@@ -1228,7 +1235,14 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
   const rel = (abs: string): string => relative(repoRoot, abs).replaceAll("\\", "/");
 
   const isPackagingFile = (name: string, allowedEntries: readonly string[]): boolean =>
-    packagingNames.has(name) || allowedEntries.includes(name) || taxonomy.packagingFileSuffixes.some((suffix) => name.endsWith(suffix));
+    packagingNames.has(name)
+    || allowedEntries.includes(name)
+    || name === "📦️index.ts"
+    || name === "📦️index.tsx"
+    || name === "🌐️index.html"
+    || (name.startsWith("🧪️") && (name.endsWith(".test.ts") || name.endsWith(".test.tsx") || name.endsWith(".spec.ts")))
+    || name === taxonomy.storyLeafFilename
+    || taxonomy.packagingFileSuffixes.some((suffix) => name.endsWith(suffix));
 
   const collectPackagingViolations = (manifestDirAbs: string, owner: OwnerAccumulator, allowedEntries: readonly string[]): void => {
     for (const entry of readdirSafe(manifestDirAbs)) {
@@ -1240,7 +1254,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
   const collectPackagingDirViolations = (manifestDirAbs: string, owner: OwnerAccumulator, allowedDirs: readonly string[]): void => {
     const allowed = new Set(allowedDirs);
     for (const entry of readdirSafe(manifestDirAbs)) {
-      if (!entry.isDirectory() || entry.name.startsWith(".") || allowed.has(entry.name)) continue;
+      if (!entry.isDirectory() || entry.name.startsWith(".") || allowed.has(entry.name) || DISCOVERY_SKIP_DIRS.has(entry.name)) continue;
       packagingViolations.push({ path: rel(join(manifestDirAbs, entry.name)), ownerRel: owner.ownerRel });
     }
   };
@@ -1295,7 +1309,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
       }
       if (hasDirect) {
         resolveOne(directManifestAbs, lang, owner, undefined);
-        collectPackagingViolations(langAbs, owner, ecosystem.entryFilenames);
+        collectPackagingViolations(langAbs, owner, [...ecosystem.entryFilenames, ecosystem.leafFilename]);
         collectPackagingDirViolations(langAbs, owner, packagingDirNamesForLang(lang, taxonomy));
         continue;
       }
@@ -1309,7 +1323,10 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy): DiscoveryScan {
           continue;
         }
         resolveOne(targetManifestAbs, lang, owner, targetEntry.name);
-        collectPackagingViolations(targetAbs, owner, taxonomy.targets[targetEntry.name]?.entryFilenames ?? ecosystem.entryFilenames);
+        const targetSpec = taxonomy.targets[targetEntry.name];
+        const targetAllowed = [...(targetSpec?.entryFilenames ?? ecosystem.entryFilenames)];
+        if (targetSpec?.leafFilename) targetAllowed.push(targetSpec.leafFilename);
+        collectPackagingViolations(targetAbs, owner, targetAllowed);
         collectPackagingDirViolations(targetAbs, owner, packagingDirNamesForLang(lang, taxonomy));
       }
     }

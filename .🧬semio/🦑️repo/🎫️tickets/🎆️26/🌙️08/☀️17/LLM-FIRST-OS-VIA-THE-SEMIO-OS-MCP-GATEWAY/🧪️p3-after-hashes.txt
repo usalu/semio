@@ -1,0 +1,16 @@
+=== 🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs ===
+66c6ad350967900e45318100c0e017a9e9920b474003bdece502525e340016f1  🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs
+=== 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts ===
+92f644b356abc093280111513a9d27b04e9d385de8d1194b1c2d13b25d1a5923  🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+=== 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts ===
+0e45108c611d6d334f8be2b29a44993ce5ae6ba0a3cfa118e9c46c10a7aeda18  🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs ===
+7eccfd7aaf93823cffb1f651f1fdcdb7245aa9d77a404c327768b75d3f2b8164  🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs
+=== 🧰️framework/🔨️modules/🧬️schema/🦀️component.rs ===
+bb967f41b1914dcd1db802ca01d98bce249872dfc49bc0ae6ac471354c65a2db  🧰️framework/🔨️modules/🧬️schema/🦀️component.rs
+=== 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx ===
+8f3ef3df3c36adfeb33ef5d7a821a8a19ecc405f22895a7c85cc42cf2caec553  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+=== ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs ===
+07c56415d857c69207553f5c1226dd7f5fbe1b5ccb22bbb3d5b53f809e5d8c5e  ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+=== 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🧪️story.tsx ===
+1978b9477a2471b7013dc9886b1d6fcd9175da667b5836592a58a525350f675f  🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🧪️story.tsx

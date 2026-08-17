@@ -20,14 +20,6 @@ use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
 const PLUGIN_FUEL_BUDGET: u64 = 50_000_000;
 
-bindgen!({
-    world: "actor",
-    path: "../../../🧬️schema",
-    async: false,
-    additional_derives: [serde::Serialize, serde::Deserialize],
-});
-
-//#region ⚠️ Errors
 /// 🧯️ Errors from `WasmPluginRuntime`'s own engine/component/call-boundary plumbing. The
 /// `impl semio::framework::host::Host for HostState` block encodes {@link Fault} bytes on the
 /// wasm component ABI (`result<_, list<u8>>` in `framework/wit/📜️world.wit`).

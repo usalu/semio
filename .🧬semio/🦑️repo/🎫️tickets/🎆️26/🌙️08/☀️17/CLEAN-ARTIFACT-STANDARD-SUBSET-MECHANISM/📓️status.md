@@ -183,6 +183,28 @@ exist with **no caller** → **D8: wire them in the shell wave or delete them.**
 > was a *second copy of a live mechanism* (harmful, deleted immediately), whereas these two are the query surface of
 > an explicitly unfinished task, recorded with an owner. If the shell wave does not land, they must be deleted.
 
+
+## ✅️ W1-E taxonomy corrected to the real native-codec shape — DONE
+
+`📓️w1-e-report.md`. W1-B's deferred patch encoded the **rejected** import/export mirror; it has been replaced.
+
+- **No new walker code was needed.** The existing `ioSemanticCollectionDirNames` mechanism — already how
+  `🧬️mutations`/`💡️inferences` sit directly under `🚪️io`, live on disk in gltf — just gained `📸️snapshot`/`🔺️diff`.
+  Reusing the proven pattern instead of adding a branch to `artifactFacetChildLevel` is the better answer and it is
+  what the corrected shape actually calls for.
+- Also fixed **W1-B's `new subset` scaffolder**, which was still generating the rejected mirror — it would have
+  stamped the wrong shape into every subset created from here on.
+- `verify taxonomy enforce`: **10887 → 10789** (decreased). All seven `clean-mechanism/*` policy counts identical
+  before/after (2830 total, **0 high-priority**).
+- Coordinator applied their `w1e-index-test-io-semantic-collection-dirs.txt` patch (the one repo-lib assertion that
+  legitimately had to change).
+
+Two peer problems it hit and reported rather than absorbed: `plugin-registry:check` is broken by an off-by-two `../`
+path bug from a third session, and `LANGUAGE-NEUTRAL-TAXONOMY-AND-PACKAGE-PURITY` left `discovery/component.ts`
+uncompileable with a duplicate `const` (removed, as it blocked all verification).
+
+**Resume step 2 is therefore done** — subsets can now move their native codecs without breaking taxonomy enforce.
+
 ## Final state of this session
 
 The **framework mechanism is built end to end and green**. **No plugin is cut over.** That is not a scheduling
@@ -255,13 +277,30 @@ renamed `HostEffect`→`Effect`. It left two of our files uncompilable, each of 
 test targets are where the peer collisions land. Always run `--lib --no-fail-fast` (and for `semio-framework-os`,
 `--features os-host-full`) before believing a crate is healthy.
 
+### ✅️ D8 resolved — dead API deleted, not documented-and-kept
+
+`os_reachable_export_dialects`/`os_reachable_import_dialects` are gone. They had no caller, and inspection showed
+they were also **weaker than they claimed**: one-hop filters over `io_entries()`, so a shell built on them would
+under-report exportable formats — real reachability is `io_route`, which the framework already exposes. Keeping a
+subtly-wrong unused wrapper "for the shell wave" would have been worse than deleting it.
+
+⚠️ **Verified by zero-reference grep, NOT by a compile.** A peer's *uncommitted* edit to
+`🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (brand-new `ArgFormat`, unsatisfied serde bounds, ` M` in the
+working tree at 23:12) reds `semio-framework` and therefore every crate below it. Re-run
+`cargo nextest -p semio-framework-os --features os-host-full` when that clears — expected **110 / 103 / 7**.
+
 ### 🚧️ THE GATE — why no plugin was cut over
 
 The cutover is **atomic per plugin** (a second parallel registration channel is the compatibility layer CLAUDE.md
 forbids — see the Rejected approaches table in `📌️important.md`). Three independent conditions block it today:
 
-1. **stdio is mid-rewrite by a peer.** 192 staged files, 268 test-target errors. Its 36 artifacts must cut over in
-   one pass (D6), which cannot be verified against a moving target. This ticket's own rule forbids chasing it.
+1. **stdio is still red — measured after the peer committed.** The `FULL-STDIO-…` peer went from 192 staged files
+   to 0 (committed) during this session, and `cargo check -p semio-s-plugin-stdio --all-targets --keep-going` still
+   reports **268 errors — the identical count as before the commit**. The lib alone is clean (0 errors); it is the
+   **test target** that is broken, which is exactly what blocks verifying any stdio migration. The earlier
+   attribution (same 268) was `🧿️semio` 86 · `🖊️dwg` 53 · `🧊️gltf` 41 · `📜️docx` 24 · `📕️xlsx` 23 · `🏗️ifc` 15 —
+   **zero in `💾️binary`/`📄txt`**, i.e. none in this ticket's files.
+   Its 36 artifacts must cut over in one pass (D6), which cannot be verified while the test target does not build.
 2. **Plugins are already red before we touch them.** `semio-s-plugin-sequence` has 17 errors whose file last changed
    at `1d71198c19` (14:44), *before* this ticket started — i.e. pre-existing, not peer-in-flight. That is exactly what
    the concurrent `26/08/17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS` ticket exists to fix.
@@ -276,9 +315,11 @@ other sessions are actively rewriting. That is the opposite of what this ticket 
 ### Resume order for the next session
 
 1. Finish `carrier_native_is_raw` once the stdio peer lands (the only unexecuted test left).
-2. **Re-cut** `🔧️patches/w1b-discovery-io-native-codec-vocabulary.txt` for the corrected native-codec shape.
+2. ~~Re-cut the native-codec vocabulary~~ — **done in W1-E.**
 3. Resolve **D8** — wire `os_reachable_export_dialects`/`os_reachable_import_dialects` into a real "Export as…"
    shell action (with en+de strings), or delete them. They must not ship unread.
-4. Wait for `ZERO-WARNINGS-…` to land a green plugin baseline and for `FULL-STDIO-…` to land its 192 files.
+4. Wait for a green plugin baseline. `FULL-STDIO-…` committing did **not** fix stdio's test target (still 268
+   errors), so W2 stays blocked on it and on `ZERO-WARNINGS-…`. The gate is `cargo check -p semio-s-plugin-stdio
+   --all-targets` reaching 0 — check that first, before spending any agent on W2.
 5. Then **W2 stdio** (all 36 artifacts + delete `📇️registry`, D6), then **W3/W4** plugin fan-out using
    `📓️recipe-subset.md`, then **W5** serializer, **W6** deletion + policy ratchet (debts D1-D7), **W7** verify + close.

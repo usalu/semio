@@ -11,10 +11,10 @@
   },
   "exports": {
     ".": "./📦️index.tsx",
-    "./🔣️components.json": "./🔣️components.json",
-    "./🎨️globals.css": "./🎨️globals.css",
-    "./🎨️globals-🎨️ui.css": "./🎨️globals-ui.css",
-    "./🎨️theme.css": "./🎨️theme.css",
+    "./🔣️components.json": "../../../../🔣️components.json",
+    "./🎨️globals.css": "../../../../🎨️globals.css",
+    "./🎨️globals-🎨️ui.css": "../../../../🎨️globals-ui.css",
+    "./🎨️theme.css": "../../../../🎨️theme.css",
     "./tailwind.config": "./🎨️tailwind.config.ts",
     "./postcss.config": "./🎨️postcss.config.ts",
     "./eslint.config": "./🟦️eslint.config.ts"

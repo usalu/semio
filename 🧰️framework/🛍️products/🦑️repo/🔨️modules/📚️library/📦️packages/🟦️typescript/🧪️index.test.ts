@@ -16,7 +16,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, renderSemanticCensusJson, resolveRustPathAttributes, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
@@ -1516,6 +1516,16 @@ describe("validateTaxonomy", () => {
     expect(validateTaxonomy()).toEqual([]);
   });
 
+  test("declares schema facet kinds partitioning data vs interface formats", () => {
+    const taxonomy = loadTaxonomy();
+    expect(taxonomy.schemaFacetKinds?.["🧬️data"]?.normativeFormat).toBe("🔣️jsonschema");
+    expect(taxonomy.schemaFacetKinds?.["📜️interface"]?.normativeFormat).toBe("📜️wit");
+    expect(taxonomy.schemaFacetKinds?.["📜️interface"]?.formats).toEqual(["📜️wit"]);
+    expect(taxonomy.schemaFormats?.["📜️wit"]?.fieldCasing).toBe("kebab");
+    expect(taxonomy.packagingDirNames).toEqual(["🎯️targets", "fixture", "app"]);
+    expect(taxonomy.ecosystems["🦀️rust"]?.packagingDirNames).toEqual(["benches", "🟦️typescript"]);
+  });
+
   test("declares canonical semantic collection and module ownership contracts", () => {
     const taxonomy = loadTaxonomy();
     expect(taxonomy.semanticManifestFilename).toBe("🔣️component.json");
@@ -1524,7 +1534,7 @@ describe("validateTaxonomy", () => {
     expect(taxonomy.semanticCollections["🔨️modules"]?.kind).toBe("module");
     expect(taxonomy.semanticCollections["💡️inferences"]?.kind).toBe("inference");
     expect(taxonomy.semanticCollections["🚪️io/🧬️mutations"]).toEqual({ kind: "io", direction: "transport" });
-    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["💡️inferences", "🧬️mutations"]);
+    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["📸️snapshot", "🔺️diff", "💡️inferences", "🧬️mutations"]);
     expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/📝️text", taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/💾️binary", taxonomy)).toBe(true);
     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/📝️text", taxonomy)).toBe(false);
@@ -2121,8 +2131,16 @@ describe("discoverBurndown", () => {
     const burndown = discoverBurndown(root);
     const catalogPaths = new Set(discoverPackages(root).map((pkg) => pkg.manifestPath));
     expect(burndown.unmarkedManifests.every((manifest) => !catalogPaths.has(manifest.path))).toBe(true);
-    // 📦️ Data/doc files parked inside a 📦️packages dir violate Shape V2 (packaging code only) and must burn down.
     expect(burndown.packagingViolations.every((violation) => violation.path.includes("📦️packages/"))).toBe(true);
+  });
+
+  test("discoverPackageProblems promotes packaging violations into census problems", () => {
+    const root = getWorkspaceRoot();
+    clearDiscoveryCache();
+    const problems = discoverPackageProblems(root);
+    expect(problems.every((problem) => problem.kind === "packaging-violation" || problem.kind === "unknown-lang")).toBe(true);
+    const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.kind === "packaging-violation");
+    expect(censusProblems.length).toBe(problems.filter((problem) => problem.kind === "packaging-violation").length);
   });
 
   test("clearDiscoveryCache forces a fresh walk", () => {

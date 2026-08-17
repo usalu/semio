@@ -29,8 +29,8 @@ import {
   playgroundTestPort,
   playgroundTestPortString,
   type PlaygroundHostKind,
-} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
+} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { PlaygroundAssetSpec } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 // #endregion 🔌️Adapters
 
 export type { PlaygroundAssetSpec };

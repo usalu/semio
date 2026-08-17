@@ -75,7 +75,7 @@ pub fn restore_now(state: &[u8]) -> Result<(), semio_framework::Fault> {
 }
 
 /// 🧬️ Everything below crosses the wasm component boundary — gated identically to `component`
-/// (`🦀️component.rs` at crate root) since it names `crate::component::exports::...` types that
+/// (`🦀️component.rs` at crate root) since it names `crate::component::component::exports::...` types that
 /// simply do not exist outside a `component-guest`/`component-extension-guest` wasm32-wasip2
 /// build (mirrors the OLD `host_port`'s per-function `#[cfg(...)]` pattern, just hoisted to one
 /// module instead of repeated per function).
@@ -86,24 +86,35 @@ pub use wit_bridge::poll;
 mod wit_bridge {
     use super::*;
 
+    /// 🧭️ `reactor`/`jobs`/`checkpoint`/`describe` are the only interfaces `world actor` directly
+    /// `export`s, so wit-bindgen only aliases THEIR top-level types under `exports::…`. `effects`/
+    /// `events`/`ui`/`types` are merely `use`d by `reactor.wit` (design-abi.md §1/§4) — their own
+    /// payload records live at the plain (non-`exports::`) path alongside the `pure` import, one
+    /// level down from where the nesting stops being re-aliased. Verified empirically: a
+    /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2
+    /// --features component-guest` emit `help: consider importing … effects::OpenWindowEffect`
+    /// (and the `events`/`ui` siblings the same way) — not guessed.
+    use crate::component::component::semio::framework::effects as wit_effects;
+    use crate::component::component::semio::framework::events as wit_events;
+    use crate::component::component::semio::framework::types as wit_types;
+    use crate::component::component::semio::framework::ui as wit_ui;
+
 /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
 /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
 /// module's `TurnResult`.
-pub fn poll(events: Vec<crate::component::exports::semio::framework::reactor::Event>, budget: crate::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
-    use crate::component::exports::semio::framework::reactor as wit;
-
+pub fn poll(events: Vec<crate::component::component::exports::semio::framework::reactor::Event>, budget: crate::component::component::exports::semio::framework::reactor::Budget) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
     let mut app_commands: HashMap<u32, Vec<Vec<u8>>> = HashMap::new();
     let mut dirty_render: Vec<(u32, String)> = Vec::new();
 
     for event in events {
         match wit_event_to_kernel(event) {
             Event::InstanceOpen { instance, app_id, .. } => {
-                let _ = crate::plugin_runtime::plugin_create_app_with_id(instance.0 as u32, &app_id.0);
-                OPEN_INSTANCES.with(|open| open.borrow_mut().push((instance.0 as u32, app_id.0)));
+                let _ = crate::plugin_runtime::plugin_create_app_with_id(instance.0.parse::<u32>().unwrap_or(0), &app_id.0);
+                OPEN_INSTANCES.with(|open| open.borrow_mut().push((instance.0.parse::<u32>().unwrap_or(0), app_id.0)));
             }
             Event::InstanceClose => {}
             Event::AppCommandEvent { instance, command, .. } => {
-                app_commands.entry(instance.0 as u32).or_default().push(command);
+                app_commands.entry(instance.0.parse::<u32>().unwrap_or(0)).or_default().push(command);
             }
             Event::SurfaceVisible { surface } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
@@ -140,7 +151,7 @@ pub fn poll(events: Vec<crate::component::exports::semio::framework::reactor::Ev
             }
             Event::Wake => {}
             Event::Request { .. } => {}
-            Event::SuspendRequest | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
+            Event::Activate { .. } | Event::SuspendRequest | Event::CapabilityChanged { .. } | Event::QuotaChanged { .. } => {}
         }
     }
 
@@ -237,8 +248,8 @@ fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEve
 
 /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
 /// mirrors the kernel shape (see `📓️design-abi.md` §2 / `events.wit`'s own doc comments).
-fn wit_event_to_kernel(event: crate::component::exports::semio::framework::reactor::Event) -> Event {
-    use crate::component::exports::semio::framework::reactor::Event as W;
+fn wit_event_to_kernel(event: crate::component::component::exports::semio::framework::reactor::Event) -> Event {
+    use crate::component::component::exports::semio::framework::reactor::Event as W;
     match event {
         W::InstanceOpen(payload) => Event::InstanceOpen {
             instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()),
@@ -267,12 +278,12 @@ fn wit_event_to_kernel(event: crate::component::exports::semio::framework::react
         W::Message(payload) => Event::Message { source: wit_endpoint_to_kernel(payload.source), payload: payload.payload },
         W::Timer(payload) => Event::Timer { id: payload.id },
         W::Wake => Event::Wake,
-        W::Request(payload) => Event::Request { req: semio_framework::kernel::RequestId(payload.req), from: wit_endpoint_to_kernel(payload.from), capability: payload.capability, payload: payload.payload },
+        W::Request(payload) => Event::Request { req: semio_framework::kernel::RequestId(payload.req), from: wit_endpoint_to_kernel(payload.origin), capability: payload.capability, payload: payload.payload },
     }
 }
 
-fn wit_activation_to_kernel(reason: crate::component::exports::semio::framework::reactor::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
-    use crate::component::exports::semio::framework::reactor::ActivationEvent as W;
+fn wit_activation_to_kernel(reason: wit_events::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+    use wit_events::ActivationEvent as W;
     match reason {
         W::OnCommand(id) => semio_framework::kernel::ActivationEvent::OnCommand { id },
         W::OnViewVisible(id) => semio_framework::kernel::ActivationEvent::OnViewVisible { id },
@@ -283,16 +294,16 @@ fn wit_activation_to_kernel(reason: crate::component::exports::semio::framework:
     }
 }
 
-fn wit_completion_to_kernel(result: crate::component::exports::semio::framework::reactor::CompletionResult) -> RequestOutcome {
-    use crate::component::exports::semio::framework::reactor::CompletionResult as W;
+fn wit_completion_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
+    use wit_events::CompletionResult as W;
     match result {
         W::Ok(bytes) => RequestOutcome::Ok(bytes),
         W::Fault(bytes) => RequestOutcome::Err(bytes),
     }
 }
 
-fn wit_endpoint_to_kernel(endpoint: crate::component::exports::semio::framework::reactor::MessageEndpoint) -> MessageEndpoint {
-    use crate::component::exports::semio::framework::reactor::MessageEndpoint as W;
+fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+    use wit_types::MessageEndpoint as W;
     match endpoint {
         W::Shell(instance) => MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
         W::Backbone(uri) => MessageEndpoint::Backbone { uri },
@@ -305,8 +316,8 @@ fn wit_endpoint_to_kernel(endpoint: crate::component::exports::semio::framework:
 /// 🔀️ kernel `TurnResult` → WIT `turn-result`. `budget` is currently unused beyond documenting
 /// the seam — `max-effects`/`max-patch-bytes` capping is real, mechanical follow-up work (design-
 /// abi.md §4's "capped by `max-effects`, overflow carries over") not yet wired into this wave.
-fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::exports::semio::framework::reactor::Budget) -> crate::component::exports::semio::framework::reactor::TurnResult {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
+    use crate::component::component::exports::semio::framework::reactor as wit;
     wit::TurnResult {
         ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
         effects: result.effects.into_iter().map(kernel_effect_to_wit).collect(),
@@ -321,11 +332,11 @@ fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budge
     }
 }
 
-fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::exports::semio::framework::reactor::UiPatch {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
+    use crate::component::component::exports::semio::framework::reactor as wit;
     let instance: u32 = patch.surface.split(':').next().and_then(|s| s.parse().ok()).unwrap_or(0);
     wit::UiPatch {
-        surface: wit::SurfaceRef { instance, surface: 0 },
+        surface: wit_ui::SurfaceRef { instance, surface: 0 },
         kind: patch.kind,
         revision: patch.revision,
         base_revision: patch.base_revision,
@@ -333,14 +344,13 @@ fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::exports::semio::f
     }
 }
 
-fn kernel_patch_op_to_wit(op: PatchOp) -> crate::component::exports::semio::framework::reactor::PatchOp {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_patch_op_to_wit(op: PatchOp) -> wit_ui::PatchOp {
     let encode_node = |node: &ui_wgpu::wgpu::UiNode| store::pack_rt::encode_wire_value(&dsl::to_dsl_value(node).unwrap_or(dsl::DslValue::Null));
     match op {
-        PatchOp::Replace { path, node } => wit::PatchOp::Replace(wit::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
-        PatchOp::InsertChild { path, index, node } => wit::PatchOp::InsertChild(wit::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
-        PatchOp::RemoveChild { path, index } => wit::PatchOp::RemoveChild(wit::PatchRemoveChild { path: path_to_indices(&path), index }),
-        PatchOp::SetProps { path, props } => wit::PatchOp::SetProps(wit::PatchSetProps { path: path_to_indices(&path), props }),
+        PatchOp::Replace { path, node } => wit_ui::PatchOp::Replace(wit_ui::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
+        PatchOp::InsertChild { path, index, node } => wit_ui::PatchOp::InsertChild(wit_ui::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
+        PatchOp::RemoveChild { path, index } => wit_ui::PatchOp::RemoveChild(wit_ui::PatchRemoveChild { path: path_to_indices(&path), index }),
+        PatchOp::SetProps { path, props } => wit_ui::PatchOp::SetProps(wit_ui::PatchSetProps { path: path_to_indices(&path), props }),
     }
 }
 
@@ -356,88 +366,87 @@ fn path_to_indices(_path: &str) -> Vec<u32> {
 /// Rust-only field types (`WindowKindId`, `DslValue`, `MediaType`, `ClipboardFragment`, ...) are
 /// wire-encoded through the SAME `store::pack_rt::encode_wire_value`/`dsl::to_dsl_value` idiom
 /// every existing host boundary in this crate already uses.
-fn kernel_effect_to_wit(effect: Effect) -> crate::component::exports::semio::framework::reactor::Effect {
-    use crate::component::exports::semio::framework::reactor as wit;
-    let pack = |value: &impl serde::Serialize| store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null));
+fn kernel_effect_to_wit(effect: Effect) -> crate::component::component::exports::semio::framework::reactor::Effect {
+    use crate::component::component::exports::semio::framework::reactor as wit;
+    fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
+        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
+    }
     match effect {
-        Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit::OpenWindowEffect { req: req.0, kind: kind.0, params: pack(&params) }),
-        Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit::CloseWindowEffect { window: window.0 as u64 }),
-        Effect::Notify { message } => wit::Effect::Notify(wit::NotifyEffect { message }),
-        Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit::ClipboardWriteEffect { fragment: pack(&fragment) }),
+        Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, kind: kind.0, params: pack(&params) }),
+        Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit_effects::CloseWindowEffect { window: window.0 as u64 }),
+        Effect::Notify { message } => wit::Effect::Notify(wit_effects::NotifyEffect { message }),
+        Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit_effects::ClipboardWriteEffect { fragment: pack(&fragment) }),
         Effect::RequestSync => wit::Effect::RequestSync,
-        Effect::Navigate { uri } => wit::Effect::Navigate(wit::NavigateEffect { uri }),
-        Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(wit::LoadDocumentEffect { doc_pack, spr }),
-        Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(wit::OpenExternalUrlEffect { url }),
-        Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit::SetPanelEffect { panel_json }),
-        Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
-        Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit::IconRenderExportEffect { items: pack(&items) }),
-        Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => wit::Effect::RequestFileOpen(wit::RequestFileOpenEffect { req: req.0, accept, read_as, multiple, import_action }),
+        Effect::Navigate { uri } => wit::Effect::Navigate(wit_effects::NavigateEffect { uri }),
+        Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(wit_effects::LoadDocumentEffect { doc_pack, spr }),
+        Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(wit_effects::OpenExternalUrlEffect { url }),
+        Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit_effects::SetPanelEffect { panel_json }),
+        Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
+        Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
+        Effect::RequestFileOpen { req, accept, read_as, import_action, multiple } => wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, accept, read_as, multiple, import_action }),
         Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => {
-            wit::Effect::RequestMediaFrames(wit::RequestMediaFramesEffect { req: req.0, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) })
+            wit::Effect::RequestMediaFrames(wit_effects::RequestMediaFramesEffect { req: req.0, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) })
         }
-        Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => wit::Effect::SpawnPluginInstance(wit::SpawnPluginInstanceEffect { req: req.0, plugin_id, app_id, os_instance_id, label, document_json }),
-        Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(wit::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
-        Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(wit::SetActiveUtilityEffect { window_id, utility_id }),
-        Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(wit::SetActiveToolEffect { tool_id }),
-        Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit::OpenDialogEffect { req: req.0, dialog_id, args: args.map(|value| pack(&value)) }),
-        Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit::DispatchActionEffect { req: req.0, action, args: args.map(|value| pack(&value)), delay_ms }),
-        Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
-        Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => wit::Effect::PatchWorld3dChrome(wit::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids }),
-        Effect::InvokeExtension { req, extension_id, capability, request_json } => wit::Effect::InvokeExtension(wit::InvokeExtensionEffect { req: req.0, extension_id, capability, payload: request_json.into_bytes() }),
-        Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
-        Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(wit::PublishEventEffect { topic, payload }),
-        Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit::BlobWriteEffect { req: req.0, media_type: pack(&media_type), bytes }),
-        Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit::BlobLoadEffect { req: req.0, hash }),
-        Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit::HttpRequestEffect { req: req.0, method, url, headers, body, streaming: stream }),
-        Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(wit::DocumentReadEffect { req: req.0, doc: doc.0 as u64, lane }),
-        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(wit::DocumentWriteEffect { req: req.0, doc: doc.0 as u64, lane, ops }),
-        Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
-        Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit::RegistryQueryEffect { req: req.0, kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }),
-        Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit::IoComposeEffect { req: req.0, key: key.into_bytes(), sources: pack(&sources) }),
-        Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit::CacheDeriveEffect { req: req.0, engine_id, input }),
-        Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit::CacheReadEffect { req: req.0, engine_id, key: key.into_bytes() }),
+        Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => wit::Effect::SpawnPluginInstance(wit_effects::SpawnPluginInstanceEffect { req: req.0, plugin_id, app_id, os_instance_id, label, document_json }),
+        Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(wit_effects::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
+        Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(wit_effects::SetActiveUtilityEffect { window_id, utility_id }),
+        Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(wit_effects::SetActiveToolEffect { tool_id }),
+        Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit_effects::OpenDialogEffect { req: req.0, dialog_id, args: args.map(|value| pack(&value)) }),
+        Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit_effects::DispatchActionEffect { req: req.0, action, args: args.map(|value| pack(&value)), delay_ms }),
+        Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
+        Effect::PatchWorld3dChrome { selection_json, vortices_json, document_selected_ids, document_highlighted_ids } => wit::Effect::PatchWorld3dChrome(wit_effects::PatchWorld3dChromeEffect { selection_json, vortices_json, document_selected_ids, document_highlighted_ids }),
+        Effect::InvokeExtension { req, extension_id, capability, request_json } => wit::Effect::InvokeExtension(wit_effects::InvokeExtensionEffect { req: req.0, extension_id, capability, payload: request_json.into_bytes() }),
+        Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit_effects::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
+        Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(wit_effects::PublishEventEffect { topic, payload }),
+        Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit_effects::BlobWriteEffect { req: req.0, media_type: pack(&media_type), bytes }),
+        Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit_effects::BlobLoadEffect { req: req.0, hash }),
+        Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit_effects::HttpRequestEffect { req: req.0, method, url, headers, body, streaming: stream }),
+        Effect::DocumentRead { req, doc, lane } => wit::Effect::DocumentRead(wit_effects::DocumentReadEffect { req: req.0, doc: doc.0 as u64, lane }),
+        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::DocumentWrite(wit_effects::DocumentWriteEffect { req: req.0, doc: doc.0 as u64, lane, ops }),
+        Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit_effects::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
+        Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit_effects::RegistryQueryEffect { req: req.0, kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() }),
+        Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit_effects::IoComposeEffect { req: req.0, key: key.into_bytes(), sources: pack(&sources) }),
+        Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit_effects::CacheDeriveEffect { req: req.0, engine_id, input }),
+        Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit_effects::CacheReadEffect { req: req.0, engine_id, key: key.into_bytes() }),
         Effect::SetTimer { id, after_ms, repeat } => {
             ARMED_TIMERS.with(|timers| timers.borrow_mut().push(id));
-            wit::Effect::SetTimer(wit::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
+            wit::Effect::SetTimer(wit_effects::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
         }
-        Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
-        Effect::CancelJob { job } => wit::Effect::CancelJob(wit::CancelJobEffect { job }),
-        Effect::Respond { req, result } => wit::Effect::Respond(wit::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
-        Effect::StorageRead { req, key } => wit::Effect::StorageRead(wit::StorageReadEffect { req: req.0, key }),
-        Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(wit::StorageWriteEffect { req: req.0, key, value: bytes }),
-        Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(wit::StorageDeleteEffect { req: req.0, key }),
-        Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(wit::RequestCapabilityEffect { req: req.0, id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional }),
-        Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit::ReleaseCapabilityEffect { id: id.0 }),
-        Effect::Subscribe { topic } => wit::Effect::Subscribe(wit::SubscribeEffect { topic }),
-        Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit::SubscribeEffect { topic }),
+        Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit_effects::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
+        Effect::CancelJob { job } => wit::Effect::CancelJob(wit_effects::CancelJobEffect { job }),
+        Effect::Respond { req, result } => wit::Effect::Respond(wit_effects::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
+        Effect::StorageRead { req, key } => wit::Effect::StorageRead(wit_effects::StorageReadEffect { req: req.0, key }),
+        Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(wit_effects::StorageWriteEffect { req: req.0, key, value: bytes }),
+        Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(wit_effects::StorageDeleteEffect { req: req.0, key }),
+        Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(wit_effects::RequestCapabilityEffect { req: req.0, id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional }),
+        Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
+        Effect::Subscribe { topic } => wit::Effect::Subscribe(wit_effects::SubscribeEffect { topic }),
+        Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit_effects::SubscribeEffect { topic }),
     }
 }
 
-fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> crate::component::exports::semio::framework::reactor::MessageEndpoint {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoint {
     match endpoint {
-        MessageEndpoint::Shell { instance } => wit::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
-        MessageEndpoint::Backbone { uri } => wit::MessageEndpoint::Backbone(uri),
-        MessageEndpoint::PluginInstance { id } => wit::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
-        MessageEndpoint::Extension { id } => wit::MessageEndpoint::Extension(id),
-        MessageEndpoint::Topic { name } => wit::MessageEndpoint::Topic(name),
+        MessageEndpoint::Shell { instance } => wit_types::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+        MessageEndpoint::Backbone { uri } => wit_types::MessageEndpoint::Backbone(uri),
+        MessageEndpoint::PluginInstance { id } => wit_types::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+        MessageEndpoint::Extension { id } => wit_types::MessageEndpoint::Extension(id),
+        MessageEndpoint::Topic { name } => wit_types::MessageEndpoint::Topic(name),
     }
 }
 
-fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> crate::component::exports::semio::framework::reactor::JobPlacement {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> wit_effects::JobPlacement {
     match placement {
-        semio_framework::kernel::JobPlacement::Inline => wit::JobPlacement::Inline,
-        semio_framework::kernel::JobPlacement::Isolated => wit::JobPlacement::Isolated,
-        semio_framework::kernel::JobPlacement::Exclusive => wit::JobPlacement::Exclusive,
+        semio_framework::kernel::JobPlacement::Inline => wit_effects::JobPlacement::Inline,
+        semio_framework::kernel::JobPlacement::Isolated => wit_effects::JobPlacement::Isolated,
+        semio_framework::kernel::JobPlacement::Exclusive => wit_effects::JobPlacement::Exclusive,
     }
 }
 
-fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> crate::component::exports::semio::framework::reactor::RespondResult {
-    use crate::component::exports::semio::framework::reactor as wit;
+fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> wit_effects::RespondResult {
     match result {
-        RequestOutcome::Ok(bytes) => wit::RespondResult::Ok(bytes),
-        RequestOutcome::Err(bytes) => wit::RespondResult::Fault(bytes),
+        RequestOutcome::Ok(bytes) => wit_effects::RespondResult::Ok(bytes),
+        RequestOutcome::Err(bytes) => wit_effects::RespondResult::Fault(bytes),
     }
 }
 

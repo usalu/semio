@@ -456,6 +456,14 @@
         "forwardAllArgs": true
       }
     },
+    "verify-package-purity": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts policy package-purity",
+        "forwardAllArgs": true
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [],

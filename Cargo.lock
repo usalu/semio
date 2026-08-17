@@ -6882,6 +6882,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-mcp"
+version = "0.1.0"
+dependencies = [
+ "axum 0.8.9",
+ "blake3",
+ "futures",
+ "jsonschema",
+ "schemars 0.8.22",
+ "semio-framework",
+ "semio-framework-ui",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-tungstenite 0.26.2",
+ "tower",
+]
+
+[[package]]
 name = "semio-framework-os-renderer-wgpu"
 version = "0.1.0"
 dependencies = [
@@ -6931,6 +6950,17 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-framework-os-shell"
+version = "0.1.0"
+dependencies = [
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "ts-rs",
 ]
 
 [[package]]

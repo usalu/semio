@@ -18,6 +18,23 @@ import type {
   ActionArgDef as GeneratedActionArgDef,
   ActionArgControl as GeneratedActionArgControl,
   ActionArgOption as GeneratedActionArgOption,
+  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
+  // `ArgSchema`/`ArgFormat`/`ArgPresentation` are the new stored-truth vocabulary behind
+  // `ActionArgDef.schema`/`.presentation` — `argControl()` below mirrors Rust `ActionArgDef::control()`.
+  ArgSchema as GeneratedArgSchema,
+  ArgFormat as GeneratedArgFormat,
+  ArgPresentation as GeneratedArgPresentation,
+  // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing.
+  ResourceSelector as GeneratedResourceSelector,
+  CapabilityEffects as GeneratedCapabilityEffects,
+  ApprovalMode as GeneratedApprovalMode,
+  CapabilityPolicy as GeneratedCapabilityPolicy,
+  PreviewMode as GeneratedPreviewMode,
+  UndoMode as GeneratedUndoMode,
+  IdempotencyMode as GeneratedIdempotencyMode,
+  ExecutionClass as GeneratedExecutionClass,
+  CapabilityExecution as GeneratedCapabilityExecution,
+  ActionSemantics as GeneratedActionSemantics,
   UtilityDefinition as GeneratedUtilityDefinition,
   UtilityRef as GeneratedUtilityRef,
   // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
@@ -534,6 +551,68 @@ export type ActionInvocation = GeneratedActionInvocation;
 export type ActionArgDef = GeneratedActionArgDef;
 export type ActionArgControl = GeneratedActionArgControl;
 export type ActionArgOption = GeneratedActionArgOption;
+
+/** 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6: the
+ * stored, engine-neutral shape of one `ActionArgDef`'s value (see Rust `🔖️ArgSchema`) — the sole
+ * persisted truth; `ActionArgControl` above (unchanged) is now DERIVED from it by {@link argControl}. */
+export type ArgSchema = GeneratedArgSchema;
+export type ArgFormat = GeneratedArgFormat;
+export type ArgPresentation = GeneratedArgPresentation;
+
+/** 🎯️ Generated from Rust `🔖️ActionSemantics` (`🛂️manifest/🦀️component.rs`) — effects/policy/
+ * execution + natural-language framing carried on every `ActionDefinition`/`CommandDefinition`. */
+export type ResourceSelector = GeneratedResourceSelector;
+export type CapabilityEffects = GeneratedCapabilityEffects;
+export type ApprovalMode = GeneratedApprovalMode;
+export type CapabilityPolicy = GeneratedCapabilityPolicy;
+export type PreviewMode = GeneratedPreviewMode;
+export type UndoMode = GeneratedUndoMode;
+export type IdempotencyMode = GeneratedIdempotencyMode;
+export type ExecutionClass = GeneratedExecutionClass;
+export type CapabilityExecution = GeneratedCapabilityExecution;
+export type ActionSemantics = GeneratedActionSemantics;
+
+/** 🎛️ Mirrors Rust `ActionArgDef::control()` exactly (D6): derives the renderer-facing
+ * `ActionArgControl` from `def.schema`/`def.presentation` — the ONLY place a TS reader should reach
+ * for an argument's widget kind; never reconstructs `ActionArgControl` from `schema` by hand.
+ * Priority matches Rust: non-empty `options` always wins Select; a `Slider` presentation OR a fully
+ * bounded `Number` wins Slider over plain Number; everything else falls through to Text. */
+export function argControl(def: ActionArgDef): ActionArgControl {
+  const schema = def.schema;
+  switch (schema.kind) {
+    case "string": {
+      if (schema.options && schema.options.length > 0) {
+        return { kind: "select", options: schema.options };
+      }
+      const format = schema.format;
+      if (format?.kind === "iconId") {
+        return { kind: "iconSelect", classifierKind: "icon" };
+      }
+      if (format?.kind === "artifactKind") {
+        return { kind: "artifactKind", roles: format.roles };
+      }
+      if (format?.kind === "surfaceApp") {
+        return { kind: "surfaceApp", roles: format.roles, dialectArg: format.dialectArg };
+      }
+      return { kind: "text", placeholder: undefined };
+    }
+    case "number": {
+      if (def.presentation?.kind === "slider" || (schema.min !== undefined && schema.max !== undefined)) {
+        return { kind: "slider", min: schema.min ?? 0, max: schema.max ?? 0, step: schema.step, unit: schema.unit };
+      }
+      return { kind: "number", min: schema.min, max: schema.max, step: schema.step };
+    }
+    case "boolean":
+      return { kind: "toggle" };
+    case "vec3":
+      return { kind: "vec3" };
+    case "array":
+    case "object":
+    case "any":
+    default:
+      return { kind: "text", placeholder: undefined };
+  }
+}
 export type UtilityDefinition = GeneratedUtilityDefinition;
 export type UtilityRef = GeneratedUtilityRef;
 

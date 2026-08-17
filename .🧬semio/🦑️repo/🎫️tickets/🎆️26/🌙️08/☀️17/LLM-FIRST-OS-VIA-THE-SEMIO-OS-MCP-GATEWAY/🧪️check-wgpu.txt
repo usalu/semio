@@ -1,0 +1,1702 @@
+    Checking flate2 v1.1.9
+    Checking form_urlencoded v1.2.2
+    Checking futures-util v0.3.32
+    Checking tokio v1.52.3
+    Checking core-foundation v0.10.1
+    Checking tungstenite v0.26.2
+    Checking errno v0.3.14
+    Checking tracing v0.1.44
+    Checking typst-timing v0.14.2
+    Checking gltf-json v1.4.1
+    Checking png v0.18.1
+    Checking url v2.5.8
+    Checking tiff v0.11.3
+    Checking zip v2.4.2
+    Checking core-graphics-types v0.2.0
+    Checking tokio-tungstenite v0.26.2
+    Checking png v0.17.16
+    Checking hayro-syntax v0.4.0
+    Checking usvg v0.45.1
+    Checking syntect v5.3.0
+    Checking typst-syntax v0.14.2
+    Checking ureq v2.12.1
+    Checking image v0.25.10
+    Checking hayagriva v0.9.1
+    Checking metal v0.32.0
+   Compiling object v0.37.3
+    Checking num-complex v0.4.6
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking winit v0.30.13
+    Checking gltf v1.4.1
+    Checking two-face v0.4.5
+   Compiling rustix v1.1.4
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking hayro-interpret v0.4.0
+    Checking arboard v3.6.1
+   Compiling wit-parser v0.220.1
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling wasm-metadata v0.220.1
+    Checking wgpu-hal v27.0.4
+   Compiling ar_archive_writer v0.5.1
+    Checking num v0.4.3
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+    Checking typst-library v0.14.2
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking referencing v0.29.1
+    Checking hayro-svg v0.2.0
+    Checking hayro v0.4.0
+   Compiling wit-bindgen-core v0.36.0
+   Compiling wit-component v0.220.1
+    Checking wgpu-core-deps-apple v27.0.0
+   Compiling psm v0.1.31
+    Checking fs-set-times v0.20.3
+    Checking fraction v0.15.4
+    Checking rustix v0.38.44
+    Checking futures-intrusive v0.5.0
+    Checking usvg v0.46.0
+    Checking typst-svg v0.14.2
+    Checking typst-layout v0.14.2
+   Compiling wit-bindgen-rust v0.36.0
+    Checking wgpu-core v27.0.3
+    Checking cap-primitives v3.4.5
+    Checking jsonschema v0.29.1
+    Checking stacker v0.1.24
+    Checking schemars v0.8.22
+   Compiling wit-parser v0.209.1
+    Checking typst-realize v0.14.2
+    Checking typst-html v0.14.2
+   Compiling semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+    Checking semio-framework-compiler v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🦀️rust)
+    Checking wasmtime-cache v22.0.1
+   Compiling wit-bindgen-rust-macro v0.36.0
+    Checking wit-bindgen v0.36.0
+    Checking wgpu v27.0.1
+    Checking cap-std v3.4.5
+    Checking wasmtime-fiber v22.0.1
+    Checking typst-eval v0.14.2
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking fxprof-processed-profile v0.6.0
+   Compiling wasmtime-wit-bindgen v22.0.1
+    Checking simba v0.9.1
+    Checking tiny-skia v0.11.4
+    Checking futures-channel v0.3.32
+    Checking iana-time-zone v0.1.65
+    Checking vello v0.7.0
+    Checking cap-fs-ext v3.4.5
+    Checking typst v0.14.2
+    Checking system-interface v0.27.3
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
+     |
+2589 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2607 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2608 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `outcome_to_result` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:21:15
+   |
+21 | pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+   |               ^^^^^^^^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3617:9
+     |
+3615 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3616 |         definitions: ArtifactDefinitionRegistry,
+3617 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3618 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3619 |         inference_services: ArtifactInferenceServiceRegistry,
+3620 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 5 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+   Compiling wasmtime-component-macro v22.0.1
+    Checking nalgebra v0.33.3
+    Checking wasmtime v22.0.1
+    Checking resvg v0.45.1
+    Checking futures v0.3.32
+    Checking cap-time-ext v3.4.5
+    Checking vello_svg v0.9.0
+    Checking cap-net-ext v3.4.5
+   Compiling semio-s-plugin-puzzle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+   Compiling rfd v0.15.4
+    Checking prost v0.13.5
+    Checking semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+    Checking dispatch2 v0.3.1
+    Checking parry3d v0.17.6
+    Checking wiggle v22.0.1
+   Compiling semio-framework-os-renderer-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu)
+    Checking semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust)
+    Checking semio-framework-surface v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust)
+    Checking wasmtime-wasi v22.0.1
+warning: unused imports: `DagLayoutOptions` and `dag_take_pending_open_instance_id`
+  --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🕸️node-graph/🦀️component.rs:24:32
+   |
+24 | ...world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNod...
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                 ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-surface` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-surface` to apply 1 suggestion)
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+error[E0433]: cannot find `semio` in `crate`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4377:5
+     |
+4377 | /     wasmtime::component::bindgen!({
+4378 | |         world: "actor",
+4379 | |         path: "../../../🧬️schema",
+4380 | |         async: false,
+...    |
+4383 | |         },
+4384 | |     });
+     | |______^ unresolved import
+     |
+     = note: this error originates in the macro `wasmtime::component::bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: a similar path exists
+     |
+4377 -     wasmtime::component::bindgen!({
+4378 -         world: "actor",
+4379 -         path: "../../../🧬️schema",
+4380 -         async: false,
+4381 -         with: {
+4382 -             "semio:framework/types": crate::semio::framework::types,
+4383 -         },
+4384 -     });
+4377 +     component::actor_bindings::semio;
+     |
+
+error[E0432]: unresolved imports `actor_bindings::semio::framework::jobs`, `actor_bindings::semio::framework::reactor`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:630:120
+    |
+630 | ...ents as wit_events, jobs as wit_jobs, reactor as wit_reactor, types as wit_types, ui as wit_ui};
+    |                        ----^^^^^^^^^^^^  -------^^^^^^^^^^^^^^^
+    |                        |                 |
+    |                        |                 no `reactor` in `component::actor_bindings::semio::framework`
+    |                        no `jobs` in `component::actor_bindings::semio::framework`
+    |
+    = help: consider importing one of these modules instead:
+            crate::component::actor_bindings::exports::semio::framework::jobs
+            crate::component::extension_bindings::exports::semio::framework::jobs
+    = help: consider importing one of these modules instead:
+            crate::component::actor_bindings::exports::semio::framework::reactor
+            crate::component::extension_bindings::exports::semio::framework::reactor
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3666:6
+     |
+3666 | impl semio::framework::host::Host for HostState {
+     |      ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3836:9
+     |
+3836 | ...   semio::framework::host::add_to_linker(&mut linker, |state| state).map_err(|error| PluginHostError::Wasmtime(error.to_string(...
+     |       ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4288:25
+     |
+4288 |         let req_struct: semio::framework::types::ArtifactInferenceRequest = serde_json::from_slice(request)?;
+     |                         ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4325:21
+     |
+4325 | ...   let input = semio::framework::types::MigrateArtifactInput { from_version: from_version.to_string(), to_version: to_version.t...
+     |                   ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find `host` in `framework`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4421:44
+     |
+4421 | impl extension_bindings::semio::framework::host::Host for ExtensionHostState {
+     |                                            ^^^^ could not find `host` in `framework`
+
+error[E0433]: cannot find `host` in `framework`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4540:47
+     |
+4540 | ...   extension_bindings::semio::framework::host::add_to_linker(&mut linker, |state| state).map_err(|error| PluginHostError::Wasmt...
+     |                                             ^^^^ could not find `host` in `framework`
+
+error[E0433]: cannot find `ExtensionWorld` in `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4587:57
+     |
+4587 | ...   let (bindings, _instance) = extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|e...
+     |                                                       ^^^^^^^^^^^^^^ could not find `ExtensionWorld` in `extension_bindings`
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3791:21
+     |
+3791 |     bindings: Mutex<PluginWorld>,
+     |                     ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3786 | pub struct WasmPluginRuntime<PluginWorld> {
+     |                             +++++++++++++
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3813:66
+     |
+3813 |     fn bindings_guard(&self) -> Result<std::sync::MutexGuard<'_, PluginWorld>, PluginHostError> {
+     |                                                                  ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3808 | impl<PluginWorld> WasmPluginRuntime {
+     |     +++++++++++++
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3817:43
+     |
+3817 |     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+     |                                           ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+help: consider importing this module
+     |
+   3 + use crate::component::actor_bindings::semio::framework::types;
+     |
+help: if you import `types`, refer to it directly
+     |
+3817 -     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+3817 +     fn plugin_result<T>(result: Result<T, types::PluginError>) -> Result<T, PluginHostError> {
+     |
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3819:13
+     |
+3819 |             semio::framework::types::PluginError::Fault(bytes) => {
+     |             ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::reactor::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+3819 -             semio::framework::types::PluginError::Fault(bytes) => {
+3819 +             PluginError::Fault(bytes) => {
+     |
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4364:129
+     |
+4364 | ...nker<HostState>) -> Result<(Store<HostState>, PluginWorld), PluginHostError> {
+     |                                                  ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3808 | impl<PluginWorld> WasmPluginRuntime {
+     |     +++++++++++++
+
+error[E0425]: cannot find type `ExtensionWorld` in module `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4514:35
+     |
+4514 |     bindings: extension_bindings::ExtensionWorld,
+     |                                   ^^^^^^^^^^^^^^ not found in `extension_bindings`
+
+error[E0425]: cannot find type `PluginError` in module `extension_bindings::semio::framework::types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4566:91
+     |
+4566 | ...s::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+     |                                ^^^^^^^^^^^ not found in `extension_bindings::semio::framework::types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::reactor::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4566 -     fn extension_result<T>(result: Result<T, extension_bindings::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+4566 +     fn extension_result<T>(result: Result<T, PluginError>) -> Result<T, PluginHostError> {
+     |
+
+error[E0433]: cannot find `PluginError` in `types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4568:58
+     |
+4568 | ...   extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&b...
+     |                                                    ^^^^^^^^^^^ could not find `PluginError` in `types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::reactor::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4568 -             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
+4568 +             PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
+     |
+
+error[E0425]: cannot find type `ExtensionWorld` in module `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4572:94
+     |
+4572 | ...State>, bindings: &extension_bindings::ExtensionWorld) -> Result<ExtensionManifest, PluginHostError> {
+     |                                           ^^^^^^^^^^^^^^ not found in `extension_bindings`
+
+error[E0433]: cannot find `PluginError` in `types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4633:58
+     |
+4633 |             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+     |                                                          ^^^^^^^^^^^ could not find `PluginError` in `types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::reactor::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4633 -             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+4633 +             PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+     |
+
+warning: unused import: `bindgen`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:17:27
+   |
+17 | use wasmtime::component::{bindgen, Component, Linker};
+   |                           ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::types::PluginError`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::types::PluginError`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::types::MessageEndpoint`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::types::MessageEndpoint`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `InferenceCacheMode`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `InferenceCacheMode`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::capabilities::CapabilityToken`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::capabilities::CapabilityToken`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::capabilities::CapabilityGrant`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::capabilities::CapabilityGrant`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::capabilities::CapabilityChange`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::capabilities::CapabilityChange`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SendMessageEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SendMessageEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::PublishEventEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::PublishEventEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::BlobLoadEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::BlobLoadEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::BlobWriteEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::BlobWriteEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::HttpRequestEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::HttpRequestEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::DocumentReadEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::DocumentReadEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::DocumentWriteEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::DocumentWriteEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::LinkResolveEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::LinkResolveEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RegistryQueryEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RegistryQueryEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::IoComposeEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::IoComposeEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::IoRunEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::IoRunEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::CacheDeriveEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::CacheDeriveEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::CacheReadEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::CacheReadEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::OpenWindowEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::OpenWindowEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::CloseWindowEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::CloseWindowEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::DispatchActionEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::DispatchActionEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::InvokeExtensionEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::InvokeExtensionEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::NotifyEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::NotifyEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::ClipboardWriteEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::ClipboardWriteEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::NavigateEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::NavigateEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::OpenExternalUrlEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::OpenExternalUrlEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SetPanelEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SetPanelEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SetActiveUtilityEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SetActiveUtilityEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SetActiveToolEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SetActiveToolEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::PatchWorld3dChromeEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::PatchWorld3dChromeEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::ReplayShellCommandEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::ReplayShellCommandEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SpawnPluginInstanceEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SpawnPluginInstanceEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::OpenPluginInstanceEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::OpenPluginInstanceEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::OpenDialogEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::OpenDialogEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::IconRenderExportEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::IconRenderExportEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::DownloadMediaExportEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::DownloadMediaExportEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RequestFileOpenEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RequestFileOpenEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RequestMediaFramesEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RequestMediaFramesEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::LoadDocumentEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::LoadDocumentEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SetTimerEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SetTimerEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::JobPlacement`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::JobPlacement`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SpawnJobEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SpawnJobEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::CancelJobEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::CancelJobEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RespondResult`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RespondResult`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RespondEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RespondEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::StorageReadEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::StorageReadEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::StorageWriteEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::StorageWriteEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::StorageDeleteEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::StorageDeleteEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::RequestCapabilityEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::RequestCapabilityEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::ReleaseCapabilityEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::ReleaseCapabilityEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::SubscribeEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::SubscribeEffect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::effects::Effect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::effects::Effect`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::SurfaceRef`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::SurfaceRef`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::PatchReplace`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::PatchReplace`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::PatchInsertChild`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::PatchInsertChild`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::PatchRemoveChild`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::PatchRemoveChild`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::PatchSetProps`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::PatchSetProps`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::PatchOp`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::PatchOp`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::ui::UiPatch`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::ui::UiPatch`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::InstanceOpenEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::InstanceOpenEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::InstanceCloseEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::InstanceCloseEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::ActivationEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::ActivationEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::ActivateEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::ActivateEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::SuspendRequestEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::SuspendRequestEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::CapabilityChangedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::CapabilityChangedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::QuotaChangedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::QuotaChangedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::AppCommandEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::AppCommandEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::SurfaceVisibleEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::SurfaceVisibleEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::SurfaceHiddenEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::SurfaceHiddenEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::SurfaceResizedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::SurfaceResizedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::PatchAckEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::PatchAckEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::PatchRejectedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::PatchRejectedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::CompletionResult`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::CompletionResult`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::CompletedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::CompletedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::HttpChunkEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::HttpChunkEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::JobProgressEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::JobProgressEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::JobCompletedEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::JobCompletedEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::MessageEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::MessageEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::TimerEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::TimerEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::RequestEvent`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::RequestEvent`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::semio::framework::events::Event`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::semio::framework::events::Event`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::exports::semio::framework::reactor::Budget`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::exports::semio::framework::reactor::Budget`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::exports::semio::framework::reactor::TurnStatus`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::exports::semio::framework::reactor::TurnStatus`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::exports::semio::framework::reactor::TurnResult`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::exports::semio::framework::reactor::TurnResult`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::exports::semio::framework::jobs::JobBudget`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::exports::semio::framework::jobs::JobBudget`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `actor_bindings::exports::semio::framework::jobs::JobStep`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:622:5
+    |
+622 | /     wasmtime::component::bindgen!({
+623 | |         world: "actor",
+624 | |         path: "../../../🧬️schema",
+625 | |         async: false,
+626 | |         additional_derives: [Clone, Debug],
+627 | |     });
+    | |      ^
+    | |      |
+    | |______first implementation here
+    |        conflicting implementation for `actor_bindings::exports::semio::framework::jobs::JobStep`
+
+error[E0433]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4356:37
+     |
+4356 | ...   let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtim...
+     |                                   ^^^^^^^^^^^ use of undeclared type `PluginWorld`
+
+error[E0433]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4366:37
+     |
+4366 | ...   let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtim...
+     |                                   ^^^^^^^^^^^ use of undeclared type `PluginWorld`
+
+Some errors have detailed explanations: E0119, E0425, E0432, E0433.
+For more information about an error, try `rustc --explain E0119`.
+warning: `semio-framework-plugin-host` (lib) generated 1 warning
+error: could not compile `semio-framework-plugin-host` (lib) due to 108 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-s-plugin-stdio` (lib) generated 4 warnings

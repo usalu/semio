@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { ActionArgDef, DialogDefinition } from "@semio-tech/framework";
+import { argControl, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
 import { UIDialog } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
@@ -18,7 +18,10 @@ import { useState } from "react";
 // 🗨️#region 🗨️UIDialog
 /** @emoji 🎛️ Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/os/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
 function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) {
-  if (def.control.kind === "toggle") {
+  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
+  // `def.control` is gone (derived, not stored) — `argControl(def)` mirrors Rust `ActionArgDef::control()`.
+  const control = argControl(def);
+  if (control.kind === "toggle") {
     return (
       <label className="flex items-center gap-single text-xs">
         <input type="checkbox" checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} />
@@ -26,8 +29,8 @@ function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: u
       </label>
     );
   }
-  if (def.control.kind === "number" || def.control.kind === "slider") {
-    return <input type="number" className="w-full border p-single text-xs" value={typeof value === "number" ? value : ""} min={def.control.min} max={def.control.max} onChange={(event) => onChange(Number(event.target.value))} />;
+  if (control.kind === "number" || control.kind === "slider") {
+    return <input type="number" className="w-full border p-single text-xs" value={typeof value === "number" ? value : ""} min={control.min} max={control.max} onChange={(event) => onChange(Number(event.target.value))} />;
   }
   return <input type="text" className="w-full border p-single text-xs" value={typeof value === "string" ? value : ""} onChange={(event) => onChange(event.target.value)} />;
 }

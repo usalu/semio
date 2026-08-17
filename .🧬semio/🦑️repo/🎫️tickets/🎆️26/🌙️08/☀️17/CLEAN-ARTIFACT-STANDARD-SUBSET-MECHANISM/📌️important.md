@@ -21,8 +21,13 @@ Ticket path (use this exact path for `ticket_reopen`/`ticket_close`):
 - ✅ Every research/summary output is a `📓️*.md` **in this folder**, not a chat message.
 - ✅ Prefix temporary logs with `[DEBUG] ` so they can be swept.
 - ✅ Report ends with `## verification` (exact commands + exact numbers) and `## sharedFileRequests`.
-- ✅ If a file you need is being rewritten by a peer session right now (`git log --date=iso` vs ticket start
-  commit `TBD-W0`), report `blocked-peer` with proof — do not chase a moving target.
+- ✅ If a file you need is being rewritten by a peer session right now, report `blocked-peer` with proof — do not
+  chase a moving target. Ticket start commit: **`101a6b4ea83acc82d6fbdc0607e6ae5d876825ae`** (2026-08-17 15:59:36
+  +0200). Check both `git log --date=iso -- <path>` (newer commit = peer landed) **and** `git status --porcelain
+  -- <path>` (` M` = peer editing right now, uncommitted — the more dangerous case; it has bitten this ticket twice).
+- ✅ Verify the **test** target, not just `cargo check`. A green `cargo check -p <crate>` says nothing about tests,
+  and this repo's peer collisions land there. For `semio-framework-os` you must also pass `--features os-host-full`
+  or it reports "0 tests run" and looks healthy while running nothing.
 
 ## Hot files — single writer each (claim in `📓️status.md` before touching)
 
@@ -53,7 +58,7 @@ Ticket path (use this exact path for `ticket_reopen`/`ticket_close`):
 | D5 | builder method is `.declare_artifact()` because the old `ArtifactDeclaration` still owns the name `.artifact()` | W1-C | W6 (rename) | ☐ |
 | D6 | stdio `📇️registry`'s rigid 36-artifact factory map is the only path `plugin()` reaches artifacts by — blocks per-artifact cutover | W2-P | W2 (delete `📇️registry`, cut all 36 at once) | ☐ |
 | D7 | `NativeCodecs.{snapshot,diff,mutations}` land as `LanguagePair{None,None}` for binary/txt — the 5 `dsl::LanguageSpec` roles the old `register_pilot_languages()` registered are not yet wired | W2-P | W2 | ☐ |
-| D8 | `os_reachable_export_dialects` / `os_reachable_import_dialects` exist with **no caller** — W1b Task 3 (shell wiring) could not complete inside its boundary. Either wire them in the shell wave or delete them; they must not ship unread. | W1b | shell wave | ☐ |
+| D8 | ~~`os_reachable_export_dialects` / `os_reachable_import_dialects` shipped with no caller~~ — **DELETED by the coordinator.** They were dead *and* subtly wrong: one-hop filters over `io_entries()`, so a shell using them would under-report what is actually exportable (real reachability is `io_route`, which already exists). Whoever builds "Export as…" should query `io_route`/`io_entries` directly. ⚠️ Removal verified by zero-reference grep across `🧰️framework` + `✏️s`; **compile verification was blocked** — a peer's uncommitted edit to `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs` (new `ArgFormat` type, serde bounds unsatisfied) reds `semio-framework` and everything downstream. **The breakage is provably not the deletion**: it is in `semio-framework`, which is *upstream* of `semio-framework-os` where the deletion happened — a downstream removal cannot break an upstream crate. Re-confirmed twice ~30 min apart: identical `ArgFormat` errors, file still ` M` (uncommitted). Re-run `cargo nextest -p semio-framework-os --features os-host-full` once that clears; expected **110 / 103 / 7**. | W1b | ✅️ coordinator | ☑️ |
 | D9 | `IoPayload` crosses the WIT as JSON, so `Binary(Vec<u8>)` serializes as a JSON array of numbers — fine for small payloads, a real blowup for large binary artifacts. Needs a `DslValue::Bytes` variant or a binary framing. | W1-D | post-W6 | ☐ |
 | D10 | WIT wire params are `source`/`target`, not `from`/`into` — `from` is a reserved WIT keyword. Rust/TS internals still say `from`/`into`. Not a defect; recorded so nobody "fixes" it back. | W1-D | — | n/a |
 

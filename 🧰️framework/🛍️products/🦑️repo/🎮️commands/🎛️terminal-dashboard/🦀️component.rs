@@ -154,7 +154,11 @@ impl Dashboard {
             win.chrome,
             Node::new(NodeContent::Widget(WidgetState::Terminal(TerminalState::new(term_size, 8000)))),
         );
-        tui.scene.node_mut(term_id).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+        tui.scene.node_mut(term_id).set_constraint(Constraint {
+            width: Dimension::Weight(1),
+            height: Dimension::Weight(1),
+            ..Default::default()
+        });
         let args: Vec<&str> = spec.args.iter().map(String::as_str).collect();
         let env_refs: Vec<(&str, &str)> = spec.env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
         let pty_size = PtySize { cols: term_size.width.max(1), rows: term_size.height.max(1) };
@@ -199,7 +203,11 @@ impl Dashboard {
         let node = current_node(&self.tree, &[]);
         let options: Vec<String> = node.children.iter().map(|c| c.label.clone()).collect();
         let widget = tui.scene.add(chrome, Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(options)))));
-        tui.scene.node_mut(widget).set_constraint(Constraint { height: Dimension::Weight(1), ..Default::default() });
+        tui.scene.node_mut(widget).set_constraint(Constraint {
+            width: Dimension::Weight(1),
+            height: Dimension::Weight(1),
+            ..Default::default()
+        });
         DashboardWindow {
             id: id.to_string(),
             chrome,

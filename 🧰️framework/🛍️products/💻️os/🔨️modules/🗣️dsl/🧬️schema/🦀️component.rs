@@ -196,6 +196,204 @@ pub struct GrammarSpec {
 }
 //#endregion 🔖️Shape
 
+//#region 🔖️JsonSchema
+// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema §3.2: the
+// gateway's JSON Schema derivation is primarily `ActionArgDef::json_schema()` (manifest-declared
+// args); THIS is the fallback for `app_commands!` payload structs whose only declared shape is a
+// `RecordSpec` (`#[derive(dsl::DslRecord)]`) — the catalog compiler tags whatever it emits from here
+// `x-semio-confidence: "payload"`, not this module's concern.
+/// @emoji 📐️ JSON Schema 2020-12 for one `Shape` leaf/node — recurses through `Tuple`/`List`/
+/// `Record`/`Block`/`Statements`/`Map`/`Table`. `Quantity`/`Angle` carry their unit as
+/// `x-semio-unit`; `Ref(kind)` carries the referenced entity kind as `x-semio-ref`; every shape with
+/// no native JSON Schema vocabulary (`Bytes64`/`Wire`/`Coord`/`Dir`/`Dim`/`Range`/`Count`/`Expr`/
+/// `Embed`/`EmbedFrom`) additionally carries `x-semio-shape` naming the exact `Shape` variant.
+pub fn shape_json_schema(shape: &Shape) -> serde_json::Value {
+    match shape {
+        Shape::Bool => serde_json::json!({ "type": "boolean" }),
+        Shape::Int => serde_json::json!({ "type": "integer" }),
+        Shape::UInt => serde_json::json!({ "type": "integer", "minimum": 0 }),
+        Shape::Float => serde_json::json!({ "type": "number" }),
+        Shape::Text => serde_json::json!({ "type": "string" }),
+        Shape::Bytes64 => serde_json::json!({ "type": "string", "contentEncoding": "base64", "x-semio-shape": "bytes64" }),
+        Shape::Enum(variants) => serde_json::json!({ "type": "string", "enum": variants.iter().map(|(tag, _)| tag.clone()).collect::<Vec<_>>() }),
+        Shape::Tuple(inner, len) => {
+            let mut value = serde_json::json!({ "type": "array", "items": shape_json_schema(inner) });
+            if let Some(len) = len {
+                let map = value.as_object_mut().expect("object schema");
+                map.insert("minItems".into(), serde_json::json!(len));
+                map.insert("maxItems".into(), serde_json::json!(len));
+            }
+            value
+        }
+        Shape::List(inner) => serde_json::json!({ "type": "array", "items": shape_json_schema(inner) }),
+        Shape::Record(spec_fn) => record_spec_json_schema(&spec_fn()),
+        Shape::Block(inner) => shape_json_schema(inner),
+        Shape::Statements(variants) => {
+            let one_of: Vec<serde_json::Value> = variants
+                .iter()
+                .map(|(keyword, spec_fn)| {
+                    let mut entry = record_spec_json_schema(&spec_fn());
+                    if let Some(map) = entry.as_object_mut() {
+                        map.insert("x-semio-keyword".into(), serde_json::Value::String(keyword.clone()));
+                    }
+                    entry
+                })
+                .collect();
+            serde_json::json!({ "type": "array", "items": { "oneOf": one_of } })
+        }
+        Shape::Map(inner) => serde_json::json!({ "type": "object", "additionalProperties": shape_json_schema(inner) }),
+        Shape::Value => serde_json::json!({}),
+        Shape::Table(spec_fn) => serde_json::json!({ "type": "array", "items": record_spec_json_schema(&spec_fn()) }),
+        Shape::Wire => serde_json::json!({ "type": "string", "x-semio-shape": "wire" }),
+        Shape::Quantity(unit) => serde_json::json!({ "type": "number", "x-semio-unit": unit.symbol }),
+        Shape::Angle(unit) => serde_json::json!({ "type": "number", "x-semio-unit": unit.symbol, "x-semio-shape": "angle" }),
+        Shape::Ref(kind) => serde_json::json!({ "type": "string", "x-semio-ref": kind }),
+        Shape::Coord(dims) => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": dims, "maxItems": dims, "x-semio-shape": "coord" }),
+        Shape::Dir => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "x-semio-shape": "dir" }),
+        Shape::Dim(dims) => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": dims, "maxItems": dims, "x-semio-shape": "dim" }),
+        Shape::Range => serde_json::json!({ "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 3, "x-semio-shape": "range" }),
+        Shape::Count => serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }),
+        Shape::Expr => serde_json::json!({ "type": "string", "x-semio-shape": "expr" }),
+        Shape::Embed(lang) => serde_json::json!({ "type": "string", "x-semio-shape": "embed", "x-semio-lang": lang }),
+        Shape::EmbedFrom(key) => serde_json::json!({ "type": "string", "x-semio-shape": "embed", "x-semio-lang-from": key }),
+    }
+}
+
+/// @emoji 📐️ JSON Schema 2020-12 object for one `RecordSpec` — one property per `FieldSpec.key`
+/// (positional-only fields, whose `key` is empty, are omitted — no name to key a JSON object
+/// property on), `flatten`ed nested-record fields splice their own fields into THIS SAME properties
+/// map rather than nesting, mirroring what `flatten` means at parse/print altitude. `required` lists
+/// every non-`optional`, non-empty-key field.
+pub fn record_spec_json_schema(spec: &RecordSpec) -> serde_json::Value {
+    let mut properties = serde_json::Map::new();
+    let mut required: Vec<serde_json::Value> = Vec::new();
+    collect_record_spec_properties(spec, &mut properties, &mut required);
+    let mut value = serde_json::json!({ "type": "object", "properties": properties });
+    let map = value.as_object_mut().expect("object schema");
+    if let Some(keyword) = &spec.keyword {
+        map.insert("x-semio-keyword".into(), serde_json::Value::String(keyword.clone()));
+    }
+    if !required.is_empty() {
+        map.insert("required".into(), serde_json::Value::Array(required));
+    }
+    value
+}
+
+fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut serde_json::Map<String, serde_json::Value>, required: &mut Vec<serde_json::Value>) {
+    for field in &spec.fields {
+        if field.flatten {
+            if let Shape::Record(spec_fn) = &field.shape {
+                collect_record_spec_properties(&spec_fn(), properties, required);
+                continue;
+            }
+        }
+        if field.key.is_empty() {
+            continue;
+        }
+        properties.insert(field.key.clone(), shape_json_schema(&field.shape));
+        if !field.optional {
+            required.push(serde_json::Value::String(field.key.clone()));
+        }
+    }
+}
+
+#[cfg(test)]
+mod json_schema_tests {
+    use super::*;
+
+    #[test]
+    fn primitive_shapes_map_onto_the_expected_json_schema_types() {
+        assert_eq!(shape_json_schema(&Shape::Bool), serde_json::json!({ "type": "boolean" }));
+        assert_eq!(shape_json_schema(&Shape::Int), serde_json::json!({ "type": "integer" }));
+        assert_eq!(shape_json_schema(&Shape::UInt), serde_json::json!({ "type": "integer", "minimum": 0 }));
+        assert_eq!(shape_json_schema(&Shape::Float), serde_json::json!({ "type": "number" }));
+        assert_eq!(shape_json_schema(&Shape::Text), serde_json::json!({ "type": "string" }));
+        assert_eq!(shape_json_schema(&Shape::Count), serde_json::json!({ "type": "integer", "minimum": 0, "x-semio-shape": "count" }));
+        assert_eq!(shape_json_schema(&Shape::Expr), serde_json::json!({ "type": "string", "x-semio-shape": "expr" }));
+    }
+
+    #[test]
+    fn ref_carries_the_entity_kind_and_quantity_carries_its_unit() {
+        let ref_schema = shape_json_schema(&Shape::Ref("material"));
+        assert_eq!(ref_schema["type"], serde_json::json!("string"));
+        assert_eq!(ref_schema["x-semio-ref"], serde_json::json!("material"));
+
+        let quantity_schema = shape_json_schema(&Shape::Quantity(crate::os_dsl::unit_by_symbol("GPa").unwrap()));
+        assert_eq!(quantity_schema["type"], serde_json::json!("number"));
+        assert_eq!(quantity_schema["x-semio-unit"], serde_json::json!("GPa"));
+    }
+
+    #[test]
+    fn enum_becomes_a_string_enum_of_its_tags() {
+        let schema = shape_json_schema(&Shape::Enum(vec![("visible".into(), 0), ("hidden".into(), 1)]));
+        assert_eq!(schema["type"], serde_json::json!("string"));
+        assert_eq!(schema["enum"], serde_json::json!(["visible", "hidden"]));
+    }
+
+    #[test]
+    fn list_and_fixed_tuple_map_onto_json_schema_arrays() {
+        let list = shape_json_schema(&Shape::List(Box::new(Shape::Float)));
+        assert_eq!(list["type"], serde_json::json!("array"));
+        assert_eq!(list["items"], serde_json::json!({ "type": "number" }));
+
+        let tuple = shape_json_schema(&Shape::Tuple(Box::new(Shape::Float), Some(3)));
+        assert_eq!(tuple["minItems"], serde_json::json!(3));
+        assert_eq!(tuple["maxItems"], serde_json::json!(3));
+    }
+
+    // --- record_spec_json_schema over the existing dsl fixtures (this file's 🧪️Tests region) ---
+    fn camera_spec() -> RecordSpec {
+        RecordSpec::new(Some("camera"), RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float), FieldSpec::new(2, "zoom", Shape::Float), FieldSpec::new(3, "label", Shape::Text).optional()])
+    }
+
+    #[test]
+    fn record_spec_json_schema_covers_required_and_optional_fields() {
+        let schema = record_spec_json_schema(&camera_spec());
+        assert_eq!(schema["type"], serde_json::json!("object"));
+        assert_eq!(schema["properties"]["x"], serde_json::json!({ "type": "number" }));
+        assert_eq!(schema["properties"]["label"], serde_json::json!({ "type": "string" }));
+        assert_eq!(schema["x-semio-keyword"], serde_json::json!("camera"));
+        let required: Vec<String> = schema["required"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+        assert!(required.contains(&"x".to_string()) && required.contains(&"zoom".to_string()));
+        assert!(!required.contains(&"label".to_string()), "optional field must not be required");
+    }
+
+    fn writer_note_spec() -> RecordSpec {
+        RecordSpec::new(Some("query"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "body", Shape::Embed("jack"))])
+    }
+
+    #[test]
+    fn record_spec_json_schema_round_trips_embed_and_positional_fields() {
+        let schema = record_spec_json_schema(&writer_note_spec());
+        assert_eq!(schema["properties"]["id"], serde_json::json!({ "type": "string" }));
+        assert_eq!(schema["properties"]["body"]["x-semio-shape"], serde_json::json!("embed"));
+        assert_eq!(schema["properties"]["body"]["x-semio-lang"], serde_json::json!("jack"));
+    }
+
+    fn nested_point_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
+    }
+
+    #[test]
+    fn record_shape_recurses_via_record_spec_json_schema() {
+        let spec = RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))]);
+        let schema = record_spec_json_schema(&spec);
+        assert_eq!(schema["properties"]["at"]["type"], serde_json::json!("object"));
+        assert_eq!(schema["properties"]["at"]["properties"]["x"], serde_json::json!({ "type": "number" }));
+    }
+
+    #[test]
+    fn flatten_splices_nested_fields_into_the_same_properties_map() {
+        let spec = RecordSpec::new(Some("shape"), RecordLayout::Inline, vec![FieldSpec::new(0, "origin", Shape::Record(nested_point_spec)).flatten(), FieldSpec::new(1, "label", Shape::Text)]);
+        let schema = record_spec_json_schema(&spec);
+        let properties = schema["properties"].as_object().unwrap();
+        assert!(properties.contains_key("x") && properties.contains_key("y"), "flatten must splice into the parent's properties, not nest");
+        assert!(properties.contains_key("label"));
+        assert!(!properties.contains_key("origin"), "the flatten carrier field itself is not a property");
+    }
+}
+//#endregion 🔖️JsonSchema
+
 //#region 🔖️Value
 /// @emoji 🌱️ Dynamic JSON-equivalent literal for schema-less fields (`Shape::Value`).
 #[derive(Clone, Debug, PartialEq)]
@@ -2120,6 +2318,7 @@ pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Resul
 //#endregion 🔖️Canonicalize
 
 //#region 🔖️SerDe
+#[path = "../🔀️dsl-value-serde/🦀️component.rs"]
 mod dsl_value_serde;
 
 /// @emoji 🔀️ Materializes a `serde::Serialize` value into a `DslValue` tree (no JSON text).

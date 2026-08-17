@@ -1,0 +1,2 @@
+unknown command "check"
+usage: bun ./📜️script.ts <os|semio|examples|nx|setup|start|dev|generate|new|lint|verify|format|test|stdio|build|cpp|publish|purge|query|micro-commit|commit> [args…]

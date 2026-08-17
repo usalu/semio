@@ -2969,6 +2969,7 @@ pub mod widget {
                 WidgetState::Chip(c) => Size { width: display_width(&c.label) + 2, height: 1 },
                 WidgetState::Divider(_) => Size { width: 1, height: 1 },
                 WidgetState::Terminal(t) => t.screen.size,
+                WidgetState::Wizard(_) => Size { width: 1, height: 1 },
                 _ => Size { width: 0, height: 0 },
             }
         }
@@ -3499,6 +3500,14 @@ pub mod chrome {
         let mut windows = Vec::new();
         for measure in solve_window_layout(layout, Rect::default()) {
             let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
+            scene.node_mut(id).set_constraint(crate::tui::layout::Constraint {
+                width: crate::tui::layout::Dimension::Weight(1),
+                height: crate::tui::layout::Dimension::Weight(1),
+                direction: crate::tui::layout::Direction::Column,
+                padding: [2, 1, 1, 1],
+                gap: 1,
+                ..Default::default()
+            });
             windows.push((measure.window_kind_id, id));
         }
         Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows, mount_root: None }
@@ -3552,6 +3561,14 @@ pub mod chrome {
                     scene.reparent(win_id, box_id);
                     let visible = child.window_kind_id == active;
                     scene.node_mut(win_id).set_visible(visible);
+                    scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint {
+                        width: Dimension::Weight(1),
+                        height: Dimension::Weight(1),
+                        direction: Direction::Column,
+                        padding: [2, 1, 1, 1],
+                        gap: 1,
+                        ..Default::default()
+                    });
                     if let Some(chrome) = scene.node_mut(win_id).chrome() {
                         if let ChromeState::Window(ref mut ws) = chrome {
                             ws.stack_tabs = tabs.clone();
@@ -3586,6 +3603,14 @@ pub mod chrome {
             if let Some(win_id) = find_window(windows, zid) {
                 scene.reparent(win_id, mount);
                 scene.node_mut(win_id).set_visible(true);
+                scene.node_mut(win_id).set_constraint(crate::tui::layout::Constraint {
+                    width: Dimension::Weight(1),
+                    height: Dimension::Weight(1),
+                    direction: Direction::Column,
+                    padding: [2, 1, 1, 1],
+                    gap: 1,
+                    ..Default::default()
+                });
             }
             return;
         }
@@ -5107,6 +5132,37 @@ mod tests {
         assert_eq!(window.window_hit(rect, Pos { x: tab1.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(1)));
         let new_x = tab0.new_x.expect("new-window glyph geometry");
         assert_eq!(window.window_hit(rect, Pos { x: new_x, y: rect.y + 1 }), Some(WidgetSignal::WindowNewTab));
+    }
+
+    #[test]
+    fn shell_window_wizard_body_paints_options_after_remount() {
+        let mut tui = crate::tui::engine::Tui::new(Size { width: 60, height: 16 }, Theme::new(AppearanceName::Dark));
+        let navbar = NavbarState { left: vec![], center: vec![], right: vec![] };
+        let footer = FooterState { hints: vec![], status: String::new() };
+        let layout = create_default_layout(&["w1".into()], "row", None, Some(&["wizard".into()]));
+        let mut built = shell(&mut tui.scene, navbar, footer, &layout);
+        let (_id, chrome) = built.windows[0].clone();
+        let widget = tui.scene.add(
+            chrome,
+            Node::new(NodeContent::Widget(WidgetState::Wizard(WizardState::new(vec!["dev".into(), "build".into(), "test".into()])))),
+        );
+        tui.scene.node_mut(widget).set_constraint(Constraint {
+            width: Dimension::Weight(1),
+            height: Dimension::Weight(1),
+            ..Default::default()
+        });
+        built.remount(&mut tui.scene, &layout);
+        tui.set_focus(Some(widget));
+        let _ = tui.render_full();
+        let rect = tui.scene.rect(widget);
+        assert!(rect.width > 4 && rect.height > 1, "wizard rect collapsed: {rect:?}");
+        let mut buf = CellBuffer::new(Size { width: 60, height: 16 }, Cell::blank([0, 0, 0], [0, 0, 0]));
+        match &tui.scene.node(widget).content {
+            NodeContent::Widget(w) => w.paint(&Theme::new(AppearanceName::Dark), rect, &mut buf, true),
+            _ => panic!("expected wizard widget"),
+        }
+        let body: String = (0..60).filter_map(|x| buf.get(x, rect.y).map(|c| c.ch)).collect();
+        assert!(body.contains("dev") || body.contains("›"), "wizard options missing from paint: {body:?}");
     }
 
     #[test]

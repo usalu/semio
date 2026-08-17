@@ -1,0 +1,2 @@
+checked 20 fixture rows (11 shell_to_gateway, 9 gateway_to_shell)
+PASS: TS bridge codec agrees byte-for-byte with every fixture row

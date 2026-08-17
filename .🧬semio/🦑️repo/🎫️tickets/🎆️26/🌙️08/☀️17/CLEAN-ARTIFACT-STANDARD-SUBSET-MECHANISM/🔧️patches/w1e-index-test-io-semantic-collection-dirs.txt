@@ -1,0 +1,53 @@
+Target file (OUT OF W1-E boundary — repo-lib TS, not taxonomy.json/discovery/component.ts/script.ts):
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+
+## Why this is a patch, not a direct W1-E edit
+
+W1-E extended `ioSemanticCollectionDirNames` in `🔣️taxonomy.json` from `["💡️inferences", "🧬️mutations"]` to
+`["📸️snapshot", "🔺️diff", "💡️inferences", "🧬️mutations"]` (the corrected, direct-under-🚪️io native-codec shape —
+see the ticket's ⚠️ CORRECTION in `📓️design.md` §1 and `📓️w1-e-report.md`). This is a required, direct consequence
+that breaks exactly one assertion in `🧪️index.test.ts`, confirmed by running the suite before and after the W1-E
+edit:
+
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts:1537
+    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["💡️inferences", "🧬️mutations"]);
+
+Actual diff observed from the failing run:
+  @@ -1,3 +1,4 @@
+     [
+  +   "📸️snapshot",
+  +   "🔺️diff",
+       "💡️inferences",
+
+All 21 other failures present in the same run (188→190 run, 20→22 fail baseline drift) are NOT caused by this
+ticket — traced to two other concurrent peer tickets (`26/08/17/LANGUAGE-NEUTRAL-TAXONOMY-AND-PACKAGE-PURITY`:
+`packagingDirNames`/`schemaFacetKinds`/`discoverPackageProblems` assertions; an unrelated pre-existing baseline:
+`snapshotChildDirs`/`osChildDirs`/`exampleAssetKindPrefixes`/`resolveCargoPackageName`/`dependency-boundary`/
+`ui-scrollbar-css`/`commit`/`command budgets`/`playground ports` — none reference `ioSemanticCollectionDirNames`,
+`artifactSpecFilenames`, `artifactSchemaSpecFilenames`, `semanticCollections["🚪️io/…"]`, or `taxonomyLeafParentDirs`,
+the only keys W1-E touched). Full before/after logs: `🧪️w1e-before-repolib-tests.txt` / `🧪️w1e-after-repolib-tests.txt`.
+
+`🧪️index.test.ts` is outside W1-E's boundary (`🔣️taxonomy.json`, `🔍️discovery/🟦️component.ts`, repo root
+`📜️script.ts`, this ticket's patches folder only), so the one-line fix below is a patch for the W5 serializer /
+coordinator to apply, per this ticket's own rule ("fix them in the same pass" + "write a patch to
+🔧️patches/<slice>-<file>.txt … the W5 serializer applies it").
+
+## Patch — 🧪️index.test.ts:1537
+
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts
+@@ -1534,7 +1534,7 @@
+     expect(taxonomy.semanticCollections["🔨️modules"]?.kind).toBe("module");
+     expect(taxonomy.semanticCollections["💡️inferences"]?.kind).toBe("inference");
+     expect(taxonomy.semanticCollections["🚪️io/🧬️mutations"]).toEqual({ kind: "io", direction: "transport" });
+-    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["💡️inferences", "🧬️mutations"]);
++    expect(taxonomy.ioSemanticCollectionDirNames).toEqual(["📸️snapshot", "🔺️diff", "💡️inferences", "🧬️mutations"]);
+     expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/📝️text", taxonomy)).toBe(true);
+     expect(artifactFacetPathIsDeclared("🚪️io/🧬️mutations/💾️binary", taxonomy)).toBe(true);
+     expect(artifactFacetPathIsDeclared("🧬️schema/🧬️mutations/📝️text", taxonomy)).toBe(false);
+
+## Verification once applied
+
+  cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript && bun test ./🧪️index.test.ts
+Expect the "declares canonical semantic collection and module ownership contracts" test to pass (it is currently
+the only W1-E-caused failure); the other ~21 failures are pre-existing/peer-owned and out of this patch's scope.

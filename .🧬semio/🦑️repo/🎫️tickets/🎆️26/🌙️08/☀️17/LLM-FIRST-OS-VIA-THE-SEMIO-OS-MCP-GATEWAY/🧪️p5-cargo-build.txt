@@ -1,0 +1,124 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling syn v2.0.117
+   Compiling smallvec v1.15.1
+   Compiling serde_core v1.0.228
+   Compiling getrandom v0.3.4
+   Compiling bytes v1.12.1
+   Compiling pin-project-lite v0.2.17
+   Compiling generic-array v0.14.7
+   Compiling futures-core v0.3.32
+   Compiling typenum v1.20.1
+   Compiling memchr v2.8.0
+   Compiling errno v0.3.14
+   Compiling synstructure v0.13.2
+   Compiling zerovec-derive v0.11.3
+   Compiling displaydoc v0.2.5
+   Compiling parking_lot_core v0.9.12
+   Compiling serde_derive v1.0.228
+   Compiling http v1.4.2
+   Compiling httparse v1.10.1
+   Compiling tokio-macros v2.7.0
+   Compiling mio v1.2.1
+   Compiling socket2 v0.6.4
+   Compiling signal-hook-registry v1.4.8
+   Compiling serde_json v1.0.149
+   Compiling log v0.4.29
+   Compiling serde v1.0.228
+   Compiling rand_core v0.9.5
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling parking_lot v0.12.5
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling http-body v1.1.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling ref-cast-impl v1.0.25
+   Compiling zerofrom v0.1.8
+   Compiling thiserror-impl v2.0.18
+   Compiling tokio v1.52.3
+   Compiling tracing-core v0.1.36
+   Compiling cpufeatures v0.2.17
+   Compiling digest v0.10.7
+   Compiling tower-service v0.3.3
+   Compiling slab v0.4.12
+   Compiling rand_chacha v0.9.0
+   Compiling futures-task v0.3.32
+   Compiling futures-sink v0.3.32
+   Compiling yoke v0.8.2
+   Compiling tracing v0.1.44
+   Compiling thiserror v2.0.18
+   Compiling ref-cast v1.0.25
+   Compiling sha1 v0.10.7
+   Compiling aho-corasick v1.1.4
+   Compiling futures-channel v0.3.32
+   Compiling rand v0.9.5
+   Compiling atomic-waker v1.1.2
+   Compiling futures-util v0.3.32
+   Compiling zerovec v0.11.6
+   Compiling zerotrie v0.2.4
+   Compiling httpdate v1.0.3
+   Compiling data-encoding v2.11.0
+   Compiling tower-layer v0.3.3
+   Compiling sync_wrapper v1.0.2
+   Compiling regex-automata v0.4.14
+   Compiling fluent-uri v0.3.2
+   Compiling ahash v0.8.12
+   Compiling http-body-util v0.1.4
+   Compiling tinystr v0.8.3
+   Compiling potential_utf v0.1.5
+   Compiling hyper v1.10.1
+   Compiling tungstenite v0.29.0
+   Compiling form_urlencoded v1.2.2
+   Compiling serde_derive_internals v0.29.1
+   Compiling mime v0.3.17
+   Compiling ryu v1.0.23
+   Compiling referencing v0.29.1
+   Compiling fancy-regex v0.14.0
+   Compiling icu_locale_core v2.2.0
+   Compiling icu_collections v2.2.0
+   Compiling hyper-util v0.1.20
+   Compiling tokio-tungstenite v0.29.0
+   Compiling tower v0.5.3
+   Compiling schemars_derive v0.8.22
+   Compiling axum-core v0.5.6
+   Compiling serde_urlencoded v0.7.1
+   Compiling email_address v0.2.9
+   Compiling serde_path_to_error v0.1.20
+   Compiling icu_provider v2.2.0
+   Compiling matchit v0.8.4
+   Compiling schemars v0.8.22
+   Compiling icu_normalizer v2.2.0
+   Compiling icu_properties v2.2.0
+   Compiling axum v0.8.9
+   Compiling idna_adapter v1.2.2
+   Compiling idna v1.1.0
+   Compiling jsonschema v0.29.1
+   Compiling semio-framework-os-mcp v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust)
+warning: unused import: `get`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🚚️transport/🦀️component.rs:22:21
+   |
+22 | use axum::routing::{get, post};
+   |                     ^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: hidden lifetime parameters in types are deprecated
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧵️bridge/🦀️component.rs:254:34
+    |
+254 |     fn decode(reader: &mut wire::Reader) -> Result<Self, GatewayError> {
+    |                            ------^^^^^^
+    |                            |
+    |                            expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+254 |     fn decode(reader: &mut wire::Reader<'_>) -> Result<Self, GatewayError> {
+    |                                        ++++
+
+warning: `semio-framework-os-mcp` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-mcp` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized] target(s) in 2m 22s
+EXIT:0

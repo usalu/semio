@@ -369,6 +369,7 @@ interface effects {
     req: request-id,
     accept: string,
     read-as: option<string>,
+    import-action: string,
     multiple: bool,
   }
   record request-media-frames-effect {
@@ -381,7 +382,7 @@ interface effects {
     max-frames: u32,
     max-long-edge-px: u32,
     fps-hint: f64,
-    payload: option<pack>,
+    payload: option<string>,
     args: option<pack>,
   }
   record load-document-effect {
@@ -619,7 +620,7 @@ interface events {
   /// a bounded number of turns, or by spawning a job.
   record request-event {
     req: request-id,
-    from: message-endpoint,
+    origin: message-endpoint,
     capability: string,
     payload: pack,
   }

@@ -711,7 +711,6 @@ export function generateStylingArtifacts(): void {
   const tokens = loadTokens();
   const resolvedAppearances = resolveAppearances(tokens);
   mkdirSync(generatedCssDir, { recursive: true });
-  mkdirSync(tsStylingDir, { recursive: true });
   mkdirSync(netPaletteDir, { recursive: true });
   mkdirSync(dirname(pyGeneratedPath), { recursive: true });
   const fonts = emitPaletteFonts(tokens);
@@ -719,8 +718,8 @@ export function generateStylingArtifacts(): void {
   const paletteCss = `${fonts}\n${theme}`;
   writeFileSync(join(generatedCssDir, "palette-fonts.css"), fonts, "utf8");
   writeFileSync(join(generatedCssDir, "palette-🎨️theme.css"), theme, "utf8");
-  writeFileSync(join(tsStylingDir, "🎨️palette.css"), paletteCss, "utf8");
-  writeFileSync(join(tsStylingDir, "🟦️tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
+  writeFileSync(join(stylingOwnerRoot, "🎨️palette.css"), paletteCss, "utf8");
+  writeFileSync(join(generatedCssDir, "🟦️tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
   const cs = emitCSharp(tokens);
   writeFileSync(join(netPaletteDir, "Palette.g.cs"), cs, "utf8");
   writeFileSync(rustGeneratedPath, emitRust(tokens, resolvedAppearances), "utf8");

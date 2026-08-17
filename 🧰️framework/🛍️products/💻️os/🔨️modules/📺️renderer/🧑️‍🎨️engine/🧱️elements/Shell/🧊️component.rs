@@ -6331,7 +6331,7 @@ impl ShellState {
             self.stage_arg(&window_id, &action_id, &arg_id, Value::Array(current));
             return true;
         }
-        let control = self.session.as_ref().and_then(|session| window_action_definition(&session.app, &window_id, &action_id)).and_then(|action| action.args.iter().find(|arg| arg.id == arg_id)).map(|arg| arg.control.clone());
+        let control = self.session.as_ref().and_then(|session| window_action_definition(&session.app, &window_id, &action_id)).and_then(|action| action.args.iter().find(|arg| arg.id == arg_id)).map(|arg| arg.control());
         let value = match control {
             Some(ActionArgControl::Number { .. }) | Some(ActionArgControl::Slider { .. }) => {
                 serde_json::json!(buffer.trim().parse::<f64>().unwrap_or(0.0))
@@ -6519,7 +6519,7 @@ impl ShellState {
                 continue;
             }
             if let Some(arg) = definition.args.first() {
-                if let semio_framework::ActionArgControl::Select { options } = &arg.control {
+                if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
                     for option in options {
                         let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
                         let invocation = semio_framework::manifest::CommandInvocation {
@@ -6746,7 +6746,7 @@ impl ShellState {
     fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
         let definition = &entry.definition;
         if let Some(arg) = definition.args.first() {
-            if let semio_framework::ActionArgControl::Select { options } = &arg.control {
+            if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
                 let value = match definition.id.as_str() {
                     "os.setAppearance" => self.appearance_id.clone(),
                     "os.setDriver" => self.driver_id.clone(),
@@ -6996,7 +6996,7 @@ mod command_registry_tests {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
-        let ActionArgControl::Select { options } = &terminology_command.args[0].control else {
+        let ActionArgControl::Select { options } = &terminology_command.args[0].control() else {
             panic!("expected a select control");
         };
         let values: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
@@ -10692,7 +10692,7 @@ impl ShellState {
     }
 
     fn staged_arg_height(&self, theme: &Theme, arg: &semio_framework::ActionArgDef) -> f32 {
-        match arg.control {
+        match arg.control() {
             semio_framework::ActionArgControl::Toggle => theme.control_height + theme.gap_standard,
             _ => theme.control_height * 2.0 + theme.gap_standard,
         }
@@ -10765,7 +10765,7 @@ impl ShellState {
         use semio_framework::ActionArgControl;
         let row_h = theme.control_height;
         let effective = self.effective_arg_value(window_id, action_id, arg);
-        match &arg.control {
+        match &arg.control() {
             ActionArgControl::Toggle => {
                 let on = effective.as_ref().and_then(|v| v.as_bool()).unwrap_or(false);
                 let label = format!("{} · {}", arg.label.resolve(self.active_terminology(), self.active_locale()), if on { "on" } else { "off" });
