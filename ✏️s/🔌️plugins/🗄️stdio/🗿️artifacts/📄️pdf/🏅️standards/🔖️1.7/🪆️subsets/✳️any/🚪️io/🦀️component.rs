@@ -1477,7 +1477,9 @@ fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Opt
 //#region 🔖️ContentStream
 #[derive(Clone, Debug)]
 enum ContentOperand {
-    Num(f64),
+    /// 🔢 A numeric operand -- text extraction never reads the value itself, only that a slot in
+    /// the operand stack was a number (vs. name/string/array), so no payload is carried.
+    Num,
     Str(Vec<u8>),
     Name(String),
     Array(Vec<ContentOperand>),
@@ -1550,10 +1552,10 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                             }
                         }
                         Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
-                            Ok(PdfObject::Int(i)) => arr.push(ContentOperand::Num(i as f64)),
+                            Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
                             Ok(PdfObject::Real(real)) => {
-                                if let Some(value) = real.to_f64() {
-                                    arr.push(ContentOperand::Num(value));
+                                if real.to_f64().is_some() {
+                                    arr.push(ContentOperand::Num);
                                 }
                             }
                             _ => {}
@@ -1567,10 +1569,10 @@ fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u
                 operands.push(ContentOperand::Array(arr));
             }
             c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
-                Ok(PdfObject::Int(i)) => operands.push(ContentOperand::Num(i as f64)),
+                Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
                 Ok(PdfObject::Real(r)) => {
-                    if let Some(value) = r.to_f64() {
-                        operands.push(ContentOperand::Num(value));
+                    if r.to_f64().is_some() {
+                        operands.push(ContentOperand::Num);
                     }
                 }
                 _ => {}

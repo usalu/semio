@@ -2,10 +2,9 @@
 //! (`.composers(engine::io_registry::entries())` on the artifact root's `declaration()`), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, ArtifactBuilder, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
+    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.playground", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_CSV: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };

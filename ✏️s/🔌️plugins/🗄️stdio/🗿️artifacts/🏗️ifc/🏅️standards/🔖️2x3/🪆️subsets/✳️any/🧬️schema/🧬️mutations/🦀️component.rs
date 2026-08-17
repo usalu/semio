@@ -261,6 +261,7 @@ impl protocol::OpBinary for Ifc2x3Mutation {
 /// (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `Part21Value` tag (incl.
 /// the recursive `List`/`Typed` cases) and `UpsertInstance`'s bare `Part21Instance` payload (incl. a
 /// real COMPLEX 2-entity instance) are exercised at least once.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
     vec![
         Ifc2x3Mutation::NoMutation,

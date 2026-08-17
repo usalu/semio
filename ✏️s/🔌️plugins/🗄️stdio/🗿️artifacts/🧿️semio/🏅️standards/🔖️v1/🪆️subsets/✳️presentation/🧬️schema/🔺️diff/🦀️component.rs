@@ -486,11 +486,6 @@ fn apply_frame(frame: &mut SlideFrame, diff: &SlideFrameDiff) {
         frame.height = v;
     }
 }
-fn frame_with_diff_applied(frame: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrame {
-    let mut out = *frame;
-    apply_frame(&mut out, diff);
-    out
-}
 fn inverse_frame(base: &SlideFrame, diff: &SlideFrameDiff) -> SlideFrameDiff {
     SlideFrameDiff { origin: diff.origin.map(|_| base.origin), width: diff.width.map(|_| base.width), height: diff.height.map(|_| base.height) }
 }
@@ -523,11 +518,6 @@ fn apply_image(image: &mut SlidePictureImage, diff: &SlidePictureImageDiff) {
     if let Some(v) = &diff.bytes {
         image.bytes = v.clone();
     }
-}
-fn image_with_diff_applied(image: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImage {
-    let mut out = image.clone();
-    apply_image(&mut out, diff);
-    out
 }
 fn inverse_image(base: &SlidePictureImage, diff: &SlidePictureImageDiff) -> SlidePictureImageDiff {
     SlidePictureImageDiff { asset_id: diff.asset_id.as_ref().map(|_| base.asset_id.clone()), mime: diff.mime.as_ref().map(|_| base.mime.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
@@ -1012,20 +1002,6 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 pub(crate) fn enc_f64(v: f64) -> String {
     v.to_bits().to_string()
-}
-pub(crate) fn enc_bool(b: bool) -> String {
-    if b {
-        "1".to_string()
-    } else {
-        "0".to_string()
-    }
-}
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
-    match s {
-        "1" => Ok(true),
-        "0" => Ok(false),
-        other => Err(format!("bool: bad value {other:?}")),
-    }
 }
 pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse::<u64>().map(f64::from_bits).map_err(|e: std::num::ParseIntError| e.to_string())

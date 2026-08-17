@@ -50,7 +50,7 @@ function policyScriptProjects(configFiles, _options, context) {
 
   return configFiles
     .filter((configFile) => {
-      if (configFile.includes("node_modules") || configFile.includes(".🦑️repo") || configFile.includes("/dist/")) {
+      if (configFile.includes("node_modules") || configFile.includes(".🧬semio") || configFile.includes("/dist/")) {
         return false;
       }
       const abs = join(workspaceRoot, configFile);
@@ -78,7 +78,7 @@ function policyScriptProjects(configFiles, _options, context) {
                     command: `bun "${rel}" policy`,
                   },
                   inputs: [`{workspaceRoot}/${rel}`, ...extraInputs],
-                  outputs: [`{workspaceRoot}/.🦑️repo/⚡️cache/breaches`],
+                  outputs: [`{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/breaches`],
                   cache: true,
                 },
               },

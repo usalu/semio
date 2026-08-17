@@ -2799,10 +2799,12 @@ impl protocol::DiffCodec for DocxDiff {
 /// AND by `⚙️engine/🦀️component.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📷️png/…/🔺️diff/🦀️component.rs`'s own `demo_diff_cases()`
 /// establishes.
+#[cfg(test)]
 pub(crate) fn xml_node(name: &str) -> XmlNode {
     XmlNode::Element { name: name.to_string(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![] }
 }
 
+#[cfg(test)]
 pub(crate) fn snapshot_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
@@ -2824,6 +2826,7 @@ pub(crate) fn snapshot_a() -> DocxSnapshot {
     )
 }
 
+#[cfg(test)]
 pub(crate) fn snapshot_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
@@ -2849,6 +2852,7 @@ pub(crate) fn snapshot_b() -> DocxSnapshot {
 
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<DocxDiff> {
     let a = snapshot_a();
     let b = snapshot_b();

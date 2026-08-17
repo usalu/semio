@@ -3390,7 +3390,7 @@ async fn main() -> std::process::ExitCode {
     // 🗄️ Zero-touch data root: `db/` (FsStorage-backed `db::Database`), `directory.json` + `history/`
     // (semio_compose_rs-semio_hub's own file-backed session/share-token/kit-history bookkeeping) — replaces
     // `DATABASE_URL`/Postgres entirely.
-    let data_dir = std::env::var("COMPOSE_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.semio/semio_compose_rs-semio_hub"), std::path::PathBuf::from);
+    let data_dir = std::env::var("COMPOSE_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/compose-rs"), std::path::PathBuf::from);
     let database = match open_database(&data_dir) {
         Ok(database) => database,
         Err(e) => {

@@ -157,14 +157,6 @@ pub fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, p
     })
 }
 
-/// 🌳️ Resolves a document-tree drop target id (`"step:<id>"` or a question id) back to its owning step.
-fn resolve_step_id_from_tree_target(spec: &FormsSnapshot, target_id: &str) -> Option<String> {
-    if let Some(step_id) = target_id.strip_prefix("step:") {
-        return Some(step_id.to_string());
-    }
-    locate_question(spec, target_id).map(|location| location.step_id)
-}
-
 /// 🌳️ Resolves the insertion index within `step_id` implied by dropping onto `target_id` at
 /// `drop_position` (`"before"`/`"after"`/`"inside"`).
 fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {

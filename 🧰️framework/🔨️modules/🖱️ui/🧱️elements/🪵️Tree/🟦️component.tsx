@@ -33,7 +33,7 @@ import { borderNormalClass } from "../../🔨️modules/📏️border-presentati
 import { interactiveActiveFillClass, interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, groupHoverExcludingHandleBgFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 import { dropZoneReadyFillClass, dropZoneReadyTextClass, loadingBorderStateClass, waitingBorderStateClass, panelTabIconSlotClass, panelTabLabelClass, windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass, windowPaneChromeToggleClass } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
-import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
+import { useLabel, Label, resolveTranslationLabel, useIdLabel, useUiTranslation, useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
 import { useFlow, FlowProvider, type FlowBlock, type FlowInline } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️component.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
@@ -4239,8 +4239,8 @@ export interface WindowPaneChromeToggleProps {
 
 /** @emoji 🪟️ Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
 export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ id, icon, label, onClick, disabled, className, dragPointerProps, showDragHandle = true, emphasized = false }) => {
-  const accessibleLabel = useControlAccessibleLabel(id, label);
   const inlineText = useControlInlineText(id, label);
+  const tooltipText = useControlTooltipText(id, label);
   const surfaceDrag = useUiDriverDragSurface();
   const canDrag = showDragHandle && Boolean(dragPointerProps);
   return (
@@ -4249,7 +4249,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
       id={id}
       data-slot="window-pane-chrome-toggle"
       data-hover-scope
-      title={accessibleLabel}
+      title={tooltipText}
       disabled={disabled}
       onClick={onClick}
       className={cn(windowPaneChromeToggleClass, className)}
@@ -4262,7 +4262,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
         </span>
       ) : null}
       {showDragHandle && !surfaceDrag ? (
-        <DragHandle labelId="ui.tree.drag.sort" {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} />
+        <DragHandle labelId="ui.tree.drag.sort" subject={label} {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} />
       ) : null}
     </button>
   );

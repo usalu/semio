@@ -16,10 +16,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfCurvatureHistogramInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCurvatureRaw) -> GltfMeasure<GltfStatistics> {
     estimate(super::statistics(&raw.edge_curvatures, &context.policy.histogram_edges), GltfUnit::InverseMetre, raw.edge_curvatures.len(), Some(context.topology))
 }

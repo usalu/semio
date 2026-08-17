@@ -364,6 +364,7 @@ impl OpBinary for StepMutation {
 /// fodder (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `StepValue` tag
 /// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `StepEntity`
 /// payload are exercised at least once.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
     use crate::artifacts::step::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };

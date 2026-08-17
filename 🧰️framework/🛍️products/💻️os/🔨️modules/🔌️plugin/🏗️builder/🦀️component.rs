@@ -1,7 +1,7 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{
-    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
+    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
     PluginCommandHandler,
 };
 use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
@@ -439,7 +439,7 @@ impl Plugin {
 #[cfg(test)]
 mod plugin_builder_dependency_tests {
     use super::*;
-    use crate::app::ArtifactContribution;
+    use crate::app::{ArtifactContribution, FlowExtensionExecutableIdentity, FlowExtensionManifest};
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     static MESH_DWG_EXECUTIONS: AtomicUsize = AtomicUsize::new(0);

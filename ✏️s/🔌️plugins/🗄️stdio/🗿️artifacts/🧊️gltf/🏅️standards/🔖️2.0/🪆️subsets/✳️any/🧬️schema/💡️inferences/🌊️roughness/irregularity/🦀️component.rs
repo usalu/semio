@@ -15,10 +15,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfIrregularityInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfRoughnessRaw) -> GltfMeasure<f64> {
     raw.irregularity
         .map(|value| estimate(value, GltfUnit::Unitless, raw.deviations.len(), Some(context.topology)))

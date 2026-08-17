@@ -16,10 +16,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfReflectionSymmetriesInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Vec<GltfDirectionScore>> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfSymmetryRaw) -> GltfMeasure<Vec<GltfDirectionScore>> {
     estimate(raw.reflections.clone(), GltfUnit::Unitless, context.sample_count, Some(context.topology))
 }

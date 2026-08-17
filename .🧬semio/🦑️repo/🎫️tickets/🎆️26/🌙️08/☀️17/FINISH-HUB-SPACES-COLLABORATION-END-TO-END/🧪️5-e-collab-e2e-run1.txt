@@ -1,0 +1,350 @@
+[collab-e2e] ports: hub=7400 user1=7401 user2=7402
+plugin registry catalog refreshed (59 plugin crates, 58 playgrounds, 22 framework packages) -> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📇️registry/🤖️generated
+.vscode/launch.json regenerated -> /Users/ueli/Documents/semio/.vscode/launch.json
+[framework/surface/rs] wasm-pack build --dev --target web --out-dir pkg --out-name framework_surface --no-pack
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-surface v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust)
+error[E0425]: cannot find function `dag_take_pending_open_instance_id` in this scope
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🕸️node-graph/🦀️component.rs:749:13
+    |
+749 |             dag_take_pending_open_instance_id(&mut self.state.borrow_mut().host.dag)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing one of these functions
+    |
+509 +     use crate::tiled_map::directed_dag::dag_take_pending_open_instance_id;
+    |
+509 +     use infinite_canvas::directed_dag::dag_take_pending_open_instance_id;
+    |
+
+
+error[E0433]: cannot find type `DagLayoutOptions` in this scope
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🕸️node-graph/🦀️component.rs:783:60
+    |
+783 | ...   let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap...
+    |                                                      ^^^^^^^^^^^^^^^^ use of undeclared type `DagLayoutOptions`
+    |
+help: consider importing one of these structs
+    |
+509 +     use crate::tiled_map::DagLayoutOptions;
+    |
+509 +     use infinite_canvas::DagLayoutOptions;
+    |
+
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:960:10
+    |
+960 |     gpu: canvas::gpu_session::CanvasGpuSession,
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+960 -     gpu: canvas::gpu_session::CanvasGpuSession,
+960 +     gpu: gpu_session::CanvasGpuSession,
+    |
+
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:976:17
+    |
+976 |                 canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+976 -                 canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
+976 +                 render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
+    |
+
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:980:17
+    |
+980 |                 canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+980 -                 canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
+980 +                 render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
+    |
+
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:984:39
+    |
+984 |         self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+984 -         self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+984 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+    |
+
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:999:95
+    |
+999 | ...ionInner { host: RasterHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "comp...
+    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+999 -         Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
+999 +         Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
+    |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:1021:51
+     |
+1021 | ...   let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).a...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1021 -             let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+1021 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🗺️tiled-map/🦀️component.rs:2909:10
+     |
+2909 |     gpu: canvas::gpu_session::CanvasGpuSession,
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2909 -     gpu: canvas::gpu_session::CanvasGpuSession,
+2909 +     gpu: gpu_session::CanvasGpuSession,
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🗺️tiled-map/🦀️component.rs:2922:39
+     |
+2922 |         self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2922 -         self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
+2922 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🗺️tiled-map/🦀️component.rs:2937:89
+     |
+2937 | ...ssionInner { host: MapHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2937 -         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
+2937 +         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+     |
+
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🗺️tiled-map/🦀️component.rs:2958:51
+     |
+2958 | ...   let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).a...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2958 -             let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+2958 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:398:30
+    |
+398 |         camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+    |         -------------------- ^^^^^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |         |
+    |         arguments to this function are incorrect
+    |
+    = note: expected mutable reference `&mut semio_framework_os_infinite::camera::Camera`
+               found mutable reference `&mut semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:995:12
+    |
+995 |     pub fn wheel_screen(camera: &mut Camera, viewport: &Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |            ^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:402:33
+    |
+402 |         camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+    |         ----------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |         |
+    |         arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:986:12
+    |
+986 |     pub fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    |            ^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:654:49
+    |
+654 |         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
+    |                   ----------------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:990:12
+    |
+990 |     pub fn camera_content_affine(camera: &Camera, viewport: &Viewport) -> Affine {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:664:49
+    |
+664 |         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
+    |                   ----------------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                   |
+    |                   arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:990:12
+    |
+990 |     pub fn camera_content_affine(camera: &Camera, viewport: &Viewport) -> Affine {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:774:51
+    |
+774 |         let world = camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+    |                     ----------------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                     |
+    |                     arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:990:12
+    |
+990 |     pub fn camera_content_affine(camera: &Camera, viewport: &Viewport) -> Affine {
+    |            ^^^^^^^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:935:54
+    |
+935 |         let top_left_world = camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+    |                              ----------------------- ^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                              |
+    |                              arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:986:12
+    |
+986 |     pub fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    |            ^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:936:58
+    |
+936 |         let bottom_right_world = camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+    |                                  ----------------------- ^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                                  |
+    |                                  arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:986:12
+    |
+986 |     pub fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    |            ^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:937:48
+    |
+937 |         let top_left = camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+    |                        ----------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                        |
+    |                        arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:982:12
+    |
+982 |     pub fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    |            ^^^^^^^^^^^^^^^
+
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/../../🎨️paint/🦀️component.rs:938:52
+    |
+938 |         let bottom_right = camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+    |                            ----------------------- ^^^^^^^^^^^^ expected `Camera`, found `semio_framework_os_infinite::Camera`
+    |                            |
+    |                            arguments to this function are incorrect
+    |
+    = note: expected reference `&semio_framework_os_infinite::camera::Camera`
+               found reference `&semio_framework_os_infinite::Camera`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/../../🖼️canvas/🦀️component.rs:982:12
+    |
+982 |     pub fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
+    |            ^^^^^^^^^^^^^^^
+
+
+Some errors have detailed explanations: E0308, E0425, E0433.
+
+For more information about an error, try `rustc --explain E0308`.
+
+error: could not compile `semio-framework-surface` (lib) due to 11 previous errors; 10 warnings emitted
+Error: `cargo build` failed, see the output above for details
+Caused by: `cargo build` failed, see the output above for details
+[framework/surface/rs] wasm build failed
+[collab-e2e] plugin prebuild failed — every scenario step is reported FAIL: framework-surface-node-graph wasm build failed
+STEP 1: FAIL: user1 creates a public studio space from Home; user2's Home shows the same row — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 2: FAIL: user1 shares the space with user2 as author; user2 opens /spaces/{id} — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 3: FAIL: user1 creates a writer artifact; the row appears in both tables and opens an editor for user1 — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 4: FAIL: user2 opens the same artifact; user1 types and user2 sees the text — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 5: FAIL: #s-presence-peers shows 2 peers in both shells — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 6: FAIL: user1 checks in with a message; history shows it and the space table's updated column moves for both — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 7: FAIL: admin: /admin/api/connections lists both connections with their surfaces; /admin returns HTML — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+STEP 8: FAIL: hub restarts against the same OS_HUB_DATA; user2 reloads and the space + artifact are still there — blocked — plugin prebuild failed: framework-surface-node-graph wasm build failed
+1224 |   }
+1225 |   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
+1226 |   // the build class rather than the generic command default since those inner builds can legitimately
+1227 |   // approach [[buildBudgetMs]] themselves.
+1228 |   const graphScript = join(repoRoot, "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts");
+1229 |   if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
+                                                                                                                       ^
+error: framework-surface-node-graph wasm build failed
+      at buildEngineWasm (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:1229:113)
+      at collabPrebuildPlugins (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:2332:13)
+      at async runCollabE2eVerify (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts:2743:13)
+
+Bun v1.3.14 (macOS arm64)

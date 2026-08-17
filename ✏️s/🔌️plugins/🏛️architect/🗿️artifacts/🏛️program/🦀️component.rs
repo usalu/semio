@@ -71,20 +71,20 @@ pub fn benchmark_records_from_table(table: &semio_s_plugin_stdio::artifacts::sem
 //#endregion 🔖️Converters
 
 //#region 🔖️WorkingScene
-/// 🌱 Ephemeral, session-side cache of the live `benchmarks` rows behind a composed-child handle —
-/// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
-/// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
-/// (checked directly, W1-owned, read-only), so this is the only way a persisted content-addressed
-/// handle round-trips to the real rows within one process — mirrors `➗️mathematical`'s
-/// `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH`.
-///
-/// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
-/// undo/redo past this session's history, or a genuinely reloaded persisted `.architect` document)
-/// sees a `benchmarks` handle whose cache entry was never populated — `program_benchmarks` fails
-/// soft to an EMPTY list rather than panicking. Every register-panel/report/mutation-diff call path
-/// already routes through `program_benchmarks`, so the gap is visibly empty, not
-/// silently-wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
 thread_local! {
+    /// 🌱 Ephemeral, session-side cache of the live `benchmarks` rows behind a composed-child handle —
+    /// NEVER persisted (matches the `EngineRep` contract: wholly derived, droppable at any instant,
+    /// rebuilt from base). No `LinkResolver`/child-dispatch seam exists in `ArtifactApp::handle` yet
+    /// (checked directly, W1-owned, read-only), so this is the only way a persisted content-addressed
+    /// handle round-trips to the real rows within one process — mirrors `➗️mathematical`'s
+    /// `MATH_SCRATCH`/`📕️norm`'s `EN1990_QK_SCRATCH`.
+    ///
+    /// ⚠️ Same documented staleness gap as every prior exemplar: a fresh process (a store-level
+    /// undo/redo past this session's history, or a genuinely reloaded persisted `.architect` document)
+    /// sees a `benchmarks` handle whose cache entry was never populated — `program_benchmarks` fails
+    /// soft to an EMPTY list rather than panicking. Every register-panel/report/mutation-diff call path
+    /// already routes through `program_benchmarks`, so the gap is visibly empty, not
+    /// silently-wrong-but-plausible. Not a fix for the missing resolver — a bridge until one lands.
     static PROGRAM_BENCHMARKS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, Vec<BenchmarkRecord>>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 

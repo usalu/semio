@@ -772,7 +772,7 @@ class TestScript extends BundleScript {
 
 const PX_SCAN_ROOTS = ["framework/module/ui/js/react", "framework/module/ui/styling/js", "framework/product/os", "framework/product/os/module/dev", "s/plugin/flow", "s/plugin/cad/renderer", "s/plugin/puzzle", "framework/os/kernel/infinite/world", "s/plugin/gis/2d"] as const;
 
-const PX_SCAN_SKIP = ["/.🦑️repo/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
+const PX_SCAN_SKIP = ["/.🧬semio/", "/node_modules/", "/.storybook/", "/fixture/", "tokens.generated.", "session.json", ".plan.md"];
 
 const PX_PATTERNS: { name: string; re: RegExp }[] = [{ name: "tailwind-arbitrary-px", re: /\[(?!9999px)[-0-9]*\.?[0-9]+px\]/ }];
 
@@ -824,7 +824,7 @@ function collectPxViolations(repoRoot: string): { file: string; line: number; ki
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".🦑️repo" || entry.name === ".repo") {
+        if (entry.name === "node_modules" || entry.name === ".🧬semio" || entry.name === ".🧬semio") {
           continue;
         }
         walk(full);
@@ -950,7 +950,7 @@ function collectColorViolations(repoRootPath: string): { file: string; line: num
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".🦑️repo" || entry.name === ".repo") {
+        if (entry.name === "node_modules" || entry.name === ".🧬semio" || entry.name === ".🧬semio") {
           continue;
         }
         walk(full);

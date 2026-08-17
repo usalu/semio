@@ -3242,15 +3242,6 @@ impl DwgLogicalDrawing {
 }
 
 impl DwgLogicalEntity {
-    fn from_native(entity: &dwg_engine::DwgEntity) -> Self {
-        let color = match entity.color {
-            dwg_engine::DwgColor::ByLayer => -1,
-            dwg_engine::DwgColor::ByBlock => -2,
-            dwg_engine::DwgColor::Index(value) => value as i16,
-        };
-        Self { layer: entity.layer, color, geometry: DwgLogicalGeometry::from_native(&entity.geometry) }
-    }
-
     fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
         let color = match self.color {
             -1 => dwg_engine::DwgColor::ByLayer,

@@ -15,10 +15,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfReentrantAreaInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfConcavityRaw) -> GltfMeasure<f64> {
     raw.reentrant_area
         .map(|area| estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)))

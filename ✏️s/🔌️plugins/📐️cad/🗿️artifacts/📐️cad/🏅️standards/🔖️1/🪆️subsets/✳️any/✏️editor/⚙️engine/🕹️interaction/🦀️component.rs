@@ -690,7 +690,7 @@ fn legacy_commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScra
     })
 }
 
-pub fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+pub(crate) fn commit_object(kernel: &mut dyn BrepKernel, session: &CadEngagementScratch, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     if is_legacy_building_id(&session.interaction_id) {
         return legacy_commit_object(kernel, session, label_count, next_id);
     }

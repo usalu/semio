@@ -28,7 +28,7 @@ import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📦�
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-os-renderer-wgpu";
-const outDir = join(repoRoot, ".🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
+const outDir = join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu");
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
 
 //#region 🌐️ DevServer

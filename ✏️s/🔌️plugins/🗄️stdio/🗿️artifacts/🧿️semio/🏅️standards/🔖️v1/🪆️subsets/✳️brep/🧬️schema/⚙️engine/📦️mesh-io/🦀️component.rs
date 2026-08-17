@@ -425,6 +425,7 @@ mod tests {
 }
 
 impl TriangleMesh {
+    #[cfg(test)]
     fn triangle_count(&self) -> usize {
         self.indices.len() / 3
     }

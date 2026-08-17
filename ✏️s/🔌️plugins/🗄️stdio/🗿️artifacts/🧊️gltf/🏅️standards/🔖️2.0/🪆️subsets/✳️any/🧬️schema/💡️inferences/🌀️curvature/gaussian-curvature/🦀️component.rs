@@ -16,10 +16,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfGaussianCurvatureInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCurvatureRaw) -> GltfMeasure<GltfStatistics> {
     estimate(super::statistics(&raw.gaussian_values, &context.policy.histogram_edges), GltfUnit::InverseSquareMetre, raw.gaussian_values.len(), Some(context.topology))
 }

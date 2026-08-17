@@ -70,7 +70,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT use search tool because it is broken.
   - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
-  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
+  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🧬semio/🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
   - You MUST NOT delete all temporary files, logs, scripts, … inside the ticket folder after you are done.
   - You MUST use regions and subregions for structuring files. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
   - You MUST close the ticket once you are done with the mcp tool `ticket_close` to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen`.

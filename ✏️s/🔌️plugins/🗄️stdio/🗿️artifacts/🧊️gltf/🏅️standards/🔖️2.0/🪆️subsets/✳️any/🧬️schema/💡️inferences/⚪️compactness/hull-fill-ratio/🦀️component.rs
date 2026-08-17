@@ -15,10 +15,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfHullFillRatioInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCompactnessRaw) -> GltfMeasure<f64> {
     raw.hull_volume
         .filter(|volume| *volume > 0.0)

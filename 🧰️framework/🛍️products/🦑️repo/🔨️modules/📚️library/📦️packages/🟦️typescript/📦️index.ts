@@ -17,6 +17,38 @@ import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../
 
 export type PlaygroundHostKind = string;
 
+export const SEMIO_ROOT_DIR = ".🧬semio";
+export const REPO_META_DIR_NAME = "🦑️repo";
+export const HUB_DATA_DIR_NAME = "🌐hub";
+export const SPACE_DATA_DIR_NAME = "🔗space";
+export const MAP_CACHE_DIR_NAME = "🗺️map";
+
+/** 🧬️Workspace-local semio root (`.🧬semio/`). */
+export function getSemioRoot(repoRoot: string): string {
+  return join(repoRoot, SEMIO_ROOT_DIR);
+}
+
+/** 🦑️Repo product meta directory (`.🧬semio/🦑️repo/`). */
+export function getRepoMetaDir(repoRoot: string): string {
+  return join(getSemioRoot(repoRoot), REPO_META_DIR_NAME);
+}
+
+/** 🌐Hub data directory (`.🧬semio/🌐hub/`). */
+export function getHubDataDir(repoRoot: string): string {
+  return join(getSemioRoot(repoRoot), HUB_DATA_DIR_NAME);
+}
+
+/** 🔗Space instance data directory (`.🧬semio/🔗space/<instance>/`). */
+export function getSpaceDataDir(repoRoot: string, instance?: string): string {
+  const base = join(getSemioRoot(repoRoot), SPACE_DATA_DIR_NAME);
+  return instance ? join(base, instance) : base;
+}
+
+/** 🗺️Per-provider map tile cache (`.🧬semio/🗺️map/<provider>/`). */
+export function getMapCacheDir(repoRoot: string, provider: string): string {
+  return join(getSemioRoot(repoRoot), MAP_CACHE_DIR_NAME, provider);
+}
+
 //#region 🔖️breach
 /** 🚫️BreachRecord is one policy lint finding from `script.ts` (serialized to cache JSON). */
 export type BreachPriority = "high" | "medium" | "low";
@@ -478,7 +510,7 @@ export function isAdapterBoundaryFile(filePath: string, content: string): boolea
 /** 🔌️Skips generated, test, and non-source paths for dependency-boundary lint. */
 export function shouldSkipDependencyBoundaryFile(filePath: string): boolean {
   const n = normalize(filePath).replaceAll("\\", "/");
-  if (n.includes("/node_modules/") || n.includes("/.🦑️repo/") || n.includes("/dist/") || n.includes("/target/")) {
+  if (n.includes("/node_modules/") || n.includes("/.🧬semio/") || n.includes("/dist/") || n.includes("/target/")) {
     return true;
   }
   const base = n.split("/").pop() ?? n;
@@ -580,7 +612,7 @@ export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleR
   const breachs: BreachRecord[] = [];
   const walk = (dir: string): void => {
     for (const ent of readdirSync(dir, { withFileTypes: true })) {
-      if (ent.name === "node_modules" || ent.name === "dist" || ent.name === ".🦑️repo") continue;
+      if (ent.name === "node_modules" || ent.name === "dist" || ent.name === ".🧬semio") continue;
       const abs = join(dir, ent.name);
       if (ent.isDirectory()) {
         walk(abs);
@@ -709,7 +741,7 @@ export async function runPolicyScript(
 
   const { mkdirSync, writeFileSync } = await import("node:fs");
   const sanitizeCacheKey = (id: string) => id.replace(/[^\w.-]+/g, "_").slice(0, 200);
-  const cacheDir = join(repoRoot, ".🦑️repo", "⚡️cache", "breaches");
+  const cacheDir = join(getRepoMetaDir(repoRoot), "⚡️cache", "breaches");
   mkdirSync(cacheDir, { recursive: true });
   const cacheName = `${sanitizeCacheKey(entity.id)}.json`;
   const cachePath = join(cacheDir, cacheName);
@@ -1150,7 +1182,7 @@ function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
   };
 
   const walk = (dir: string): void => {
-    if (dir.includes("node_modules") || dir.includes("target") || dir.includes(".git") || dir.includes(".🦑️repo")) return;
+    if (dir.includes("node_modules") || dir.includes("target") || dir.includes(".git") || dir.includes(".🧬semio")) return;
     for (const ent of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, ent.name);
       if (ent.isDirectory()) {
@@ -1490,9 +1522,9 @@ export function coverageEnabled(): boolean {
 
 export type CoverageKind = "js" | "rust" | "go" | "py" | "dotnet";
 
-/** 📊️Per-toolchain lcov output directory under `.🦑️repo/coverage`, created on demand. */
+/** 📊️Per-toolchain lcov output directory under `.🧬semio/🦑️repo/📊️metrics/coverage`, created on demand. */
 export function coverageDir(repoRoot: string, kind: CoverageKind): string {
-  const dir = join(repoRoot, ".🦑️repo", "📊️metrics", "coverage", kind);
+  const dir = join(getRepoMetaDir(repoRoot), "📊️metrics", "coverage", kind);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -2633,7 +2665,7 @@ const LANG_EMOJI: Record<string, string> = {
   Docker: "🐳️",
 };
 
-const ULOC_EXCLUDE_DIRS = [".🦑️repo", "node_modules", "dist", "build", "target", ".git", ".nx", "coverage", ".cache", ".turbo", ".next", "out", "vendor", "third_party", "Carthage"];
+const ULOC_EXCLUDE_DIRS = [".🧬semio", "node_modules", "dist", "build", "target", ".git", ".nx", "coverage", ".cache", ".turbo", ".next", "out", "vendor", "third_party", "Carthage"];
 
 const MAX_METRICS_FILE_BYTES = 8 * 1024 * 1024;
 //#endregion Constants
@@ -2672,7 +2704,7 @@ function isMetricsLicenseTemplateFile(rel: string): boolean {
 /** 🗂️Whether paths must be excluded from uloc/metrics (dot paths, license templates, vendor, lockfiles). */
 export function shouldSkipPathForUloc(root: string, relPath: string): boolean {
   const rel = normalizeRepoPath(relPath);
-  if (!rel || rel === ".🦑️repo" || rel.startsWith(".🦑️repo/")) return true;
+  if (!rel || rel === ".🧬semio" || rel.startsWith(".🧬semio/")) return true;
   if (hasHiddenDotPathSegment(rel)) return true;
   if (isMetricsLicenseTemplateFile(rel)) return true;
   if (isMetricsLockOrGenerated(rel)) return true;
@@ -3375,7 +3407,7 @@ const EMOJI_PRESENTATION_SELECTOR_RE = /[\uFE0E\uFE0F]/g;
 const COUNTER_RE = /^(.+🎆️[\uFE0E\uFE0F]?\d{2}🌙️[\uFE0E\uFE0F]?\d{2}☀️[\uFE0E\uFE0F]?\d{2})🚩️[\uFE0E\uFE0F]?(\d+)$/u;
 const BUNDLE_TAG_RE = /^(.+🎆️[\uFE0E\uFE0F]?\d{2}🌙️[\uFE0E\uFE0F]?\d{2}☀️[\uFE0E\uFE0F]?\d{2})🚩️[\uFE0E\uFE0F]?$/u;
 const NUMERIC_COUNTER_RE = /^(\d+)$/;
-const TICKET_JSON_RE = /^\.🦑️repo\/🎫️tickets\/.+\/🎫️ticket\.json$/;
+const TICKET_JSON_RE = /^\.🧬semio\/🦑️repo\/🎫️tickets\/.+\/🎫️ticket\.json$/;
 export function digestMicroCommitMessage(message: string): string {
   return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
 }
@@ -3462,7 +3494,7 @@ function gitEmail(root: string): string {
 
 function findContributor(root: string): Contributor | null {
   const email = gitEmail(root).toLowerCase();
-  const dir = join(root, ".🦑️repo", "🧑️‍💻️devs");
+  const dir = join(getRepoMetaDir(root), "🧑️‍💻️devs");
   if (!existsSync(dir)) return null;
   if (email) {
     for (const name of readdirSync(dir, { withFileTypes: true })) {
@@ -3498,7 +3530,7 @@ function loadLevel(root: string, contributor: Contributor, segments: string[]): 
   if (/\b(gp|gpush|push!|\+push)\b/.test(token)) return "prepare-and-commit-and-push";
   if (/\b(gc|commit!|\+commit)\b/.test(token)) return "prepare-and-commit";
   if (/\b(g\.|gprepare|prepare!|\+prepare)\b/.test(token)) return "prepare-only";
-  const path = join(root, ".🦑️repo", "🧑️‍💻️devs", contributor.alias, "micro-commit.json");
+  const path = join(getRepoMetaDir(root), "🧑️‍💻️devs", contributor.alias, "micro-commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
     if (j.level === "prepare-and-commit" || j.level === "prepare-and-commit-and-push" || j.level === "prepare-only") {
@@ -4050,8 +4082,8 @@ function writeMicroCommitHookFile(path: string, body: string): void {
 
 export function installMicroCommitGitHooks(root: string): void {
   const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
-  mkdirSync(join(root, ".🦑️repo"), { recursive: true });
-  writeFileSync(join(root, ".🦑️repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  mkdirSync(getRepoMetaDir(root), { recursive: true });
+  writeFileSync(join(getRepoMetaDir(root), MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
   const hooksDir = join(root, ".git", "hooks");
   const repoHooksDir = join(root, "🧰️framework", "🛍️products", "🦑️repo", "🪝️hooks");
   mkdirSync(hooksDir, { recursive: true });
@@ -4229,7 +4261,7 @@ function commitStepsFromLevel(level: CommitLevel): CommitSteps {
 function loadCommitSteps(root: string, contributor: Contributor, segments: string[]): CommitSteps {
   const explicit = parseCommitSteps(segments);
   if (explicit.tag || explicit.squash || explicit.push) return explicit;
-  const path = join(root, ".🦑️repo", "🧑️‍💻️devs", contributor.alias, "commit.json");
+  const path = join(getRepoMetaDir(root), "🧑️‍💻️devs", contributor.alias, "commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
     const allowed: CommitLevel[] = ["prepare-only", "prepare-and-tag", "prepare-and-tag-and-squash", "prepare-and-tag-and-squash-and-push"];

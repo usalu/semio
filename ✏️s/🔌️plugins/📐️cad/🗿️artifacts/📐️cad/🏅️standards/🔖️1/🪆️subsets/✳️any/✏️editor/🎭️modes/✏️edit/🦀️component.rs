@@ -74,7 +74,7 @@ pub fn gumball_active(_runtime: &CadPlayRuntime, _active_utility: Option<&str>, 
 /// ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `selected` is always `false` here — see
 /// `instance_is_component_hovered`'s doc comment for why `render` cannot know the current mesh
 /// selection. Documented reduced-fidelity gap.
-pub fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
+pub(crate) fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
     let instances: Vec<Value> = objects
         .iter()
         .filter(|object| object.visible)
@@ -102,7 +102,7 @@ pub fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> 
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
     let urls = collect_mesh_urls(objects);
     if !urls.is_empty() {
         return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);

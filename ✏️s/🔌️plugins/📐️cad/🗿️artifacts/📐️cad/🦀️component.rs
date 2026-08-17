@@ -70,47 +70,23 @@ pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
 #[serde(rename_all = "camelCase")]
 pub struct CadWorkingScene {
     #[serde(default)]
-    pub objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[serde(default)]
-    pub building_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) building_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[serde(default)]
-    pub energy_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) energy_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[serde(default)]
-    pub structure_classic_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) structure_classic_objects: Vec<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject>,
     #[serde(default)]
-    pub geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[serde(default)]
-    pub building_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) building_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[serde(default)]
-    pub energy_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) energy_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[serde(default)]
-    pub structure_classic_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
+    pub(crate) structure_classic_geometry: Option<crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry>,
 }
 
-impl CadWorkingScene {
-    /// 🗂️ This pane's object list.
-    pub fn objects_for(&self, pane: CadPaneId) -> &[crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject] {
-        match pane {
-            CadPaneId::Shape => &self.objects,
-            CadPaneId::Building => &self.building_objects,
-            CadPaneId::Energy => &self.energy_objects,
-            CadPaneId::StructureClassic => &self.structure_classic_objects,
-        }
-    }
-
-    /// 🗂️ This pane's raw import-time topology, when the working scene carries it (write-side
-    /// fixture/DWG import only — the READ direction from a resolved `SemioModelSnapshot` child
-    /// never has this, since `model` never inlines brep/mesh geometry data; see that subset's own
-    /// module doc).
-    pub fn geometry_for(&self, pane: CadPaneId) -> Option<&crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry> {
-        match pane {
-            CadPaneId::Shape => self.geometry.as_ref(),
-            CadPaneId::Building => self.building_geometry.as_ref(),
-            CadPaneId::Energy => self.energy_geometry.as_ref(),
-            CadPaneId::StructureClassic => self.structure_classic_geometry.as_ref(),
-        }
-    }
-}
 
 /// 🌉 READ direction: resolved `s.stdio.semio.model` child content (once a real resolver hands it
 /// over — see `store::LinkResolver`/`ChildStoreFactory` in `🏪️store/🦀️component.rs`'s

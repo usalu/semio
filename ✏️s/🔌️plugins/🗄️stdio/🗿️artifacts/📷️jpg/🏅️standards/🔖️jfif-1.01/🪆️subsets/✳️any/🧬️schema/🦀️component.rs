@@ -256,6 +256,7 @@ pub fn empty_jpg_snapshot() -> JpgSnapshot {
 /// gaps `../🚪️io/🦀️component.rs`'s own `📡️component.protocol.semio` documents (thumbnail-size =
 /// width*height*3 needs a two-field product; other_segments' body length needs `Lp - 2`, neither
 /// expressible by this dialect's `Field`/`Array` primitives).
+#[cfg(test)]
 pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
     use crate::artifacts::jpg::JpgSnapshot;
     use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;

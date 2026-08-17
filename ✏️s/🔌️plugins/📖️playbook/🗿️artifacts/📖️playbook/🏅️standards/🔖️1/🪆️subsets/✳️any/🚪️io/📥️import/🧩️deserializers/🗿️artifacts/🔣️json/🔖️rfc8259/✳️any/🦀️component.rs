@@ -5,26 +5,12 @@
 //! boundary per that schema's own doc comment, NOT structurally plain JSON) by a concurrent stdio
 //! wave, breaking this pre-existing leaf's compile. Fixed as a minimal lagging-call-site update
 //! (same shape as note's own fix for this exact leaf,
-//! `🗒️note/.../🔣️json/🔖️rfc8259/✳️any/🦀️component.rs`): a real, honest structural
-//! `JsonValue -> serde_json::Value` converter plus stdio's own real `parse_json_text`.
+//! `🗒️note/.../🔣️json/🔖️rfc8259/✳️any/🦀️component.rs`): goes through stdio's own
+//! `JsonSnapshot::to_serde_value` bridge plus stdio's own real `parse_json_text`.
 use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonSnapshot, JsonValue};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{parse_json_text, JsonSnapshot};
 use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
-use std::str::FromStr;
 pub fn register() {}
-
-/// 🔁️ Structural `JsonValue -> serde_json::Value` conversion (stdio's own `JsonValue` has no
-/// built-in bridge to `serde_json::Value` — see this file's module doc comment).
-fn json_value_to_serde(value: &JsonValue) -> serde_json::Value {
-    match value {
-        JsonValue::Null => serde_json::Value::Null,
-        JsonValue::Bool { value } => serde_json::Value::Bool(*value),
-        JsonValue::Number { lexeme } => serde_json::Number::from_str(lexeme).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null),
-        JsonValue::String { value } => serde_json::Value::String(value.clone()),
-        JsonValue::Array { items } => serde_json::Value::Array(items.iter().map(json_value_to_serde).collect()),
-        JsonValue::Object { members } => serde_json::Value::Object(members.iter().map(|member| (member.key.clone(), json_value_to_serde(&member.value))).collect()),
-    }
-}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<PlaybookSnapshot, String> {
     let mut snap: PlaybookSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| e.to_string())?;

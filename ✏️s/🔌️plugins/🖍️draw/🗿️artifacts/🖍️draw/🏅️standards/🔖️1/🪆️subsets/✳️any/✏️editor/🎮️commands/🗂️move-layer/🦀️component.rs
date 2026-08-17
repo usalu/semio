@@ -7,7 +7,6 @@ use crate::artifacts::draw::op::DrawMutation;
 use crate::artifacts::draw::DrawSnapshot;
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 //#region 🔖️DocumentHelpers
 fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_position: &str) -> (Option<String>, usize) {
@@ -28,14 +27,6 @@ fn resolve_reorder_target(document: &DrawSnapshot, target_row_id: &str, drop_pos
         }
     }
     (None, document.layers.len())
-}
-
-/// 🩹️ Parses a `PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a plain JSON
-/// string when it isn't valid JSON) so one `String` wire field covers every heterogeneous
-/// `draw_op_for_layer_field` value type (bool/number/string) — mirrors
-/// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
-fn patch_value_json(value: &str) -> Value {
-    serde_json::from_str(value).unwrap_or_else(|_| Value::String(value.to_string()))
 }
 //#endregion 🔖️DocumentHelpers
 

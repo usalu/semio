@@ -9,6 +9,7 @@
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️component.tsx";
+import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { GripVerticalIcon, MoveIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -24,6 +25,7 @@ export const HANDLE_HOVER_SCOPE_ATTR = "data-hover-scope";
  */
 export const DragHandle: React.FC<{
   readonly labelId?: string;
+  readonly subject?: string;
   readonly iconKind?: "grip-vertical" | "move";
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   readonly onPointerMove?: React.PointerEventHandler<HTMLSpanElement>;
@@ -34,8 +36,12 @@ export const DragHandle: React.FC<{
   readonly onClick?: React.MouseEventHandler<HTMLSpanElement>;
   readonly className?: string;
   readonly emphasized?: boolean;
-}> = ({ labelId = "ui.tree.drag.sort", iconKind = "grip-vertical", onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => (
-  <ChromeControlHint id={labelId}>
+}> = ({ labelId = "ui.tree.drag.sort", subject, iconKind = "grip-vertical", onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => {
+  const targetLabelId = labelId === "ui.tree.drag.transfer" ? "ui.tree.drag.transferTarget" : "ui.tree.drag.sortTarget";
+  const localizedSubjectHint = useLabel(targetLabelId, { target: subject ?? "" });
+  const subjectHint = subject ? localizedSubjectHint : undefined;
+  return (
+  <ChromeControlHint id={subject ? undefined : labelId} text={subjectHint} always>
     <span
       data-slot="drag-handle"
       data-drag-role={iconKind === "move" ? "transfer" : "sort"}
@@ -57,7 +63,8 @@ export const DragHandle: React.FC<{
       {iconKind === "move" ? <MoveIcon size={12} /> : <GripVerticalIcon size={12} />}
     </span>
   </ChromeControlHint>
-);
+  );
+};
 
 /** @emoji 🎯️ Passive drop-zone fill — secondary accent, kept visually distinct from the stronger primary-accent indicator on the actively hovered target. */
 

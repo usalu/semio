@@ -382,6 +382,7 @@ impl OpBinary for IfcMutation {
 /// fodder (`ops_grammar_conformance_law`) and `protocol_walk_law` fodder — every `IfcValue` tag
 /// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `IfcEntity`
 /// payload are exercised at least once.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![

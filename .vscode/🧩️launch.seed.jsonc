@@ -1515,7 +1515,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "OS_HUB_PORT": "8787",
-        "OS_HUB_DATA": "${workspaceFolder}/.semio/hub-dev/"
+        "OS_HUB_DATA": "${workspaceFolder}/.🧬semio/🌐hub/hub-dev/"
       },
       "presentation": {
         "group": "3_dev",
@@ -3037,7 +3037,7 @@
           "SEMIO_PLUGIN": "s",
           "S_USER": "{EMAIL}",
           "S_HUB_URL": "http://127.0.0.1:8787",
-          "S_DATA_DIR": "${workspaceFolder}/.semio/s-user{N}"
+          "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user{N}"
         }
       }
     },

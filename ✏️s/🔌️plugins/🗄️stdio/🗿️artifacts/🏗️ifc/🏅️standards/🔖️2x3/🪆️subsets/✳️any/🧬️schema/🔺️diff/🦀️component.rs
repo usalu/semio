@@ -909,6 +909,7 @@ impl protocol::DiffCodec for Ifc2x3Diff {
 /// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
 /// `between()` result exercising every top-level field (schema/header/removed/upserted, incl. a
 /// COMPLEX instance and every `Part21Value` tag), and its reverse direction.
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     let a = crate::artifacts::ifc::standards::v2x3::engine::demo_ifc2x3_snapshot();
     let mut b = a.clone();

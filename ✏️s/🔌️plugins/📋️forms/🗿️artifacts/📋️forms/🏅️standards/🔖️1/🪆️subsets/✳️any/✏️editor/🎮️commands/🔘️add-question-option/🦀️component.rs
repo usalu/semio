@@ -5,34 +5,13 @@ use crate::artifacts::forms::schema::{create_form_id, update_block_operation};
 use crate::artifacts::forms::{op::FormMutation, FormQuestionOption, FormsSnapshot};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 //#region 🔖️Shell
-fn patch_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormMutation> {
-    update_block_operation(spec, question_id, |question| {
-        let mut options = question.options.take().unwrap_or_default();
-        if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
-            if field == "label" {
-                option.label = raw_value.as_str().unwrap_or("").to_string();
-            }
-        }
-        question.options = Some(options);
-    })
-}
-
 fn add_question_option(spec: &FormsSnapshot, question_id: &str, label: &str) -> Option<FormMutation> {
     let value = create_form_id("opt");
     update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.push(FormQuestionOption { value, label: label.into() });
-        question.options = Some(options);
-    })
-}
-
-fn remove_question_option(spec: &FormsSnapshot, question_id: &str, option_value: &str) -> Option<FormMutation> {
-    update_block_operation(spec, question_id, |question| {
-        let mut options = question.options.take().unwrap_or_default();
-        options.retain(|entry| entry.value != option_value);
         question.options = Some(options);
     })
 }

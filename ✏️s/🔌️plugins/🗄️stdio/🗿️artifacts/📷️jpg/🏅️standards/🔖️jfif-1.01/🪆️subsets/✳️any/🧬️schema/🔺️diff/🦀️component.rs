@@ -98,12 +98,6 @@ pub struct JpgFrameFieldsDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<JpgComponentsDiff>,
 }
-impl JpgFrameFieldsDiff {
-    fn is_empty(&self) -> bool {
-        self == &Self::default()
-    }
-}
-
 /// 🌲️ `frame`'s change shape: `Modify` when both base/next have a frame (field-level patch,
 /// including the id-keyed `components` triple); `Replace` on a decode-status "kind change"
 /// (`None`<->`Some`) — mirrors xml's `XmlNodeDiff::Replace` fallback for exactly this situation.
@@ -315,11 +309,6 @@ pub struct JpgOtherSegmentsDiff {
     pub modified: Vec<JpgSegmentModified>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JpgSegmentAdded>,
-}
-impl JpgOtherSegmentsDiff {
-    fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
-    }
 }
 //#endregion 🔖️OtherSegmentsDiff
 
@@ -2281,6 +2270,7 @@ impl protocol::DiffCodec for JpgDiff {
 /// tests. Mirrors `handcrafted_diff_codec_tests`'s own `snap_a`/`snap_b`/`snap_c` fixtures exactly
 /// (kept `pub(crate)` here instead of `#[cfg(test)]`-gated so the engine's non-test conformance
 /// module can reuse it too — matches png's own `demo_diff_cases()` visibility).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<JpgDiff> {
     fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }

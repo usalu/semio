@@ -106,10 +106,13 @@ mod tests {
 // classification/reclassification (rule 2: pure fn snapshot/objects -> derived objects), not
 // stateful app behaviour.
 mod derive_transformation {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadObject, CadPrimitiveSlot};
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+    #[cfg(test)]
+    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{BrepKernel, GeometryHandle};
     use semio_framework_3d::engine::Vec3;
+    #[cfg(test)]
     use std::collections::HashMap;
 
     //#region 🔖️ClassifyRules
@@ -138,6 +141,7 @@ mod derive_transformation {
         pub fallback: bool,
     }
 
+    #[cfg(test)]
     const FROM_GEOMETRY_CLASSIFY_RULES: &[ClassifyRule] = &[
         ClassifyRule { role: "roof", typology: "energy.energy.roof", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Max), fallback: false },
         ClassifyRule { role: "baseplate", typology: "energy.energy.baseplate", dominant_axis: Some(DominantAxis::Z), min_dominant_normal: Some(0.75), min_axis_normal: None, z_band: Some(ZBand::Min), fallback: false },
@@ -229,6 +233,7 @@ mod derive_transformation {
         format!("{dominant}:{sign}:{}:{}:{}", q(centroid[0]), q(centroid[1]), q(centroid[2]))
     }
 
+    #[cfg(test)]
     fn dominant_axis_of(normal: Vec3) -> DominantAxis {
         let [nx, ny, nz] = normal;
         let abs = [nx.abs(), ny.abs(), nz.abs()];
@@ -241,6 +246,7 @@ mod derive_transformation {
         }
     }
 
+    #[cfg(test)]
     fn axis_normal_component(normal: Vec3, axis: DominantAxis) -> f64 {
         match axis {
             DominantAxis::X => normal[0].abs(),
@@ -249,6 +255,7 @@ mod derive_transformation {
         }
     }
 
+    #[cfg(test)]
     fn classify_rule_matches(rule: &ClassifyRule, normal: Vec3, centroid_z: f64, z_min: f64, z_max: f64, z_tol: f64) -> bool {
         if rule.fallback {
             return true;
@@ -290,7 +297,7 @@ mod derive_transformation {
 
     //#region 🔖️SolidConstruction
     /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
-    pub fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
+    pub(crate) fn solid_for_object(kernel: &mut dyn BrepKernel, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
             if semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
@@ -314,6 +321,7 @@ mod derive_transformation {
         }
     }
 
+    #[cfg(test)]
     fn fuse_solids(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle]) -> Option<GeometryHandle> {
         if solids.is_empty() {
             return None;
@@ -327,18 +335,21 @@ mod derive_transformation {
     //#endregion 🔖️SolidConstruction
 
     //#region 🔖️DeriveEngine
+    #[cfg(test)]
     struct FaceMeta {
         handle: GeometryHandle,
         normal: Vec3,
         centroid: Vec3,
     }
 
+    #[cfg(test)]
     fn next_object_id(prefix: &str, index: usize) -> String {
         format!("{prefix}-{index}")
     }
 
     /// @emoji 🔄️ Derives energy objects from shape-pane solids via fuse + face classification.
-    pub fn run_derive_from_geometry(kernel: &mut dyn BrepKernel, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+    #[cfg(test)]
+    pub(crate) fn run_derive_from_geometry(kernel: &mut dyn BrepKernel, source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let solids: Vec<GeometryHandle> = source_objects.iter().filter_map(|object| solid_for_object(kernel, object)).collect();
         if solids.is_empty() {
             return Vec::new();
@@ -445,6 +456,7 @@ mod derive_transformation {
         objects
     }
 
+    #[cfg(test)]
     const BUILDING_TO_STRUCTURE: &[(&str, &str)] = &[
         ("building.building.slab", "structure.structure.onewayreinforcedconcreteslab"),
         ("building.building.column", "structure.structure.reinforcedconcretecolumn"),
@@ -455,7 +467,8 @@ mod derive_transformation {
     ];
 
     /// @emoji 🔄️ Maps building typologies to structure-classic equivalents (premigration `from_building` applier).
-    pub fn apply_from_building(source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
+    #[cfg(test)]
+    pub(crate) fn apply_from_building(source_objects: &[CadObject], id_seed: &str) -> Vec<CadObject> {
         let mut counts: HashMap<&str, usize> = HashMap::new();
         source_objects
             .iter()
@@ -483,7 +496,8 @@ mod derive_transformation {
     }
 
     /// @emoji 🔄️ Filters source objects to whitelisted typologies (premigration `applyTransformationFallback`).
-    pub fn apply_typology_fallback(source_objects: &[CadObject], typologies: &[&str], id_seed: &str) -> Vec<CadObject> {
+    #[cfg(test)]
+    pub(crate) fn apply_typology_fallback(source_objects: &[CadObject], typologies: &[&str], id_seed: &str) -> Vec<CadObject> {
         source_objects
             .iter()
             .enumerate()
@@ -578,7 +592,8 @@ mod construct_query {
     }
 
     impl<'a> CadTopologyGraph<'a> {
-        pub fn new(geometry: &'a CadGeometry) -> Self {
+        #[cfg(test)]
+        pub(crate) fn new(geometry: &'a CadGeometry) -> Self {
             Self { geometry }
         }
     }
@@ -684,7 +699,8 @@ mod construct_query {
     /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
     /// non-manifold-edge checks, adjacency lookups), reusing `graph::dsl::run_query_json`
     /// unchanged.
-    pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
+    #[cfg(test)]
+    pub(crate) fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
         let graph = CadTopologyGraph::new(geometry);
         graph::dsl::run_query_json(&graph, source)
     }
@@ -904,7 +920,7 @@ mod scene_compute {
     }
 
     /// @emoji 📐️ Shifts a tessellated mesh onto the authored fixture primitive centroid when kernel output drifts.
-    pub fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
+    pub(crate) fn align_mesh_to_fixture_centroid(mesh: &mut MeshData, geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) {
         let Some(target) = centroid_from_fixture_primitives(geometry, primitives) else {
             return;
         };
@@ -957,7 +973,7 @@ mod scene_compute {
     /// `CadPaneId` rather than a raw fixture index — the real, non-stub object+geometry source
     /// `crate::editor::cad::forest_working_scene` (the app layer's `CadWorkingScene` test/render
     /// fixture) builds each pane from.
-    pub fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
+    pub(crate) fn forest_pane_bundle(pane: CadPaneId) -> (Vec<CadObject>, CadGeometry) {
         let model_index = match pane {
             CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
             CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
@@ -1120,7 +1136,7 @@ mod scene_compute {
         }
     }
 
-    pub fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObject) {
+    pub(crate) fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObject) {
         if object.solid_handle.is_some() {
             return;
         }
@@ -1133,15 +1149,15 @@ mod scene_compute {
         }
     }
 
-    pub fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
+    pub(crate) fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
         object.mesh_url.as_ref().filter(|url| !url.is_empty()).cloned()
     }
 
-    pub fn primary_primitive_kind(object: &CadObject) -> &str {
+    pub(crate) fn primary_primitive_kind(object: &CadObject) -> &str {
         object.primitives.first().map_or("solid", |primitive| primitive.kind.as_str())
     }
 
-    pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
+    pub(crate) fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
         let kind = primary_primitive_kind(object);
         {
             let mut kernel = cad_brep_kernel();
@@ -1157,7 +1173,7 @@ mod scene_compute {
         typology_brep_mesh(&object.typology, object.extent, object.solid_handle.as_deref(), centroid)
     }
 
-    pub fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
+    pub(crate) fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
         let mut urls = HashSet::new();
         for object in objects {
             if let Some(url) = resolve_object_mesh_url(object) {
@@ -1167,7 +1183,7 @@ mod scene_compute {
         urls.into_iter().collect()
     }
 
-    pub fn object_scale_json(object: &CadObject) -> [f64; 3] {
+    pub(crate) fn object_scale_json(object: &CadObject) -> [f64; 3] {
         object.scale.unwrap_or([1.0, 1.0, 1.0])
     }
 

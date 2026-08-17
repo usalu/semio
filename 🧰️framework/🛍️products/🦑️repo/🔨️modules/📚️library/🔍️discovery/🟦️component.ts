@@ -1073,7 +1073,7 @@ export function readSemioMarkerSubTable(manifestPath: string, lang: PackageLang,
 }
 //#endregion 🏷️SemioMarkerSubTable
 
-const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".🦑️repo", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", "compose"]);
+const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".🧬semio", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", "compose"]);
 
 /** 📁️ `readdirSync(dir, { withFileTypes: true })`, defaulting to `[]` for an unreadable/missing dir — a helper (rather than an explicit `ReturnType<typeof readdirSync>` annotation) so the `Dirent<string>` element type infers unambiguously from this specific overload. */
 function readdirSafe(absDir: string) {

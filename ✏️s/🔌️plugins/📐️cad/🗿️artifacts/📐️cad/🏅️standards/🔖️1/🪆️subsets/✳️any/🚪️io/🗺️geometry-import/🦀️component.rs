@@ -15,7 +15,6 @@
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, BrepKernel, GeometryHandle};
 use semio_framework_3d::engine::Vec3;
-use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -153,7 +152,7 @@ fn default_true() -> bool {
 //#endregion 🔖️EphemeralImportTypes
 
 //#region 🔖️Parse
-pub fn parse_geometry(value: Option<&Value>) -> CadGeometry {
+pub(crate) fn parse_geometry(value: Option<&Value>) -> CadGeometry {
     value.and_then(|entry| serde_json::from_value(entry.clone()).ok()).unwrap_or_default()
 }
 
@@ -254,7 +253,7 @@ fn face_boundary_points(face: &CadFace, wires: &HashMap<String, &CadWire>, edges
     face.wire_ids.iter().find_map(|wire_id| wires.get(wire_id)).map(|wire| wire_points(wire, edges, vertices)).unwrap_or_default()
 }
 
-pub fn import_geometry_handles(kernel: &mut dyn BrepKernel, geometry: &CadGeometry) -> HashMap<String, String> {
+pub(crate) fn import_geometry_handles(kernel: &mut dyn BrepKernel, geometry: &CadGeometry) -> HashMap<String, String> {
     let vertices = vertex_map(geometry);
     let edges = edge_map(geometry);
     let wires = wire_map(geometry);
@@ -324,7 +323,7 @@ pub fn import_geometry_handles(kernel: &mut dyn BrepKernel, geometry: &CadGeomet
     handles
 }
 
-pub fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
+pub(crate) fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashMap<String, String>) -> Option<(String, String)> {
     for primitive in primitives {
         if let Some(handle) = handles.get(&primitive.primitive_id) {
             return Some((handle.clone(), primitive.kind.clone()));
@@ -377,7 +376,7 @@ fn extent_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 
 /// Derives an object's world-space bounding extent from its authored geometry, trying each
 /// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
-pub fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn extent_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
@@ -397,12 +396,12 @@ fn centroid_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
 }
 
 /// 🎯️ World-space centroid of the first primitive slot that resolves against authored geometry.
-pub fn centroid_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
+pub(crate) fn centroid_from_fixture_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| centroid_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))
 }
 
 /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
-pub fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: &CadObject, kind: &str) -> Option<MeshData> {
+pub(crate) fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: &CadObject, kind: &str) -> Option<MeshData> {
     let handle_id = object.solid_handle.as_deref()?;
     if block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
         return None;
@@ -411,7 +410,7 @@ pub fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: &CadObject, k
 }
 
 /// 🧵️ Re-imports fixture geometry and tessellates the object's primitive slots.
-pub fn tessellate_object_mesh_from_fixture(kernel: &mut dyn BrepKernel, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
+pub(crate) fn tessellate_object_mesh_from_fixture(kernel: &mut dyn BrepKernel, object: &CadObject, geometry: &CadGeometry) -> Option<MeshData> {
     if object.primitives.is_empty() {
         return None;
     }
@@ -517,32 +516,11 @@ fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
 /// `solidHandle`/`primitives` path fixture geometry uses. Falls back to an extent-only object
 /// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
 /// no triangles or the kernel is unable to import it.
-pub fn cad_object_from_mesh(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
+pub(crate) fn cad_object_from_mesh(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
     let extent = mesh_extent(mesh);
     let solid_handle = mesh_to_obj_text(mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok()).map(|handle| handle.0);
     let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
     CadObject { id: id.into(), label: label.into(), typology: typology.into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, extent, solid_handle, primitives }
-}
-/// 🧊️ Builds a `CadObject` around a solid `GeometryHandle` already resident in `kernel` (e.g. from
-/// a native OBJ/STL/STEP import), tessellating once just to derive a display `extent` — the
-/// handle itself is kept verbatim rather than being round-tripped through a mesh reimport.
-pub fn cad_object_from_solid_handle(kernel: &mut dyn BrepKernel, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, handle: GeometryHandle) -> CadObject {
-    let extent = block_on(kernel.tessellate(&handle, 0.1)).ok().and_then(|mesh| mesh_extent(&mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)));
-    let handle_id = handle.0;
-    CadObject {
-        id: id.into(),
-        label: label.into(),
-        typology: typology.into(),
-        visible: true,
-        locked: false,
-        origin: [0.0, 0.0, 0.0],
-        orientation: Some([0.0, 0.0, 0.0, 1.0]),
-        scale: None,
-        mesh_url: None,
-        extent,
-        solid_handle: Some(handle_id.clone()),
-        primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: handle_id, kind: "solid".into() }],
-    }
 }
 //#endregion 🔖️MeshImport
 
@@ -550,7 +528,7 @@ pub fn object_label_from_id(object_id: &str) -> String {
     object_id.split('-').next_back().map_or_else(|| object_id.to_string(), str::to_string)
 }
 
-pub fn objects_from_fixture_model(kernel: &mut dyn BrepKernel, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
+pub(crate) fn objects_from_fixture_model(kernel: &mut dyn BrepKernel, objects_value: &[Value], geometry: &CadGeometry) -> Vec<CadObject> {
     let handles = import_geometry_handles(kernel, geometry);
     objects_value
         .iter()

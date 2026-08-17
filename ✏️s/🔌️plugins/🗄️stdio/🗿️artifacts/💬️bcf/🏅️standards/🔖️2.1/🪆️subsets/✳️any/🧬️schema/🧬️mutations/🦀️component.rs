@@ -563,6 +563,7 @@ impl protocol::OpBinary for BcfMutation {
 /// truth reused by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     use crate::artifacts::bcf::schema::diff::{demo_snapshot_a, demo_snapshot_b};
     let base = demo_snapshot_a();

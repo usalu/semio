@@ -6,19 +6,6 @@ use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Helpers
-/// 🩹️ Builds the `VcsDemoMutation` for a `patchSnapshot` field write — mirrors
-/// `shooting_ui::shot_patch_for_field`'s string-keyed field dispatch.
-fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMutation> {
-    use crate::artifacts::vcs::mutations::{change_counter, change_notes, change_status, rename_vcs};
-    match field {
-        "title" => Some(rename_vcs(value.into())),
-        "counter" => value.parse::<i64>().ok().map(change_counter),
-        "status" => Some(change_status(value.into())),
-        "notes" => Some(change_notes(value.into())),
-        _ => None,
-    }
-}
-
 fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
     use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
     let mut operations = Vec::new();

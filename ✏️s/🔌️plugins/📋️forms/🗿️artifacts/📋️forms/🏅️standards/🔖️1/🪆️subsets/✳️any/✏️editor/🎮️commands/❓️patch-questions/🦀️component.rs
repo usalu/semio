@@ -2,8 +2,8 @@
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::{parse_value_json, reset_try_config_mutations};
-use crate::artifacts::forms::schema::{locate_question, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
+use crate::artifacts::forms::schema::{update_block_operation, value_to_dsl};
+use crate::artifacts::forms::{op::FormMutation, FormQuestion, FormsSnapshot, FormVectorField};
 use semio_framework_plugin::{ConfigView, ArtifactView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -154,30 +154,6 @@ pub fn patch_building_component_param(spec: &FormsSnapshot, question_id: &str, p
             }
         }
         question.params = Some(params);
-    })
-}
-
-/// 🌳️ Resolves a document-tree drop target id (`"step:<id>"` or a question id) back to its owning step.
-fn resolve_step_id_from_tree_target(spec: &FormsSnapshot, target_id: &str) -> Option<String> {
-    if let Some(step_id) = target_id.strip_prefix("step:") {
-        return Some(step_id.to_string());
-    }
-    locate_question(spec, target_id).map(|location| location.step_id)
-}
-
-/// 🌳️ Resolves the insertion index within `step_id` implied by dropping onto `target_id` at
-/// `drop_position` (`"before"`/`"after"`/`"inside"`).
-fn resolve_question_insert_index(spec: &FormsSnapshot, step_id: &str, target_id: &str, drop_position: &str) -> Option<usize> {
-    let steps = forms_steps(spec);
-    let step = steps.iter().find(|step| step.id == step_id)?;
-    if target_id.starts_with("step:") {
-        return Some(if drop_position == "before" { 0 } else { step.blocks.len() });
-    }
-    let target_index = step.blocks.iter().position(|question| question.id == target_id)?;
-    Some(match drop_position {
-        "before" => target_index,
-        "after" => target_index + 1,
-        _ => step.blocks.len(),
     })
 }
 //#endregion 🔖️Shell

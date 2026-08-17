@@ -362,9 +362,7 @@ fn decrypt_page_header(raw32: &[u8; 32], file_address: u64) -> PageHeader {
 #[derive(Debug, Clone, Copy)]
 struct PageDirEntry {
     number: i32,
-    size: u32,
     address: u64,
-    gap_tree: Option<[i32; 4]>,
 }
 
 fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry> {
@@ -376,45 +374,25 @@ fn parse_page_directory(dec: &[u8], section_array_size: u32) -> Vec<PageDirEntry
         let size = u32::from_le_bytes(dec[pos + 4..pos + 8].try_into().unwrap());
         pos += 8;
         let entry_address = address;
-        let mut gap_tree = None;
         if number <= section_array_size as i32 {
             address += size as u64;
         }
         if number < 0 && pos + 16 <= dec.len() {
-            gap_tree = Some([
-                i32::from_le_bytes(dec[pos..pos + 4].try_into().unwrap()),
-                i32::from_le_bytes(dec[pos + 4..pos + 8].try_into().unwrap()),
-                i32::from_le_bytes(dec[pos + 8..pos + 12].try_into().unwrap()),
-                i32::from_le_bytes(dec[pos + 12..pos + 16].try_into().unwrap()),
-            ]);
             pos += 16;
         }
-        out.push(PageDirEntry { number, size, address: entry_address, gap_tree });
+        out.push(PageDirEntry { number, address: entry_address });
     }
     out
 }
 
 //#region 🧱️R2004DirectoryDecode
-fn data_header_words(raw: &[u8], address: u64) -> Result<[u32; 8], String> {
-    if raw.len() < 32 {
-        return Err("encrypted data-page header is truncated".into());
-    }
-    let mask = 0x4164536bu32 ^ address as u32;
-    let mut words = [0; 8];
-    for (index, word) in words.iter_mut().enumerate() {
-        *word = u32::from_le_bytes(raw[index * 4..index * 4 + 4].try_into().unwrap()) ^ mask;
-    }
-    Ok(words)
-}
 
 /// 🧰 Transient page materialization used only while decoding named standard concepts.
 #[derive(Debug, Clone, Default)]
 struct DwgRawPage {
     page_number: i32,
     file_address: u64,
-    compressed_size: u32,
     start_offset: u64,
-    decompressed_size: u32,
     /// Empty iff this page's decompression failed; never retained by an artifact snapshot.
     decoded: Vec<u8>,
     error: Option<String>,
@@ -434,8 +412,6 @@ struct DwgRawSection {
     /// crate technique after the first engine port used `page_size` and every compressed
     /// section on the real fixture failed).
     max_decomp_size: u32,
-    section_id: u32,
-    encrypted: u32,
     pages: Vec<DwgRawPage>,
 }
 
@@ -536,16 +512,16 @@ fn locate_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
 
     let by_number: std::collections::HashMap<i32, u64> = page_dir.iter().map(|e| (e.number, e.address)).collect();
     let mut out = Vec::with_capacity(descriptors.len());
-    for (name, declared_size, compressed_flag, max_decomp_size, section_id, encrypted, pages) in descriptors {
+    for (name, declared_size, compressed_flag, max_decomp_size, _section_id, _encrypted, pages) in descriptors {
         if name.is_empty() {
             continue; // padding descriptor slot (section-info headers sometimes reserve one).
         }
         let mut raw_pages = Vec::with_capacity(pages.len());
-        for (pnum, psize, start_offset) in pages {
+        for (pnum, _psize, start_offset) in pages {
             let file_address = *by_number.get(&pnum).ok_or_else(|| format!("r2004: page {pnum} for section {name} not in page directory"))?;
-            raw_pages.push(DwgRawPage { page_number: pnum, file_address, compressed_size: psize, start_offset, decompressed_size: 0, decoded: Vec::new(), error: None });
+            raw_pages.push(DwgRawPage { page_number: pnum, file_address, start_offset, decoded: Vec::new(), error: None });
         }
-        out.push(DwgRawSection { name, compressed: compressed_flag == 2, declared_size, max_decomp_size, section_id, encrypted, pages: raw_pages });
+        out.push(DwgRawSection { name, compressed: compressed_flag == 2, declared_size, max_decomp_size, pages: raw_pages });
     }
     Ok(out)
 }
@@ -566,7 +542,6 @@ fn decode_r2004_sections(bytes: &[u8]) -> Result<Vec<DwgRawSection>, String> {
             let mut raw32 = [0u8; 32];
             raw32.copy_from_slice(&bytes[addr..addr + 32]);
             let ph = decrypt_page_header(&raw32, page.file_address);
-            page.decompressed_size = ph.page_size;
             if ph.page_type != 0x4163043b {
                 page.error = Some(format!("page {} page_type {:#x} != 0x4163043b", page.page_number, ph.page_type));
                 continue;
@@ -603,7 +578,6 @@ struct EncodedR2004Page {
     section_id: u32,
     page_number: i32,
     start_offset: u64,
-    decompressed_size: u32,
     payload: Vec<u8>,
     address: u64,
     allocation_size: u32,
@@ -672,30 +646,6 @@ fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), 
     Ok(())
 }
 
-fn write_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8]) -> Result<u32, String> {
-    let payload = compress_r2004_section(decoded)?;
-    let start = output.len();
-    let mut header = Vec::with_capacity(20);
-    push_u32(&mut header, page_type);
-    push_u32(&mut header, decoded.len() as u32);
-    push_u32(&mut header, payload.len() as u32);
-    push_u32(&mut header, 2);
-    push_u32(&mut header, 0);
-    let checksum = r2004_page_checksum(r2004_page_checksum(0, &header), &payload);
-    header[16..20].copy_from_slice(&checksum.to_le_bytes());
-    output.extend_from_slice(&header);
-    output.extend_from_slice(&payload);
-    output.extend_from_slice(&page_type.to_le_bytes());
-    output.extend_from_slice(&[0; 16]);
-    output.resize(align_r2004(output.len()), 0);
-    Ok((output.len() - start) as u32)
-}
-
-struct CanonicalR2004Section {
-    name: &'static str,
-    section_id: u32,
-    content: Vec<u8>,
-}
 
 fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
     let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
@@ -725,7 +675,7 @@ fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::
             let mut payload = content;
             payload.resize(capacity, 0);
             let allocation_size = (32 + capacity) as u32;
-            pages.push(EncodedR2004Page { section_id, page_number, start_offset: 0, decompressed_size: payload.len() as u32, payload, address: address as u64, allocation_size });
+            pages.push(EncodedR2004Page { section_id, page_number, start_offset: 0, payload, address: address as u64, allocation_size });
             address += allocation_size as usize;
             page_number += 1;
             continue;
@@ -735,7 +685,7 @@ fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::
             decoded[..chunk.len()].copy_from_slice(chunk);
             let payload = compress_r2004_section(&decoded)?;
             let allocation_size = align_r2004(32 + payload.len()) as u32;
-            pages.push(EncodedR2004Page { section_id, page_number, start_offset: (page_index * 0x7400) as u64, decompressed_size: chunk.len() as u32, payload, address: address as u64, allocation_size });
+            pages.push(EncodedR2004Page { section_id, page_number, start_offset: (page_index * 0x7400) as u64, payload, address: address as u64, allocation_size });
             address += allocation_size as usize;
             page_number += 1;
         }
@@ -743,21 +693,6 @@ fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::
     Ok(pages)
 }
 
-pub(crate) fn verify_r2004_ordinary_prefix(snapshot: &crate::artifacts::dwg::DwgSnapshot, bytes: &[u8]) -> Result<(usize, usize), String> {
-    let pages = materialize_r2004_ordinary_pages_without_header(snapshot)?;
-    let mut output = vec![0; 0x100];
-    for page in &pages {
-        write_data_page(&mut output, page)?;
-    }
-    if output.len() != 0x23b80 {
-        return Err(format!("ordinary prefix ended at {:#x}", output.len()));
-    }
-    if output[0x100..] != bytes[0x100..0x23b80] {
-        let mismatch = output[0x100..].iter().zip(&bytes[0x100..0x23b80]).position(|(left, right)| left != right).unwrap_or(0);
-        return Err(format!("ordinary prefix mismatch at file offset {:#x}", mismatch + 0x100));
-    }
-    Ok((pages.len(), output.len()))
-}
 
 struct R2004SectionDescriptor {
     name: &'static str,
@@ -845,25 +780,6 @@ fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages: &[En
     Ok(output)
 }
 
-fn decode_r2004_system_page(bytes: &[u8], address: usize, expected_type: u32) -> Result<Vec<u8>, String> {
-    let header = bytes.get(address..address + 20).ok_or("R2004 system page header is truncated")?;
-    let page_type = u32::from_le_bytes(header[0..4].try_into().unwrap());
-    let decoded_size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
-    let payload_size = u32::from_le_bytes(header[8..12].try_into().unwrap()) as usize;
-    let compression = u32::from_le_bytes(header[12..16].try_into().unwrap());
-    let checksum = u32::from_le_bytes(header[16..20].try_into().unwrap());
-    if page_type != expected_type || compression != 2 {
-        return Err(format!("R2004 system page at {address:#x} has type {page_type:#x}, compression {compression}"));
-    }
-    let payload = bytes.get(address + 20..address + 20 + payload_size).ok_or("R2004 system page payload is truncated")?;
-    let mut checksum_header = header.to_vec();
-    checksum_header[16..20].fill(0);
-    let calculated = r2004_page_checksum(r2004_page_checksum(0, &checksum_header), payload);
-    if calculated != checksum {
-        return Err(format!("R2004 system page checksum {checksum:#x} != {calculated:#x}"));
-    }
-    decompress_r2004_section(payload, decoded_size)
-}
 
 fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8], physical_allocation: Option<usize>, fill_skip: usize) -> Result<usize, String> {
     let start = output.len();
@@ -926,127 +842,6 @@ fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, head
     Ok(descriptors)
 }
 
-pub(crate) fn verify_r2004_system_directories(snapshot: &crate::artifacts::dwg::DwgSnapshot, bytes: &[u8]) -> Result<(usize, usize, usize, usize), String> {
-    let native_sections = decode_r2004_sections(bytes)?;
-    let header = r2004_section_data(native_sections.iter().find(|section| section.name == "AcDb:Header").ok_or("AcDb:Header section missing")?)?;
-    let mut pages = materialize_r2004_ordinary_pages_without_header(snapshot)?;
-    let mut decoded_header = vec![0; 0x7400];
-    decoded_header.get_mut(..header.len()).ok_or("AcDb:Header exceeds one page")?.copy_from_slice(&header);
-    let payload = compress_r2004_section(&decoded_header)?;
-    let address = pages.last().map(|page| page.address + u64::from(page.allocation_size)).unwrap_or(0x100);
-    pages.push(EncodedR2004Page { section_id: 1, page_number: 20, start_offset: 0, decompressed_size: header.len() as u32, allocation_size: align_r2004(32 + payload.len()) as u32, address, payload });
-    if pages.last().map(|page| (page.address, page.allocation_size, page.payload.len())) != Some((0x23b80, 992, 946)) {
-        return Err("AcDb:Header page materialization changed".into());
-    }
-    let mut materialized_map = Vec::new();
-    for page in &pages {
-        push_u32(&mut materialized_map, page.page_number as u32);
-        push_u32(&mut materialized_map, page.allocation_size);
-    }
-    push_u32(&mut materialized_map, 23);
-    push_u32(&mut materialized_map, 1_024);
-    push_u32(&mut materialized_map, 24);
-    push_u32(&mut materialized_map, 1_600);
-    let compressed_map = compress_r2004_section(&materialized_map)?;
-    let mut reserved_name = [0u8; 64];
-    reserved_name.copy_from_slice(compressed_map.get(52..116).ok_or("compressed Section Map is too short for AC1024 reserved descriptor derivation")?);
-    reserved_name[0] = 0;
-    let descriptors = r2004_section_descriptors(snapshot, header.len())?;
-    let application_history_scratch = encode_application_history(&snapshot.application_history)?;
-    let section_info = encode_r2004_section_info(&descriptors, &pages, &reserved_name, &application_history_scratch)?;
-    let file_header = parse_r2004_file_header(&decrypt_r2004_header(bytes.get(0x80..0x80 + R2004_HEADER_LEN).ok_or("primary header missing")?))?;
-    let map_address = file_header.section_map_address as usize + 0x100;
-    let page_map = decode_r2004_system_page(bytes, map_address, 0x41630e3b)?;
-    let page_directory = parse_page_directory(&page_map, file_header.section_array_size);
-    let info_address = page_directory.iter().find(|entry| entry.number == file_header.section_info_id).ok_or("Section Info page missing")?.address as usize;
-    let native_section_info = decode_r2004_system_page(bytes, info_address, 0x4163003b)?;
-    if section_info != native_section_info {
-        let mismatch = section_info.iter().zip(&native_section_info).position(|(left, right)| left != right).unwrap_or(section_info.len().min(native_section_info.len()));
-        let start = mismatch.saturating_sub(12);
-        let end = (mismatch + 32).min(section_info.len());
-        let mut position = 20usize;
-        let mut name_buffers = Vec::new();
-        let history_scratch = encode_application_history(&snapshot.application_history)?;
-        let mut history_bases = Vec::new();
-        for descriptor in &descriptors {
-            let count = u32::from_le_bytes(native_section_info[position + 8..position + 12].try_into().unwrap()) as usize;
-            let buffer = &native_section_info[position + 32..position + 96];
-            name_buffers.push(format!("{:02x?}", buffer));
-            let tail_start = descriptor.name.len() + 1;
-            let tail = &buffer[tail_start.min(64)..];
-            let found = history_scratch.windows(tail.len()).position(|window| window == tail).and_then(|index| index.checked_sub(tail_start));
-            history_bases.push(found);
-            position += 96 + count * 16;
-        }
-        return Err(format!(
-            "Section Info mismatch at {mismatch}: materialized={} native={} materialized_window={:02x?} native_window={:02x?} history_bases={history_bases:?} name_buffers={name_buffers:?}",
-            section_info.len(),
-            native_section_info.len(),
-            &section_info[start..end],
-            &native_section_info[start..end]
-        ));
-    }
-    if materialized_map != page_map {
-        let mismatch = materialized_map.iter().zip(&page_map).position(|(left, right)| left != right).unwrap_or(materialized_map.len().min(page_map.len()));
-        return Err(format!("Section Map mismatch at {mismatch}: materialized={} native={}", materialized_map.len(), page_map.len()));
-    }
-    let mut physical = vec![0; 0x100];
-    for page in &pages {
-        write_data_page(&mut physical, page)?;
-    }
-    if physical.len() != info_address || physical[0x100..] != bytes[0x100..info_address] {
-        let mismatch = physical[0x100..].iter().zip(&bytes[0x100..info_address]).position(|(left, right)| left != right).unwrap_or(physical.len().min(info_address) - 0x100);
-        return Err(format!("ordinary 20-page prefix mismatch at {:#x}", mismatch + 0x100));
-    }
-    if write_r2004_system_page(&mut physical, 0x4163003b, &section_info, Some(1_024), 1)? != 970 {
-        return Err("Section Info compressed size changed".into());
-    }
-    if physical.len() != map_address {
-        return Err(format!("Section Info ended at {:#x}, expected {map_address:#x}", physical.len()));
-    }
-    if write_r2004_system_page(&mut physical, 0x41630e3b, &materialized_map, None, 0)? != 170 {
-        return Err("Section Map compressed size changed".into());
-    }
-    if physical.len() != 0x24432 || physical[info_address..] != bytes[info_address..0x24432] {
-        let mismatch = physical[info_address..].iter().zip(&bytes[info_address..0x24432]).position(|(left, right)| left != right).unwrap_or(physical.len().min(0x24432) - info_address);
-        return Err(format!("system-page physical mismatch at {:#x}", mismatch + info_address));
-    }
-    Ok((descriptors.len(), pages.len(), section_info.len(), materialized_map.len()))
-}
-
-fn encode_section_info(sections: &[CanonicalR2004Section], pages: &[EncodedR2004Page]) -> Vec<u8> {
-    let mut output = Vec::new();
-    push_u32(&mut output, sections.len() as u32 + 1);
-    push_u32(&mut output, 2);
-    push_u32(&mut output, 0x7400);
-    push_u32(&mut output, 0);
-    push_u32(&mut output, sections.len() as u32 + 1);
-    let mut descriptors: Vec<Option<&CanonicalR2004Section>> = vec![None];
-    descriptors.extend(sections.iter().map(Some));
-    for section in descriptors {
-        let section_id = section.map_or(0, |value| value.section_id);
-        let section_pages: Vec<&EncodedR2004Page> = pages.iter().filter(|page| page.section_id == section_id).collect();
-        push_u64(&mut output, section.map_or(0, |value| value.content.len() as u64));
-        push_u32(&mut output, section_pages.len() as u32);
-        push_u32(&mut output, section.map_or(0x7400, |value| value.content.len().max(1) as u32));
-        push_u32(&mut output, 1);
-        push_u32(&mut output, 2);
-        push_u32(&mut output, section_id);
-        push_u32(&mut output, 0);
-        let mut name = [0u8; 64];
-        if let Some(section) = section {
-            let length = section.name.len().min(63);
-            name[..length].copy_from_slice(&section.name.as_bytes()[..length]);
-        }
-        output.extend_from_slice(&name);
-        for page in section_pages {
-            push_u32(&mut output, page.page_number as u32);
-            push_u32(&mut output, page.payload.len() as u32);
-            push_u64(&mut output, page.start_offset);
-        }
-    }
-    output
-}
 
 /// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
 /// Section payloads are serialization products and are never retained in the artifact schema.
@@ -1060,7 +855,7 @@ fn encode_r2004_canonical(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Resu
     decoded_header[..header.len()].copy_from_slice(&header);
     let header_payload = compress_r2004_section(&decoded_header)?;
     let header_address = pages.last().map(|page| page.address + u64::from(page.allocation_size)).unwrap_or(0x100);
-    pages.push(EncodedR2004Page { section_id: 1, page_number: 20, start_offset: 0, decompressed_size: header.len() as u32, allocation_size: align_r2004(32 + header_payload.len()) as u32, address: header_address, payload: header_payload });
+    pages.push(EncodedR2004Page { section_id: 1, page_number: 20, start_offset: 0, allocation_size: align_r2004(32 + header_payload.len()) as u32, address: header_address, payload: header_payload });
     let mut page_map = Vec::new();
     for page in &pages {
         push_u32(&mut page_map, page.page_number as u32);
@@ -3869,85 +3664,8 @@ pub(crate) fn decode_r2004_document_sections(bytes: &[u8]) -> Result<DwgDocument
     })
 }
 
-pub(crate) fn verify_r2004_header_semantic(bytes: &[u8]) -> Result<(usize, usize), String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let native = r2004_section_data(sections.iter().find(|section| section.name == "AcDb:Header").ok_or("AcDb:Header section missing")?)?;
-    let logical = decode_r2010_header_section(&native)?;
-    let materialized = encode_r2010_header_section(&logical)?;
-    if materialized != native {
-        let mismatch = materialized.iter().zip(&native).position(|(left, right)| left != right).unwrap_or(materialized.len().min(native.len()));
-        return Err(format!("AcDb:Header semantic mismatch at {mismatch}: materialized={} native={}", materialized.len(), native.len()));
-    }
-    Ok((native.len(), logical.relations.handle_seed as usize))
-}
 
-pub(crate) fn verify_r2004_named_semantic_sections(bytes: &[u8]) -> Result<(usize, usize, usize, usize), String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let section = |name: &str| sections.iter().find(|section| section.name == name).ok_or_else(|| format!("{name} section missing"));
-    let data = |name: &str| r2004_section_data(section(name)?);
-    let auxiliary_native = data("AcDb:AuxHeader")?;
-    let auxiliary = decode_auxiliary_header(&auxiliary_native)?;
-    if encode_auxiliary_header(&auxiliary)? != auxiliary_native {
-        return Err("AcDb:AuxHeader semantic re-encode changed".into());
-    }
-    let revision_native = data("AcDb:RevHistory")?;
-    let revision = decode_revision_history(&revision_native)?;
-    if encode_revision_history(&revision)? != revision_native {
-        return Err("AcDb:RevHistory semantic re-encode changed".into());
-    }
-    let preview_section = section("AcDb:Preview")?;
-    let preview_native = r2004_section_data(preview_section)?;
-    let preview = decode_indexed_preview(&preview_native)?;
-    let payload_address = u32::try_from(preview_section.pages.first().ok_or("preview page missing")?.file_address + 32).map_err(|_| "preview payload address exceeds u32")?;
-    if encode_indexed_preview(&preview, payload_address)? != preview_native {
-        return Err("AcDb:Preview semantic re-encode changed".into());
-    }
-    let history_native = data("AcDb:AppInfoHistory")?;
-    let history = decode_application_history(&history_native)?;
-    if encode_application_history(&history)? != history_native {
-        return Err("AcDb:AppInfoHistory semantic re-encode changed".into());
-    }
-    Ok((auxiliary_native.len(), revision_native.len(), preview_native.len(), history_native.len()))
-}
 
-pub(crate) fn verify_r2004_materialized_named_sections(snapshot: &crate::artifacts::dwg::DwgSnapshot, bytes: &[u8]) -> Result<usize, String> {
-    let native_sections = decode_r2004_sections(bytes)?;
-    let native = |name: &str| -> Result<Vec<u8>, String> { r2004_section_data(native_sections.iter().find(|section| section.name == name).ok_or_else(|| format!("{name} section missing"))?) };
-    let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
-    let handles = materialize_r2004_handles(&pairs)?;
-    let sections = [
-        ("AcDb:AuxHeader", encode_auxiliary_header(&snapshot.auxiliary_header)?),
-        ("AcDb:Classes", encode_r2010_classes_section(&snapshot.classes)?),
-        ("AcDb:Handles", handles),
-        ("AcDb:Template", encode_template(&snapshot.template)?),
-        ("AcDb:ObjFreeSpace", encode_object_free_space(&snapshot.auxiliary_header.updated_at)),
-        ("AcDb:AcDbObjects", objects),
-        ("AcDb:RevHistory", encode_revision_history(&snapshot.revision_history)?),
-        ("AcDb:SummaryInfo", encode_summary_info(&snapshot.summary)?),
-        ("AcDb:Preview", encode_indexed_preview(&snapshot.preview, 0x1c0)?),
-        ("AcDb:AppInfo", encode_application_info(&snapshot.application)?),
-        ("AcDb:AppInfoHistory", encode_application_history(&snapshot.application_history)?),
-        ("AcDb:FileDepList", encode_dependencies(&snapshot.dependencies)?),
-    ];
-    for (name, materialized) in &sections {
-        let expected = native(name)?;
-        if *materialized != expected {
-            let mismatch = materialized.iter().zip(&expected).position(|(left, right)| left != right).unwrap_or(materialized.len().min(expected.len()));
-            let start = mismatch.saturating_sub(8);
-            let end = (mismatch + 16).min(materialized.len().min(expected.len()));
-            let expected_tail_end = (mismatch + 32).min(expected.len());
-            return Err(format!(
-                "{name} logical materialization changed at {mismatch}: materialized={} native={} materialized_window={:02x?} native_window={:02x?} native_tail={:02x?}",
-                materialized.len(),
-                expected.len(),
-                &materialized[start..end],
-                &expected[start..end],
-                &expected[mismatch..expected_tail_end]
-            ));
-        }
-    }
-    Ok(sections.len())
-}
 
 fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: bool) -> Result<i64, String> {
     let mut value = 0i64;
@@ -4067,6 +3785,7 @@ fn decode_r2010_eed(reader: &mut DwgBitReader<'_>, _base: u64) -> Result<Vec<cra
     }
 }
 
+#[cfg(test)]
 fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>, String> {
     let handles = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
     let objects = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
@@ -10907,856 +10626,50 @@ pub(crate) fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::art
     decode_r2004_object_records(bytes, classes).map(|(objects, _)| objects)
 }
 
-pub(crate) fn decode_r2004_xrecord_terminal_fills(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<Vec<(u8, u8)>, String> {
-    decode_r2004_object_records(bytes, classes).map(|(_, fills)| fills)
-}
 
-pub(crate) fn verify_r2004_xrecord_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("XRECORD {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("XRECORD frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("XRECORD {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_xrecord_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let original_payload = &original[frame.byte_pos..frame.byte_pos + payload_size];
-            let mut original_handles = DwgBitReader::at_bit(original_payload, payload_size * 8 - original_handle_bits)?;
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            encoded_frame.pad_to_byte();
-            let encoded_payload = &encoded[encoded_frame.byte_pos..encoded_frame.byte_pos + encoded_payload_size];
-            let mut encoded_handles = DwgBitReader::at_bit(encoded_payload, encoded_payload_size * 8 - encoded_handle_bits)?;
-            let xrecord = match object.body.as_ref() {
-                Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::XRecord(value)) => value,
-                _ => unreachable!(),
-            };
-            let semantic_handle_count = 1 + object.reactor_handles.len() + usize::from(object.extension_dictionary_handle.is_some()) + xrecord.object_id_handles.len();
-            let original_refs = (0..semantic_handle_count).map(|_| original_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let encoded_refs = (0..semantic_handle_count).map(|_| encoded_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let from = first.saturating_sub(4);
-            let original_window = &original[from..original.len().min(first + 8)];
-            let encoded_window = &encoded[from..encoded.len().min(first + 8)];
-            return Err(format!(
-                "XRECORD {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original_refs={original_refs:?} encoded_refs={encoded_refs:?} original={original_window:02x?} encoded={encoded_window:02x?}",
-                original.len(),
-                encoded.len()
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_dictionary_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("dictionary {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("dictionary frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("dictionary {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_dictionary_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            encoded_frame.pad_to_byte();
-            let original_payload = &original[frame.byte_pos..frame.byte_pos + payload_size];
-            let mut original_handles = DwgBitReader::at_bit(original_payload, payload_size * 8 - original_handle_bits)?;
-            let encoded_payload = &encoded[encoded_frame.byte_pos..encoded_frame.byte_pos + encoded_payload_size];
-            let mut encoded_handles = DwgBitReader::at_bit(encoded_payload, encoded_payload_size * 8 - encoded_handle_bits)?;
-            let dictionary = match object.body.as_ref() {
-                Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Dictionary(value)) => value,
-                _ => unreachable!(),
-            };
-            let semantic_handle_count = 1 + object.reactor_handles.len() + usize::from(object.extension_dictionary_handle.is_some()) + dictionary.entries.len() + usize::from(dictionary.default_entry_handle.is_some());
-            let original_refs = (0..semantic_handle_count).map(|_| original_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let encoded_refs = (0..semantic_handle_count).map(|_| encoded_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let from = first.saturating_sub(4);
-            let original_window = &original[from..original.len().min(first + 8)];
-            let encoded_window = &encoded[from..encoded.len().min(first + 8)];
-            return Err(format!(
-                "dictionary {handle:#x} frame mismatch: entries={} original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original_refs={original_refs:?} encoded_refs={encoded_refs:?} original={original_window:02x?} encoded={encoded_window:02x?}",
-                dictionary.entries.len(),
-                original.len(),
-                encoded.len()
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_table_control_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("table control {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("table-control frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("table control {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_table_control_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            encoded_frame.pad_to_byte();
-            let original_payload = &original[frame.byte_pos..frame.byte_pos + payload_size];
-            let mut original_handles = DwgBitReader::at_bit(original_payload, payload_size * 8 - original_handle_bits)?;
-            let encoded_payload = &encoded[encoded_frame.byte_pos..encoded_frame.byte_pos + encoded_payload_size];
-            let mut encoded_handles = DwgBitReader::at_bit(encoded_payload, encoded_payload_size * 8 - encoded_handle_bits)?;
-            let control = match object.body.as_ref() {
-                Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(value)) => value,
-                _ => unreachable!(),
-            };
-            let special_count = match control {
-                crate::artifacts::dwg::schema::snapshot::DwgTableControlBody::Block(_) | crate::artifacts::dwg::schema::snapshot::DwgTableControlBody::Linetype(_) => 2,
-                crate::artifacts::dwg::schema::snapshot::DwgTableControlBody::DimensionStyle(value) => value.additional_handles.len(),
-                _ => 0,
-            };
-            let semantic_handle_count = 1 + object.reactor_handles.len() + usize::from(object.extension_dictionary_handle.is_some()) + control.entry_handles().len() + special_count;
-            let original_refs = (0..semantic_handle_count).map(|_| original_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let encoded_refs = (0..semantic_handle_count).map(|_| encoded_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let from = first.saturating_sub(4);
-            let original_window = &original[from..original.len().min(first + 8)];
-            let encoded_window = &encoded[from..encoded.len().min(first + 8)];
-            return Err(format!(
-                "table control {handle:#x}/{} frame mismatch: entries={} original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original_refs={original_refs:?} encoded_refs={encoded_refs:?} original={original_window:02x?} encoded={encoded_window:02x?}",
-                object.class_name,
-                match object.body.as_ref() {
-                    Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableControl(value)) => value.entry_handles().len(),
-                    _ => 0,
-                },
-                original.len(),
-                encoded.len()
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_table_record_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("table record {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("table-record frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("table record {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_table_record_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            encoded_frame.pad_to_byte();
-            let original_payload = &original[frame.byte_pos..frame.byte_pos + payload_size];
-            let mut original_handles = DwgBitReader::at_bit(original_payload, payload_size * 8 - original_handle_bits)?;
-            let encoded_payload = &encoded[encoded_frame.byte_pos..encoded_frame.byte_pos + encoded_payload_size];
-            let mut encoded_handles = DwgBitReader::at_bit(encoded_payload, encoded_payload_size * 8 - encoded_handle_bits)?;
-            let body = match object.body.as_ref() {
-                Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(value)) => value,
-                _ => unreachable!(),
-            };
-            let class_handles = match body {
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::RegisteredApplication(_) | crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::TextStyle(_) => 0,
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Layer(_) => 3,
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Linetype(value) => value.dashes.len(),
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(value) => 3 + value.owned_entity_handles.len() + value.insert_backreference_handles.len(),
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::Viewport(_) => 5,
-                crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::DimensionStyle(_) => 8,
-            };
-            let semantic_handle_count = 2 + object.reactor_handles.len() + usize::from(object.extension_dictionary_handle.is_some()) + class_handles;
-            let original_refs = (0..semantic_handle_count).map(|_| original_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let encoded_refs = (0..semantic_handle_count).map(|_| encoded_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let from = first.saturating_sub(4);
-            let original_window = &original[from..original.len().min(first + 8)];
-            let encoded_window = &encoded[from..encoded.len().min(first + 8)];
-            return Err(format!(
-                "table record {handle:#x}/{} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original_refs={original_refs:?} encoded_refs={encoded_refs:?} body={:?} original={original_window:02x?} encoded={encoded_window:02x?}",
-                object.class_name,
-                original.len(),
-                encoded.len(),
-                object.body
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_line_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::Entity(crate::artifacts::dwg::schema::snapshot::DwgEntityBody::Line(_)))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("LINE {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("LINE frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("LINE {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_line_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let _encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            let from = first.saturating_sub(4);
-            return Err(format!(
-                "LINE {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original={:02x?} encoded={:02x?}",
-                original.len(),
-                encoded.len(),
-                &original[from..original.len().min(first + 8)],
-                &encoded[from..encoded.len().min(first + 8)]
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-fn verify_r2004_entity_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass], type_code: u16, class_name: &str, encoder: fn(&crate::artifacts::dwg::schema::snapshot::DwgLogicalObject) -> Result<Vec<u8>, String>) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle).filter(|object| object.type_code == type_code) else { continue };
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("{class_name} {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos + payload_size + 2;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("{class_name} {handle:#x} frame is truncated"))?;
-        let encoded = encoder(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let _encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            let from = first.saturating_sub(4);
-            return Err(format!(
-                "{class_name} {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original={:02x?} encoded={:02x?}",
-                original.len(),
-                encoded.len(),
-                &original[from..original.len().min(first + 8)],
-                &encoded[from..encoded.len().min(first + 8)]
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_arc_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, DWG_TYPE_ARC, "ARC", encode_r2010_arc_frame)
-}
 
-pub(crate) fn verify_r2004_lwpolyline_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, DWG_TYPE_LWPOLYLINE, "LWPOLYLINE", encode_r2010_lwpolyline_frame)
-}
 
-pub(crate) fn verify_r2004_insert_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, DWG_TYPE_INSERT, "INSERT", encode_r2010_insert_frame)
-}
 
-pub(crate) fn verify_r2004_dimension_linear_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, DWG_TYPE_DIMENSION_LINEAR, "DIMENSION_LINEAR", encode_r2010_dimension_linear_frame)
-}
 
-pub(crate) fn verify_r2004_viewport_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, DWG_TYPE_VIEWPORT, "VIEWPORT", encode_r2010_viewport_frame)
-}
 
-pub(crate) fn verify_r2004_visual_style_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 506, "VISUALSTYLE", encode_r2010_visual_style_frame)
-}
 
-pub(crate) fn verify_r2004_block_parameter_dependency_body_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 543, "BLOCKPARAMDEPENDENCYBODY", encode_r2010_block_parameter_dependency_body_frame)
-}
 
-pub(crate) fn verify_r2004_block_representation_data_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 559, "ACDB_BLOCKREPRESENTATION_DATA", encode_r2010_block_representation_data_frame)
-}
 
-pub(crate) fn verify_r2004_dynamic_block_purge_preventer_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 522, "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION", encode_r2010_dynamic_block_purge_preventer_frame)
-}
 
-pub(crate) fn verify_r2004_evaluation_graph_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 517, "ACAD_EVALUATION_GRAPH", encode_r2010_evaluation_graph_frame)
-}
 
-pub(crate) fn verify_r2004_block_flip_parameter_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 529, "BLOCKFLIPPARAMETER", encode_r2010_block_flip_parameter_frame)
-}
 
-pub(crate) fn verify_r2004_block_visibility_parameter_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 531, "BLOCKVISIBILITYPARAMETER", encode_r2010_block_visibility_parameter_frame)
-}
 
-pub(crate) fn verify_r2004_placeholder_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 80, "ACDBPLACEHOLDER", encode_r2010_placeholder_frame)
-}
 
-pub(crate) fn verify_r2004_dictionary_variable_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 503, "DICTIONARYVAR", encode_r2010_dictionary_variable_frame)
-}
 
-pub(crate) fn verify_r2004_annotation_scale_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 507, "SCALE", encode_r2010_annotation_scale_frame)
-}
 
-pub(crate) fn verify_r2004_sort_entities_table_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 516, "SORTENTSTABLE", encode_r2010_sort_entities_table_frame)
-}
 
-pub(crate) fn verify_r2004_table_style_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 504, "TABLESTYLE", encode_r2010_table_style_frame)
-}
 
-pub(crate) fn verify_r2004_mline_style_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 73, "MLINESTYLE", encode_r2010_mline_style_frame)
-}
 
-pub(crate) fn verify_r2004_mleader_style_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 508, "MLEADERSTYLE", encode_r2010_mleader_style_frame)
-}
 
-pub(crate) fn verify_r2004_material_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 505, "MATERIAL", encode_r2010_material_frame)
-}
 
-pub(crate) fn verify_r2004_block_move_action_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 521, "BLOCKMOVEACTION", encode_r2010_block_move_action_frame)
-}
 
-pub(crate) fn verify_r2004_assoc_network_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 539, "ACDBASSOCNETWORK", encode_r2010_assoc_network_frame)
-}
 
-pub(crate) fn verify_r2004_assoc_2d_constraint_group_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    verify_r2004_entity_frames(bytes, classes, 540, "ACDBASSOC2DCONSTRAINTGROUP", encode_r2010_assoc_2d_constraint_group_frame)
-}
 
-pub(crate) fn verify_r2004_dynamic_linear_grip_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(usize, usize, usize, usize), String> {
-    Ok((
-        verify_r2004_entity_frames(bytes, classes, 527, "BLOCKLINEARPARAMETER", encode_r2010_dynamic_block_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 528, "BLOCKLINEARGRIP", encode_r2010_dynamic_block_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 530, "BLOCKFLIPGRIP", encode_r2010_dynamic_block_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 532, "BLOCKVISIBILITYGRIP", encode_r2010_dynamic_block_frame)?,
-    ))
-}
 
-pub(crate) fn verify_r2004_alignment_action_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(usize, usize, usize, usize, usize), String> {
-    Ok((
-        verify_r2004_entity_frames(bytes, classes, 533, "BLOCKALIGNMENTPARAMETER", encode_r2010_alignment_action_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 534, "BLOCKALIGNMENTGRIP", encode_r2010_alignment_action_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 535, "BLOCKSTRETCHACTION", encode_r2010_alignment_action_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 536, "BLOCKSCALEACTION", encode_r2010_alignment_action_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 537, "BLOCKFLIPACTION", encode_r2010_alignment_action_frame)?,
-    ))
-}
 
-pub(crate) fn verify_r2004_final_parameter_layout_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(usize, usize, usize, usize), String> {
-    Ok((
-        verify_r2004_entity_frames(bytes, classes, 538, "BLOCKBASEPOINTPARAMETER", encode_r2010_final_parameter_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 546, "BLOCKVERTICALCONSTRAINTPARAMETER", encode_r2010_final_parameter_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 548, "BLOCKHORIZONTALCONSTRAINTPARAMETER", encode_r2010_final_parameter_frame)?,
-        verify_r2004_entity_frames(bytes, classes, 82, "LAYOUT", encode_r2010_layout_frame)?,
-    ))
-}
 
-pub(crate) fn verify_r2004_object_handle_sections(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(usize, usize, usize), String> {
-    let objects = decode_r2004_object_identities(bytes, classes)?;
-    let (materialized_objects, pairs) = materialize_r2010_objects(&objects)?;
-    let materialized_handles = materialize_r2004_handles(&pairs)?;
-    let sections = decode_r2004_sections(bytes)?;
-    let original_objects = r2004_section_data(sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("AcDbObjects missing")?)?;
-    let original_handles = r2004_section_data(sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("Handles missing")?)?;
-    if materialized_objects != original_objects {
-        let first = materialized_objects.iter().zip(&original_objects).position(|(left, right)| left != right).unwrap_or(materialized_objects.len().min(original_objects.len()));
-        return Err(format!("AcDbObjects mismatch at {first}: materialized={} original={}", materialized_objects.len(), original_objects.len()));
-    }
-    if materialized_handles != original_handles {
-        let first = materialized_handles.iter().zip(&original_handles).position(|(left, right)| left != right).unwrap_or(materialized_handles.len().min(original_handles.len()));
-        return Err(format!("Handles mismatch at {first}: materialized={} original={}", materialized_handles.len(), original_handles.len()));
-    }
-    Ok((objects.len(), materialized_objects.len(), materialized_handles.len()))
-}
 
-pub(crate) fn verify_r2004_d2_payloads(bytes: &[u8]) -> Result<usize, String> {
-    let pages = [
-        (0x161c0usize, 135usize),
-        (0x16280, 17_145),
-        (0x1a5a0, 11_080),
-        (0x1d120, 4_380),
-        (0x1e260, 2_246),
-        (0x1eb60, 3_378),
-        (0x1f8c0, 4_448),
-        (0x20a40, 3_490),
-        (0x21820, 1_711),
-        (0x21f00, 169),
-        (0x21fe0, 129),
-        (0x220a0, 1_907),
-        (0x22840, 4_656),
-        (0x23aa0, 205),
-        (0x23ba0, 946),
-    ];
-    for (index, (offset, length)) in pages.into_iter().enumerate() {
-        let native = bytes.get(offset..offset + length).ok_or_else(|| format!("D2 page {} outside fixture", index + 6))?;
-        let decoded = decompress_r2004_section(native, 0x7400)?;
-        let encoded = compress_r2004_section(&decoded)?;
-        if encoded != native {
-            let mismatch = encoded.iter().zip(native).position(|(left, right)| left != right).unwrap_or(encoded.len().min(native.len()));
-            return Err(format!("D2 page {} mismatch at {mismatch}: encoded {} native {}", index + 6, encoded.len(), native.len()));
-        }
-    }
-    Ok(pages.len())
-}
 
-pub(crate) fn verify_r2004_d2_pages(bytes: &[u8]) -> Result<usize, String> {
-    let pages = [
-        (8u32, 0x161a0usize, 192u32, 135usize, 0u64),
-        (7, 0x16260, 17_184, 17_145, 0),
-        (7, 0x1a580, 11_136, 11_080, 0x7400),
-        (7, 0x1d100, 4_416, 4_380, 0xe800),
-        (7, 0x1e240, 2_304, 2_246, 0x15c00),
-        (7, 0x1eb40, 3_424, 3_378, 0x1d000),
-        (7, 0x1f8a0, 4_480, 4_448, 0x24400),
-        (7, 0x20a20, 3_552, 3_490, 0x2b800),
-        (7, 0x21800, 1_760, 1_711, 0x32c00),
-        (6, 0x21ee0, 224, 169, 0),
-        (5, 0x21fc0, 192, 129, 0),
-        (4, 0x22080, 1_952, 1_907, 0),
-        (3, 0x22820, 4_704, 4_656, 0),
-        (2, 0x23a80, 256, 205, 0),
-        (1, 0x23b80, 992, 946, 0),
-    ];
-    for (index, (section_id, address, allocation_size, payload_size, start_offset)) in pages.into_iter().enumerate() {
-        let native_payload = bytes.get(address + 32..address + 32 + payload_size).ok_or_else(|| format!("D2 page {} payload outside fixture", index + 6))?;
-        let decoded = decompress_r2004_section(native_payload, 0x7400)?;
-        let payload = compress_r2004_section(&decoded)?;
-        let page = EncodedR2004Page { section_id, page_number: (index + 6) as i32, start_offset, decompressed_size: decoded.len() as u32, payload, address: address as u64, allocation_size };
-        let mut encoded = vec![0; address];
-        write_data_page(&mut encoded, &page)?;
-        let native = &bytes[address..address + allocation_size as usize];
-        let actual = &encoded[address..];
-        if actual != native {
-            let mismatch = actual.iter().zip(native).position(|(left, right)| left != right).unwrap_or(actual.len().min(native.len()));
-            return Err(format!("D2 page {} native mismatch at {mismatch}", index + 6));
-        }
-    }
-    Ok(pages.len())
-}
 
-pub(crate) fn verify_r2004_stored_pages(bytes: &[u8]) -> Result<usize, String> {
-    let pages = [(9u32, 0x100usize, 160u32), (10, 0x1a0, 87_072), (11, 0x155c0, 800), (12, 0x158e0, 1_440), (13, 0x15e80, 800)];
-    for (index, (section_id, address, allocation_size)) in pages.into_iter().enumerate() {
-        let payload = bytes[address + 32..address + allocation_size as usize].to_vec();
-        let page = EncodedR2004Page { section_id, page_number: (index + 1) as i32, start_offset: 0, decompressed_size: payload.len() as u32, payload, address: address as u64, allocation_size };
-        let mut encoded = vec![0; address];
-        write_data_page(&mut encoded, &page)?;
-        let native = &bytes[address..address + allocation_size as usize];
-        if &encoded[address..] != native {
-            let mismatch = encoded[address..].iter().zip(native).position(|(left, right)| left != right).unwrap_or(allocation_size as usize);
-            return Err(format!("stored page {} native mismatch at {mismatch}", index + 1));
-        }
-    }
-    Ok(pages.len())
-}
 
-pub(crate) fn verify_r2004_block_marker_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<(usize, usize), String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let block_names = logical
-        .iter()
-        .filter_map(|object| match object.body.as_ref() {
-            Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::TableRecord(crate::artifacts::dwg::schema::snapshot::DwgTableRecordBody::BlockHeader(header))) => Some((header.block_entity_handle, header.common.name.as_str())),
-            _ => None,
-        })
-        .collect::<std::collections::BTreeMap<_, _>>();
-    let mut blocks = 0usize;
-    let mut end_blocks = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle).filter(|object| object.type_code == DWG_TYPE_BLOCK || object.type_code == DWG_TYPE_ENDBLK) else { continue };
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("block marker {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("block marker frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("block marker {handle:#x} frame is truncated"))?;
-        let encoded = if object.type_code == DWG_TYPE_BLOCK {
-            let name = block_names.get(&handle).ok_or_else(|| format!("BLOCK {handle:#x} has no block-header name"))?;
-            blocks += 1;
-            encode_r2010_block_begin_frame(object, name)?
-        } else {
-            end_blocks += 1;
-            encode_r2010_block_end_frame(object)?
-        };
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            return Err(format!(
-                "{} {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits}",
-                if object.type_code == DWG_TYPE_BLOCK { "BLOCK" } else { "ENDBLK" },
-                original.len(),
-                encoded.len()
-            ));
-        }
-    }
-    Ok((blocks, end_blocks))
-}
 
-pub(crate) fn verify_r2004_associative_dependency_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDependency(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ACDBASSOCDEPENDENCY frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ACDBASSOCDEPENDENCY {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_associative_dependency_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let mut encoded_frame = DwgBitReader::new(&encoded);
-            let encoded_payload_size = encoded_frame.read_ms()? as usize;
-            let encoded_handle_bits = encoded_frame.read_umc()? as usize;
-            encoded_frame.pad_to_byte();
-            let original_payload = &original[frame.byte_pos..frame.byte_pos + payload_size];
-            let encoded_payload = &encoded[encoded_frame.byte_pos..encoded_frame.byte_pos + encoded_payload_size];
-            let mut original_handles = DwgBitReader::at_bit(original_payload, payload_size * 8 - original_handle_bits)?;
-            let mut encoded_handles = DwgBitReader::at_bit(encoded_payload, encoded_payload_size * 8 - encoded_handle_bits)?;
-            let original_refs = (0..5).map(|_| original_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            let encoded_refs = (0..5).map(|_| encoded_handles.read_handle()).collect::<Result<Vec<_>, _>>()?;
-            return Err(format!(
-                "ACDBASSOCDEPENDENCY {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} encoded_handle_bits={encoded_handle_bits} original_refs={original_refs:?} encoded_refs={encoded_refs:?}",
-                original.len(),
-                encoded.len()
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_associative_value_dependency_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeValueDependency(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ACDBASSOCVALUEDEPENDENCY frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ACDBASSOCVALUEDEPENDENCY {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_associative_value_dependency_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let from = first.saturating_sub(4);
-            return Err(format!(
-                "ACDBASSOCVALUEDEPENDENCY {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} original={:02x?} encoded={:02x?}",
-                original.len(),
-                encoded.len(),
-                &original[from..original.len().min(first + 8)],
-                &encoded[from..encoded.len().min(first + 8)]
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_associative_geometry_dependency_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeGeometryDependency(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ACDBASSOCGEOMDEPENDENCY frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ACDBASSOCGEOMDEPENDENCY {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_associative_geometry_dependency_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let from = first.saturating_sub(4);
-            return Err(format!(
-                "ACDBASSOCGEOMDEPENDENCY {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} original={:02x?} encoded={:02x?}",
-                original.len(),
-                encoded.len(),
-                &original[from..original.len().min(first + 8)],
-                &encoded[from..encoded.len().min(first + 8)]
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_block_grip_location_component_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::BlockGripLocationComponent(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("BLOCKGRIPLOCATIONCOMPONENT frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("BLOCKGRIPLOCATIONCOMPONENT {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_block_grip_location_component_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            let from = first.saturating_sub(4);
-            return Err(format!(
-                "BLOCKGRIPLOCATIONCOMPONENT {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits} original={:02x?} encoded={:02x?}",
-                original.len(),
-                encoded.len(),
-                &original[from..original.len().min(first + 8)],
-                &encoded[from..encoded.len().min(first + 8)]
-            ));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_dynamic_block_proxy_node_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::DynamicBlockProxyNode(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ACDB_DYNAMICBLOCKPROXYNODE frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_dynamic_block_proxy_node_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            return Err(format!("ACDB_DYNAMICBLOCKPROXYNODE {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits}", original.len(), encoded.len()));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_associative_variable_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    let mut bindings = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        let Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeVariable(variable)) = object.body.as_ref() else { continue };
-        bindings += variable.referenced_value_dependency_handles.len();
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ACDBASSOCVARIABLE frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ACDBASSOCVARIABLE {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_associative_variable_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            return Err(format!("ACDBASSOCVARIABLE {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits}", original.len(), encoded.len()));
-        }
-        verified += 1;
-    }
-    if bindings != 6 {
-        return Err(format!("ACDBASSOCVARIABLE binding count {bindings} differs from the six logical fixture bindings"));
-    }
-    Ok(verified)
-}
 
-pub(crate) fn verify_r2004_associative_dimension_dependency_body_frames(bytes: &[u8], classes: &[crate::artifacts::dwg::DwgClass]) -> Result<usize, String> {
-    let sections = decode_r2004_sections(bytes)?;
-    let handles_section = sections.iter().find(|section| section.name == "AcDb:Handles").ok_or("R2004 Handles section missing")?;
-    let objects_section = sections.iter().find(|section| section.name == "AcDb:AcDbObjects").ok_or("R2004 AcDbObjects section missing")?;
-    let handle_map = decode_r2004_handle_map(&r2004_section_data(handles_section)?)?;
-    let object_data = r2004_section_data(objects_section)?;
-    let logical = decode_r2004_object_identities(bytes, classes)?;
-    let by_handle = logical.iter().map(|object| (object.handle, object)).collect::<std::collections::BTreeMap<_, _>>();
-    let mut verified = 0usize;
-    for (handle, address) in handle_map {
-        let Some(object) = by_handle.get(&handle) else { continue };
-        if !matches!(object.body, Some(crate::artifacts::dwg::schema::snapshot::DwgLogicalObjectBody::AssociativeDimensionDependencyBody(_))) {
-            continue;
-        }
-        let frame_bytes = object_data.get(address..).ok_or_else(|| format!("ASSOCDIMDEPENDENCYBODY {handle:#x} address exceeds object section"))?;
-        let mut frame = DwgBitReader::new(frame_bytes);
-        let payload_size = frame.read_ms()? as usize;
-        let original_handle_bits = frame.read_umc()? as usize;
-        frame.pad_to_byte();
-        let original_len = frame.byte_pos.checked_add(payload_size).and_then(|value| value.checked_add(2)).ok_or("ASSOCDIMDEPENDENCYBODY frame length overflow")?;
-        let original = frame_bytes.get(..original_len).ok_or_else(|| format!("ASSOCDIMDEPENDENCYBODY {handle:#x} frame is truncated"))?;
-        let encoded = encode_r2010_associative_dimension_dependency_body_frame(object)?;
-        if original != encoded {
-            let first = original.iter().zip(&encoded).position(|(left, right)| left != right).unwrap_or(original.len().min(encoded.len()));
-            let first_bit = original.get(first).zip(encoded.get(first)).map(|(left, right)| first * 8 + (left ^ right).leading_zeros() as usize).unwrap_or(first * 8);
-            return Err(format!("ASSOCDIMDEPENDENCYBODY {handle:#x} frame mismatch: original_len={} encoded_len={} first_diff_byte={first} first_diff_bit={first_bit} original_handle_bits={original_handle_bits}", original.len(), encoded.len()));
-        }
-        verified += 1;
-    }
-    Ok(verified)
-}
 
 fn r2010_string_stream(bytes: &[u8], end_bit: usize) -> Result<(DwgBitReader<'_>, usize), String> {
     if end_bit < 17 || end_bit > bytes.len().saturating_mul(8) {

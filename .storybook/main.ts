@@ -120,7 +120,7 @@ const config: StorybookConfig = {
     config.server.watch = {
       ...currentWatch,
       usePolling: true,
-      ignored: [...ignoredList, "**/storybook-static/**", "**/.nx/**", "**/.🦑️repo/**", "**/.repo/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
+      ignored: [...ignoredList, "**/storybook-static/**", "**/.nx/**", "**/.🧬semio/**", "**/.repo/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
     };
 
     config.plugins = config.plugins || [];

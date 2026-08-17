@@ -17,7 +17,8 @@
 pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
 
-use canvas::camera::{Camera, Viewport};
+pub use canvas::camera::Camera;
+use canvas::camera::Viewport;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -28,7 +29,6 @@ enum LayerNodeJson {
     #[serde(rename = "pixel", rename_all = "camelCase")]
     Pixel {
         id: String,
-        name: String,
         #[serde(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
@@ -37,19 +37,14 @@ enum LayerNodeJson {
         blend_mode: String,
         transform: TransformJson,
         mask: Option<MaskJson>,
-        #[serde(default)]
-        clip_to_below: bool,
         width: Option<u32>,
         height: Option<u32>,
         #[serde(default)]
         image_key: Option<String>,
-        #[serde(default)]
-        filters: Vec<FilterJson>,
     },
     #[serde(rename = "group", rename_all = "camelCase")]
     Group {
         id: String,
-        name: String,
         #[serde(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
@@ -58,21 +53,16 @@ enum LayerNodeJson {
         blend_mode: String,
         transform: TransformJson,
         mask: Option<MaskJson>,
-        #[serde(default)]
-        clip_to_below: bool,
         children: Vec<LayerNodeJson>,
     },
     #[serde(rename = "adjustment", rename_all = "camelCase")]
     Adjustment {
-        id: String,
-        name: String,
         #[serde(default = "default_true")]
         visible: bool,
         #[serde(default = "default_opacity")]
         opacity: f32,
         #[serde(default)]
         blend_mode: String,
-        transform: TransformJson,
         adjustment_kind: String,
         #[serde(default)]
         params: AdjustmentParamsJson,
@@ -110,8 +100,6 @@ fn default_one() -> f64 {
 struct MaskJson {
     #[serde(default = "default_true")]
     enabled: bool,
-    #[serde(default = "default_true")]
-    linked: bool,
     #[serde(default)]
     invert: bool,
     width: Option<u32>,
@@ -120,52 +108,23 @@ struct MaskJson {
 
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct FilterJson {
-    kind: String,
-    radius: Option<f32>,
-    amount: Option<f32>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct AdjustmentParamsJson {
     brightness: Option<f32>,
     contrast: Option<f32>,
-    hue: Option<f32>,
-    saturation: Option<f32>,
-    levels_black: Option<f32>,
-    levels_white: Option<f32>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-struct CameraJson {
-    #[serde(default)]
-    x: f64,
-    #[serde(default)]
-    y: f64,
-    #[serde(default = "default_one")]
-    zoom: f64,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct DocumentJson {
     schema: String,
-    id: String,
-    #[serde(default)]
-    camera: CameraJson,
     layers: Vec<LayerNodeJson>,
-    #[serde(default)]
-    brush_size: Option<f32>,
-    #[serde(default)]
-    brush_opacity: Option<f32>,
 }
 
 #[derive(Clone)]
 enum LayerNode {
     Pixel { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
     Group { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
-    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
+    Adjustment { visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
 }
 
 #[derive(Clone)]
@@ -228,7 +187,7 @@ fn parse_layer(raw: LayerNodeJson) -> LayerNode {
         LayerNodeJson::Group { id, visible, opacity, blend_mode, transform, mask, children, .. } => {
             LayerNode::Group { id, visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), transform: affine_from_json(&transform), children: children.into_iter().map(parse_layer).collect(), mask: mask.map(|m| parse_mask(&m)) }
         }
-        LayerNodeJson::Adjustment { id, visible, opacity, blend_mode, adjustment_kind, params, .. } => LayerNode::Adjustment { id, visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), kind: adjustment_kind, params },
+        LayerNodeJson::Adjustment { visible, opacity, blend_mode, adjustment_kind, params, .. } => LayerNode::Adjustment { visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), kind: adjustment_kind, params },
     }
 }
 
@@ -276,6 +235,7 @@ fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> RasterImage {
     RasterImage::rgba8(width, height, Arc::new(rgba))
 }
 
+#[cfg(test)]
 fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
     let b = brightness;
     let c = contrast;
@@ -288,6 +248,7 @@ fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
     }
 }
 
+#[cfg(test)]
 fn apply_blur_box(rgba: &mut [u8], width: u32, height: u32, radius: u32) {
     if radius == 0 {
         return;

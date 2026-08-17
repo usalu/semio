@@ -865,7 +865,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".🦑️repo/👤️/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -893,7 +893,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀️Starters"><sub>🚀️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".🦑️repo/👤️/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -902,21 +902,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-composegrasshopper-" title="🦗️compose/grasshopper"><sub>🦗️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".🦑️repo/👤️/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-composegrasshopper-" title="🦗️compose/grasshopper"><sub>🦗️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".🦑️repo/👤️/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-composejs-" title="🟨️compose/js"><sub>🟨️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".🦑️repo/👤️/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -924,14 +924,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-composeladybug-" title="🐞️ladybug"><sub>🐞️<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".🦑️repo/👤️/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-composeengine-" title="⚙️compose/engine"><sub>⚙️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".🦑️repo/👤️/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".🧬semio/🦑️repo/👤️/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

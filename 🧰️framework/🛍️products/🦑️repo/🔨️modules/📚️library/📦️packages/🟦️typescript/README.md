@@ -24,7 +24,7 @@ await runBundleScriptMain(router, import.meta.url);
 - **`runPolicyOnlyMain(import.meta.url)`**: policy-only bundles (no subcommands).
 - **Workspace root** (`/script.ts`): same `Script` base class with `ScriptRouter` over workspace verbs (see root `script.ts`).
 - **Native bootstrap**: `repo/native/bootstrap/🪟️script.ps1` / `⌨️script.sh` (invoked via `bun ./📜️script.ts setup native` / `start`).
-- **Neo4j export**: `bun ./📜️script.ts generate neo4j …` (live graph → `.🦑️repo/🛂️manifest` bundles; greenfield, no migration runner).
+- **Neo4j export**: `bun ./📜️script.ts generate neo4j …` (live graph → `.🧬semio/🦑️repo/🛂️manifest` bundles; greenfield, no migration runner).
 - Helpers: `runCmd`, `runBun`, `runBunx`, `runViteDev`, `runViteBuild`, `runVitest`, `runWasmPackWebBuild`, `playPollingEnv`, `dispatchSubcommand`, `runWorkspaceScriptMain`, `devToolingEnv`, `spawnBunx`.
 - Nested verbs inside a command class use `dispatchSubcommand(segments, { … }, usage, defaultKey?)`.
 

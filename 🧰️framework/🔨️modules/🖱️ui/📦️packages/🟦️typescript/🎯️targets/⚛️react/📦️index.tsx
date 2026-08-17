@@ -1067,10 +1067,11 @@ export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, 
 
 // #region ⌨️UiKeybindings
 import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
+import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️component.ts";
 import { buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, type ControlKeybindingAction, type ControlKeybindingDefinition, type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies } from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️component.ts";
-export { parseKeybindingChords, formatKeybindingShortcut, buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, ControlHotkeyBadge, readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides };
+export { parseKeybindingChords, formatKeybindingShortcut, formatControlTooltipText, buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, ControlHotkeyBadge, readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides };
 export type { ControlKeybindingAction, ControlKeybindingDefinition, ControlKeybindingCallback, ControlKeybindingOptions, ControlKeybindingDependencies, ControlHotkeyBadgeProps };
 
 /** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
@@ -1885,7 +1886,9 @@ export const uiChromeTranslationBundles = {
         tree: {
           drag: {
             sort: { label: { normal: "Sortieren", beginner: "Zeile sortieren" } },
+            sortTarget: { label: { normal: "Linksklick gedrückt halten, um {{target}} zu ziehen", beginner: "Linksklick gedrückt halten, um {{target}} zu ziehen" } },
             transfer: { label: { normal: "Verschieben", beginner: "In ein Fenster ziehen" } },
+            transferTarget: { label: { normal: "Linksklick gedrückt halten, um {{target}} zu ziehen", beginner: "Linksklick gedrückt halten, um {{target}} zu ziehen" } },
           },
         },
         find: {
@@ -2676,7 +2679,9 @@ export const uiChromeTranslationBundles = {
         tree: {
           drag: {
             sort: { label: { normal: "Reorder", beginner: "Reorder row" } },
+            sortTarget: { label: { normal: "Click and hold left click to drag {{target}}", beginner: "Click and hold left click to drag {{target}}" } },
             transfer: { label: { normal: "Drag to window", beginner: "Drag into a window" } },
+            transferTarget: { label: { normal: "Click and hold left click to drag {{target}}", beginner: "Click and hold left click to drag {{target}}" } },
           },
         },
         find: {
@@ -7503,8 +7508,9 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 
 // #region 🌥️Base Components
 // #region 🏷️Label
-import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
-export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, resolveTranslationLabel, useUiTranslation };
+import { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
+export { Label, useLabel, useIdLabel, useControlAccessibleLabel, useControlInlineText, useControlTooltipText, resolveTranslationLabel, useUiTranslation };
+export type { ControlTooltipTextOptions } from "../../../../🧱️elements/🏷️Label/🟦️component.tsx";
 // #endregion 🏷️Label
 
 // #endregion 🌥️Base Components
@@ -17042,6 +17048,11 @@ if (treeVitest) {
       expect(formatKeybindingShortcut("escape")).toBeTruthy();
     });
 
+    it("formats control tooltip text with optional hotkeys", () => {
+      expect(formatControlTooltipText({ label: "Find" })).toBe("Find");
+      expect(formatControlTooltipText({ label: "Find", hotkey: "⌘P" })).toBe("Find (⌘P)");
+    });
+
     it("tree highlight store notifies subscribers only when highlighted ids change", () => {
       const store = createTreeHighlightStore();
       let calls = 0;
@@ -19037,6 +19048,27 @@ if (treeVitest) {
         </UiDriverProvider>,
       );
       expect(fullMarkup).toContain(">Compact<");
+    });
+
+    it("icon-only controls expose tooltip titles with hotkeys when the driver shows them", () => {
+      const tooltipDriver: UiDriver = { ...COMPACT_UI_DRIVER, tooltips: "minimal", hotkeys: "tooltip" };
+      const markup = renderToStaticMarkup(
+        <UiKeybindingsProvider bindings={composeControlKeybindings(new Map(), {})}>
+          <UiDriverProvider driver={tooltipDriver}>
+            <Button id="ui.search.toggle" icon={<CheckIcon />} />
+          </UiDriverProvider>
+        </UiKeybindingsProvider>,
+      );
+      expect(markup).toMatch(/title="Search.*\(/);
+    });
+
+    it("drag handles with a subject render contextual drag instructions", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <DragHandle subject="Perspective Window" />
+        </UiDriverProvider>,
+      );
+      expect(markup).toContain('title="Click and hold left click to drag Perspective Window"');
     });
   });
 

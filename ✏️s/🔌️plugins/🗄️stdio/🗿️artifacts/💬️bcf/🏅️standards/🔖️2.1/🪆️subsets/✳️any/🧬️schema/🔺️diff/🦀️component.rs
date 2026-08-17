@@ -1444,6 +1444,7 @@ impl protocol::DiffCodec for BcfDiff {
 /// reused by `demo_diff_cases()` below AND by `⚙️engine/🦀️component.rs`'s own
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️component.rs`'s own `snapshot_a()`/`snapshot_b()` establishes.
+#[cfg(test)]
 pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
@@ -1493,6 +1494,7 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA.into(),
@@ -1540,6 +1542,7 @@ pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
 
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
     let a = demo_snapshot_a();
     let b = demo_snapshot_b();

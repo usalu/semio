@@ -586,13 +586,13 @@ function blake3Hex(bytes: Uint8Array): string {
 //#region BlobVitePlugin
 let blobDatabaseSingleton: InstanceType<typeof import("bun:sqlite").Database> | undefined;
 
-/** 🗄️ Lazily opens the dev-session-wide content-addressed blob store at `<repoRoot>/.semio/blobs.db` —
+/** 🗄️ Lazily opens the dev-session-wide content-addressed blob store at `<repoRoot>/.🧬semio/🔗space/blobs.db` —
  * unlike backbone documents, blobs aren't scoped to a per-uri folder (there's no folder in the
  * `write-blob`/`read-blob` WIT signature), so this is one shared table for the whole dev server. */
 async function blobDatabase(): Promise<InstanceType<typeof import("bun:sqlite").Database>> {
   if (!blobDatabaseSingleton) {
     const Database = await backboneDatabaseCtorLazy();
-    const dbPath = join(repoRoot, ".semio", "blobs.db");
+    const dbPath = join(repoRoot, ".🧬semio", "🔗space", "blobs.db");
     mkdirSync(dirname(dbPath), { recursive: true });
     blobDatabaseSingleton = new Database(dbPath);
     blobDatabaseSingleton.run("CREATE TABLE IF NOT EXISTS blob (hash TEXT PRIMARY KEY, media_type TEXT NOT NULL, size INTEGER NOT NULL, bytes BLOB NOT NULL)");
@@ -2204,7 +2204,7 @@ type CollabStepOutcome = { readonly step: number; readonly name: string; readonl
 
 /** 📁️ Ticket folder — scratch logs/screenshots for this lane's own probes, per the worker-brief. */
 function collabOutDir(): string {
-  const dir = join(repoRoot, ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS");
+  const dir = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -3620,7 +3620,7 @@ function stopParityDevServer(handle: ParityServerHandle): void {
 
 //#region 🔖️Report
 function parityOutDir(): string {
-  const configured = process.env.PARITY_OUT_DIR ?? ".🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY";
+  const configured = process.env.PARITY_OUT_DIR ?? ".🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY";
   const dir = resolve(repoRoot, configured);
   mkdirSync(dir, { recursive: true });
   return dir;

@@ -7046,7 +7046,7 @@ func getSubmoduleStatus(repoRoot string) string {
 // Only structural changes (new goals, tickets, policies, drafts) invalidate the cache.
 // ✏️Ephemeral data (agent session logs, ticket agent tracking updates) is excluded.
 func hashComposeMetaState(repoRoot string) string {
-	metaRoot := filepath.Join(repoRoot, ".🦑️repo")
+	metaRoot := RepoMetaDirForRoot(repoRoot)
 	if !FileExists(metaRoot) {
 		return ""
 	}
@@ -8301,7 +8301,7 @@ func locPathSkipped(relPath string) bool {
 	if rel == "" {
 		return true
 	}
-	if rel == ".🦑️repo" || strings.HasPrefix(rel, ".🦑️repo/") {
+	if rel == ".🧬semio" || strings.HasPrefix(rel, ".🧬semio/") {
 		return true
 	}
 	return isIgnoredByGitignore(rel)
@@ -15996,8 +15996,8 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 	BreachFileIllegalUseGodfile: {
 		Kind:        BreachFileIllegalUseGodfile,
 		Priority:    BreachPriorityHigh,
-		Reason:      "File is not listed in .🦑️repo/files.json godfile",
-		Solution:    "Add the file to .🦑️repo/files.json or remove it",
+		Reason:      "File is not listed in .🧬semio/🦑️repo/📁️files.json godfile",
+		Solution:    "Add the file to .🧬semio/🦑️repo/📁️files.json or remove it",
 		Autofixable: false,
 	},
 	BreachComposeNoUiDependency: {
@@ -16551,10 +16551,21 @@ func SetRootDir(dir string) {
 	InvalidateTechnologyCache()
 }
 
+// 🔷️GetSemioRootDir MUST return the stored value without modification.
+// 🧬️GetSemioRootDir returns the workspace-local semio root under the monorepo.
+func GetSemioRootDir() string {
+	return filepath.Join(GetRootDir(), ".🧬semio")
+}
+
+// 🔷️RepoMetaDirForRoot MUST return the repo meta dir for an explicit monorepo root.
+func RepoMetaDirForRoot(repoRoot string) string {
+	return filepath.Join(repoRoot, ".🧬semio", "🦑️repo")
+}
+
 // 🔷️GetRepoMetaDir MUST return the stored value without modification.
 // 📦️GetRepoMetaDir returns the repo meta dir of the value.
 func GetRepoMetaDir() string {
-	return filepath.Join(GetRootDir(), ".🦑️repo")
+	return RepoMetaDirForRoot(GetRootDir())
 }
 
 // 🛤️GetRepoMetaPath MUST return the stored value without modification.
@@ -16565,7 +16576,7 @@ func GetRepoMetaPath(path string) string {
 
 // #region ⚙️RepoConfig
 
-// 📋️LoggingConfig holds hook logging switches and detail for `.🦑️repo/config.toml` `[logging]`.
+// 📋️LoggingConfig holds hook logging switches and detail for `.🧬semio/🦑️repo/📋️config.toml` `[logging]`.
 type LoggingConfig struct {
 	Session    bool
 	Operations bool
@@ -16573,7 +16584,7 @@ type LoggingConfig struct {
 	Detail     string
 }
 
-// ⚙️RepoConfig holds repo-wide settings loaded from `.🦑️repo/config.toml`.
+// ⚙️RepoConfig holds repo-wide settings loaded from `.🧬semio/🦑️repo/📋️config.toml`.
 type RepoConfig struct {
 	Logging LoggingConfig
 }
@@ -16609,13 +16620,13 @@ func unquoteRepoConfigValue(value string) string {
 	return value
 }
 
-// 📥️LoadRepoConfig reads `.🦑️repo/config.toml` under repoRoot; missing file yields defaults.
+// 📥️LoadRepoConfig reads `.🧬semio/🦑️repo/📋️config.toml` under repoRoot; missing file yields defaults.
 func LoadRepoConfig(repoRoot string) RepoConfig {
 	cfg := DefaultRepoConfig()
 	if strings.TrimSpace(repoRoot) == "" {
 		return cfg
 	}
-	path := filepath.Join(repoRoot, ".🦑️repo", "📋️config.toml")
+	path := filepath.Join(RepoMetaDirForRoot(repoRoot), "📋️config.toml")
 	data, err := ReadTextFile(path)
 	if err != nil {
 		return cfg
@@ -18440,7 +18451,7 @@ var policies = []PolicyDef{
 				Groups: []Territory{
 					{
 						Name:        "Use Godfile",
-						Description: "Files not listed in .🦑️repo/files.json godfile",
+						Description: "Files not listed in .🧬semio/🦑️repo/📁️files.json godfile",
 						Kinds: []Statute{
 							BreachFileIllegalUseGodfile,
 						},
@@ -20439,7 +20450,7 @@ func folderPolicy(ctx *PolicyContext) []Breach {
 	var breachs []Breach
 	excludePrefixes := []string{
 		".git/",
-		".🦑️repo/",
+		".🧬semio/🦑️repo/",
 		"node_modules/",
 		".venv/",
 		".nx/",
@@ -20498,7 +20509,7 @@ func isGlobPattern(value string) bool {
 
 // ­ƒö┤️loadGodfile holds the data fields for a loadGodfile record.
 func loadGodfile() (*Godfile, error) {
-	godfilePath := filepath.Join(rootDir, ".🦑️repo", "📁️files.json")
+	godfilePath := filepath.Join(GetRepoMetaDir(), "📁️files.json")
 	data, err := os.ReadFile(godfilePath)
 	if err != nil {
 		return nil, err
@@ -20565,7 +20576,7 @@ func filePolicy(ctx *PolicyContext) []Breach {
 		relPath := normalizeRepoPath(path)
 		if !godfileMatchesPath(godfile, relPath) {
 			breachs = append(breachs, ctx.CreateBreach(
-				"File \""+relPath+"\" is not listed in .🦑️repo/files.json",
+				"File \""+relPath+"\" is not listed in .🧬semio/🦑️repo/📁️files.json",
 				BreachFileIllegalUseGodfile,
 				relPath, 0, 0, relPath))
 		}
@@ -20672,7 +20683,7 @@ func dependencyBoundarySkipFile(file string) bool {
 	if strings.Contains(n, "/node_modules/") || strings.Contains(n, "\\node_modules\\") {
 		return true
 	}
-	if strings.Contains(n, "/.🦑️repo/") || strings.Contains(n, "/dist/") || strings.Contains(n, "/target/") {
+	if strings.Contains(n, "/.🧬semio/") || strings.Contains(n, "/dist/") || strings.Contains(n, "/target/") {
 		return true
 	}
 	if strings.Contains(n, "/pkg/") && (strings.HasSuffix(n, "_bg.js") || strings.HasSuffix(n, ".wasm")) {
@@ -21534,8 +21545,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 		result = append(result, CodebaseContributor{
 			ID:            c.Alias,
-			URI:           ctx.FileURI(".🦑️repo/🧑️‍💻️devs/" + c.Alias),
-			Path:          ".🦑️repo/🧑️‍💻️devs/" + c.Alias + "/contributor.json",
+			URI:           ctx.FileURI(".🧬semio/🦑️repo/🧑️‍💻️devs/" + c.Alias),
+			Path:          ".🧬semio/🦑️repo/🧑️‍💻️devs/" + c.Alias + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        emails,
@@ -21565,7 +21576,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 		ticketID := ticket.GetID()
 		ticketPath := ticket.FolderPath
 		if ticketPath == "" {
-			ticketPath = ".🦑️repo/🎫️tickets/" + FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+			ticketPath = ".🧬semio/🦑️repo/🎫️tickets/" + FormatTicketRelPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		}
 
 		bundleFiles := make(map[string]int)
@@ -28295,7 +28306,7 @@ type breachCacheEnvelope struct {
 }
 
 func loadBreachsFromCache(repoRoot string) ([]Breach, error) {
-	dir := filepath.Join(repoRoot, ".🦑️repo", "⚡️cache", "breaches")
+	dir := filepath.Join(RepoMetaDirForRoot(repoRoot), "⚡️cache", "breaches")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -36057,7 +36068,7 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == "" {
 		return false
 	}
-	if normalized == ".🦑️repo" || strings.HasPrefix(normalized, ".🦑️repo/") {
+	if normalized == ".🧬semio" || strings.HasPrefix(normalized, ".🧬semio/") {
 		return true
 	}
 	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/asset/repo/") {
@@ -36730,7 +36741,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	var relPaths []string
 	for _, entry := range entries {
 		if entry.IsDir() {
-			if strings.HasPrefix(entry.Name(), ".") && entry.Name() != ".🦑️repo" {
+			if strings.HasPrefix(entry.Name(), ".") && entry.Name() != ".🧬semio" {
 				continue
 			}
 			if entry.Name() == "node_modules" || entry.Name() == "bin" || entry.Name() == "obj" {
@@ -37347,7 +37358,7 @@ func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string
 
 // ✏️writeBenchmarkReport holds the data fields for a writeBenchmarkReport record.
 func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
-	reportFile := filepath.Join(rootDir, ".🦑️repo", "📊️metrics", "benchmark.csv")
+	reportFile := filepath.Join(GetRepoMetaDir(), "📊️metrics", "benchmark.csv")
 	if err := os.MkdirAll(filepath.Dir(reportFile), 0755); err != nil {
 		return err
 	}
@@ -38677,7 +38688,7 @@ func storeCheckpointDiff(repoRoot string, checkpointID string) {
 	mm := FormatMonthDir(int(now.Month()))
 	dd := FormatDayDir(now.Day())
 	repoRoot = findRepoRoot(repoRoot)
-	diffDir := filepath.Join(repoRoot, ".🦑️repo", "⚡️cache", "🔀️diff", yy, mm, dd)
+	diffDir := filepath.Join(RepoMetaDirForRoot(repoRoot), "⚡️cache", "🔀️diff", yy, mm, dd)
 	if err := os.MkdirAll(diffDir, 0755); err != nil {
 		return
 	}
@@ -39046,7 +39057,7 @@ func resolveBunBinary(repoRoot string) (string, error) {
 			return pinned, nil
 		}
 	}
-	pinPath := filepath.Join(repoRoot, ".🦑️repo", "🐹️compose-micro-commit-bun")
+	pinPath := filepath.Join(RepoMetaDirForRoot(repoRoot), "🐹️compose-micro-commit-bun")
 	if data, err := os.ReadFile(pinPath); err == nil {
 		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
 			if _, statErr := os.Stat(line); statErr == nil {
@@ -39992,8 +40003,7 @@ func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptio
 	if len(opts) > 0 {
 		options = opts[0]
 	}
-	rootDir := GetRootDir()
-	agentEventsDir := filepath.Join(rootDir, ".🦑️repo", "⚡️cache", "🤖️generated")
+	agentEventsDir := filepath.Join(GetRepoMetaDir(), "⚡️cache", "🤖️generated")
 	yearDirs, err := os.ReadDir(agentEventsDir)
 	if err != nil {
 		return nil
@@ -40601,7 +40611,7 @@ func ScanTodos(rootDir string) ([]*Todo, error) {
 			return err
 		}
 		if d.IsDir() {
-			if strings.HasPrefix(d.Name(), ".") && d.Name() != "." && d.Name() != ".🦑️repo" {
+			if strings.HasPrefix(d.Name(), ".") && d.Name() != "." && d.Name() != ".🧬semio" {
 				return fs.SkipDir
 			}
 			if d.Name() == "node_modules" || d.Name() == "dist" || d.Name() == "build" {
@@ -44449,7 +44459,7 @@ func writeHookArtifacts(ctx HookContext, result HookResult) {
 	if sessionID == "" {
 		sessionID = "unknown"
 	}
-	logDir := filepath.Join(repoRoot, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(RepoMetaDirForRoot(repoRoot), "⚡️cache", "🤖️generated",
 		FormatYearDir(now.Year()%100),
 		FormatMonthDir(int(now.Month())),
 		FormatDayDir(now.Day()),

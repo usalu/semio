@@ -209,7 +209,7 @@ func TestContributorDiscovery(t *testing.T) {
 	SetRootDir(tmpDir)
 	defer SetRootDir(originalRootDir)
 
-	contributorsDir := filepath.Join(tmpDir, ".🦑️repo", "🧑️‍💻️devs")
+	contributorsDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🧑️‍💻️devs")
 	os.MkdirAll(contributorsDir, 0755)
 
 	t.Run("Match and update email", func(t *testing.T) {
@@ -1172,12 +1172,12 @@ func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
 		Month:      1,
 		Day:        20,
 		Slug:       "SAMPLE",
-		FolderPath: filepath.Join(rootDir, ".🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE"),
+		FolderPath: filepath.Join(rootDir, ".🧬semio", "🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE"),
 	}
 	files := []string{
 		".🦑️repo/🎫️tickets/26/01/20/SAMPLE/plan.md",
-		"./.🦑️repo/🎫️tickets/26/01/20/SAMPLE/ticket.json",
-		filepath.Join(rootDir, ".🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE", "extra.txt"),
+		"./.🧬semio/🦑️repo/🎫️tickets/26/01/20/SAMPLE/ticket.json",
+		filepath.Join(rootDir, ".🧬semio", "🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE", "extra.txt"),
 		absMain,
 	}
 	filtered := FilterTicketWorkspaceFiles(ticket, files)
@@ -1268,7 +1268,7 @@ func TestStreamAndListTicketsIgnoreNestedWorkspaceFiles(t *testing.T) {
 	SetRootDir(tmpDir)
 	defer SetRootDir(oldRootDir)
 
-	ticketDir := filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets", FormatYearDir(26), FormatMonthDir(3), FormatDayDir(7), "SAMPLE")
+	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets", FormatYearDir(26), FormatMonthDir(3), FormatDayDir(7), "SAMPLE")
 	if err := os.MkdirAll(filepath.Join(ticketDir, "workspace", "node_modules", "pkg"), 0755); err != nil {
 		t.Fatalf("failed to create nested workspace: %v", err)
 	}
@@ -2066,7 +2066,7 @@ func TestAnalyzeFile(t *testing.T) {
 
 func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 	tmp := t.TempDir()
-	cacheDir := filepath.Join(tmp, ".🦑️repo", "⚡️cache", "breaches")
+	cacheDir := filepath.Join(tmp, ".🧬semio", "🦑️repo", "⚡️cache", "breaches")
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -6555,7 +6555,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	first := ToolTicketOpen("🌱️", "Seed Ticket", "Seed prompt", "gpt-5-mini", "", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
@@ -10863,7 +10863,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
 
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -10910,7 +10910,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 		t.Error("OpenGoal: GitHub data should be nil")
 	}
 
-	goalPath := filepath.Join(tmpDir, ".🦑️repo", "🎯️goals", "GOAL-TITLE", "🎯️goal.json")
+	goalPath := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎯️goals", "GOAL-TITLE", "🎯️goal.json")
 	if _, err := os.Stat(goalPath); os.IsNotExist(err) {
 		t.Errorf("goal file not created at %s", goalPath)
 	}
@@ -10984,7 +10984,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GoalClose failed: %v", err)
 	}
-	closedGoalPath := filepath.Join(tmpDir, ".🦑️repo", "🎯️goals", goal2.ID, "🎯️goal.json")
+	closedGoalPath := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎯️goals", goal2.ID, "🎯️goal.json")
 	closedGoalContent, err := ReadTextFile(closedGoalPath)
 	if err != nil {
 		t.Fatalf("failed to read closed goal: %v", err)
@@ -11065,7 +11065,7 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
 	goal, err := OpenGoal("Hook Goal", "Hook Goal Desc", "Hook Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", "", true)
@@ -13640,7 +13640,7 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
 	}
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo"), 0755); err != nil {
 		t.Fatalf("mkdir .🦑️repo: %v", err)
 	}
 	oldRoot := GetRootDir()
@@ -15374,7 +15374,7 @@ func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 	breachs := folderPolicy(ctx)
 	for _, v := range breachs {
 		if v.Kind == BreachFolderIllegalEmpty {
-			if strings.HasPrefix(v.Excerpt, ".git") || strings.HasPrefix(v.Excerpt, ".🦑️repo") || strings.HasPrefix(v.Excerpt, "node_modules") {
+			if strings.HasPrefix(v.Excerpt, ".git") || strings.HasPrefix(v.Excerpt, ".🧬semio") || strings.HasPrefix(v.Excerpt, "node_modules") {
 				t.Errorf("should skip excluded dir, got breach for %s", v.Excerpt)
 			}
 		}
@@ -15386,7 +15386,7 @@ func TestFilePolicyGodfile(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	metaDir := filepath.Join(tmpDir, ".🦑️repo")
+	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	godfileContent := `["allowed.txt", "src/main.ts"]`
 	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(godfileContent), 0644)
@@ -15420,7 +15420,7 @@ func TestFilePolicyGodfileSupportsGlobPatterns(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	metaDir := filepath.Join(tmpDir, ".🦑️repo")
+	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	godfileContent := `["allowed.txt", "src/**/*.ts", "docs/*.md"]`
 	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(godfileContent), 0644)
@@ -15457,7 +15457,7 @@ func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	metaDir := filepath.Join(tmpDir, ".🦑️repo")
+	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(`[]`), 0644)
 	os.WriteFile(filepath.Join(metaDir, "some_internal.json"), []byte("internal"), 0644)
@@ -15466,7 +15466,7 @@ func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 	ctx := NewPolicyContext(scope, bundles)
 	breachs := filePolicy(ctx)
 	for _, v := range breachs {
-		if v.Kind == BreachFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".🦑️repo") {
+		if v.Kind == BreachFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".🧬semio") {
 			t.Errorf("should skip .🦑️repo files, got breach for %s", v.Excerpt)
 		}
 	}
@@ -15478,7 +15478,7 @@ func TestFilePolicyGodfileSkipsNestedNodeModules(t *testing.T) {
 	SetRootDir(tmpDir)
 	defer func() { SetRootDir(oldRoot) }()
 	os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte("node_modules/\n"), 0644)
-	metaDir := filepath.Join(tmpDir, ".🦑️repo")
+	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	os.WriteFile(filepath.Join(metaDir, "files.json"), []byte(`[]`), 0644)
 	nested := filepath.Join(tmpDir, "repo", "vscode", "node_modules", "undici-types")
@@ -15554,7 +15554,7 @@ func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
 	if got := GetRootDir(); got != repoRoot {
 		t.Fatalf("expected repo root %q, got %q", repoRoot, got)
 	}
-	if got := GetRepoMetaDir(); got != filepath.Join(repoRoot, ".🦑️repo") {
+	if got := GetRepoMetaDir(); got != filepath.Join(repoRoot, ".🧬semio", "🦑️repo") {
 		t.Fatalf("expected repo meta dir at monorepo root, got %q", got)
 	}
 }
@@ -15564,7 +15564,7 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(repoRoot, ".git"), 0755); err != nil {
 		t.Fatalf("mkdir .git: %v", err)
 	}
-	templateDir := filepath.Join(repoRoot, ".🦑️repo", "💬️prompts")
+	templateDir := filepath.Join(repoRoot, ".🧬semio", "🦑️repo", "💬️prompts")
 	if err := os.MkdirAll(templateDir, 0755); err != nil {
 		t.Fatalf("mkdir template dir: %v", err)
 	}
@@ -15629,7 +15629,7 @@ func TestGetCacheDirUsesMonorepoRoot(t *testing.T) {
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(clientDir)
 	cacheDir := getCacheDir()
-	wantPrefix := filepath.Join(monoRoot, ".🦑️repo", "⚡️cache") + string(os.PathSeparator)
+	wantPrefix := filepath.Join(monoRoot, ".🧬semio", "🦑️repo", "⚡️cache") + string(os.PathSeparator)
 	if !strings.HasPrefix(cacheDir, wantPrefix) {
 		t.Fatalf("expected cache dir under %q, got %q", wantPrefix, cacheDir)
 	}
@@ -16870,7 +16870,7 @@ func testLoggingConfigSession() LoggingConfig {
 
 func writeRepoLoggingConfig(t *testing.T, root string, lg LoggingConfig) {
 	t.Helper()
-	repoDir := filepath.Join(root, ".🦑️repo")
+	repoDir := filepath.Join(root, ".🧬semio", "🦑️repo")
 	if err := os.MkdirAll(repoDir, 0o755); err != nil {
 		t.Fatalf("mkdir .🦑️repo: %v", err)
 	}
@@ -16920,7 +16920,7 @@ func TestRepoConfig(t *testing.T) {
 	})
 	t.Run("detail levels", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated", "26", "05", "30", "detail-sess")
+		logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated", "26", "05", "30", "detail-sess")
 		if err := os.MkdirAll(logDir, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -16978,7 +16978,7 @@ func TestHookLogging(t *testing.T) {
 	tmpDir := t.TempDir()
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17096,7 +17096,7 @@ func TestSessionJsonTracksPlan(t *testing.T) {
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
 	sessionID := "plan-track-session"
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17422,7 +17422,7 @@ func TestHookLoggingToolBlocked(t *testing.T) {
 	tmpDir := t.TempDir()
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17473,7 +17473,7 @@ func TestHookLoggingStdinInput(t *testing.T) {
 	tmpDir := t.TempDir()
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17612,7 +17612,7 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 func TestLogRepoOperationHookMCPTool(t *testing.T) {
 	tmpDir := t.TempDir()
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17721,7 +17721,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 func TestLogRepoOperationHookCLI(t *testing.T) {
 	tmpDir := t.TempDir()
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17819,7 +17819,7 @@ func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
 	RunHook(hctx)
 
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17855,7 +17855,7 @@ func setupTicketDir(t *testing.T) (string, string) {
 	t.Helper()
 	tmpDir := t.TempDir()
 	now := time.Now().UTC()
-	ticketDir := filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets",
+	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", now.Month()),
 		fmt.Sprintf("%02d", now.Day()),
@@ -17886,7 +17886,7 @@ func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 
 func getLogFiles(t *testing.T, tmpDir string) []string {
 	t.Helper()
-	outBase := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache")
+	outBase := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache")
 	var logFiles []string
 	filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -18296,7 +18296,7 @@ func TestHookCommandStdinPiped(t *testing.T) {
 	_ = out
 	_ = err
 	now := time.Now().UTC()
-	logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+	logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 		fmt.Sprintf("%02d", now.Year()%100),
 		fmt.Sprintf("%02d", int(now.Month())),
 		fmt.Sprintf("%02d", now.Day()),
@@ -21051,7 +21051,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 				sessionID = "unknown"
 			}
 			logNow := time.Now().UTC()
-			logDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated",
+			logDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated",
 				fmt.Sprintf("%02d", logNow.Year()%100),
 				fmt.Sprintf("%02d", int(logNow.Month())),
 				fmt.Sprintf("%02d", logNow.Day()),
@@ -21123,7 +21123,7 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 
 func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 	repoRoot := findRepoRoot(".")
-	logDir := filepath.Join(repoRoot, ".🦑️repo", "📜️")
+	logDir := filepath.Join(repoRoot, ".🧬semio", "🦑️repo", "📜️")
 	dirEntries, err := os.ReadDir(logDir)
 	if err != nil {
 		t.Skipf("no log directory: %v", err)
@@ -21169,7 +21169,7 @@ func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
 				Input:    old.Context.Input,
 			}
 			result := RunHook(hctx)
-			outBase := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache")
+			outBase := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache")
 			var logFiles []string
 			filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
 				if walkErr != nil {
@@ -21402,7 +21402,7 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 	}
 	RunHook(hctx)
 
-	agentEventsDir := filepath.Join(tmpDir, ".🦑️repo", "⚡️cache", "🤖️generated")
+	agentEventsDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache", "🤖️generated")
 	var sessionJSONPath string
 	filepath.WalkDir(agentEventsDir, func(path string, d os.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -23474,7 +23474,7 @@ func TestTicketEffortLifecycle(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -23535,7 +23535,7 @@ func TestGraphQLEffortMutationsAndQueries(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🦑️repo", "🎫️tickets"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}
 

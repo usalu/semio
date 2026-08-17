@@ -2187,7 +2187,7 @@ async function navigateToUri(uri: string): Promise<void> {
         const year = `🎆️${String(node.Year).padStart(2, "0")}`;
         const month = `🌙️${String(node.Month).padStart(2, "0")}`;
         const day = `☀️${String(node.Day).padStart(2, "0")}`;
-        ticketPath = path.join(wsRoot, ".🦑️repo", "🎫️tickets", year, month, day, node.Data.slug);
+        ticketPath = path.join(wsRoot, ".🧬semio", "🦑️repo", "🎫️tickets", year, month, day, node.Data.slug);
       }
 
       if (ticketPath && fs.existsSync(ticketPath)) {
@@ -2197,7 +2197,7 @@ async function navigateToUri(uri: string): Promise<void> {
     }
     case "goal": {
       const goalId = node?.Data?.id || parsed.path;
-      const goalJsonPath = path.join(wsRoot, ".🦑️repo", "🎯️goals", goalId, "🎯️goal.json");
+      const goalJsonPath = path.join(wsRoot, ".🧬semio", "🦑️repo", "🎯️goals", goalId, "🎯️goal.json");
       if (fs.existsSync(goalJsonPath)) {
         return vscode.commands.executeCommand("compose.navigateToFile", goalJsonPath) as any;
       }
@@ -2205,7 +2205,7 @@ async function navigateToUri(uri: string): Promise<void> {
     }
     case "draft": {
       const slug = node?.Data?.slug || node?.Data?.id || parsed.path;
-      const draftPath = path.join(wsRoot, ".🦑️repo", "✍️notes", slug);
+      const draftPath = path.join(wsRoot, ".🧬semio", "🦑️repo", "✍️notes", slug);
       if (fs.existsSync(draftPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(draftPath)) as any;
       }
@@ -2213,7 +2213,7 @@ async function navigateToUri(uri: string): Promise<void> {
     }
     case "todo": {
       const slug = node?.Data?.slug || node?.Data?.id || parsed.path;
-      const todoPath = path.join(wsRoot, ".🦑️repo", "todos", slug);
+      const todoPath = path.join(wsRoot, ".🧬semio", "🦑️repo", "todos", slug);
       if (fs.existsSync(todoPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(todoPath)) as any;
       }
@@ -2366,7 +2366,7 @@ function resolveTicketPath(ticket: { year: number; month: number; day: number; s
   const root = getWorkspaceRoot();
   if (!root) return undefined;
   const relPath = path.join(`🎆️${String(ticket.year).padStart(2, "0")}`, `🌙️${String(ticket.month).padStart(2, "0")}`, `☀️${String(ticket.day).padStart(2, "0")}`, ticket.slug);
-  return path.join(root, ".🦑️repo", "🎫️tickets", relPath);
+  return path.join(root, ".🧬semio", "🦑️repo", "🎫️tickets", relPath);
 }
 
 /**
@@ -2413,7 +2413,7 @@ const ignoredDirectories = new Set(["node_modules", "venv", "dist", "build", "ou
 /**
  * allowedDotDirectories holds the data fields for a allowedDotDirectories record.
  **/
-const allowedDotDirectories = new Set([".github", ".devcontainer", ".🦑️repo"]);
+const allowedDotDirectories = new Set([".github", ".devcontainer", ".🧬semio"]);
 
 /**
  * isInIgnoredDirectory holds the data fields for a isInIgnoredDirectory record.

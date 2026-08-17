@@ -72,7 +72,7 @@ function emojiProjectJsonNodes(configFiles, _options, context) {
       // 🛡️ Nx's native walker sometimes hands back lossy paths with U+FFFD where a
       // multi-byte emoji used to be; those are unopenable duplicates of a real file.
       if (configFile.includes("\uFFFD")) return false;
-      if (configFile.includes("node_modules") || configFile.includes(".🦑️repo") || configFile.includes("/dist/")) {
+      if (configFile.includes("node_modules") || configFile.includes(".🧬semio") || configFile.includes("/dist/")) {
         return false;
       }
       return true;

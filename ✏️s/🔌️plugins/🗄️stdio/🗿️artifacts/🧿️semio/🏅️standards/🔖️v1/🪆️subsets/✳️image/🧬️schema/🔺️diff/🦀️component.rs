@@ -539,10 +539,6 @@ fn parse_u8(s: &str) -> Result<u8, String> {
 fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
-fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
 /// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
 /// backing the real `DiffCodec::encode_diff`/`decode_diff` below.

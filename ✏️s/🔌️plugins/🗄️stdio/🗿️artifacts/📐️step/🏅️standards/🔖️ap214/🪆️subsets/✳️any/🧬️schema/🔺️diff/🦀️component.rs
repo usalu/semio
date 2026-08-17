@@ -382,13 +382,6 @@ impl StepEntitiesDiff {
         entities
     }
 
-    /// ➕️ In-place absorb on a bare (non-`Option`-wrapped) triple — delegates to the
-    /// `Option`-wrapped free function `absorb_entities` (the real logic; kept there so
-    /// `StepDiff::absorb`'s `self.entities.take()`/`other.entities` shape needs no unwrapping).
-    fn absorb(&mut self, other: Self) {
-        let merged = absorb_entities(Some(std::mem::take(self)), Some(other));
-        *self = merged.unwrap_or_default();
-    }
 }
 
 /// ➕️ Free-function core of `entities` absorb — id-keyed, no rename transport needed (unlike
@@ -1328,6 +1321,7 @@ impl protocol::DiffCodec for StepDiff {
 /// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
 /// `between()` result exercising every top-level field plus all three `entities`/`args`
 /// collection-triple flavors and `StepEntityDiff.complex`, and its reverse direction.
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
     let a = crate::artifacts::step::engine::demo_step_snapshot();
     let mut b = a.clone();

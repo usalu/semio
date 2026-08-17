@@ -117,7 +117,7 @@ is_neo4j_reachable() {
 run_cypher() {
   local database="$1"
   local cypher="$2"
-  local bundled_cypher_shell="$REPO_ROOT/.🦑️repo/⚡️cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
+  local bundled_cypher_shell="$REPO_ROOT/.🧬semio/🦑️repo/⚡️cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
   if command -v cypher-shell >/dev/null 2>&1; then
     cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" >/dev/null 2>&1
     return $?
@@ -133,7 +133,7 @@ run_cypher_expect() {
   local database="$1"
   local cypher="$2"
   local pattern="$3"
-  local bundled_cypher_shell="$REPO_ROOT/.🦑️repo/⚡️cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
+  local bundled_cypher_shell="$REPO_ROOT/.🧬semio/🦑️repo/⚡️cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
   local output
   if command -v cypher-shell >/dev/null 2>&1; then
     output="$(cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" 2>/dev/null)" || return 1
@@ -150,7 +150,7 @@ run_cypher_expect() {
 
 neo4j_schema_cypher_uri() {
   local technology="$1"
-  printf 'file://%s/.🦑️repo/\\uD83D\\uDEC2/%s.cypher\n' "$REPO_ROOT" "$technology"
+  printf 'file://%s/.🧬semio/🦑️repo/\\uD83D\\uDEC2/%s.cypher\n' "$REPO_ROOT" "$technology"
 }
 
 detect_neo4j_desktop_dbms_home() {
@@ -266,7 +266,7 @@ ensure_java_runtime() {
 }
 
 ensure_native_neo4j_tools() {
-  local cache_root="$REPO_ROOT/.🦑️repo/⚡️cache/neo4j"
+  local cache_root="$REPO_ROOT/.🧬semio/🦑️repo/⚡️cache/neo4j"
   local runtime_root="$cache_root/neo4j-community-$NEO4J_VERSION"
   mkdir -p "$cache_root"
   if [ ! -d "$runtime_root" ]; then
@@ -376,7 +376,7 @@ ensure_native_neo4j() {
   graph_db="$(resolve_native_graph_database)"
   log "Neo4j graph database for imports (after optional CREATE DATABASE compose): ${graph_db}"
 
-  log "Neo4j: clearing graph in ${graph_db}, then loading generated .🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
+  log "Neo4j: clearing graph in ${graph_db}, then loading generated .🧬semio/🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
   run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
 
   local technologies=(compose elements coda reuse)
@@ -385,7 +385,7 @@ ensure_native_neo4j() {
     [ -n "$ex" ] && technologies+=("$ex")
   done < <(extra_neo4j_graph_names_from_env)
   for technology in "${technologies[@]}"; do
-    local schema_file="$REPO_ROOT/.🦑️repo/🛂️manifest/${technology}.cypher"
+    local schema_file="$REPO_ROOT/.🧬semio/🦑️repo/🛂️manifest/${technology}.cypher"
     if [ -f "$schema_file" ] && grep -Eqv '^[[:space:]]*(//|:|$)' "$schema_file"; then
       local schema_uri
       schema_uri="$(neo4j_schema_cypher_uri "$technology")"

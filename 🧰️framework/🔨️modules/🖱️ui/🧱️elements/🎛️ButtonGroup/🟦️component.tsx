@@ -15,7 +15,7 @@ import { borderElementClass } from "../../🔨️modules/📏️border-presentat
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { chromeControlGroupClass, chromeControlItemClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
-import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
 import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -110,6 +110,7 @@ function ButtonGroupItem({
   const Comp = asChild ? Slot : "button";
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
+  const tooltipText = useControlTooltipText(id, text);
   const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const buttonGroupItemElement = (
@@ -117,7 +118,7 @@ function ButtonGroupItem({
       data-slot="button-group-item"
       id={id}
       aria-label={ariaLabel}
-      title={ariaLabel}
+      title={tooltipText}
       data-level={context.level || level}
       className={cn(
         buttonGroupItemVariants(),

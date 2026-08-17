@@ -644,10 +644,12 @@ impl OpBinary for DocxMutation {
 /// tests below AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📷️png/…/🧬️mutations/🦀️component.rs`'s own
 /// `demo_mutation_cases()` establishes.
+#[cfg(test)]
 fn fixture() -> DocxSnapshot {
     crate::artifacts::docx::engine::build_minimal_docx(DocxDocument { body: vec![DocxBlock::paragraph("first"), DocxBlock::paragraph("second")], styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }] })
 }
 
+#[cfg(test)]
 fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> DocxBlockPath {
     DocxBlockPath { segments: vec![DocxPathSegment { block_index, row, cell }], index }
 }
@@ -660,6 +662,7 @@ fn table_path(block_index: usize, row: usize, cell: usize, index: usize) -> Docx
 /// `sweep_b` (a table, exercising the recursive nested triple down to `blocks`). Styles (a
 /// name-keyed collection, order-independent) get one removed, one modified-in-every-field, one
 /// added. OPC content_types/parts/relationships each get one removed, one modified, one added.
+#[cfg(test)]
 fn sweep_a() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -689,6 +692,7 @@ fn sweep_a() -> DocxSnapshot {
     )
 }
 
+#[cfg(test)]
 fn sweep_b() -> DocxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -740,6 +744,7 @@ fn sweep_b() -> DocxSnapshot {
 //#endregion 🔖️Fixtures
 
 /// 🧪️ The demo cases proper -- one representative `DocxMutation` per variant.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<DocxMutation> {
     vec![
         DocxMutation::NoMutation,

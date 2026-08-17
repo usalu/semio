@@ -16,7 +16,7 @@
 
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage,
     GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin,
     GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
@@ -169,7 +169,7 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
 /// 🧩️ A per-item diff for collection element type `T` -- implemented by real per-field diff
 /// structs for STRONG entities (`GltfNodeDiff`, `GltfMeshDiff`, …), and by the blanket `T for T`
 /// impl below for WEAK entities (the "diff" IS the whole new value).
-pub(crate) trait ItemDiff<T>: Clone + PartialEq {
+pub trait ItemDiff<T>: Clone + PartialEq {
     fn between(base: &T, other: &T) -> Self;
     fn apply(&self, base: &T) -> T;
     fn inverse(&self, base: &T) -> Self;
@@ -1858,31 +1858,6 @@ pub(crate) fn dec_source_form(s: &str) -> Result<GltfSourceForm, String> {
 //#endregion 🔖️UnitEnumCodecs
 
 //#region 🔖️AssetSceneNodeGroupCodecs
-pub(crate) fn enc_asset(a: &GltfAsset) -> String {
-    format!(
-        "[{},{},{},{},{},{}]",
-        enc_str(&a.version),
-        encode_option(&a.generator, |v| enc_str(v)),
-        encode_option(&a.copyright, |v| enc_str(v)),
-        encode_option(&a.min_version, |v| enc_str(v)),
-        encode_option(&a.extensions, enc_json),
-        encode_option(&a.extras, enc_json),
-    )
-}
-pub(crate) fn dec_asset(s: &str) -> Result<GltfAsset, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [version, generator, copyright, min_version, extensions, extras] = parts.as_slice() else {
-        return Err(format!("asset: expected 6 fields, got {}", parts.len()));
-    };
-    Ok(GltfAsset {
-        version: dec_str(version)?,
-        generator: decode_option(generator, dec_str)?,
-        copyright: decode_option(copyright, dec_str)?,
-        min_version: decode_option(min_version, dec_str)?,
-        extensions: decode_option(extensions, dec_json)?,
-        extras: decode_option(extras, dec_json)?,
-    })
-}
 pub(crate) fn enc_asset_diff(d: &GltfAssetDiff) -> String {
     format!(
         "[{},{},{},{},{},{}]",
@@ -2577,78 +2552,6 @@ pub(crate) fn dec_collection<T, D>(s: &str, dec_item: impl Fn(&str) -> Result<T,
 }
 //#endregion 🔖️GenericCollectionCodec
 
-//#region 🔖️Document
-/// 🌍 Whole [`GltfDocument`] -- needed by `GltfMutation::SetSnapshot`'s hand-rolled `OpText`/
-/// `OpBinary` (🧬️mutations/component.rs), positioned here since it's built entirely out of this
-/// file's own item encoders.
-pub(crate) fn enc_document(d: &GltfDocument) -> String {
-    format!(
-        "[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
-        enc_asset(&d.asset),
-        encode_option(&d.scene, |v| v.to_string()),
-        format!("[{}]", d.scenes.iter().map(enc_scene).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.meshes.iter().map(enc_mesh).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.accessors.iter().map(enc_accessor).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.buffer_views.iter().map(enc_buffer_view).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.buffers.iter().map(enc_buffer).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.materials.iter().map(enc_material).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.textures.iter().map(enc_texture).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.images.iter().map(enc_image).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.samplers.iter().map(enc_sampler).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.skins.iter().map(enc_skin).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.animations.iter().map(enc_animation).collect::<Vec<_>>().join(",")),
-        format!("[{}]", d.cameras.iter().map(enc_camera).collect::<Vec<_>>().join(",")),
-        enc_string_vec(&d.extensions_used),
-        enc_string_vec(&d.extensions_required),
-        encode_option(&d.extensions, enc_json),
-        encode_option(&d.extras, enc_json),
-    )
-}
-pub(crate) fn dec_document(s: &str) -> Result<GltfDocument, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [asset, scene, scenes, nodes, meshes, accessors, buffer_views, buffers, materials, textures, images, samplers, skins, animations, cameras, extensions_used, extensions_required, extensions, extras] = parts.as_slice() else {
-        return Err(format!("document: expected 19 fields, got {}", parts.len()));
-    };
-    Ok(GltfDocument {
-        asset: dec_asset(asset)?,
-        scene: decode_option(scene, parse_usize)?,
-        scenes: split_top_level(strip_brackets(scenes)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_scene).collect::<Result<Vec<_>, String>>()?,
-        nodes: split_top_level(strip_brackets(nodes)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_node).collect::<Result<Vec<_>, String>>()?,
-        meshes: split_top_level(strip_brackets(meshes)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mesh).collect::<Result<Vec<_>, String>>()?,
-        accessors: split_top_level(strip_brackets(accessors)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_accessor).collect::<Result<Vec<_>, String>>()?,
-        buffer_views: split_top_level(strip_brackets(buffer_views)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_buffer_view).collect::<Result<Vec<_>, String>>()?,
-        buffers: split_top_level(strip_brackets(buffers)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_buffer).collect::<Result<Vec<_>, String>>()?,
-        materials: split_top_level(strip_brackets(materials)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_material).collect::<Result<Vec<_>, String>>()?,
-        textures: split_top_level(strip_brackets(textures)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_texture).collect::<Result<Vec<_>, String>>()?,
-        images: split_top_level(strip_brackets(images)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_image).collect::<Result<Vec<_>, String>>()?,
-        samplers: split_top_level(strip_brackets(samplers)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_sampler).collect::<Result<Vec<_>, String>>()?,
-        skins: split_top_level(strip_brackets(skins)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_skin).collect::<Result<Vec<_>, String>>()?,
-        animations: split_top_level(strip_brackets(animations)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation).collect::<Result<Vec<_>, String>>()?,
-        cameras: split_top_level(strip_brackets(cameras)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_camera).collect::<Result<Vec<_>, String>>()?,
-        extensions_used: dec_string_vec(extensions_used)?,
-        extensions_required: dec_string_vec(extensions_required)?,
-        extensions: decode_option(extensions, dec_json)?,
-        extras: decode_option(extras, dec_json)?,
-    })
-}
-/// 📸️ Whole [`GltfSnapshot`] (schema + document + raw buffer bytes + source form) -- used by
-/// `GltfMutation::SetSnapshot`'s hand-rolled `OpText`/`OpBinary`.
-pub(crate) fn enc_gltf_snapshot(s: &GltfSnapshot) -> String {
-    format!("[{},{},{},{}]", enc_str(&s.schema), enc_document(&s.document), format!("[{}]", s.buffers.iter().map(|b| enc_bytes(b)).collect::<Vec<_>>().join(",")), enc_source_form(s.source_form),)
-}
-pub(crate) fn dec_gltf_snapshot(s: &str) -> Result<GltfSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, document, buffers, source_form] = parts.as_slice() else { return Err(format!("gltf snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(GltfSnapshot {
-        schema: dec_str(schema)?,
-        document: dec_document(document)?,
-        buffers: split_top_level(strip_brackets(buffers)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_bytes).collect::<Result<Vec<_>, String>>()?,
-        source_form: dec_source_form(source_form)?,
-    })
-}
-//#endregion 🔖️Document
-
 //#region 🔖️RealBinaryPrimitives
 /// 🧪️ P2-FG3: real binary value codecs for `GltfDiff`/`GltfMutation` — mirrors the text codecs
 /// above field-for-field, using `dsl::ByteWriter`/`dsl::ByteReader` (the same real LEB128-varint/
@@ -2920,24 +2823,6 @@ pub(crate) fn read_bin_source_form(r: &mut dsl::ByteReader<'_>) -> Result<GltfSo
 //#endregion 🔖️RealBinaryUnitEnumCodecs
 
 //#region 🔖️RealBinaryAssetSceneNodeGroupCodecs
-pub(crate) fn write_bin_asset(w: &mut dsl::ByteWriter, a: &GltfAsset) {
-    write_bin_str(w, &a.version);
-    write_bin_option(w, &a.generator, |w, v| write_bin_str(w, v));
-    write_bin_option(w, &a.copyright, |w, v| write_bin_str(w, v));
-    write_bin_option(w, &a.min_version, |w, v| write_bin_str(w, v));
-    write_bin_json_opt(w, &a.extensions);
-    write_bin_json_opt(w, &a.extras);
-}
-pub(crate) fn read_bin_asset(r: &mut dsl::ByteReader<'_>) -> Result<GltfAsset, dsl::PackError> {
-    Ok(GltfAsset {
-        version: read_bin_str(r)?,
-        generator: read_bin_option(r, read_bin_str)?,
-        copyright: read_bin_option(r, read_bin_str)?,
-        min_version: read_bin_option(r, read_bin_str)?,
-        extensions: read_bin_json_opt(r)?,
-        extras: read_bin_json_opt(r)?,
-    })
-}
 pub(crate) fn write_bin_asset_diff(w: &mut dsl::ByteWriter, d: &GltfAssetDiff) {
     write_bin_option(w, &d.version, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.generator, |w, v| write_bin_str(w, v));
@@ -3552,68 +3437,6 @@ pub(crate) fn read_bin_collection_blob<T, D>(
     read_bin_collection(&mut inner, read_item, read_diff)
 }
 //#endregion 🔖️RealBinaryGenericCollectionCodec
-
-//#region 🔖️RealBinaryDocumentCodec
-/// 🌍 Whole [`GltfDocument`]/[`GltfSnapshot`] real binary -- needed by `GltfMutation::SetSnapshot`'s
-/// hand-rolled `OpBinary` (🧬️mutations/component.rs) AND by `📸️snapshot/🦀️component.rs`'s
-/// `ArtifactPack` impl (which now routes the canonical `.pack.semio` payload through
-/// `⚙️engine/component.rs`'s real `encode_glb`/`decode_glb` GLB container instead -- this whole-
-/// document binary pair stays for `SetSnapshot`'s own op-frame use, positioned here since it's
-/// built entirely out of this file's own item encoders, same shape json/csv/zip's pilots use).
-pub(crate) fn write_bin_document(w: &mut dsl::ByteWriter, d: &GltfDocument) {
-    write_bin_asset(w, &d.asset);
-    write_bin_option(w, &d.scene, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_vec(w, &d.scenes, write_bin_scene);
-    write_bin_vec(w, &d.nodes, write_bin_node);
-    write_bin_vec(w, &d.meshes, write_bin_mesh);
-    write_bin_vec(w, &d.accessors, write_bin_accessor);
-    write_bin_vec(w, &d.buffer_views, write_bin_buffer_view);
-    write_bin_vec(w, &d.buffers, write_bin_buffer);
-    write_bin_vec(w, &d.materials, write_bin_material);
-    write_bin_vec(w, &d.textures, write_bin_texture);
-    write_bin_vec(w, &d.images, write_bin_image);
-    write_bin_vec(w, &d.samplers, write_bin_sampler);
-    write_bin_vec(w, &d.skins, write_bin_skin);
-    write_bin_vec(w, &d.animations, write_bin_animation);
-    write_bin_vec(w, &d.cameras, write_bin_camera);
-    write_bin_string_vec(w, &d.extensions_used);
-    write_bin_string_vec(w, &d.extensions_required);
-    write_bin_json_opt(w, &d.extensions);
-    write_bin_json_opt(w, &d.extras);
-}
-pub(crate) fn read_bin_document(r: &mut dsl::ByteReader<'_>) -> Result<GltfDocument, dsl::PackError> {
-    Ok(GltfDocument {
-        asset: read_bin_asset(r)?,
-        scene: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
-        scenes: read_bin_vec(r, read_bin_scene)?,
-        nodes: read_bin_vec(r, read_bin_node)?,
-        meshes: read_bin_vec(r, read_bin_mesh)?,
-        accessors: read_bin_vec(r, read_bin_accessor)?,
-        buffer_views: read_bin_vec(r, read_bin_buffer_view)?,
-        buffers: read_bin_vec(r, read_bin_buffer)?,
-        materials: read_bin_vec(r, read_bin_material)?,
-        textures: read_bin_vec(r, read_bin_texture)?,
-        images: read_bin_vec(r, read_bin_image)?,
-        samplers: read_bin_vec(r, read_bin_sampler)?,
-        skins: read_bin_vec(r, read_bin_skin)?,
-        animations: read_bin_vec(r, read_bin_animation)?,
-        cameras: read_bin_vec(r, read_bin_camera)?,
-        extensions_used: read_bin_string_vec(r)?,
-        extensions_required: read_bin_string_vec(r)?,
-        extensions: read_bin_json_opt(r)?,
-        extras: read_bin_json_opt(r)?,
-    })
-}
-pub(crate) fn write_bin_gltf_snapshot(w: &mut dsl::ByteWriter, s: &GltfSnapshot) {
-    write_bin_str(w, &s.schema);
-    write_bin_document(w, &s.document);
-    write_bin_vec(w, &s.buffers, |w, b: &Vec<u8>| write_bin_blob(w, b));
-    write_bin_source_form(w, s.source_form);
-}
-pub(crate) fn read_bin_gltf_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<GltfSnapshot, dsl::PackError> {
-    Ok(GltfSnapshot { schema: read_bin_str(r)?, document: read_bin_document(r)?, buffers: read_bin_vec(r, read_bin_blob)?, source_form: read_bin_source_form(r)? })
-}
-//#endregion 🔖️RealBinaryDocumentCodec
 
 //#region 🔖️TopLevel
 fn print_gltf_diff(d: &GltfDiff) -> String {

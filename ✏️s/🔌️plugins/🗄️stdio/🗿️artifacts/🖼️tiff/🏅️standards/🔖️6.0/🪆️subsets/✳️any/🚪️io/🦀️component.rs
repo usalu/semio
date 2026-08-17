@@ -81,12 +81,6 @@ enum Endian {
 }
 
 impl Endian {
-    fn of(bo: TiffByteOrder) -> Self {
-        match bo {
-            TiffByteOrder::LittleEndian => Endian::Little,
-            TiffByteOrder::BigEndian => Endian::Big,
-        }
-    }
     fn u16(self, b: &[u8]) -> u16 {
         match self {
             Endian::Little => u16::from_le_bytes([b[0], b[1]]),

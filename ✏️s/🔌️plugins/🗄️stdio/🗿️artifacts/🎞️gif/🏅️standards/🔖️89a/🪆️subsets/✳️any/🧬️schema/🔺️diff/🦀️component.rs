@@ -803,6 +803,7 @@ pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff 
 /// tri-states (`gct`, `loop_count`), `GifFrameDiff`'s own THREE nested tri-states
 /// (`lct`/`transparent_index`/`plain_text`), and all three collection triples (`frames`,
 /// `comments`, `app_extensions`) at once (mirrors 87a's own `demo_diff_cases()`).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
     let f = |seed: u8, w: u32, h: u32| GifFrame {
         left: 0,

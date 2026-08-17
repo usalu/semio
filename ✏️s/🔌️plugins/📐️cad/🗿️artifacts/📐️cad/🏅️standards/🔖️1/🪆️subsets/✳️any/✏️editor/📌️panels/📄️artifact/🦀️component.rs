@@ -28,7 +28,7 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
+pub(crate) fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
         .iter()
@@ -152,7 +152,7 @@ pub fn document_tree_highlighted_ids(document: &CadSnapshot, runtime: &CadPlayRu
 }
 
 /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded.
-pub fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
+pub(crate) fn document_pane_section(label: impl Into<Label>, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<Label>, bool, Vec<UiTreeItemNode>) {
     (format!("cad-play-document.{id_suffix}"), Some(label.into()), true, objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect())
 }
 

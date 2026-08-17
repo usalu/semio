@@ -1753,6 +1753,7 @@ impl protocol::DiffCodec for XlsxDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape docx's own
 /// `snapshot_a()`/`snapshot_b()`/`demo_diff_cases()` establish (this wave's OPC pattern-setter).
 /// Promoted from the former test-only `sample_a`/`sample_b` (renamed for the same convention).
+#[cfg(test)]
 pub(crate) fn snapshot_a() -> XlsxSnapshot {
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
@@ -1763,6 +1764,7 @@ pub(crate) fn snapshot_a() -> XlsxSnapshot {
     })
 }
 
+#[cfg(test)]
 pub(crate) fn snapshot_b() -> XlsxSnapshot {
     let mut snap = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
@@ -1788,6 +1790,7 @@ pub(crate) fn snapshot_b() -> XlsxSnapshot {
 
 /// 🧪️ The demo cases proper — `default()` (empty diff) plus every real `between()` shape (both
 /// directions, and the trivially-empty self-diff).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<XlsxDiff> {
     let a = snapshot_a();
     let b = snapshot_b();

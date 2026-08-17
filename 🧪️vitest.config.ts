@@ -42,7 +42,7 @@ const root = process.cwd();
 function isDiscoverable(relPath: string): boolean {
   return (
     !relPath.includes("node_modules") &&
-    !relPath.startsWith(".🦑️repo/") &&
+    !relPath.startsWith(".🧬semio/🦑️repo/") &&
     !relPath.startsWith("♻️mit-bestand/") &&
     relPath !== "🧪️vitest.config.ts"
   );

@@ -1,10 +1,9 @@
 //! 🔷️ Flow brep extension — geometry operators packaged as a runtime-installable unit.
 
 use flow_extension_sdk::brep_geometry::*;
-use flow_extension_sdk::{build_manifest_json, evaluate_json};
-use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel};
-use std::sync::{Mutex, OnceLock};
+use flow_extension_sdk::build_manifest_json;
+use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on;
 
 macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
@@ -1469,6 +1468,9 @@ pub fn module_registry() -> Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use neural_engine::{Atom, Value};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep;
+    use std::sync::{Mutex, OnceLock};
 
     fn point(x: f64, y: f64, z: f64) -> Dictionary {
         Dictionary::with_schema("point").insert("x", Value::Atom(Atom::Decimal(x))).insert("y", Value::Atom(Atom::Decimal(y))).insert("z", Value::Atom(Atom::Decimal(z)))

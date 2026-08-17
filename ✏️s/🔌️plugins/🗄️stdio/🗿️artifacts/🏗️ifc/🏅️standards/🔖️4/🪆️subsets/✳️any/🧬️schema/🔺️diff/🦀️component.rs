@@ -1279,6 +1279,7 @@ impl protocol::DiffCodec for IfcDiff {
 /// (`diff_grammar_conformance_law`) and `protocol_walk_law` fodder — the empty diff, a genuine
 /// `between()` result exercising every top-level field plus all three `entities`/`args`
 /// collection-triple flavors and `IfcEntityDiff.complex`, and its reverse direction.
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
     let a = crate::artifacts::ifc::engine::demo_ifc_snapshot();
     let mut b = a.clone();

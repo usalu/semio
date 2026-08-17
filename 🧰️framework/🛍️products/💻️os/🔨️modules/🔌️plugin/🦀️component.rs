@@ -347,7 +347,7 @@ pub mod app {
     /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
     use store::os_io::{ArtifactKindId, ArtifactRef};
     use store::{
-        build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, ChildStoreFactory, CompositionCoordinator, ConfigStore, EngineHandles,
+        build_history_columns, child_store_factory, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, EngineHandles,
         GroupMeta, HistoryColumn, HistoryLane, Mutation, MutationDiff, SpaceMember,
     };
     use ui_wgpu::wgpu::{
@@ -684,7 +684,7 @@ pub mod app {
         type Snapshot;
         const WRITES: Dialect;
         fn reads() -> &'static [Dialect];
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError>;
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError>;
     }
 
     /// 🎹️ Erases a typed `ArtifactComposer` into a `ComposerEntry` row for `register_composer_entries`.
@@ -699,7 +699,7 @@ pub mod app {
         where
             C::Snapshot: ArtifactPack,
         {
-            let typed_sources: Vec<ComposeSource> = sources
+            let typed_sources: Vec<ComposeSource<'_>> = sources
                 .iter()
                 .map(|s| ComposeSource {
                     dialect: s.dialect,
@@ -835,7 +835,7 @@ pub mod app {
     pub trait ArtifactDecomposer: Sized {
         type Snapshot;
         type Parts;
-        fn decompose(sources: &[DecomposeSource]) -> Decomposition<Self::Parts>;
+        fn decompose(sources: &[DecomposeSource<'_>]) -> Decomposition<Self::Parts>;
     }
 
     /// 🧐️ Standards/subsets successor to `ArtifactDecomposer` (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO
@@ -847,8 +847,8 @@ pub mod app {
         type Parts;
         const DIALECT: Dialect;
         /// 👃️ Cheap recognizability probe -- no allocation, no full parse.
-        fn sniff(source: &AnalyzeSource) -> IoConfidence;
-        fn analyze(sources: &[AnalyzeSource]) -> Analysis<Self::Parts>;
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
     }
 
     //#region 🧬️DerivedArtifactFacets
@@ -4224,6 +4224,7 @@ pub mod app {
         pub foreign: Vec<::protocol::ForeignStep>,
     }
 
+    #[cfg(test)]
     pub(crate) fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
         store::pack_rt::encode_wire_value(&to_dsl_value(value).unwrap_or(DslValue::Null))
     }
@@ -4247,6 +4248,7 @@ pub mod app {
     /// 📌️ Commits every document app's owner mutation roster (`PluginBuilder::document_app`'s
     /// captured `(document_schema, kinds)` providers) — idempotent for byte-identical re-registration
     /// (mirrors `ArtifactInferenceServiceRegistry::register`), a typed conflict otherwise.
+    #[cfg(test)]
     pub(crate) fn commit_owner_mutation_roster(providers: &[fn() -> (&'static str, &'static [::protocol::SemanticDescriptor])]) -> Result<(), PluginAssemblyError> {
         let mut registry = owner_mutation_roster_registry().write().map_err(|_| PluginAssemblyError::new("plugin-assembly.owner-mutation-roster", "owner mutation roster registry is poisoned"))?;
         for provider in providers {
@@ -9691,10 +9693,6 @@ pub mod app {
             self.actions.get(id)
         }
 
-        fn has_window_action(&self, window_kind_id: &str, action_id: &str) -> bool {
-            self.window_actions.get(window_kind_id).is_some_and(|actions| actions.contains_key(action_id))
-        }
-
         fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
             self.window_actions.get(window_kind_id)?.get(action_id)
         }
@@ -9707,16 +9705,8 @@ pub mod app {
             self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
         }
 
-        fn has_app_command(&self, id: &str) -> bool {
-            self.app_commands.contains_key(id)
-        }
-
         fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
             self.app_commands.get(id)
-        }
-
-        fn has_mode_command(&self, mode_id: &str, id: &str) -> bool {
-            self.mode_commands.get(mode_id).is_some_and(|commands| commands.contains_key(id))
         }
 
         fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
@@ -9992,7 +9982,7 @@ pub mod app {
     /// 🔀️ A `dispatch_emit` gesture whose `artifact_mutations` carried foreign steps (contract
     /// §5.1) — stashed instead of applied, drained by `plugin_exchange` via
     /// `PluginApp::take_pending_transaction_proposal` and framed as `AppFrame::TransactionProposal`.
-    pub(crate) struct TransactionProposalDraft {
+    pub struct TransactionProposalDraft {
         pub(crate) local_ops: Vec<Vec<u8>>,
         pub(crate) description: String,
         pub(crate) coalesce_key: String,
@@ -13928,9 +13918,7 @@ pub mod plugin_runtime {
             crate::host_port::register_host_backbone_channel();
             #[cfg(feature = "component-guest")]
             {
-                unsafe {
-                    semio_plugin_bundle_installer_link_shim();
-                }
+                semio_plugin_bundle_installer_link_shim();
                 if let Some(install) = PLUGIN_BUNDLE_INSTALLER.get() {
                     install();
                 }

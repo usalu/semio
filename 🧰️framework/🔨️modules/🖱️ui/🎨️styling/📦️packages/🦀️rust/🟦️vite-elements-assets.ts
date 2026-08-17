@@ -965,8 +965,8 @@ export function resolveGisMapTileServeMode(value?: string): GisMapTileServeMode 
 
 export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; readonly vt: string } {
   return {
-    osm: resolve(repoRoot, ".repo-cache", "osm-tiles"),
-    vt: resolve(repoRoot, ".repo-cache", "openfreemap-vt"),
+    osm: resolve(repoRoot, ".🧬semio/🗺️map", "osm-tiles"),
+    vt: resolve(repoRoot, ".🧬semio/🗺️map", "openfreemap-vt"),
   };
 }
 
@@ -1093,7 +1093,7 @@ async function fetchVtTileToCache(cacheRoot: string, z: number, x: number, y: nu
   return true;
 }
 
-/** @emoji ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.repo-cache` for offline map play. */
+/** @emoji ⬇️ Prefetch OSM PNG and MapLibre MVT tiles into `.🧬semio/🗺️map` for offline map play. */
 export async function prefetchMapTiles(options: PrefetchMapTilesOptions): Promise<PrefetchMapTilesResult> {
   const {
     repoRoot,
@@ -1282,7 +1282,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
  * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
  * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
 export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): Plugin[] {
-  const cacheRoot = resolve(repoRoot, ".repo-cache", spec.cache);
+  const cacheRoot = resolve(repoRoot, ".🧬semio/🗺️map", spec.cache);
   const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
   let outDir = resolve(process.cwd(), "dist");
   const plugins: Plugin[] = [
@@ -1327,7 +1327,7 @@ export function startAssetServer(repoRoot: string, port: number, specs: readonly
     if (seen.has(key)) continue;
     seen.add(key);
     if (spec.kind === "tile-proxy") {
-      middlewares.push(createTileProxyMiddleware(spec.route, resolve(repoRoot, ".repo-cache", spec.cache), spec.upstream, mode));
+      middlewares.push(createTileProxyMiddleware(spec.route, resolve(repoRoot, ".🧬semio/🗺️map", spec.cache), spec.upstream, mode));
     } else if (spec.kind === "mesh-collection") {
       middlewares.push(createMeshCollectionMiddleware(repoRoot, spec));
     } else {
@@ -1740,7 +1740,7 @@ if (import.meta.vitest) {
     });
 
     it("throws when fonts are missing", () => {
-      expect(() => resolveSemioAssetRoot(resolve(repoRoot, ".🦑️repo"))).toThrow(/Missing Semio asset root/);
+      expect(() => resolveSemioAssetRoot(resolve(repoRoot, ".🧬semio"))).toThrow(/Missing Semio asset root/);
     });
   });
 

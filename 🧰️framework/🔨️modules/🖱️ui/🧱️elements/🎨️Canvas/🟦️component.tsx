@@ -1009,7 +1009,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
             {tab.title}
           </span>
         </div>
-        <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
+        <DragHandle labelId="ui.tree.drag.sort" subject={tab.title} onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
       </button>
     );
   };

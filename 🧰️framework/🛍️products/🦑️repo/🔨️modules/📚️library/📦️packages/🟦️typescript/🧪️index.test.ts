@@ -686,7 +686,7 @@ describe("micro-commit", () => {
       const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
       expect(hook).toContain("compose_micro_commit_wipe");
       expect(hook).not.toContain("\r");
-      expect(existsSync(join(root, ".🦑️repo/compose-micro-commit-bun"))).toBe(true);
+      expect(existsSync(join(root, ".🧬semio/🦑️repo/compose-micro-commit-bun"))).toBe(true);
       expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -848,7 +848,7 @@ describe("package boundary guards", () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of require("node:fs").readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".🦑️repo" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
+        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".🧬semio" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
         const full = join(dir, entry.name);
         if (entry.isDirectory()) {
           walk(full);
@@ -871,7 +871,7 @@ describe("package boundary guards", () => {
   });
 
   test("legacy package aliases are absent from source imports", () => {
-    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑️repo/**", "--glob", "!**/🧪️index.test.ts"], {
+    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🧪️index.test.ts"], {
       cwd: repoRoot,
       encoding: "utf8",
     });

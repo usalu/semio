@@ -150,7 +150,7 @@ fn question_kind_route_from_topic(topic_contribution: &semio_framework_plugin::T
 }
 
 /// 🗂️ Reads the open `TopicContribution` (`"forms.questionKind"` topic) shape per entry.
-pub fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
+fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEntry], kind: &str) -> Option<(&'a str, QuestionKindRoute)> {
     contributions.iter().find_map(|entry| {
         let route = entry.topic_contribution.as_ref().and_then(|topic_contribution| question_kind_route_from_topic(topic_contribution, kind))?;
         Some((entry.plugin_id.as_str(), route))

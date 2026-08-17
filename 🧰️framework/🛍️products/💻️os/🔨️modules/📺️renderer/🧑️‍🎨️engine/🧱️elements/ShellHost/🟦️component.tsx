@@ -2217,6 +2217,21 @@ function FrameworkOsShellInner({
     async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[]) => {
       if (scopeArg.kind === "none") return;
       const generation = ++refreshGenerationRef.current;
+      // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — reads `loadedPluginsRef`
+      // (kept in sync every render, line ~1145), NOT the `loadedPlugins` array closed over by this
+      // callback: this function's own identity depended on `loadedPlugins` (deps array below), so it was
+      // RECREATED on every one of the ~50+ sequential catalogue plugin loads during boot — and every
+      // `useEffect` that calls `refreshUi` (line ~2461's session-refresh effect, in particular) lists
+      // `refreshUi` itself in its own deps array, so a fresh `refreshUi` identity re-fired a FULL
+      // `refreshUi(session)` call on the SAME already-open session for each unrelated background plugin
+      // finishing its load — live-confirmed (`🧪️5-e-live-postmessage-probe.md`) as the dominant contributor
+      // to the `plugin.internal: plugin instance busy` storm: dozens of overlapping `refreshUi` calls
+      // colliding on the wasm guest's single-flight `InstanceGuard`, each retried up to 8× on the worker
+      // side and 8× more by `withSerializedPluginWasmHandle` on the host side. Mirrors lane 5-A's own
+      // `readHistory` effect fix (line ~992) one level up the call graph — that fix stopped `readHistory`
+      // itself from refiring but could not stop THIS callback's identity churn, since `readHistory`'s
+      // effect and this one are independent call sites, not nested.
+      const loadedPlugins = loadedPluginsRef.current;
       const program = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!program) return;
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
@@ -2377,7 +2392,7 @@ function FrameworkOsShellInner({
     // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
     // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appLabelsOverlay, injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
+    [appLabelsOverlay, injectActiveTool, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -2406,6 +2421,11 @@ function FrameworkOsShellInner({
     async (spawned: SpawnedAppEntry, viewState: ViewModel, scopeArg: UiDirtyScope = { kind: "full" }) => {
       if (scopeArg.kind === "none") return;
       const generation = ++spawnedRefreshGenerationRef.current;
+      // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — same fix as `refreshUi`
+      // above: reads `loadedPluginsRef.current` instead of closing over `loadedPlugins`, so this
+      // callback's identity (and every effect that lists it in a deps array) stops churning on every
+      // unrelated background catalogue plugin load.
+      const loadedPlugins = loadedPluginsRef.current;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
       const plugin = pluginEntry?.handle;
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
@@ -2450,13 +2470,23 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
     },
-    [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
+    [injectActiveUtility, uiLocale, uiTerminology],
   );
 
   // 🐢️ Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
   // a genuine session switch (app open/spawn/instance change) — every other action already calls
   // `refreshUi` explicitly via `applyHostEffects`, and re-running it here too on every `session` object
   // churn was a second, redundant full-shell refresh cascade per interaction.
+  // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
+  // from this effect's own deps (mirrors `refreshUi`'s own fix above, and lane 5-A's `readHistory`
+  // effect fix, line ~992): a session can only exist for an already-loaded plugin (nothing sets
+  // `session`/`sessionIdentityKey` for a plugin still mid-load), so this effect never needed to refire
+  // on unrelated background catalogue loads in the first place — `refreshUi` itself now reads
+  // `loadedPluginsRef.current` at call time regardless. Before this fix, `loadedPlugins` getting a new
+  // array reference on every one of the ~50+ sequential background plugin loads during boot re-ran this
+  // effect that many times for the SAME already-open session, each dispatching a fresh top-level
+  // `refreshUi` against the wasm guest's single-flight `InstanceGuard` — live-confirmed as the dominant
+  // contributor to the `plugin.internal: plugin instance busy` storm blocking collab-e2e STEP 2.
   const sessionIdentityKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
   useEffect(() => {
     const current = sessionRef.current;
@@ -2465,7 +2495,7 @@ function FrameworkOsShellInner({
       console.error("[DEBUG] render failed", renderError);
       dispatch({ type: "SET_ERROR", value: renderError instanceof Error ? renderError.message : String(renderError) });
     });
-  }, [loadedPlugins, refreshUi, sessionIdentityKey]);
+  }, [refreshUi, sessionIdentityKey]);
 
   useEffect(() => {
     if (!hostMode || !session) {
@@ -2485,7 +2515,11 @@ function FrameworkOsShellInner({
       console.error("[DEBUG] spawned render failed", renderError);
       dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
     });
-  }, [loadedPlugins, panel, refreshSpawnedUi, session, hostMode]);
+    // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
+    // (same reasoning as the session-refresh effect above): `refreshSpawnedUi` now reads
+    // `loadedPluginsRef.current` at call time, and a spawned instance can only exist for an
+    // already-loaded plugin, so this never needed to refire on unrelated background catalogue loads.
+  }, [panel, refreshSpawnedUi, session, hostMode]);
 
   const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
     dispatch({

@@ -1548,7 +1548,7 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDire
 async fn main() -> Result<(), HubError> {
     tracing_subscriber::fmt::init();
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
-    let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.semio/hub/"), std::path::PathBuf::from);
+    let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
     std::fs::create_dir_all(&data_dir)?;
     let db = connect_db(&data_dir)?;
     let directory = connect_directory(&data_dir).await?;

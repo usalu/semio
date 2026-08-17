@@ -519,6 +519,7 @@ pub fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff 
 /// the empty diff, plus a real `between()` result exercising every scalar field, the `gct`
 /// tri-state (both `Some(Some(_))` and `Some(None)`), and the `images` collection triple's
 /// `removed`/`modified`/`added` all at once (mirrors png's own `demo_diff_cases()`).
+#[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
     let img = |seed: u8, w: u32, h: u32| GifImage { left: 0, top: 0, width: w, height: h, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] }), indices: vec![0u8; (w * h) as usize] };
     let a = GifSnapshot { width: 4, height: 4, gct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 1, g: 2, b: 3 }; 2] }), images: vec![img(1, 2, 2), img(2, 2, 2)], ..GifSnapshot::default() };

@@ -480,6 +480,7 @@ impl OpBinary for JpgMutation {
 /// AND by `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests. `pub(crate)` (not `#[cfg(test)]`-gated) so the engine's non-test conformance
 /// module can reuse it, matching png's own `demo_mutation_cases()` visibility.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
     fn quant(id: u8, seed: u16) -> JpgQuantTable {
         JpgQuantTable { id, precision: 0, values: [seed; 64] }

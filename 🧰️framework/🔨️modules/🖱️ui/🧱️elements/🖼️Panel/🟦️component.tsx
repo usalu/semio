@@ -170,7 +170,7 @@ function PanelTreeUnitHeader({
       {UnitIcon ? <UnitIcon size={12} /> : null}
       <span className="min-w-0 truncate">{unit.label}</span>
       {unitDockDraggable && !surfaceDrag ? (
-        <DragHandle labelId="ui.tree.drag.sort" className="ms-auto" onPointerDown={arm} emphasized={unitDragActive} />
+        <DragHandle labelId="ui.tree.drag.sort" subject={unit.label} className="ms-auto" onPointerDown={arm} emphasized={unitDragActive} />
       ) : null}
     </div>
   );

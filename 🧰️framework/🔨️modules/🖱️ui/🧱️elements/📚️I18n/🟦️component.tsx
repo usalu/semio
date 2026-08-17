@@ -132,7 +132,9 @@ export type UiTranslationSchema = {
     readonly tree: {
       readonly drag: {
         readonly sort: UiLabelValue;
+        readonly sortTarget: UiLabelValue;
         readonly transfer: UiLabelValue;
+        readonly transferTarget: UiLabelValue;
       };
     };
     readonly find: {

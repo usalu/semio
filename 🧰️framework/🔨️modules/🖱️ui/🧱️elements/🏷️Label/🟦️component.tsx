@@ -16,6 +16,8 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️co
 import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🪵️Tree/🟦️component.tsx";
 import { type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️component.tsx";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️component.tsx";
+import { useControlHotkey } from "../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
+import { formatControlTooltipText } from "../../🔨️modules/⌨️control-tooltip-presentation/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏷️Label
@@ -172,6 +174,23 @@ export function useControlInlineText(id: string | undefined, text?: string): str
   const driver = useUiDriver();
   const accessibleLabel = useControlAccessibleLabel(id, text);
   return driver.labels === "icons" ? undefined : accessibleLabel;
+}
+/** @emoji 💬 Options for {@link useControlTooltipText}. */
+export interface ControlTooltipTextOptions {
+  readonly always?: boolean;
+}
+/** @emoji 💬 Resolves native hover tooltip text for icon-only chrome controls, appending hotkeys when present. */
+export function useControlTooltipText(id: string | undefined, text?: string, options?: ControlTooltipTextOptions): string | undefined {
+  const driver = useUiDriver();
+  const inlineText = useControlInlineText(id, text);
+  const accessibleLabel = useControlAccessibleLabel(id, text);
+  const hotkey = useControlHotkey(id);
+  if (driver.tooltips === "none") return undefined;
+  if (!options?.always && inlineText) return undefined;
+  const label = text ?? accessibleLabel;
+  if (!label) return undefined;
+  const resolvedHotkey = driver.hotkeys !== "none" ? hotkey : undefined;
+  return formatControlTooltipText({ label, hotkey: resolvedHotkey });
 }
 // Foundational internal components like Label.
 // Consumers MUST use these as building blocks for inputs.

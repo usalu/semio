@@ -8,7 +8,7 @@ use std::process::{Command, Stdio};
 /// 🌊️ Executes a ticket-scoped dependency workflow through locally available coding-agent runners.
 pub fn run(root: &Path, parsed: &ParsedArgs) -> i32 {
     let sub = parsed.segments.first().map(String::as_str).unwrap_or("status");
-    let ticket = parsed.flag("ticket").map(PathBuf::from).unwrap_or_else(|| root.join(".🦑️repo/🎫️tickets"));
+    let ticket = parsed.flag("ticket").map(PathBuf::from).unwrap_or_else(|| root.join(".🧬semio/🦑️repo/🎫️tickets"));
     match sub {
         "status" => {
             let path = workflow_path(&ticket);

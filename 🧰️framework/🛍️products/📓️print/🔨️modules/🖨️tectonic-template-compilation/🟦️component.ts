@@ -211,7 +211,7 @@ function tectonicTarget(): string {
 }
 
 function tectonicCacheDirectory(): string {
-  return join(workspaceRoot, ".🦑️repo", "⚡️cache", "tectonic", tectonicVersion);
+  return join(workspaceRoot, ".🧬semio", "🦑️repo", "⚡️cache", "tectonic", tectonicVersion);
 }
 
 function tectonicBinaryPath(): string {

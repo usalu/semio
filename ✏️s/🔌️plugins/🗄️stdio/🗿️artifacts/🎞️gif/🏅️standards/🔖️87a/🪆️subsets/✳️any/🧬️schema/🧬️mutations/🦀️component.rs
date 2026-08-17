@@ -84,6 +84,7 @@ pub enum GifMutation {
 /// every one of the 12 real variants, incl. both `Some`/`None` shapes of the one
 /// `Option<T>`-of-struct-block field (`SetGlobalColorTable::gct`) — mirrors png's own
 /// `demo_mutation_cases()`.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     let base = crate::artifacts::gif::standards::v87a::subsets::any::schema::demo_gif_snapshot();
     let sample_image = GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(GifColorTable { sorted: false, colors: vec![GifRgb { r: 9, g: 9, b: 9 }; 2] }), indices: vec![0, 1, 1, 0] };

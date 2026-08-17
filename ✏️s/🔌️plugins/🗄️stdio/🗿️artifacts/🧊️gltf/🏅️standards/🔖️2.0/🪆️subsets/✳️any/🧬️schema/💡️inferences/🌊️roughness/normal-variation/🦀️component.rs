@@ -16,10 +16,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfNormalVariationInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfRoughnessRaw) -> GltfMeasure<GltfStatistics> {
     exact(super::statistics(&raw.normal_angles, &context.policy.histogram_edges), GltfUnit::Radian, raw.normal_angles.len(), Some(context.topology))
 }

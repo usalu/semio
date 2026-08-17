@@ -2741,7 +2741,7 @@
         "SEMIO_PLUGIN": "s",
         "S_USER": "user1@semio.dev",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user1",
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -2765,7 +2765,7 @@
         "SEMIO_PLUGIN": "s",
         "S_USER": "user2@semio.dev",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user2",
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -2789,7 +2789,7 @@
         "SEMIO_PLUGIN": "s",
         "S_USER": "user1@semio.dev",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user1",
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -2813,7 +2813,7 @@
         "SEMIO_PLUGIN": "s",
         "S_USER": "user2@semio.dev",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.semio/s-user2",
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -2867,7 +2867,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "OS_HUB_PORT": "8787",
-        "OS_HUB_DATA": "${workspaceFolder}/.semio/hub-dev/"
+        "OS_HUB_DATA": "${workspaceFolder}/.🧬semio/🌐hub/hub-dev/"
       },
       "presentation": {
         "group": "3_dev",

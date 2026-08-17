@@ -1,14 +1,21 @@
 //! 🔍️ CAD play app panel — the inspection panel: the field groups for whatever is selected
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
-use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, CadPlayView, TYPOLOGY_CATALOG};
+use crate::editor::cad::terminology::CadLabels;
+#[cfg(test)]
+use crate::editor::cad::terminology::typology_label;
+use crate::editor::cad::{cad_action, CadPlayView};
+#[cfg(test)]
+use crate::editor::cad::TYPOLOGY_CATALOG;
+#[cfg(test)]
 use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::artifacts::cad::{CadNode, CadReference};
 use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition,
-    PanelTabKind, UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition,
+    PanelTabKind, UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+#[cfg(test)]
+use semio_framework_plugin::{ui_inspector_mixed_text, ui_inspector_mixed_toggle, UiSelectItem, UiSelectNode};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -78,7 +85,8 @@ pub fn inspector_quat_group(id: &str, label: impl Into<Label>, values: &[[f64; 4
     })
 }
 
-pub fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
+#[cfg(test)]
+pub(crate) fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> UiInspectorFieldGroup {
     let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
     let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
     let typologies: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
@@ -185,7 +193,8 @@ pub fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -
     }
 }
 
-pub fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
+#[cfg(test)]
+pub(crate) fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_id: &str, kind: &str) -> UiInspectorFieldGroup {
     let slot = object.primitives.iter().find(|primitive| primitive.primitive_id == primitive_id).map_or("primitive", |primitive| primitive.slot.as_str());
     UiInspectorFieldGroup {
         id: "cad-play-inspector.primitive".into(),

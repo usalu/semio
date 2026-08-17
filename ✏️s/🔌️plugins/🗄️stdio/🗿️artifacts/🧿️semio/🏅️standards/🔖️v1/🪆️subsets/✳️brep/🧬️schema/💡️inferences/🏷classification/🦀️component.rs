@@ -147,6 +147,7 @@ fn segment_distance_sq_2d(p: Pnt2, a: Pnt2, b: Pnt2) -> f64 {
     (p - q).dot(p - q)
 }
 
+#[cfg(test)]
 fn loop_uv_polygon(body: &Body, loop_id: LoopId, surface: &Surface) -> Result<Vec<Pnt2>, KernelError> {
     loop_uv_polygon_sampled(body, loop_id, surface, 8)
 }
@@ -403,20 +404,6 @@ fn point_in_polygon_3d(hit: Pnt3, verts: &[Pnt3], normal: Vec3, tol: f64) -> boo
 }
 
 // #endregion 🔖️RayCast
-
-// #region 🔖️Helpers
-
-trait Midpoint {
-    fn midpoint(self, other: Self) -> Self;
-}
-
-impl Midpoint for f64 {
-    fn midpoint(self, other: Self) -> Self {
-        0.5 * (self + other)
-    }
-}
-
-// #endregion 🔖️Helpers
 
 // #region 🔖️Tests
 

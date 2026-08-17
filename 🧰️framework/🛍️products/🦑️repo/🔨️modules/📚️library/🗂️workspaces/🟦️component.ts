@@ -4,7 +4,7 @@
 // on-disk scan for every `package.json`-carrying directory (Shape V1 `⚡️implementations/<lang>` and
 // Shape V2 `📦️packages/<lang>` alike), replacing the ~68 hand-maintained literal globs that were
 // already out of sync (~40 math npm wrapper packages were resolving via nx only, invisible to bun).
-// @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/GENERATED-BUN-WORKSPACES-FROM-PACKAGE-CATALOG
+// @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/GENERATED-BUN-WORKSPACES-FROM-PACKAGE-CATALOG
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
@@ -19,7 +19,7 @@ const CARGO_MANIFEST_FILENAME = "Cargo.toml";
 /** 🧺️ Directory names never descended into — build/vendor/scratch trees, never real workspace source.
  * Includes legacy `compose` (same isolation as `DISCOVERY_SKIP_DIRS`) so workspace generation never
  * re-integrates the legacy technology island. */
-const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🦑️repo", "compose"]);
+const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🧬semio", "compose"]);
 
 /** 🧻️ wasm-pack's generated npm-wrapper dir name — gitignored, present only once built, handled
  * specially by `resolvePkgDir` and never generically recursed into (see its docstring for why). */

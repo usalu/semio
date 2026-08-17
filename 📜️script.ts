@@ -19,6 +19,9 @@ import {
   enforceCoverageThreshold,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
+  getRepoMetaDir,
+  getMapCacheDir,
+  getSemioRoot,
   goCoverageArgs,
   goLevelTestArgs,
   goProfileToLcov,
@@ -165,7 +168,7 @@ function ensureSccache(): void {
   const dest = join(binDir, binName);
   if (existsSync(dest)) return;
 
-  const cacheDir = join(WORKSPACE_ROOT, ".🦑️repo", "⚡️cache", "sccache");
+  const cacheDir = join(getRepoMetaDir(WORKSPACE_ROOT), "⚡️cache", "sccache");
   mkdirSync(cacheDir, { recursive: true });
   const archive = join(cacheDir, asset);
   const url = `https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/${asset}`;
@@ -374,7 +377,7 @@ export class StartScript extends Script {
     process.chdir(this.root);
     const runGenerate = () => {
       if (runCmdStatus(BUN, [join(this.root, "📜️script.ts"), "generate"], { cwd: this.root, ...orchestratorBudgetOpts() }) !== 0) {
-        console.log("[start] `bun run generate` did not refresh all `.🦑️repo/🛂️manifest` bundles (Neo4j may be offline).");
+        console.log("[start] `bun run generate` did not refresh all `.🧬semio/🦑️repo/🛂️manifest` bundles (Neo4j may be offline).");
       }
     };
 
@@ -623,7 +626,7 @@ function taxonomyOption(args: readonly string[], name: string): string | undefin
 function taxonomyTicketDirectory(repoRoot: string, ticketId: string): string {
   const parts = ticketId.split("/").filter(Boolean);
   if (parts.length !== 4) throw new Error(`[taxonomy] ticket id must be YYYY/MM/DD/TICKETSLUG, got ${JSON.stringify(ticketId)}.`);
-  let current = realpathSync(join(repoRoot, ".🦑️repo", "🎫️tickets"));
+  let current = realpathSync(join(getRepoMetaDir(repoRoot), "🎫️tickets"));
   for (const part of parts) {
     const entry = readdirSync(current, { withFileTypes: true })
       .filter((candidate) => candidate.isDirectory())
@@ -674,7 +677,7 @@ export class GenerateScript extends Script {
     if (failures > 0) {
       console.error(`[generate] partial success (${successes} ok, ${failures} failed).`);
     }
-    console.log(`[generate] Neo4j Cypher export finished (${successes} ok, ${failures} skipped/failed) under .🦑️repo/🛂️manifest.`);
+    console.log(`[generate] Neo4j Cypher export finished (${successes} ok, ${failures} skipped/failed) under .🧬semio/🦑️repo/🛂️manifest.`);
   }
 
   /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
@@ -1168,7 +1171,7 @@ export class TestScript extends Script {
     if (collectingCoverage) this.enforceCoverageGate();
   }
 
-  /** 📊️Walks every `*.lcov`/`lcov.info`/`coverage.info`/`*.cover` file under `.🦑️repo/📊️metrics/coverage/`, merges them into one repo-wide LCOV, writes `summary.json`, and hard-fails below the 95% threshold — the exhaustive-level gate. */
+  /** 📊️Walks every `*.lcov`/`lcov.info`/`coverage.info`/`*.cover` file under `.🧬semio/🦑️repo/📊️metrics/coverage/`, merges them into one repo-wide LCOV, writes `summary.json`, and hard-fails below the 95% threshold — the exhaustive-level gate. */
   private enforceCoverageGate(): void {
     const walk = (dir: string, matches: (name: string) => boolean, found: string[] = []): string[] => {
       if (!existsSync(dir)) return found;
@@ -1188,8 +1191,8 @@ export class TestScript extends Script {
     ];
     const merged = mergeLcov(recordSets);
     const summary = summarizeCoverage(merged);
-    writeFileSync(join(this.root, ".🦑️repo", "📊️metrics", "coverage", "lcov.info"), renderLcov(merged));
-    writeFileSync(join(this.root, ".🦑️repo", "📊️metrics", "coverage", "summary.json"), JSON.stringify(summary, null, 2));
+    writeFileSync(join(getRepoMetaDir(this.root), "📊️metrics", "coverage", "lcov.info"), renderLcov(merged));
+    writeFileSync(join(getRepoMetaDir(this.root), "📊️metrics", "coverage", "summary.json"), JSON.stringify(summary, null, 2));
     enforceCoverageThreshold(summary, 95);
   }
 
@@ -1955,7 +1958,7 @@ export class CppScript extends Script {
     const vcpkgRoot = this.vcpkgRoot();
     const vcpkgExe = join(vcpkgRoot, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
     if (!existsSync(vcpkgRoot)) {
-      mkdirSync(join(this.root, ".🦑️repo", "⚡️cache"), { recursive: true });
+      mkdirSync(join(getRepoMetaDir(this.root), "⚡️cache"), { recursive: true });
       runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
     if (!existsSync(vcpkgExe)) {
@@ -1978,7 +1981,7 @@ export class CppScript extends Script {
   }
 
   private vcpkgRoot(): string {
-    return process.env.VCPKG_ROOT || join(this.root, ".🦑️repo", "⚡️cache", "vcpkg");
+    return process.env.VCPKG_ROOT || join(getRepoMetaDir(this.root), "⚡️cache", "vcpkg");
   }
 
   private ensureWindowsMsvc(): void {
@@ -1990,7 +1993,7 @@ export class CppScript extends Script {
   }
 
   private purgeStaleCmakeCache(preset: string): void {
-    const cacheDir = join(this.root, ".🦑️repo", "⚡️cache", "cmake", preset);
+    const cacheDir = join(getRepoMetaDir(this.root), "⚡️cache", "cmake", preset);
     const cacheFile = join(cacheDir, "CMakeCache.txt");
     if (!existsSync(cacheFile)) return;
     const content = readFileSync(cacheFile, "utf8");
@@ -2317,7 +2320,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
 
 //#region 🔖️generate-neo4j-gen
 /**
- * 🛂️ Neo4j → `.🦑️repo/🛂️manifest/<graph>.cypher` export (pure module; invoked from root `script.ts`). Product graphs are fixed specs; extra Bolt graphs use `NEO4J_EXTRA_GRAPH_DATABASES` (comma-separated). Argv segments join with `-` via `joinNeo4jGraphDatabaseName`.
+ * 🛂️ Neo4j → `.🧬semio/🦑️repo/🛂️manifest/<graph>.cypher` export (pure module; invoked from root `script.ts`). Product graphs are fixed specs; extra Bolt graphs use `NEO4J_EXTRA_GRAPH_DATABASES` (comma-separated). Argv segments join with `-` via `joinNeo4jGraphDatabaseName`.
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -2327,7 +2330,7 @@ const NEO4J_VERSION = "5.26.26";
 /** 🏗️Product graphs only (compose stack); not arbitrary developer databases. */
 export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["compose"], ["elements"], ["coda"], ["reuse"]] as const;
 
-/** 🗑️Env key: comma-separated extra Bolt graph names for `bun run generate` and native `.🦑️repo/🛂️manifest/*.cypher` stubs. */
+/** 🗑️Env key: comma-separated extra Bolt graph names for `bun run generate` and native `.🧬semio/🦑️repo/🛂️manifest/*.cypher` stubs. */
 export const NEO4J_EXTRA_GRAPH_DATABASES_ENV = "NEO4J_EXTRA_GRAPH_DATABASES";
 
 /** 🔗️Bolt user graph name from argv segments after `neo4j` / `generate neo4j` (hyphen join). */
@@ -2377,7 +2380,7 @@ export class Neo4jCypherExport {
 
   resolveCypherShell(): string | null {
     const runtimeName = process.platform === "win32" ? "cypher-shell.bat" : "cypher-shell";
-    const cachedShell = join(this.repoRoot, ".🦑️repo", "⚡️cache", "neo4j", `neo4j-community-${NEO4J_VERSION}`, "bin", runtimeName);
+    const cachedShell = join(getRepoMetaDir(this.repoRoot), "⚡️cache", "neo4j", `neo4j-community-${NEO4J_VERSION}`, "bin", runtimeName);
     const candidates = [process.env.NEO4J_CYPHER_SHELL, cachedShell, runtimeName].filter((value): value is string => Boolean(value));
 
     for (const candidate of candidates) {
@@ -2413,7 +2416,7 @@ export class Neo4jCypherExport {
       return { ok: false, stdout: "", stderr: "cypher-shell not found (install Neo4j tools or set NEO4J_CYPHER_SHELL)." };
     }
 
-    const queryDir = join(this.repoRoot, ".🦑️repo", "⚡️cache");
+    const queryDir = join(getRepoMetaDir(this.repoRoot), "⚡️cache");
     mkdirSync(queryDir, { recursive: true });
     const queryPath = join(queryDir, `neo4j-generate-query-${process.pid}-${Date.now()}.cypher`);
     writeFileSync(queryPath, `${cypher.trim()}\n`, "utf8");
@@ -2493,11 +2496,11 @@ export class Neo4jCypherExport {
 
     const technology = joined;
     const database = process.env.NEO4J_DATABASE ?? joined;
-    const outDir = join(this.repoRoot, ".🦑️repo", "🛂️manifest");
+    const outDir = join(getRepoMetaDir(this.repoRoot), "🛂️manifest");
     mkdirSync(outDir, { recursive: true });
 
     const finalAbs = join(outDir, `${technology}.cypher`);
-    const cacheDir = join(this.repoRoot, ".🦑️repo", "⚡️cache");
+    const cacheDir = join(getRepoMetaDir(this.repoRoot), "⚡️cache");
     mkdirSync(cacheDir, { recursive: true });
     const tmpAbs = join(cacheDir, `.generate-${technology}-${process.pid}.tmp.cypher`);
 
@@ -2546,7 +2549,7 @@ export class Neo4jCypherExport {
  */
 
 //#region 🔧️PolicyFsScan
-const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".🦑️repo", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
+const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".🧬semio", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
 /** 🧹️Drops every non-ASCII codepoint (emoji + variation selectors), e.g. `"📐️cad"` -> `"cad"`, `"🗣️dsl"` -> `"dsl"`. */
 function policyStripEmoji(segment: string): string {
@@ -4523,7 +4526,7 @@ function policyStripTsCommentsAndStrings(content: string): string {
   return out.join("");
 }
 
-/** 🔎️Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.🦑️repo and other policy skip dirs. */
+/** 🔎️Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.🧬semio and other policy skip dirs. */
 function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -6712,7 +6715,7 @@ function policyEffectCapabilityParityBreaches(repoRoot: string): BreachRecord[] 
  * measured regression — are promoted to `priority: "high"`, which `VerifyScript.runGate`'s
  * `dissolveBreaches` block already filters on. Ceilings MAY be lowered freely as debt burns down; RAISING
  * one requires a ticket citation in a comment beside the changed entry, or the ratchet is meaningless.
- * Measured `bun ./📜️script.ts policy` against `.🦑️repo/⚡️cache/breaches/compose.json`, three runs
+ * Measured `bun ./📜️script.ts policy` against `.🧬semio/🦑️repo/⚡️cache/breaches/compose.json`, three runs
  * 2026-08-13 ~00:12/00:14/00:16 (~90-100s apart) — see `📓️w5-ratchet-report.md`.
  *
  * Four of eight APA ratchet keys are intentionally ABSENT below — no ceiling, permanently `medium` — not
@@ -8926,7 +8929,7 @@ const POLICY_CRDT_VOCABULARY_RE = new RegExp(`\\b(${POLICY_CRDT_VOCABULARY_TOKEN
 
 /**
  * 📏️Rule 3: zero repo-wide occurrences of the CRDT merge-strategy/conflict-rule vocabulary C10 deletes
- * (`.🦑️repo/`, `node_modules`, `target`, `dist` excluded via `POLICY_SKIP_DIRS`). Scoped to `.rs` files —
+ * (`.🧬semio/`, `node_modules`, `target`, `dist` excluded via `POLICY_SKIP_DIRS`). Scoped to `.rs` files —
  * every token is a Rust-only identifier (no TS mirror was ever specified for the deleted CRDT pair).
  */
 export function policyNoCrdtVocabularyBreaches(repoRoot: string): BreachRecord[] {

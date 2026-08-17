@@ -112,6 +112,7 @@ pub enum GifMutation {
 /// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
 /// every one of the 21 real variants, incl. `Some`/`None` shapes of every `Option<T>` field
 /// (`gct`, `loop_count`, `transparent_index`) — mirrors 87a's own `demo_mutation_cases()`.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
     // 🧭️ Deliberately a small, hand-built snapshot for `SetSnapshot`'s own payload — NOT
     // `engine::demo_gif_snapshot()` (the real, 800×800/54-frame `dancing.gif` fixture used by

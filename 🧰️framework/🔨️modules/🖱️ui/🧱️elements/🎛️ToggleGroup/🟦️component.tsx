@@ -18,7 +18,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
 import { type Level, useLevel } from "../🌈️Surface/🟦️component.tsx";
-import { Label, useControlInlineText, useControlAccessibleLabel } from "../🏷️Label/🟦️component.tsx";
+import { Label, useControlInlineText, useControlAccessibleLabel, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
 import { renderControlIcon, type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -102,6 +102,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
   const level = context.level ?? "base";
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
+  const tooltipText = useControlTooltipText(id, text);
   const ariaLabel = inlineText ? undefined : accessibleLabel;
 
   const toggleGroupItemElement = (
@@ -109,7 +110,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       data-slot="toggle-group-item"
       id={id}
       aria-label={ariaLabel}
-      title={ariaLabel}
+      title={tooltipText}
       data-level={level}
       className={cn(
         toggleVariants(),

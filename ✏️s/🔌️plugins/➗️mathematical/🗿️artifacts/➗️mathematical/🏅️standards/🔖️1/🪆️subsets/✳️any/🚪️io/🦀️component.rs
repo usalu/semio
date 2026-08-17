@@ -16,7 +16,6 @@ pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::mathematical::MathematicalSnapshot;
     use crate::artifacts::mathematical::standards::v1::subsets::any::schema::MathematicalAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.mathematical", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -34,7 +33,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

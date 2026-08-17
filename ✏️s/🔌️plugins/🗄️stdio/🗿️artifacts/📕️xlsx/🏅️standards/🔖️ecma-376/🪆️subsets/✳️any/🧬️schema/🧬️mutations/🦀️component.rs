@@ -510,6 +510,7 @@ impl OpBinary for XlsxMutation {
 /// conformance tests, same shape docx's own `demo_mutation_cases()` establishes (this wave's OPC
 /// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
 /// `sample_mutations` (the last renamed for the same convention).
+#[cfg(test)]
 pub(crate) fn fixture() -> XlsxSnapshot {
     crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "Sheet2".into(), cells: vec![] }],
@@ -528,6 +529,7 @@ pub(crate) fn fixture() -> XlsxSnapshot {
 /// `removed`+`modified` and `b -> a` (asserted separately in `field_sweep`) exercises
 /// `added`+`modified`. OPC content_types/parts/relationships each get one removed, one
 /// modified, one added (all true name-keyed collections, exercised in one direction).
+#[cfg(test)]
 pub(crate) fn sweep_a() -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -571,6 +573,7 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
     )
 }
 
+#[cfg(test)]
 pub(crate) fn sweep_b() -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
@@ -616,6 +619,7 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
 //#endregion 🔖️Fixtures
 
 /// 🧪️ The demo cases proper -- one representative `XlsxMutation` per variant.
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<XlsxMutation> {
     vec![
         XlsxMutation::NoMutation,

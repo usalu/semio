@@ -431,7 +431,7 @@ const PanelTabButton: React.FC<{
             ) : null}
           </>
         )}
-        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
+        {draggable && !surfaceDrag ? <DragHandle labelId="ui.tree.drag.sort" subject={tab.name} onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
       </button>
     </ChromeControlHint>
   );

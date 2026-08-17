@@ -397,7 +397,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: {
-      path: "node_modules|dist|target|storybook-static|\\.git|\\.nx|\\.🦑️repo|\\.repo",
+      path: "node_modules|dist|target|storybook-static|\\.git|\\.nx|\\.🧬semio|\\.repo",
     },
     tsPreCompilationDeps: true,
     combinedDependencies: true,

@@ -89,7 +89,7 @@
   "dotnet.defaultSolution": "Monorepo.sln",
   "cmake.useCMakePresets": "always",
   "cmake.configureOnOpen": false,
-  "cmake.buildDirectory": "${workspaceFolder}/.🦑️repo/⚡️cache/cmake/${presetName}",
+  "cmake.buildDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cmake/${presetName}",
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
   "chat.agent.maxRequests": 5000,
   "editor.minimap.enabled": true,

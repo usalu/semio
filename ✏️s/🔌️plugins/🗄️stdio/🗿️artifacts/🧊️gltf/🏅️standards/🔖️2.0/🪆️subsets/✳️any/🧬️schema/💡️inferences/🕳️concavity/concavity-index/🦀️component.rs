@@ -15,10 +15,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfConcavityIndexInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfConcavityRaw) -> GltfMeasure<f64> {
     raw.hull_volume
         .filter(|volume| *volume > 0.0)

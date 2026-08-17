@@ -83,14 +83,8 @@ fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
     dec_semio_value_entry(s)
 }
 
-fn enc_ports(ports: &[SemioGraphPort]) -> String {
-    format!("[{}]", ports.iter().map(enc_port).collect::<Vec<_>>().join(","))
-}
 fn dec_ports(s: &str) -> Result<Vec<SemioGraphPort>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect()
-}
-fn enc_properties(properties: &[SemioValueEntry]) -> String {
-    format!("[{}]", properties.iter().map(enc_property).collect::<Vec<_>>().join(","))
 }
 fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect()

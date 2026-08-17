@@ -2,6 +2,7 @@
 
 use crate::editor::remodel::commands::import_video_bytes_payload;
 use crate::editor::remodel::config::{RemodelConfig, RemodelConfigMutation};
+#[cfg(test)]
 use crate::editor::remodel::engine::images as remodel_image;
 use crate::editor::remodel::{decode_still_image, payload_from_data_url};
 use crate::artifacts::remodel::mutations::{add_stream_frame, create_asset, create_stream};

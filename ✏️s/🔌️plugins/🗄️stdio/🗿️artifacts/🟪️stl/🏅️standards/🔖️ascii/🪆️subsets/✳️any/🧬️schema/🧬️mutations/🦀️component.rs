@@ -303,6 +303,7 @@ impl OpBinary for StlMutation {
 /// `op_text_binary_roundtrip_law` below AND `⚙️engine::conformance_laws`'s `ops_grammar_
 /// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
 /// establishes).
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
     let base = StlSnapshot { schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![

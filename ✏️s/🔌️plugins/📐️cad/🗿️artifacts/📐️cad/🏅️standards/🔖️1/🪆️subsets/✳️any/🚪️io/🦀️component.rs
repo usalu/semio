@@ -19,7 +19,6 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 pub mod derived_composition {
     use crate::artifacts::cad::standards::v1::subsets::any::schema::CadAnalyzer;
     use crate::artifacts::cad::CadSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad", standard: StandardId("1"), subset: SubsetId("*") };
@@ -42,7 +41,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_DWG, DEP_GLTF, DEP_IFC, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STEP, DEP_STL]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

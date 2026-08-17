@@ -241,7 +241,7 @@ ensure_neo4j_schema_files() {
   while IFS= read -r ex; do
     [ -n "$ex" ] && technologies+=("$ex")
   done < <(extra_neo4j_graph_names_from_env)
-  local schema_dir="$WORKSPACE/.🦑️repo/🛂️manifest"
+  local schema_dir="$WORKSPACE/.🧬semio/🦑️repo/🛂️manifest"
   mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
     local schema_file="$schema_dir/$technology.cypher"
@@ -257,7 +257,7 @@ EOF
 
 neo4j_schema_cypher_uri() {
   local technology="$1"
-  printf 'file:///workspaces/semio/.🦑️repo/🛂️manifest/%s.cypher' "$technology"
+  printf 'file:///workspaces/semio/.🧬semio/🦑️repo/🛂️manifest/%s.cypher' "$technology"
 }
 
 reload_neo4j_from_repo_cypher() {
@@ -275,7 +275,7 @@ reload_neo4j_from_repo_cypher() {
     echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
     return 0
   fi
-  echo "🧾️ Neo4j: clearing graph in database ${graph_db}, then loading generated .🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
+  echo "🧾️ Neo4j: clearing graph in database ${graph_db}, then loading generated .🧬semio/🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
   cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
     echo "⚠️ Neo4j wipe failed; skipping cypher file import."
     return 0
@@ -287,7 +287,7 @@ reload_neo4j_from_repo_cypher() {
     [ -n "$ex" ] && technologies+=("$ex")
   done < <(extra_neo4j_graph_names_from_env)
   for technology in "${technologies[@]}"; do
-    local schema_file="$WORKSPACE/.🦑️repo/🛂️manifest/$technology.cypher"
+    local schema_file="$WORKSPACE/.🧬semio/🦑️repo/🛂️manifest/$technology.cypher"
     local schema_uri
     schema_uri="$(neo4j_schema_cypher_uri "$technology")"
     if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then

@@ -15,10 +15,6 @@ pub fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfSphericityInference::DESCRIPTOR
 }
 
-pub(crate) fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    from_raw(context, &super::raw(context))
-}
-
 pub(crate) fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCompactnessRaw) -> GltfMeasure<f64> {
     raw.sphericity.map(|value| exact(value, GltfUnit::Unitless, context.sample_count, Some(context.topology))).unwrap_or_else(|| unavailable(GltfUnit::Unitless, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
 }

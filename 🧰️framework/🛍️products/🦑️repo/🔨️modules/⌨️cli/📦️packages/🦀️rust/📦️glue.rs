@@ -362,8 +362,16 @@ pub mod ipc {
     }
 
     /// 📁 Cache directory for the dashboard daemon socket / pid / event log.
+    pub fn semio_root_dir(root: &Path) -> PathBuf {
+        root.join(".🧬semio")
+    }
+
+    pub fn repo_meta_dir(root: &Path) -> PathBuf {
+        semio_root_dir(root).join("🦑️repo")
+    }
+
     pub fn dashboard_cache_dir(root: &Path) -> PathBuf {
-        root.join(".🦑️repo").join("⚡️cache").join("🎛️dashboard")
+        repo_meta_dir(root).join("⚡️cache").join("🎛️dashboard")
     }
 
     pub fn socket_path(root: &Path) -> PathBuf {

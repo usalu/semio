@@ -35,23 +35,23 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.🦑️repo/🛂️manifest`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
+Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.🧬semio/🦑️repo/🛂️manifest`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
 
 ## Neo4j Cypher Persistence
 
 APOC Core and APOC Extended are installed in the **`compose`** image and configured for file import/export. The canonical repo persistence paths are:
 
-- **`.🦑️repo/🛂️manifest/compose.cypher`**
-- **`.🦑️repo/🛂️manifest/elements.cypher`**
-- **`.🦑️repo/🛂️manifest/coda.cypher`**
-- **`.🦑️repo/🛂️manifest/reuse.cypher`**
+- **`.🧬semio/🦑️repo/🛂️manifest/compose.cypher`**
+- **`.🧬semio/🦑️repo/🛂️manifest/elements.cypher`**
+- **`.🧬semio/🦑️repo/🛂️manifest/coda.cypher`**
+- **`.🧬semio/🦑️repo/🛂️manifest/reuse.cypher`**
 
 On devcontainer start, **`post-start.sh`** imports non-empty schema files with **`apoc.cypher.runFile`** only when the live database is empty. Export technology-scoped graph state with APOC query exports instead of dumping the whole database, for example:
 
 ```cypher
 CALL apoc.export.cypher.query(
   'MATCH (n:Compose) OPTIONAL MATCH (n)-[r]->(m:Compose) RETURN n, r, m',
-  '/workspaces/semio/.🦑️repo/🛂️manifest/compose.cypher',
+  '/workspaces/semio/.🧬semio/🦑️repo/🛂️manifest/compose.cypher',
   {format: 'cypher-shell'}
 );
 ```

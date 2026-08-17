@@ -25,7 +25,7 @@ import { borderNormalClass } from "../../🔨️modules/📏️border-presentati
 import { chromeControlGroupShellClass, chromeControlItemBaseClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
 import { loadingBorderElementClass, waitingBorderElementClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️component.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️component.tsx";
-import { useControlAccessibleLabel, useControlInlineText } from "../🏷️Label/🟦️component.tsx";
+import { useControlAccessibleLabel, useControlInlineText, useControlTooltipText } from "../🏷️Label/🟦️component.tsx";
 import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -84,9 +84,13 @@ function ActionGroupItem({
 }) {
   const context = reactHostPort.useContext(ActionGroupContext);
   const level = context.level ?? "base";
-  const hasText = Boolean(text);
+  const inlineText = useControlInlineText(id, text);
+  const hasText = Boolean(inlineText);
 
   const accessibleLabel = useControlAccessibleLabel(id, text);
+  const tooltipText = useControlTooltipText(id, text);
+  const ariaLabel = inlineText ? undefined : accessibleLabel;
+
   const actionGroupItemElement = (
     <Component
       data-slot="action-group-item"
@@ -94,7 +98,8 @@ function ActionGroupItem({
       type={Component === "button" ? "button" : undefined}
       role={Component === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Component === "div" && (props as any).onClick ? 0 : undefined}
-      title={accessibleLabel}
+      aria-label={ariaLabel}
+      title={tooltipText}
       data-level={context.level || level}
       className={cn(
         actionGroupItemVariants(),
@@ -106,9 +111,9 @@ function ActionGroupItem({
       {...(props as any)}
     >
       {children}
-      {text ? (
+      {inlineText ? (
         <span data-slot="inline-label" className="text-tiny whitespace-nowrap">
-          {text}
+          {inlineText}
         </span>
       ) : null}
       {renderControlIcon(icon, "tiny")}
@@ -207,6 +212,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
   const Comp = as;
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
+  const tooltipText = useControlTooltipText(id, text);
   const hasText = Boolean(inlineText);
   const ariaLabel = inlineText ? undefined : accessibleLabel;
 
@@ -219,7 +225,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
       id={id}
       aria-label={ariaLabel}
       aria-busy={loading || waiting || undefined}
-      title={accessibleLabel}
+      title={tooltipText}
       data-level={level}
       className={cn(
         `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,

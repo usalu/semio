@@ -7,7 +7,6 @@ pub mod derived_composition {
     use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
     use crate::artifacts::playbook::PlaybookSnapshot;
     use crate::artifacts::playbook::standards::v1::subsets::any::schema::PlaybookAnalyzer;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.playbook", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DOCX: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
@@ -27,7 +26,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_DOCX, DEP_JSON, DEP_MD, DEP_PDF, DEP_TXT]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {

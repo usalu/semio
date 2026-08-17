@@ -70,7 +70,7 @@ export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "♻️mit-bestand/🧺️demonstrator/📦️index.tsx",
 ] as const;
 
-const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".🦑️repo", ".repo", "storybook-static", ".claude", ".git"]);
+const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);
 
 const UI_PRIMITIVES_FRAMEWORK_PREFIX = "🧰️framework/";
 const UI_PRIMITIVES_STORYBOOK_PREFIX = ".storybook/";
@@ -195,7 +195,7 @@ const CHROME_I18N_SCANNED_ROOTS = [
   "♻️mit-bestand/🧺️demonstrator",
 ] as const;
 
-const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🦑️repo", ".repo", "storybook-static", ".claude", ".git"]);
+const CHROME_I18N_SKIP_DIRS = new Set(["node_modules", "dist", "dist-staging", "target", ".🧬semio", ".🧬semio", "storybook-static", ".claude", ".git"]);
 
 const CHROME_I18N_FALLBACK_RE = /(\?\?|\|\|)\s*"[A-Z][^"]*"/;
 const CHROME_I18N_JSX_TEXT_RE = />[A-Z][a-zA-Z]+(?: [a-zA-Z…]+)*<\//;

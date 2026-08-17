@@ -536,7 +536,7 @@ pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], 
     Vec::new()
 }
 
-pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
+pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
     use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
     let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
@@ -879,11 +879,11 @@ fn cad_command_from_action(action: &str, args: Option<&Value>) -> Result<CadComm
 //#endregion 🔖️Commands
 
 //#region 🔖️PlayApp
-/// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
-/// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
-/// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
-/// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
-/// rubber-band tick counter, not app state.
+// 📐️ B1/WORKFLOWS-END-TO-END-TYPED-PORTS: unit-struct-shaped pure `ArtifactApp` — every former
+// `CadPlayRuntime`/`self.runtime` field now lives in `CadConfig`, written through
+// `CadConfigMutation`s (real `backwards`, no ad hoc `InverseAction`). `preview_seq` is the sole
+// surviving interior-mutable field — it backs `gesture_preview`'s never-VCS'd, never-config'd live
+// rubber-band tick counter, not app state.
 thread_local! {
     static CAD_PREVIEW_SEQ: std::cell::RefCell<u64> = std::cell::RefCell::new(0);
 }
