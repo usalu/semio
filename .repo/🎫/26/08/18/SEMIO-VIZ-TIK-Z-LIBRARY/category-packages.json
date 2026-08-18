@@ -1,0 +1,397 @@
+[
+  {
+    "id": "1",
+    "title": "Categorical comparison charts",
+    "category": "comparison"
+  },
+  {
+    "id": "2",
+    "title": "Time-series and sequential visualizations",
+    "category": "time-series"
+  },
+  {
+    "id": "3",
+    "title": "Distribution visualizations",
+    "category": "distribution"
+  },
+  {
+    "id": "4",
+    "title": "Relationship / correlation visualizations",
+    "category": "relationship-correlation"
+  },
+  {
+    "id": "5",
+    "title": "Multivariate visualizations",
+    "category": "multivariate"
+  },
+  {
+    "id": "6",
+    "title": "Part-to-whole / composition visualizations",
+    "category": "part-whole"
+  },
+  {
+    "id": "7",
+    "title": "Hierarchical visualizations",
+    "category": "hierarchical"
+  },
+  {
+    "id": "8",
+    "title": "Graph and network visualizations",
+    "category": "graph-network"
+  },
+  {
+    "id": "9",
+    "title": "Flow visualizations",
+    "category": "flow"
+  },
+  {
+    "id": "10",
+    "title": "Geospatial / cartographic visualizations",
+    "category": "geospatial-cartographic"
+  },
+  {
+    "id": "11",
+    "title": "Matrix and heatmap visualizations",
+    "category": "matrix-heatmap"
+  },
+  {
+    "id": "12",
+    "title": "Table-oriented visualizations",
+    "category": "table-oriented"
+  },
+  {
+    "id": "13",
+    "title": "Text and language visualizations",
+    "category": "text-language"
+  },
+  {
+    "id": "14",
+    "title": "Process / workflow visualizations",
+    "category": "process-workflow"
+  },
+  {
+    "id": "15",
+    "title": "UML and software-engineering diagrams",
+    "category": "uml-software"
+  },
+  {
+    "id": "16",
+    "title": "Project-management and planning visualizations",
+    "category": "project-management"
+  },
+  {
+    "id": "17",
+    "title": "Financial / economic visualizations",
+    "category": "financial-economic"
+  },
+  {
+    "id": "18",
+    "title": "KPI / dashboard visualizations",
+    "category": "kpi-dashboard"
+  },
+  {
+    "id": "19",
+    "title": "Funnel / conversion visualizations",
+    "category": "funnel-conversion"
+  },
+  {
+    "id": "20",
+    "title": "Polar / radial visualizations",
+    "category": "polar-radial"
+  },
+  {
+    "id": "21",
+    "title": "Circular/genomic visualizations",
+    "category": "circular-genomic"
+  },
+  {
+    "id": "22",
+    "title": "Medical / biomedical visualizations",
+    "category": "medical-biomedical"
+  },
+  {
+    "id": "23",
+    "title": "Statistical inference / uncertainty visualizations",
+    "category": "statistical-inference"
+  },
+  {
+    "id": "24",
+    "title": "Model evaluation / machine-learning visualizations",
+    "category": "model-evaluation"
+  },
+  {
+    "id": "25",
+    "title": "Mathematical function visualizations",
+    "category": "mathematical-function"
+  },
+  {
+    "id": "26",
+    "title": "Geometry visualizations",
+    "category": "geometry"
+  },
+  {
+    "id": "27",
+    "title": "Vector-field / field visualizations",
+    "category": "vector-field"
+  },
+  {
+    "id": "28",
+    "title": "Scalar-field / surface visualizations",
+    "category": "scalar-field"
+  },
+  {
+    "id": "29",
+    "title": "Three-dimensional visualizations",
+    "category": "three-dimensional"
+  },
+  {
+    "id": "30",
+    "title": "Physics visualizations",
+    "category": "physics"
+  },
+  {
+    "id": "31",
+    "title": "Electrical / electronics visualizations",
+    "category": "electrical-electronics"
+  },
+  {
+    "id": "32",
+    "title": "Signal-processing visualizations",
+    "category": "signal-processing"
+  },
+  {
+    "id": "33",
+    "title": "Chemistry visualizations",
+    "category": "chemistry"
+  },
+  {
+    "id": "34",
+    "title": "Biology / ecology visualizations",
+    "category": "biology-ecology"
+  },
+  {
+    "id": "35",
+    "title": "Earth / climate / meteorological visualizations",
+    "category": "earth-climate"
+  },
+  {
+    "id": "36",
+    "title": "Engineering diagrams",
+    "category": "engineering"
+  },
+  {
+    "id": "37",
+    "title": "Architecture / spatial diagrams",
+    "category": "architecture-spatial"
+  },
+  {
+    "id": "38",
+    "title": "Mathematical / abstract diagrams",
+    "category": "mathematical-abstract"
+  },
+  {
+    "id": "39",
+    "title": "Set / overlap visualizations",
+    "category": "set-overlap"
+  },
+  {
+    "id": "40",
+    "title": "Optimization / operations-research visualizations",
+    "category": "optimization-operations"
+  },
+  {
+    "id": "41",
+    "title": "Probability visualizations",
+    "category": "probability"
+  },
+  {
+    "id": "42",
+    "title": "Specialized analytical charts",
+    "category": "specialized-analytical"
+  },
+  {
+    "id": "43",
+    "title": "Sports visualizations",
+    "category": "sports"
+  },
+  {
+    "id": "44",
+    "title": "Music visualizations",
+    "category": "music"
+  },
+  {
+    "id": "45",
+    "title": "Education / conceptual visualizations",
+    "category": "education-conceptual"
+  },
+  {
+    "id": "46",
+    "title": "Infographic-style visualizations",
+    "category": "infographic-style"
+  },
+  {
+    "id": "47",
+    "title": "Layout / spatial relationship diagrams",
+    "category": "layout-spatial"
+  },
+  {
+    "id": "48",
+    "title": "Composite / coordinated visualizations",
+    "category": "composite-coordinated"
+  },
+  {
+    "id": "49",
+    "title": "Faceting / repeated-view visualizations",
+    "category": "faceting-repeated"
+  },
+  {
+    "id": "50",
+    "title": "Annotation-driven visualization types",
+    "category": "annotation-driven"
+  },
+  {
+    "id": "51",
+    "title": "Axis-specialized plots",
+    "category": "axis-specialized"
+  },
+  {
+    "id": "52",
+    "title": "Coordinate-system variants",
+    "category": "coordinate-system"
+  },
+  {
+    "id": "53",
+    "title": "Diagrammatic grids / matrices",
+    "category": "diagrammatic-grids"
+  },
+  {
+    "id": "54",
+    "title": "Graphical schedules and calendars",
+    "category": "graphical-schedules"
+  },
+  {
+    "id": "55",
+    "title": "Circular seat / arrangement diagrams",
+    "category": "circular-seat"
+  },
+  {
+    "id": "56",
+    "title": "Graphical notation / domain-specific symbolic diagrams",
+    "category": "graphical-notation"
+  },
+  {
+    "id": "57",
+    "title": "Formal-language / computing visualizations",
+    "category": "formal-language"
+  },
+  {
+    "id": "58",
+    "title": "Cybersecurity visualizations",
+    "category": "cybersecurity"
+  },
+  {
+    "id": "59",
+    "title": "Logistics / transportation visualizations",
+    "category": "logistics-transportation"
+  },
+  {
+    "id": "60",
+    "title": "Scientific publication figure families",
+    "category": "scientific-publication"
+  },
+  {
+    "id": "61",
+    "title": "Unusual / niche chart types",
+    "category": "unusual-niche"
+  },
+  {
+    "id": "62",
+    "title": "Software-performance visualizations",
+    "category": "software-performance"
+  },
+  {
+    "id": "63",
+    "title": "Provenance / lineage visualizations",
+    "category": "provenance-lineage"
+  },
+  {
+    "id": "64",
+    "title": "Version-control visualizations",
+    "category": "version-control"
+  },
+  {
+    "id": "65",
+    "title": "Network / system monitoring visualizations",
+    "category": "network-system"
+  },
+  {
+    "id": "66",
+    "title": "Database visualizations",
+    "category": "database"
+  },
+  {
+    "id": "67",
+    "title": "AI / neural-network diagrams",
+    "category": "ai-neural"
+  },
+  {
+    "id": "68",
+    "title": "Experimental-design visualizations",
+    "category": "experimental-design"
+  },
+  {
+    "id": "69",
+    "title": "Survey / polling visualizations",
+    "category": "survey-polling"
+  },
+  {
+    "id": "70",
+    "title": "Election / political visualizations",
+    "category": "election-political"
+  },
+  {
+    "id": "71",
+    "title": "Relationship / conceptual diagrams",
+    "category": "relationship-conceptual"
+  },
+  {
+    "id": "72",
+    "title": "Storytelling / narrative visualization",
+    "category": "storytelling-narrative"
+  },
+  {
+    "id": "73",
+    "title": "Static equivalents of interactive D3 patterns",
+    "category": "static-equivalents"
+  },
+  {
+    "id": "74",
+    "title": "Visual encodings the library should support across all chart families",
+    "category": "visual-encodings"
+  },
+  {
+    "id": "75",
+    "title": "Layout algorithms worth treating as first-class visualization families",
+    "category": "layout-algorithms"
+  },
+  {
+    "id": "76",
+    "title": "Recommended top-level TikZ library namespaces",
+    "category": "recommended-top"
+  },
+  {
+    "id": "77",
+    "title": "Meta/composition types that should work with every visualization",
+    "category": "meta-composition"
+  },
+  {
+    "id": "78",
+    "title": "“D3-equivalent” algorithmic capabilities implied by the visualization catalogue",
+    "category": "d3-equivalent"
+  },
+  {
+    "id": "79",
+    "title": "Ultimate API objective",
+    "category": "ultimate-api"
+  }
+]

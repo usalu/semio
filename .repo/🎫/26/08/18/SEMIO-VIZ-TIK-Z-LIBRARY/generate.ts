@@ -18,6 +18,7 @@ const FAMILIES = new Set([
 function slugify(title: string): string {
   const slug = title
     .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
     .replace(/['’]/g, "")
     .replace(/[–—]/g, "-")
     .replace(/[%]/g, "percent")
@@ -35,8 +36,11 @@ function stripDecor(title: string): string {
 
 function isCategoryName(title: string): boolean {
   if (title.includes(" / ")) return true;
-  if (/\b(visualizations|capabilities|namespaces|encodings|transforms|infrastructure|objective|equivalents)\b/i.test(title)) return true;
-  if (/(charts|plots|diagrams|maps|families|types|views|structures|representations|indicators|algorithms)$/i.test(title)) return true;
+  if (/\b(visualizations|capabilities|namespaces|encodings|transforms|infrastructure|objective|equivalents|primitives|summaries|diagnostics|displays)\b/i.test(title)) return true;
+  if (/(charts|plots|diagrams|maps|families|types|views|structures|representations|indicators|algorithms|histograms|scatterplots|distributions)$/i.test(title)) return true;
+  if (/^(lines|areas|arcs|connections|regions|points|marks|scales|axes|position|size|shape|appearance|orientation)$/i.test(title)) return true;
+  if (/^(line|text|compound) encoding$/i.test(title)) return true;
+  if (/-based /i.test(title) || /-family /i.test(title)) return true;
   return false;
 }
 
@@ -141,19 +145,21 @@ function parseTaxonomy(md: string): Section[] {
     else stack[stack.length - 1]!.node.children.push(node);
     stack.push({ depth, node });
   }
-  return sections.map((section) => flattenSection(section));
+  const used = new Set<string>();
+  return sections.map((section) => flattenSection(section, used));
 }
 
-function flattenSection(section: { id: string; title: string; roots: Node[] }): Section {
-  const used = new Set<string>();
+function flattenSection(section: { id: string; title: string; roots: Node[] }, used: Set<string>): Section {
   const groups: Group[] = [];
   const general: Leaf[] = [];
   const toLeaf = (groupTitle: string, title: string): Leaf => {
     const kind = kindFor(section.id, groupTitle, title);
     const family = familyFor(section.id, groupTitle, title, kind);
-    let slug = slugify(title);
+    const base = slugify(title);
+    let slug = base;
+    if (used.has(slug)) slug = `${base}-${section.id}`;
     let n = 2;
-    while (used.has(slug)) slug = `${slugify(title)}-${n++}`;
+    while (used.has(slug)) slug = `${base}-${section.id}-${n++}`;
     used.add(slug);
     return { slug, title, kind, family };
   };
@@ -240,21 +246,59 @@ function extraOpts(leaf: Leaf): string {
   return ",scale=y,orient=left";
 }
 
-function kindsSty(sections: readonly Section[]): string {
+const KEEP_CATEGORY: Record<string, string> = { "1": "comparison", "3": "distribution" };
+const CATEGORY_STOP = new Set(["and", "or", "the", "a", "an", "for", "of", "in", "to", "with", "visualizations", "charts", "diagrams"]);
+const PUBLIC_CHART_ALIASES: readonly { readonly slug: string; readonly family: string; readonly section: string }[] = [
+  { slug: "vertical-bar", family: "bar", section: "1" },
+];
+
+function categorySlug(section: Section, used: Set<string>): string {
+  const kept = KEEP_CATEGORY[section.id];
+  if (kept) {
+    used.add(kept);
+    return kept;
+  }
+  const words = slugify(section.title).split("-").filter((word) => !CATEGORY_STOP.has(word));
+  const base = words.slice(0, 2).join("-") || `section-${section.id}`;
+  let name = base;
+  let n = 2;
+  while (used.has(name)) name = `${base}-${n++}`;
+  used.add(name);
+  return name;
+}
+
+function kindLines(section: Section): string[] {
+  const lines: string[] = [];
+  for (const group of section.groups) {
+    for (const leaf of group.leaves) {
+      lines.push(`\\SemioVizChartKind{${leaf.slug}}{${leaf.family}}{data=demo${extraOpts(leaf)}}`);
+    }
+  }
+  return lines;
+}
+
+function chartPackage(section: Section, category: string): string {
   const lines = [
     `\\NeedsTeXFormat{LaTeX2e}`,
-    `\\ProvidesPackage{semio-viz-chart-kinds}[2026/08/18 v0.1.0 semio viz chart kinds]`,
+    `\\ProvidesPackage{semio-viz-chart-${category}}[2026/08/18 v0.1.0 semio viz ${texText(section.title)}]`,
+    `%region Kinds`,
+    ...kindLines(section),
   ];
-  for (const section of sections) {
-    if (section.id === "0") continue;
-    lines.push(`%region Section${section.id}`);
-    for (const group of section.groups) {
-      for (const leaf of group.leaves) {
-        lines.push(`\\SemioVizChartKind{${leaf.slug}}{${leaf.family}}{data=demo${extraOpts(leaf)}}`);
-      }
-    }
-    lines.push(`%endregion Section${section.id}`);
+  for (const alias of PUBLIC_CHART_ALIASES) {
+    if (alias.section !== section.id) continue;
+    if (section.groups.some((group) => group.leaves.some((leaf) => leaf.slug === alias.slug))) continue;
+    lines.push(`\\SemioVizChartKind{${alias.slug}}{${alias.family}}{data=demo}`);
   }
+  lines.push(`%endregion Kinds`);
+  return `${lines.join("\n")}\n`;
+}
+
+function chartsLoader(packages: readonly { readonly category: string }[]): string {
+  const lines = [
+    `\\NeedsTeXFormat{LaTeX2e}`,
+    `\\ProvidesPackage{semio-viz-charts}[2026/08/18 v0.1.0 semio viz chart loader]`,
+  ];
+  for (const pack of packages) lines.push(`\\RequirePackage{semio-viz-chart-${pack.category}}`);
   return `${lines.join("\n")}\n`;
 }
 
@@ -268,6 +312,9 @@ const unknown = [...new Set(all.map((leaf) => leaf.family).filter((family) => !F
 if (unknown.length > 0) throw new Error(`unknown families: ${unknown.join(", ")}`);
 const ids = all.map((leaf) => leaf.id);
 if (new Set(ids).size !== ids.length) throw new Error("duplicate coverage ids");
+const slugs = all.map((leaf) => leaf.slug);
+if (new Set(slugs).size !== slugs.length) throw new Error("duplicate global slugs");
+if (sections.length !== 80) throw new Error(`expected 80 sections, got ${sections.length}`);
 writeFileSync(join(printRoot, "asset/viz-taxonomy.md"), md(sections));
 writeFileSync(join(printRoot, "asset/viz-taxonomy.json"), JSON.stringify(all, null, 2));
 writeFileSync(join(ticket, "wp-registry.json"), JSON.stringify(all, null, 2));
@@ -276,8 +323,18 @@ mkdirSync(join(printRoot, "template/viz-gallery"), { recursive: true });
 for (const section of sections) {
   writeFileSync(join(printRoot, "template/viz-gallery", `viz-${section.id}.tex`), galleryTex(section));
 }
-writeFileSync(join(printRoot, "tex", "semio-viz-chart-kinds.sty"), kindsSty(sections));
+const usedCategories = new Set<string>();
+const packages = sections
+  .filter((section) => section.id !== "0")
+  .map((section) => ({ id: section.id, title: section.title, category: categorySlug(section, usedCategories) }));
+for (const pack of packages) {
+  const section = sections.find((item) => item.id === pack.id)!;
+  writeFileSync(join(printRoot, "tex", `semio-viz-chart-${pack.category}.sty`), chartPackage(section, pack.category));
+}
+writeFileSync(join(printRoot, "tex", "semio-viz-charts.sty"), chartsLoader(packages));
+writeFileSync(join(ticket, "category-packages.json"), JSON.stringify(packages, null, 2));
 const counts = new Map<string, number>();
 for (const leaf of all) counts.set(leaf.family, (counts.get(leaf.family) ?? 0) + 1);
-console.log(`print viz taxonomy: ${all.length} leaves, ${sections.length} gallery files`);
+console.log(`print viz taxonomy: ${all.length} leaves, ${sections.length} gallery files, ${packages.length} chart packages`);
 console.log(`families: ${[...counts.entries()].map(([family, n]) => `${family}=${n}`).join(" ")}`);
+console.log(`packages: ${packages.map((pack) => `${pack.id}:${pack.category}`).join(" ")}`);

@@ -834,11 +834,13 @@ class TestScript extends BundleScript {
     const taxonomy = readFileSync(VIZ_TAXONOMY_PATH, "utf8");
     const vizLeaves = parseVizTaxonomyLeaves(taxonomy);
     assert.ok(vizLeaves.includes("0/dot"));
-    assert.ok(vizLeaves.includes("1/vertical-bar"));
+    assert.ok(vizLeaves.includes("1/vertical-bar-chart"));
+    assert.ok(vizLeaves.length > 1500);
+    assert.equal(new Set(vizLeaves.map((leaf) => leaf.split("/")[0])).size, 80);
     assert.equal(new Set(vizLeaves).size, vizLeaves.length);
     const vizCovers = parseVizCovers(VIZ_GALLERY_DIR);
     assert.ok(vizCovers.has("0/dot"));
-    assert.ok(vizCovers.has("1/vertical-bar"));
+    assert.ok(vizCovers.has("1/vertical-bar-chart"));
     assert.ok(vizGallerySources().includes("\\SemioVizDemo"));
     //#endregion
 

@@ -31,9 +31,9 @@
 
 \clist_map_inline:nn {
   dot, circle, square, rectangle, triangle, diamond, cross, plus, star,
-  custom-glyph, icon, image, text,
-  straight-line, polyline, step-line, curved-line, bezier, spline,
-  catmull-rom, basis-spline, cardinal-spline, monotone-spline, closed-curve,
+  custom-glyph, icon, icon-mark, image, image-mark, text, text-mark,
+  straight-line, polyline, step-line, curved-line, bezier, bezier-curve, spline,
+  catmull-rom, catmull-rom-spline, basis-spline, cardinal-spline, monotone-spline, closed-curve,
   polygon, filled-path, ribbon, band, envelope,
   circular-arc, elliptical-arc, annular-arc, sector, wedge,
   straight-connector, orthogonal-connector, curved-connector, elbow-connector,
@@ -128,6 +128,18 @@
   \semio_viz_mark_keys_reset:
   \keys_set:nn { semio / viz / mark } {#2}
   \semio_viz_xy:n {#3}
+  \tl_set:Nn \l_tmpb_tl {#1}
+  \str_case:nn {#1} {
+    { icon-mark } { \tl_set:Nn \l_tmpb_tl { icon } }
+    { image-mark } { \tl_set:Nn \l_tmpb_tl { image } }
+    { text-mark } { \tl_set:Nn \l_tmpb_tl { text } }
+    { bezier-curve } { \tl_set:Nn \l_tmpb_tl { bezier } }
+    { catmull-rom-spline } { \tl_set:Nn \l_tmpb_tl { catmull-rom } }
+  }
+  \exp_args:NV \semio_viz_mark_draw_kind:n \l_tmpb_tl
+}
+
+\cs_new_protected:Npn \semio_viz_mark_draw_kind:n #1 {
   \str_case:nnF {#1} {
     { dot } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=\fp_eval:n { \l_semio_viz_mark_size_fp } ] ; }
     { circle } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp } , \fp_eval:n { \l_semio_viz_my_fp } ) circle [ radius=\fp_eval:n { \l_semio_viz_mark_size_fp } ] ; }

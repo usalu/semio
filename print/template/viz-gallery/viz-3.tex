@@ -1,102 +1,230 @@
 \documentclass[type=report,theme=light,language=de]{semio}
-\title{Distribution charts}
+\title{Distribution visualizations}
 \author{Semio}
 \date{\today}
 \begin{document}
-\chapter{Distribution charts}
-\section{Frequency}
+\chapter{Distribution visualizations}
+\section{Histograms}
 % viz-covers: 3/histogram
 \begin{VizFigure}[title={Histogram}, width=80, height=40]
 \SemioVizDemo{histogram}
+\end{VizFigure}
+% viz-covers: 3/grouped-histogram
+\begin{VizFigure}[title={Grouped histogram}, width=80, height=40]
+\SemioVizDemo{grouped-histogram}
+\end{VizFigure}
+% viz-covers: 3/overlaid-histogram
+\begin{VizFigure}[title={Overlaid histogram}, width=80, height=40]
+\SemioVizDemo{overlaid-histogram}
+\end{VizFigure}
+% viz-covers: 3/stacked-histogram
+\begin{VizFigure}[title={Stacked histogram}, width=80, height=40]
+\SemioVizDemo{stacked-histogram}
+\end{VizFigure}
+% viz-covers: 3/relative-frequency-histogram
+\begin{VizFigure}[title={Relative-frequency histogram}, width=80, height=40]
+\SemioVizDemo{relative-frequency-histogram}
+\end{VizFigure}
+% viz-covers: 3/density-histogram
+\begin{VizFigure}[title={Density histogram}, width=80, height=40]
+\SemioVizDemo{density-histogram}
+\end{VizFigure}
+% viz-covers: 3/cumulative-histogram
+\begin{VizFigure}[title={Cumulative histogram}, width=80, height=40]
+\SemioVizDemo{cumulative-histogram}
 \end{VizFigure}
 % viz-covers: 3/variable-width-histogram
 \begin{VizFigure}[title={Variable-width histogram}, width=80, height=40]
 \SemioVizDemo{variable-width-histogram}
 \end{VizFigure}
-% viz-covers: 3/density
-\begin{VizFigure}[title={Density plot}, width=80, height=40]
-\SemioVizDemo{density}
+% viz-covers: 3/circular-histogram
+\begin{VizFigure}[title={Circular histogram}, width=80, height=40]
+\SemioVizDemo{circular-histogram}
 \end{VizFigure}
-% viz-covers: 3/kernel-density
-\begin{VizFigure}[title={Kernel density estimate}, width=80, height=40]
-\SemioVizDemo{kernel-density}
+% viz-covers: 3/polar-histogram
+\begin{VizFigure}[title={Polar histogram}, width=80, height=40]
+\SemioVizDemo{polar-histogram}
 \end{VizFigure}
-% viz-covers: 3/ridgeline
+\section{Distribution curves}
+% viz-covers: 3/distribution-curves
+\begin{VizFigure}[title={Distribution curves}, width=80, height=40]
+\SemioVizDemo{distribution-curves}
+\end{VizFigure}
+% viz-covers: 3/kernel-density-estimate-plot
+\begin{VizFigure}[title={Kernel density estimate plot}, width=80, height=40]
+\SemioVizDemo{kernel-density-estimate-plot}
+\end{VizFigure}
+% viz-covers: 3/multiple-kde-plot
+\begin{VizFigure}[title={Multiple KDE plot}, width=80, height=40]
+\SemioVizDemo{multiple-kde-plot}
+\end{VizFigure}
+% viz-covers: 3/filled-density-plot
+\begin{VizFigure}[title={Filled density plot}, width=80, height=40]
+\SemioVizDemo{filled-density-plot}
+\end{VizFigure}
+% viz-covers: 3/density-ridge-plot
+\begin{VizFigure}[title={Density ridge plot}, width=80, height=40]
+\SemioVizDemo{density-ridge-plot}
+\end{VizFigure}
+% viz-covers: 3/ridgeline-plot
 \begin{VizFigure}[title={Ridgeline plot}, width=80, height=40]
-\SemioVizDemo{ridgeline}
+\SemioVizDemo{ridgeline-plot}
 \end{VizFigure}
-% viz-covers: 3/joy
-\begin{VizFigure}[title={Joy plot}, width=80, height=40]
-\SemioVizDemo{joy}
+% viz-covers: 3/joyplot
+\begin{VizFigure}[title={Joyplot}, width=80, height=40]
+\SemioVizDemo{joyplot}
 \end{VizFigure}
 % viz-covers: 3/frequency-polygon
 \begin{VizFigure}[title={Frequency polygon}, width=80, height=40]
 \SemioVizDemo{frequency-polygon}
 \end{VizFigure}
-% viz-covers: 3/cumulative-freq
-\begin{VizFigure}[title={Cumulative frequency}, width=80, height=40]
-\SemioVizDemo{cumulative-freq}
+% viz-covers: 3/cumulative-density-plot
+\begin{VizFigure}[title={Cumulative density plot}, width=80, height=40]
+\SemioVizDemo{cumulative-density-plot}
 \end{VizFigure}
-% viz-covers: 3/ogive
-\begin{VizFigure}[title={Ogive}, width=80, height=40]
-\SemioVizDemo{ogive}
+% viz-covers: 3/empirical-cdf-plot
+\begin{VizFigure}[title={Empirical CDF plot}, width=80, height=40]
+\SemioVizDemo{empirical-cdf-plot}
 \end{VizFigure}
-\section{Summary}
-% viz-covers: 3/boxplot
+% viz-covers: 3/complementary-cdf-plot
+\begin{VizFigure}[title={Complementary CDF plot}, width=80, height=40]
+\SemioVizDemo{complementary-cdf-plot}
+\end{VizFigure}
+\section{Box-family plots}
+% viz-covers: 3/box-plot
 \begin{VizFigure}[title={Box plot}, width=80, height=40]
-\SemioVizDemo{boxplot}
+\SemioVizDemo{box-plot}
 \end{VizFigure}
-% viz-covers: 3/letter-value-box
-\begin{VizFigure}[title={Letter-value box plot}, width=80, height=40]
-\SemioVizDemo{letter-value-box}
+% viz-covers: 3/horizontal-box-plot
+\begin{VizFigure}[title={Horizontal box plot}, width=80, height=40]
+\SemioVizDemo{horizontal-box-plot}
 \end{VizFigure}
-% viz-covers: 3/violin
+% viz-covers: 3/grouped-box-plot
+\begin{VizFigure}[title={Grouped box plot}, width=80, height=40]
+\SemioVizDemo{grouped-box-plot}
+\end{VizFigure}
+% viz-covers: 3/notched-box-plot
+\begin{VizFigure}[title={Notched box plot}, width=80, height=40]
+\SemioVizDemo{notched-box-plot}
+\end{VizFigure}
+% viz-covers: 3/variable-width-box-plot
+\begin{VizFigure}[title={Variable-width box plot}, width=80, height=40]
+\SemioVizDemo{variable-width-box-plot}
+\end{VizFigure}
+% viz-covers: 3/boxen-plot
+\begin{VizFigure}[title={Boxen plot}, width=80, height=40]
+\SemioVizDemo{boxen-plot}
+\end{VizFigure}
+% viz-covers: 3/letter-value-plot
+\begin{VizFigure}[title={Letter-value plot}, width=80, height=40]
+\SemioVizDemo{letter-value-plot}
+\end{VizFigure}
+\section{Violin-family plots}
+% viz-covers: 3/violin-plot
 \begin{VizFigure}[title={Violin plot}, width=80, height=40]
-\SemioVizDemo{violin}
+\SemioVizDemo{violin-plot}
 \end{VizFigure}
-% viz-covers: 3/bean
+% viz-covers: 3/half-violin-plot
+\begin{VizFigure}[title={Half violin plot}, width=80, height=40]
+\SemioVizDemo{half-violin-plot}
+\end{VizFigure}
+% viz-covers: 3/split-violin-plot
+\begin{VizFigure}[title={Split violin plot}, width=80, height=40]
+\SemioVizDemo{split-violin-plot}
+\end{VizFigure}
+% viz-covers: 3/grouped-violin-plot
+\begin{VizFigure}[title={Grouped violin plot}, width=80, height=40]
+\SemioVizDemo{grouped-violin-plot}
+\end{VizFigure}
+% viz-covers: 3/bean-plot
 \begin{VizFigure}[title={Bean plot}, width=80, height=40]
-\SemioVizDemo{bean}
+\SemioVizDemo{bean-plot}
 \end{VizFigure}
-% viz-covers: 3/bee-swarm
-\begin{VizFigure}[title={Beeswarm plot}, width=80, height=40]
-\SemioVizDemo{bee-swarm}
-\end{VizFigure}
-% viz-covers: 3/strip
-\begin{VizFigure}[title={Strip plot}, width=80, height=40]
-\SemioVizDemo{strip}
-\end{VizFigure}
-% viz-covers: 3/jitter
-\begin{VizFigure}[title={Jitter plot}, width=80, height=40]
-\SemioVizDemo{jitter}
-\end{VizFigure}
-% viz-covers: 3/sina
-\begin{VizFigure}[title={Sina plot}, width=80, height=40]
-\SemioVizDemo{sina}
-\end{VizFigure}
-% viz-covers: 3/raincloud
+% viz-covers: 3/raincloud-plot
 \begin{VizFigure}[title={Raincloud plot}, width=80, height=40]
-\SemioVizDemo{raincloud}
+\SemioVizDemo{raincloud-plot}
 \end{VizFigure}
-% viz-covers: 3/quantile-box
-\begin{VizFigure}[title={Quantile box plot}, width=80, height=40]
-\SemioVizDemo{quantile-box}
+\section{Point-based distributions}
+% viz-covers: 3/strip-plot
+\begin{VizFigure}[title={Strip plot}, width=80, height=40]
+\SemioVizDemo{strip-plot}
 \end{VizFigure}
-\section{Binned 2d}
-% viz-covers: 3/hexbin
-\begin{VizFigure}[title={Hexbin chart}, width=80, height=40]
-\SemioVizDemo{hexbin}
+% viz-covers: 3/jitter-plot
+\begin{VizFigure}[title={Jitter plot}, width=80, height=40]
+\SemioVizDemo{jitter-plot}
 \end{VizFigure}
-% viz-covers: 3/rectbin
-\begin{VizFigure}[title={Rectbin chart}, width=80, height=40]
-\SemioVizDemo{rectbin}
+% viz-covers: 3/beeswarm-plot
+\begin{VizFigure}[title={Beeswarm plot}, width=80, height=40]
+\SemioVizDemo{beeswarm-plot}
 \end{VizFigure}
-% viz-covers: 3/contour
-\begin{VizFigure}[title={Contour plot}, width=80, height=40]
-\SemioVizDemo{contour}
+% viz-covers: 3/swarm-plot
+\begin{VizFigure}[title={Swarm plot}, width=80, height=40]
+\SemioVizDemo{swarm-plot}
 \end{VizFigure}
-% viz-covers: 3/filled-contour
-\begin{VizFigure}[title={Filled contour}, width=80, height=40]
-\SemioVizDemo{filled-contour}
+% viz-covers: 3/sina-plot
+\begin{VizFigure}[title={Sina plot}, width=80, height=40]
+\SemioVizDemo{sina-plot}
+\end{VizFigure}
+% viz-covers: 3/dot-density-plot
+\begin{VizFigure}[title={Dot-density plot}, width=80, height=40]
+\SemioVizDemo{dot-density-plot}
+\end{VizFigure}
+% viz-covers: 3/wilkinson-dot-plot
+\begin{VizFigure}[title={Wilkinson dot plot}, width=80, height=40]
+\SemioVizDemo{wilkinson-dot-plot}
+\end{VizFigure}
+% viz-covers: 3/stack-dot-plot
+\begin{VizFigure}[title={Stack-dot plot}, width=80, height=40]
+\SemioVizDemo{stack-dot-plot}
+\end{VizFigure}
+% viz-covers: 3/rug-plot
+\begin{VizFigure}[title={Rug plot}, width=80, height=40]
+\SemioVizDemo{rug-plot}
+\end{VizFigure}
+% viz-covers: 3/barcode-plot
+\begin{VizFigure}[title={Barcode plot}, width=80, height=40]
+\SemioVizDemo{barcode-plot}
+\end{VizFigure}
+\section{Quantile and diagnostic distributions}
+% viz-covers: 3/quantile-plot
+\begin{VizFigure}[title={Quantile plot}, width=80, height=40]
+\SemioVizDemo{quantile-plot}
+\end{VizFigure}
+% viz-covers: 3/quantile-dot-plot
+\begin{VizFigure}[title={Quantile dot plot}, width=80, height=40]
+\SemioVizDemo{quantile-dot-plot}
+\end{VizFigure}
+% viz-covers: 3/q-q-plot
+\begin{VizFigure}[title={Q–Q plot}, width=80, height=40]
+\SemioVizDemo{q-q-plot}
+\end{VizFigure}
+% viz-covers: 3/p-p-plot
+\begin{VizFigure}[title={P–P plot}, width=80, height=40]
+\SemioVizDemo{p-p-plot}
+\end{VizFigure}
+% viz-covers: 3/probability-plot
+\begin{VizFigure}[title={Probability plot}, width=80, height=40]
+\SemioVizDemo{probability-plot}
+\end{VizFigure}
+% viz-covers: 3/lorenz-curve
+\begin{VizFigure}[title={Lorenz curve}, width=80, height=40]
+\SemioVizDemo{lorenz-curve}
+\end{VizFigure}
+% viz-covers: 3/concentration-curve
+\begin{VizFigure}[title={Concentration curve}, width=80, height=40]
+\SemioVizDemo{concentration-curve}
+\end{VizFigure}
+\section{Classical statistical displays}
+% viz-covers: 3/stem-and-leaf-plot
+\begin{VizFigure}[title={Stem-and-leaf plot}, width=80, height=40]
+\SemioVizDemo{stem-and-leaf-plot}
+\end{VizFigure}
+% viz-covers: 3/stem-plot
+\begin{VizFigure}[title={Stem plot}, width=80, height=40]
+\SemioVizDemo{stem-plot}
+\end{VizFigure}
+% viz-covers: 3/frequency-table-visualization
+\begin{VizFigure}[title={Frequency table visualization}, width=80, height=40]
+\SemioVizDemo{frequency-table-visualization}
 \end{VizFigure}
 \end{document}
