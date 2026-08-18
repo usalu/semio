@@ -1,9 +1,9 @@
 {
   "title": "Semio Viz TikZ Library",
   "emoji": "📊",
-  "status": "open",
+  "status": "closed",
   "description": "Implement a layered TikZ-based D3-for-LaTeX visualization library (semio-viz) inside print: data, scale, mark, axis, layout, and chart recipe modules covering the exhaustive visualization taxonomy. Library plus tests plus tooling in print only. Coverage gate via print/asset/viz-taxonomy.md and gallery fixtures. Architecture mirrors semio-graph.sty and semio-tree.sty (expl3, l3keys, kind registries, Figure-window integration, token colors).",
-  "summary": "Fixed Opus review P0/P1s for semio-viz: launch test targets, public API gallery, legend/scale/axis/mark/data defects, and deterministic PDF hashing.",
+  "summary": "Post-P1 exhaustive semio-viz: 1966/1966 coverage, 79 chart packages, 81 galleries light+dark (162 PDFs) with deterministic hash 2e7209f8ba5b. Catalogue/API/compile/visual re-review PASS. Residual P2s: chrome-nominal frames, mark-shadow of 74/icon 79/text 79/image, custom-scale axis domain storage.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪e1c10676d3214592aae5dfe6b77a1425",

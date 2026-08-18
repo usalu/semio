@@ -168,3 +168,26 @@ manifest, the gallery and `semio-viz-chart-recommended-top.sty`. The other 60 se
 
 Added by this review (ticket-local, no source edits): `review.ts`, `review2.ts`, `review-output.txt`,
 `review-output-2.txt`, `phase4-review.md`.
+
+## Post-P1 addendum (multi-perspective re-review)
+
+The FAIL above judged a **2001-leaf** snapshot. After the P1 parser (allow-list + prose skip + `76/charts`), stale-package prune, and gallery regen, that verdict is **stale**. This addendum reviews the live tree.
+
+| Check | Post-P1 result |
+| --- | --- |
+| Independent catalogue parse | 1966 leaves, 80 sections, 0 cover/demo mismatches, 0 duplicate slugs, `76/charts` present, no `7/trees` / `6/pie-family` / `79/maps` / sentence kinds (`review-catalogue.md`) |
+| Packages | 79 `semio-viz-chart-*.sty`; loader matches disk |
+| Public API | `viz-api.tex` exercises 13 tokens including `VizFigure`, `\SemioVizChartKind`, `\SemioVizDemo`; `apiq` consumed as a bottom axis (`review-architecture.md`) |
+| Contracts | `\SemioVizRow{name}{clist}`, `\SemioVizLegend[legend=…]`, 32 families |
+| `unknown-layout` | `\seq_if_in:NnTF` then `\use:c`, else error — no missing-family fallthrough |
+| Coverage | `bun ./print/script.ts test viz` → `1966/1966 leaves, API 13/13` |
+| Full compile | `bun ./print/script.ts test viz full` exit 0: 162 PDFs, deterministic hash `2e7209f8ba5b` (`review-compile.md`) |
+| Visual | 32 families used; `special` = 7; chrome-nominal ~259 accepted; mark-shadow of `74/icon`, `79/text`, `79/image` documented not inverted (`review-visual.md`) |
+
+**Verdict: PASS.** No new P0/P1.
+
+Remaining P2 documentation only:
+
+1. Chrome kinds share one default frame (plan freeze: no family per leaf).
+2. `\SemioVizDemo` prefers mark registry; `74/icon` / `79/text` / `79/image` draw marks.
+3. Custom scale `apisym` with domain `-10,10` as an axis still hits `Invalid operation (0)/(0)` (scale storage via expl3 cs names). `apiq` with domain `0,10` compiles.

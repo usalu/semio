@@ -16,4 +16,12 @@
 
 ## Full rebuild
 
-`bun ./print/script.ts test viz full` started after the P1 set and `viz-api` were green. Verdict for this lens is recorded when that process exits 0 with a stable `pdfStableHash`.
+`bun ./print/script.ts test viz full` exit 0 after 15229992 ms.
+
+- 81 galleries × light+dark = 162 PDFs
+- `pdfStableHash` on `viz-api` stable: `2e7209f8ba5b`
+- No `unknown-layout` / `unknown-chart` / `unknown-demo`
+- Underfull `\vbox` accepted throughout
+- Overfull `\hbox` previously recorded on the `viz-79` chapter title (H worker); this full run’s stdout has underfull `\vbox` only
+
+**Verdict: PASS**
