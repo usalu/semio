@@ -1238,9 +1238,9 @@ mod tests {
 
     #[test]
     fn channel_frame_round_trip_holds_for_command_and_frame_samples() {
-        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::Bye));
-        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::Hello { channel_version: crate::os_spr::CHANNEL_VERSION, app_id: "app-1".to_string(), actor: "actor-1".to_string(), config: vec![1, 2, 3] }));
-        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Welcome { channel_version: crate::os_spr::CHANNEL_VERSION, instance: 1, manifest: vec![1, 2] }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::ReadConflicts { seq: 1 }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Done { in_reply_to: 1 }));
         assert_channel_frame_round_trip(&ChannelFrameSample::Frame(crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() }));
     }
     //#endregion 🔖️Laws (continued)
@@ -1464,15 +1464,15 @@ mod tests {
     //#region 🔖️Channel
     #[test]
     fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
-        let corpus = vec![crate::os_spr::AppCommand::Bye, crate::os_spr::AppCommand::Hello { channel_version: crate::os_spr::CHANNEL_VERSION, app_id: "app-1".to_string(), actor: "actor-1".to_string(), config: vec![1, 2, 3] }];
+        let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }, crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }];
         assert_channel_frame_corpus(&corpus, |command| crate::os_spr::encode_app_command(command), |bytes| crate::os_spr::decode_app_command(bytes).unwrap());
     }
 
     #[test]
     #[should_panic(expected = "must equal sample")]
     fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
-        let corpus = vec![crate::os_spr::AppCommand::Bye];
-        assert_channel_frame_corpus(&corpus, |_command| Vec::new(), |_bytes| crate::os_spr::AppCommand::Hello { channel_version: 0, app_id: String::new(), actor: String::new(), config: Vec::new() });
+        let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }];
+        assert_channel_frame_corpus(&corpus, |_command| Vec::new(), |_bytes| crate::os_spr::AppCommand::ReadConflicts { seq: 0 });
     }
     //#endregion 🔖️Channel
 

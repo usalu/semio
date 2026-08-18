@@ -1,0 +1,313 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+error[E0433]: cannot find `semio` in `crate`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4386:5
+     |
+4386 | /     wasmtime::component::bindgen!({
+4387 | |         world: "actor",
+4388 | |         path: "../../../🧬️schema",
+4389 | |         async: false,
+...    |
+4392 | |         },
+4393 | |     });
+     | |______^ unresolved import
+     |
+     = note: this error originates in the macro `wasmtime::component::bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: a similar path exists
+     |
+4386 -     wasmtime::component::bindgen!({
+4387 -         world: "actor",
+4388 -         path: "../../../🧬️schema",
+4389 -         async: false,
+4390 -         with: {
+4391 -             "semio:framework/types": crate::semio::framework::types,
+4392 -         },
+4393 -     });
+4386 +     component::actor_bindings::semio;
+     |
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3675:6
+     |
+3675 | impl semio::framework::host::Host for HostState {
+     |      ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3845:9
+     |
+3845 | ...   semio::framework::host::add_to_linker(&mut linker, |state| state).map_err(|error| PluginHostError::Wasmtime(error.to_string(...
+     |       ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4297:25
+     |
+4297 |         let req_struct: semio::framework::types::ArtifactInferenceRequest = serde_json::from_slice(request)?;
+     |                         ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4334:21
+     |
+4334 | ...   let input = semio::framework::types::MigrateArtifactInput { from_version: from_version.to_string(), to_version: to_version.t...
+     |                   ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+
+error[E0433]: cannot find `host` in `framework`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4430:44
+     |
+4430 | impl extension_bindings::semio::framework::host::Host for ExtensionHostState {
+     |                                            ^^^^ could not find `host` in `framework`
+
+error[E0433]: cannot find `host` in `framework`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4549:47
+     |
+4549 | ...   extension_bindings::semio::framework::host::add_to_linker(&mut linker, |state| state).map_err(|error| PluginHostError::Wasmt...
+     |                                             ^^^^ could not find `host` in `framework`
+
+error[E0433]: cannot find `ExtensionWorld` in `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4596:57
+     |
+4596 | ...   let (bindings, _instance) = extension_bindings::ExtensionWorld::instantiate(&mut store, &component, &self.linker).map_err(|e...
+     |                                                       ^^^^^^^^^^^^^^ could not find `ExtensionWorld` in `extension_bindings`
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3800:21
+     |
+3800 |     bindings: Mutex<PluginWorld>,
+     |                     ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3795 | pub struct WasmPluginRuntime<PluginWorld> {
+     |                             +++++++++++++
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3822:66
+     |
+3822 |     fn bindings_guard(&self) -> Result<std::sync::MutexGuard<'_, PluginWorld>, PluginHostError> {
+     |                                                                  ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3817 | impl<PluginWorld> WasmPluginRuntime {
+     |     +++++++++++++
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3826:43
+     |
+3826 |     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+     |                                           ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+help: consider importing this module
+     |
+   3 + use crate::component::actor_bindings::semio::framework::types;
+     |
+help: if you import `types`, refer to it directly
+     |
+3826 -     fn plugin_result<T>(result: Result<T, semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+3826 +     fn plugin_result<T>(result: Result<T, types::PluginError>) -> Result<T, PluginHostError> {
+     |
+
+error[E0433]: cannot find module or crate `semio` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3828:13
+     |
+3828 |             semio::framework::types::PluginError::Fault(bytes) => {
+     |             ^^^^^ use of unresolved module or unlinked crate `semio`
+     |
+     = help: if you wanted to use a crate named `semio`, use `cargo add semio` to add it to your `Cargo.toml`
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::reactor::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+3828 -             semio::framework::types::PluginError::Fault(bytes) => {
+3828 +             PluginError::Fault(bytes) => {
+     |
+
+error[E0425]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4373:129
+     |
+4373 | ...nker<HostState>) -> Result<(Store<HostState>, PluginWorld), PluginHostError> {
+     |                                                  ^^^^^^^^^^^ not found in this scope
+     |
+help: you might be missing a type parameter
+     |
+3817 | impl<PluginWorld> WasmPluginRuntime {
+     |     +++++++++++++
+
+error[E0425]: cannot find type `ExtensionWorld` in module `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4523:35
+     |
+4523 |     bindings: extension_bindings::ExtensionWorld,
+     |                                   ^^^^^^^^^^^^^^ not found in `extension_bindings`
+
+error[E0425]: cannot find type `PluginError` in module `extension_bindings::semio::framework::types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4575:91
+     |
+4575 | ...s::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+     |                                ^^^^^^^^^^^ not found in `extension_bindings::semio::framework::types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::reactor::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4575 -     fn extension_result<T>(result: Result<T, extension_bindings::semio::framework::types::PluginError>) -> Result<T, PluginHostError> {
+4575 +     fn extension_result<T>(result: Result<T, PluginError>) -> Result<T, PluginHostError> {
+     |
+
+error[E0433]: cannot find `PluginError` in `types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4577:58
+     |
+4577 | ...   extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&b...
+     |                                                    ^^^^^^^^^^^ could not find `PluginError` in `types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::reactor::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4577 -             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
+4577 +             PluginError::Fault(bytes) => PluginHostError::Plugin(dsl::decode_fault_bytes(&bytes).message),
+     |
+
+error[E0425]: cannot find type `ExtensionWorld` in module `extension_bindings`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4581:94
+     |
+4581 | ...State>, bindings: &extension_bindings::ExtensionWorld) -> Result<ExtensionManifest, PluginHostError> {
+     |                                           ^^^^^^^^^^^^^^ not found in `extension_bindings`
+
+error[E0433]: cannot find `PluginError` in `types`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4642:58
+     |
+4642 |             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+     |                                                          ^^^^^^^^^^^ could not find `PluginError` in `types`
+     |
+help: consider importing one of these items
+     |
+   3 + use crate::component::actor_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::checkpoint::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::jobs::PluginError;
+     |
+   3 + use crate::component::extension_bindings::exports::semio::framework::reactor::PluginError;
+     |
+     = and 3 other candidates
+help: if you import `PluginError`, refer to it directly
+     |
+4642 -             extension_bindings::semio::framework::types::PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+4642 +             PluginError::Fault(bytes) => dsl::decode_fault_bytes(&bytes),
+     |
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:75:45
+   |
+75 |         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+75 |         assert_eq!(after_set.defaults, vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:92:56
+   |
+92 | ...   let base = OpeningPreferences { defaults: vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() ...
+   |                                                      ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+92 |         let base = OpeningPreferences { defaults: vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }] };
+   |                                                        +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+warning: unused import: `bindgen`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:17:27
+   |
+17 | use wasmtime::component::{bindgen, Component, Linker};
+   |                           ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0433]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4365:37
+     |
+4365 | ...   let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtim...
+     |                                   ^^^^^^^^^^^ use of undeclared type `PluginWorld`
+
+error[E0433]: cannot find type `PluginWorld` in this scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:4375:37
+     |
+4375 | ...   let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtim...
+     |                                   ^^^^^^^^^^^ use of undeclared type `PluginWorld`
+
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+Some errors have detailed explanations: E0422, E0425, E0433.
+For more information about an error, try `rustc --explain E0422`.
+warning: `semio-framework-plugin-host` (lib test) generated 1 warning
+error: could not compile `semio-framework-plugin-host` (lib test) due to 22 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-plugin-host` (lib) generated 1 warning (1 duplicate)
+error: could not compile `semio-framework-plugin-host` (lib) due to 20 previous errors; 1 warning emitted

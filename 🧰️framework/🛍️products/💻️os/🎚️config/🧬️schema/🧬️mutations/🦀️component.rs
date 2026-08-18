@@ -62,6 +62,9 @@ pub use super::clear_default_app::mutation::{clear_default_app, ClearDefaultApp}
 #[cfg(test)]
 mod tests {
     use super::*;
+    /// 🪪️ Declared at the schema level, so from inside this test module it needs one more `super`
+    /// than the file-level `use super::super::OpeningPreferences;` above (see this file's header note).
+    use super::super::super::DefaultApp;
     use semio_framework::{AppRef, AppRole, ArtifactDialect};
 
     #[test]

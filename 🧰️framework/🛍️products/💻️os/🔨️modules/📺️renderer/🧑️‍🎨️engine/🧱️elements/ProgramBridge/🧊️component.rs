@@ -10,7 +10,6 @@
 use semio_framework::kernel::Effect;
 use semio_framework::{PluginManifest, ViewModel};
 use std::collections::HashMap;
-use std::sync::Arc;
 use ui_wgpu::wgpu::{UiNode, WindowEngagement, WindowMeasure};
 
 #[cfg(target_arch = "wasm32")]
@@ -25,23 +24,18 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::WasmPluginRuntime;
+use crate::kernel_runtime::KernelClient;
 
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
     use dsl::{from_dsl_value, to_dsl_value, DslValue};
-    use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame, SectionProbe};
+    use protocol::{AppCommand, AppFrame};
     use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
-    use semio_framework_plugin_host::WasmPluginRuntime;
     use serde::de::DeserializeOwned;
     use serde::Serialize;
     use std::sync::atomic::{AtomicU64, Ordering};
     use store::pack_rt;
-
-    const SECTION_KIND_WINDOW: u8 = 0;
-    const SECTION_KIND_ENGAGEMENTS: u8 = 2;
-    const SECTION_KIND_MEASURES: u8 = 3;
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
 
@@ -98,10 +92,15 @@ mod wasm_program_exchange {
         message
     }
 
-    fn exchange(runtime: &WasmPluginRuntime, instance_id: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, String> {
-        let encoded: Vec<Vec<u8>> = commands.iter().map(encode_app_command).collect();
-        let response = runtime.exchange(instance_id, encoded).map_err(|error| error.to_string())?;
-        response.iter().map(|bytes| decode_app_frame(bytes).map_err(|error| error.to_string())).collect()
+    /// 🎠️ H3-wgpu-native — the old synchronous `WasmPluginRuntime::exchange(instance, cmds) ->
+    /// Vec<AppFrame>` in-process call, replaced by a real off-thread round-trip: each `AppCommand`
+    /// becomes an `Event::AppCommandEvent` the kernel thread's `GuestRuntime::execute_turn` actually
+    /// runs (`📓️design-abi.md` §2/§4's "exchange collapse": `exchange(id, cmds) ⇒ poll([app-command{
+    /// id,seq,cmd}…], budget)`). `AppFrame`s the guest sends back travel as `Effect::SendMessage{
+    /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
+    /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
+    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, String> {
+        client.exchange_commands(instance_id, commands).await
     }
 
     fn expect_done(frames: &[AppFrame], seq: u64) -> Result<(), String> {
@@ -114,31 +113,18 @@ mod wasm_program_exchange {
         Err(format!("plugin sent no Done for seq {seq}"))
     }
 
-    fn decode_effects_frame(effects: &[Vec<u8>]) -> Result<Vec<Effect>, String> {
-        effects.iter().map(|bytes| decode_wire::<Effect>(bytes)).collect()
-    }
-
-    fn collect_refresh_effects(frames: &[AppFrame], seq: u64) -> Result<Vec<Effect>, String> {
-        let mut requested_effects = Vec::new();
-        for frame in frames {
-            match frame {
-                AppFrame::Effects { in_reply_to: Some(reply), effects } if *reply == seq => {
-                    requested_effects.extend(decode_effects_frame(effects)?);
-                }
-                AppFrame::Effects { in_reply_to: None, effects } => {
-                    requested_effects.extend(decode_effects_frame(effects)?);
-                }
-                _ => {}
-            }
-        }
-        Ok(requested_effects)
-    }
-
-    fn invocation_from_frames(frames: &[AppFrame], seq: u64) -> Result<InvocationResult, String> {
+    /// 🎠️ H3-wgpu-native — `📓️design-abi.md` §2: `AppFrame::Effects`/`AppFrame::Events` no longer
+    /// exist (channel v12). Effects now travel as real `kernel::Effect` values directly on
+    /// `TurnResult.effects` (`ExchangeOutcome::effects`, already separated from the `AppFrame`s by
+    /// the kernel thread); events have no ABI counterpart yet at this layer (`AppEvent` was the
+    /// OLD-protocol "requested_effects"-adjacent event list a `Command`/`Action` invocation could
+    /// also emit — no `kernel::Event` variant carries it back to this exchange today, so
+    /// `invocation_from_frames` reports an empty list, a real but honestly-flagged gap rather than a
+    /// silent guess).
+    fn invocation_from_frames(outcome: &crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, String> {
         let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
-        let mut requested_effects = Vec::new();
-        let mut events = Vec::new();
+        let events: Vec<AppEvent> = Vec::new();
         let mut saw_invocation = false;
         // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — `history_patch` used to
         // be silently discarded here (the native wgpu shell tracked no history/uncommitted-edit
@@ -146,7 +132,7 @@ mod wasm_program_exchange {
         // and threaded onto `InvocationResult` so `Shell/🧊️component.rs`'s check-in tracking has a real
         // signal to fold, exactly like every other wire payload this module already decodes.
         let mut history_patch: Option<semio_framework::kernel::HistoryPatch> = None;
-        for frame in frames {
+        for frame in &outcome.frames {
             match frame {
                 AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, history_patch: history_patch_bytes, .. } if *in_reply_to == seq => {
                     output = decode_wire::<DslValue>(out_bytes)?;
@@ -155,15 +141,6 @@ mod wasm_program_exchange {
                         history_patch = decode_wire::<semio_framework::kernel::HistoryPatch>(history_patch_bytes).ok();
                     }
                     saw_invocation = true;
-                }
-                AppFrame::Effects { in_reply_to: Some(reply), effects } if *reply == seq => {
-                    requested_effects.extend(decode_effects_frame(effects)?);
-                }
-                AppFrame::Effects { in_reply_to: None, effects } => {
-                    requested_effects.extend(decode_effects_frame(effects)?);
-                }
-                AppFrame::Events { in_reply_to: Some(reply), events: evs } if *reply == seq => {
-                    events = evs.iter().map(|bytes| decode_wire::<AppEvent>(bytes)).collect::<Result<Vec<_>, _>>()?;
                 }
                 AppFrame::Error { in_reply_to, fault, report } if in_reply_to == &Some(seq) => {
                     return Err(app_frame_error_message(fault, report));
@@ -179,7 +156,7 @@ mod wasm_program_exchange {
             mutations: Vec::new(),
             inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
             diagnostics,
-            requested_effects,
+            requested_effects: outcome.effects.clone(),
             events,
             ui_scope: semio_framework::kernel::UiDirtyScope::default(),
             history_patch,
@@ -189,11 +166,13 @@ mod wasm_program_exchange {
     /// 🧾️ ticket §C5 — the native twin of the React shell's `plugin.readHistory(instanceId)`: sends a
     /// real `AppCommand::ReadHistory` and decodes the `AppFrame::HistorySnapshot` reply, used once per
     /// session/document mount to seed a full projection (`replace=true` on the caller's fold) rather
-    /// than waiting for the next incremental `Invocation.history_patch`.
-    pub fn read_history(runtime: &WasmPluginRuntime, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+    /// than waiting for the next incremental `Invocation.history_patch`. `ReadHistory` survives
+    /// channel v12 unchanged (packet A4's report).
+    pub async fn read_history(client: &KernelClient, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
         let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::ReadHistory { seq }])?;
-        frames
+        let outcome = exchange(client, instance_id, vec![AppCommand::ReadHistory { seq }]).await?;
+        outcome
+            .frames
             .into_iter()
             .find_map(|frame| match frame {
                 AppFrame::HistorySnapshot { in_reply_to, history_patch } if in_reply_to == seq => decode_wire::<semio_framework::kernel::HistoryPatch>(&history_patch).ok(),
@@ -202,121 +181,117 @@ mod wasm_program_exchange {
             .ok_or_else(|| format!("plugin sent no HistorySnapshot for seq {seq}"))
     }
 
-    pub fn handle_action(runtime: &WasmPluginRuntime, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
+    pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let invocation: semio_framework::manifest::ActionInvocation = serde_json::from_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
         let commands = vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }];
-        let frames = exchange(runtime, instance_id, commands)?;
-        invocation_from_frames(&frames, seq)
+        let outcome = exchange(client, instance_id, commands).await?;
+        invocation_from_frames(&outcome, seq)
     }
 
-    pub fn handle_command(runtime: &WasmPluginRuntime, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
+    pub async fn handle_command(client: &KernelClient, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let invocation: semio_framework::manifest::CommandInvocation = serde_json::from_str(command_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
-        let frames = exchange(
-            runtime,
-            instance_id,
-            vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }],
-        )?;
-        invocation_from_frames(&frames, seq)
+        let outcome = exchange(client, instance_id, vec![AppCommand::Command { seq, command: encode_wire(&invocation)?, view_state: pack_view_state(view_state)? }]).await?;
+        invocation_from_frames(&outcome, seq)
     }
 
-    pub fn load_app_document_pack(runtime: &WasmPluginRuntime, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
+    pub async fn load_app_document_pack(client: &KernelClient, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
         let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::LoadDocument { seq, pack: pack.to_vec(), spr: spr.to_vec() }])?;
-        expect_done(&frames, seq)
+        let outcome = exchange(client, instance_id, vec![AppCommand::LoadDocument { seq, pack: pack.to_vec(), spr: spr.to_vec() }]).await?;
+        expect_done(&outcome.frames, seq)
     }
 
-    pub fn apply_mutations(runtime: &WasmPluginRuntime, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    /// 🎠️ H3-wgpu-native — now `async`: this is the plugin call `Shell/🧊️component.rs`'s
+    /// `pump_sync_events` makes (see `📓️terra-H3-wgpu-native-report.md`'s 3-plugin-blocking-sites
+    /// section) — its ONE call site there was changed from a plain call to `.await`, the minimal
+    /// "plugin-call site" edit needed to keep it off the winit thread's own CPU even though the
+    /// caller still `pollster::block_on`s the surrounding turn.
+    pub async fn apply_mutations(client: &KernelClient, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.to_string())?;
         let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::ApplyEnvelopes { seq, envelopes }])?;
-        expect_done(&frames, seq)
+        let outcome = exchange(client, instance_id, vec![AppCommand::ApplyEnvelopes { seq, envelopes }]).await?;
+        expect_done(&outcome.frames, seq)
     }
 
-    pub fn attach_backbone(runtime: &WasmPluginRuntime, instance_id: u32, uri: &str) -> Result<(), String> {
-        let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::AttachBackbone { seq, uri: uri.to_string() }])?;
-        expect_done(&frames, seq)
+    /// 🚧️ `AppCommand::AttachBackbone`/`DetachBackbone` no longer exist in channel v12 (packet
+    /// A4-channel's report: backbone attach/detach collapses into event-driven `Event::Message`/
+    /// `subscribe` per `📓️design-abi.md` §2/§4 — "backbone-poll/backbone-status deleted → event.
+    /// message / subscribe{topic}"). That is real design work belonging to whichever packet wires
+    /// `EffectBackbone` end to end (flagged as a critical-path gap in `📓️status.md`'s "A2-abi-sdk —
+    /// honest partial" entry, still open as of this packet), not a rename this packet can do safely.
+    /// Honest stub, not a silent no-op.
+    pub fn attach_backbone(_instance_id: u32, _uri: &str) -> Result<(), String> {
+        Err("attach_backbone: retired in channel v12 — backbone is now event-driven (design-abi.md §2/§4); no EffectBackbone replacement has landed yet".to_string())
     }
 
-    pub fn detach_backbone(runtime: &WasmPluginRuntime, instance_id: u32) -> Result<(), String> {
-        let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::DetachBackbone { seq }])?;
-        expect_done(&frames, seq)
+    pub fn detach_backbone(_instance_id: u32) -> Result<(), String> {
+        Err("detach_backbone: retired in channel v12 — backbone is now event-driven (design-abi.md §2/§4); no EffectBackbone replacement has landed yet".to_string())
     }
 
-    pub fn ephemeral_snapshot(runtime: &WasmPluginRuntime, instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
-        let frames = exchange(runtime, instance_id, Vec::new())?;
-        frames
-            .into_iter()
-            .find_map(|frame| match frame {
-                AppFrame::Ephemeral { presence, presence_generation, transient_generation } => Some((presence, presence_generation, transient_generation)),
-                _ => None,
-            })
-            .ok_or_else(|| "plugin sent no Ephemeral frame".to_string())
+    /// 🚧️ The old implementation was the literal `exchange(id, [])` drain design-abi.md §4 names as
+    /// retired outright ("The `exchange(id, [])` drain disappears — guests are woken by events/
+    /// timers/`next-wake`"). There is no synchronous poll-for-ephemeral-state left in the ABI;
+    /// presence/ephemeral state will need to arrive as a pushed `Event::Message`/similar the kernel
+    /// thread caches, which is real design work outside this packet's scope. Honest stub.
+    pub fn ephemeral_snapshot(_instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
+        Err("ephemeral_snapshot: the empty-command poll it relied on is retired in channel v12 (design-abi.md §4) — guests must push ephemeral state via events now, not implemented in this packet".to_string())
     }
 
-    pub fn render_with_document(runtime: &WasmPluginRuntime, instance_id: u32, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
-        let _ = _document_dsl;
-        let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind: SECTION_KIND_WINDOW, key: body_key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
+    /// 🖼️ H3-wgpu-native — `design-abi.md` §2: `AppFrame::UiSection` is gone; its replacement is
+    /// `ui-patch`, returned in `turn-result.ui-patches` rather than as a frame at all. The kernel
+    /// thread already reconciles patches against a retained tree per `(instance, surface)`
+    /// (`KernelThreadState::retained`) and hands back the resolved `UiNode` in
+    /// `ExchangeOutcome::surfaces` — this fn asks for the surface to be (re)painted via
+    /// `Event::SurfaceVisible` (design-abi.md §4: "Surfaces render lazily: `surface-visible`/
+    /// `hidden` replace the `RefreshUi` section-probe protocol") and reads back whatever the SAME
+    /// turn produced for it. A guest that has nothing new to say for this surface this turn (no
+    /// migrated plugin exists yet to test against — W3 hasn't started) surfaces as an honest error
+    /// rather than a stale-but-silent empty tree.
+    pub async fn render_with_document(client: &KernelClient, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiNode, String> {
+        let outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: body_key.to_string() }]).await?;
         if let Some(sink) = refresh_effects {
-            sink.extend(collect_refresh_effects(&frames, seq)?);
+            sink.extend(outcome.effects.iter().cloned());
         }
-        for frame in &frames {
-            if let AppFrame::UiSection { in_reply_to, body, .. } = frame {
-                if in_reply_to == &Some(seq) {
-                    let Some(body) = body else {
-                        return Err("plugin returned empty window section".into());
-                    };
-                    return decode_wire(body);
-                }
-            }
-            if let AppFrame::Error { in_reply_to, fault, report } = frame {
-                if in_reply_to == &Some(seq) {
-                    return Err(app_frame_error_message(fault, report));
-                }
+        if let Some(node) = outcome.surfaces.get(body_key) {
+            return Ok(node.clone());
+        }
+        for frame in &outcome.frames {
+            if let AppFrame::Error { in_reply_to: None, fault, report } = frame {
+                return Err(app_frame_error_message(fault, report));
             }
         }
-        Err(format!("plugin sent no UiSection for seq {seq}"))
+        Err(format!("plugin has not yet painted surface '{body_key}' this turn"))
     }
 
-    pub fn window_engagements(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
-        refresh_hash_map_section(runtime, instance_id, view_state, SECTION_KIND_ENGAGEMENTS, "engagements")
+    /// 🚧️ `window_engagements`/`window_measures` rode the SAME `RefreshUi`/`SectionProbe{kind}`
+    /// channel as the window body, just with a different `kind` byte and a non-`UiNode` payload
+    /// type. `design-abi.md`'s `ui-patch`/`PatchOp::Replace` is `UiNode`-typed specifically (per
+    /// `🎠️kernel/🦀️component.rs`'s `PatchOp::Replace{path,node: UiNode}`), so this data has no
+    /// defined wire home in channel v12 yet — inventing an ad-hoc encoding here risks colliding with
+    /// whichever packet owns that design. Matches the wasm32/JS backend's own existing fallback
+    /// (`window_engagements_js`/`window_measures_js` already return an empty map when the JS side
+    /// doesn't expose the function) rather than a hard error, since callers already treat "nothing
+    /// yet" as a normal case.
+    pub async fn window_engagements(_client: &KernelClient, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
+        Ok(HashMap::new())
     }
 
-    pub fn window_measures(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
-        refresh_hash_map_section(runtime, instance_id, view_state, SECTION_KIND_MEASURES, "measures")
-    }
-
-    fn refresh_hash_map_section<T: DeserializeOwned + Default>(runtime: &WasmPluginRuntime, instance_id: u32, view_state: &ViewModel, kind: u8, key: &str) -> Result<T, String> {
-        let seq = next_seq();
-        let frames = exchange(runtime, instance_id, vec![AppCommand::RefreshUi { seq, sections: vec![SectionProbe { kind, key: key.to_string(), hash: None }], view_state: pack_view_state(view_state)? }])?;
-        for frame in &frames {
-            if let AppFrame::UiSection { in_reply_to, body, .. } = frame {
-                if in_reply_to == &Some(seq) {
-                    return match body {
-                        Some(body) => decode_wire(body),
-                        None => Ok(T::default()),
-                    };
-                }
-            }
-            if let AppFrame::Error { in_reply_to, fault, report } = frame {
-                if in_reply_to == &Some(seq) {
-                    return Err(app_frame_error_message(fault, report));
-                }
-            }
-        }
-        Err(format!("plugin sent no UiSection for seq {seq}"))
+    pub async fn window_measures(_client: &KernelClient, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
+        Ok(HashMap::new())
     }
 }
 
 enum ProgramBridgeBackend {
     #[cfg(target_arch = "wasm32")]
     Js(Rc<JsValue>),
+    /// 🎠️ H3-wgpu-native — replaces `Arc<WasmPluginRuntime>`. `KernelClient` is a cheap channel
+    /// handle to the dedicated kernel thread (`crate::kernel_runtime`); `wasm_path` is carried here
+    /// (not resolved through the client) because instantiation is now lazy — `create_app` is the
+    /// first moment the kernel thread actually reads+compiles the component, per item 3 of this
+    /// packet ("no eager loading").
     #[cfg(not(target_arch = "wasm32"))]
-    Wasm(Arc<WasmPluginRuntime>),
+    Wasm { client: KernelClient, wasm_path: std::path::PathBuf },
 }
 
 impl Clone for ProgramBridgeBackend {
@@ -325,7 +300,7 @@ impl Clone for ProgramBridgeBackend {
             #[cfg(target_arch = "wasm32")]
             Self::Js(handle) => Self::Js(handle.clone()),
             #[cfg(not(target_arch = "wasm32"))]
-            Self::Wasm(runtime) => Self::Wasm(runtime.clone()),
+            Self::Wasm { client, wasm_path } => Self::Wasm { client: client.clone(), wasm_path: wasm_path.clone() },
         }
     }
 }
@@ -349,24 +324,29 @@ impl ProgramBridgeEntry {
         Ok(Self { plugin_id, manifest, backend: ProgramBridgeBackend::Js(Rc::new(handle)) })
     }
 
+    /// 🎠️ H3-wgpu-native — no longer instantiates anything (see `load_wasm_plugins` below, item 3
+    /// "no eager loading"): `manifest` is whatever `load_wasm_plugins` could establish without
+    /// running the component (a build-time `PackageDescriptor` when one exists, an honest empty
+    /// placeholder otherwise — no plugin has migrated to emit one yet, E1-describe is a sibling
+    /// packet still in flight). The kernel thread only ever sees `wasm_path` once `create_app` is
+    /// actually called.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_wasm(plugin_id: String, runtime: Arc<WasmPluginRuntime>) -> Result<Self, String> {
-        Ok(Self { plugin_id, manifest: runtime.manifest.clone(), backend: ProgramBridgeBackend::Wasm(runtime) })
+    pub fn from_wasm(plugin_id: String, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
+        Ok(Self { plugin_id: plugin_id.clone(), manifest, backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path } })
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn wasm_runtime(&self) -> Option<Arc<WasmPluginRuntime>> {
-        match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => Some(runtime.clone()),
-            #[cfg(target_arch = "wasm32")]
-            _ => None,
-        }
-    }
-
+    /// 🎠️ H3-wgpu-native — replaces the old `Arc<WasmPluginRuntime>`-returning `wasm_runtime()`.
+    /// `register_host_backbone`/`deregister_host_backbone` (its only real callers,
+    /// `Shell/🧊️component.rs`) had no in-process guest handle to call anyway once the guest moved to
+    /// a separate kernel thread — that mechanism is the process-global `HostBackboneChannel`
+    /// `📓️design-abi.md` §4 replaces with a per-instance `EffectBackbone`, flagged as an
+    /// unimplemented critical-path gap in `📓️status.md`'s "A2-abi-sdk — honest partial" entry
+    /// ("Registrar decision needed before W2 — critical path for both renderer packets"). Not this
+    /// packet's to invent; callers get an honest `None`/gap message instead of a dangling type.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn wasm_artifact_path(&self) -> Option<&std::path::Path> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => Some(runtime.path.as_path()),
+            ProgramBridgeBackend::Wasm { wasm_path, .. } => Some(wasm_path.as_path()),
             #[cfg(target_arch = "wasm32")]
             _ => None,
         }
@@ -377,7 +357,7 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => create_app_js(handle, app_id).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => runtime.create_app(app_id).map_err(|error| error.to_string()),
+            ProgramBridgeBackend::Wasm { client, wasm_path } => client.create_app(wasm_path.clone(), self.plugin_id.clone(), app_id.to_string()).await,
         }
     }
 
@@ -386,7 +366,7 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => destroy_app_js(handle, instance_id),
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => runtime.destroy_app(instance_id),
+            ProgramBridgeBackend::Wasm { client, .. } => client.destroy_app(instance_id),
         }
     }
 
@@ -395,7 +375,7 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::handle_action(runtime, instance_id, action_json, view_state),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::handle_action(client, instance_id, action_json, view_state).await,
         }
     }
 
@@ -404,21 +384,27 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::handle_command(runtime, instance_id, command_json, view_state),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::handle_command(client, instance_id, command_json, view_state).await,
         }
     }
 
-    /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot.
+    /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot. 🚧️ Native:
+    /// `context-menu` has no defined path in the new reactor ABI (it was a synchronous
+    /// `WasmPluginRuntime` export, not an `AppCommand`) — honest empty result until a packet gives it
+    /// one, matching the wasm32 JS backend's own "function not exposed" fallback below.
     pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::wgpu::ContextMenuItemSpec>, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => runtime.context_menu(instance_id, request).map_err(|error| error.to_string()),
+            ProgramBridgeBackend::Wasm { .. } => {
+                let _ = (instance_id, request);
+                Ok(Vec::new())
+            }
         }
     }
 
-    pub fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
+    pub async fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
@@ -430,7 +416,7 @@ impl ProgramBridgeEntry {
                 load.apply(&JsValue::NULL, &args).map(|_| ()).map_err(|_| "load_app_document_pack failed".into())
             }
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::load_app_document_pack(runtime, instance_id, pack, spr),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::load_app_document_pack(client, instance_id, pack, spr).await,
         }
     }
 
@@ -443,7 +429,7 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::render_with_document(runtime, instance_id, body_key, view_state, document_dsl, refresh_effects),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, body_key, view_state, document_dsl, refresh_effects).await,
         }
     }
 
@@ -452,7 +438,7 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => window_engagements_js(handle, instance_id, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::window_engagements(runtime, instance_id, view_state),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::window_engagements(client, instance_id, view_state).await,
         }
     }
 
@@ -461,14 +447,17 @@ impl ProgramBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => window_measures_js(handle, instance_id, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::window_measures(runtime, instance_id, view_state),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::window_measures(client, instance_id, view_state).await,
         }
     }
 
+    /// 🎠️ Kept synchronous (unlike `apply_mutations`/`read_history` below): the body never actually
+    /// awaits anything — see `wasm_program_exchange::attach_backbone`'s doc for why, this stays a
+    /// plain fn so its existing non-async Shell.rs call sites don't need touching at all.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::attach_backbone(runtime, instance_id, uri),
+            ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::attach_backbone(instance_id, uri),
             #[cfg(target_arch = "wasm32")]
             _ => Err("attach_backbone unavailable".into()),
         }
@@ -477,7 +466,7 @@ impl ProgramBridgeEntry {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn detach_backbone(&self, instance_id: u32) -> Result<(), String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::detach_backbone(runtime, instance_id),
+            ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::detach_backbone(instance_id),
             #[cfg(target_arch = "wasm32")]
             _ => Err("detach_backbone unavailable".into()),
         }
@@ -486,16 +475,16 @@ impl ProgramBridgeEntry {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn ephemeral_snapshot(&self, instance_id: u32) -> Result<(Vec<u8>, u64, u64), String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::ephemeral_snapshot(runtime, instance_id),
+            ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::ephemeral_snapshot(instance_id),
             #[cfg(target_arch = "wasm32")]
             _ => Err("ephemeral_snapshot unavailable".into()),
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
+    pub async fn apply_mutations(&self, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::apply_mutations(runtime, instance_id, operations),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::apply_mutations(client, instance_id, operations).await,
             #[cfg(target_arch = "wasm32")]
             _ => Err("apply_mutations unavailable".into()),
         }
@@ -503,10 +492,13 @@ impl ProgramBridgeEntry {
 
     /// 🧾️ ticket §C5 — full history snapshot for an instance, native-only (mirrors every other
     /// backbone/control call on this type; see `wasm_program_exchange::read_history`'s own doc).
+    /// Kept synchronous like `attach_backbone`/`ephemeral_snapshot` above — its one Shell.rs call
+    /// site (`refresh_history_snapshot`) is a plain, non-`async fn`; `pollster::block_on` here still
+    /// moves the actual wasm execution to the kernel thread even though this call still parks.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm(runtime) => wasm_program_exchange::read_history(runtime, instance_id),
+            ProgramBridgeBackend::Wasm { client, .. } => pollster::block_on(wasm_program_exchange::read_history(client, instance_id)),
             #[cfg(target_arch = "wasm32")]
             _ => Err("read_history unavailable".into()),
         }
@@ -673,6 +665,14 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+/// 🎠️ H3-wgpu-native, item 3 ("no eager loading") — used to `WasmPluginRuntime::load(&path)` every
+/// plugin here, which instantiated the FULL component (engine + linker + `Store`) just to read its
+/// manifest, at boot, for every plugin `is_space_mode` finds. Now: a registry scan that reads a
+/// build-time `🔣️descriptor.json` (`📓️design-abi.md` §3's `PackageDescriptor`, packet E1-describe's
+/// emitter — not yet wired, no plugin crate emits one yet) when present, and otherwise records the
+/// plugin as a lazy `ProgramBridgeEntry` with an honest empty manifest and a `[DEBUG]` seam note —
+/// never instantiating. `create_app` (`crate::kernel_runtime::KernelClient::create_app`) is the
+/// first point ANY wasm actually gets read/compiled, and only for the plugin the caller opens.
 pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     let space_mode = is_space_mode(plugin_filter);
     let plugin_ids: Vec<String> = if space_mode {
@@ -687,9 +687,6 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
             continue;
         }
         let wasm_path = std::fs::read_dir(&plugin_dir).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"));
-        let Some(path) = wasm_path else {
-            continue;
-        };
         // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — discovered live: one stale
         // (pre-compose, never-adapted) `.core.wasm` artifact anywhere under a space-mode `modules_root`
         // (~54+ plugin directories — the "13 of 33 plugin crates still fail to build for wasm" attributed
@@ -698,9 +695,17 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
         // (non-space-mode) load still hard-fails outright — there's no other plugin to fall back to —
         // but space mode now skips a broken plugin with a loud warning and keeps loading the rest,
         // exactly like the real `run_native`/`--smoke` boot path needs: 53 good plugins must not be
-        // held hostage by one bad one.
-        let loaded = WasmPluginRuntime::load(&path).map_err(|error| format!("{}: {error}", path.display())).and_then(|runtime| ProgramBridgeEntry::from_wasm(plugin_id.clone(), Arc::new(runtime)));
-        match loaded {
+        // held hostage by one bad one. The check moved from "wasm fails to instantiate" (old, eager)
+        // to "no wasm artifact exists at all" (new, lazy) — same skip-vs-hard-fail split.
+        let Some(path) = wasm_path else {
+            if space_mode {
+                eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: no .wasm artifact under {}", plugin_dir.display());
+                continue;
+            }
+            return Err(format!("{}: no .wasm artifact found", plugin_dir.display()));
+        };
+        let manifest = read_descriptor_manifest(&plugin_dir, &plugin_id);
+        match ProgramBridgeEntry::from_wasm(plugin_id.clone(), path, manifest) {
             Ok(entry) => entries.push(entry),
             Err(error) if space_mode => eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: {error}"),
             Err(error) => return Err(error),
@@ -710,4 +715,35 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
         return Err(format!("[DEBUG] no wasm programs found under {}", modules_root.display()));
     }
     Ok(entries)
+}
+
+/// 🎠️ H3-wgpu-native — reads `🔣️descriptor.json` (`design-abi.md` §3) next to the plugin's wasm
+/// artifact when packet E1-describe has emitted one; otherwise returns an honest EMPTY manifest
+/// (zero apps) rather than instantiating the wasm to ask it, and logs the seam once per plugin.
+/// This is the real, structural consequence of "no eager loading" — no app can be found/opened for
+/// a plugin without a descriptor until E1 lands and W3 migrates real plugins to emit one; nothing in
+/// this repo does yet (`WasmtimeRuntime`'s own tests confirm no `.wasm` here exports `world actor`).
+#[cfg(not(target_arch = "wasm32"))]
+fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
+    let descriptor_path = plugin_dir.join("🔣️descriptor.json");
+    if let Ok(bytes) = std::fs::read(&descriptor_path) {
+        if let Ok(descriptor) = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(&bytes) {
+            return descriptor.manifest;
+        }
+        eprintln!("[DEBUG] load_wasm_plugins: {} exists but failed to parse as PackageDescriptor", descriptor_path.display());
+    }
+    eprintln!("[DEBUG] load_wasm_plugins: no descriptor for {plugin_id} yet (packet E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation");
+    PluginManifest {
+        plugin_id: plugin_id.to_string(),
+        label: plugin_id.to_string(),
+        version: String::new(),
+        apps: Vec::new(),
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    }
 }

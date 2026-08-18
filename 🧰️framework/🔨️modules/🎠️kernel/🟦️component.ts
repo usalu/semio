@@ -13,6 +13,7 @@ import type {
   NamedLayout,
 } from "../🛂️manifest/🟦️component.ts";
 import type { StoragePort } from "../🖥️platform/🟦️component.ts";
+import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 
 //#region EphemeralLane
 /** 🫧 Process-local box for module ephemeral values. */
@@ -1409,267 +1410,16 @@ export type MergeReport = {
 };
 //#endregion 🔖️MergeOutcome
 
-//#region SerializedPluginWasm
-/** @emoji 🧾️ Flattens jco/component errors — message is often `[object Object] (see error.payload)` while the real text lives on `payload.val`. */
-export function pluginErrorText(error: unknown): string {
-  if (error instanceof Error) {
-    const withPayload = error as Error & { payload?: unknown };
-    const payload = withPayload.payload;
-    if (payload && typeof payload === "object") {
-      const record = payload as { val?: unknown; tag?: unknown; message?: unknown };
-      if (typeof record.val === "string" && record.val.length > 0) {
-        return `${withPayload.message} payload=${JSON.stringify(payload)}`;
-      }
-      if (typeof record.message === "string" && record.message.length > 0) {
-        return `${withPayload.message} payload=${JSON.stringify(payload)}`;
-      }
-    }
-    return withPayload.message;
-  }
-  if (error && typeof error === "object" && "payload" in error) {
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return String(error);
-    }
-  }
-  return String(error);
-}
-
-/** @emoji 🔒️ True when a plugin call hit the single-flight instance lock (or a poisoned guard after a trap). */
-export function isPluginInstanceBusyError(error: unknown): boolean {
-  const message = pluginErrorText(error);
-  return message.includes("plugin instance busy") || message.includes("plugin busy");
-}
-
-/** @emoji 🔒️ Serializes wasm program entry points — the host keeps instances in one RefCell. */
-export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): PluginWasmHandle {
-  let tail: Promise<void> = Promise.resolve();
-  const runSerialized = <T>(fn: () => Promise<T>): Promise<T> => {
-    const job = tail.then(async () => {
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        try {
-          return await fn();
-        } catch (error) {
-          if (!isPluginInstanceBusyError(error)) throw error;
-          await new Promise((resolve) => setTimeout(resolve, attempt + 1));
-        }
-      }
-      return fn();
-    });
-    tail = job.then(
-      () => undefined,
-      () => undefined,
-    );
-    return job;
-  };
-  return {
-    manifest: () => runSerialized(() => handle.manifest()),
-    createApp: (appId) => runSerialized(() => handle.createApp(appId)),
-    destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
-    exchange: (instanceId, frames) => runSerialized(() => handle.exchange(instanceId, frames)),
-    dispose: handle.dispose,
-  };
-}
-//#endregion SerializedPluginWasm
-
-//#region PluginWorkerClient
-/** @emoji 🧵️ Message types the generated `🟨️plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
-type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "destroy" | "exchange" | "error";
-
-/** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
- * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
-const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
-
-/** @emoji 🔌️ Derives the generic worker bootstrap script's URL from a plugin module URL — same directory,
- * `🟨️plugin-worker.js` instead of the plugin's own bridge filename. The bootstrap script itself never
- * needs cache-busting (it's plugin-version-agnostic; the *actual* module URL, `?v=`-busted or not, only
- * ever travels as the `init` request's `moduleUrl` payload — see `start()` below), so any `?query` or
- * `#hash` on `moduleUrl` (from `PluginSource.moduleUrl`'s hot-reload cache-busting) is stripped first —
- * otherwise the trailing `.js` no longer sits at the string's end and the replace silently no-ops,
- * pointing the worker at the plugin's own module instead of its bootstrap script. */
-/** @emoji 🪶️ GUESTSLIM: the typst default font set (see `infinite_canvas`'s `render` feature doc),
- * static-served alongside every plugin's own output at `_vendor/guestslim-typst-fonts.bin`
- * (`📇️registry/📜️script.ts`'s `ensureGuestSlimTypstFontsAsset`). Fetched once and reused across every
- * plugin worker this tab spins up — the file itself never changes at runtime (pinned crate version). */
-const GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE = 1;
-let guestSlimTypstFontsPromise: Promise<ArrayBuffer> | null = null;
-
-/** @emoji 🛡️ Best-effort: most plugins never call `read-asset` at all, and the guest-side Rust already
- * degrades gracefully (empty font list → typst compile yields no glyphs → `BoardResolvedIcon::None`)
- * when no reader is registered — so a fetch hiccup here must never block a plugin worker from booting. */
-async function guestSlimAssetsForModule(moduleUrl: string): Promise<ReadonlyArray<readonly [number, ArrayBuffer]>> {
-  guestSlimTypstFontsPromise ??= (async () => {
-    const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/_vendor/guestslim-typst-fonts.bin");
-    const response = await fetch(vendorUrl);
-    if (!response.ok) throw new Error(`GuestSlim typst fonts asset fetch failed: ${response.status} ${vendorUrl}`);
-    return response.arrayBuffer();
-  })();
-  try {
-    const buffer = await guestSlimTypstFontsPromise;
-    return [[GUESTSLIM_TYPST_DEFAULT_FONTS_ASSET_HANDLE, buffer]];
-  } catch (error) {
-    console.warn("[DEBUG] GuestSlim typst fonts asset unavailable; affected plugins fall back to blank typst/emoji/text icons", error);
-    guestSlimTypstFontsPromise = null;
-    return [];
-  }
-}
-
-export function pluginWorkerUrl(moduleUrl: string): string {
-  const bare = moduleUrl.split(/[?#]/)[0]!;
-  return bare.replace(/\/[^/]+\.js$/, "/🟨️plugin-worker.js");
-}
-
-/**
- * @emoji 🧵️ Runs a component-model plugin's WASM inside a Web Worker so `handleAction` — including
- * long-running precompute — never blocks the UI thread. Mirrors `framework/os/renderer/wgpu/js/🟦️boot.ts`'s
- * `PluginWorkerClient`, minus its 5s timeout+restart.
- */
-class PluginWorkerClient {
-  private worker: Worker | null = null;
-  private readonly pending = new Map<string, { resolve: (value: Record<string, unknown>) => void; reject: (error: Error) => void; watchdog: number }>();
-  onBackboneOutbound?: (uri: string, message: Uint8Array) => void;
-
-  private readonly pluginId: string;
-  private readonly moduleUrl: string;
-
-  constructor(
-    pluginId: string,
-    moduleUrl: string,
-  ) {
-    this.pluginId = pluginId;
-    this.moduleUrl = moduleUrl;
-  }
-
-  private clearPending(error: Error): void {
-    for (const [requestId, entry] of this.pending) {
-      window.clearTimeout(entry.watchdog);
-      entry.reject(error);
-      this.pending.delete(requestId);
-    }
-  }
-
-  private attachWorker(worker: Worker): void {
-    worker.onmessage = (event: MessageEvent) => {
-      const message = event.data as {
-        requestId?: string;
-        type?: PluginWorkerMessageType | "backboneOutbound";
-        uri?: string;
-        message?: string;
-      };
-      if (message.type === "backboneOutbound" && message.uri && message.message != null) {
-        const bytes = message.message instanceof Uint8Array ? message.message : new Uint8Array(message.message as ArrayBuffer);
-        this.onBackboneOutbound?.(message.uri, bytes);
-        return;
-      }
-      const requestId = message.requestId;
-      if (!requestId) return;
-      const entry = this.pending.get(requestId);
-      if (!entry) return;
-      window.clearTimeout(entry.watchdog);
-      this.pending.delete(requestId);
-      if (message.type === "error") {
-        entry.reject(new Error(message.message ?? `program worker ${this.pluginId} error`));
-        return;
-      }
-      entry.resolve(message);
-    };
-    worker.onerror = (error) => {
-      console.error(`[DEBUG] program worker ${this.pluginId} crashed`, error);
-      this.worker = null;
-      this.clearPending(new Error(`program worker ${this.pluginId} crashed`));
-    };
-  }
-
-  async start(): Promise<void> {
-    const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
-    this.attachWorker(worker);
-    this.worker = worker;
-    // 🪶️ GUESTSLIM: structured-clone copy, not a transfer — `guestSlimAssetsForModule` caches and
-    // reuses the same master `ArrayBuffer` across every plugin worker this tab starts; transferring
-    // it would detach (neuter) it after the first worker, breaking every subsequent one.
-    const guestSlimAssets = await guestSlimAssetsForModule(this.moduleUrl);
-    await this.request("init", { moduleUrl: this.moduleUrl, guestSlimAssets });
-  }
-
-  private request(type: PluginWorkerMessageType, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return new Promise((resolve, reject) => {
-      if (!this.worker) {
-        reject(new Error(`program worker ${this.pluginId} is not running`));
-        return;
-      }
-      const requestId = crypto.randomUUID();
-      const watchdog = window.setTimeout(() => {
-        console.warn(`[DEBUG] program worker ${this.pluginId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
-      }, PLUGIN_WORKER_UNRESPONSIVE_MS);
-      this.pending.set(requestId, { resolve, reject, watchdog });
-      this.worker.postMessage({ type, requestId, ...payload });
-    });
-  }
-
-  async manifest(): Promise<Uint8Array> {
-    return ((await this.request("manifest", {})).value as Uint8Array | undefined) ?? new Uint8Array();
-  }
-
-  async createApp(appId: string): Promise<number> {
-    return Number((await this.request("createApp", { appId })).instanceId);
-  }
-
-  async destroyApp(instanceId: number): Promise<void> {
-    await this.request("destroy", { instanceId });
-  }
-
-  async exchange(instanceId: number, frames: Uint8Array[]): Promise<Uint8Array[]> {
-    return ((await this.request("exchange", { instanceId, frames })).value as Uint8Array[] | undefined) ?? [];
-  }
-
-  dispose(): void {
-    this.clearPending(new Error(`program worker ${this.pluginId} disposed`));
-    this.worker?.terminate();
-    this.worker = null;
-  }
-
-  postBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
-    this.worker?.postMessage({ type: "backboneInbound", uri, messages });
-  }
-}
-
-/**
- * @emoji 🧵️ Worker-backed `PluginWasmHandle` for component-model plugins (the ABI the generated
- * `🟨️plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
- * `🟨️plugin-worker.js` alongside this module, wasm-bindgen-only program, or `Worker` unavailable).
- *
- * Keyed by `moduleUrl` (not `pluginId`): a hot reload acquires a *second* worker at a fresh
- * cache-busted URL for the same `pluginId` while the old one still serves live instances, so a
- * `pluginId`-keyed map would have the new worker's `set()` silently clobber the old entry and then
- * the old worker's `dispose()` delete the new one out from under it. `activeWorkerByPluginId` tracks
- * which of a plugin's (possibly several, during a swap) worker clients is the one inbound backbone
- * traffic should reach.
- */
-const pluginWorkerClients = new Map<string, PluginWorkerClient>();
-const activeWorkerByPluginId = new Map<string, PluginWorkerClient>();
-
-async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  const client = new PluginWorkerClient(pluginId, moduleUrl);
-  pluginWorkerClients.set(moduleUrl, client);
-  client.onBackboneOutbound = (uri, message) => relayPluginBackboneOutbound(uri, message);
-  await client.start();
-  activeWorkerByPluginId.set(pluginId, client);
-  console.log(`[DEBUG] plugin worker + ${pluginId} (${pluginWorkerClients.size} live)`);
-  return withSerializedPluginWasmHandle({
-    manifest: () => client.manifest(),
-    createApp: (appId) => client.createApp(appId),
-    destroyApp: (instanceId) => client.destroyApp(instanceId),
-    exchange: (instanceId, frames) => client.exchange(instanceId, frames),
-    dispose: () => {
-      if (pluginWorkerClients.get(moduleUrl) === client) pluginWorkerClients.delete(moduleUrl);
-      if (activeWorkerByPluginId.get(pluginId) === client) activeWorkerByPluginId.delete(pluginId);
-      client.dispose();
-      console.log(`[DEBUG] plugin worker - ${pluginId} (${pluginWorkerClients.size} live)`);
-    },
-  });
-}
-//#endregion PluginWorkerClient
+// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `SerializedPluginWasm` (`pluginErrorText`/
+// `isPluginInstanceBusyError`/`withSerializedPluginWasmHandle`) and `PluginWorkerClient` — one Worker
+// per plugin, capping the browser at ~20 plugins on V8's 4 GiB wasm-module guard region per worker —
+// are DELETED (grepped clean: neither had a live caller left outside this file once
+// `loadPluginModuleViaWorker`/`loadPluginModuleUncached` went with them; see
+// `📓️terra-H2-web-shard-report.md`). Replaced by `ShardClient`
+// (`🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts` — a bounded pool multiplexed by actorId) and
+// `ActivationRegistry` below. `runSerialized`'s busy-retry/reload loop has no equivalent: the new
+// ABI's traps are `ActivationRegistry`'s `FailurePolicy` job (design-runtime.md §1) — drop + restore
+// from checkpoint — not a local blind-retry loop with no visibility into checkpoint state.
 
 export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): void {
   pluginBackboneRoutes.get(pluginBackboneDocumentIdFromUri(uri))?.(uri, message);
@@ -1690,12 +1440,27 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uin
   bridge.__semioBackboneInbound = queue;
 }
 
+/**
+ * @emoji 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2) GAP — read before relying on this. The
+ * per-worker fast path this function used to take (`activeWorkerByPluginId.get(pluginId)` →
+ * `PluginWorkerClient.postBackboneInbound`, a raw `"backboneInbound"` postMessage type) is gone along
+ * with `PluginWorkerClient` itself, and its counterpart on the guest side is ALSO gone:
+ * `🟨️host-shim.js` now implements only the `pure` WIT interface (`log`/`now-ms`/`trace-span`) —
+ * `backboneSend`/`backbonePoll`/`backboneStatus` were deleted (design-runtime.md §3), because
+ * `world actor` has no synchronous host import for them anymore. Every read/write/network/backbone
+ * -shaped exchange now flows through the effect/event turn loop instead (`events::message-event`
+ * replaces "the `backbone-poll` push", per `component.wit`'s own doc comment on that variant).
+ *
+ * This function is kept — `pluginId` stays a real parameter, `ShellHost/🟦️component.tsx` (registrar-
+ * only, not this packet's to edit) still imports it — but its ONLY remaining path is the main-thread
+ * global queue below, which nothing on the guest side drains anymore either post-flip. Wiring
+ * `message-event`-addressed delivery through `ActivationRegistry`/`ShardClient` is real, non-mechanical
+ * work belonging to whichever packet finishes rewiring `ShellHost` off the pre-flip `PluginWasmHandle`
+ * ABI entirely (see this packet's report for the full list of what that touches) — flagged here rather
+ * than silently left to look functional.
+ */
 export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly Uint8Array[]): void {
-  const client = activeWorkerByPluginId.get(pluginId);
-  if (client) {
-    client.postBackboneInbound(uri, messages);
-    return;
-  }
+  void pluginId;
   pushMainThreadPluginBackboneInbound(uri, messages);
 }
 
@@ -1726,237 +1491,175 @@ export function registerPluginBackboneRoute(documentId: string, relay: (uri: str
 }
 //#endregion 🐚️PluginBackboneRouting
 
-//#region 🪶️LeasePool
-/** @emoji 🪶️ One caller's reference to a {@link LeasePool}-managed resource. `release()` is idempotent —
- * a second call is a no-op — and drops this caller's refcount; the pool only disposes the underlying
- * resource once every issued lease on that key has released (and, unless `lingerMs` is 0, only after
- * the linger window below elapses with no re-acquire). */
-export interface Lease<T> {
-  readonly value: T;
-  release(): void;
-}
+// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `LeasePool`/`createLeasePool` RELOCATE unchanged
+// to `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts` under `//#region 🪶️LeasePool` — its non-plugin
+// consumers (the renderer's engine-session cache and others; see `📓️luna-consumers-audit.md`) keep
+// working from there. `PluginModuleLease`/`acquirePluginModule`/`evictPluginModule` and the trailing
+// `loadPluginModuleUncached`/`pluginHandleForBridge` are DELETED outright (no relocation — they were
+// plugin-specific, per `📌️important.md`'s "must not exist" list), replaced by `ActivationRegistry`.
 
-export interface LeasePoolStats {
-  readonly key: string;
-  readonly refs: number;
-  readonly state: "loading" | "resident" | "lingering";
-}
-
-export interface LeasePool<T> {
-  acquire(key: string): Promise<Lease<T>>;
-  /** Forces disposal of `key` (or every entry when omitted) right now, bypassing any linger timer.
-   * A no-op (logged, not thrown) for a key with active leases — evicting a resource a caller still
-   * holds would leave that caller's `Lease.value` silently dead underneath it. */
-  evictNow(key?: string): void;
-  stats(): readonly LeasePoolStats[];
-}
-
-type LeasePoolEntry<T> = {
-  readonly promise: Promise<T>;
-  refs: number;
-  lingerTimer: ReturnType<typeof setTimeout> | null;
-  settled: T | undefined;
-};
-
+//#region 🐚️ActivationRegistry
 /**
- * @emoji 🪶️ Generic refcounted resource pool with linger-based eviction — the shared mechanism both
- * {@link acquirePluginModule} (plugin worker modules) and the renderer's engine-session cache build on
- * top of, instead of each hand-rolling its own refcounting. A resource loads once per `key` and is
- * shared by every caller; when the last lease on a key releases, the resource isn't disposed
- * immediately — it lingers for `lingerMs` (default 30s) so a caller that re-acquires the same key
- * shortly after (e.g. reopening a just-closed window) reuses the still-live resource instead of paying
- * full reload cost. `lingerMs: 0` disposes the instant refs hit zero, matching the pre-`LeasePool`
- * `acquirePluginModule` behavior exactly.
+ * @emoji 🐚️ Replaces the deleted `LeasePool`/`PluginModuleLease`/`acquirePluginModule` trio
+ * (design-runtime.md §3). Manifest-only records seeded from a `PluginCatalog` (build-time descriptors
+ * — no worker/module is touched until an actor actually activates); `events::activation-event` maps
+ * onto `activate()`, which calls `ShardClient.activate` (design's `Kernel::activate`, on the web
+ * transport); LRU + memory-pressure suspension checkpoints a resident actor and drops it before a new
+ * activation would exceed `maxResidentActors`; `resume()` re-activates and restores that checkpoint.
+ *
+ * `actorId` is a caller-minted string key here, not the real bit-packed `RuntimeActorId` (that
+ * encoding lives in the pure `semio-framework-actor` crate — packet A1); this registry only needs a
+ * stable key for shard routing and residency bookkeeping, same as `ShardClient` itself.
  */
-export function createLeasePool<T>(load: (key: string) => Promise<T>, dispose: (value: T) => void, options?: { readonly lingerMs?: number; readonly label?: string }): LeasePool<T> {
-  const lingerMs = options?.lingerMs ?? 30_000;
-  const label = options?.label ?? "resource";
-  const entries = new Map<string, LeasePoolEntry<T>>();
+export type ActivationReason = "on-command" | "on-view-visible" | "on-file-type" | "on-artifact-kind" | "on-extension-request" | "on-startup-finished" | "manual";
 
-  function disposeEntry(key: string, entry: LeasePoolEntry<T>): void {
-    if (entries.get(key) !== entry) return;
-    entries.delete(key);
-    if (entry.settled !== undefined) {
-      console.log(`[DEBUG] ${label} evicted ${key}`);
-      dispose(entry.settled);
+export interface ActivationManifestEntry {
+  readonly pluginId: string;
+  readonly moduleUrl: string;
+  readonly caps: readonly ShardCapabilityGrant[];
+}
+
+/** 🪶️ GUESTSLIM (design-runtime.md §3): the typst default font set, fetched ONCE and reused across
+ * every actor this registry activates — same fetch-once/reuse contract the deleted
+ * `guestSlimAssetsForModule` had (`📇️registry/📜️script.ts`'s `ensureGuestSlimTypstFontsAsset` served
+ * layout), just no longer tied to a single worker's lifetime. Delivered as a declared asset attached
+ * to the guest's `instance-open` event (see `🌐plugin-web-materialize.ts`'s `shardWorkerSource`) rather
+ * than a worker-bootstrap special case — it must be resident before the first `surface-visible`. */
+function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly ShardAsset[]> {
+  const vendorUrl = moduleUrl.split(/[?#]/)[0]!.replace(/\/[^/]+\/[^/]+\.js$/, "/_vendor/guestslim-typst-fonts.bin");
+  return fetch(vendorUrl)
+    .then((response) => {
+      if (!response.ok) throw new Error(`GuestSlim typst fonts asset fetch failed: ${response.status} ${vendorUrl}`);
+      return response.arrayBuffer();
+    })
+    .then((buffer): readonly ShardAsset[] => [["guestslim-typst-fonts", buffer]]);
+}
+
+interface ActivationResidentEntry {
+  readonly actorId: string;
+  readonly pluginId: string;
+}
+
+export interface ActivationRegistryOptions {
+  readonly shardClient: ShardClient;
+  readonly defaultBudget: ShardBudget;
+  /** LRU cap driving memory-pressure suspension (design-runtime.md §1 `FailurePolicy`) — activating
+   * beyond this count checkpoints + suspends the least-recently-touched resident actor first. */
+  readonly maxResidentActors?: number;
+  readonly fetchAssets?: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
+}
+
+export class ActivationRegistry {
+  private readonly manifests = new Map<string, ActivationManifestEntry>();
+  private readonly resident = new Map<string, ActivationResidentEntry>();
+  private readonly residencyOrder: string[] = [];
+  private readonly checkpoints = new Map<string, Uint8Array>();
+  private readonly actorPlugin = new Map<string, string>();
+  private readonly shardClient: ShardClient;
+  private readonly defaultBudget: ShardBudget;
+  private readonly maxResidentActors: number;
+  private readonly fetchAssets: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
+  private assetsPromise: Promise<readonly ShardAsset[]> | null = null;
+
+  constructor(options: ActivationRegistryOptions) {
+    this.shardClient = options.shardClient;
+    this.defaultBudget = options.defaultBudget;
+    this.maxResidentActors = options.maxResidentActors ?? 24;
+    this.fetchAssets = options.fetchAssets ?? defaultGuestSlimAssetFetcher;
+  }
+
+  //#region 📖️Manifest
+  registerManifest(entry: ActivationManifestEntry): void {
+    this.manifests.set(entry.pluginId, entry);
+  }
+
+  /** 📖️ Seeds every plugin + extension row from a `PluginCatalog` (build-time descriptors) — no
+   * worker/module is touched until `activate()` for one of these ids actually runs. */
+  registerCatalog(catalog: PluginCatalog): void {
+    for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId, target.wasmOut), caps: [] });
+    for (const target of catalog.extensions) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId, target.wasmOut), caps: [] });
+  }
+
+  manifestFor(pluginId: string): ActivationManifestEntry | undefined {
+    return this.manifests.get(pluginId);
+  }
+  //#endregion 📖️Manifest
+
+  private loadAssets(moduleUrl: string): Promise<readonly ShardAsset[]> {
+    this.assetsPromise ??= this.fetchAssets(moduleUrl).catch((error: unknown) => {
+      console.warn("[DEBUG] ActivationRegistry: guestSlim asset fetch failed; affected actors render without it", error);
+      this.assetsPromise = null;
+      return [];
+    });
+    return this.assetsPromise;
+  }
+
+  private markResident(actorId: string, pluginId: string): void {
+    this.resident.set(actorId, { actorId, pluginId });
+    this.actorPlugin.set(actorId, pluginId);
+    this.touch(actorId);
+  }
+
+  /** ⏱️ Refreshes `actorId`'s LRU position — call on every turn, not just activation, or a
+   * long-resident-but-idle actor never yields to memory pressure ahead of one that's actually busy. */
+  touch(actorId: string): void {
+    const index = this.residencyOrder.indexOf(actorId);
+    if (index !== -1) this.residencyOrder.splice(index, 1);
+    this.residencyOrder.push(actorId);
+  }
+
+  //#region ▶️Activate
+  /** ▶️ `events::activation-event` → `Kernel::activate`. */
+  async activate(pluginId: string, actorId: string, _reason: ActivationReason): Promise<void> {
+    const manifest = this.manifests.get(pluginId);
+    if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
+    await this.evictForMemoryPressure();
+    const assets = await this.loadAssets(manifest.moduleUrl);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
+    this.markResident(actorId, pluginId);
+  }
+  //#endregion ▶️Activate
+
+  //#region 🚑️SuspendResume
+  private async evictForMemoryPressure(): Promise<void> {
+    while (this.residencyOrder.length >= this.maxResidentActors) {
+      await this.suspend(this.residencyOrder[0]!);
     }
   }
 
-  return {
-    async acquire(key: string): Promise<Lease<T>> {
-      let entry = entries.get(key);
-      if (!entry) {
-        const created: LeasePoolEntry<T> = { promise: load(key), refs: 0, lingerTimer: null, settled: undefined };
-        created.promise.then(
-          (value) => {
-            created.settled = value;
-          },
-          () => {
-            if (entries.get(key) === created) entries.delete(key);
-          },
-        );
-        entries.set(key, created);
-        entry = created;
-      }
-      const active = entry;
-      if (active.lingerTimer !== null) {
-        clearTimeout(active.lingerTimer);
-        active.lingerTimer = null;
-      }
-      active.refs += 1;
-      try {
-        const value = await active.promise;
-        let released = false;
-        return {
-          value,
-          release: () => {
-            if (released) return;
-            released = true;
-            active.refs -= 1;
-            if (active.refs > 0) return;
-            if (lingerMs <= 0) {
-              disposeEntry(key, active);
-              return;
-            }
-            active.lingerTimer = setTimeout(() => disposeEntry(key, active), lingerMs);
-          },
-        };
-      } catch (error) {
-        active.refs -= 1;
-        throw error;
-      }
-    },
-    evictNow(key?: string): void {
-      for (const [entryKey, entry] of key ? ([[key, entries.get(key)]] as const) : entries) {
-        if (!entry) continue;
-        if (entry.refs > 0) {
-          console.warn(`[DEBUG] ${label} evictNow(${entryKey}) skipped — ${entry.refs} active lease(s)`);
-          continue;
-        }
-        if (entry.lingerTimer !== null) clearTimeout(entry.lingerTimer);
-        disposeEntry(entryKey, entry);
-      }
-    },
-    stats(): readonly LeasePoolStats[] {
-      return Array.from(entries.entries()).map(([key, entry]) => ({
-        key,
-        refs: entry.refs,
-        state: entry.settled === undefined ? "loading" : entry.lingerTimer !== null ? "lingering" : "resident",
-      }));
-    },
-  };
-}
-//#endregion 🪶️LeasePool
-
-//#region 🐚️PluginModuleLease
-export interface PluginModuleLease {
-  readonly handle: PluginWasmHandle;
-  /** Releases this caller's reference to the shared module — idempotent, a second call is a no-op.
-   * The underlying worker/module disposes once every lease on this `moduleUrl` has released and the
-   * pool's linger window (see {@link createLeasePool}) elapses with no re-acquire. */
-  release(): void;
-}
-
-// 🐚️ The pool's `load` callback only receives the key (`moduleUrl` — already globally unique per
-// plugin, matching the pre-pool cache's key exactly), but `loadPluginModuleUncached` also wants a
-// human-readable `pluginId` for its worker/log labels. `acquirePluginModule` records that association
-// here just before acquiring; safe as a plain overwrite since a given `moduleUrl` only ever maps to
-// one `pluginId` in practice.
-const pluginModuleIdByUrl = new Map<string, string>();
-const pluginModulePool = createLeasePool<PluginWasmHandle>((moduleUrl) => loadPluginModuleUncached(pluginModuleIdByUrl.get(moduleUrl) ?? moduleUrl, moduleUrl), (handle) => handle.dispose(), { label: "plugin module" });
-
-/**
- * @emoji 🐚️ Refcounted replacement for the old `loadPluginModule` — several shells (or several plugin
- * instances within one shell) loading the SAME `moduleUrl` share one worker/module, but each caller
- * gets its own {@link PluginModuleLease} and must `release()` it on unmount/teardown. Built on
- * {@link createLeasePool}: the shared module lingers briefly after the last lease releases (a shell
- * closed and immediately reopened reuses it) rather than disposing that instant — under the pre-pool
- * cache, a loaded module was in practice *never* disposed at all (its promise was cached forever with
- * nothing to evict it; `dispose()` was only ever reachable on load *failure*), so this is strictly a
- * bugfix on top of a lifecycle improvement.
- */
-export async function acquirePluginModule(pluginId: string, moduleUrl: string): Promise<PluginModuleLease> {
-  pluginModuleIdByUrl.set(moduleUrl, pluginId);
-  const lease = await pluginModulePool.acquire(moduleUrl);
-  return { handle: lease.value, release: lease.release };
-}
-
-/** @emoji 🔁️ Forces immediate disposal of a stale `moduleUrl` after a hot reload has released its last
- * lease — a no-op with a `[DEBUG]` warning (see {@link createLeasePool.evictNow}) if a caller still
- * holds the old lease, so a reload sequence must release before evicting. Skipping this after a
- * cache-busted reload would leave the old worker lingering for the pool's full 30s window per swap. */
-export function evictPluginModule(moduleUrl: string): void {
-  pluginModulePool.evictNow(moduleUrl);
-}
-
-/** @emoji 🔭️ Debug-only runtime snapshot — live plugin worker ids and the plugin module pool's lease
- * states — for verifying eager-boot-vs-lazy-residency changes from devtools without instrumenting call
- * sites by hand. Intentionally global rather than exported: this is a console/devtools aid, not API. */
-(globalThis as unknown as { __semioPluginRuntimeStats?: () => unknown }).__semioPluginRuntimeStats = () => ({
-  workerModuleUrls: Array.from(pluginWorkerClients.keys()),
-  workerCount: pluginWorkerClients.size,
-  activePluginIds: Array.from(activeWorkerByPluginId.keys()),
-  modulePool: pluginModulePool.stats(),
-});
-//#endregion 🐚️PluginModuleLease
-
-/**
- * 🌉️ Direct main-thread import fallback for {@link loadPluginModuleViaWorker} (no `Worker` global —
- * vitest/node — or no `🟨️plugin-worker.js` alongside this module). Only the component-model
- * `createPluginApi` ABI is supported: the pre-ABI-flip flat `semio_plugin_*` wasm-bindgen export
- * surface (one JS function per verb: `semio_plugin_handle_action`, `semio_plugin_render`, ...)
- * predates the binary `exchange` ABI entirely and has no equivalent under it, so it is dropped
- * rather than adapted — this is a greenfield codebase with no legacy-ABI support obligation.
- */
-async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  // 🧵️ Worker-backed by default so a plugin's `exchange` (e.g. puzzle-3d's collision precompute) can
-  // never block the UI thread. Falls back to the direct main-thread import below when unavailable: no
-  // `Worker` global (vitest/node) or no `🟨️plugin-worker.js` alongside this module.
-  if (typeof Worker !== "undefined") {
-    try {
-      return await loadPluginModuleViaWorker(pluginId, moduleUrl);
-    } catch (error) {
-      console.warn(`[DEBUG] program ${pluginId} worker-backed load failed, falling back to main thread: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  /** 🚑️ Checkpoints and drops `actorId`'s worker-side residency — LRU eviction and an explicit call
+   * both go through here. A no-op for an already-suspended (or never-activated) actorId. */
+  async suspend(actorId: string): Promise<void> {
+    if (!this.resident.has(actorId)) return;
+    const checkpoint = await this.shardClient.checkpoint(actorId);
+    this.checkpoints.set(actorId, checkpoint);
+    this.shardClient.dispose(actorId);
+    this.resident.delete(actorId);
+    const index = this.residencyOrder.indexOf(actorId);
+    if (index !== -1) this.residencyOrder.splice(index, 1);
   }
-  const module = (await import(/* @vite-ignore */ moduleUrl)) as {
-    default?: () => Promise<void> | void;
-    createPluginApi?: () => Promise<{
-      manifest: () => Promise<Uint8Array>;
-      createApp: (appId: string) => Promise<number>;
-      destroyApp?: (instanceId: number) => Promise<void>;
-      exchange: (instanceId: number, frames: Uint8Array[]) => Promise<Uint8Array[]>;
-    }>;
-  };
-  if (module.default) await module.default();
-  if (!module.createPluginApi) {
-    throw new Error(`[DEBUG] program ${pluginId} missing createPluginApi export`);
-  }
-  const api = await module.createPluginApi();
-  return withSerializedPluginWasmHandle({
-    manifest: () => api.manifest(),
-    createApp: (appId) => api.createApp(appId),
-    destroyApp: async (instanceId) => {
-      await api.destroyApp?.(instanceId);
-    },
-    exchange: (instanceId, frames) => api.exchange(instanceId, frames),
-    dispose() {},
-  });
-}
 
-/** 🌉️ Adapts a {@link PluginWasmHandle} to a plain-object shape safe to close over across a
- * `postMessage`/global-bridge boundary (see the wgpu renderer's own program-worker embedding) — a
- * pass-through now that the whole ABI is already binary (`manifest`/`exchange` bytes cross
- * structured clone natively, same as `Uint8Array` payloads elsewhere on this bridge). */
-export function pluginHandleForBridge(handle: PluginWasmHandle) {
-  return {
-    manifest: () => handle.manifest(),
-    createApp: (appId: string) => handle.createApp(appId),
-    destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
-    exchange: (instanceId: number, frames: Uint8Array[]) => handle.exchange(instanceId, frames),
-  };
+  /** 🚑️ Re-activates a suspended actorId and restores its last checkpoint — a plain cold `activate()`
+   * (no `restore()` call) if it was never checkpointed. */
+  async resume(actorId: string): Promise<void> {
+    const pluginId = this.actorPlugin.get(actorId);
+    if (!pluginId) throw new Error(`[DEBUG] ActivationRegistry.resume: unknown actor ${actorId} (never activated)`);
+    const manifest = this.manifests.get(pluginId);
+    if (!manifest) throw new Error(`[DEBUG] ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
+    await this.evictForMemoryPressure();
+    const assets = await this.loadAssets(manifest.moduleUrl);
+    await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
+    const checkpoint = this.checkpoints.get(actorId);
+    if (checkpoint) await this.shardClient.restore(actorId, checkpoint);
+    this.markResident(actorId, pluginId);
+  }
+
+  isResident(actorId: string): boolean {
+    return this.resident.has(actorId);
+  }
+  //#endregion 🚑️SuspendResume
 }
-//#endregion PluginRuntime
+//#endregion 🐚️ActivationRegistry
 
 //#region 🔌️PluginSource
 /** @emoji 🔌️ Dev-server SSE endpoint a `PluginSource` availability stream connects to (see
@@ -1995,7 +1698,7 @@ export interface PluginSource {
 /** @emoji 🔌️ `PluginSource` backed by the dev server's static `/plugin-modules` output and its
  * {@link PLUGIN_SOURCE_WATCH_PATH} SSE stream. `EventSource` is unavailable under vitest/node, so
  * `subscribe` there is a harmless no-op (matches every other browser-only feature detection in this
- * module, e.g. {@link loadPluginModuleUncached}'s `Worker` check). */
+ * module). */
 export function createDevPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   return {

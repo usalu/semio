@@ -4,6 +4,14 @@
   "projectType": "application",
   "sourceRoot": "",
   "targets": {
+    "scale-fixture-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",
+        "forwardAllArgs": true
+      }
+    },
     "setup": {
       "executor": "nx:run-commands",
       "cache": false,

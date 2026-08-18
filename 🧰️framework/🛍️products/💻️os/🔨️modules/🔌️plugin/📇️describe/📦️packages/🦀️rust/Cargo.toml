@@ -1,0 +1,37 @@
+[package]
+name = "semio-framework-plugin-describe"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Build-time descriptor emitter: instantiates a built plugin/extension component once and writes its static PackageDescriptor (🛂️descriptor.semio + 🔣️descriptor.json), never called at runtime"
+
+[package.metadata.semio]
+role = "tool"
+id = "plugin-describe"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[[bin]]
+name = "semio-framework-plugin-describe"
+path = "📦️main.rs"
+
+[dependencies]
+# 🛂️ `PackageDescriptor`/`ContributionSet`/`PackageHashes` (packet A3, this crate = `🛂️manifest`
+# mounted inside `semio_framework`).
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+# 🔁️ direct dependency (not just transitive through `semio-framework`) so this crate can declare its
+# own `extern crate semio_framework_os_kernel as store;` / `as dsl;` aliases — the same pattern every
+# plugin crate's own `📦️glue.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/📦️glue.rs`) — for
+# `store::pack_rt::{encode_wire_value,decode_wire_value}` / `dsl::{to_dsl_value,from_dsl_value}`.
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+# 🐎️ `world actor`'s ONLY import is `pure` (log/now-ms/trace-span, `📜️wit/📜️pure.wit`) — this
+# emitter satisfies exactly that and nothing else (no `wasmtime-wasi`: the world declares no wasi
+# import, and B1-host-native's own `WasmtimeRuntime::new` confirms only `pure::add_to_linker` is
+# ever registered for this world).
+wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
+sha2 = "0.10"
+serde_json = "1.0.140"

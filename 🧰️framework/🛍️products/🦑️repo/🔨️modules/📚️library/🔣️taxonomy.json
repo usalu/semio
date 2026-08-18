@@ -615,7 +615,8 @@
     "🤖️generated",
     "🧫️examples",
     "🖼️assets",
-    "📇️registry"
+    "📇️registry",
+    "📇️describe"
   ],
   "rootDataFileNames": [
     "🛂️manifest.json",
@@ -627,7 +628,9 @@
     "🎨️globals-ui.css",
     "🎨️theme.css",
     "🎨️palette.css",
-    "🎨️ui.css"
+    "🎨️ui.css",
+    "🛂️descriptor.semio",
+    "🔣️descriptor.json"
   ],
   "rootDocFileNames": [
     "AGENTS.md",

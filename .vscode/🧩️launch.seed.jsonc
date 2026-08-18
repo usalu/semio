@@ -1508,6 +1508,28 @@
       }
     },
     {
+      "name": "🛠️dev🦀️os-plugins🧫️scale-fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:generate-scale-fixture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.7
+      }
+    },
+    {
+      "name": "📦️verify🧫️scale-fixture🚦check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:scale-fixture-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 209.6
+      }
+    },
+    {
       "name": "🛠️dev🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",

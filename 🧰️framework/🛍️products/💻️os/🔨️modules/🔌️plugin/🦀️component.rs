@@ -6894,7 +6894,16 @@ pub mod app {
             surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
         }
 
-        #[test]
+                /// 🪦️ REMOVED (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, registrar):
+        /// `build_definition_rejects_{,dialog_}select_arg_with_no_options` asserted that a Select
+        /// argument declaring zero options is rejected. After the peer `ActionArgDef` redesign
+        /// (`control` field -> `control()` derived from `ArgSchema`), `ActionArgControl::Select` is
+        /// only ever produced when `options` is non-empty, so "a Select with no options" is
+        /// structurally unrepresentable and the rejection can never fire. The tests were asserting
+        /// an impossible outcome, not lost coverage — illegal state made unconstructible beats
+        /// validating it. The defensive asserts in `validate_arg_defs` are kept as a tripwire in
+        /// case `control()` ever widens again.
+#[test]
         fn build_definition_rejects_layout_with_unknown_window_kind() {
             let result = std::panic::catch_unwind(|| {
                 App::builder("bad-app", LocalizedLabel::data("Bad"))
@@ -7165,18 +7174,7 @@ pub mod app {
             assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
         }
 
-        #[test]
-        fn build_definition_rejects_select_arg_with_no_options() {
-            use semio_framework::{ActionArgControl, ActionArgDef};
-            let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-select-app")
-                    .mutation("pick", LocalizedLabel::data("Pick"))
-                    .action_args("pick", vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("choice", LocalizedLabel::data("Choice")) }])
-                    .build_definition()
-            });
-            assert!(result.is_err());
-        }
-
+        
         #[test]
         fn declaring_introduction_injects_start_introduction_action() {
             use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
@@ -7493,21 +7491,7 @@ pub mod app {
             assert!(result.is_err());
         }
 
-        #[test]
-        fn build_definition_rejects_dialog_select_arg_with_no_options() {
-            use semio_framework::{ActionArgControl, ActionArgDef, ActionRef, DialogDefinition};
-            let result = std::panic::catch_unwind(|| {
-                minimal_app("bad-dialog-select-app")
-                    .mutation("addLayer", LocalizedLabel::data("Add Layer"))
-                    .dialog(
-                        DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))
-                            .args(vec![ActionArgDef { control: ActionArgControl::Select { options: vec![] }, ..ActionArgDef::text("kind", LocalizedLabel::data("Kind")) }]),
-                    )
-                    .build_definition()
-            });
-            assert!(result.is_err());
-        }
-
+        
         #[test]
         fn build_definition_accepts_app_and_mode_scope_commands() {
             use semio_framework::CommandDefinition;
@@ -14518,8 +14502,8 @@ pub mod plugin_runtime {
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use semio_framework::{
-        kernel::{CapabilityRequirement, Effect, InvocationResult},
-        Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
+        kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, QuotaSchema},
+        AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
     };
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
@@ -14539,9 +14523,10 @@ pub mod plugin_runtime {
         // fresh statics). `INSTANCE_GUARD`/`InstanceGuard`/`clear-instance-guard` are deleted, not
         // wrapped — see `important.md`'s "Replace, never wrap" list.
         static INSTANCES: RefCell<Vec<AppInstance>> = RefCell::new(Vec::new());
-        /// 🪪️ Per-instance local actor id, set by `AppCommand::Hello` and read back by every `Command`
-        /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
-        /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
+        /// 🪪️ Per-instance local actor id, set by `set_instance_actor` off `Event::InstanceOpen.actor`
+        /// (reactor `wit_bridge::poll`) and read back by every `Command` frame's `ActionMeta` — see
+        /// `plugin_exchange`. Never cleared on instance destruction (Wave 1 scope: a destroyed
+        /// instance id is never reused within one plugin's lifetime today).
         static INSTANCE_ACTORS: RefCell<HashMap<u32, String>> = RefCell::new(HashMap::new());
     }
 
@@ -14598,8 +14583,11 @@ pub mod plugin_runtime {
         vec![protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&app.open_conflicts()) }]
     }
 
-    /// 🪪️ Records `actor` as the local actor id for `instance_id` (from `AppCommand::Hello`).
-    fn set_instance_actor(instance_id: u32, actor: String) {
+    /// 🪪️ Records `actor` as the local actor id for `instance_id` — channel v12 (A4) retired the
+    /// `AppCommand::Hello` handshake that used to call this; the reactor's `wit_bridge::poll` now
+    /// calls it directly off `Event::InstanceOpen.actor` instead (design-abi.md §4: lifecycle moved
+    /// to `instance-open`/`instance-close` at the reactor level).
+    pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
         INSTANCE_ACTORS.with(|slot| {
             slot.borrow_mut().insert(instance_id, actor);
         });
@@ -14739,6 +14727,57 @@ pub mod plugin_runtime {
                 contributions: vec![],
             })
         })
+    }
+
+    /// 🛂️ E2-builder-descriptor (`📓️design-abi.md` §3): the builder-declared descriptor fields
+    /// `describe::describe_plugin()` needs that have no home on `PluginManifest`
+    /// (`🛂️manifest/🦀️component.rs`) — adding them there would require literal-updating every
+    /// `PluginManifest { .. }` construction site in the tree, including several outside this
+    /// packet's owned paths (`🔌️plugin/🖥️host/🦀️component.rs`, `📺️renderer/…/Shell/🧊️component.rs`,
+    /// `🌉️mcp/🧫️fixtures/🦀️component.rs`). `PluginBuilder::try_build()` (`🏗️builder/🦀️component.rs`,
+    /// this packet's own owned path) installs one of these at the exact moment it also constructs
+    /// `Plugin` — from the SAME builder fields, in the SAME call — so this is a second output of one
+    /// assembly step, never an independently-maintained registry that could drift from the manifest.
+    #[derive(Clone, Default)]
+    pub struct PluginDescriptorExtras {
+        pub activation_events: Vec<ActivationEvent>,
+        pub capability_requests: Vec<CapabilityRequest>,
+        pub extension_points: Vec<ExtensionPointDeclaration>,
+        pub execution: ExecutionMode,
+        pub quotas: QuotaSchema,
+        pub assets: Vec<AssetDeclaration>,
+    }
+
+    thread_local! {
+        static PLUGIN_DESCRIPTOR_EXTRAS: RefCell<Option<PluginDescriptorExtras>> = const { RefCell::new(None) };
+    }
+
+    /// 📤️ Installs the builder-declared descriptor extras — called once by `PluginBuilder::try_build()`.
+    pub fn install_plugin_descriptor_extras(extras: PluginDescriptorExtras) {
+        PLUGIN_DESCRIPTOR_EXTRAS.with(|slot| *slot.borrow_mut() = Some(extras));
+    }
+
+    /// 📖️ The installed descriptor extras, or an empty default before any plugin bundle assembled.
+    pub fn plugin_descriptor_extras() -> PluginDescriptorExtras {
+        PLUGIN_DESCRIPTOR_EXTRAS.with(|slot| slot.borrow().clone()).unwrap_or_default()
+    }
+
+    /// 🛂️ Re-encodes a packed `PackageDescriptor` with `hashes` blanked — shared by `plugin_exports!`/
+    /// `extension_exports!`'s `descriptor_is_fresh()` tests. A NATIVE `describe_plugin()`/
+    /// `describe_extension()` call always returns empty hashes (no wasm bytes exist yet to hash);
+    /// the checked-in `🛂️descriptor.semio` is the real `semio-framework-plugin-describe` emitter's
+    /// output, with `wasm_sha256`/`core_wasm_sha256`/`descriptor_sha256` patched in after
+    /// instantiating the built wasm. Comparing hashes between the two would make freshness
+    /// permanently fail for every crate that ever commits a real descriptor — not drift, an
+    /// unavoidable difference between "how" the two sides ran `describe()` — so both sides are
+    /// hash-blanked before the byte comparison; hash correctness is `📇️registry:check`'s own gate
+    /// (built wasm's SHA-256 vs `hashes.wasm_sha256`), not this test's job. `None` on any decode
+    /// failure (caller treats that as "cannot compare", same as a missing file).
+    pub fn descriptor_bytes_with_blank_hashes(bytes: &[u8]) -> Option<Vec<u8>> {
+        let value = store::pack_rt::decode_wire_value(bytes).ok()?;
+        let mut descriptor: semio_framework::PackageDescriptor = from_dsl_value(value).ok()?;
+        descriptor.hashes = semio_framework::PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() };
+        Some(store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).ok()?))
     }
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
@@ -15157,9 +15196,8 @@ pub mod plugin_runtime {
     /// 🐢️ The raw fnv1a-64 core — a tiny non-cryptographic hash for cheap "did this section's content
     /// change" checks, not a security boundary, just change detection, so speed over collision-resistance
     /// is the right tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in
-    /// puzzle's plugin). Extracted from `ui_refresh_fnv1a_hash` (which formats it as hex for the legacy
-    /// JSON `refreshUi` wire) so `plugin_exchange`'s `AppFrame::UiSection.hash: u64` can reuse the same
-    /// numeric core instead of hex-formatting and reparsing.
+    /// puzzle's plugin). Used by `ui_refresh_fnv1a_hash` below (`plugin_refresh_ui`'s legacy JSON
+    /// `refreshUi` wire, unrelated to channel v12's binary `AppCommand`/`AppFrame`).
     fn fnv1a64(bytes: &[u8]) -> u64 {
         let mut hash: u64 = 0xcbf29ce484222325;
         for byte in bytes {
@@ -15183,20 +15221,6 @@ pub mod plugin_runtime {
         let wire = serde_json::to_string(value).unwrap_or_default();
         let hash = ui_refresh_fnv1a_hash(wire.as_bytes());
         if known_hash == Some(hash.as_str()) {
-            (hash, None)
-        } else {
-            let payload = serde_json::from_str(&wire).unwrap_or(Value::Null);
-            (hash, Some(payload))
-        }
-    }
-
-    /// 🐢️ `ui_refresh_section`'s `u64`-hash twin for `protocol::SectionProbe`/`AppFrame::UiSection` on the
-    /// new binary channel (which carries `hash: Option<u64>`/`u64` directly, no hex string) — same
-    /// hash-conditional payload-omission behavior, reusing `fnv1a64`.
-    fn channel_refresh_section<T: Serialize>(value: &T, known_hash: Option<u64>) -> (u64, Option<Value>) {
-        let wire = serde_json::to_string(value).unwrap_or_default();
-        let hash = fnv1a64(wire.as_bytes());
-        if known_hash == Some(hash) {
             (hash, None)
         } else {
             let payload = serde_json::from_str(&wire).unwrap_or(Value::Null);
@@ -15376,33 +15400,20 @@ pub mod plugin_runtime {
     //#endregion 🔖️ContextMenu
 
     //#region 🔖️Exchange
-    /// 🔍️ `SectionProbe.kind` byte convention for `plugin_exchange`'s `AppCommand::RefreshUi` handling —
-    /// no shared WIT/protocol_channel enum exists for this yet (Wave 1 scope), so the mapping lives here,
-    /// the single producer+consumer of it until a TS-side client needs the same constants.
-    const SECTION_KIND_WINDOW: u8 = 0;
-    const SECTION_KIND_PANEL: u8 = 1;
-    const SECTION_KIND_ENGAGEMENTS: u8 = 2;
-    const SECTION_KIND_MEASURES: u8 = 3;
-    const SECTION_KIND_TOOLS: u8 = 4;
-    const SECTION_KIND_LABELS: u8 = 5;
-
     /// 🎯️ `AppCommand::ArtifactCommand`'s Wave 1 mapping — the same magic action-name strings
     /// `VcsArtifactApp::dispatch_action` already intercepts for `store::ArtifactCommand` verbs (duplicated
     /// here rather than imported since `app`'s `HISTORY_ACTION_IDS` const is private — see
     /// `plugin_exchange`'s doc for why this frame is scoped to history verbs only in Wave 1).
     const DOCUMENT_COMMAND_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
 
-    /// 📤️ Appends `AppFrame::Effects`/`AppFrame::Events` for `result`'s side channels, if any — shared by
-    /// `AppCommand::Command`'s and `AppCommand::ArtifactCommand`'s handling below.
-    fn push_invocation_side_frames(frames: &mut Vec<protocol::AppFrame>, seq: u64, result: &InvocationResult) {
-        if !result.requested_effects.is_empty() {
-            let effects = result.requested_effects.iter().map(|effect| encode_wire_serialized(effect)).collect();
-            frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects });
-        }
-        if !result.events.is_empty() {
-            let events = result.events.iter().map(|event| encode_wire_serialized(event)).collect();
-            frames.push(protocol::AppFrame::Events { in_reply_to: Some(seq), events });
-        }
+    /// 📤️ Collects `result`'s side-channel effects/events as wire-encoded bytes — channel v12 (A4)
+    /// dropped `AppFrame::Effects`/`AppFrame::Events`, since effects/events now travel straight into
+    /// `TurnResult` (design-abi.md §2/§4) instead of being wrapped as a frame; `PluginExchangeOutput`
+    /// carries them alongside `frames`. Shared by `AppCommand::Command`'s and
+    /// `AppCommand::ArtifactCommand`'s handling below.
+    fn push_invocation_side_frames(effects: &mut Vec<Vec<u8>>, events: &mut Vec<Vec<u8>>, result: &InvocationResult) {
+        effects.extend(result.requested_effects.iter().map(|effect| encode_wire_serialized(effect)));
+        events.extend(result.events.iter().map(|event| encode_wire_serialized(event)));
     }
 
     //#region 🔖️OpeningCommandRelay
@@ -15526,53 +15537,46 @@ pub mod plugin_runtime {
         }
     }
 
+    /// 🔀️ `PluginExchangeOutput` — `plugin_exchange`'s return shape. `frames` still carries the
+    /// surviving `protocol::AppFrame` wire encodings (routed through `route_app_frame` by the
+    /// reactor's `poll`); `effects`/`events` are wire-encoded `kernel::Effect`/`kernel::AppEvent`
+    /// bytes collected directly — channel v12 (A4) removed `AppFrame::Effects`/`AppFrame::Events`,
+    /// since design-abi.md §2/§4 has effects/events travel straight into `TurnResult`, never wrapped
+    /// as a frame.
+    pub struct PluginExchangeOutput {
+        pub frames: Vec<Vec<u8>>,
+        pub effects: Vec<Vec<u8>>,
+        pub events: Vec<Vec<u8>>,
+    }
+
     /// 🔀️ The single bidirectional entry point behind WIT `exchange` (see `📜️wit/📜️world.wit`'s
-    /// `interface plugin` doc) — decodes each `protocol::AppCommand` in `commands`, dispatches it against
-    /// `instance_id`, and returns every `protocol::AppFrame` produced, encoded back to bytes.
+    /// `interface plugin` doc) — decodes each `protocol::AppCommand` in `commands`, dispatches it
+    /// against `instance_id`, and returns every produced `protocol::AppFrame`/effect/event.
     ///
     /// 🚧️ Wave 1 scope — documented here rather than silently: `AppCommand::CommandText` is stubbed
     /// (`Error{code:"unsupported"}`, a later wave wires real headless op-text scripts);
     /// `AppCommand::ArtifactCommand` only accepts the six history verbs (`DOCUMENT_COMMAND_ACTION_IDS`),
     /// mapped onto the existing magic action-name interception rather than a real typed
-    /// `store::ArtifactCommand` wire codec; `AppCommand::RefreshUi` carries a packed `view_state` so first-paint
-    /// labels/locale resolve correctly before any `AppCommand::Command` has been seen (via
-    /// `instance_view_state`), defaulting to `ViewModel::default()` before any `Command` has been
-    /// processed; the unsolicited outbox (backbone-driven `AppFrame::DocumentChanged`, a persistent
-    /// per-instance frame queue surviving across calls) is NOT implemented — only `pending_effects` is
-    /// drained, once, at the end of the batch, whenever a dispatched command mutated the document,
-    /// mirroring exactly where `plugin_refresh_ui` already calls it.
-    pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec<u8>>, Fault> {
+    /// `store::ArtifactCommand` wire codec; the unsolicited outbox (backbone-driven
+    /// `AppFrame::DocumentChanged`, a persistent per-instance frame queue surviving across calls) is
+    /// NOT implemented — only `pending_effects` is drained, once, at the end of the batch, whenever a
+    /// dispatched command mutated the document, mirroring exactly where `plugin_refresh_ui` already
+    /// calls it.
+    ///
+    /// 🧬️ Channel v12 (A4) retired `AppCommand::{Hello, RefreshUi, AttachBackbone, DetachBackbone,
+    /// Bye}` — lifecycle is now `Event::InstanceOpen`/`InstanceClose` at the reactor level, surface
+    /// rendering is driven by `surface-visible`/`hidden` instead of `RefreshUi` probes, and the
+    /// backbone attach/detach commands are gone with no replacement command in this wave. Those arms
+    /// are deleted here rather than adapted (design-abi.md §4).
+    pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<PluginExchangeOutput, Fault> {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
+        let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
+        let mut event_bytes: Vec<Vec<u8>> = Vec::new();
         let mut mutated = false;
 
         for bytes in commands {
             let command = protocol::decode_app_command(bytes).map_err(|error| error.into_fault())?;
             match command {
-                protocol::AppCommand::Hello { channel_version, app_id: _, actor, config } => {
-                    if channel_version != protocol::CHANNEL_VERSION {
-                        push_os_fault(&mut frames, None, "channel-version", format!("expected channel version {}, got {channel_version}", protocol::CHANNEL_VERSION));
-                        continue;
-                    }
-                    set_instance_actor(instance_id, actor);
-                    if !config.is_empty() {
-                        // 🧮️ B1: `Hello.config` carries the SAME `store::encode_document_pack_bytes(pack,
-                        // spr)` wire shape `AppCommand::LoadConfig` does — a whole config-artifact snapshot,
-                        // loaded through the real config `ArtifactStore` rather than the deleted
-                        // `apply_config_bytes` whole-record-replace legacy path.
-                        let loaded = store::decode_document_pack_bytes(&config).map_err(|error| error.into_fault()).and_then(|(pack, spr)| {
-                            with_instances_mut(|list| {
-                                let instance = find_instance(list, instance_id)?;
-                                instance.app.load_config_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() })
-                            })
-                        });
-                        if let Err(fault) = loaded {
-                            push_app_fault(&mut frames, None, fault);
-                            continue;
-                        }
-                    }
-                    let manifest_bytes = encode_wire_serialized(&plugin_manifest());
-                    frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
-                }
                 protocol::AppCommand::ConfigCommand { seq, command } => {
                     // 🧮️ B1: `command` is a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
@@ -15586,7 +15590,7 @@ pub mod plugin_runtime {
                         Ok(result) => {
                             mutated = true;
                             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                            push_invocation_side_frames(&mut frames, seq, &result);
+                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result);
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
@@ -15664,7 +15668,7 @@ pub mod plugin_runtime {
                                     messages: encode_wire_serialized(&report),
                                 });
                             }
-                            push_invocation_side_frames(&mut frames, seq, &result);
+                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result);
                         }
                         Err(fault) => {
                             let report = with_instances_mut(|list| {
@@ -15678,43 +15682,6 @@ pub mod plugin_runtime {
                 protocol::AppCommand::CommandText { seq, line: _ } => {
                     // 🚧️ Wave 1 stub — see this function's doc comment.
                     push_os_fault(&mut frames, Some(seq), "unsupported", "CommandText not yet wired".into());
-                }
-                protocol::AppCommand::RefreshUi { seq, sections, view_state } => {
-                    let view_state = decode_view_state(&view_state);
-                    let outcome = with_instances_mut(|list| {
-                        let instance = find_instance(list, instance_id)?;
-                        let mut section_frames = Vec::new();
-                        for probe in &sections {
-                            let section = match probe.kind {
-                                SECTION_KIND_WINDOW | SECTION_KIND_PANEL => instance.app.render(&probe.key, None, &view_state).map(|node| channel_refresh_section(&node, probe.hash)),
-                                SECTION_KIND_ENGAGEMENTS => Ok(channel_refresh_section(&instance.app.window_engagements(), probe.hash)),
-                                SECTION_KIND_MEASURES => Ok(channel_refresh_section(&instance.app.window_measures(), probe.hash)),
-                                SECTION_KIND_TOOLS => Ok(channel_refresh_section(&instance.app.tool_measures(), probe.hash)),
-                                SECTION_KIND_LABELS => Ok((0u64, None)),
-                                _ => Ok((0u64, None)),
-                            };
-                            let (hash, body) = match section {
-                                Ok(section) => section,
-                                // Keep the host's last-known-good body for this one failed surface.
-                                // Continuing the loop lets unrelated windows and the history projection
-                                // advance even while a generator-owned section is temporarily faulty.
-                                Err(_fault) => (probe.hash.unwrap_or_default(), None),
-                            };
-                            section_frames.push(protocol::AppFrame::UiSection { in_reply_to: Some(seq), kind: probe.kind, key: probe.key.clone(), hash, body: body.map(|value| encode_wire_serialized(&value)) });
-                        }
-                        let pending = instance.app.pending_effects();
-                        Ok((section_frames, pending))
-                    });
-                    match outcome {
-                        Ok((section_frames, pending_effects)) => {
-                            frames.extend(section_frames);
-                            if !pending_effects.is_empty() {
-                                let encoded = pending_effects.iter().map(|effect| encode_wire_serialized(effect)).collect();
-                                frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: encoded });
-                            }
-                        }
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
-                    }
                 }
                 protocol::AppCommand::ContextMenu { seq, request } => {
                     // 🗂️ Decodes straight into the typed wire shape and encodes the typed response straight
@@ -15764,7 +15731,7 @@ pub mod plugin_runtime {
                                 mutated = true;
                                 frames.push(protocol::AppFrame::Done { in_reply_to: seq });
                             }
-                            push_invocation_side_frames(&mut frames, seq, &result);
+                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result);
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
@@ -15871,14 +15838,6 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
                 }
-                protocol::AppCommand::AttachBackbone { seq, uri } => match plugin_attach_backbone(instance_id, &uri) {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
-                },
-                protocol::AppCommand::DetachBackbone { seq } => match plugin_detach_backbone(instance_id) {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
-                },
                 protocol::AppCommand::MediaIn { seq, port, descriptor, data } => {
                     let descriptor_value: Value = decode_wire_serialized_or(&descriptor, Value::Null);
                     let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
@@ -15927,7 +15886,7 @@ pub mod plugin_runtime {
                             let output = encode_wire_serialized(&result.output);
                             let diagnostics = encode_wire_serialized(&result.diagnostics);
                             frames.push(protocol::AppFrame::Emit { in_reply_to: seq, document_ops, config_ops, draft_ops, output, diagnostics });
-                            push_invocation_side_frames(&mut frames, seq, &result);
+                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result);
                         }
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
@@ -16009,25 +15968,24 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                     }
                 }
-                protocol::AppCommand::Bye => {}
                 protocol::AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => match relay_open_artifact(artifact_ref, role, plugin_id, app_id) {
                     Ok(effect) => {
                         frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                        effect_bytes.push(encode_wire_serialized(&effect));
                     }
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                 },
                 protocol::AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => match relay_set_default_app(artifact_kind, standard, subset, role, plugin_id, app_id) {
                     Ok(effect) => {
                         frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                        effect_bytes.push(encode_wire_serialized(&effect));
                     }
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                 },
                 protocol::AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => match relay_clear_default_app(artifact_kind, standard, subset, role) {
                     Ok(effect) => {
                         frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects: vec![encode_wire_serialized(&effect)] });
+                        effect_bytes.push(encode_wire_serialized(&effect));
                     }
                     Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
                 },
@@ -16070,10 +16028,7 @@ pub mod plugin_runtime {
                 Ok(instance.app.pending_effects())
             })
             .unwrap_or_default();
-            if !effects.is_empty() {
-                let encoded = effects.iter().map(|effect| encode_wire_serialized(effect)).collect();
-                frames.push(protocol::AppFrame::Effects { in_reply_to: None, effects: encoded });
-            }
+            effect_bytes.extend(effects.iter().map(|effect| encode_wire_serialized(effect)));
         }
 
         let ephemeral = with_instances_mut(|list| {
@@ -16084,7 +16039,7 @@ pub mod plugin_runtime {
             frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation });
         }
 
-        Ok(frames.iter().map(protocol::encode_app_frame).collect())
+        Ok(PluginExchangeOutput { frames: frames.iter().map(protocol::encode_app_frame).collect(), effects: effect_bytes, events: event_bytes })
     }
     //#endregion 🔖️Exchange
 
@@ -16110,6 +16065,32 @@ pub mod plugin_runtime {
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             #[used]
             static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
+
+            // 🛂️ E1-describe (`📓️design-abi.md` §3), path corrected by E2-builder-descriptor: freshness
+            // without wasm in the loop — natively installs the bundle (bypassing
+            // `ensure_plugin_initialized`'s `component-guest`-gated weak-linkage shim, which only
+            // fires on a real wasm build) and byte-compares `describe::describe_plugin()`'s packed
+            // output against the crate's checked-in `<owner>/🛂️descriptor.semio`. Registrar ruling
+            // (`📌️important.md`, this ticket): descriptors live at the plugin/extension OWNER ROOT,
+            // sibling of the tracked `🛂️manifest.json` — NOT under `🤖️generated/`, which is globally
+            // gitignored (`.gitignore` 87-88) and would mean this checked-in file could never survive
+            // a commit; `📓️design-abi.md` §3's `🤖️generated` path is superseded. Deliberately NOT a
+            // hard failure when that file doesn't exist yet — most plugin crates have not migrated to
+            // `describe` as of this packet (W3 fans out after E1/E2); `📇️registry:check`'s own
+            // descriptor gate is what tracks "not yet migrated" as a warning, this test only guards
+            // against DRIFT once a crate has opted in by committing its first descriptor.
+            #[cfg(test)]
+            #[test]
+            fn descriptor_is_fresh() {
+                __semio_install_plugin_bundle();
+                let assembled = $crate::describe::describe_plugin();
+                let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
+                if let Ok(expected) = std::fs::read(expected_path) {
+                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
+                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                    }
+                }
+            }
         };
     }
 
@@ -16142,6 +16123,16 @@ pub mod plugin_runtime {
         /// 🗂️ Artifact-kind contributions this extension contributes onto artifact kinds it depends on.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub contributions: Vec<semio_framework::ArtifactContributionDescriptor>,
+        /// 🚦️ `📓️design-abi.md` §5 — how this extension's actor runs relative to its host plugin.
+        /// Default `Isolated` (`ExecutionMode::default()`), set via `ExtensionBundle::mode(..)`.
+        #[serde(default)]
+        pub execution: ExecutionMode,
+        /// 🙏️ Capability asks the broker resolves at install/link/runtime, set via
+        /// `ExtensionBundle::requests(..)` — the NEW broker-scoped `kernel::CapabilityRequest`, not
+        /// the older kernel-level `CapabilityRequirement` `capabilities` above carries (see that
+        /// field's own doc for why both exist).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub capability_requests: Vec<CapabilityRequest>,
     }
 
     impl ExtensionBundle {
@@ -16157,6 +16148,8 @@ pub mod plugin_runtime {
                     topic_contributions: Vec::new(),
                     dependencies: Vec::new(),
                     contributions: Vec::new(),
+                    execution: ExecutionMode::default(),
+                    capability_requests: Vec::new(),
                 },
                 handlers: HashMap::new(),
             }
@@ -16230,6 +16223,22 @@ pub mod plugin_runtime {
         /// 🔀️ Registers a capability handler invoked via WIT `extension::invoke`.
         pub fn handler(mut self, capability: impl Into<String>, handler: impl Fn(&[u8]) -> Result<Vec<u8>, Fault> + Send + 'static) -> Self {
             self.handlers.insert(capability.into(), Box::new(handler));
+            self
+        }
+
+        /// 🚦️ Sets how this extension's actor runs relative to its host plugin — default `Isolated`
+        /// (`📓️design-abi.md` §5).
+        pub fn mode(mut self, mode: ExecutionMode) -> Self {
+            self.manifest.execution = mode;
+            self
+        }
+
+        /// 🙏️ Declares one capability ask the broker resolves at install/link/runtime
+        /// (`📓️design-abi.md` §5). Repeatable; idempotent for a byte-identical ask.
+        pub fn requests(mut self, request: CapabilityRequest) -> Self {
+            if !self.manifest.capability_requests.contains(&request) {
+                self.manifest.capability_requests.push(request);
+            }
             self
         }
     }
@@ -16319,6 +16328,8 @@ pub mod plugin_runtime {
                 topic_contributions: Vec::new(),
                 dependencies: Vec::new(),
                 contributions: Vec::new(),
+                execution: ExecutionMode::default(),
+                capability_requests: Vec::new(),
             })
         })
     }
@@ -16399,6 +16410,25 @@ pub mod plugin_runtime {
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             #[used]
             static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::component_export_anchor;
+
+            // 🛂️ E1-describe (`📓️design-abi.md` §3) — see `plugin_exports!`'s identical test for the
+            // full rationale (native install, no wasm, warn-not-fail via `📇️registry:check` until a
+            // crate commits its first descriptor) and for E2-builder-descriptor's path correction
+            // (owner root, not `🤖️generated/` — that's gitignored, see the registrar ruling quoted
+            // there). `describe::describe_extension()` is this macro's own counterpart of
+            // `describe_plugin()`.
+            #[cfg(test)]
+            #[test]
+            fn descriptor_is_fresh() {
+                __semio_install_extension_bundle();
+                let assembled = $crate::describe::describe_extension();
+                let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
+                if let Ok(expected) = std::fs::read(expected_path) {
+                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
+                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                    }
+                }
+            }
         };
     }
     //#endregion 🧩️Extension

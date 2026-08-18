@@ -1,0 +1,10 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  26 passed (26)
+   Start at  02:39:35
+   Duration  653ms (transform 325ms, setup 0ms, import 348ms, tests 102ms, environment 0ms)
+
+EXIT: 0

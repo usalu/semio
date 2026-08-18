@@ -105,6 +105,8 @@ members = [
     "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust",
 ]
 
 resolver = "2"
@@ -125,6 +127,8 @@ semio-framework-number = { path = "🧰️framework/🔨️modules/🔢️number
 semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-scale-fixture = { path = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust" }
+semio-framework-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
 # explicit requirement string already used somewhere in the 630 manifests (matches what
 # Cargo.lock already resolves to, so adopting `.workspace = true` later is a no-op for

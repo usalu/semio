@@ -1,0 +1,172 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+warning: unused imports: `ArtifactKind`, `CapabilityRequirement`, `Rights`, `Scope`, `TopicContribution`, and `ViewModel`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:8:25
+   |
+ 8 |         ArtifactHandle, ArtifactKind, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, CapabilityRequirement, Effect,...
+   |                         ^^^^^^^^^^^^                                                                  ^^^^^^^^^^^^^^^^^^^^^
+ 9 |         RequestOutcome, Rights, Scope, TurnResult, TurnStatus, WindowHandle, WindowKindId,
+   |                         ^^^^^^  ^^^^^
+10 |     },
+11 |     DslValue, PluginManifest, TopicContribution, ViewModel,
+   |                               ^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `UtilityNode`, `WindowEngagement`, and `WindowMeasure`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:19:21
+   |
+19 | use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
+   |                     ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^
+
+warning: unused import: `bindgen`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:20:27
+   |
+20 | use wasmtime::component::{bindgen, Component, Linker};
+   |                           ^^^^^^^
+
+warning: unused imports: `ResourceTable`, `WasiCtxBuilder`, and `WasiCtx`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:21
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                     ^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:75:45
+   |
+75 |         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+75 |         assert_eq!(after_set.defaults, vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:92:56
+   |
+92 | ...   let base = OpeningPreferences { defaults: vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() ...
+   |                                                      ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+92 |         let base = OpeningPreferences { defaults: vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }] };
+   |                                                        +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+warning: unused imports: `ResourceTable`, `WasiCtxBuilder`, `WasiCtx`, and `WasiView`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:21
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                     ^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `WasiView`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:61
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                                                             ^^^^^^^^
+
+warning: unused variable: `id`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1108:22
+     |
+1108 |         C::Granted { id, grant } => wit_capabilities::CapabilityChange::Granted(kernel_broker_grant_to_wit(grant)),
+     |                      ^^ help: try ignoring the field: `id: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variant `Mock` is never constructed
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:362:5
+    |
+361 | enum GuestInstanceState {
+    |      ------------------ variant in this enum
+362 |     Mock(MockInstanceState),
+    |     ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: enum `ScriptedOutcome` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:424:6
+    |
+424 | enum ScriptedOutcome {
+    |      ^^^^^^^^^^^^^^^
+
+warning: field `checkpoint` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:432:5
+    |
+431 | struct MockInstanceState {
+    |        ----------------- field in this struct
+432 |     checkpoint: Option<Vec<u8>>,
+    |     ^^^^^^^^^^
+
+warning: field `actor` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:682:5
+    |
+680 | struct ActorHostState {
+    |        -------------- field in this struct
+681 |     plugin_id: String,
+682 |     actor: RuntimeActorId,
+    |     ^^^^^
+
+warning: function `encode_dsl` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:888:4
+    |
+888 | fn encode_dsl(value: &DslValue) -> Vec<u8> {
+    |    ^^^^^^^^^^
+
+warning: function `wit_request_outcome_to_kernel` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:923:4
+    |
+923 | fn wit_request_outcome_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `host_fault_bytes` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1267:4
+     |
+1267 | fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
+     |    ^^^^^^^^^^^^^^^^
+
+warning: constant `DEFAULT_ENGINE_CACHE_BUDGET_BYTES` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1379:7
+     |
+1379 | const DEFAULT_ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `next_host_seq` is never used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1416:4
+     |
+1416 | fn next_host_seq() -> u64 {
+     |    ^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0422`.
+warning: `semio-framework-plugin-host` (lib test) generated 5 warnings (4 duplicates)
+error: could not compile `semio-framework-plugin-host` (lib test) due to 2 previous errors; 5 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-plugin-host` (lib) generated 15 warnings (run `cargo fix --lib -p semio-framework-plugin-host` to apply 5 suggestions)

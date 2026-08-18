@@ -4,9 +4,38 @@ use crate::app::{
     App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
     PluginCommandHandler,
 };
-use semio_framework::{kernel::CapabilityRequirement, CommandDefinition};
+use semio_framework::{
+    kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
+    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
+};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;
+
+/// 📏️ Field-by-field `QuotaSchema` merge — `incoming`'s `Some` fields win, `None` fields defer to
+/// `base`. Mirrors `📓️design-abi.md` §5's own `QuotaTree` inherit rule (`None` at any level defers
+/// to the next), applied here across repeated `PluginBuilder::quota(..)` calls on one builder
+/// instance instead of across the os → plugin → extension → instance tree.
+fn merge_quota_schema(base: QuotaSchema, incoming: QuotaSchema) -> QuotaSchema {
+    QuotaSchema {
+        memory_bytes: incoming.memory_bytes.or(base.memory_bytes),
+        fuel_per_turn: incoming.fuel_per_turn.or(base.fuel_per_turn),
+        turn_deadline_ms: incoming.turn_deadline_ms.or(base.turn_deadline_ms),
+        tables: incoming.tables.or(base.tables),
+        mailbox_len: incoming.mailbox_len.or(base.mailbox_len),
+        message_bytes: incoming.message_bytes.or(base.message_bytes),
+        outstanding_requests: incoming.outstanding_requests.or(base.outstanding_requests),
+        timers: incoming.timers.or(base.timers),
+        storage_bytes: incoming.storage_bytes.or(base.storage_bytes),
+        network_bytes_per_min: incoming.network_bytes_per_min.or(base.network_bytes_per_min),
+        ui_nodes: incoming.ui_nodes.or(base.ui_nodes),
+        patch_bytes: incoming.patch_bytes.or(base.patch_bytes),
+        patch_hz: incoming.patch_hz.or(base.patch_hz),
+        blob_resident_bytes: incoming.blob_resident_bytes.or(base.blob_resident_bytes),
+        gpu_ms_per_frame: incoming.gpu_ms_per_frame.or(base.gpu_ms_per_frame),
+        background_ms_per_min: incoming.background_ms_per_min.or(base.background_ms_per_min),
+        log_bytes_per_min: incoming.log_bytes_per_min.or(base.log_bytes_per_min),
+    }
+}
 
 /// 🏷️ Builder has plugin id only — next call must be `.label(...)`.
 pub struct NeedsLabel;
@@ -46,6 +75,17 @@ pub struct PluginBuilder<State> {
     /// walked by `.declare_artifact(...)`/`try_build()` alongside (never instead of) `artifacts`
     /// above, which stays bound to the OLD `ArtifactDeclaration` type (debt D1).
     declared_artifacts: Vec<crate::app::declarations::ArtifactDeclaration>,
+    /// 🚀️ Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME E2 (`📓️design-abi.md` §3) —
+    /// `.activation(..)`/`.extension_point(..)`/`.requests(..)`/`.quota(..)`/`.execution(..)`/
+    /// `.asset(..)`'s own storage, installed into `plugin_runtime::PluginDescriptorExtras` at the
+    /// end of `try_build()` for `describe::describe_plugin()` to read — see that install call's own
+    /// doc for why this is a side channel rather than new `Plugin`/`PluginManifest` fields.
+    activation_events: Vec<ActivationEvent>,
+    capability_requests: Vec<CapabilityRequest>,
+    extension_points: Vec<ExtensionPointDeclaration>,
+    execution: ExecutionMode,
+    quotas: QuotaSchema,
+    assets: Vec<AssetDeclaration>,
     _state: PhantomData<State>,
 }
 
@@ -72,6 +112,12 @@ impl PluginBuilder<NeedsLabel> {
             app_schema_descriptors: Vec::new(),
             document_app_ids: Vec::new(),
             declared_artifacts: Vec::new(),
+            activation_events: Vec::new(),
+            capability_requests: Vec::new(),
+            extension_points: Vec::new(),
+            execution: ExecutionMode::default(),
+            quotas: QuotaSchema::default(),
+            assets: Vec::new(),
             _state: PhantomData,
         }
     }
@@ -98,6 +144,12 @@ impl PluginBuilder<NeedsLabel> {
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
             declared_artifacts: self.declared_artifacts,
+            activation_events: self.activation_events,
+            capability_requests: self.capability_requests,
+            extension_points: self.extension_points,
+            execution: self.execution,
+            quotas: self.quotas,
+            assets: self.assets,
             _state: PhantomData,
         }
     }
@@ -126,6 +178,12 @@ impl PluginBuilder<NeedsVersion> {
             app_schema_descriptors: self.app_schema_descriptors,
             document_app_ids: self.document_app_ids,
             declared_artifacts: self.declared_artifacts,
+            activation_events: self.activation_events,
+            capability_requests: self.capability_requests,
+            extension_points: self.extension_points,
+            execution: self.execution,
+            quotas: self.quotas,
+            assets: self.assets,
             _state: PhantomData,
         }
     }
@@ -351,6 +409,60 @@ impl PluginBuilder<Ready> {
     }
     //#endregion 🔖️Surfaces
 
+    //#region 🔖️Descriptor
+    /// 🚀️ Declares one activation event — when the host should spin up an instance of this plugin
+    /// (`📓️design-abi.md` §2/§3). Repeatable; idempotent for a byte-identical event.
+    pub fn activation(mut self, event: ActivationEvent) -> Self {
+        if !self.activation_events.contains(&event) {
+            self.activation_events.push(event);
+        }
+        self
+    }
+
+    /// 🧩️ Publishes one extension point other packages may attach to (`📓️design-abi.md` §5) —
+    /// replaces the old Cargo `consumes` tag. Repeatable; idempotent for a byte-identical row.
+    pub fn extension_point(mut self, declaration: ExtensionPointDeclaration) -> Self {
+        if !self.extension_points.contains(&declaration) {
+            self.extension_points.push(declaration);
+        }
+        self
+    }
+
+    /// 🙏️ Declares one capability ask the broker resolves at install/link/runtime
+    /// (`📓️design-abi.md` §5) — the NEW broker-scoped `kernel::CapabilityRequest`, not the older
+    /// kernel-level `CapabilityRequirement` `.capability(..)` declares. Repeatable; idempotent for a
+    /// byte-identical ask.
+    pub fn requests(mut self, request: CapabilityRequest) -> Self {
+        if !self.capability_requests.contains(&request) {
+            self.capability_requests.push(request);
+        }
+        self
+    }
+
+    /// 📏️ Merges one resource ceiling into this plugin's own (`📓️design-abi.md` §5) — only
+    /// `schema`'s `Some` fields override; repeated calls layer without clobbering fields a previous
+    /// call already set (see `merge_quota_schema`).
+    pub fn quota(mut self, schema: QuotaSchema) -> Self {
+        self.quotas = merge_quota_schema(self.quotas, schema);
+        self
+    }
+
+    /// 🚦️ Sets how this plugin's actor runs — default `Isolated` (`📓️design-abi.md` §5).
+    pub fn execution(mut self, mode: ExecutionMode) -> Self {
+        self.execution = mode;
+        self
+    }
+
+    /// 📦️ Declares one asset bundled with this plugin, preloaded into `kernel::Event::InstanceOpen.
+    /// assets` (`📓️design-abi.md` §2). Repeatable; idempotent for a byte-identical declaration.
+    pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
+        if !self.assets.contains(&declaration) {
+            self.assets.push(declaration);
+        }
+        self
+    }
+    //#endregion 🔖️Descriptor
+
     /// 📚️ Assembles a library-only plugin through the typed boundary.
     pub fn try_library(self) -> Result<Plugin, PluginAssemblyError> {
         self.try_build()
@@ -378,6 +490,12 @@ impl PluginBuilder<Ready> {
             mut app_schema_descriptors,
             document_app_ids,
             declared_artifacts,
+            activation_events,
+            capability_requests,
+            extension_points,
+            execution,
+            quotas,
+            assets,
             _state: _,
         } = self;
         let label = label.ok_or_else(|| PluginAssemblyError::new("plugin-assembly.label", "typestate-ready builder has no label"))?;
@@ -466,6 +584,11 @@ impl PluginBuilder<Ready> {
         }
         let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
+        // 🛂️ E2-builder-descriptor (`📓️design-abi.md` §3): installs the SAME builder fields that
+        // just built `plugin` above, as a second output of this one assembly call — see
+        // `plugin_runtime::PluginDescriptorExtras`'s own doc for why this is not an
+        // independently-maintained side registry that could drift from the manifest.
+        crate::plugin_runtime::install_plugin_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { activation_events, capability_requests, extension_points, execution, quotas, assets });
         Ok(plugin)
     }
 }

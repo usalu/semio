@@ -4441,10 +4441,13 @@ pub struct PackageHashes {
 }
 
 /// 🗂️ One free-form descriptor-only contribution row, keyed by `id` with an opaque JSON
-/// `payload` — the placeholder shape for `ContributionSet` categories (`menus`, `file_types`,
-/// `panels`, `themes`, `inference_services`, `mutation_services`, `io_entries`,
-/// `composer_entries`) that don't have a typed manifest model of their own yet. Additive: nothing
-/// constructs one yet, and a future typed model can replace any one category without a wire break.
+/// `payload` — the residual placeholder shape for the two `ContributionSet` categories (`menus`,
+/// `themes`) that still have no real declared-contribution precedent anywhere in the codebase
+/// (E1-describe surveyed every `[package.metadata.semio]` `contributes`/`consumes` tag and every
+/// manifest-adjacent type: no plugin declares a menu or theme as its own manifest concept today —
+/// context menus are derived at runtime from `ActionSemantics`/category metadata, and there is no
+/// declared theme/palette contribution anywhere under `🖱️ui/🎨️styling`). Additive: nothing
+/// constructs one yet, and a future typed model can replace either category without a wire break.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -4455,10 +4458,72 @@ pub struct DescriptorEntry {
     pub payload: Option<serde_json::Value>,
 }
 
+/// 🗂️ One file-format kind an app declares it can import and/or export — the typed shape for
+/// `ContributionSet.file_types` (`📓️design-abi.md` §3), grounded in `AppIo.export_formats`/
+/// `import_formats` (currently flat `Vec<String>` scaffolding on that type) paired with the app's
+/// own `document_media_type`, flattened to one row per format kind across every app the package
+/// declares.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FileTypeContribution {
+    pub format_kind: String,
+    pub media_type: MediaType,
+    pub imports: bool,
+    pub exports: bool,
+}
+
+/// 🚪️ Which side of an `IoEntryDescriptor` route this row is — owned mirror of `io::IoDirection`
+/// (`🚪️io/🦀️component.rs`), the same "owned wire twin of a native type living in a sibling
+/// framework module" idiom `ContributedMutationMetadata`/`ContributedInferenceMetadata` already
+/// use for the os-kernel protocol crate.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IoEntryDirection {
+    Import,
+    Export,
+}
+
+/// 🚪️ One registered IO dialect route — the typed shape for `ContributionSet.io_entries`
+/// (`📓️design-abi.md` §2/§3's absorbed `io-dialects` routing table), an owned mirror of
+/// `io::IoKey`'s `(owner, counterpart, direction)` identity built from the already-in-scope
+/// `ArtifactDialect` (`🚪️io/🧬️schema/🦀️component.rs`) instead of `IoKey`'s seven flat fields —
+/// `IoKey` itself isn't `ts_rs`-derived and this crate must not add that derive to a module it
+/// doesn't own.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IoEntryDescriptor {
+    pub owner: ArtifactDialect,
+    pub counterpart: ArtifactDialect,
+    pub direction: IoEntryDirection,
+}
+
+/// 🎹️ One registered composer/serializer/deserializer route — the typed shape for
+/// `ContributionSet.composer_entries`, an owned mirror of `io::ComposerEntry`'s `(writes, reads)`
+/// identity (its third field, the `compose` fn pointer, is runtime-only and has no wire form —
+/// a descriptor is build-time, non-executable data).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ComposerEntryDescriptor {
+    pub writes: ArtifactDialect,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reads: Vec<ArtifactDialect>,
+}
+
 /// 🗂️ Everything a package contributes, gathered for static (`describe()`-time) emission —
 /// `📓️design-abi.md` §3. `commands`/`topic_contributions`/`artifact_contributions` reuse this
-/// crate's existing typed models; the remaining categories are `DescriptorEntry` for now — see
-/// its doc.
+/// crate's existing typed models; `panels` reuses `PanelTabDefinition` (already the typed shape
+/// `AppDefinition.panel_tabs` declares, flattened across every app); `inference_services`/
+/// `mutation_services` reuse `ContributedInferenceMetadata`/`ContributedMutationMetadata` (a
+/// package's OWN registered services on artifact kinds it owns, as opposed to
+/// `artifact_contributions`' services contributed onto a DEPENDENCY's kind — same wire shape
+/// either way, `contributor == owner` and `depends_on` empty for a self-owned row);
+/// `file_types`/`io_entries`/`composer_entries` are new types grounded in `AppIo`/`io::IoKey`/
+/// `io::ComposerEntry` — see each type's own doc. `menus`/`themes` stay `DescriptorEntry` — see
+/// its doc for why.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -4468,9 +4533,9 @@ pub struct ContributionSet {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub menus: Vec<DescriptorEntry>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub file_types: Vec<DescriptorEntry>,
+    pub file_types: Vec<FileTypeContribution>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub panels: Vec<DescriptorEntry>,
+    pub panels: Vec<PanelTabDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub themes: Vec<DescriptorEntry>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4478,13 +4543,13 @@ pub struct ContributionSet {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub artifact_contributions: Vec<ArtifactContributionDescriptor>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub inference_services: Vec<DescriptorEntry>,
+    pub inference_services: Vec<ContributedInferenceMetadata>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub mutation_services: Vec<DescriptorEntry>,
+    pub mutation_services: Vec<ContributedMutationMetadata>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub io_entries: Vec<DescriptorEntry>,
+    pub io_entries: Vec<IoEntryDescriptor>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub composer_entries: Vec<DescriptorEntry>,
+    pub composer_entries: Vec<ComposerEntryDescriptor>,
 }
 
 /// 📦️ The static, build-time-emitted description of a plugin or extension package —

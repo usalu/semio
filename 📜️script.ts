@@ -651,6 +651,10 @@ export class GenerateScript extends Script {
       this.generatePluginGlue(segments.slice(1));
       return;
     }
+    if (segments[0] === "scale-fixture") {
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
+      return;
+    }
     let successes = 0;
     let failures = 0;
     const exporter = new Neo4jCypherExport(this.root);
@@ -2500,6 +2504,22 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("start", StartScript)
   .register("dev", DevScript)
   .register("generate", GenerateScript)
+  .register(
+    "scale-fixture",
+    /** 🧫️ 50×50 scale fixture (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet F1) —
+     * `check` regenerates the seeded registry/catalog and diffs, the same freshness idiom
+     * `plugin-registry:check` uses. */
+    class extends Script {
+      run(segments: string[]): void {
+        const sub = segments[0];
+        if (sub === "check") {
+          runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:scale-fixture-check"], { cwd: this.root });
+          return;
+        }
+        throw new Error(`unknown scale-fixture subcommand: ${sub} (expected check)`);
+      }
+    },
+  )
   .register("new", CleanMechanismNewScript)
   .register("lint", LintScript)
   .register("verify", VerifyScript)

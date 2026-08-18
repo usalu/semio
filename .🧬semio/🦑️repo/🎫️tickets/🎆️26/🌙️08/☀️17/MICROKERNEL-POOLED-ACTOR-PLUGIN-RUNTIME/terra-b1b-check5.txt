@@ -1,0 +1,20 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error[E0432]: unresolved import `crate::os_spr::channel::SectionProbe`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:28:148
+   |
+28 | ... AppCommand, AppFrame, ChildPackEntry, SectionProbe, CHANNEL_VERSION};
+   |                                           ^^^^^^^^^^^^ no `SectionProbe` in `os_spr::channel`
+
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0432`.
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 1 warning emitted

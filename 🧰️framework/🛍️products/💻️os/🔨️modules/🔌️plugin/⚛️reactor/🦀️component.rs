@@ -108,9 +108,13 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
 
     for event in events {
         match wit_event_to_kernel(event) {
-            Event::InstanceOpen { instance, app_id, .. } => {
-                let _ = crate::plugin_runtime::plugin_create_app_with_id(instance.0.parse::<u32>().unwrap_or(0), &app_id.0);
-                OPEN_INSTANCES.with(|open| open.borrow_mut().push((instance.0.parse::<u32>().unwrap_or(0), app_id.0)));
+            Event::InstanceOpen { instance, app_id, actor, .. } => {
+                let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
+                let _ = crate::plugin_runtime::plugin_create_app_with_id(numeric_instance, &app_id.0);
+                // 🪪️ Channel v12 (A4) retired the `AppCommand::Hello` handshake that used to record
+                // this — lifecycle now arrives here as `Event::InstanceOpen` (design-abi.md §4).
+                crate::plugin_runtime::set_instance_actor(numeric_instance, actor);
+                OPEN_INSTANCES.with(|open| open.borrow_mut().push((numeric_instance, app_id.0)));
             }
             Event::InstanceClose => {}
             Event::AppCommandEvent { instance, command, .. } => {
@@ -160,9 +164,23 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
     let mut effects: Vec<Effect> = Vec::new();
     for (instance, commands) in app_commands {
         match crate::plugin_runtime::plugin_exchange(instance, &commands) {
-            Ok(frames) => {
-                for frame_bytes in frames {
+            Ok(output) => {
+                for frame_bytes in output.frames {
                     route_app_frame(instance, &frame_bytes, &mut effects);
+                }
+                // 🧬️ Channel v12 (A4) removed `AppFrame::Effects`/`Events` — `plugin_exchange` now
+                // hands these back directly (design-abi.md §2/§4: effects/events travel straight into
+                // `TurnResult`, never wrapped as a frame), so they're decoded here instead of through
+                // `route_app_frame`.
+                for one in &output.effects {
+                    if let Ok(effect) = decode_wire_effect(one) {
+                        effects.push(effect);
+                    }
+                }
+                for one in &output.events {
+                    if let Ok(event) = decode_wire_app_event(one) {
+                        effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+                    }
                 }
             }
             Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
@@ -200,35 +218,24 @@ fn parse_surface_instance(surface: &str) -> Option<u32> {
     surface.split(':').next()?.parse().ok()
 }
 
-/// 🔀️ `AppFrame::UiSection` → a `UiPatch` (via `render_surface`, called separately from
-/// `SurfaceVisible` today — see the scope note in `poll`); `AppFrame::Effects`/`Events` → decoded
-/// straight into `Effect`s (A3's mechanical `HostEffect` → `Effect` rename means these bytes are
-/// ALREADY `Effect`-shaped pack values, not a foreign wire format); everything else →
-/// `Effect::SendMessage` to the shell, matching design-abi.md §2's table verbatim.
+/// 🔀️ `AppFrame::UiPatch` → a real `kernel::UiPatch` passthrough into `PENDING_PATCHES` (the wire
+/// frame is already `UiPatch`-shaped field-for-field — channel v12/A4 — so this is a decode, not a
+/// render); `AppFrame::Effects`/`Events` no longer exist as frames (`poll` decodes
+/// `plugin_exchange`'s `PluginExchangeOutput.effects`/`.events` directly instead — see there);
+/// `AppFrame::UiSnapshotEnd` has no consumer yet in this wave (patches apply incrementally, no
+/// snapshot-boundary bookkeeping); everything else → `Effect::SendMessage` to the shell, matching
+/// design-abi.md §2's table verbatim.
 fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>) {
     let Ok(frame) = protocol::decode_app_frame(frame_bytes) else {
         return;
     };
     match frame {
-        protocol::AppFrame::Effects { effects: encoded, .. } => {
-            for one in encoded {
-                if let Ok(effect) = decode_wire_effect(&one) {
-                    effects.push(effect);
-                }
-            }
+        protocol::AppFrame::UiPatch { surface, kind, revision, base_revision, ops, .. } => {
+            let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
+            let Ok(ops) = dsl::from_dsl_value::<Vec<PatchOp>>(ops_value) else { return };
+            PENDING_PATCHES.with(|pending| pending.borrow_mut().push(UiPatch { surface, kind, revision, base_revision, ops }));
         }
-        protocol::AppFrame::Events { events: encoded, .. } => {
-            for one in encoded {
-                if let Ok(event) = decode_wire_app_event(&one) {
-                    effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
-                }
-            }
-        }
-        protocol::AppFrame::UiSection { .. } => {
-            // Handled by the dedicated `SurfaceVisible` → `plugin_render` path in `poll`, not here
-            // — a `RefreshUi`-probe-shaped section frame from `plugin_exchange` itself has no
-            // `surface-ref` naming to key a `PatchTracker` entry by in this wave.
-        }
+        protocol::AppFrame::UiSnapshotEnd { .. } => {}
         other => {
             let payload = protocol::encode_app_frame(&other);
             effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload });

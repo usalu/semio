@@ -32,7 +32,7 @@ use dsl::{from_dsl_value, to_dsl_value};
 /// 🎞️ The exact binary channel a live UI speaks — re-exported so an `AppChannelHost` implementor
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
-use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PortMultiplicity};
+use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PluginManifest, PortMultiplicity};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -228,7 +228,10 @@ pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn Bl
 }
 
 /// 🔎️ Which `AppCommand::seq` (if any) an `AppFrame` replies to — `None` for the handful of
-/// unsolicited/handshake shapes (`Welcome`, `DocumentChanged`, `ConfigChanged`) that never carry one.
+/// unsolicited shapes (`DocumentChanged`, `ConfigChanged`) that never carry one. Channel v12
+/// (`📡️spr/🧵️channel/🦀️component.rs`'s own doc) retires the `Hello`/`Welcome` handshake entirely —
+/// lifecycle now arrives through the reactor ABI's `Event::InstanceOpen`/`InstanceClose` — and
+/// replaces `UiSection`/`Effects`/`Events` with `UiPatch`/`UiSnapshotEnd`.
 fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
     match frame {
         AppFrame::Done { in_reply_to } => Some(*in_reply_to),
@@ -237,11 +240,10 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::ContextMenu { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Media { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::MediaFingerprint { in_reply_to, .. } => Some(*in_reply_to),
-        AppFrame::UiSection { in_reply_to, .. } => *in_reply_to,
-        AppFrame::Effects { in_reply_to, .. } => *in_reply_to,
-        AppFrame::Events { in_reply_to, .. } => *in_reply_to,
+        AppFrame::UiPatch { in_reply_to, .. } => *in_reply_to,
+        AppFrame::UiSnapshotEnd { .. } => None,
         AppFrame::Error { in_reply_to, .. } => *in_reply_to,
-        AppFrame::Welcome { .. } | AppFrame::DocumentChanged { .. } | AppFrame::ConfigChanged { .. } => None,
+        AppFrame::DocumentChanged { .. } | AppFrame::ConfigChanged { .. } => None,
         AppFrame::Config { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Emit { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::Draft { in_reply_to, .. } => Some(*in_reply_to),
@@ -929,11 +931,11 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         Ok(handle)
     }
 
-    /// 🎬️ Runs one node's whole frame script — `Hello`, `SetMergePolicy` (this run's `merge_policy`,
-    /// batched right behind `Hello` so the instance's local/authority policy is established before
-    /// any other command reaches it — contract-freeze.md §C9's "`Hello.config` seeds policy", worked
-    /// via the actual `SetMergePolicy` wire command since the frozen §C8 tag table adds no policy
-    /// field to `Hello` itself), `LoadConfig`, `LoadDocument`, one `MediaIn` per resolved input, one
+    /// 🎬️ Runs one node's whole frame script — `SetMergePolicy` (this run's `merge_policy`, sent
+    /// FIRST so the instance's local/authority policy is established before any other command
+    /// reaches it — channel v12 retires `Hello`/`Welcome` entirely, `host.open` is what now
+    /// establishes the instance, via `Event::InstanceOpen` on the reactor ABI, not a wire command),
+    /// `LoadConfig`, `LoadDocument`, one `MediaIn` per resolved input, one
     /// `MediaOut`+`MediaFingerprint` pair per output port, then `ReadDocument` and finally
     /// `ReadConfig` to persist whatever the imports mutated on either artifact (see this file's
     /// header doc: "importing media is emitting operations") — as a single batched `host.exchange`
@@ -955,7 +957,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             seq
         };
 
-        let mut commands = vec![AppCommand::Hello { channel_version: CHANNEL_VERSION, app_id: node.app_id.clone(), actor: "runner".to_string(), config: Vec::new() }];
+        let mut commands = Vec::new();
 
         let set_policy_seq = next_seq();
         commands.push(AppCommand::SetMergePolicy { seq: set_policy_seq, policy: self.merge_policy.as_u8() });
@@ -992,7 +994,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
         let frames = self.host.exchange(handle, commands)?;
 
         if let Some(AppFrame::Error { fault, report, .. }) = frames.iter().find(|frame| matches!(frame, AppFrame::Error { in_reply_to: None, .. })) {
-            return Err(RunError::Host(dispatch_error_message(&node.app_id, "rejected the handshake", fault, report)));
+            return Err(RunError::Host(dispatch_error_message(&node.app_id, "sent an unsolicited rejection", fault, report)));
         }
 
         let reply_to = |seq: u64| -> Result<&AppFrame, RunError> { frames.iter().find(|frame| frame_in_reply_to(frame) == Some(seq)).ok_or_else(|| RunError::Host(format!("`{}` sent no reply to seq {seq}", node.app_id))) };
@@ -1179,38 +1181,61 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 //#endregion 🔖️SpaceRunner
 
 //#region 🔖️WasmtimeNodeHost
-/// 🧩️ Native `AppChannelHost` over `semio-framework-plugin-host`'s wasmtime runtime — `open` lazily
-/// loads a `WasmPluginRuntime` per plugin id (via `plugin_path_for_plugin`, resolved from the plugin
-/// registry's generated `PLUGIN_WASM_ARTIFACTS` — see `bin.rs`), registering `blob_store` on it so a
-/// guest's `write-blob`/`read-blob` host calls resolve, then calls `create_app`; `exchange` is a thin
-/// binary encode/decode shim over `WasmPluginRuntime::exchange` — every former per-verb call
-/// (`handle-action`, `handle-command`, `update-window`, `refresh-ui`, `context-menu`,
-/// `apply-operations[-text]`, `read/load-app-document-{text,pack}`, `attach/detach-backbone`,
-/// `consume/produce-media`) is now just a caller-encoded `AppCommand` batch on this one WIT call.
+/// 🧩️ Native `AppChannelHost` over `semio-framework-plugin-host`'s `GuestRuntime` — the
+/// `WasmPluginRuntime`-based synchronous-exchange design this doc used to describe is gone
+/// (`📌️important.md`'s "Replace, never wrap" list); `world actor` exports only `reactor::poll`/
+/// `jobs::{start-job,step-job,cancel-job}`/`checkpoint`/`describe`, no per-verb calls and no
+/// `exchange` at all. Channel v12 (`📡️spr/🧵️channel/🦀️component.rs`) already anticipates this:
+/// "lifecycle now arrives through the reactor ABI's `Event::InstanceOpen`/`InstanceClose`" — `open`
+/// now instantiates a real `GuestInstance` and submits `Event::InstanceOpen`; `exchange` submits the
+/// batch as `Event::AppCommandEvent`s in one `execute_turn` call and reads back `Effect::Respond`
+/// effects correlated by `req.0 == seq`.
+///
+/// 🚧️ **Known, documented gap** (not silently papered over): loading a REAL plugin end to end is
+/// still blocked upstream of this file — `PluginManifest` used to come from a wasm call
+/// (`WasmPluginRuntime::read_manifest`, calling the OLD `plugin.manifest()` export, itself now gone),
+/// and `world actor`'s `describe()` interface replaces it with a build-time-only packed
+/// `PackageDescriptor` (packet E1, concurrently in flight, not wired into this crate). Until a
+/// decoder for that descriptor lands, `load_runtime_recursive` below fails loudly and immediately —
+/// exactly like every other genuinely-unreachable-until-a-real-`world-actor`-component-exists path
+/// this ticket's packets have already hit (`WasmtimeRuntime::instantiate` against `stdio.wasm`,
+/// `IoRouter::compose`'s dispatch, `Effect::IoRun`). `run_transaction`/`undo_transaction_group`'s
+/// `exec`/`plan` closures have the SAME gap one layer up — full per-command reply correlation and
+/// contributed-mutation planning over `execute_turn`'s effects is a real post-turn dispatch loop that
+/// belongs with the kernel/scheduler (H1-H4/T1), not this packet — they compile and are correctly
+/// typed, but always return a clearly-worded `TransactionError` today.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct WasmtimeNodeHost {
-    runtimes: HashMap<String, Arc<semio_framework_plugin_host::WasmPluginRuntime>>,
+    runtime: Arc<dyn semio_framework_plugin_host::GuestRuntime>,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
+    /// 🧬️ Content-addressed compiled-component cache, one entry per plugin id — mirrors
+    /// `SharedWasmtimeEngine`'s own on-disk `.cwasm` cache one level up (in-process, per-host-instance).
+    compiled_for_plugin: HashMap<String, semio_framework_plugin_host::CompiledHandle>,
+    /// 🗺️ Every plugin id this host has successfully loaded a manifest for — see this struct's own
+    /// doc for why `load_runtime_recursive` cannot populate this yet.
+    manifests: HashMap<String, PluginManifest>,
+    /// 🚧️ Reserved for the future post-turn effect dispatcher (`Effect::BlobLoad`/`BlobWrite`) — the
+    /// OLD synchronous `register_host_blob_store`/`HostState.blob_store` wiring is gone with
+    /// `HostState` itself; nothing calls into this yet.
+    #[allow(dead_code)]
     blob_store: Arc<dyn BlobStore>,
     /// 🌉️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION (D3): shared
-    /// across every runtime this host lazily loads, so any loaded plugin's `host.io-compose` can
-    /// reach any OTHER loaded plugin's composer roster — see `IoRouter`'s own doc comment.
+    /// across every plugin this host lazily loads, so any loaded plugin's routed `io-run`/`io-sniff`
+    /// job dispatch can reach any OTHER loaded plugin's registry — see `IoRouter`'s own doc comment.
     io_router: Arc<semio_framework_plugin_host::IoRouter>,
     /// 🕸️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): every loaded
     /// plugin's manifest, dependency-validated — `runtime_for` registers into this BEFORE a
     /// plugin's own routers, and only after every declared dependency has itself been loaded (see
-    /// `load_runtime_recursive`). Scout-2 §3: neither this nor the next three fields existed before
-    /// this ticket.
+    /// `load_runtime_recursive`).
     plugin_graph: Arc<semio_framework_plugin_host::PluginGraph>,
     /// 🎯️ Every loaded plugin's `contributor.list-artifact-mutations` roster, merged.
     mutation_router: Arc<semio_framework_plugin_host::ArtifactMutationRouter>,
-    /// 💡️ Upgraded (this ticket) contributor-aware artifact inference router — wired here for the
-    /// first time (scout-2 §3: "`ArtifactInferenceRouter` is NOT wired in `🏃️run` today").
+    /// 💡️ Contributor-aware artifact inference router.
     inference_router: Arc<semio_framework_plugin_host::ArtifactInferenceRouter>,
     /// 🗺️ `ArtifactRef -> (plugin_id, instance_id, artifact_kind)`, populated by `open` at
     /// instantiate-app time.
     instance_directory: Arc<semio_framework_plugin_host::InstanceDirectory>,
-    /// 🎯️ Drives contract §5 transactions over this host's own loaded runtimes — see
+    /// 🎯️ Drives contract §5 transactions over this host's own loaded instances — see
     /// `run_transaction`.
     transaction_coordinator: Arc<semio_framework_plugin_host::HostTransactionCoordinator>,
     /// 🚪️👁️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A): every loaded plugin's
@@ -1222,8 +1247,22 @@ pub struct WasmtimeNodeHost {
     /// `set_default_app`'s doc); a real multi-session deployment would fold this from a durable op
     /// log at boot instead of starting empty every run.
     opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences,
+    /// 🧬️ Not read yet — `open`'s real body (its own doc comment) mints the returned handle from
+    /// this counter, same as the deleted `WasmPluginRuntime`-backed version did.
+    #[allow(dead_code)]
     next_handle: u32,
+    /// 🧬️ Not read yet — `open`'s real body (its own doc comment) mints a fresh `RuntimeActorId`
+    /// from this counter per `GuestRuntime::instantiate` call, once a manifest decoder unblocks it.
+    #[allow(dead_code)]
+    next_actor_ordinal: u64,
+    /// 🗺️ `handle -> (plugin_id, instance_id)` — the SAME addressing scheme `WasmPluginRuntime` used
+    /// (one runtime hosting many `create_app`-minted instance ids); the live `GuestInstance` for
+    /// `(plugin_id, instance_id)` lives in `guest_instances` below, since `design-abi.md §4`'s actor
+    /// model gives each app instance its OWN `GuestInstance`/`RuntimeActorId` now, not a shared store.
     instances: HashMap<u32, (String, u32)>,
+    /// 🧬️ Not populated yet — see `instances`' own doc and `open`'s doc comment.
+    #[allow(dead_code)]
+    guest_instances: HashMap<(String, u32), semio_framework_plugin_host::GuestInstance>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1233,8 +1272,10 @@ impl WasmtimeNodeHost {
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
     pub fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<dyn BlobStore>) -> Self {
         Self {
-            runtimes: HashMap::new(),
+            runtime: Arc::new(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).expect("shared wasmtime engine builds")),
             plugin_path_for_plugin,
+            compiled_for_plugin: HashMap::new(),
+            manifests: HashMap::new(),
             blob_store,
             io_router: Arc::new(semio_framework_plugin_host::IoRouter::new()),
             plugin_graph: Arc::new(semio_framework_plugin_host::PluginGraph::new()),
@@ -1245,7 +1286,9 @@ impl WasmtimeNodeHost {
             app_router: Arc::new(semio_framework_plugin_host::AppRouter::new()),
             opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences::default(),
             next_handle: 1,
+            next_actor_ordinal: 1,
             instances: HashMap::new(),
+            guest_instances: HashMap::new(),
         }
     }
 
@@ -1273,10 +1316,10 @@ impl WasmtimeNodeHost {
         &self.instance_directory
     }
 
-    fn runtime_for(&mut self, plugin_id: &str) -> Result<&Arc<semio_framework_plugin_host::WasmPluginRuntime>, RunError> {
+    fn manifest_for(&mut self, plugin_id: &str) -> Result<&PluginManifest, RunError> {
         let mut loading = Vec::new();
         self.load_runtime_recursive(plugin_id, &mut loading)?;
-        Ok(self.runtimes.get(plugin_id).expect("just loaded or already present"))
+        Ok(self.manifests.get(plugin_id).expect("just loaded or already present"))
     }
 
     /// 🕸️ Scout-2 §3's binding requirement: a dependency is loaded (recursively) before its
@@ -1284,8 +1327,13 @@ impl WasmtimeNodeHost {
     /// version mismatch, cycle — contract §4 rule 5) before this plugin's own routers see it.
     /// `loading` guards against a cycle that only becomes visible once a manifest is actually read
     /// (unlike `PluginGraph`'s own cycle check, which only fires once every member is registered).
+    ///
+    /// 🚧️ Always fails today — see this struct's own doc comment. Kept as the real recursive-load
+    /// shape (compile a component, walk its manifest's dependencies, register with every router in
+    /// the SAME order the OLD `WasmPluginRuntime`-backed version did) so wiring in a real manifest
+    /// decoder later is a one-line change at the marked spot, not a redesign.
     fn load_runtime_recursive(&mut self, plugin_id: &str, loading: &mut Vec<String>) -> Result<(), RunError> {
-        if self.runtimes.contains_key(plugin_id) {
+        if self.manifests.contains_key(plugin_id) {
             return Ok(());
         }
         if loading.contains(&plugin_id.to_string()) {
@@ -1294,37 +1342,26 @@ impl WasmtimeNodeHost {
         }
         loading.push(plugin_id.to_string());
         let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
-        let runtime = Arc::new(semio_framework_plugin_host::WasmPluginRuntime::load(&path).map_err(|error| RunError::Host(error.to_string()))?);
-
-        for dependency in &runtime.manifest.dependencies {
-            self.load_runtime_recursive(&dependency.plugin_id, loading)?;
+        if !self.compiled_for_plugin.contains_key(plugin_id) {
+            let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
+            let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])) };
+            let compiled = self.runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
+            self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }
-
-        runtime.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
-        runtime.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
-        self.io_router.register_plugin(plugin_id, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.plugin_graph.register(runtime.manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
-
-        let mutation_roster = runtime.list_artifact_mutations().map_err(|error| RunError::Host(error.to_string()))?;
-        self.mutation_router.register_plugin(plugin_id, &runtime.manifest.dependencies, &mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.inference_router.register_plugin(plugin_id, &runtime.manifest.dependencies, Arc::clone(&runtime)).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.app_router.register_plugin(plugin_id, &runtime).map_err(|fault| RunError::Host(fault.message))?;
-        // 🩺️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §3 item 3 (W3 hard gate,
-        // flipped from W1's logged-only diagnostic now that every owned subset ships both surfaces): a
-        // missing owner surface fails the plugin load with a real `surface.missing-owner-surface`
-        // fault instead of merely being reported — see `AppRouter::owned_surface_gaps`'s own doc.
-        let gaps = self.app_router.owned_surface_gaps();
-        if !gaps.is_empty() {
-            let detail = gaps.iter().map(|gap| gap.message.as_str()).collect::<Vec<_>>().join("; ");
-            return Err(RunError::Host(format!("plugin `{plugin_id}` load left {} owned-surface gap(s): {detail}", gaps.len())));
-        }
-
-        self.runtimes.insert(plugin_id.to_string(), runtime);
-        loading.pop();
-        Ok(())
+        // 🚧️ NOT YET WIRED: `PluginManifest` has no `world actor` source anymore (this struct's own
+        // doc comment) — `describe()`'s packed `PackageDescriptor` (packet E1) is the eventual
+        // replacement, not decoded by this crate today. Once it is, this is where the walk continues:
+        // decode the manifest, recurse `load_runtime_recursive` over `manifest.dependencies`,
+        // `self.runtime.instantiate(&compiled, ActorId(fresh), &[], &budget)` to get a `GuestInstance`,
+        // wrap it in a `PluginInstanceHandle` and register that with `io_router`/`inference_router`
+        // (mirroring `IoRouter::register_plugin`'s new signature — pre-decoded rosters, no wasm call),
+        // `plugin_graph.register`, `mutation_router.register_plugin`, `app_router.register_manifest`,
+        // then the SAME `owned_surface_gaps` hard-gate the OLD `WasmPluginRuntime`-backed version had,
+        // before finally `self.manifests.insert(...)`. Every router this file uses already accepts
+        // exactly this shape (verified by `semio-framework-plugin-host`'s own compiling test suite).
+        Err(RunError::Host(format!(
+            "plugin `{plugin_id}` compiled successfully but its manifest cannot be read: `world actor` has no manifest-reading export (the old `plugin.manifest()` WIT call is gone with `WasmPluginRuntime`); `describe()`'s PackageDescriptor (packet E1) is not wired into this crate yet"
+        )))
     }
 
     /// ✂️ Contract §4.5: refused while any OTHER loaded plugin still depends on `plugin_id`.
@@ -1335,84 +1372,50 @@ impl WasmtimeNodeHost {
         self.inference_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
         self.app_router.unregister_plugin(plugin_id);
         self.plugin_graph.unregister(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.runtimes.remove(plugin_id);
+        self.manifests.remove(plugin_id);
+        self.compiled_for_plugin.remove(plugin_id);
         Ok(())
     }
 
-    /// 🩹️ Contract §4.5: builds a fresh `WasmPluginRuntime` from the SAME compiled path, re-validates
-    /// the WHOLE graph with `plugin_id` replaced (so a version bump that would break a live
-    /// dependent is rejected before anything swaps — scout-2 §5's "nothing considers dependents on
-    /// reload"), then atomically replaces the registered runtime and every router entry for it. A
-    /// fresh top-level `Arc` (not an in-place mutation of the existing one) is used deliberately:
-    /// nothing in this host caches a `WasmPluginRuntime` handle across calls (`exchange`/`open`
-    /// always re-look-up via `self.runtimes.get(plugin_id)`), so swapping the map entry is
-    /// observationally identical to, and simpler than, requiring exclusive ownership of the old
-    /// `Arc` (which every router's own registration also holds a clone of).
+    /// 🩹️ Contract §4.5: re-validates the WHOLE graph with `plugin_id` replaced (so a version bump
+    /// that would break a live dependent is rejected before anything swaps), then atomically replaces
+    /// the registered manifest and every router entry for it.
+    ///
+    /// 🚧️ Same gap as `load_runtime_recursive` — always fails until a manifest decoder exists.
     pub fn hot_reload_plugin(&mut self, plugin_id: &str) -> Result<(), RunError> {
-        let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
-        let fresh = semio_framework_plugin_host::WasmPluginRuntime::load(&path).map_err(|error| RunError::Host(error.to_string()))?;
-        self.plugin_graph.prepare_hot_reload(&fresh.manifest).map_err(|error| RunError::Host(error.to_string()))?;
-
-        let fresh = Arc::new(fresh);
-        fresh.register_host_blob_store(Arc::clone(&self.blob_store)).map_err(|error| RunError::Host(error.to_string()))?;
-        fresh.register_host_io_router(Arc::clone(&self.io_router)).map_err(|error| RunError::Host(error.to_string()))?;
-        self.io_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.io_router.register_plugin(plugin_id, Arc::clone(&fresh)).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.mutation_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        let mutation_roster = fresh.list_artifact_mutations().map_err(|error| RunError::Host(error.to_string()))?;
-        self.mutation_router.register_plugin(plugin_id, &fresh.manifest.dependencies, &mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.inference_router.unregister_plugin(plugin_id).map_err(|error| RunError::Host(error.to_string()))?;
-        self.inference_router.register_plugin(plugin_id, &fresh.manifest.dependencies, Arc::clone(&fresh)).map_err(|error| RunError::Host(error.to_string()))?;
-
-        self.app_router.unregister_plugin(plugin_id);
-        self.app_router.register_plugin(plugin_id, &fresh).map_err(|fault| RunError::Host(fault.message))?;
-
-        self.plugin_graph.commit_hot_reload(fresh.manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
-        self.runtimes.insert(plugin_id.to_string(), fresh);
-        Ok(())
+        self.manifests.remove(plugin_id);
+        self.compiled_for_plugin.remove(plugin_id);
+        self.manifest_for(plugin_id).map(|_| ())
     }
 
     /// 🎯️ Contract §5 end to end: `initiator_handle` must already have proposed (its own
     /// `dispatch_emit` stashed a `TransactionProposalDraft` instead of applying — the caller drains
     /// it via `exchange` and passes `local_ops`/`description`/`foreign` straight through here).
-    /// Resolves every foreign step through this host's own `InstanceDirectory`/`ArtifactMutationRouter`,
-    /// planning a CONTRIBUTED step by calling the contributor's real `artifact-mutation-plan` with
-    /// the target's live `SessionLanePack` snapshot, and drives every `TransactionPrepare`/`Commit`/
-    /// `Rollback`/`Undo` over the SAME `WasmPluginRuntime::exchange` a live UI's frames go through.
+    ///
+    /// 🚧️ `exec`/`plan` always return `TransactionError` today — this struct's own doc comment
+    /// explains why (a real per-command reply correlation / contributed-mutation-plan dispatch over
+    /// `GuestRuntime::execute_turn`'s effects needs a post-turn dispatch loop this packet does not
+    /// build). Kept as a real, correctly-typed call into `HostTransactionCoordinator::run_transaction`
+    /// (unlike deleting the method) so `TransactionCoordinator`'s own resolution/gating logic — which
+    /// IS real and IS tested (`host_transaction_coordinator_tests`) — stays reachable from here the
+    /// moment the two closures below get real bodies.
     pub fn run_transaction(&self, initiator_handle: u32, local_ops: Vec<Vec<u8>>, description: String, foreign: Vec<protocol::ForeignStep>) -> Result<semio_framework_plugin_host::TransactionOutcome, semio_framework_plugin_host::TransactionError> {
         let (plugin_id, instance_id) = self.instances.get(&initiator_handle).cloned().ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("unknown node handle {initiator_handle}")))?;
         let initiator = semio_framework_plugin_host::TransactionMember { plugin_id, instance_id };
-        let runtimes = &self.runtimes;
-        let graph = &self.plugin_graph;
         self.transaction_coordinator.run_transaction(
             &self.instance_directory,
             &self.mutation_router,
-            |plugin_id, instance_id, command| {
-                let runtime = runtimes.get(plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{plugin_id}` not loaded")))?;
-                let encoded = protocol::encode_app_command(&command);
-                let frames = runtime.exchange(instance_id, vec![encoded]).map_err(semio_framework_plugin_host::TransactionError::Host)?;
-                frames.iter().map(|bytes| protocol::decode_app_frame(bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))).collect()
+            |plugin_id, _instance_id, _command| {
+                Err(semio_framework_plugin_host::TransactionError::rejected(
+                    "transaction.not-wired",
+                    format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — needs a post-turn effect-dispatch loop over GuestRuntime::execute_turn, not built in this packet (see 📓️terra-B1b-host-complete-report.md)"),
+                ))
             },
-            |contributor, artifact_kind, mutation_id, member, payload| {
-                // 🔗️ Re-check the dependency at dispatch time, not just at load: an owner can be
-                // unloaded, or replaced by a build the contributor's requirement no longer matches,
-                // long after both registered. `contribution_block` distinguishes the three cases so
-                // the caller sees `dependency-missing` / `version-mismatch` / `contribution-not-permitted`
-                // rather than one undifferentiated refusal.
-                if let Some((code, detail)) = graph.contribution_block(contributor, &member.plugin_id).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.contribution-not-permitted", error.to_string()))? {
-                    return Err(semio_framework_plugin_host::TransactionError::rejected(code, detail));
-                }
-                let contributor_runtime = runtimes.get(contributor).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.dependency-missing", format!("contributor `{contributor}` not loaded")))?;
-                let target_runtime = runtimes.get(&member.plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{}` not loaded", member.plugin_id)))?;
-                let session = target_runtime.document_session(member.instance_id).map_err(semio_framework_plugin_host::TransactionError::Host)?.unwrap_or_default();
-                let request = semio_framework_plugin_host::HostArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: session.command_log_len, generation: session.generation, snapshot_pack: session.document.pack.clone(), payload: payload.to_vec() };
-                let request_value = to_dsl_value(&request).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error))?;
-                let request_bytes = store::pack_rt::encode_wire_value(&request_value);
-                let result_bytes = contributor_runtime.artifact_mutation_plan(&request_bytes).map_err(semio_framework_plugin_host::TransactionError::Host)?;
-                let result_value = store::pack_rt::decode_wire_value(&result_bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))?;
-                from_dsl_value(result_value).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error))
+            |contributor, _artifact_kind, _mutation_id, _member, _payload| {
+                Err(semio_framework_plugin_host::TransactionError::rejected(
+                    "transaction.not-wired",
+                    format!("contributor `{contributor}`: artifact-mutation-plan has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md"),
+                ))
             },
             initiator,
             local_ops,
@@ -1421,14 +1424,14 @@ impl WasmtimeNodeHost {
         )
     }
 
+    /// 🚧️ Same gap as `run_transaction` — see its own doc comment.
     pub fn undo_transaction_group(&self, members: &[semio_framework_plugin_host::TransactionMember], group_id: &str) {
-        let runtimes = &self.runtimes;
         self.transaction_coordinator.undo_group(
-            |plugin_id, instance_id, command| {
-                let runtime = runtimes.get(plugin_id).ok_or_else(|| semio_framework_plugin_host::TransactionError::rejected("transaction.unknown-target", format!("plugin `{plugin_id}` not loaded")))?;
-                let encoded = protocol::encode_app_command(&command);
-                let frames = runtime.exchange(instance_id, vec![encoded]).map_err(semio_framework_plugin_host::TransactionError::Host)?;
-                frames.iter().map(|bytes| protocol::decode_app_frame(bytes).map_err(|error| semio_framework_plugin_host::TransactionError::rejected("transaction.commit-failed", error.to_string()))).collect()
+            |plugin_id, _instance_id, _command| {
+                Err(semio_framework_plugin_host::TransactionError::rejected(
+                    "transaction.not-wired",
+                    format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — see 📓️terra-B1b-host-complete-report.md"),
+                ))
             },
             members,
             group_id,
@@ -1522,22 +1525,18 @@ fn opening_role_from_wire(role_wire: u8) -> Result<semio_framework::AppRole, sem
 
 #[cfg(not(target_arch = "wasm32"))]
 impl AppChannelHost for WasmtimeNodeHost {
-    fn open(&mut self, plugin_id: &str, app_id: &str, artifact_ref: &str) -> Result<u32, RunError> {
-        let instance_id = self.runtime_for(plugin_id)?.create_app(app_id).map_err(|error| RunError::Host(error.to_string()))?;
-        if !artifact_ref.is_empty() {
-            let artifact_kind = self
-                .runtimes
-                .get(plugin_id)
-                .and_then(|runtime| runtime.manifest.apps.iter().find(|app| app.id == app_id))
-                .map(|app| app.io.document_schema.clone())
-                .filter(|schema| !schema.is_empty())
-                .unwrap_or_else(|| app_id.to_string());
-            self.instance_directory.bind(artifact_ref, plugin_id, instance_id, &artifact_kind).map_err(|error| RunError::Host(error.to_string()))?;
-        }
-        let handle = self.next_handle;
-        self.next_handle += 1;
-        self.instances.insert(handle, (plugin_id.to_string(), instance_id));
-        Ok(handle)
+    /// 🚧️ Real body once a manifest exists (see `WasmtimeNodeHost`'s own doc comment and
+    /// `load_runtime_recursive`): `self.runtime.instantiate(&compiled, ActorId(fresh), &[], &budget)`
+    /// to get a `GuestInstance`, `self.runtime.execute_turn(&mut instance, &[Event::InstanceOpen {
+    /// instance, app_id, actor, config: manifest-declared defaults, assets, capabilities, quotas }],
+    /// budget)` to prime it (channel v12's own doc: "lifecycle now arrives through ... `Event::
+    /// InstanceOpen`"), bind `artifact_ref` into `instance_directory` off the manifest's own app
+    /// entry's `io.document_schema` (exactly the OLD lookup below, unchanged), then store the
+    /// `GuestInstance` in `guest_instances` keyed `(plugin_id, instance_id)`. `manifest_for` is the
+    /// single gate every one of those steps sits behind today.
+    fn open(&mut self, plugin_id: &str, app_id: &str, _artifact_ref: &str) -> Result<u32, RunError> {
+        self.manifest_for(plugin_id)?;
+        unreachable!("manifest_for always errors today — see WasmtimeNodeHost's own doc comment; app_id {app_id} would open a real instance once it doesn't")
     }
 
     /// 🚪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (W1-A) contract §3: intercepts the
@@ -1579,13 +1578,17 @@ impl AppChannelHost for WasmtimeNodeHost {
             }
         }
         if !passthrough.is_empty() {
-            let (plugin_id, instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-            let encoded: Vec<Vec<u8>> = passthrough.iter().map(protocol::encode_app_command).collect();
-            let runtime = self.runtimes.get(plugin_id).ok_or_else(|| RunError::Host(format!("no runtime for plugin `{plugin_id}`")))?;
-            let response = runtime.exchange(*instance_id, encoded).map_err(|error| RunError::Host(error.to_string()))?;
-            for bytes in &response {
-                frames.push(protocol::decode_app_frame(bytes).map_err(|error| RunError::Host(error.to_string()))?);
-            }
+            // 🚧️ `node` can never resolve — `open` (above) can never succeed today either (same
+            // manifest-decode gap), so `self.instances`/`self.guest_instances` are always empty. Real
+            // body once unblocked: encode each passthrough `AppCommand` as `Event::AppCommandEvent
+            // {instance, seq, command}`, `self.runtime.execute_turn(&mut instance, &events, budget)`
+            // in ONE batched call (preserves this method's "single batched, synchronous duplex round
+            // trip" contract), then scan `TurnResult.effects` for `Effect::Respond{req, result}`
+            // where `req.0 == seq`, decoding `RequestOutcome::Ok(bytes)` as a `protocol::AppFrame`
+            // (the guest's per-command reply, same wire shape `exchange` always returned, now
+            // delivered via an effect instead of a direct return) and `Err(bytes)` as `AppFrame::Error`.
+            let (plugin_id, _instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
+            return Err(RunError::Host(format!("plugin `{plugin_id}`: exchange has no world-actor equivalent yet — needs a post-turn effect-dispatch loop over GuestRuntime::execute_turn, not built in this packet (see 📓️terra-B1b-host-complete-report.md)")));
         }
         Ok(frames)
     }
@@ -1657,13 +1660,8 @@ mod tests {
             let mut frames = Vec::new();
             for command in commands {
                 match command {
-                    AppCommand::Hello { channel_version, .. } => {
-                        if channel_version != CHANNEL_VERSION {
-                            frames.push(AppFrame::Error { in_reply_to: None, fault: run_fault_bytes("channel-version", "mismatched channel version"), report: Vec::new() });
-                            continue;
-                        }
-                        frames.push(AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: node, manifest: Vec::new() });
-                    }
+                    // 🧬️ Channel v12 retires `Hello`/`Welcome` — `open` (above) is what now
+                    // establishes the instance, matching the reactor ABI's `Event::InstanceOpen`.
                     AppCommand::LoadConfig { seq, pack, spr } => {
                         self.configs.insert(node, (pack, spr));
                         frames.push(AppFrame::Done { in_reply_to: seq });

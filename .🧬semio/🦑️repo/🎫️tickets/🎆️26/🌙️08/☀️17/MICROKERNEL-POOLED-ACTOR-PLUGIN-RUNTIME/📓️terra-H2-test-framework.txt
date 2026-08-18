@@ -1,0 +1,10 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  152 passed (152)
+   Start at  02:37:19
+   Duration  438ms (transform 407ms, setup 0ms, import 493ms, tests 94ms, environment 1ms)
+
+EXIT: 0

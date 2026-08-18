@@ -52,6 +52,11 @@ required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+# 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H3-wgpu-native): the `Kernel`/`ActorId`/`ThreadTransport`
+# vocabulary the native kernel thread (`📦️glue.rs`'s `kernel_runtime` module) drives directly — see
+# `📓️terra-H3-wgpu-native-report.md`.
+semio-framework-actor = { workspace = true }
+blake3 = "1"
 # 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D): `ureq`
 # added alongside the pre-existing `sync` so `os_directory::client::native::NativeDirectoryTransport`
 # (gated `all(feature = "ureq", feature = "sync", not(wasm32))`) compiles — both features already

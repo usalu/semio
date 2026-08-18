@@ -1,11 +1,19 @@
 #!/usr/bin/env bun
-/** @emoji 🌐 Shared jco transpile + plugin web glue (dev runner + extension store). */
+/** @emoji 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
+ *
+ * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
+ * (one Worker per plugin) are replaced by `shardWorkerSource`/`SHARD_WORKER_FILE` — ONE
+ * package-agnostic `🟨️shard-worker.js`, served from `/plugin-modules/_shard/`, multiplexed by
+ * `actorId` across a bounded shard pool (see `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`'s
+ * `ShardClient`, the client-side transport this worker pairs with). V8 reserves a 4 GiB guard region
+ * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
+ * change that lifts that ceiling. */
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { buildBudgetMs, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
-export const PLUGIN_WORKER_FILE = "🟨️plugin-worker.js";
+export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
@@ -24,173 +32,189 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
   }
 }
 
-export function pluginWorkerSource(): string {
-  return `/** @generated semio plugin web worker */
-let pluginApi = null;
+/**
+ * @emoji 🧵️ ONE package-agnostic worker bootstrap shared by every actor this tab's shard pool
+ * activates — pairs with `ShardClient` (`🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`), which
+ * owns exactly K of these workers (design-runtime.md §1 `ShardTable`: `min(hardwareConcurrency-1,
+ * 4)` on web) instead of one per plugin. Keeps `Map<actorId, {api, instance}>` and dynamically
+ * `import()`s each actor's own jco bridge module (`pluginComponentBridgeSource`'s output) on its
+ * first `activate` — never at worker-bootstrap time, since one worker now hosts many unrelated
+ * plugins' actors over its lifetime.
+ *
+ * Runs *one turn at a time per actor*: two `turn` requests for the SAME `actorId` overlapping is a
+ * caller bug (the scheduler's job to prevent, not this worker's), enforced here defensively by
+ * rejecting a second in-flight turn rather than corrupting interleaved guest state. Different actors
+ * DO interleave — every request handler is `async`, so a long `await` inside one actor's turn lets
+ * another actor's message be picked up and start in the meantime; nothing here blocks the worker's
+ * event loop across actors.
+ *
+ * Heartbeats: posts `{kind:"heartbeat", turnSeq}` at the START of every request (before running any
+ * guest code) — see `ShardClient`'s watchdog, which times a turn out at `2×wallMs` and, after three
+ * such windows, terminates and rebuilds this worker. Also mirrors the same `turnSeq` into the shared
+ * `Atomics.store` heartbeat slot when `attachHeartbeatSab` provided one (COOP/COEP already served ⇒
+ * `SharedArrayBuffer` available) — purely a faster read path for `ShardClient`; the `postMessage`
+ * heartbeat above is unconditional, so correctness never depends on the SAB path being available.
+ *
+ * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
+ * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
+ * hand-rolled `Envelope`/`TurnResult` pack encoding (no TS mirror of that codec exists yet — tracked
+ * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, budget)` call this worker makes
+ * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
+ * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
+ * interim JSON rather than pack bytes.
+ */
+export function shardWorkerSource(): string {
+  return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
+const actors = new Map(); // actorId -> { api, moduleUrl }
+const inFlightTurnActors = new Set();
+let turnSeq = 0;
+let heartbeatSabView = null;
+let heartbeatShardIndex = -1;
 
-async function loadPlugin(moduleUrl) {
-  if (pluginApi) return pluginApi;
-  const module = await import(moduleUrl);
-  if (module.createPluginApi) {
-    pluginApi = await module.createPluginApi();
-    return pluginApi;
-  }
-  throw new Error("plugin module missing createPluginApi export");
+function heartbeat() {
+  turnSeq += 1;
+  self.postMessage({ kind: "heartbeat", turnSeq });
+  if (heartbeatSabView) Atomics.store(heartbeatSabView, heartbeatShardIndex, turnSeq);
 }
 
-function reply(requestId, type, payload) {
-  self.postMessage({ requestId, type, ...payload });
+function reply(requestId, value) {
+  self.postMessage({ kind: "result", requestId, ok: true, value });
 }
 
-function replyError(requestId, message) {
-  self.postMessage({ requestId, type: "error", message });
+function replyError(requestId, error) {
+  const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
+  const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
+  self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail });
+}
+
+async function loadActor(actorId, moduleUrl) {
+  const existing = actors.get(actorId);
+  if (existing && existing.moduleUrl === moduleUrl) return existing;
+  const bridge = await import(/* @vite-ignore */ moduleUrl);
+  const api = await bridge.createActorApi();
+  const entry = { api, moduleUrl, pendingAssets: [] };
+  actors.set(actorId, entry);
+  return entry;
+}
+
+// 🪶️ GUESTSLIM (design-runtime.md §3): world \`actor\` exports NO \`activate\` function — activation is
+// pure bookkeeping (load the module, cache the named asset packs the main thread fetched) until the
+// KERNEL's own first \`turn\` for this actor carries a real \`instance-open\` event (it alone knows
+// \`app-id\`/\`config\`/\`quotas\`). This worker's only job is splicing the cached asset bytes into that
+// event's \`assets\` field right before the first \`poll\` — they must be resident before the guest's
+// first \`surface-visible\`, not fetched lazily on read.
+function spliceInstanceOpenAssets(entry, events) {
+  if (entry.pendingAssets.length === 0) return events;
+  const pending = entry.pendingAssets;
+  entry.pendingAssets = [];
+  return events.map((event) => {
+    if (event.kind !== "instance-open") return event;
+    return { kind: event.kind, payload: { ...event.payload, assets: [...(event.payload.assets ?? []), ...pending] } };
+  });
 }
 
 self.addEventListener("message", async (event) => {
   const msg = event.data ?? {};
-  const { type, requestId } = msg;
-  // 🔗️ Backbone relay passthrough (main thread ⇄️ host-shim): inbound messages from the sync actor
-  // (\`🟦️backbone-🟦️worker.ts\`) land in the shared queue the host-shim's \`backbonePoll\` drains; the shim's
-  // \`backboneSend\` posts \`backboneOutbound\` straight up to the main thread, so there is nothing to do
-  // for it here. These carry no requestId, so they must be handled before the request/response guard.
-  if (type === "backboneInbound") {
-    const queues = (globalThis.__semioBackboneInbound ??= new Map());
-    const queue = queues.get(msg.uri) ?? [];
-    for (const message of msg.messages ?? []) queue.push(message);
-    queues.set(msg.uri, queue);
+  const { kind } = msg;
+  if (kind === "attachHeartbeatSab") {
+    heartbeatShardIndex = msg.shardIndex;
+    heartbeatSabView = new Int32Array(msg.sab);
     return;
   }
-  if (!requestId || !type) return;
+  if (kind === "cancelJob") {
+    const actor = actors.get(msg.actorId);
+    actor?.api.cancelJob(msg.job);
+    return;
+  }
+  if (kind === "dispose") {
+    actors.delete(msg.actorId);
+    inFlightTurnActors.delete(msg.actorId);
+    return;
+  }
+  const { requestId, actorId } = msg;
+  if (!requestId || !actorId) return;
+  heartbeat();
   try {
-    if (type === "init") {
-      // 🪶️ GUESTSLIM: bytes forwarded from the main thread's \`acquirePluginModule\` fetch (a worker
-      // never owns fetch itself); \`readAsset\` in \`🟨️host-shim.js\` reads from this global.
-      if (msg.guestSlimAssets) {
-        globalThis.__semioGuestSlimAssets = new Map(msg.guestSlimAssets.map(([handle, buffer]) => [handle, new Uint8Array(buffer)]));
-      }
-      await loadPlugin(msg.moduleUrl);
-      reply(requestId, "init", { ok: true });
+    if (kind === "activate") {
+      const entry = await loadActor(actorId, msg.moduleUrl);
+      entry.pendingAssets = msg.assets ?? [];
+      reply(requestId, undefined);
       return;
     }
-    const api = pluginApi;
-    if (!api) throw new Error("worker not initialized");
-    switch (type) {
-      case "manifest":
-        reply(requestId, "manifest", { value: await api.manifest() });
+    const actor = actors.get(actorId);
+    if (!actor) throw new Error(\`shard worker: actor \${actorId} not activated\`);
+    switch (kind) {
+      case "turn": {
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        try {
+          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.budget));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
         break;
-      case "createApp":
-        reply(requestId, "createApp", { instanceId: await api.createApp(msg.appId) });
+      }
+      case "startJob":
+        await actor.api.startJob(msg.job, msg.jobKind, msg.input);
+        reply(requestId, undefined);
         break;
-      case "destroy":
-        await api.destroyApp?.(msg.instanceId);
-        reply(requestId, "destroy", { ok: true });
+      case "stepJob":
+        reply(requestId, await actor.api.stepJob(msg.job, msg.budget));
         break;
-      case "exchange":
-        reply(requestId, "exchange", { value: await api.exchange(msg.instanceId, msg.frames) });
+      case "checkpoint":
+        reply(requestId, await actor.api.checkpoint());
+        break;
+      case "restore":
+        await actor.api.restore(msg.state);
+        reply(requestId, undefined);
         break;
       default:
-        throw new Error(\`unknown worker message type: \${type}\`);
+        throw new Error(\`unknown shard worker message kind: \${kind}\`);
     }
   } catch (error) {
-    const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
-    const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
-    replyError(requestId, (error instanceof Error ? error.message : String(error)) + detail);
+    replyError(requestId, error);
   }
 });
 `;
 }
 
+/**
+ * @emoji 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
+ * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
+ * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
+ * `checkpoint`/`restore`.
+ *
+ * DROPS the old `runSerialized` retry/reload loop entirely (design-runtime.md §3: "recovery is the
+ * kernel's job now"). Under the old ABI a guest panic (`panic = "abort"`, no unwind) permanently
+ * killed the wasm32-wasip2 instance, and — with no host-side supervisor — the ONLY recovery available
+ * was this bridge silently re-importing the module and replaying. Now `ActivationRegistry`'s
+ * `FailurePolicy` (design-runtime.md §1) owns that: a trap here just throws, `🟨️shard-worker.js`'s
+ * `replyError` propagates it to `ShardClient` as a rejected turn, and the KERNEL decides
+ * `Trapped{restarts}` → drop + re-instantiate (fresh `activate`) + `restore()` the last checkpoint —
+ * the SAME re-instantiation this bridge used to do blindly, now a supervised decision instead of a
+ * local guess with no visibility into checkpoint state.
+ *
+ * 🚧 UNVERIFIED against a real compiled artifact (B1b's `GuestRuntime`/wasip2 guest build is still
+ * landing as of this packet): the exact jco-generated export shape for a world that exports several
+ * *interfaces* (rather than bare functions) is assumed here to be one JS binding per interface, named
+ * for the interface (\`reactor\`/\`jobs\`/\`checkpoint\`/\`describe\`), field names camelCased from the
+ * WIT's kebab-case. If jco nests these differently, only the four destructured names below need to
+ * change — every other line here is interface-shape-agnostic.
+ */
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
-  return `/** @generated semio plugin jco component bridge */
-let plugin = (await import("./${componentBase}.js")).plugin;
-let reloadNonce = 0;
+  return `/** @generated semio actor jco component bridge */
+const { reactor, jobs, checkpoint, describe } = await import("./${componentBase}.js");
 
-// 🩹️ A guest panic traps the wasm32-wasip2 instance for good (\`panic = "abort"\`, no unwind) — the
-// guest's own \`clearInstanceGuard\` export can no longer reach a dead instance either. Re-importing
-// the SAME specifier returns the cached (still-dead) module, so recovery re-imports it under a fresh
-// \`?semioReload=\` query — the same cache-busting shape \`PluginSource.moduleUrl\` already uses for hot
-// reload (see \`🎠️kernel/🟦️component.ts\`) — to force a genuinely new module evaluation and thus a new
-// \`WebAssembly.Instance\`.
-async function reloadPlugin() {
-  reloadNonce += 1;
-  const fresh = await import(\`./${componentBase}.js?semioReload=\${reloadNonce}\`);
-  plugin = fresh.plugin;
-  return plugin;
-}
-
-const apps = new Set();
-let tail = Promise.resolve();
-let pluginApiPromise = null;
-
-function runSerialized(fn) {
-  const job = tail.then(async () => {
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      try {
-        return await fn();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
-        const detail = payload !== undefined ? \`\${message} payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : message;
-        const busy = detail.includes("plugin instance busy") || detail.includes("plugin busy");
-        const trapped = detail.includes("unreachable") || /trap|panicked/i.test(detail);
-        if (trapped) {
-          // 💀️ Genuinely dead instance — clearing the guard cell cannot help (see comment above);
-          // re-instantiate the whole module so this and every later call runs against a live instance.
-          apps.clear();
-          try {
-            await reloadPlugin();
-          } catch {
-            /* reload failure surfaces on the next attempt's own call instead */
-          }
-        } else if (busy) {
-          // 🔒️ Contended, not dead — a cheap in-place guard clear is enough.
-          try { plugin.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
-        }
-        if (!busy && !trapped) throw error;
-        await new Promise((resolve) => setTimeout(resolve, attempt + 1));
-      }
-    }
-    return fn();
-  }, async () => fn());
-  tail = job.then(
-    () => undefined,
-    () => undefined,
-  );
-  return job;
-}
-
-async function createPluginApiInner() {
-  const core = {
-    async manifest() {
-      return await plugin.manifest();
-    },
-    async createApp(appId) {
-      // 🐚️ A random instance id (not \`appId\` itself) so two shells sharing this worker's plugin module
-      // (see acquirePluginModule in framework/core) can each instantiate the same app without colliding
-      // on the guest's instance-id-keyed \`INSTANCES\` table.
-      const instanceId = await plugin.instantiateApp(appId, crypto.randomUUID());
-      apps.add(instanceId);
-      return instanceId;
-    },
-    async destroyApp(instanceId) {
-      apps.delete(instanceId);
-    },
-    async exchange(instanceId, frames) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      return await plugin.exchange(instanceId, frames);
-    },
-  };
+export async function createActorApi() {
   return {
-    manifest: () => runSerialized(() => core.manifest()),
-    createApp: (appId) => runSerialized(() => core.createApp(appId)),
-    destroyApp: (instanceId) => runSerialized(() => core.destroyApp(instanceId)),
-    exchange: (instanceId, frames) => runSerialized(() => core.exchange(instanceId, frames)),
+    poll: (events, budget) => reactor.poll(events, budget),
+    startJob: (job, kind, input) => jobs.startJob(job, kind, input),
+    stepJob: (job, budget) => jobs.stepJob(job, budget),
+    cancelJob: (job) => jobs.cancelJob(job),
+    checkpoint: () => checkpoint.checkpoint(),
+    restore: (state) => checkpoint.restore(state),
+    describe: () => describe.describe(),
   };
-}
-
-export async function createPluginApi() {
-  if (!pluginApiPromise) pluginApiPromise = createPluginApiInner();
-  return pluginApiPromise;
 }
 `;
 }
@@ -246,7 +270,10 @@ function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: P
 }
 
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  if (runNodeBinStatus(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨️host-shim.js"], ctx.repoRoot) !== 0) {
+  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2): `world actor`'s only import is `pure`
+  // (component.wit's `interface pure { log; now-ms; trace-span; }`), replacing the old `host`
+  // interface — `🟨️host-shim.js` below implements only these three functions now.
+  if (runNodeBinStatus(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js"], ctx.repoRoot) !== 0) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   optimizePluginCoreModules(outDir, componentBase, ctx);
@@ -254,112 +281,34 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
 }
 
 
+/**
+ * @emoji 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1): `world actor`'s ONLY
+ * import — `interface pure { log; now-ms; trace-span; }` — replacing the old `host` world's much
+ * larger synchronous surface (`read-document`/`write-document`/`open-window`/`invoke-action`/
+ * `read-asset`/`network-fetch`/`write-blob`/`read-blob`, and the ad hoc `backboneSend`/`backbonePoll`/
+ * `backboneStatus` worker-postMessage relay). Every one of those is gone: reads/writes/network/dialogs
+ * /jobs are now `effect`s returned from `poll`, answered by an `event` on a later `poll` — never a
+ * synchronous host-shim call — which is what makes a pooled, multi-instance-per-worker actor
+ * `Send`-free and reentrancy-safe in the first place (component.wit's own doc comment on `pure`).
+ * `writeBlob`/`readBlob`'s synchronous XHR trick and the `backbonePoll` shared queue are the two
+ * pieces design-runtime.md §3 calls out by name for deletion; both are subsumed by the same effect/
+ * event turn loop (`document-read`/`document-write`/`blob-load`/`blob-write` effects, `message-event`
+ * for backbone-shaped traffic).
+ */
 export function hostShimSource(): string {
-  return `/** @generated semio plugin host shim */
+  return `/** @generated semio actor host shim — implements ONLY the \`pure\` import interface */
 
 export function log(level, message) {
-  if (level === "error") console.error(\`[plugin] \${message}\`);
-  else console.log(\`[plugin] \${message}\`);
+  if (level === "error") console.error(\`[actor] \${message}\`);
+  else console.log(\`[actor] \${message}\`);
 }
 
 export function nowMs() {
   return BigInt(Date.now());
 }
 
-export function readDocument(handle) {
-  throw \`read-document unsupported: \${handle}\`;
-}
-
-export function writeDocument(handle, payloadJson) {
-  throw \`write-document unsupported: \${handle}\`;
-}
-
-export function openWindow(kind, paramsJson) {
-  throw \`open-window unsupported: \${kind}\`;
-}
-
-export function invokeAction(target, invocationJson) {
-  throw \`invoke-action unsupported: \${target}\`;
-}
-
-export function readAsset(handle) {
-  // 🪶️ GUESTSLIM: bytes are pushed into \`globalThis.__semioGuestSlimAssets\` by the worker
-  // bootstrap's "init" handler (see \`🟨️plugin-worker.js\`), forwarded from the main thread's
-  // \`acquirePluginModule\` fetch — a WASI-P2 program worker never owns fetch itself (see this
-  // module's own doc comment above), so there is nothing to fetch synchronously here.
-  const bytes = globalThis.__semioGuestSlimAssets?.get(handle);
-  if (!bytes) throw \`read-asset unsupported: \${handle}\`;
-  return bytes;
-}
-
-export function networkFetch(origin, path) {
-  throw \`network-fetch unsupported: \${origin}\${path}\`;
-}
-
-// 📦️ Must match \`framework/os/core/js/index.ts\`'s \`BLOB_ENDPOINT_PATH\`.
-const BLOB_ENDPOINT_PATH = "/semio-blob";
-
-/** @emoji 📦️ Persists \`data\` to the dev server's content-addressed blob store, returning its hash.
- * \`write-blob\`/\`read-blob\` are declared synchronous in the WIT world (no \`async\` on the host import),
- * so this can't use \`fetch\` — a dedicated worker (unlike the main thread) still permits synchronous
- * \`XMLHttpRequest\`, which is the standard sync-bridge trick for exactly this constraint. */
-export function writeBlob(data, mediaType) {
-  const xhr = new XMLHttpRequest();
-  xhr.open("PUT", \`\${BLOB_ENDPOINT_PATH}?mediaType=\${encodeURIComponent(mediaType)}\`, false);
-  xhr.send(new Uint8Array(data));
-  if (xhr.status < 200 || xhr.status >= 300) throw \`write-blob failed (\${xhr.status})\`;
-  return JSON.parse(xhr.responseText).hash;
-}
-
-/** @emoji 📦️ Fetches a previously written blob's bytes by hash. See \`writeBlob\` for why this is a
- * synchronous XHR rather than \`fetch\`. */
-export function readBlob(hash) {
-  const xhr = new XMLHttpRequest();
-  xhr.open("GET", \`\${BLOB_ENDPOINT_PATH}/\${encodeURIComponent(hash)}\`, false);
-  xhr.responseType = "arraybuffer";
-  xhr.send();
-  if (xhr.status === 404) throw \`blob not found: \${hash}\`;
-  if (xhr.status < 200 || xhr.status >= 300) throw \`read-blob failed (\${xhr.status})\`;
-  return new Uint8Array(xhr.response);
-}
-
-// 🔗️ Per-uri inbound queues (serialized \`BackboneMessage\`s), shared on the worker global so the program
-// worker's \`backboneInbound\` relay (see pluginWorkerSource) can fill them while this shim drains them —
-// the two scripts live in the same worker realm but are separate modules.
-function backboneInboundQueues() {
-  return (globalThis.__semioBackboneInbound ??= new Map());
-}
-const backboneAttached = new Set();
-
-/** @emoji 📤️ Enqueues an outbound message to the main thread, which relays it into \`🟦️backbone-🟦️worker.ts\`
- * (the sync actor). Inside a dedicated worker this is postMessage-only (a worker can't own the
- * socket/fetch itself); when this component is instead loaded directly on the main thread (the
- * no-\`Worker\`/component-model-load fallback in \`framework/core/js/index.ts\`), it reaches the same
- * relay through the well-known \`__semioMainThreadPluginBackboneOutbound\` global instead. */
-export function backboneSend(uri, messageBytes) {
-  backboneAttached.add(uri);
-  if (typeof WorkerGlobalScope !== "undefined" && typeof self !== "undefined" && typeof self.postMessage === "function") {
-    self.postMessage({ type: "backboneOutbound", uri, message: messageBytes });
-  } else if (typeof globalThis.__semioMainThreadPluginBackboneOutbound === "function") {
-    globalThis.__semioMainThreadPluginBackboneOutbound(uri, messageBytes);
-  }
-}
-
-/** @emoji 📥️ Drains the inbound queue the worker filled from \`backboneInbound\` postMessages. Returns
- * serialized \`BackboneMessage\`s (never blocks — an empty queue yields \`[]\`). */
-export function backbonePoll(uri) {
-  backboneAttached.add(uri);
-  const queues = backboneInboundQueues();
-  const queue = queues.get(uri);
-  if (!queue || queue.length === 0) return [];
-  queues.set(uri, []);
-  return queue;
-}
-
-/** @emoji 📶️ Reports whether this shim has seen traffic for a uri (the real transport health lives in
- * \`🟦️backbone-🟦️worker.ts\`; the sandboxed plugin only needs attached/detached). */
-export function backboneStatus(uri) {
-  return backboneAttached.has(uri) ? "attached" : "detached";
+export function traceSpan(name) {
+  if (typeof performance !== "undefined" && typeof performance.mark === "function") performance.mark(name);
 }
 `;
 }

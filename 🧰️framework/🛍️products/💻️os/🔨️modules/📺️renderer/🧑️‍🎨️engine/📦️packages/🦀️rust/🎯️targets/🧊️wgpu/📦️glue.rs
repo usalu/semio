@@ -83,6 +83,401 @@ use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::window::Fullscreen;
 use winit::window::{Window, WindowAttributes, WindowId};
 
+//#region 🎠️KernelRuntime
+/// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native), `📓️design-runtime.md` §1's
+/// "wgpu native" host: `Kernel` runs on a dedicated kernel thread; the winit thread only submits
+/// requests and drains outbound results (`📓️terra-H3-wgpu-native-report.md` has the full design
+/// writeup and the honest list of what is NOT wired yet — DRR `tick()`-based fairness, multi-shard
+/// `ShardTable` routing, checkpoint/restore). `ProgramBridgeBackend::Wasm` (in `ProgramBridge/`)
+/// holds a [`KernelClient`] instead of the deleted `Arc<WasmPluginRuntime>`; every plugin turn now
+/// executes on this thread via the real `semio_framework_actor::Kernel` + `GuestRuntime`/
+/// `WasmtimeRuntime` + `ShardLoop`, never in-process on the winit thread.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) mod kernel_runtime {
+    use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, PatchOp, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
+    use semio_framework_actor::{ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload, ShardKind, ShardTransport, ThreadTransport};
+    use semio_framework_plugin_host::shard::{ShardLoop, ShardOutcome};
+    use semio_framework_plugin_host::{GuestRuntime, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+    use std::collections::HashMap;
+    use std::future::Future;
+    use std::path::PathBuf;
+    use std::pin::Pin;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::mpsc;
+    use std::sync::{Arc, Mutex, OnceLock};
+    use std::task::{Context, Poll, Waker};
+    use ui_wgpu::wgpu::UiNode;
+
+    static SEQ: AtomicU64 = AtomicU64::new(1);
+    fn next_seq() -> u64 {
+        SEQ.fetch_add(1, Ordering::Relaxed)
+    }
+
+    /// ⛽️ One generous constant turn budget until the DRR scheduler threads a real per-lane one
+    /// through (same honestly-flagged gap `PluginInstanceHandle`'s `RELAY_JOB_BUDGET` already
+    /// documents on the host side for jobs — this is its `reactor::poll` turn-budget twin).
+    const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
+
+    //#region 🔖️Requests/Outcomes
+    pub(crate) enum KernelRequest {
+        CreateApp { wasm_path: PathBuf, plugin_id: String, app_id: String },
+        DestroyApp { instance: u32 },
+        /// 📡️ `events` is normally one `Event::AppCommandEvent` (the `exchange` collapse,
+        /// `📓️design-abi.md` §2/§4) but callers that need `surface-visible` (rendering) or other raw
+        /// kernel events pass those directly — a single turn may carry several.
+        Exchange { instance: u32, events: Vec<Event> },
+    }
+
+    pub(crate) struct ExchangeOutcome {
+        pub frames: Vec<protocol::AppFrame>,
+        /// 🖼️ Surfaces this turn actually repainted, already reconciled against the kernel thread's
+        /// own retained tree (`KernelThreadState::retained`) — see that field's doc for the
+        /// full-body-vs-desync policy.
+        pub surfaces: HashMap<String, UiNode>,
+        /// 🧾️ Every effect this turn produced that was NOT one of the `Effect::SendMessage{target:
+        /// Shell{..}}` entries already unpacked into `frames` above — `📓️design-abi.md` §2's
+        /// replacement for the deleted `AppFrame::Effects` wrapper: effects now travel as real
+        /// `kernel::Effect` values on `TurnResult.effects` directly, not re-encoded as an `AppFrame`.
+        pub effects: Vec<Effect>,
+    }
+
+    pub(crate) enum KernelOutcome {
+        Created(Result<u32, String>),
+        Exchanged(Result<ExchangeOutcome, String>),
+    }
+    //#endregion
+
+    //#region 🔖️KernelFuture — the leaf `Future` every `ProgramBridgeEntry` async method awaits
+    #[derive(Default)]
+    struct ResponseSlot {
+        result: Mutex<Option<KernelOutcome>>,
+        waker: Mutex<Option<Waker>>,
+    }
+
+    impl ResponseSlot {
+        fn deliver(&self, outcome: KernelOutcome) {
+            *self.result.lock().expect("response slot lock") = Some(outcome);
+            if let Some(waker) = self.waker.lock().expect("response slot lock").take() {
+                waker.wake();
+            }
+        }
+    }
+
+    /// 🌉 The genuinely-yielding leaf every plugin call now awaits, replacing the old in-process
+    /// `WasmPluginRuntime::exchange` blocking call. Whoever drives this to completion (`pollster`'s
+    /// own park-based executor for the majority of call sites that are fine staying synchronous, or
+    /// `poll_app_tasks`'s tiny task-pool executor for the 3 sites this packet moved off the winit
+    /// thread — see `📓️terra-H3-wgpu-native-report.md`) supplies its own `Waker`; this future does
+    /// not care which, it only stores+calls whatever it was last polled with.
+    struct KernelFuture {
+        slot: Arc<ResponseSlot>,
+        request: Option<KernelRequest>,
+        sender: mpsc::Sender<(KernelRequest, Arc<ResponseSlot>)>,
+    }
+
+    impl Future for KernelFuture {
+        type Output = KernelOutcome;
+        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            let this = self.get_mut();
+            if let Some(request) = this.request.take() {
+                let _ = this.sender.send((request, this.slot.clone()));
+            }
+            let mut result = this.slot.result.lock().expect("response slot lock");
+            if let Some(outcome) = result.take() {
+                return Poll::Ready(outcome);
+            }
+            drop(result);
+            *this.slot.waker.lock().expect("response slot lock") = Some(cx.waker().clone());
+            Poll::Pending
+        }
+    }
+    //#endregion
+
+    //#region 🔖️KernelClient
+    #[derive(Clone)]
+    pub(crate) struct KernelClient {
+        sender: mpsc::Sender<(KernelRequest, Arc<ResponseSlot>)>,
+    }
+
+    fn global_client() -> &'static OnceLock<KernelClient> {
+        static CLIENT: OnceLock<KernelClient> = OnceLock::new();
+        &CLIENT
+    }
+
+    impl KernelClient {
+        /// ▶️ Spawns the kernel thread exactly once (lazily, on first use — every `ProgramBridgeEntry`
+        /// clones the same handle afterward). Native-only; there is no equivalent on wasm32, where
+        /// the JS host already owns the actual plugin execution off this crate's own thread.
+        pub(crate) fn get() -> KernelClient {
+            global_client()
+                .get_or_init(|| {
+                    let (tx, rx) = mpsc::channel::<(KernelRequest, Arc<ResponseSlot>)>();
+                    std::thread::Builder::new().name("semio-kernel".into()).spawn(move || run_kernel_thread(rx)).expect("spawn kernel thread");
+                    KernelClient { sender: tx }
+                })
+                .clone()
+        }
+
+        fn submit(&self, request: KernelRequest) -> KernelFuture {
+            KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), sender: self.sender.clone() }
+        }
+
+        pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
+            match self.submit(KernelRequest::CreateApp { wasm_path, plugin_id, app_id }).await {
+                KernelOutcome::Created(result) => result,
+                KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
+            }
+        }
+
+        /// ✂️ Fire-and-forget, matching the old `WasmPluginRuntime::destroy_app`'s `fn(&self, u32)`
+        /// (no result) shape — the kernel thread frees the actor's `GuestInstance` asynchronously.
+        pub(crate) fn destroy_app(&self, instance: u32) {
+            let _ = self.sender.send((KernelRequest::DestroyApp { instance }, Arc::new(ResponseSlot::default())));
+        }
+
+        pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, String> {
+            let events = commands.into_iter().map(|command| Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()), seq: next_seq(), command: protocol::encode_app_command(&command) }).collect();
+            self.exchange_events(instance, events).await
+        }
+
+        pub(crate) async fn exchange_events(&self, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+            match self.submit(KernelRequest::Exchange { instance, events }).await {
+                KernelOutcome::Exchanged(result) => result,
+                KernelOutcome::Created(_) => Err("kernel: unexpected Created response for exchange".into()),
+            }
+        }
+    }
+    //#endregion
+
+    //#region 🔖️KernelThreadState
+    struct RetainedSurface {
+        revision: u64,
+        node: UiNode,
+    }
+
+    struct KernelThreadState {
+        kernel: Kernel,
+        runtime: Arc<dyn GuestRuntime>,
+        shard: ShardLoop,
+        kernel_transport: ThreadTransport,
+        plugin_ordinals: HashMap<String, u16>,
+        /// 📇️ `instance_id` (the `u32` `ProgramBridgeEntry`'s callers already address plugin apps
+        /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
+        instances: HashMap<u32, ActorId>,
+        next_instance_id: u32,
+        /// 🖼️ `📓️design-runtime.md` §"Scene": one retained `UiNode` per `(instance, surface)`,
+        /// reconciled from `TurnResult.ui_patches` on every turn — this crate's stand-in for a full
+        /// `SceneStore` snapshot swap (item 4 of the packet: never block the render loop on a plugin
+        /// turn, reuse the previous tree on a missed/rejected patch). Only `PatchOp::Replace{path:
+        /// "", node}` (a full body) is applied by walking the tree; `📓️design-abi.md` §4's guest-side
+        /// diffing (`InsertChild`/`RemoveChild`/non-root `Replace`/`SetProps`) has no guest emitting
+        /// it yet (no plugin has migrated to `world actor`, W3 hasn't started) — an unrecognized op
+        /// shape is treated as a desync, not walked, exactly like a `base_revision` mismatch.
+        retained: HashMap<(u32, String), RetainedSurface>,
+        /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected` asking the guest to
+        /// resend a full body — queued here instead of round-tripping an extra turn synchronously.
+        pending_rejections: HashMap<(u32, String), u64>,
+    }
+
+    fn now_ms() -> u64 {
+        crate::app_now_ms() as u64
+    }
+
+    impl KernelThreadState {
+        fn new() -> Self {
+            let runtime: Arc<dyn GuestRuntime> = Arc::new(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds"));
+            let kernel = Kernel::new(ShardKind::Thread, 1, 0, 64);
+            let (kernel_transport, shard_transport) = ThreadTransport::new_pair();
+            let shard = ShardLoop::new(runtime.clone(), Box::new(shard_transport));
+            Self { kernel, runtime, shard, kernel_transport, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
+        }
+
+        fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
+            let next = self.plugin_ordinals.len() as u16;
+            *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
+        }
+
+        fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
+            let bytes = std::fs::read(&wasm_path).map_err(|error| format!("{}: {error}", wasm_path.display()))?;
+            let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
+            let package_id = PackageId(plugin_id.clone());
+            let package_ref = PackageRef { package: package_id.clone(), hash };
+            let compiled = self.runtime.compile(&package_ref, &bytes).map_err(|error| error.to_string())?;
+            let instance_id = self.next_instance_id;
+            self.next_instance_id += 1;
+            let plugin_ordinal = self.plugin_ordinal(&plugin_id);
+            let actor = self.kernel.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, semio_framework_actor::ActivationEvent::Manual);
+            let guest_instance = self.runtime.instantiate(&compiled, actor, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET).map_err(|error| error.to_string())?;
+            self.shard.register(actor, guest_instance);
+            self.instances.insert(instance_id, actor);
+            // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
+            // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
+            // broker/asset-preload pipeline lands (A2b/T1 territory, not this packet's).
+            let open = Event::InstanceOpen {
+                instance: semio_framework::kernel::PluginInstanceId(instance_id.to_string()),
+                app_id: semio_framework::kernel::AppInstanceId(app_id),
+                actor: "local".to_string(),
+                config: Vec::new(),
+                assets: Vec::new(),
+                capabilities: Vec::new(),
+                quotas: QuotaSchema::default(),
+            };
+            self.run_turn(actor, instance_id, vec![open])?;
+            Ok(instance_id)
+        }
+
+        fn destroy_app(&mut self, instance: u32) {
+            if let Some(actor) = self.instances.remove(&instance) {
+                self.shard.unregister(actor);
+            }
+            self.retained.retain(|(inst, _), _| *inst != instance);
+            self.pending_rejections.retain(|(inst, _), _| *inst != instance);
+        }
+
+        fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+            let Some(&actor) = self.instances.get(&instance) else {
+                return Err(format!("kernel: instance {instance} is not registered"));
+            };
+            let rejections: Vec<(u32, String)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
+            for key in rejections {
+                if let Some(revision) = self.pending_rejections.remove(&key) {
+                    events.insert(0, Event::PatchRejected { surface: key.1, revision, reason: "revision-mismatch".to_string() });
+                }
+            }
+            self.run_turn(actor, instance, events)
+        }
+
+        fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+            let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(serde_json::to_vec(&events.first().cloned().unwrap_or(Event::Wake)).map_err(|error| error.to_string())?) };
+            // 🐛️ `ShardLoop::pump` groups envelopes per actor and runs exactly one `execute_turn` per
+            // actor per pump — one envelope per turn is enough for every event in `events` when they
+            // share a destination actor, so each is sent as its own envelope and drained by the SAME
+            // pump call (its inbound queue is drained fully before any turn executes).
+            self.kernel_transport.send(&pack_envelope(&envelope));
+            for event in events.iter().skip(1) {
+                let envelope = Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(serde_json::to_vec(event).map_err(|error| error.to_string())?) };
+                self.kernel_transport.send(&pack_envelope(&envelope));
+            }
+            self.shard.pump(|_| TURN_BUDGET).map_err(|error| error.to_string())?;
+            let Some(bytes) = self.kernel_transport.recv() else {
+                return Err("kernel: shard produced no outcome for this turn".to_string());
+            };
+            let outcome: ShardOutcome = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
+            match outcome {
+                ShardOutcome::Turn { result, .. } => self.apply_turn_result(actor, instance, result),
+                ShardOutcome::Fault { message, .. } => Err(message),
+                ShardOutcome::Job { .. } => Err("kernel: unexpected job outcome for an app-command turn".to_string()),
+            }
+        }
+
+        fn apply_turn_result(&mut self, actor: ActorId, instance: u32, result: TurnResult) -> Result<ExchangeOutcome, String> {
+            // 🚧️ `Kernel::complete` wants `semio_framework_actor::TurnResult` (opaque pack-encoded
+            // `ui_patches`/`effects` bytes, the crate's own mirror type — A1 was deliberately kept
+            // free of a `semio_framework` dependency, see `📌️important.md`'s naming-hazard note) —
+            // NOT `semio_framework::kernel::TurnResult`, which is what `GuestRuntime::execute_turn`
+            // actually returns. Bridging the two needs a real pack-encode step this packet didn't
+            // reach; `Kernel`'s failure-ladder/metrics bookkeeping is skipped for now (honest gap,
+            // not silently wrong data) rather than passing a fabricated `TurnResult`.
+            let _ = actor;
+            let mut frames = Vec::new();
+            let mut effects = Vec::new();
+            for effect in result.effects {
+                if let Effect::SendMessage { target: MessageEndpoint::Shell { instance: target_instance }, payload } = &effect {
+                    if target_instance.0 == instance.to_string() {
+                        if let Ok(frame) = protocol::decode_app_frame(payload) {
+                            frames.push(frame);
+                            continue;
+                        }
+                    }
+                }
+                effects.push(effect);
+            }
+            let mut surfaces = HashMap::new();
+            for patch in &result.ui_patches {
+                self.apply_ui_patch(instance, patch, &mut surfaces);
+            }
+            Ok(ExchangeOutcome { frames, surfaces, effects })
+        }
+
+        fn apply_ui_patch(&mut self, instance: u32, patch: &KernelUiPatch, out: &mut HashMap<String, UiNode>) {
+            let key = (instance, patch.surface.clone());
+            let full_body = match patch.ops.as_slice() {
+                [PatchOp::Replace { path, node }] if path.is_empty() => Some(node.clone()),
+                _ => None,
+            };
+            let local_revision = self.retained.get(&key).map(|surface| surface.revision).unwrap_or(0);
+            if let Some(node) = full_body {
+                self.retained.insert(key.clone(), RetainedSurface { revision: patch.revision, node: node.clone() });
+                self.pending_rejections.remove(&key);
+                out.insert(patch.surface.clone(), node);
+            } else if patch.base_revision == local_revision && local_revision != 0 {
+                // 🚧️ Incremental `InsertChild`/`RemoveChild`/`SetProps`/non-root `Replace` — no guest
+                // emits these yet (see `KernelThreadState::retained`'s doc); treated as a desync
+                // rather than silently mis-walked. Previous snapshot is reused (item 4).
+                self.pending_rejections.insert(key, local_revision);
+            } else {
+                self.pending_rejections.insert(key, local_revision);
+            }
+        }
+    }
+
+    fn pack_envelope(envelope: &Envelope) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        envelope.pack_encode(&mut bytes);
+        bytes
+    }
+
+    fn run_kernel_thread(rx: mpsc::Receiver<(KernelRequest, Arc<ResponseSlot>)>) {
+        let mut state = KernelThreadState::new();
+        while let Ok((request, slot)) = rx.recv() {
+            let outcome = match request {
+                KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id)),
+                KernelRequest::DestroyApp { instance } => {
+                    state.destroy_app(instance);
+                    continue;
+                }
+                KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events)),
+            };
+            slot.deliver(outcome);
+        }
+    }
+    //#endregion
+
+    //#region 🔖️TaskPool — the non-blocking executor for `spawn_app_task`
+    // 🌀️ `spawn_app_task`'s native replacement for `pollster::block_on(future)`: pushes onto a
+    // thread-local pool polled from `about_to_wait` (which already runs every loop iteration —
+    // `ControlFlow::Poll` is set once `RuntimeReady` lands) instead of running the future to
+    // completion synchronously on the winit thread. This is safe precisely because
+    // `about_to_wait`/`poll_tasks` never hold a `try_borrow_mut()` on `Rc<RefCell<AppRuntime>>`
+    // themselves while polling — each queued future re-acquires its OWN borrow only for the
+    // instant it needs it (the existing `if let Ok(mut app) = runtime.try_borrow_mut() { ...await
+    // inside here... }` pattern every `PointerCallbacks` closure already used before this packet).
+    // `Waker::noop()` is correct here specifically BECAUSE the loop is continuous `Poll`, not
+    // `Wait` — see `📓️terra-H3-wgpu-native-report.md`'s honest-limits section for the scope note
+    // that a real cross-thread `EventLoopProxy` wake (needed for a future switch to
+    // `ControlFlow::Wait`) is not implemented, and for why `pump_sync_events`/hot-reload `boot`
+    // (called FROM WITHIN an already-active `frame()` borrow) could not be converted the same way
+    // without a larger `ShellState` ownership refactor.
+    thread_local! {
+        static TASK_POOL: std::cell::RefCell<Vec<Pin<Box<dyn Future<Output = ()>>>>> = const { std::cell::RefCell::new(Vec::new()) };
+    }
+
+    pub(crate) fn spawn_task(future: impl Future<Output = ()> + 'static) {
+        TASK_POOL.with(|pool| pool.borrow_mut().push(Box::pin(future)));
+    }
+
+    pub(crate) fn poll_tasks() {
+        let waker = Waker::noop();
+        let mut cx = Context::from_waker(waker);
+        TASK_POOL.with(|pool| {
+            let mut pool = pool.borrow_mut();
+            pool.retain_mut(|task| task.as_mut().poll(&mut cx).is_pending());
+        });
+    }
+    //#endregion
+}
+//#endregion 🎠️KernelRuntime
+
 fn spawn_app_task<F>(future: F)
 where
     F: std::future::Future<Output = ()> + 'static,
@@ -90,7 +485,7 @@ where
     #[cfg(target_arch = "wasm32")]
     spawn_local(future);
     #[cfg(not(target_arch = "wasm32"))]
-    pollster::block_on(future);
+    kernel_runtime::spawn_task(future);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -288,6 +683,14 @@ impl AppRuntime {
         }
     }
 
+    /// 🎠️ H3-wgpu-native — this used to `pollster::block_on(self.shell.boot())` directly on the
+    /// winit thread. It still blocks the CALLING thread (`frame()` runs with `self` already
+    /// exclusively borrowed via `Rc<RefCell<AppRuntime>>`, so a future stored across `frame()` calls
+    /// would need to re-borrow that SAME cell from inside its own body — a genuine deadlock, not a
+    /// style choice; see `📓️terra-H3-wgpu-native-report.md`'s honest-limits section). What DOES move
+    /// off the winit thread: every actual plugin turn `boot()` triggers (`create_app`/`render`) now
+    /// runs on the dedicated kernel thread via `KernelClient`, not in-process here — `pollster`
+    /// parks this thread on that thread's response instead of running wasmtime itself.
     #[cfg(not(target_arch = "wasm32"))]
     fn maybe_reload_native_plugins(&mut self) {
         if !self.native_reload_pending {
@@ -1046,6 +1449,12 @@ impl ApplicationHandler<HostUserEvent> for SemioApp {
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        // 🎠️ H3-wgpu-native — drains every `spawn_app_task` future queued since the last iteration
+        // (boot, and every pointer/keyboard/wheel/context-menu-driven plugin dispatch): none of them
+        // run to completion inline anymore, they resume here once their kernel-thread round-trip
+        // lands. `ControlFlow::Poll` means this runs continuously, so nothing needs an explicit wake.
+        #[cfg(not(target_arch = "wasm32"))]
+        kernel_runtime::poll_tasks();
         if let Some(window) = self.window.as_ref() {
             window.request_redraw();
         }

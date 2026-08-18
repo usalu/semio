@@ -1,0 +1,226 @@
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(2,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(3,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(4,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(5,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(6,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(7,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(13,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(14,15): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(19,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(30,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(42,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(43,57): error TS2459: Module '"../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEE\uFE0Faction-argument-resolution/\uD83D\uDFE6\uFE0Fcomponent.ts"' declares 'ActionArgDef' locally, but it is not exported.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(43,77): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(78,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(582,30): error TS2304: Cannot find name 'PluginRegistryEntry'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(610,21): error TS2304: Cannot find name 'PluginSourceEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(775,9): error TS2420: Class 'PlayerEvent' incorrectly implements interface 'StatechartEvent'.
+  Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(789,13): error TS2430: Interface 'PlayerSpec' incorrectly extends interface 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(796,33): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(822,9): error TS2420: Class 'RecorderEvent' incorrectly implements interface 'StatechartEvent'.
+  Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(836,13): error TS2430: Interface 'RecorderSpec' incorrectly extends interface 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(843,35): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1012,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1013,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1019,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1020,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1021,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1027,27): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1028,29): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1029,43): error TS2344: Type 'PlayerSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'PlayerEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1030,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1031,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1033,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1036,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1040,17): error TS2345: Argument of type 'Machine<PlayerSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<PlayerSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1046,27): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1047,29): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1048,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1055,27): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1056,29): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1057,43): error TS2344: Type 'RecorderSpec' does not satisfy the constraint 'MachineSpec'.
+  Types of property 'Event' are incompatible.
+    Property 'eventCount' is missing in type 'RecorderEvent' but required in type 'StatechartEvent'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1058,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1059,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts(1062,17): error TS2345: Argument of type 'Machine<RecorderSpec>' is not assignable to parameter of type 'Machine<MachineSpec>'.
+  The types of 'definition.contextFromInput' are incompatible between these types.
+    Type 'InputFn<RecorderSpec>' is not assignable to type 'InputFn<MachineSpec>'.
+      Types of parameters 'input' and 'input' are incompatible.
+        Type 'unknown' is not assignable to type 'void'.
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(16,91): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(113,47): error TS2339: Property 'contributions' does not exist on type 'PluginManifest'.
+🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts(114,48): error TS2353: Object literal may only specify known properties, and 'contribution' does not exist in type 'ProgramContributionEntry'.
+🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts(14,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts(633,43): error TS2304: Cannot find name 'PluginContextMenuRequest'.
+🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts(273,35): error TS2345: Argument of type 'HoverSpec' is not assignable to parameter of type 'SelectionSpec'.
+  Type 'HoverSpec' is missing the following properties from type 'SelectionSpec': modes, methods, merges
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(22,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(70,28): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(73,46): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(73,59): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(78,52): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(84,113): error TS2304: Cannot find name 'UiStatus'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(91,35): error TS2304: Cannot find name 'UiPresence'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(129,149): error TS2304: Cannot find name 'WindowLayoutWindowNode'.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(752,33): error TS7006: Parameter 'child' implicitly has an 'any' type.
+🧰️framework/🔨️modules/🖥️platform/🟦️component.ts(752,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(5,59): error TS2307: Cannot find module '../../📦️packages/🦀️rust/🎨️tailwind/🎨️tailwind.config.ts' or its corresponding type declarations.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(19,8): error TS2307: Cannot find module './🟦️tokens.generated.ts' or its corresponding type declarations.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(21,144): error TS2307: Cannot find module './🟦️tokens.generated.ts' or its corresponding type declarations.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(227,29): error TS2540: Cannot assign to 'aliases' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(228,30): error TS2540: Cannot assign to 'variants' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(229,35): error TS2540: Cannot assign to 'themedAliases' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(230,36): error TS2540: Cannot assign to 'themedVariants' because it is a read-only property.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(593,54): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts(915,33): error TS2339: Property 'glob' does not exist on type 'ImportMeta'.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(19,47): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(20,98): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(21,81): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(29,8): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(30,104): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts(31,87): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts(6,50): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts(28,81): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(6,149): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(274,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(307,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(325,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(346,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(361,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(371,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(385,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(397,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(409,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(420,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(430,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(440,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(451,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(471,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(479,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(494,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(505,77): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(512,19): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(533,5): error TS2304: Cannot find name 'UiComponentSceneNode'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(534,5): error TS2304: Cannot find name 'UiExternalSlotNode'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1003,53): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1090,40): error TS2304: Cannot find name 'Effect'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1130,18): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts(1137,28): error TS2304: Cannot find name 'ContextMenuItemSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(177,9): error TS2304: Cannot find name 'ConfigSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(182,17): error TS2304: Cannot find name 'CommandGrammar'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(188,5): error TS2304: Cannot find name 'AppIo'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(383,225): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(766,27): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(799,79): error TS2304: Cannot find name 'TopicContribution'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1107,68): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1107,109): error TS2304: Cannot find name 'StyleSpec'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1107,150): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1114,42): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1114,55): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1116,136): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1118,161): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1120,60): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1120,97): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1122,89): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1122,231): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1124,40): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1126,95): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1128,183): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1139,124): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1141,52): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1143,99): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1143,164): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1145,63): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1147,170): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1162,35): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1162,140): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1164,67): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1164,132): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1166,60): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1166,105): error TS2304: Cannot find name 'UiTreeActionPlacement'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1168,51): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1178,8): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1180,125): error TS2304: Cannot find name 'UiMenuRef'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1189,55): error TS2304: Cannot find name 'Label'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1253,9): error TS2304: Cannot find name 'Locale'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1257,14): error TS2304: Cannot find name 'Terminology'.
+🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️manifest.ts(1336,143): error TS2304: Cannot find name 'WindowStackCorner'.

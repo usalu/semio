@@ -1689,7 +1689,12 @@ impl ShellState {
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                            if let Err(error) = plugin.load_app_document_pack(session.instance_id, &pack, &spr) {
+                            // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async;
+                            // `queue_host_effects` itself is a plain `fn`, not worth making async for
+                            // this one call site, so this blocks the calling thread on the kernel
+                            // thread's response the same way every other non-async plugin call in
+                            // this file already does (`pollster::block_on`).
+                            if let Err(error) = pollster::block_on(plugin.load_app_document_pack(session.instance_id, &pack, &spr)) {
                                 eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
                             }
                         }
@@ -2217,9 +2222,10 @@ impl ShellState {
             let _ = channel.cmd_tx.send(ArtifactActorMsg::Detach);
             if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == channel.plugin_id) {
                 let _ = plugin.detach_backbone(channel.instance_id);
-                if let Some(runtime) = plugin.wasm_runtime() {
-                    let _ = runtime.deregister_host_backbone(&channel.actor_uri);
-                }
+                // 🎠️ H3-wgpu-native — `wasm_runtime()`/`deregister_host_backbone` had no in-process
+                // guest handle to call once the guest moved to the kernel thread; the process-global
+                // `HostBackboneChannel` this drove is retired with no `EffectBackbone` replacement
+                // landed yet (`📓️status.md`'s "A2-abi-sdk — honest partial" entry, still open).
             }
             self.document_host.close(&channel.document_id);
         }
@@ -2269,7 +2275,10 @@ impl ShellState {
                 ArtifactEvent::RemoteMutations { envelopes } => {
                     if let Some(plugin) = plugin.as_ref() {
                         let operations = protocol::encode_envelopes(&envelopes);
-                        match plugin.apply_mutations(instance_id, &operations) {
+                        // 🎠️ H3-wgpu-native — `apply_mutations` now runs its plugin turn on the
+                        // dedicated kernel thread instead of in-process here; `.await` is the only
+                        // change this call site needs (`pump_sync_events` was already `async fn`).
+                        match plugin.apply_mutations(instance_id, &operations).await {
                             Ok(()) => changed = true,
                             Err(error) => eprintln!("[DEBUG] wgpu shell apply_mutations failed: {error}"),
                         }
@@ -2277,7 +2286,8 @@ impl ShellState {
                 }
                 ArtifactEvent::SnapshotReplaced { pack, spr } => {
                     if let Some(plugin) = plugin.as_ref() {
-                        match plugin.load_app_document_pack(instance_id, &pack, &spr) {
+                        // 🎠️ H3-wgpu-native — same treatment, `load_app_document_pack` is now async.
+                        match plugin.load_app_document_pack(instance_id, &pack, &spr).await {
                             Ok(()) => changed = true,
                             Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_pack failed: {error}"),
                         }
@@ -2583,21 +2593,17 @@ impl ShellState {
                 return;
             }
         };
-        let Some(runtime) = program.wasm_runtime() else {
-            program.destroy_app(instance_id);
-            return;
-        };
+        // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` had no in-process guest
+        // handle to call once the guest moved to the kernel thread (see `detach_sync_backbone_internal`'s
+        // own note above); `attach_backbone` below is now the SDK's own honest-error stub for the
+        // whole retired backbone mechanism (`📓️design-abi.md` §2/§4's `EffectBackbone`, not landed
+        // yet), so this falls straight through to it rather than gating on a step that no longer
+        // does anything.
         let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
         let surface = semio_framework::manifest::surface_app_id(&app.dialect, semio_framework::manifest::AppRole::Editor);
         let bindings = default_persistence_bindings(self.identity.as_ref(), Some(space_id), data_dir, Some(surface.as_str()));
         let actor_uri = format!("actor://{S_SPACE_INDEX_DOCUMENT_ID}");
         let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() });
-        if let Err(error) = runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)) {
-            eprintln!("[DEBUG] wgpu shell touchArtifact register_host_backbone failed: {error}");
-            self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
-            program.destroy_app(instance_id);
-            return;
-        }
         if let Err(error) = program.attach_backbone(instance_id, &actor_uri) {
             eprintln!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}");
             self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
@@ -2658,7 +2664,9 @@ impl ShellState {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-            let runtime = plugin.wasm_runtime().ok_or("native plugin runtime missing")?;
+            // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` retired, see
+            // `detach_sync_backbone_internal`'s note; `attach_backbone` below now carries the honest
+            // "not implemented yet" error for the whole mechanism.
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
             let schema = session.app.breadcrumb.join(".");
             let bindings = Self::parse_persistence_binding(&uri)?;
@@ -2675,7 +2683,6 @@ impl ShellState {
             let actor = self.current_shell_actor(session.instance_id);
             let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
             let events = self.document_host.subscribe(&document_id);
-            runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
@@ -2708,7 +2715,8 @@ impl ShellState {
     async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>) -> Result<(), String> {
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-        let runtime = plugin.wasm_runtime().ok_or("native plugin runtime missing")?;
+        // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` retired, see
+        // `detach_sync_backbone_internal`'s note.
         // 📌️ ticket §C5 item 4 — checkpoint-on-close, same "switch away IS close" posture as
         // `attach_sync_backbone` above (this shell keeps exactly one document mounted at a time).
         self.checkpoint_before_detach().await;
@@ -2718,7 +2726,6 @@ impl ShellState {
         let actor = self.current_shell_actor(session.instance_id);
         let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
         let events = self.document_host.subscribe(&document_id);
-        runtime.register_host_backbone(&actor_uri, Box::new(channels.channel_backbone)).map_err(|error| format!("register host backbone: {error}"))?;
         plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
@@ -2958,7 +2965,8 @@ impl ShellState {
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                            if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr) {
+                            // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
+                            if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr).await {
                                 eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
                             }
                         }
@@ -3036,7 +3044,8 @@ impl ShellState {
                 }
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                        plugin.load_app_document_pack(session.instance_id, pack, spr)?;
+                        // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
+                        plugin.load_app_document_pack(session.instance_id, pack, spr).await?;
                     }
                 }
                 semio_framework::kernel::Effect::DispatchAction { action, args, .. } => {
@@ -3550,7 +3559,8 @@ impl ShellState {
         let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
         for effect in &result.requested_effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                program.load_app_document_pack(session.instance_id, pack, spr)?;
+                // 🎠️ H3-wgpu-native — `load_app_document_pack` is now async.
+                program.load_app_document_pack(session.instance_id, pack, spr).await?;
             }
         }
         self.sync_session_chrome();

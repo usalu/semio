@@ -20,5 +20,5 @@ pub fn deserialize(from: &SvgSnapshot) -> Result<NoteSnapshot, String> {
 }
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-    deserialize(&SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)?, lexical: None })
+    deserialize(&SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
 }

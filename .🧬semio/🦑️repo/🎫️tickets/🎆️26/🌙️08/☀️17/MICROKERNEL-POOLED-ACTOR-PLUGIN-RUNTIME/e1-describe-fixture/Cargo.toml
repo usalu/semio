@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "e1-describe-fixture"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin", features = ["component-guest"] }

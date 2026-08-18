@@ -229,3 +229,177 @@ A2b also hit a live fleet-wide breakage in `🛂️manifest/🦀️component.rs`
 | `B1-host-native` | ⏳ partial | trait + mock + engine primitives + real `impl GuestRuntime` written; `ShardLoop`, router relay and the legacy deletions outstanding |
 | `A4-channel` | queued | channel v12 |
 | kernel regression diff | ⏳ blocked | queued behind peer's 2.5 h run |
+
+## 2026-08-18 — W2 dispatched, per-packet target dirs
+
+Standing instruction is to finish end to end, so W2 goes out now that the guest contract is green.
+
+**Build-contention fix applied.** Every W2 packet gets its **own** `CARGO_TARGET_DIR` (`🎯️target-b1b`, `-e1`, `-a4`, `-f1`) instead of sharing one. Parallel editing was always free; parallel *building* was serializing us against ourselves on a single build-directory lock, on top of the global package-cache lock the three peer tickets contend for. Disk is 304 GiB free, so the duplicate-cache cost is affordable — this is exactly what prior workforce tickets did with `🎯️target-w3-cad` / `🎯️target-verify`.
+
+Four packets dispatched, file-disjoint:
+
+| packet | scope | target dir |
+|---|---|---|
+| `B1b-host-complete` | `ShardLoop`, post-turn router relay, delete `WasmPluginRuntime`/`ExtensionRuntime`/both `ProgramSupervisorState`/`PLUGIN_FUEL_BUDGET`, `🏃️run` onto `GuestRuntime` | `🎯️target-b1b` |
+| `E1-describe` | emitter crate, `descriptor_is_fresh()` macro test, registry reads descriptors, typed `ContributionSet` shapes | `🎯️target-e1` |
+| `A4-channel` | channel v12: drop `Hello`/`RefreshUi`/`UiSection`/`Effects`/`Events`/`Welcome`, add revisioned `UiPatch` | `🎯️target-a4` |
+| `F1-scale-fixture` | 50×50 fixture crate + seeded deterministic generator, 2550 records | `🎯️target-f1` |
+
+Two instructions carried into every brief from the W1 post-mortem: **foreground builds only**, and the specific coverage rule for B1b — rewrite the ~510-line real-wasm `IoRouter` test block against `GuestRuntime` rather than deleting it, since it is the only real-wasm coverage of cross-plugin routing.
+
+`A4-channel` will make the tree red between its landing and the renderer packets; that is planned, confined to this gate, and its brief requires it to enumerate every out-of-scope consumer with the exact edit needed so the renderer packets can pick them up.
+
+### ✅ A4-channel landed; 2 of 7 leases applied by registrar
+
+Channel v12 is in: `CHANNEL_VERSION` 11→12, `AppCommand::{Hello,Bye,AttachBackbone,DetachBackbone,RefreshUi}` and `SectionProbe` removed, `AppFrame::{Welcome,UiSection,Effects,Events}` removed, `AppFrame::{UiPatch,UiSnapshotEnd}` added mirroring `kernel::UiPatch` field-for-field and reusing `kernel::PatchOp` rather than redefining it. Tags renumbered contiguously with no legacy gaps — correct for a greenfield repo that forbids compatibility layers. TS twin mirrored, including retiring `hello()`/`refreshUi()`/`attachBackbone()`/`detachBackbone()`/`drain()` from `AppChannelClient`.
+
+A4 made one judgment call worth endorsing: it edited the 6 cross-language JSON fixtures under `💻️os/🧫️fixtures/📡️channel/**`, one level outside its literal owned prefix, because they are this codec's own byte-parity pins and have no other owner — and it documented the call rather than doing it silently. Its 4 cross-language vector tests confirm Rust/TS byte-parity on the new wire.
+
+**Leases applied by me (same crate, mechanical):**
+1. `📡️spr/🦀️component.rs` — dropped the dead `SectionProbe` from the barrel re-export.
+2. `📡️spr/🧪️testkit/🦀️component.rs` — 8 test-only uses of `AppCommand::Hello`/`Bye` and `AppFrame::Welcome`, which were arbitrary "any two variants" round-trip samples with no semantic dependency on those variants. Swapped for `ConfigCommand`/`ReadConflicts`/`Done`. **Coverage preserved, not deleted** — the round-trip laws still run against real surviving variants.
+
+**Leases routed, not applied (5).** These need real rewrites, not renames, so they go to the packets that own the surrounding redesign:
+- `🔌️plugin/🦀️component.rs` + `⚛️reactor/🦀️component.rs` — the old `plugin_exchange` dispatcher's `Hello`/`RefreshUi`/`UiSection`/`AttachBackbone`/`Bye`/`Effects` handling, and `route_app_frame`'s three now-dead match arms. A4's diagnosis is right that the `UiSection` arm should become a real `AppFrame::UiPatch` → `kernel::UiPatch` passthrough (fields match field-for-field; `ops` needs `decode_wire_value::<Vec<PatchOp>>`).
+- `🔌️plugin/🖥️host/🦀️component.rs` — the `Hello` handshake at 4 sites; instance bring-up is now `instance-open` at the `GuestRuntime` level. **Routed to `B1b`, which is live in that file.**
+- `ProgramBridge/🧊️component.rs` and the React `📦️index.tsx`/`🧪️index.test.ts` — routed to the renderer packets, which is exactly where `📓️design-abi.md` §2 says this work belongs.
+
+### ✅ Kernel regression check CLEARED — the last open G1 item
+
+```
+cargo check -p semio-framework-os-kernel --all-targets   → Finished in 13.99s, 0 errors
+cargo test  -p semio-framework-os-kernel --lib           → 1003 passed; 0 failed
+```
+
+Peer `SHARED-PRESENCE-…`'s recorded pre-work baseline was **996/996**. We are at **1003/0** — **no regressions, +7 tests** (A4's new channel-v12 codec tests, including the 4 cross-language Rust/TS byte-parity vectors).
+
+This was the risk I flagged when A3 rewrote a crate that a peer ticket was actively gating on: compiling is not the same as its suite still passing. It passes, and it grew. Earlier the check was queued behind that peer's 2.5-hour run; giving A4 its own `🎯️target-a4` dir dropped it to seconds, which validates the per-packet-target-dir decision on its own.
+
+**G1 is now met.** Every W1 contract is landed and verified:
+
+| | evidence |
+|---|---|
+| actor kernel | native + wasm32-unknown-unknown checks, 52/52 tests, purity grep |
+| kernel/manifest contracts | 2 crate checks clean, 135-file rename, peer region byte-identical |
+| reactor ABI (guest) | `wasm32-wasip2 --features component-guest` → `Finished`, 0 errors |
+| channel v12 | os-kernel green, 1003/0 tests, Rust/TS byte-parity vectors pass |
+
+### ✅ F1-scale-fixture landed — the 50×50 proof asset exists
+
+The fixture that makes this ticket's central claim measurable rather than asserted.
+
+Coordinator-verified after applying its leases:
+```
+cargo check -p semio-framework-os-scale-fixture --all-targets            → Finished in 3m 14s, 0 errors
+cargo check -p … --target wasm32-wasip2 --features component-guest      → Finished, 0 errors  (F1's run)
+cargo test  -p … --lib                                                  → 12 passed; 0 failed
+cargo metadata --no-deps                                                → workspace parses
+```
+Determinism proven properly, not claimed: same seed → **byte-identical** `registry.json` (`8acb5ef9…`) and `catalog.json` (`f7623e7c…`) across two runs; a **different seed produces different output**, which is what actually proves the seed drives generation rather than the result being constant. Record count exactly **2550** = 50 plugins + 2500 extensions.
+
+F1 also independently verified the taxonomy claim I had asserted in the design — `pluginAreas` is `["✏️s/🔌️plugins"]` and `🧫️fixtures` is a legal owner-root data dir — so the fixture is invisible to the production registry, dev catalog and `launch.json`. It confirmed `role = "testkit"` was declared but unused. Good instinct to check rather than trust the brief.
+
+**Four leases applied by me:**
+1. Root `Cargo.toml` — member + `[workspace.dependencies]` alias, **and** removed the crate's temporary `[workspace]`/`[workspace.lints]` opt-out tables plus its crate-local `Cargo.lock`, which F1 correctly warned would conflict with real membership. Verified the crate builds as a member afterwards.
+2. Root `📜️script.ts` — `generate scale-fixture` branch + a `scale-fixture check` router entry. Verified: `scale-fixture` now appears in the usage line.
+3. Root `📋️project.json` — `scale-fixture-check` target; JSON re-validated.
+4. `.vscode/🧩️launch.seed.jsonc` — `🛠️dev🦀️os-plugins🧫️scale-fixture` (3_dev, 386.7) and `📦️verify🧫️scale-fixture🚦check` (4_build, **209.6** — F1 found the design's suggested 209.3 already taken by `📦️new🧩️taxonomy🗿️artifact` and picked the next free slot, correctly checking rather than colliding). Seed re-validated as JSON; one name I had written as escape sequences was normalized to literal emoji for consistency with the rest of the file.
+
+**Known gap, honestly recorded:** the fixture's `describe()` returns an empty placeholder — a real packed `PackageDescriptor` is `E1-describe`'s job, and nothing in F1's acceptance or the generated registry depends on it. No wasmtime instantiation was exercised (that is `V1-bench`'s job; nobody has yet instantiated this ABI under wasmtime).
+
+**Third peer breakage found and routed, not patched:** `.storybook/scopes.ts:146` still imports `🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts`, which the ui-styling restructure moved up a level. That session already fixed its own `glue.rs` but missed this one. Spawned as a separate task rather than edited, since it belongs to their in-flight move. Two similar dangling-import bugs F1 hit were likewise routed (one already fixed by the spawned session mid-turn).
+
+### ✅ A5-sdk-channel — guest SDK consumes channel v12
+
+Coordinator-verified:
+```
+cargo check -p semio-framework-plugin --lib                                    → Finished, 0 errors
+cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest → Finished, 0 errors
+```
+
+`plugin_exchange` now returns `PluginExchangeOutput { frames, effects, events }` instead of `Vec<Vec<u8>>` — the right call, since `AppFrame::Effects`/`Events` no longer exist as wire variants it could construct; effects and events are carried as raw wire bytes and decoded in `poll`. The dead `Hello`/`RefreshUi`/`SECTION_KIND_*`/`AttachBackbone`/`DetachBackbone`/`Bye` arms are gone, and `route_app_frame`'s `UiSection` arm became the real `AppFrame::UiPatch → kernel::UiPatch` passthrough that A4 predicted, decoding `ops` through `decode_wire_value` → `from_dsl_value::<Vec<PatchOp>>`.
+
+Two decisions worth recording:
+- A5 **checked the caller count with `rg` before changing a public signature** and found exactly one. I re-verified independently: `plugin_exchange` appears only in the plugin crate's own two files (plus a name mention in the OS TS twin). Packet B1b, live in `🔌️plugin/🖥️host/**`, is unaffected — no cross-packet break.
+- It ported actor-id recording forward from the deleted `Hello` handshake into `poll`'s `Event::InstanceOpen`, since `InstanceOpen.actor` carries the same data — but deliberately did **not** port `Hello`'s optional inline config-load, because `AppCommand::LoadConfig` already covers it and the brief said remove rather than adapt. Correct reading of the no-compatibility-layers rule.
+
+**Both halves of the ABI now compile against channel v12.** The guest contract and the wire are consistent.
+
+### ✅ E1-describe — descriptor pipeline in; and a real flaw in MY design that E1 caught
+
+**Delivered and self-verified by E1:** the wasmtime emitter crate `semio-framework-plugin-describe` (compiles clean, 5/5 tests, and proven against a real built plugin wasm where it fails *correctly* with a wasi-import error because no plugin has migrated to the new ABI yet — that is the honest result, not a fudge); the `descriptor_is_fresh()` test inside `plugin_exports!`/`extension_exports!`, proven with a throwaway fixture crate; registry `parsePluginCargo` reading `🔣️descriptor.json` with a transitional Cargo-metadata fallback (0/59 plugins migrated so far) plus a `check` gate on id/extends/extension-point/hash consistency, `plugin-registry:check` exiting 0; and typed `ContributionSet` shapes grounded in existing types — deliberately leaving `menus`/`themes` untyped because nothing in the codebase declares them yet. Correct restraint: inventing shapes for contributions no plugin makes would be fabrication.
+
+It also found and fixed a genuine pre-existing bug: `📇️registry/📜️script.ts`'s own import path had 8 `../` instead of 6, so `plugin-registry:check`/`:generate` **could not run at all** before this packet.
+
+#### Registrar decision: descriptors move out of `🤖️generated/`
+
+E1's most valuable finding is a flaw in my own design doc. `📓️design-abi.md` §3 specifies the descriptor as *checked-in* at `<crate>/🤖️generated/🛂️descriptor.semio`, but I verified: `.gitignore` lines 87–88 ignore `**/🤖️generated/` and `**/🤖️generated.*`, and `git ls-files` shows **zero** tracked files under any `🤖️generated`. A descriptor there could never survive a commit — the freshness test would have no baseline on a clean checkout and the registry would have nothing to read. The design was unimplementable as written.
+
+Ruling: **descriptors live at the plugin/extension owner root** as `🛂️descriptor.semio` + `🔣️descriptor.json`, siblings of the already-tracked `🛂️manifest.json`. This is not an ad-hoc workaround — the taxonomy's own `_languageNeutralityComment` states that language-neutral assets *including generated output* belong "at the owner root as siblings of 📦️packages — never inside 📦️packages/<lang>/". So the correct location was already specified; my design doc contradicted it.
+
+Applied as registrar:
+- root `Cargo.toml` — member + `[workspace.dependencies]` alias for the describe crate;
+- `🔣️taxonomy.json` — `rootDataDirNames` += `📇️describe`, `rootDataFileNames` += `🛂️descriptor.semio`, `🔣️descriptor.json`.
+
+`📓️design-abi.md` §3's stated path is now superseded by this entry.
+
+**Not started, carried forward:** the `PluginBuilder`/`ExtensionBundle` descriptor-populating methods (`.activation`, `.extension_point`, `.requests`, `.quota`, `.execution`). E1 judged it unsafe to rush them in its remaining budget and said so rather than half-landing them — the right call, and they are a prerequisite for W3, since a plugin cannot declare an activation event without them.
+
+### ✅ B1b-host-complete — legacy runtime deleted, ShardLoop in
+
+Coordinator-verified after two registrar fixes:
+```
+cargo check -p semio-framework-plugin-host --all-targets → Finished, 0 errors
+cargo test  -p semio-framework-plugin-host --lib         → 67 passed; 0 failed
+cargo check -p semio-framework-os-run --all-targets      → Finished, 0 errors
+```
+
+**The legacy runtime is gone.** `WasmPluginRuntime`, `ExtensionRuntime`, `PLUGIN_FUEL_BUDGET` and the orphaned old `HostState` are deleted — I verified every surviving mention of those names in the tree is a doc comment, not code. `ShardLoop` exists at `🖥️host/🧵️shard/` driving a real `ShardTransport`, and B1b found that `GuestRuntime` was missing `start_job` despite `jobs.wit` declaring three functions — a genuine gap in B1's own trait, caught by implementing against it.
+
+B1b's best find: B1's `bindgen!` had `additional_derives: [Clone, Debug]`, but wasmtime-wit-bindgen always hand-writes `Debug` for WIT records — requesting it again caused **~91 of the original 112 errors** as `E0119` conflicts. One line.
+
+**Coverage was rewritten, not dropped**, as instructed: pure tests kept verbatim, the real-wasm compose test replaced with honest compile/instantiate-rejects coverage plus new `MockGuestRuntime`-backed cross-plugin routing tests. Two blocks were deleted because they tested subsystems (`ExtensionRuntime`, the old `exchange` ABI) that have no `world actor` equivalent — correct, and stated rather than hidden.
+
+**Two fixes I made as registrar:**
+1. `🎚️config/🧬️schema/🧬️mutations/🦀️component.rs` — B1b's filed blocker. `DefaultApp` is declared at the schema level, so the test module needed one more `super` than the file-level import. One line; plugin-host tests could not run at all before it.
+2. B1b's own new gap-documenting test was failing. It asserted the "resolution succeeds, dispatch not yet wired" path but built the **inverse** `IoKey` orientation to the one `register_plugin` actually derives from a `(writes, reads)` pair — the Export route is keyed on the READ dialect with the WRITE dialect as its format. So it failed on resolution and never reached the gap it existed to pin down. **I fixed the test, not the router**: that route-derivation is the peer ticket's algorithm, which `📌️important.md` requires be preserved byte-for-byte. The orientation looks semantically inverted to me (exporting cad-as-step keys on step, not cad) and that is worth the peer's attention, but it is theirs to judge, not mine to silently rewrite.
+
+**Honest gaps:** `PluginHost.supervisor` → `KernelMetrics` read view not attempted (no live `Kernel` is instantiated anywhere yet); `IoRouter::compose` for the OLD IoKey mechanism resolves ownership then reports "not yet wired" rather than guessing an undocumented wire format — no job kind exists for it in the WIT, so refusing to invent one is right.
+
+### ⏳ H3-wgpu-native — substantial partial; blocked by a peer's presence refactor
+
+**Delivered:** a real `KernelClient` + dedicated kernel thread in `📦️glue.rs` driving `semio_framework_actor::Kernel` + `ShardLoop` + `WasmtimeRuntime` over a real `ThreadTransport`, replacing the deleted `Arc<WasmPluginRuntime>` backend. `ProgramBridge` rewritten onto channel v12 — `UiPatch`/`PatchOp` applied to a retained per-surface tree with `base_revision`-mismatch desync handling, effects read from `TurnResult.effects`. `load_wasm_plugins` no longer eagerly instantiates: it scans for a build-time `🔣️descriptor.json` and compiles only on `create_app`. 12 surgical hunks in the shared 12.7k-line `Shell/🧊️component.rs`, each listed by line range.
+
+**H3's block_on claim, checked:** it identified the 3 plugin-blocking sites out of 19 occurrences and converted 1 (`spawn_app_task`) to a genuinely non-blocking task pool drained from `about_to_wait`. The other 2 still park, and H3 explained why rather than papering over it — they run inside an already-active `Rc<RefCell<AppRuntime>>` borrow, so removing the park needs a `ShellState` ownership refactor beyond this packet. The wasm execution itself moved off-thread regardless. That is a real constraint honestly reported, not an excuse.
+
+**Its "pre-existing, not mine" claim — verified independently, and it holds.** 5 errors remain in `Shell/🧊️component.rs`: unresolved `store_sync::PresencePoint`/`PresenceViewport`, a non-exhaustive `ArtifactEvent::Session` match, `PresencePeer` missing `cursor`/`viewport`, and a `DockStackTab`-vs-`String` mismatch. I confirmed `PresencePoint`/`PresenceViewport` **no longer exist anywhere** — the peer `SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION` ticket replaced them with `PresenceUi`/`PresenceWindowView`/`PresencePeer` in `📡️spr/📡️wire/🦀️component.rs` (the same rename A3 recorded in its peer-coexistence section) and has not yet updated `Shell`. Last commit on that file is theirs, 01:34 today, with 33 further uncommitted insertions.
+
+So the wgpu renderer cannot compile until that peer finishes. **Not our regression and not ours to fix** — touching their half-done presence rename would be exactly the "chasing a moving target" failure both tickets' rules forbid. H3 accepted as a verified partial; its own crate's warnings were cleaned to zero.
+
+**Honest follow-ups H3 named:** no DRR `tick()`/multi-shard scheduling yet (single shard, direct dispatch), and `attach_backbone`/`detach_backbone`/`ephemeral_snapshot`/`context_menu`/`window_engagements`/`window_measures` are explicit error/empty stubs tied to the still-open backbone-replacement gap — it refused to invent a wire format for a mechanism that was retired without a replacement.
+
+### ✅ E2-builder-descriptor — a real descriptor exists for a real plugin
+
+The W3 prerequisite is met: plugins can now declare what the descriptor carries.
+
+**Verified by me:** `🗒️note` has a committed `🛂️descriptor.semio` (64 KB) + `🔣️descriptor.json` (269 KB) **at its owner root**, confirmed NOT gitignored, containing real data — `role: plugin`, `activationEvents: [{onArtifactKind: {kind: "2d.note"}}]`, `execution: isolated`, `capabilityRequests: [{id: "documents.write", scope: "plugin", reason: "persist note edits to the open document"}]`. That is the end-to-end proof the packet was asked for, not a placeholder.
+
+E2 resolved the design fork per-role and justified it: `ExtensionManifest` got the fields directly; plugins use a `PluginDescriptorExtras` side-channel populated atomically in `try_build()`, avoiding a cascade through ~10 `PluginManifest` construction sites in files it did not own. Reasonable — and it kept a single build-time source of truth rather than a drifting parallel registry.
+
+**It found a real gap in E1's work**, which only surfaced because E2 is the first packet ever to commit a real descriptor: `descriptor_is_fresh()` still pointed at the superseded `🤖️generated` location, and its hash fields could never match a committed descriptor. My registrar ruling propagated correctly *because* someone exercised it end to end.
+
+#### Registrar fixes and one mistake of mine, corrected
+
+`ActionArgDef.control` no longer exists — a peer redesign turned it into a `control()` method derived from `ArgSchema`. Two construction sites blocked the whole plugin test binary.
+
+My first fix was **wrong**: I replaced `ActionArgDef { control: Select { options: vec![] }, ..text(..) }` with plain `text(..)`, reasoning they were equivalent. They are not — an empty Select was *deliberately invalid input*, constructed by two tests to prove the validator rejects it. My change made the tests pass nothing and they failed. Caught it by running the suite rather than trusting the compile.
+
+Reading `control()` settled it: it yields `ActionArgControl::Select` **only** when `options` is non-empty. So "a Select with no options" is now **structurally unrepresentable**, the `validate_arg_defs` assertion for it can never fire, and both tests assert an impossible rejection. I removed the two tests with a `🪦️` tombstone recording exactly why, and kept the defensive asserts as a tripwire in case `control()` ever widens. This is not dropped coverage — making an illegal state unconstructible is strictly stronger than validating it.
+
+#### Honest test position
+
+`cargo test -p semio-framework-plugin --lib` → **239 passed, 5 failed.** Attribution, checked rather than assumed:
+- **4 fail deterministically in isolation** — exactly matching the pre-existing baseline A2 recorded ("230 run / 226 pass / 4 fail") before any of our work. Not ours.
+- **1** (`a_child_survives_…_through_the_channel_frames`) **passes alone but fails in the suite** — shared-global-state interference in the SDK's process-global registries, still failing with `--test-threads=1`. I cannot cleanly attribute this one: the tree has moved too far to reproduce a true pre-change baseline. Recorded as unattributed rather than claimed as pre-existing.
+
+Also of note: my E2 brief named `cargo check -p semio-s-plugin-note --target wasm32-wasip2 --features component-guest` as acceptance, but that crate has no `component-guest` feature — my error in the brief, not the packet's.

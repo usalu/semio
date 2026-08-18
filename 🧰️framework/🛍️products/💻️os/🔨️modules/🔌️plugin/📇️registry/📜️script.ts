@@ -11,16 +11,25 @@
  *
  * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { AreaState, DiscoveredPackage, PackageRole } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, loadTaxonomy, discoverPackages, discoverPackageProblems } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
 export type PluginHostMetadata = {
   readonly landingAppId: string;
   readonly hostAppId: string;
+};
+
+/** 🛂️ `#️⃣PackageHashes` mirror (`🛂️manifest/🦀️component.rs`) — content hashes the `check` gate
+ * verifies against the built wasm. Present only once a crate has a `🔣️descriptor.json`. */
+export type PluginDescriptorHashes = {
+  readonly wasmSha256: string;
+  readonly coreWasmSha256: string;
+  readonly descriptorSha256: string;
 };
 
 export type PluginRegistryEntry = {
@@ -41,6 +50,20 @@ export type PluginRegistryEntry = {
    * session's plugin set transitively. */
   readonly dependsOn: readonly string[];
   readonly host?: PluginHostMetadata;
+  /** 🎬️ `kernel::ActivationEvent` rows, flattened to `📓️design-abi.md` §2's canonical dash-separated
+   * strings (`on-command:<id>`, `on-view-visible:<id>`, `on-file-type:<ext>`, `on-artifact-kind:<kind>`,
+   * `on-extension-request:<point>`, `on-startup-finished`) — sourced from `🔣️descriptor.json`, empty
+   * for a crate that has none yet (E1-describe lands ahead of the W3 plugin migrations that produce
+   * one per crate — see `parsePluginCargo`'s own doc for the fallback rule). */
+  readonly activationEvents: readonly string[];
+  /** 🧩️ `ExtensionPointDeclaration.id` rows this package PUBLISHES for others to attach to — empty
+   * for crates with none declared or no descriptor yet. */
+  readonly extensionPoints: readonly string[];
+  /** 🚦️ `ExecutionMode` (`declarative`|`linked`|`isolated`|`exclusive`|`cold`) — `undefined` for a
+   * crate with no descriptor yet. */
+  readonly executionMode?: string;
+  /** #️⃣ `undefined` for a crate with no descriptor yet — see `check`'s hash-verification gate. */
+  readonly hashes?: PluginDescriptorHashes;
 };
 
 //#region 🏛️DiscoveryContract
@@ -118,6 +141,72 @@ function findPluginCargoFiles(root: string): string[] {
     .sort();
 }
 
+/** 🔣️ Where a crate's static descriptor (`semio-framework-plugin-describe`'s output) lives, relative
+ * to its own Cargo.toml directory: two levels up (out of `📦️packages/🦀️rust`) into the crate's OWNER
+ * root, then `🤖️generated/` — the same "sibling of `📦️packages`" convention `🎭️actor`'s own
+ * `🤖️generated/🟦️actor.ts` already uses (`🎭️actor/📦️packages/🦀️rust/📜️script.ts`'s
+ * `generatedBindingsPath`). Every plugin crate's `📜️script.ts describe` command and the dev
+ * `📜️script.ts` wasip2-build step both write to `--out <owner>/🤖️generated`. */
+const DESCRIPTOR_JSON_REL_PATH = ["..", "..", "🤖️generated", "🔣️descriptor.json"];
+
+/** 🎬️ `kernel::ActivationEvent`'s default (externally tagged) serde JSON shape, decoded into
+ * `📓️design-abi.md` §2's canonical dash-separated string form. Unit variant `OnStartupFinished`
+ * serializes as the bare string `"onStartupFinished"`; every other variant as
+ * `{ "<camelTag>": { ...fields } }`. */
+function formatActivationEvent(raw: unknown): string | undefined {
+  if (typeof raw === "string") {
+    return raw === "onStartupFinished" ? "on-startup-finished" : undefined;
+  }
+  if (raw === null || typeof raw !== "object") return undefined;
+  const entries = Object.entries(raw as Record<string, unknown>);
+  if (entries.length !== 1) return undefined;
+  const [tag, body] = entries[0];
+  const field = body !== null && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  switch (tag) {
+    case "onCommand":
+      return typeof field.id === "string" ? `on-command:${field.id}` : undefined;
+    case "onViewVisible":
+      return typeof field.id === "string" ? `on-view-visible:${field.id}` : undefined;
+    case "onFileType":
+      return typeof field.ext === "string" ? `on-file-type:${field.ext}` : undefined;
+    case "onArtifactKind":
+      return typeof field.kind === "string" ? `on-artifact-kind:${field.kind}` : undefined;
+    case "onExtensionRequest":
+      return typeof field.point === "string" ? `on-extension-request:${field.point}` : undefined;
+    default:
+      return undefined;
+  }
+}
+
+/** 🔣️ Reads and loosely-shapes `<cratePath>/🤖️generated/🔣️descriptor.json` (the
+ * `semio-framework-plugin-describe` emitter's JSON mirror of `PackageDescriptor`) — `undefined` when
+ * the crate has none yet (every crate today: E1-describe lands ahead of the W3 plugin migrations
+ * that produce one per crate; see `parsePluginCargo`'s doc for the fallback this enables). Loosely
+ * typed (no schema validation) on purpose — `check`'s own gate is what enforces shape, not the parser. */
+function readDescriptorJson(repoRoot: string, cratePath: string): Record<string, unknown> | undefined {
+  const path = join(repoRoot, cratePath, ...DESCRIPTOR_JSON_REL_PATH);
+  if (!existsSync(path)) return undefined;
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * @emoji 🔣️ Parses one plugin/extension crate manifest into its catalog row. `📓️design-abi.md` §3:
+ * when `<cratePath>/🤖️generated/🔣️descriptor.json` exists, `capabilities`/`contributes`/
+ * `activationEvents`/`extensionPoints`/`executionMode`/`hashes` are read from it — Cargo
+ * `[package.metadata.semio]` no longer carries `contributes` for a migrated crate (kept only for
+ * `role`/`extends`/`mode`/playground rows, per the design doc). **Transitional fallback**: no plugin
+ * crate has been migrated to emit a descriptor yet (that is W3's `M0`…`M8`, dispatched after this
+ * packet) — for a crate with no descriptor, `capabilities`/`contributes` still come from the OLD
+ * Cargo `contributes` TOML array exactly as before, so today's catalog (0/N crates migrated) is
+ * byte-identical to pre-E1 behaviour. `consumes` is ALWAYS read from Cargo metadata regardless: the
+ * static descriptor has no typed "what a package wants to receive" concept (`PackageDescriptor` only
+ * has `topic_contributions`, i.e. what a package PUBLISHES) — a real gap, not silently papered over,
+ * see `📓️terra-E1-describe-report.md`.
+ */
 function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry {
   const text = readFileSync(manifestPath, "utf8");
   const packageName = text.match(/^name = "([^"]+)"/m)?.[1];
@@ -128,9 +217,7 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   const wasmOut = `${packageName.replace(/-/g, "_")}.wasm`;
   const semioBlock = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
   const semioText = semioBlock?.join("\n") ?? "";
-  const contributes = parseTomlStringArray(semioText, "contributes");
   const consumes = parseTomlStringArray(semioText, "consumes");
-  const capabilities = contributes;
   const roleRaw = semioText.match(/^role\s*=\s*"([^"]+)"/m)?.[1];
   const role: PluginRegistryEntry["role"] = roleRaw === "extension" ? "extension" : "plugin";
   const extendsHost = semioText.match(/^extends\s*=\s*"([^"]+)"/m)?.[1];
@@ -141,6 +228,34 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   const cargoDependsOnIds = parseCargoPluginDependencyIds(text, componentPackage);
   // 🔗️ contract freeze §4 rule 1: for an extension, `extends` is always dependsOn[0].
   const dependsOn = extendsHost ? [extendsHost, ...cargoDependsOnIds.filter((id) => id !== extendsHost)] : cargoDependsOnIds;
+
+  const descriptor = readDescriptorJson(repoRoot, cratePath);
+  let capabilities: string[];
+  let contributes: string[];
+  let activationEvents: string[] = [];
+  let extensionPoints: string[] = [];
+  let executionMode: string | undefined;
+  let hashes: PluginDescriptorHashes | undefined;
+  if (descriptor) {
+    const capabilityRequests = Array.isArray(descriptor.capabilityRequests) ? descriptor.capabilityRequests : [];
+    capabilities = capabilityRequests.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
+    const contributions = descriptor.contributions as Record<string, unknown> | undefined;
+    const topicContributions = Array.isArray(contributions?.topicContributions) ? (contributions!.topicContributions as unknown[]) : [];
+    contributes = topicContributions.map((row) => (row as { topic?: unknown }).topic).filter((topic): topic is string => typeof topic === "string");
+    const rawActivationEvents = Array.isArray(descriptor.activationEvents) ? descriptor.activationEvents : [];
+    activationEvents = rawActivationEvents.map(formatActivationEvent).filter((event): event is string => event !== undefined);
+    const rawExtensionPoints = Array.isArray(descriptor.extensionPoints) ? descriptor.extensionPoints : [];
+    extensionPoints = rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string");
+    executionMode = typeof descriptor.execution === "string" ? descriptor.execution : undefined;
+    const rawHashes = descriptor.hashes as Record<string, unknown> | undefined;
+    if (rawHashes && typeof rawHashes.wasmSha256 === "string" && typeof rawHashes.coreWasmSha256 === "string" && typeof rawHashes.descriptorSha256 === "string") {
+      hashes = { wasmSha256: rawHashes.wasmSha256, coreWasmSha256: rawHashes.coreWasmSha256, descriptorSha256: rawHashes.descriptorSha256 };
+    }
+  } else {
+    contributes = parseTomlStringArray(semioText, "contributes");
+    capabilities = contributes;
+  }
+
   return {
     pluginId: componentPackage,
     cratePath,
@@ -151,8 +266,12 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
     contributes,
     consumes,
     dependsOn,
+    activationEvents,
+    extensionPoints,
     ...(extendsHost ? { extends: extendsHost } : {}),
     ...(host ? { host } : {}),
+    ...(executionMode ? { executionMode } : {}),
+    ...(hashes ? { hashes } : {}),
   };
 }
 
@@ -503,7 +622,9 @@ function emitTypeScript(entries: PluginRegistryEntry[]): string {
   const formatTargetRow = (entry: PluginRegistryEntry) => {
     const host = entry.host ? `, host: { landingAppId: ${JSON.stringify(entry.host.landingAppId)}, hostAppId: ${JSON.stringify(entry.host.hostAppId)} }` : "";
     const extendsHost = entry.extends ? `, extends: ${JSON.stringify(entry.extends)}` : "";
-    return `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, role: ${JSON.stringify(entry.role)}, capabilities: ${JSON.stringify(entry.capabilities)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}, dependsOn: ${JSON.stringify(entry.dependsOn)}${extendsHost}${host} },`;
+    const executionMode = entry.executionMode ? `, executionMode: ${JSON.stringify(entry.executionMode)}` : "";
+    const hashes = entry.hashes ? `, hashes: { wasmSha256: ${JSON.stringify(entry.hashes.wasmSha256)}, coreWasmSha256: ${JSON.stringify(entry.hashes.coreWasmSha256)}, descriptorSha256: ${JSON.stringify(entry.hashes.descriptorSha256)} }` : "";
+    return `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, role: ${JSON.stringify(entry.role)}, capabilities: ${JSON.stringify(entry.capabilities)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}, dependsOn: ${JSON.stringify(entry.dependsOn)}, activationEvents: ${JSON.stringify(entry.activationEvents)}, extensionPoints: ${JSON.stringify(entry.extensionPoints)}${extendsHost}${host}${executionMode}${hashes} },`;
   };
   const pluginRows = pluginEntries.map(formatTargetRow).join("\n");
   const extensionRows = extensionEntries.map(formatTargetRow).join("\n");
@@ -515,6 +636,12 @@ export type PluginHostMetadata = {
 
 export type PluginHostConfig = PluginHostMetadata & {
 \treadonly pluginId: string;
+};
+
+export type PluginDescriptorHashes = {
+\treadonly wasmSha256: string;
+\treadonly coreWasmSha256: string;
+\treadonly descriptorSha256: string;
 };
 
 export type PluginBuildTarget = {
@@ -531,6 +658,12 @@ export type PluginBuildTarget = {
 \t * \`📇️registry/📜️script.ts\`. */
 \treadonly dependsOn: readonly string[];
 \treadonly host?: PluginHostMetadata;
+\t/** @emoji 🎬️ See \`PluginRegistryEntry.activationEvents\` in \`📇️registry/📜️script.ts\`. */
+\treadonly activationEvents: readonly string[];
+\t/** @emoji 🧩️ See \`PluginRegistryEntry.extensionPoints\` in \`📇️registry/📜️script.ts\`. */
+\treadonly extensionPoints: readonly string[];
+\treadonly executionMode?: string;
+\treadonly hashes?: PluginDescriptorHashes;
 };
 
 export const PLUGIN_HOST_CONFIGS: readonly PluginHostConfig[] = [
@@ -1731,6 +1864,99 @@ class GenerateScript extends BundleScript {
  * `.vscode/launch.json` — never writes (a lint/verify step must never let the auto-commit daemon land
  * regenerated files). Launch freshness is folded in here rather than living in a second, unenforced
  * entry point, so one `check` covers every artifact `generate` produces. */
+//#region 🔖️DescriptorGate
+/** 🦀️ Mirrors `emitRustArtifacts`'s own `PLUGIN_WASM_TARGET_DIR`/`PLUGIN_WASM_PROFILE_DIRS` —
+ * kept as a second literal (not imported from the generated file) since this runs at `check` time,
+ * before/independent of whether `🤖️generated/🦀️artifacts.rs` itself is fresh. */
+const WASM_TARGET_DIR = ["target", "wasm32-wasip2"];
+const WASM_PROFILE_DIRS = ["debug", "wasm-release"];
+
+/** #️⃣ Lowercase hex SHA-256 — same algorithm `semio-framework-plugin-describe` uses for
+ * `hashes.wasmSha256` (see that crate's own `sha256_hex` doc for why not this repo's usual
+ * `blake3`-based `semio-framework-hash`). */
+function sha256HexOfFile(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+/** 🔎️ Finds the crate's built wasm component under either profile dir, `undefined` if neither exists. */
+function findBuiltWasm(repoRoot: string, wasmOut: string): string | undefined {
+  for (const profile of WASM_PROFILE_DIRS) {
+    const path = join(repoRoot, ...WASM_TARGET_DIR, profile, wasmOut);
+    if (existsSync(path)) return path;
+  }
+  return undefined;
+}
+
+/**
+ * 🛂️ `📓️design-abi.md` §3's registry `check` extension: a descriptor exists per crate, `pluginId`
+ * matches the component package, `extends` matches the first dependency, every
+ * `on-extension-request:<point>` activation event an extension declares names a real extension point
+ * on its host plugin, and the built wasm's sha256 matches `hashes.wasmSha256`.
+ *
+ * **Severity, deliberately asymmetric** (documented judgment call, `📓️terra-E1-describe-report.md`):
+ * zero plugin crates have been migrated to emit a descriptor yet (W3's `M0`…`M8` land after this
+ * packet) — hard-failing "descriptor exists" today would permanently red the gate until every plugin
+ * migrates, which is not what a W2 packet's `check` extension is for. So "missing descriptor" and
+ * "wasm not built" are **warnings** (mirrors this file's own `PLUGIN_AREAS_STATE`
+ * legacy/mixed/clean idiom for the taxonomy-tree audit above); every check that only applies to a
+ * crate that DOES have a descriptor (id/extends/extension-point/hash consistency) is a **hard
+ * error** — a wrong descriptor is worse than a missing one.
+ */
+function validateDescriptors(entries: readonly PluginRegistryEntry[], repoRoot: string): { warnings: string[]; errors: string[] } {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const byId = new Map(entries.map((entry) => [entry.pluginId, entry]));
+  let described = 0;
+  for (const entry of entries) {
+    const descriptorPath = join(entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
+    if (entry.hashes === undefined && entry.executionMode === undefined && entry.activationEvents.length === 0 && entry.extensionPoints.length === 0) {
+      // 🚧️ No `🔣️descriptor.json` (or one too malformed to read) — see `readDescriptorJson`.
+      warnings.push(`${entry.pluginId}: no ${descriptorPath} yet — run \`bun ./📜️script.ts describe\` in ${entry.cratePath} after building its wasm32-wasip2 component`);
+      continue;
+    }
+    described++;
+    const descriptor = readDescriptorJson(repoRoot, entry.cratePath);
+    const manifestPluginId = (descriptor?.manifest as Record<string, unknown> | undefined)?.pluginId;
+    if (manifestPluginId !== entry.pluginId) {
+      errors.push(`${entry.pluginId}: ${descriptorPath} manifest.pluginId is ${JSON.stringify(manifestPluginId)}, expected ${JSON.stringify(entry.pluginId)} (the [package.metadata.component] package)`);
+    }
+    if (entry.extends !== undefined) {
+      const manifestDependencies = (descriptor?.manifest as Record<string, unknown> | undefined)?.dependencies;
+      const firstDependencyId = Array.isArray(manifestDependencies) ? (manifestDependencies[0] as { pluginId?: unknown } | undefined)?.pluginId : undefined;
+      if (firstDependencyId !== entry.extends) {
+        errors.push(`${entry.pluginId}: extends ${JSON.stringify(entry.extends)} but manifest.dependencies[0].pluginId is ${JSON.stringify(firstDependencyId)} — contract freeze §4 rule 1 requires these to match`);
+      }
+    }
+    const hostPluginId = entry.extends;
+    const hostExtensionPoints = hostPluginId ? new Set(byId.get(hostPluginId)?.extensionPoints ?? []) : undefined;
+    for (const activation of entry.activationEvents) {
+      const point = activation.startsWith("on-extension-request:") ? activation.slice("on-extension-request:".length) : undefined;
+      if (point === undefined) continue;
+      if (hostPluginId === undefined) {
+        errors.push(`${entry.pluginId}: declares on-extension-request:${point} but has no "extends" host plugin`);
+      } else if (!hostExtensionPoints?.has(point)) {
+        errors.push(`${entry.pluginId}: declares on-extension-request:${point}, but host plugin ${JSON.stringify(hostPluginId)} declares no extension point ${JSON.stringify(point)} (has: ${[...(hostExtensionPoints ?? [])].join(", ") || "none"})`);
+      }
+    }
+    if (entry.hashes) {
+      const builtWasm = findBuiltWasm(repoRoot, entry.wasmOut);
+      if (builtWasm === undefined) {
+        warnings.push(`${entry.pluginId}: has hashes.wasmSha256 but no built wasm found under ${WASM_TARGET_DIR.join("/")}/{${WASM_PROFILE_DIRS.join(",")}}/${entry.wasmOut} — skipping hash check`);
+      } else {
+        const actual = sha256HexOfFile(builtWasm);
+        if (actual !== entry.hashes.wasmSha256) {
+          errors.push(`${entry.pluginId}: hashes.wasmSha256 is ${entry.hashes.wasmSha256} but ${relative(repoRoot, builtWasm)} actually hashes to ${actual} — re-run \`describe\` after the latest build`);
+        }
+      }
+    }
+  }
+  if (described > 0 || warnings.length === 0) {
+    console.log(`descriptor gate: ${described}/${entries.length} crates have a 🔣️descriptor.json.`);
+  }
+  return { warnings, errors };
+}
+//#endregion 🔖️DescriptorGate
+
 class CheckScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = getWorkspaceRoot();
@@ -1785,6 +2011,18 @@ class CheckScript extends BundleScript {
     if (discoveryProblems.length > 0) {
       console.warn("package discovery problems:");
       for (const problem of discoveryProblems) console.warn(`  - [${problem.kind}] ${problem.message}`);
+    }
+    // 🛂️ `📓️design-abi.md` §3's descriptor gate — see `validateDescriptors`'s own doc for the
+    // warn-vs-error severity split.
+    const descriptorResult = validateDescriptors(entries, repoRoot);
+    if (descriptorResult.warnings.length > 0) {
+      console.warn("descriptor gate warnings:");
+      for (const warning of descriptorResult.warnings) console.warn(`  - ${warning}`);
+    }
+    if (descriptorResult.errors.length > 0) {
+      console.error("descriptor gate violations:");
+      for (const error of descriptorResult.errors) console.error(`  - ${error}`);
+      process.exit(1);
     }
     console.log(`plugin registry catalog is fresh (${entries.length} plugin crates, ${playgrounds.length} playgrounds, ${frameworkPackages.length} framework packages); ${LAUNCH_OUTPUT_REL_PATH} is fresh.`);
   }

@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -8,7 +9,12 @@ use semio_framework_plugin::Plugin;
 /// thing it used to survive for, registered automatically by `register_document_app` below.
 /// `.editor(…)`/`.viewer(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract
 /// §2.1/§2.4) replace the retired `.document_app(…)` call — the `s.note.note@1/*` dialect now
-/// registers one mutation-capable editor and one read-only viewer surface.
+/// registers one mutation-capable editor and one read-only viewer surface. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME E2,
+/// `📓️design-abi.md` §3) are this crate's proof-of-migration: the host activates one instance
+/// whenever a `"2d.note"` artifact (`crate::artifacts::note::artifact_kind().id`) is opened, this
+/// plugin's actor runs `Isolated` (no publisher trust assumed beyond the sandbox default), and it
+/// asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("note")
         .label("Note")
@@ -19,6 +25,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::note::NotePlayApp>()
         .viewer::<crate::viewer::note::NoteViewer>(crate::viewer::note::create_note_viewer())
         .viewer_mutation_roster::<crate::viewer::note::NoteViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::note::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist note edits to the open document".into(), optional: false })
         .try_build()
 }
 

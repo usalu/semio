@@ -1,0 +1,247 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+warning: unused imports: `ArtifactKind`, `CapabilityRequirement`, `Rights`, `Scope`, `TopicContribution`, and `ViewModel`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:8:25
+   |
+ 8 |         ArtifactHandle, ArtifactKind, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, CapabilityRequirement, Effect,...
+   |                         ^^^^^^^^^^^^                                                                  ^^^^^^^^^^^^^^^^^^^^^
+ 9 |         RequestOutcome, Rights, Scope, TurnResult, TurnStatus, WindowHandle, WindowKindId,
+   |                         ^^^^^^  ^^^^^
+10 |     },
+11 |     DslValue, PluginManifest, TopicContribution, ViewModel,
+   |                               ^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `UtilityNode`, `WindowEngagement`, and `WindowMeasure`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:19:21
+   |
+19 | use ui_wgpu::wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
+   |                     ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^
+
+warning: unused import: `bindgen`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:20:27
+   |
+20 | use wasmtime::component::{bindgen, Component, Linker};
+   |                           ^^^^^^^
+
+warning: unused imports: `ResourceTable`, `WasiCtxBuilder`, and `WasiCtx`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:21
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                     ^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:75:45
+   |
+75 |         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+75 |         assert_eq!(after_set.defaults, vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
+   |                                             +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+error[E0422]: cannot find struct, variant or union type `DefaultApp` in this scope
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:92:56
+   |
+92 | ...   let base = OpeningPreferences { defaults: vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() ...
+   |                                                      ^^^^^^^^^^
+   |
+  ::: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/./././../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦠️mutation/🦀️component.rs:15:1
+   |
+15 | pub struct SetDefaultApp {
+   | ------------------------ similarly named struct `SetDefaultApp` defined here
+   |
+help: a struct with a similar name exists
+   |
+92 |         let base = OpeningPreferences { defaults: vec![SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }] };
+   |                                                        +++
+help: consider importing this struct through its public re-export
+   |
+64 +     use crate::opening_config::DefaultApp;
+   |
+
+warning: unused imports: `ResourceTable`, `WasiCtxBuilder`, `WasiCtx`, and `WasiView`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:21
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                     ^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️component.rs:179:5
+    |
+179 |     impl ShardTransport for Arc<LoopbackTransport> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^----------------------
+    |                             |
+    |                             `std::sync::Arc` is not defined in the current crate
+    |
+    = note: impl doesn't have any local type before any uncovered type parameters
+    = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+    = note: define and implement a trait or new type instead
+
+error[E0277]: `GuestInstance` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:3903:89
+     |
+3903 | ...   let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).expect_err(&format!("{name}.wasm does not export...
+     |                                                                                   ^^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `Debug` is not implemented for `GuestInstance`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:345:1
+     |
+ 345 | pub struct GuestInstance {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: add `#[derive(Debug)]` to `GuestInstance` or manually `impl Debug for GuestInstance`
+note: required by a bound in `std::result::Result::<T, E>::expect_err`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:1293:12
+     |
+1291 |     pub fn expect_err(self, msg: &str) -> E
+     |            ---------- required by a bound in this associated function
+1292 |     where
+1293 |         T: fmt::Debug,
+     |            ^^^^^^^^^^ required by this bound in `Result::<T, E>::expect_err`
+
+error[E0277]: `GuestInstance` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1130:85
+     |
+1130 | ...   let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).expect_err("stdio.wasm does not export `reactor`...
+     |                                                                                   ^^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `Debug` is not implemented for `GuestInstance`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:345:1
+     |
+ 345 | pub struct GuestInstance {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: add `#[derive(Debug)]` to `GuestInstance` or manually `impl Debug for GuestInstance`
+note: required by a bound in `std::result::Result::<T, E>::expect_err`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:1293:12
+     |
+1291 |     pub fn expect_err(self, msg: &str) -> E
+     |            ---------- required by a bound in this associated function
+1292 |     where
+1293 |         T: fmt::Debug,
+     |            ^^^^^^^^^^ required by this bound in `Result::<T, E>::expect_err`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:751:102
+    |
+751 |         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
+    |                                                                                                      ^^^^^^^^ expected `Actor`, found `(Actor, Instance)`
+    |
+    = note: expected struct `actor_bindings::Actor`
+                found tuple `(actor_bindings::Actor, wasmtime::component::Instance)`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:960:112
+    |
+960 |         E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.engine_id, key: inner.key },
+    |                                                                                                                ^^^^^^^^^ expected `String`, found `Vec<u8>`
+    |
+    = note: expected struct `std::string::String`
+               found struct `Vec<u8>`
+
+error[E0609]: no field `target` on type `DispatchActionEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:963:103
+    |
+963 | ...   E::DispatchAction(inner) => Effect::DispatchAction { req: RequestId(inner.req), action: inner.target, args: decode_dsl(&inner...
+    |                                                                                                     ^^^^^^ unknown field
+    |
+    = note: available fields are: `req`, `action`, `args`, `delay_ms`
+
+error[E0609]: no field `invocation` on type `DispatchActionEffect`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:963:135
+    |
+963 | ...req), action: inner.target, args: decode_dsl(&inner.invocation), delay_ms: 0 },
+    |                                                        ^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `req`, `action`, `args`, `delay_ms`
+
+error[E0277]: the trait bound `ClipboardFragment: std::default::Default` is not satisfied
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:966:101
+     |
+ 966 |         E::ClipboardWrite(inner) => Effect::ClipboardWrite { fragment: decode_json(&inner.fragment).unwrap_or_default() },
+     |                                                                                                     ^^^^^^^^^^^^^^^^^ the trait `std::default::Default` is not implemented for `ClipboardFragment`
+     |
+note: required by a bound in `std::option::Option::<T>::unwrap_or_default`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1093:12
+     |
+1091 |     pub const fn unwrap_or_default(self) -> T
+     |                  ----------------- required by a bound in this associated function
+1092 |     where
+1093 |         T: [const] Default,
+     |            ^^^^^^^^^^^^^^^ required by this bound in `Option::<T>::unwrap_or_default`
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:995:72
+    |
+995 |             payload: inner.payload.map(|bytes| String::from_utf8_lossy(&bytes).into_owned()),
+    |                                                ----------------------- ^^^^^^ expected `&[u8]`, found `&String`
+    |                                                |
+    |                                                arguments to this function are incorrect
+    |
+    = note: expected reference `&[u8]`
+               found reference `&std::string::String`
+note: associated function defined here
+   --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/string.rs:628:12
+    |
+628 |     pub fn from_utf8_lossy(v: &[u8]) -> Cow<'_, str> {
+    |            ^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1040:21
+     |
+1040 |             app_id: app_id.clone(),
+     |                     ^^^^^^^^^^^^^^ expected `String`, found `AppInstanceId`
+
+error[E0560]: struct `RequestEvent` has no field named `from`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1065:128
+     |
+1065 | ...t(wit_events::RequestEvent { req: req.0, from: kernel_message_endpoint_to_wit(from), capability: capability.clone(), payload: p...
+     |                                             ^^^^ `RequestEvent` does not have this field
+     |
+     = note: available fields are: `origin`
+
+warning: unused import: `WasiView`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:22:61
+   |
+22 | use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+   |                                                             ^^^^^^^^
+
+warning: unused variable: `id`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1084:22
+     |
+1084 |         C::Granted { id, grant } => wit_capabilities::CapabilityChange::Granted(kernel_broker_grant_to_wit(grant)),
+     |                      ^^ help: try ignoring the field: `id: _`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0277, E0308, E0560, E0609.
+For more information about an error, try `rustc --explain E0277`.
+Some errors have detailed explanations: E0117, E0277, E0308, E0422, E0560, E0609.
+For more information about an error, try `rustc --explain E0117`.
+warning: `semio-framework-plugin-host` (lib) generated 6 warnings
+error: could not compile `semio-framework-plugin-host` (lib) due to 8 previous errors; 6 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-plugin-host` (lib test) generated 5 warnings (4 duplicates)
+error: could not compile `semio-framework-plugin-host` (lib test) due to 13 previous errors; 5 warnings emitted
