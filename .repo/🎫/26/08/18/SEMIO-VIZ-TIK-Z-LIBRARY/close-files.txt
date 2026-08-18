@@ -47,7 +47,6 @@ print/template/viz-gallery/viz-17.tex
 print/template/viz-gallery/viz-18.tex
 print/template/viz-gallery/viz-19.tex
 print/template/viz-gallery/viz-api.tex
-print/template/viz-gallery/viz-api.tex
 print/script.ts
 print/project.json
 package.json

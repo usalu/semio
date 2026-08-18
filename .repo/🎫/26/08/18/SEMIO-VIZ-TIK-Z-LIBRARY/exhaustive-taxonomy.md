@@ -1,0 +1,2221 @@
+# Exhaustive Visualization Taxonomy for a TikZ-Based “D3 for LaTeX” Library
+
+- **0. Foundational visualizations / primitives**
+  - Points / marks
+    - Dot
+    - Circle
+    - Square
+    - Rectangle
+    - Triangle
+    - Diamond
+    - Cross
+    - Plus
+    - Star
+    - Custom glyph
+    - Icon mark
+    - Image mark
+    - Text mark
+  - Lines
+    - Straight line
+    - Polyline
+    - Step line
+    - Curved line
+    - Bézier curve
+    - Spline
+    - Catmull–Rom spline
+    - Basis spline
+    - Cardinal spline
+    - Monotone spline
+    - Closed curve
+  - Areas
+    - Polygon
+    - Filled path
+    - Ribbon
+    - Band
+    - Envelope
+  - Arcs
+    - Circular arc
+    - Elliptical arc
+    - Annular arc
+    - Sector
+    - Wedge
+  - Connections
+    - Straight connector
+    - Orthogonal connector
+    - Curved connector
+    - Elbow connector
+    - Bundled connector
+    - Arrow
+    - Bidirectional arrow
+  - Regions
+    - Rectangular region
+    - Circular region
+    - Polygonal region
+    - Voronoi region
+    - Convex hull
+    - Concave hull
+  - Annotation primitives
+    - Label
+    - Callout
+    - Leader line
+    - Bracket
+    - Brace
+    - Highlight region
+    - Reference line
+    - Reference band
+    - Reference point
+
+- **1. Categorical comparison charts**
+  - Bar charts
+    - Vertical bar chart
+    - Horizontal bar chart
+    - Grouped bar chart
+    - Clustered bar chart
+    - Stacked bar chart
+    - 100% stacked bar chart
+    - Diverging stacked bar chart
+    - Floating bar chart
+    - Range bar chart
+    - Overlapping bar chart
+    - Nested bar chart
+    - Thin bar chart
+    - Rounded bar chart
+    - Lollipop bar chart
+    - Bullet-style bar chart
+    - Paired bar chart
+    - Mirrored bar chart
+    - Butterfly chart
+    - Tornado chart
+    - Population pyramid
+  - Column charts
+    - Column chart
+    - Grouped column chart
+    - Stacked column chart
+    - 100% stacked column chart
+    - Floating column chart
+    - Range column chart
+  - Dot-based comparison
+    - Dot plot
+    - Cleveland dot plot
+    - Grouped dot plot
+    - Paired dot plot
+    - Dumbbell chart
+    - Connected dot plot
+    - Lollipop chart
+    - Needle chart
+  - Ranking charts
+    - Ranked bar chart
+    - Ranked dot plot
+    - Bump chart
+    - Rank evolution chart
+    - Podium chart
+    - Top-N chart
+  - Icon/unit comparison
+    - Pictogram chart
+    - Icon array
+    - Unit chart
+    - Isotype chart
+    - Repeated-symbol chart
+    - Waffle comparison chart
+
+- **2. Time-series and sequential visualizations**
+  - Line charts
+    - Basic line chart
+    - Multi-line chart
+    - Grouped line chart
+    - Highlighted-line chart
+    - Indexed line chart
+    - Normalized line chart
+    - Step chart
+    - Step-before chart
+    - Step-after chart
+    - Smoothed line chart
+    - Spline chart
+    - Connected scatter time series
+  - Area charts
+    - Area chart
+    - Stacked area chart
+    - 100% stacked area chart
+    - Overlapping area chart
+    - Streamgraph
+    - Theme river
+    - Horizon chart
+    - Difference chart
+    - Range-area chart
+    - Confidence-band chart
+  - Specialized temporal charts
+    - Sparkline
+    - Spark area chart
+    - Spark bar chart
+    - Timeline
+    - Event timeline
+    - Milestone timeline
+    - Chronology chart
+    - Lifeline chart
+    - Event sequence chart
+    - Interval timeline
+    - State timeline
+    - Status timeline
+    - Swimlane timeline
+    - Calendar chart
+    - Calendar heatmap
+    - Year heatmap
+    - Clock chart
+    - Radial timeline
+    - Circular timeline
+    - Spiral timeline
+    - Spiral time-series chart
+    - Polar time-series chart
+    - Cycle plot
+    - Seasonal plot
+    - Seasonal subseries plot
+    - Horizon time-series chart
+    - Fan chart
+    - Forecast chart
+    - Forecast cone
+    - Control timeline
+  - Before/after and change
+    - Slope chart
+    - Slopegraph
+    - Before-after plot
+    - Change bar
+    - Delta chart
+    - Waterfall chart
+    - Bridge chart
+
+- **3. Distribution visualizations**
+  - Histograms
+    - Histogram
+    - Grouped histogram
+    - Overlaid histogram
+    - Stacked histogram
+    - Relative-frequency histogram
+    - Density histogram
+    - Cumulative histogram
+    - Variable-width histogram
+    - Circular histogram
+    - Polar histogram
+  - Distribution curves
+    - Kernel density estimate plot
+    - Multiple KDE plot
+    - Filled density plot
+    - Density ridge plot
+    - Ridgeline plot
+    - Joyplot
+    - Frequency polygon
+    - Cumulative density plot
+    - Empirical CDF plot
+    - Complementary CDF plot
+  - Box-family plots
+    - Box plot
+    - Horizontal box plot
+    - Grouped box plot
+    - Notched box plot
+    - Variable-width box plot
+    - Boxen plot
+    - Letter-value plot
+  - Violin-family plots
+    - Violin plot
+    - Half violin plot
+    - Split violin plot
+    - Grouped violin plot
+    - Bean plot
+    - Raincloud plot
+  - Point-based distributions
+    - Strip plot
+    - Jitter plot
+    - Beeswarm plot
+    - Swarm plot
+    - Sina plot
+    - Dot-density plot
+    - Wilkinson dot plot
+    - Stack-dot plot
+    - Rug plot
+    - Barcode plot
+  - Quantile and diagnostic distributions
+    - Quantile plot
+    - Quantile dot plot
+    - Q–Q plot
+    - P–P plot
+    - Probability plot
+    - Lorenz curve
+    - Concentration curve
+  - Classical statistical displays
+    - Stem-and-leaf plot
+    - Stem plot
+    - Frequency table visualization
+
+- **4. Relationship / correlation visualizations**
+  - Scatterplots
+    - Scatter plot
+    - Grouped scatter plot
+    - Colored scatter plot
+    - Symbol-coded scatter plot
+    - Bubble chart
+    - Proportional-symbol scatter plot
+    - Connected scatter plot
+    - Scatterplot with trend line
+    - Scatterplot with regression line
+    - Scatterplot with confidence band
+    - Residual scatterplot
+    - Jittered scatterplot
+  - Density-based relationships
+    - 2D density plot
+    - Hexbin plot
+    - Binned scatter plot
+    - Density scatter plot
+    - Contour scatter plot
+    - KDE contour plot
+  - Correlation summaries
+    - Correlation matrix
+    - Correlogram
+    - Correlation heatmap
+    - Scatterplot matrix
+    - Pair plot
+    - Bubble correlation matrix
+    - Ellipse correlation plot
+  - Statistical relationship diagnostics
+    - Residual plot
+    - Scale-location plot
+    - Leverage plot
+    - Influence plot
+    - Cook’s-distance plot
+    - Bland–Altman plot
+    - Calibration plot
+    - Reliability diagram
+    - Lift chart
+    - Gain chart
+
+- **5. Multivariate visualizations**
+  - Parallel coordinates
+  - Parallel sets
+  - Radar chart
+  - Spider chart
+  - Star plot
+  - Polar profile plot
+  - Glyph plot
+  - Chernoff faces
+  - Andrews curves
+  - Bubble matrix
+  - Heatmap matrix
+  - Scatterplot matrix
+  - Attribute matrix
+  - Profile plot
+  - Ternary plot
+  - Ternary scatter plot
+  - Ternary density plot
+  - Ternary contour plot
+  - Simplex plot
+  - Quaternary composition plot
+  - Biplot
+  - PCA biplot
+  - PCA score plot
+  - PCA loading plot
+  - Correspondence-analysis plot
+  - Multidimensional-scaling plot
+  - t-SNE embedding plot
+  - UMAP embedding plot
+  - Cluster projection
+  - RadViz
+  - Grand tour projection
+  - Projection pursuit visualization
+
+- **6. Part-to-whole / composition visualizations**
+  - Pie family
+    - Pie chart
+    - Exploded pie chart
+    - Nested pie chart
+    - Semi-circle pie chart
+    - Polar pie chart
+  - Donut family
+    - Donut chart
+    - Nested donut
+    - Multi-ring donut
+    - Gauge donut
+  - Radial partitions
+    - Sunburst chart
+    - Multi-level pie chart
+    - Radial partition chart
+  - Rectangular composition
+    - Stacked bar
+    - 100% stacked bar
+    - Stacked area
+    - Treemap
+    - Marimekko chart
+    - Mekko chart
+    - Mosaic plot
+    - Spine plot
+  - Unit composition
+    - Waffle chart
+    - Unit chart
+    - Icon array
+    - Pictogram
+  - Specialized
+    - Parliament chart
+    - Seat chart
+    - Coxcomb chart
+    - Polar-area chart
+    - Nightingale rose chart
+
+- **7. Hierarchical visualizations**
+  - Trees
+    - Rooted tree
+    - Binary tree
+    - N-ary tree
+    - Ordered tree
+    - Unordered tree
+    - Top-down tree
+    - Bottom-up tree
+    - Left-right tree
+    - Radial tree
+    - Circular tree
+    - Balloon tree
+    - Cone tree
+    - Hyperbolic tree
+  - Dendrograms
+    - Dendrogram
+    - Horizontal dendrogram
+    - Vertical dendrogram
+    - Radial dendrogram
+    - Circular dendrogram
+    - Cluster dendrogram
+  - Space-filling hierarchies
+    - Treemap
+    - Squarified treemap
+    - Slice-and-dice treemap
+    - Strip treemap
+    - Binary treemap
+    - Voronoi treemap
+    - Circular treemap
+    - Icicle plot
+    - Sunburst
+    - Partition diagram
+  - Organizational/human hierarchies
+    - Organization chart
+    - Family tree
+    - Genealogy chart
+    - Pedigree chart
+    - Ancestor chart
+    - Descendant chart
+  - Concept hierarchies
+    - Mind map
+    - Concept tree
+    - Taxonomy diagram
+    - Classification tree
+    - Decision tree
+  - Specialized trees
+    - Phylogenetic tree
+    - Cladogram
+    - Phylogram
+    - Chronogram
+    - Linguistic syntax tree
+    - Parse tree
+    - Abstract syntax tree
+    - Game tree
+    - Search tree
+    - Trie visualization
+    - Merkle tree
+    - Decision-tree model visualization
+
+- **8. Graph and network visualizations**
+  - General node-link graphs
+    - Undirected graph
+    - Directed graph
+    - Weighted graph
+    - Signed graph
+    - Multigraph
+    - Pseudograph
+    - Bipartite graph
+    - Multipartite graph
+    - DAG
+    - Cyclic graph
+  - Graph layouts
+    - Force-directed graph
+    - Spring layout
+    - Fruchterman–Reingold graph
+    - Kamada–Kawai graph
+    - Circular graph
+    - Shell graph
+    - Grid graph
+    - Spectral layout
+    - Random layout
+    - Hierarchical graph
+    - Layered/Sugiyama graph
+    - Radial network
+  - Dense graph alternatives
+    - Adjacency matrix
+    - Node-link matrix hybrid
+    - Arc diagram
+    - Circular arc diagram
+    - Hive plot
+    - BioFabric-style graph
+  - Edge-centric visualizations
+    - Edge-bundled graph
+    - Hierarchical edge bundling
+    - Dependency wheel
+    - Chord diagram
+    - Connection matrix
+  - Ego/community views
+    - Ego network
+    - Community graph
+    - Clustered network
+    - Social network
+    - Co-occurrence network
+    - Citation network
+    - Collaboration network
+    - Knowledge graph
+    - Semantic network
+  - Specialized graph types
+    - State-transition graph
+    - Automaton
+    - Finite-state machine
+    - Markov-chain diagram
+    - Bayesian network
+    - Factor graph
+    - Causal DAG
+    - Argument map
+    - Attack graph
+    - Dependency graph
+    - Call graph
+    - Control-flow graph
+    - Data-flow graph
+    - Package dependency graph
+    - Module graph
+    - Build graph
+
+- **9. Flow visualizations**
+  - Sankey diagram
+  - Alluvial diagram
+  - Parallel sets
+  - Flow map
+  - Chord diagram
+  - Dependency wheel
+  - Energy-flow diagram
+  - Material-flow diagram
+  - Money-flow diagram
+  - Migration-flow diagram
+  - Traffic-flow diagram
+  - User-flow diagram
+  - Conversion-flow diagram
+  - Funnel-flow diagram
+  - River-flow diagram
+  - Streamgraph
+  - ThemeRiver
+  - Flow network
+  - Source-sink graph
+  - Input-output flow diagram
+
+- **10. Geospatial / cartographic visualizations**
+  - Base maps
+    - Political map
+    - Physical map
+    - Topographic map
+    - Street map
+    - Terrain map
+    - Relief map
+    - Bathymetric map
+    - Geological map
+  - Statistical maps
+    - Choropleth map
+    - Dasymetric map
+    - Graduated-symbol map
+    - Proportional-symbol map
+    - Bubble map
+    - Dot-density map
+    - Dot-distribution map
+    - Heat map
+    - Spatial density map
+    - Hexbin map
+    - Bivariate choropleth
+    - Multivariate choropleth
+  - Distortion maps
+    - Cartogram
+    - Contiguous cartogram
+    - Non-contiguous cartogram
+    - Dorling cartogram
+    - Demers cartogram
+  - Grid/tile maps
+    - Tile-grid map
+    - Hex tile map
+    - Square tile map
+    - Equal-area grid map
+  - Routes and movement
+    - Route map
+    - Transit map
+    - Metro map
+    - Subway map
+    - Railway map
+    - Road-network map
+    - Flight-route map
+    - Shipping-route map
+    - Origin-destination map
+    - Desire-line map
+    - Migration map
+    - Flow map
+  - Continuous spatial fields
+    - Contour map
+    - Isoline map
+    - Isopleth map
+    - Isochrone map
+    - Isodistance map
+    - Elevation contours
+    - Weather map
+    - Pressure map
+    - Temperature map
+    - Precipitation map
+    - Wind map
+  - Terrain representations
+    - Hillshade
+    - Hypsometric tint
+    - Shaded relief
+    - Elevation raster
+    - DEM visualization
+    - Terrain profile
+    - Cross-sectional terrain profile
+  - Coordinate/cartographic structures
+    - Graticule
+    - Latitude-longitude grid
+    - Map projection diagram
+    - Great-circle paths
+    - Geodesic paths
+    - Voronoi map
+    - Delaunay map
+  - Specialized maps
+    - Electoral map
+    - Constituency map
+    - Campus map
+    - Floor map
+    - Site map
+    - Archaeological map
+    - Historical map
+    - Linguistic map
+    - Epidemiological map
+    - Ecological range map
+
+- **11. Matrix and heatmap visualizations**
+  - Heatmap
+  - Clustered heatmap
+  - Annotated heatmap
+  - Calendar heatmap
+  - Correlation heatmap
+  - Confusion matrix
+  - Adjacency matrix
+  - Distance matrix
+  - Similarity matrix
+  - Covariance matrix
+  - Co-occurrence matrix
+  - Transition matrix
+  - Presence/absence matrix
+  - Binary matrix
+  - Dot matrix
+  - Bubble matrix
+  - Matrix plot
+  - Matrix with marginal dendrograms
+  - Matrix with marginal histograms
+  - Sparse matrix visualization
+
+- **12. Table-oriented visualizations**
+  - Plain data table
+  - Statistical table
+  - Comparison table
+  - Matrix table
+  - Crosstab
+  - Pivot table
+  - Frequency table
+  - Contingency table
+  - Heatmapped table
+  - Bar-in-cell table
+  - Sparkline table
+  - Icon table
+  - Highlight table
+  - Ranked table
+  - League table
+  - Table with confidence intervals
+  - Table with mini visualizations
+
+- **13. Text and language visualizations**
+  - Word cloud
+  - Tag cloud
+  - Frequency cloud
+  - Word tree
+  - Phrase tree
+  - Concordance plot
+  - KWIC visualization
+  - Text arc diagram
+  - Text heatmap
+  - Document-term matrix
+  - Topic map
+  - Topic distribution chart
+  - Topic river
+  - Topic evolution chart
+  - Sentiment timeline
+  - Sentiment matrix
+  - Lexical dispersion plot
+  - Vocabulary-growth curve
+  - Co-occurrence network
+  - Semantic network
+  - Dependency parse tree
+  - Constituency parse tree
+  - Syntax tree
+  - Sentence diagram
+  - Alignment visualization
+  - Parallel-text alignment
+
+- **14. Process / workflow visualizations**
+  - Flowchart
+    - Process flowchart
+    - Decision flowchart
+    - Cross-functional flowchart
+    - Swimlane flowchart
+    - Workflow diagram
+    - Process map
+  - Business-process diagrams
+    - BPMN diagram
+    - Value-stream map
+    - SIPOC diagram
+    - Service blueprint
+    - Customer-journey map
+    - User-journey map
+    - Experience map
+  - Logic diagrams
+    - Decision diagram
+    - Decision tree
+    - Decision table
+    - Cause-effect diagram
+    - Fishbone/Ishikawa diagram
+    - Fault tree
+    - Event tree
+    - Logic tree
+  - Flow structures
+    - Funnel diagram
+    - Pipeline diagram
+    - Stage-gate diagram
+    - Lifecycle diagram
+    - Circular process diagram
+    - Feedback-loop diagram
+    - Causal-loop diagram
+
+- **15. UML and software-engineering diagrams**
+  - UML structural diagrams
+    - Class diagram
+    - Object diagram
+    - Component diagram
+    - Composite-structure diagram
+    - Package diagram
+    - Deployment diagram
+    - Profile diagram
+  - UML behavioral diagrams
+    - Use-case diagram
+    - Activity diagram
+    - State-machine diagram
+  - UML interaction diagrams
+    - Sequence diagram
+    - Communication diagram
+    - Interaction-overview diagram
+    - Timing diagram
+  - Data/software architecture
+    - Entity–relationship diagram
+    - Enhanced ER diagram
+    - Database schema diagram
+    - Relational-schema diagram
+    - Data-flow diagram
+    - Context diagram
+    - C4 context diagram
+    - C4 container diagram
+    - C4 component diagram
+    - C4 code diagram
+    - Architecture diagram
+    - Microservice diagram
+    - Cloud-architecture diagram
+    - Network topology diagram
+    - Deployment topology
+    - API dependency diagram
+    - Call graph
+    - Control-flow graph
+    - Data-lineage diagram
+    - Data-pipeline diagram
+    - ETL diagram
+
+- **16. Project-management and planning visualizations**
+  - Gantt chart
+  - Milestone chart
+  - Roadmap
+  - Product roadmap
+  - Technology roadmap
+  - Release roadmap
+  - Project timeline
+  - Program timeline
+  - Dependency timeline
+  - PERT chart
+  - Critical-path diagram
+  - Work-breakdown structure
+  - Kanban board
+  - Scrum board
+  - Burndown chart
+  - Burnup chart
+  - Cumulative-flow diagram
+  - Velocity chart
+  - Resource-allocation chart
+  - Resource histogram
+  - RACI matrix
+  - Risk matrix
+  - Impact-effort matrix
+
+- **17. Financial / economic visualizations**
+  - Price charts
+    - Line price chart
+    - Candlestick chart
+    - OHLC chart
+    - HLC chart
+    - Kagi chart
+    - Renko chart
+    - Point-and-figure chart
+    - Heikin-Ashi chart
+  - Volume
+    - Volume bar chart
+    - Volume profile
+    - Price-volume chart
+  - Financial indicators
+    - Moving-average chart
+    - Bollinger-band chart
+    - MACD plot
+    - RSI plot
+    - Momentum plot
+    - Drawdown chart
+  - Performance
+    - Equity curve
+    - Return chart
+    - Cumulative-return chart
+    - Risk-return scatterplot
+    - Efficient frontier
+    - Portfolio allocation chart
+  - Accounting/business
+    - Waterfall chart
+    - Bridge chart
+    - P&L bridge
+    - Revenue bridge
+    - Variance chart
+    - Actual-vs-budget chart
+    - Bullet chart
+    - KPI chart
+  - Economics
+    - Supply-demand graph
+    - Lorenz curve
+    - Phillips curve
+    - Production-possibility frontier
+    - Indifference curve
+    - Engel curve
+    - Yield curve
+    - Term-structure chart
+
+- **18. KPI / dashboard visualizations**
+  - KPI card
+  - Big-number display
+  - Delta indicator
+  - Trend indicator
+  - Sparkline KPI
+  - Bullet graph
+  - Linear gauge
+  - Radial gauge
+  - Dial
+  - Speedometer
+  - Thermometer
+  - Progress bar
+  - Progress ring
+  - Completion donut
+  - Traffic-light indicator
+  - Status badge
+  - Scorecard
+  - Balanced scorecard
+  - Dashboard tile
+  - Small-multiple dashboard
+
+- **19. Funnel / conversion visualizations**
+  - Funnel chart
+  - Inverted funnel
+  - Conversion funnel
+  - Sales funnel
+  - Recruitment funnel
+  - Marketing funnel
+  - Funnel with drop-off
+  - Funnel plot
+  - Pyramid funnel
+  - Sankey funnel
+  - Stage-flow funnel
+
+- **20. Polar / radial visualizations**
+  - Polar scatter plot
+  - Polar line plot
+  - Polar area plot
+  - Polar histogram
+  - Rose diagram
+  - Wind rose
+  - Nightingale rose
+  - Coxcomb chart
+  - Radar chart
+  - Spider chart
+  - Radial bar chart
+  - Radial column chart
+  - Radial stacked bar
+  - Radial heatmap
+  - Circular heatmap
+  - Radial timeline
+  - Radial tree
+  - Radial dendrogram
+  - Sunburst
+  - Chord diagram
+  - Circular network
+  - Circular calendar
+  - Circular genome plot
+  - Circumplex plot
+
+- **21. Circular/genomic visualizations**
+  - Circos plot
+  - Circular genome plot
+  - Ideogram
+  - Karyotype diagram
+  - Chromosome map
+  - Chromosome banding diagram
+  - Genome track
+  - Manhattan plot
+  - Regional association plot
+  - Synteny plot
+  - Circular synteny plot
+  - Gene map
+  - Gene structure diagram
+  - Transcript diagram
+  - Exon–intron diagram
+  - Sequence logo
+  - Motif logo
+  - Coverage track
+  - Read pileup
+  - Variant track
+  - Hi-C contact map
+  - Phylogenetic tree
+  - Phylogenetic network
+  - Protein domain diagram
+  - Protein interaction network
+
+- **22. Medical / biomedical visualizations**
+  - Survival curve
+  - Kaplan–Meier plot
+  - Cumulative-hazard plot
+  - Forest plot
+  - Funnel plot
+  - ROC curve
+  - Precision-recall curve
+  - Calibration plot
+  - Nomogram
+  - Growth chart
+  - Dose-response curve
+  - Bland–Altman plot
+  - Volcano plot
+  - MA plot
+  - Manhattan plot
+  - Gene-expression heatmap
+  - Pathway diagram
+  - Metabolic-network diagram
+  - Anatomical schematic
+  - Patient timeline
+  - Clinical-event timeline
+
+- **23. Statistical inference / uncertainty visualizations**
+  - Error-bar chart
+  - Confidence-interval plot
+  - Interval plot
+  - Dot-and-whisker plot
+  - Forest plot
+  - Caterpillar plot
+  - Confidence band
+  - Prediction band
+  - Credible interval
+  - Highest-density interval
+  - Fan chart
+  - Uncertainty ribbon
+  - Gradient uncertainty band
+  - Hypothetical outcome plot
+  - Bootstrap distribution
+  - Posterior density
+  - Prior/posterior plot
+  - Bayesian posterior interval plot
+  - Sampling-distribution plot
+  - Null-distribution plot
+  - P-value plot
+  - Power curve
+  - Funnel plot
+  - Meta-analysis forest plot
+
+- **24. Model evaluation / machine-learning visualizations**
+  - Confusion matrix
+  - ROC curve
+  - Precision-recall curve
+  - DET curve
+  - Calibration curve
+  - Lift curve
+  - Gains chart
+  - Cumulative-gains chart
+  - Learning curve
+  - Validation curve
+  - Loss curve
+  - Training-history chart
+  - Feature-importance chart
+  - Permutation-importance chart
+  - SHAP summary plot
+  - SHAP beeswarm
+  - SHAP dependence plot
+  - SHAP waterfall plot
+  - SHAP force-style diagram
+  - Partial-dependence plot
+  - ICE plot
+  - Decision boundary
+  - Classification-region plot
+  - Cluster plot
+  - Silhouette plot
+  - Elbow plot
+  - Dendrogram
+  - Embedding plot
+  - Neural-network architecture diagram
+  - Computational graph
+  - Attention heatmap
+  - Transformer attention map
+  - Token-probability plot
+
+- **25. Mathematical function visualizations**
+  - Cartesian function plot
+  - Parametric curve
+  - Implicit curve
+  - Piecewise function
+  - Polar function
+  - Complex-plane plot
+  - Argand diagram
+  - Domain-coloring plot
+  - Riemann-surface visualization
+  - Vector-valued function plot
+  - Sequence plot
+  - Recurrence plot
+  - Cobweb plot
+  - Bifurcation diagram
+  - Phase portrait
+  - Phase-space plot
+  - Stability diagram
+  - Nullcline plot
+  - Direction field
+  - Slope field
+  - Integral-area visualization
+  - Riemann-sum diagram
+  - Taylor-approximation plot
+  - Fourier-series approximation
+  - Probability-density function
+  - Probability-mass function
+  - CDF
+  - Quantile function
+
+- **26. Geometry visualizations**
+  - Euclidean construction
+  - Triangle diagram
+  - Polygon diagram
+  - Circle geometry
+  - Conic section
+  - Ellipse
+  - Parabola
+  - Hyperbola
+  - Tangent construction
+  - Secant construction
+  - Angle diagram
+  - Similarity diagram
+  - Congruence diagram
+  - Coordinate geometry
+  - Transform geometry
+    - Translation
+    - Rotation
+    - Reflection
+    - Scaling
+    - Shear
+  - Voronoi diagram
+  - Delaunay triangulation
+  - Convex hull
+  - Concave hull
+  - Triangulation
+  - Mesh
+  - Tessellation
+  - Regular tiling
+  - Penrose tiling
+  - Hyperbolic tiling
+  - Fractal geometry
+  - L-system drawing
+
+- **27. Vector-field / field visualizations**
+  - Quiver plot
+  - Vector field
+  - Direction field
+  - Streamline plot
+  - Streamplot
+  - Particle-flow plot
+  - Pathline
+  - Streakline
+  - LIC-style field depiction
+  - Gradient field
+  - Curl field
+  - Divergence field
+  - Electric-field diagram
+  - Magnetic-field diagram
+  - Force-field diagram
+  - Velocity-field diagram
+
+- **28. Scalar-field / surface visualizations**
+  - Contour plot
+  - Filled contour plot
+  - Isoline plot
+  - Level-set plot
+  - Scalar heatmap
+  - Density map
+  - Surface plot
+  - Mesh surface
+  - Wireframe
+  - Height map
+  - Shaded surface
+  - Waterfall surface
+  - Curtain plot
+  - Slice plot
+  - Isosurface
+  - Volume rendering
+  - Voxel plot
+
+- **29. Three-dimensional visualizations**
+  - 3D scatter plot
+  - 3D line plot
+  - 3D trajectory
+  - 3D bar chart
+  - 3D surface
+  - 3D wireframe
+  - 3D mesh
+  - 3D contour
+  - 3D vector field
+  - 3D quiver plot
+  - Point cloud
+  - Voxel visualization
+  - Volume visualization
+  - Isosurface visualization
+  - 3D network
+  - 3D tree
+  - 3D geometric solid
+  - Polyhedron
+  - Exploded 3D assembly
+  - Axonometric drawing
+  - Isometric drawing
+  - Perspective projection
+  - Orthographic projection
+  - Oblique projection
+
+- **30. Physics visualizations**
+  - Free-body diagram
+  - Force diagram
+  - Vector decomposition diagram
+  - Motion diagram
+  - Position-time graph
+  - Velocity-time graph
+  - Acceleration-time graph
+  - Phase-space diagram
+  - Projectile trajectory
+  - Orbital trajectory
+  - Spacetime diagram
+  - Minkowski diagram
+  - Light-cone diagram
+  - Feynman diagram
+  - Energy-level diagram
+  - Potential-energy diagram
+  - Band diagram
+  - Field-line diagram
+  - Equipotential map
+  - Wave diagram
+  - Standing-wave diagram
+  - Interference diagram
+  - Diffraction pattern
+  - Ray diagram
+  - Lens diagram
+  - Mirror diagram
+  - Polarization diagram
+  - Poincaré sphere
+
+- **31. Electrical / electronics visualizations**
+  - Circuit schematic
+  - Logic circuit
+  - Logic-gate diagram
+  - Ladder diagram
+  - Wiring diagram
+  - Block diagram
+  - Signal-flow graph
+  - Timing diagram
+  - Waveform plot
+  - Oscilloscope trace
+  - Bode plot
+    - Magnitude plot
+    - Phase plot
+  - Nyquist plot
+  - Nichols chart
+  - Root-locus plot
+  - Pole-zero plot
+  - Smith chart
+  - Constellation diagram
+  - Eye diagram
+  - Spectrogram
+  - Frequency-response plot
+  - Impulse-response plot
+  - Step-response plot
+  - Transfer-function block diagram
+
+- **32. Signal-processing visualizations**
+  - Waveform
+  - Time-domain signal
+  - Frequency spectrum
+  - Power spectral density
+  - Periodogram
+  - Spectrogram
+  - Scalogram
+  - Wavelet plot
+  - Cepstrum
+  - Autocorrelation plot
+  - Cross-correlation plot
+  - Lag plot
+  - Coherence plot
+  - Phase spectrum
+  - Magnitude spectrum
+  - Waterfall spectrum
+  - Time-frequency map
+  - Filter-response plot
+  - Pole-zero map
+
+- **33. Chemistry visualizations**
+  - Chemical structure
+  - Skeletal formula
+  - Lewis structure
+  - Reaction scheme
+  - Reaction mechanism
+  - Reaction coordinate diagram
+  - Energy profile
+  - Molecular orbital diagram
+  - Electron configuration diagram
+  - Orbital visualization
+  - Crystal structure
+  - Unit-cell diagram
+  - Phase diagram
+  - Ternary phase diagram
+  - Pourbaix diagram
+  - Frost diagram
+  - Latimer diagram
+  - NMR spectrum
+  - IR spectrum
+  - Mass spectrum
+  - UV–Vis spectrum
+  - Chromatogram
+
+- **34. Biology / ecology visualizations**
+  - Cell diagram
+  - Anatomical diagram
+  - Biological pathway
+  - Food web
+  - Food chain
+  - Ecological network
+  - Phylogenetic tree
+  - Cladogram
+  - Pedigree
+  - Punnett square
+  - Life-cycle diagram
+  - Population-growth curve
+  - Predator-prey phase plot
+  - Species-abundance plot
+  - Rarefaction curve
+  - Biodiversity map
+  - Habitat-range map
+  - Ecological niche plot
+
+- **35. Earth / climate / meteorological visualizations**
+  - Weather map
+  - Synoptic chart
+  - Weather fronts
+  - Pressure contours
+  - Isobar map
+  - Isotherm map
+  - Wind-barb map
+  - Wind rose
+  - Skew-T log-P diagram
+  - Tephigram
+  - Meteogram
+  - Climate stripe
+  - Climate anomaly chart
+  - Climograph
+  - Walter–Lieth climate diagram
+  - Hydrograph
+  - Hyetograph
+  - River profile
+  - Geological cross-section
+  - Stratigraphic column
+  - Seismic section
+  - Seismogram
+  - Tectonic map
+
+- **36. Engineering diagrams**
+  - Mechanical schematic
+  - Exploded view
+  - Assembly diagram
+  - Kinematic diagram
+  - Mechanism diagram
+  - Linkage diagram
+  - Gear train
+  - Hydraulic schematic
+  - Pneumatic schematic
+  - Piping diagram
+  - P&ID
+  - Process-flow diagram
+  - Block-flow diagram
+  - Control-system diagram
+  - Structural diagram
+  - Beam diagram
+  - Shear-force diagram
+  - Bending-moment diagram
+  - Stress-strain curve
+  - Mohr’s circle
+  - Truss diagram
+  - Frame diagram
+  - Finite-element mesh
+  - CFD mesh
+  - Engineering drawing
+  - Dimensioned drawing
+
+- **37. Architecture / spatial diagrams**
+  - Floor plan
+  - Site plan
+  - Section
+  - Elevation
+  - Axonometric drawing
+  - Isometric drawing
+  - Exploded axonometric
+  - Bubble diagram
+  - Adjacency diagram
+  - Circulation diagram
+  - Zoning diagram
+  - Massing diagram
+  - Sun-path diagram
+  - Shadow diagram
+  - Space-syntax graph
+
+- **38. Mathematical / abstract diagrams**
+  - Commutative diagram
+  - Category-theory diagram
+  - String diagram
+  - Penrose graphical notation
+  - Tensor-network diagram
+  - Young diagram
+  - Hasse diagram
+  - Lattice diagram
+  - Venn diagram
+  - Euler diagram
+  - Set diagram
+  - Karnaugh map
+  - Truth table
+  - Logic diagram
+  - Proof tree
+  - Inference tree
+  - Rewrite diagram
+  - Knot diagram
+  - Braid diagram
+  - Coxeter diagram
+  - Dynkin diagram
+  - Cayley graph
+  - Cayley table visualization
+  - Group lattice
+
+- **39. Set / overlap visualizations**
+  - Venn diagram
+  - Euler diagram
+  - Area-proportional Venn diagram
+  - Multi-set Venn diagram
+  - UpSet plot
+  - Combination matrix
+  - Intersection matrix
+  - Set-overlap network
+
+- **40. Optimization / operations-research visualizations**
+  - Feasible-region plot
+  - Constraint plot
+  - Objective-function contours
+  - Pareto frontier
+  - Efficient frontier
+  - Tradeoff curve
+  - Decision tree
+  - Decision lattice
+  - Network-flow diagram
+  - Transportation network
+  - Assignment matrix
+  - Scheduling chart
+  - Gantt chart
+  - PERT chart
+  - Critical-path network
+  - Queueing-network diagram
+
+- **41. Probability visualizations**
+  - Probability tree
+  - Probability mass function
+  - Probability density function
+  - CDF
+  - Survival function
+  - Hazard function
+  - Quantile function
+  - Joint-density plot
+  - Marginal-density plot
+  - Conditional-density plot
+  - Copula plot
+  - Probability simplex
+  - Bayesian network
+  - Markov-chain diagram
+  - Transition matrix
+  - Random-walk plot
+  - Brownian-motion path
+  - Monte-Carlo simulation plot
+
+- **42. Specialized analytical charts**
+  - Pareto chart
+  - Control chart
+    - X-bar chart
+    - R chart
+    - S chart
+    - P chart
+    - NP chart
+    - C chart
+    - U chart
+    - EWMA chart
+    - CUSUM chart
+  - Run chart
+  - Process-capability plot
+  - Process-behavior chart
+  - Funnel plot
+  - Fishbone diagram
+  - Risk matrix
+  - Quadrant chart
+  - Four-quadrant matrix
+  - Boston matrix
+  - Ansoff matrix
+  - Eisenhower matrix
+  - SWOT matrix
+  - Importance-performance matrix
+  - Perceptual map
+
+- **43. Sports visualizations**
+  - Shot chart
+  - Pitch map
+  - Pass network
+  - Heatmap
+  - Player-position map
+  - Formation diagram
+  - Race chart
+  - Lap chart
+  - Split-time chart
+  - Play-by-play timeline
+  - Win-probability chart
+  - Tournament bracket
+  - Knockout bracket
+  - League table
+  - Standings chart
+  - Head-to-head matrix
+  - Spider/player profile
+  - Movement trajectory
+
+- **44. Music visualizations**
+  - Staff notation
+  - Piano roll
+  - Pitch contour
+  - Waveform
+  - Spectrogram
+  - Chord diagram
+  - Tonnetz
+  - Circle of fifths
+  - Harmonic-network diagram
+  - Rhythm timeline
+  - Tempo map
+  - Dynamic profile
+  - MIDI-event plot
+
+- **45. Education / conceptual visualizations**
+  - Concept map
+  - Mind map
+  - Knowledge map
+  - Learning map
+  - Curriculum map
+  - Argument map
+  - Causal map
+  - Timeline
+  - Comparison diagram
+  - Cycle diagram
+  - Pyramid diagram
+  - Layer diagram
+  - Onion diagram
+  - Stair-step diagram
+  - Continuum diagram
+  - Spectrum diagram
+
+- **46. Infographic-style visualizations**
+  - Number infographic
+  - Statistical infographic
+  - Timeline infographic
+  - Process infographic
+  - Comparison infographic
+  - Hierarchy infographic
+  - Geographic infographic
+  - List infographic
+  - Anatomical infographic
+  - Cutaway diagram
+  - Exploded infographic
+  - Annotated illustration
+  - Icon matrix
+  - Pictorial chart
+
+- **47. Layout / spatial relationship diagrams**
+  - Grid layout
+  - Packing layout
+  - Circle packing
+  - Bubble packing
+  - Rectangular packing
+  - Voronoi layout
+  - Beeswarm layout
+  - Force layout
+  - Constraint-based layout
+  - Layered layout
+  - Radial layout
+  - Spiral layout
+  - Matrix layout
+  - Small-multiple layout
+
+- **48. Composite / coordinated visualizations**
+  - Small multiples
+  - Trellis plot
+  - Faceted chart
+  - Panel chart
+  - Multipanel scientific figure
+  - Dashboard
+  - Linked chart collection
+  - Overview + detail
+  - Focus + context
+  - Main plot + marginals
+  - Scatterplot + marginal histograms
+  - Scatterplot + marginal densities
+  - Heatmap + dendrogram
+  - Map + statistical chart
+  - Table + sparkline
+  - Chart + annotations
+  - Inset chart
+  - Inset map
+  - Zoomed inset
+  - Broken-axis composition
+  - Dual-axis composition
+  - Multi-axis composition
+  - Layered/overlaid plot
+  - Combination chart
+    - Bar + line
+    - Area + line
+    - Scatter + regression
+    - Candlestick + volume
+    - Histogram + density
+    - Box + swarm
+    - Violin + box
+    - Raincloud composition
+
+- **49. Faceting / repeated-view visualizations**
+  - Small multiples
+  - Facet grid
+  - Facet wrap
+  - Trellis display
+  - Lattice plot
+  - Multipanel chart
+  - Repeated map
+  - Repeated histogram
+  - Repeated sparkline
+  - Comparative panels
+  - Before/after panels
+
+- **50. Annotation-driven visualization types**
+  - Annotated chart
+  - Story chart
+  - Narrative chart
+  - Scrollytelling-style static sequence
+  - Explainer diagram
+  - Callout chart
+  - Highlight chart
+  - Threshold chart
+  - Reference-line chart
+  - Reference-band chart
+  - Event-marker chart
+  - Label-rich chart
+  - Directly labeled chart
+
+- **51. Axis-specialized plots**
+  - Linear-axis plot
+  - Log-axis plot
+  - Symmetric-log plot
+  - Power-scale plot
+  - Square-root scale plot
+  - Reciprocal-axis plot
+  - Probability-axis plot
+  - Date/time-axis plot
+  - Categorical-axis plot
+  - Discontinuous-axis plot
+  - Broken-axis plot
+  - Mirrored-axis plot
+  - Dual-axis plot
+  - Multiple-axis plot
+  - Polar-axis plot
+  - Ternary-axis plot
+
+- **52. Coordinate-system variants**
+  - Cartesian plot
+  - Polar plot
+  - Radial plot
+  - Ternary plot
+  - Barycentric plot
+  - Geographic projection
+  - Parallel-coordinate plot
+  - Log-polar plot
+  - Complex-plane plot
+  - 3D Cartesian plot
+  - Spherical-coordinate plot
+  - Cylindrical-coordinate plot
+
+- **53. Diagrammatic grids / matrices**
+  - Matrix diagram
+  - Quadrant matrix
+  - 2×2 matrix
+  - 3×3 matrix
+  - Risk matrix
+  - Priority matrix
+  - Confusion matrix
+  - Compatibility matrix
+  - Relationship matrix
+  - Responsibility matrix
+  - House of Quality
+  - QFD matrix
+  - Morphological matrix
+
+- **54. Graphical schedules and calendars**
+  - Calendar
+  - Calendar heatmap
+  - Weekly planner
+  - Monthly planner
+  - Academic calendar
+  - Shift schedule
+  - Resource schedule
+  - Train timetable
+  - Transit timetable
+  - Interval schedule
+  - Gantt chart
+  - Event timeline
+
+- **55. Circular seat / arrangement diagrams**
+  - Parliament chart
+  - Hemicycle
+  - Seating chart
+  - Theater seating
+  - Stadium seating
+  - Classroom arrangement
+  - Round-table arrangement
+  - Conference seating plan
+  - Tournament bracket seating
+
+- **56. Graphical notation / domain-specific symbolic diagrams**
+  - Chessboard
+  - Go board
+  - Game board
+  - Feynman diagram
+  - Knot diagram
+  - Circuit diagram
+  - Chemical diagram
+  - Music notation
+  - Linguistic tree
+  - Railroad diagram
+  - Syntax railroad diagram
+  - Statechart
+  - Petri net
+  - Message-sequence chart
+
+- **57. Formal-language / computing visualizations**
+  - Finite automaton
+  - Deterministic finite automaton
+  - Nondeterministic finite automaton
+  - Pushdown automaton
+  - Turing-machine diagram
+  - State transition diagram
+  - Petri net
+  - Railroad syntax diagram
+  - Parse tree
+  - Abstract syntax tree
+  - Trie
+  - Suffix tree
+  - Heap visualization
+  - Binary-search tree
+  - Red-black tree
+  - B-tree
+  - Hash-table diagram
+  - Linked-list diagram
+  - Memory-layout diagram
+  - Stack diagram
+  - Queue diagram
+  - Algorithm execution trace
+
+- **58. Cybersecurity visualizations**
+  - Attack tree
+  - Attack graph
+  - Threat model
+  - Data-flow threat diagram
+  - Network topology
+  - Trust-boundary diagram
+  - Kill-chain diagram
+  - MITRE-style technique matrix
+  - Incident timeline
+  - Access-control matrix
+  - Permission graph
+
+- **59. Logistics / transportation visualizations**
+  - Network map
+  - Route diagram
+  - Transit diagram
+  - Schedule diagram
+  - Timetable
+  - Origin-destination matrix
+  - Flow map
+  - Shipment Sankey
+  - Supply-chain network
+  - Warehouse-layout diagram
+  - Vehicle-routing diagram
+  - Space-time transport diagram
+
+- **60. Scientific publication figure families**
+  - Multi-panel figure
+  - Figure with subfigures
+  - Plot + schematic
+  - Experimental setup diagram
+  - Apparatus diagram
+  - Measurement geometry
+  - Results panel
+  - Parameter-sweep heatmap
+  - Phase diagram
+  - Regime map
+  - Parameter-space plot
+  - Sensitivity plot
+  - Convergence plot
+  - Error-convergence chart
+  - Scaling-law plot
+  - Log-log plot
+  - Semi-log plot
+
+- **61. Unusual / niche chart types**
+  - Nightingale rose
+  - Coxcomb
+  - Spiral chart
+  - Spiral heatmap
+  - Horizon chart
+  - Bump chart
+  - Streamgraph
+  - ThemeRiver
+  - Parallel sets
+  - Hive plot
+  - Arc diagram
+  - Chord diagram
+  - Dependency wheel
+  - Circle packing
+  - Voronoi treemap
+  - Marimekko
+  - Mosaic chart
+  - Waffle chart
+  - Parliament chart
+  - Sankey
+  - Alluvial plot
+  - Raincloud plot
+  - Ridgeline plot
+  - Sina plot
+  - Boxen plot
+  - UpSet plot
+  - Hexbin plot
+  - Horizon graph
+  - Flame graph
+  - Icicle chart
+  - Sunburst
+  - Calendar heatmap
+  - Spiral timeline
+  - Barcode plot
+  - Rug plot
+  - Joyplot
+  - Bullet graph
+  - Funnel plot
+  - Dumbbell plot
+  - Slopegraph
+
+- **62. Software-performance visualizations**
+  - Flame graph
+  - Flame chart
+  - Icicle flame graph
+  - Call tree
+  - Call graph
+  - Trace timeline
+  - Span timeline
+  - Waterfall request chart
+  - CPU profile chart
+  - Memory profile chart
+  - Allocation timeline
+  - Garbage-collection timeline
+  - Latency histogram
+  - Latency percentile chart
+  - Service dependency graph
+
+- **63. Provenance / lineage visualizations**
+  - Data-lineage graph
+  - Provenance graph
+  - Transformation graph
+  - Pipeline graph
+  - Dependency DAG
+  - Workflow provenance
+  - Version history graph
+  - Git commit graph
+  - Branch graph
+
+- **64. Version-control visualizations**
+  - Commit graph
+  - Branch graph
+  - Merge graph
+  - Contribution heatmap
+  - Commit timeline
+  - Code-frequency chart
+  - Churn chart
+  - Blame visualization
+  - Repository dependency graph
+
+- **65. Network / system monitoring visualizations**
+  - Topology map
+  - Service map
+  - Dependency map
+  - Request waterfall
+  - Latency heatmap
+  - Traffic time series
+  - Error-rate chart
+  - Throughput chart
+  - Availability timeline
+  - Status history
+  - Incident timeline
+  - SLO burn-rate chart
+
+- **66. Database visualizations**
+  - ER diagram
+  - Schema diagram
+  - Table relationship graph
+  - Query plan
+  - Query execution tree
+  - Index structure
+  - B-tree diagram
+  - Join diagram
+  - Data lineage
+  - Star schema
+  - Snowflake schema
+
+- **67. AI / neural-network diagrams**
+  - Feed-forward neural network
+  - CNN architecture
+  - RNN architecture
+  - LSTM architecture
+  - Transformer architecture
+  - Attention block
+  - Encoder-decoder diagram
+  - Residual network
+  - Computational graph
+  - Tensor-shape diagram
+  - Model pipeline
+  - Training loop
+  - Diffusion process diagram
+  - GAN architecture
+  - Autoencoder
+  - Graph neural network
+  - Attention heatmap
+  - Saliency map
+  - Activation map
+  - Feature map
+
+- **68. Experimental-design visualizations**
+  - Experimental layout
+  - Factorial-design cube
+  - Response-surface plot
+  - Main-effects plot
+  - Interaction plot
+  - Design matrix
+  - Randomization diagram
+  - CONSORT-style participant flow
+  - Sampling diagram
+  - Treatment timeline
+
+- **69. Survey / polling visualizations**
+  - Likert chart
+  - Diverging Likert chart
+  - Stacked response chart
+  - Top-two-box chart
+  - Net-promoter chart
+  - Survey heatmap
+  - Question-by-group matrix
+  - Margin-of-error interval chart
+  - Polling trend
+  - Election polling average
+  - Seat projection
+
+- **70. Election / political visualizations**
+  - Electoral map
+  - Choropleth election map
+  - Swing map
+  - Seat chart
+  - Parliament chart
+  - Hemicycle
+  - Election-result bar chart
+  - Vote-share chart
+  - Swingometer
+  - Coalition diagram
+  - Constituency cartogram
+  - Polling trend
+  - Seat projection chart
+
+- **71. Relationship / conceptual diagrams**
+  - Venn diagram
+  - Euler diagram
+  - Concept map
+  - Mind map
+  - Affinity diagram
+  - Stakeholder map
+  - Ecosystem map
+  - Relationship map
+  - Influence diagram
+  - Causal diagram
+  - Causal-loop diagram
+  - Systems map
+  - Dependency map
+  - Onion diagram
+  - Layer diagram
+  - Pyramid diagram
+
+- **72. Storytelling / narrative visualization**
+  - Annotated timeline
+  - Storyline chart
+  - Narrative flow diagram
+  - Story map
+  - Event-sequence diagram
+  - Character-interaction timeline
+  - Story arc visualization
+  - Scene graph
+  - Comic-panel data narrative
+  - Before/after sequence
+  - Progressive reveal panels
+
+- **73. Static equivalents of interactive D3 patterns**
+  - Overview + detail panel
+  - Focus + context chart
+  - Brush-selection depiction
+  - Zoom inset
+  - Magnified region
+  - Hover-state callout rendered statically
+  - Selected-node network state
+  - Filtered-vs-unfiltered comparison
+  - Before/after filtering panels
+  - Small-multiple animation frames
+  - Keyframe sequence
+  - Transition sequence
+  - Animated-path frames
+  - Morph sequence
+  - Interactive-state storyboard
+
+- **74. Visual encodings the library should support across all chart families**
+  - Position
+    - Cartesian x/y
+    - Polar angle/radius
+    - Geographic coordinates
+    - Barycentric coordinates
+  - Size
+    - Length
+    - Width
+    - Height
+    - Area
+    - Radius
+    - Stroke width
+  - Shape
+    - Symbol
+    - Glyph
+    - Icon
+  - Appearance
+    - Fill
+    - Stroke
+    - Opacity
+    - Pattern
+    - Hatching
+    - Gradient
+  - Orientation
+    - Angle
+    - Rotation
+    - Direction
+  - Line encoding
+    - Width
+    - Dash
+    - Curvature
+    - Arrowheads
+  - Text encoding
+    - Label
+    - Font weight
+    - Font size
+    - Rotation
+  - Compound encodings
+    - Glyphs
+    - Mini charts
+    - Nested marks
+
+- **75. Layout algorithms worth treating as first-class visualization families**
+  - Stack
+  - Normalized stack
+  - Diverging stack
+  - Streamgraph stack
+  - Histogram binning
+  - Hexagonal binning
+  - Beeswarm layout
+  - Jitter layout
+  - Pie layout
+  - Arc layout
+  - Chord layout
+  - Sankey layout
+  - Treemap layout
+  - Partition layout
+  - Pack layout
+  - Force layout
+  - Tree layout
+  - Cluster layout
+  - DAG layout
+  - Edge bundling
+  - Voronoi
+  - Delaunay
+  - Convex hull
+  - Contour generation
+  - Density estimation
+  - Geographic projection
+
+- **76. Recommended top-level TikZ library namespaces**
+  - `charts`
+    - `bar`
+    - `line`
+    - `area`
+    - `scatter`
+    - `distribution`
+    - `statistical`
+    - `financial`
+    - `polar`
+  - `hierarchy`
+    - `tree`
+    - `dendrogram`
+    - `treemap`
+    - `partition`
+    - `pack`
+  - `network`
+    - `graph`
+    - `matrix`
+    - `arc`
+    - `chord`
+    - `bundling`
+  - `flow`
+    - `sankey`
+    - `alluvial`
+    - `parallelsets`
+  - `geo`
+    - `map`
+    - `projection`
+    - `choropleth`
+    - `symbols`
+    - `contours`
+    - `routes`
+  - `matrix`
+    - `heatmap`
+    - `correlation`
+    - `adjacency`
+  - `diagram`
+    - `flowchart`
+    - `uml`
+    - `architecture`
+    - `process`
+    - `concept`
+  - `scientific`
+    - `field`
+    - `surface`
+    - `signal`
+    - `physics`
+    - `chemistry`
+    - `biology`
+    - `engineering`
+  - `timeline`
+  - `table`
+  - `annotation`
+  - `dashboard`
+  - `infographic`
+  - `layout`
+  - `scale`
+  - `axis`
+  - `legend`
+  - `label`
+  - `interactionstate`
+  - `theme`
+
+- **77. Meta/composition types that should work with every visualization**
+  - Layer
+  - Overlay
+  - Facet
+  - Repeat
+  - Concatenate horizontally
+  - Concatenate vertically
+  - Grid composition
+  - Nested composition
+  - Inset
+  - Zoom inset
+  - Shared axes
+  - Independent axes
+  - Shared legend
+  - Independent legends
+  - Linked annotations
+  - Cross-panel reference lines
+  - Small multiples
+  - Dashboard assembly
+  - Figure/subfigure assembly
+
+- **78. “D3-equivalent” algorithmic capabilities implied by the visualization catalogue**
+  - Scales
+    - Linear
+    - Logarithmic
+    - Power
+    - Square-root
+    - Symlog
+    - Identity
+    - Ordinal
+    - Band
+    - Point
+    - Quantile
+    - Quantize
+    - Threshold
+    - Sequential
+    - Diverging
+    - Temporal
+  - Axes
+    - Cartesian
+    - Polar
+    - Ternary
+    - Geographic
+    - Multiple axes
+    - Broken axes
+  - Shape generators
+    - Lines
+    - Areas
+    - Arcs
+    - Links
+    - Symbols
+    - Ribbons
+  - Statistical transforms
+    - Bin
+    - Aggregate
+    - Stack
+    - Normalize
+    - KDE
+    - Quantile
+    - Regression
+    - Contours
+  - Geometric transforms
+    - Projection
+    - Voronoi
+    - Delaunay
+    - Hull
+    - Clip
+    - Interpolate
+  - Hierarchy transforms
+    - Tree
+    - Cluster
+    - Partition
+    - Treemap
+    - Pack
+  - Network transforms
+    - Force
+    - Sankey
+    - Chord
+    - Bundling
+  - Data transforms
+    - Filter
+    - Sort
+    - Group
+    - Nest
+    - Rollup
+    - Pivot
+    - Fold
+    - Join
+    - Window
+  - Figure infrastructure
+    - Themes
+    - Legends
+    - Labels
+    - Annotations
+    - Guides
+    - Faceting
+    - Layout
+    - Clipping
+    - Coordinate transformations
+    - Responsive sizing
+    - Export-safe typography
+    - Accessibility-friendly patterns
+    - Grayscale-safe encodings
+
+- **79. Ultimate API objective**
+  - A user should be able to describe essentially any visualization as:
+    - **data**
+      - tabular
+      - hierarchical
+      - graph
+      - geographic
+      - matrix
+      - functional
+    - **transform**
+      - filter
+      - aggregate
+      - bin
+      - stack
+      - hierarchy
+      - network layout
+      - statistical transform
+    - **mark**
+      - point
+      - line
+      - area
+      - rect
+      - arc
+      - text
+      - image
+      - link
+      - custom TikZ shape
+    - **encoding**
+      - x
+      - y
+      - angle
+      - radius
+      - size
+      - shape
+      - fill
+      - stroke
+      - opacity
+      - text
+    - **scale**
+    - **coordinate system**
+    - **layout**
+    - **facet**
+    - **guide**
+      - axis
+      - legend
+      - grid
+    - **annotation**
+    - **theme**
+    - **composition**
+  - This grammar then generates:
+    - conventional named charts,
+    - unusual chart variants,
+    - domain-specific scientific figures,
+    - network and hierarchical diagrams,
+    - maps,
+    - completely novel visualizations,
+    - all as native TikZ/PGF output.

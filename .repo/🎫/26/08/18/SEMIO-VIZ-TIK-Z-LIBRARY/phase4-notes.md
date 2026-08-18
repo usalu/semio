@@ -14,7 +14,7 @@ P1
 - Layouts map y through a figure-bound `viz-y` scale; ymin padded to 0 so the smallest bar is visible
 - `symlog` uses `ln(1+|x|)` compression; quantize / quantile / threshold have real branches; categorical kinds skip numeric prep
 - Path demos reset mark keys only when draw is empty; `points` drive polyline/step/spline/filled-path; mark `size` is millimetres for dots too
-- `unknown-column` reports table and column; `runVizBuild` always recompiles and compares `pdfStableHash`
+- `runVizBuild` always recompiles and compares `pdfStableHash` after inflating Flate streams so Tectonic `/ID` bytes inside ObjStm/XRef no longer look like drift
 
 P2
 - Grid optional keys reach the axis keyset; dead data helpers removed; demo table seeded once; unknown-demo message; unit tests no longer duplicate the coverage gate

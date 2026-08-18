@@ -8,6 +8,7 @@ import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { inflateRawSync, inflateSync, deflateSync } from "node:zlib";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, TEST_LEVELS } from "../repo/lib/js/index.ts";
 
 const printRoot = import.meta.dir;
@@ -116,15 +117,31 @@ function assertVizApi(): { readonly missing: readonly string[] } {
   return { missing: VIZ_API_COMMANDS.filter((command) => !source.includes(command)) };
 }
 
+function inflatePdfStreamBody(body: Buffer): Buffer {
+  try {
+    return inflateSync(body);
+  } catch {
+    return inflateRawSync(body);
+  }
+}
+
 function pdfStableHash(pdfPath: string): string {
-  const text = readFileSync(pdfPath)
-    .toString("binary")
-    .replace(/\/CreationDate \([^)]*\)/g, "")
-    .replace(/\/ModDate \([^)]*\)/g, "")
-    .replace(/\/ID \[[^\]]+\]/g, "")
+  const raw = readFileSync(pdfPath).toString("binary");
+  const inflated = raw.replace(/stream\r?\n([\s\S]*?)\r?\nendstream/g, (_all, body: string) => {
+    try {
+      return `stream\n${inflatePdfStreamBody(Buffer.from(body, "binary")).toString("binary")}\nendstream`;
+    } catch {
+      return `stream\n${body}\nendstream`;
+    }
+  });
+  const text = inflated
+    .replace(/\/CreationDate\s*\([^)]*\)/g, "")
+    .replace(/\/ModDate\s*\([^)]*\)/g, "")
+    .replace(/\/ID\s*\[[^\]]*\]/g, "")
     .replace(/\(D:[0-9+\-'Z]+\)/g, "")
-    .replace(/\/Producer \([^)]*\)/g, "")
-    .replace(/\/Creator \([^)]*\)/g, "");
+    .replace(/\/Producer\s*\([^)]*\)/g, "")
+    .replace(/\/Creator\s*\([^)]*\)/g, "")
+    .replace(/<x:xmpmeta[\s\S]*?<\/x:xmpmeta>/g, "");
   return createHash("sha256").update(text, "binary").digest("hex");
 }
 
@@ -823,6 +840,24 @@ class TestScript extends BundleScript {
     assert.ok(vizCovers.has("0/dot"));
     assert.ok(vizCovers.has("1/vertical-bar"));
     assert.ok(vizGallerySources().includes("\\SemioVizDemo"));
+    //#endregion
+
+    //#region pdfStableHash
+    const pdfA = join(distDir, ".semio-print-test-a.pdf");
+    const pdfB = join(distDir, ".semio-print-test-b.pdf");
+    const streamA = deflateSync(Buffer.from("/ID[<aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa><bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb>] viz-content"));
+    const streamB = deflateSync(Buffer.from("/ID[<cccccccccccccccccccccccccccccccc><dddddddddddddddddddddddddddddddd>] viz-content"));
+    const wrap = (id: string, stream: Buffer) =>
+      Buffer.concat([
+        Buffer.from(`%PDF-\n8 0 obj\n<</Type/ObjStm/Filter/FlateDecode>>\nstream\n`, "binary"),
+        stream,
+        Buffer.from(`\nendstream\nendobj\n61 0 obj\n<</Type/XRef/ID[${id}]>>\nendobj\n`, "binary"),
+      ]);
+    writeFileSync(pdfA, wrap("<aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa><bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb>", streamA));
+    writeFileSync(pdfB, wrap("<cccccccccccccccccccccccccccccccc><dddddddddddddddddddddddddddddddd>", streamB));
+    assert.equal(pdfStableHash(pdfA), pdfStableHash(pdfB));
+    rmSync(pdfA);
+    rmSync(pdfB);
     //#endregion
 
     //#region Window layout
