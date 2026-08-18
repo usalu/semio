@@ -1,0 +1,158 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-mark}[2026/08/18 v0.1.0 semio viz marks]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-viz } { unknown-mark }
+  { Unknown~viz~mark~'#1'. }
+\msg_new:nnn { semio-viz } { outside-figure }
+  { \iow_char:N\\#1~needs~an~enclosing~VizFigure. }
+%endregion Diagnostics
+
+%region Registry
+\seq_new:N \g_semio_viz_mark_kinds_seq
+\bool_new:N \l_semio_viz_in_figure_bool
+\fp_new:N \l_semio_viz_mx_fp
+\fp_new:N \l_semio_viz_my_fp
+\tl_new:N \l_semio_viz_mark_fill_tl
+\tl_new:N \l_semio_viz_mark_draw_tl
+\tl_new:N \l_semio_viz_points_tl
+\fp_new:N \l_semio_viz_mark_size_fp
+
+\cs_new_protected:Npn \semio_viz_mark_kind_define:n #1 {
+  \seq_if_in:NnF \g_semio_viz_mark_kinds_seq {#1}
+    { \seq_gput_right:Nn \g_semio_viz_mark_kinds_seq {#1} }
+}
+
+\clist_map_inline:nn {
+  dot, circle, square, rectangle, triangle, diamond, cross, plus, star,
+  custom-glyph, icon, image, text,
+  straight-line, polyline, step-line, curved-line, bezier, spline,
+  catmull-rom, basis-spline, cardinal-spline, monotone-spline, closed-curve,
+  polygon, filled-path, ribbon, band, envelope,
+  circular-arc, elliptical-arc, annular-arc, sector, wedge,
+  straight-connector, orthogonal-connector, curved-connector, elbow-connector,
+  bundled-connector, arrow, bidirectional-arrow,
+  rectangular-region, circular-region, polygonal-region, voronoi-region,
+  convex-hull, concave-hull,
+  label, callout, leader-line, bracket, brace, highlight-region,
+  reference-line, reference-band, reference-point
+} { \semio_viz_mark_kind_define:n {#1} }
+
+\cs_new_protected:Npn \semio_viz_frame_require:n #1 {
+  \bool_if:NF \l_semio_viz_in_figure_bool
+    { \msg_error:nnn { semio-viz } { outside-figure } {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_mark_keys_reset: {
+  \fp_set:Nn \l_semio_viz_mark_size_fp { 2.2 }
+  \tl_set:Nn \l_semio_viz_mark_fill_tl { semio-primary }
+  \tl_set:Nn \l_semio_viz_mark_draw_tl { semio-chrome-border-emphasized }
+  \tl_set:Nn \l_semio_viz_points_tl { 8,8; 22,28; 40,12; 58,30; 72,16 }
+}
+
+\keys_define:nn { semio / viz / mark } {
+  size .fp_set:N = \l_semio_viz_mark_size_fp,
+  fill .tl_set:N = \l_semio_viz_mark_fill_tl,
+  draw .tl_set:N = \l_semio_viz_mark_draw_tl,
+  points .tl_set:N = \l_semio_viz_points_tl,
+}
+
+\cs_new_protected:Npn \semio_viz_xy:n #1 {
+  \fp_set:Nn \l_semio_viz_mx_fp { \clist_item:nn {#1} { 1 } }
+  \fp_set:Nn \l_semio_viz_my_fp { \clist_item:nn {#1} { 2 } }
+}
+
+\cs_new_protected:Npn \semio_viz_mark_draw:nnn #1#2#3 {
+  \semio_viz_frame_require:n { SemioVizMark }
+  \seq_if_in:NnF \g_semio_viz_mark_kinds_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-mark } {#1} }
+  \semio_viz_mark_keys_reset:
+  \keys_set:nn { semio / viz / mark } {#2}
+  \semio_viz_xy:n {#3}
+  \str_case:nnF {#1} {
+    { dot } { \fill [ \l_semio_viz_mark_fill_tl ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) circle [ radius=\l_semio_viz_mark_size_fp pt ] ; }
+    { circle } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) circle [ radius=\l_semio_viz_mark_size_fp ] ; }
+    { square } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
+    { rectangle } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \fp_eval:n { \l_semio_viz_mx_fp - 2*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 2*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
+    { triangle } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- cycle ; }
+    { diamond } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , line~width=\semio@stroke@hairline ] ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \l_semio_viz_my_fp ) -- ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \l_semio_viz_my_fp ) -- cycle ; }
+    { cross } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) ; }
+    { plus } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \l_semio_viz_my_fp ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \l_semio_viz_my_fp ) ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) ; }
+    { star } { \fill [ \l_semio_viz_mark_fill_tl ] ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp + \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.4*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.5*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - 0.1*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 0.7*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \l_semio_viz_mx_fp , \fp_eval:n { \l_semio_viz_my_fp - 0.4*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.7*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - \l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.5*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp - 0.1*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - \l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- ( \fp_eval:n { \l_semio_viz_mx_fp - 0.4*\l_semio_viz_mark_size_fp } , \fp_eval:n { \l_semio_viz_my_fp + 0.3*\l_semio_viz_mark_size_fp } ) -- cycle ; }
+    { custom-glyph } { \node [ font=\SemioMono, text=\l_semio_viz_mark_draw_tl ] at ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) { * } ; }
+    { icon } { \node [ font=\SemioSans, text=\l_semio_viz_mark_fill_tl ] at ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) { + } ; }
+    { image } { \fill [ \l_semio_viz_mark_fill_tl ] ( \fp_eval:n { \l_semio_viz_mx_fp - 6 } , \fp_eval:n { \l_semio_viz_my_fp - 4 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 6 } , \fp_eval:n { \l_semio_viz_my_fp + 4 } ) ; }
+    { text } { \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl ] at ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) { Aa } ; }
+    { label } { \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl, anchor=west ] at ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) { label } ; }
+    { callout } {
+      \draw [ \l_semio_viz_mark_draw_tl , fill=semio-chrome-canvas, line~width=\semio@stroke@hairline ]
+        ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) -- ++( 6, 8 ) -- ++( 18, 0 ) -- ++( 0, 8 ) -- ++( -22, 0 ) -- cycle ;
+      \node [ font=\SemioSans, text=\l_semio_viz_mark_draw_tl ] at ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \fp_eval:n { \l_semio_viz_my_fp + 12 } ) { note } ;
+    }
+    { leader-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) -- ++( 16, 10 ) node [ anchor=west, font=\SemioSans ] { leader } ; }
+    { bracket } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( \fp_eval:n { \l_semio_viz_mx_fp - 10 } , \l_semio_viz_my_fp ) -- ++( 0, 8 ) -- ++( 20, 0 ) -- ++( 0, -8 ) ; }
+    { brace } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline, decorate, decoration={brace,amplitude=2mm} ] ( \fp_eval:n { \l_semio_viz_mx_fp - 12 } , \l_semio_viz_my_fp ) -- ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \l_semio_viz_my_fp ) ; }
+    { highlight-region } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.25 ] ( \fp_eval:n { \l_semio_viz_mx_fp - 12 } , \fp_eval:n { \l_semio_viz_my_fp - 8 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 12 } , \fp_eval:n { \l_semio_viz_my_fp + 8 } ) ; }
+    { reference-line } { \draw [ \l_semio_viz_mark_draw_tl , dashed, line~width=\semio@stroke@hairline ] ( 4 , \l_semio_viz_my_fp ) -- ( 76 , \l_semio_viz_my_fp ) ; }
+    { reference-band } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.18 ] ( 4 , \fp_eval:n { \l_semio_viz_my_fp - 4 } ) rectangle ( 76 , \fp_eval:n { \l_semio_viz_my_fp + 4 } ) ; }
+    { reference-point } { \fill [ \l_semio_viz_mark_fill_tl ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) circle [ radius=1.4pt ] ; \draw [ \l_semio_viz_mark_draw_tl ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) circle [ radius=2.6pt ] ; }
+    { rectangular-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, line~width=\semio@stroke@hairline, dashed ] ( \fp_eval:n { \l_semio_viz_mx_fp - 14 } , \fp_eval:n { \l_semio_viz_my_fp - 8 } ) rectangle ( \fp_eval:n { \l_semio_viz_mx_fp + 14 } , \fp_eval:n { \l_semio_viz_my_fp + 8 } ) ; }
+    { circular-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, dashed ] ( \l_semio_viz_mx_fp , \l_semio_viz_my_fp ) circle [ radius=10 ] ; }
+    { polygonal-region } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2 ] ( \fp_eval:n { \l_semio_viz_mx_fp - 10 } , \l_semio_viz_my_fp ) -- ++( 8, 10 ) -- ++( 12, -4 ) -- ++( -4, -12 ) -- cycle ; }
+    { voronoi-region } { \semio_viz_path_demo:n { voronoi-region } }
+    { convex-hull } { \semio_viz_path_demo:n { convex-hull } }
+    { concave-hull } { \semio_viz_path_demo:n { concave-hull } }
+  } { \semio_viz_path_demo:n {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_path_demo:n #1 {
+  \str_case:nnF {#1} {
+    { straight-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 10 ) -- ( 72, 28 ) ; }
+    { polyline } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 8 ) -- ( 22, 28 ) -- ( 40, 12 ) -- ( 58, 30 ) -- ( 72, 16 ) ; }
+    { step-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 8 ) -| ( 22, 28 ) -| ( 40, 12 ) -| ( 58, 30 ) -| ( 72, 16 ) ; }
+    { curved-line } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth ] coordinates { (8,8) (22,28) (40,12) (58,30) (72,16) } ; }
+    { bezier } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 8, 8 ) .. controls ( 24, 32 ) and ( 48, 0 ) .. ( 72, 24 ) ; }
+    { spline } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth ] coordinates { (8,10) (24,26) (40,14) (56,30) (72,18) } ; }
+    { catmull-rom } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth, tension=0.7 ] coordinates { (8,12) (24,28) (40,10) (56,26) (72,14) } ; }
+    { basis-spline } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth, tension=0.2 ] coordinates { (8,16) (24,24) (40,12) (56,28) (72,18) } ; }
+    { cardinal-spline } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth, tension=0.9 ] coordinates { (8,10) (24,30) (40,8) (56,28) (72,12) } ; }
+    { monotone-spline } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] plot [ smooth ] coordinates { (8,8) (24,14) (40,18) (56,26) (72,32) } ; }
+    { closed-curve } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.2, line~width=\semio@stroke@default ] plot [ smooth~cycle ] coordinates { (24,10) (48,12) (60,24) (40,32) (16,24) } ; }
+    { polygon } { \draw [ \l_semio_viz_mark_draw_tl , fill=\l_semio_viz_mark_fill_tl , fill~opacity=0.35, line~width=\semio@stroke@hairline ] ( 20, 8 ) -- ( 60, 10 ) -- ( 68, 28 ) -- ( 36, 34 ) -- ( 12, 22 ) -- cycle ; }
+    { filled-path } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.45 ] ( 8, 8 ) -- ( 22, 28 ) -- ( 40, 12 ) -- ( 58, 30 ) -- ( 72, 16 ) -- ( 72, 8 ) -- cycle ; }
+    { ribbon } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.35 ] ( 8, 10 ) -- ( 72, 22 ) -- ( 72, 14 ) -- ( 8, 4 ) -- cycle ; }
+    { band } { \fill [ \l_semio_viz_mark_fill_tl , fill~opacity=0.3 ] ( 8, 12 ) -- ( 24, 22 ) -- ( 40, 16 ) -- ( 56, 28 ) -- ( 72, 20 ) -- ( 72, 12 ) -- ( 56, 18 ) -- ( 40, 8 ) -- ( 24, 14 ) -- ( 8, 6 ) -- cycle ; }
+    { envelope } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 8, 22 ) -- ( 24, 30 ) -- ( 40, 24 ) -- ( 56, 32 ) -- ( 72, 26 ) ( 8, 8 ) -- ( 24, 12 ) -- ( 40, 10 ) -- ( 56, 14 ) -- ( 72, 10 ) ; }
+    { circular-arc } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 40, 20 ) ++( 20:14 ) arc [ start~angle=20, end~angle=200, radius=14 ] ; }
+    { elliptical-arc } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 40, 20 ) ++( 0:18 ) arc [ start~angle=0, end~angle=180, x~radius=18, y~radius=10 ] ; }
+    { annular-arc } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) ++( 20:14 ) arc [ start~angle=20, end~angle=200, radius=14 ] -- ++( 200: -6 ) arc [ start~angle=200, end~angle=20, radius=8 ] -- cycle ; }
+    { sector } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( 10:14 ) arc [ start~angle=10, end~angle=110, radius=14 ] -- cycle ; }
+    { wedge } { \fill [ \l_semio_viz_mark_fill_tl ] ( 40, 20 ) -- ++( 40:16 ) arc [ start~angle=40, end~angle=80, radius=16 ] -- cycle ; }
+    { straight-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) -- ( 68, 28 ) ; \fill [ \l_semio_viz_mark_draw_tl ] ( 12, 10 ) circle [ radius=1.2pt ] ( 68, 28 ) circle [ radius=1.2pt ] ; }
+    { orthogonal-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) -| ( 68, 28 ) ; }
+    { curved-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 10 ) to [ out=20, in=200 ] ( 68, 28 ) ; }
+    { elbow-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 12, 28 ) -- ( 12, 10 ) -- ( 68, 10 ) ; }
+    { bundled-connector } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 10, 8 ) to [ out=90, in=180 ] ( 40, 20 ) to [ out=0, in=90 ] ( 70, 8 ) ( 10, 32 ) to [ out=-90, in=180 ] ( 40, 20 ) to [ out=0, in=-90 ] ( 70, 32 ) ; }
+    { arrow } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, -{Latex} ] ( 12, 16 ) -- ( 68, 24 ) ; }
+    { bidirectional-arrow } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default, {Latex}-{Latex} ] ( 12, 20 ) -- ( 68, 20 ) ; }
+    { voronoi-region } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@hairline ] ( 20, 8 ) -- ( 40, 20 ) -- ( 20, 32 ) -- cycle ( 40, 20 ) -- ( 64, 8 ) -- ( 64, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 28, 20 ) circle [ radius=1pt ] ( 52, 20 ) circle [ radius=1pt ] ; }
+    { convex-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 64, 10 ) -- ( 68, 28 ) -- ( 24, 32 ) -- cycle ; \fill [ \l_semio_viz_mark_fill_tl ] ( 22, 14 ) circle [ radius=1pt ] ( 40, 22 ) circle [ radius=1pt ] ( 56, 16 ) circle [ radius=1pt ] ; }
+    { concave-hull } { \draw [ \l_semio_viz_mark_draw_tl , line~width=\semio@stroke@default ] ( 16, 8 ) -- ( 40, 16 ) -- ( 64, 8 ) -- ( 68, 28 ) -- ( 40, 22 ) -- ( 16, 30 ) -- cycle ; }
+  } { \draw [ \l_semio_viz_mark_draw_tl ] ( 8, 8 ) -- ( 72, 28 ) ; }
+}
+
+\cs_new_protected:Npn \semio_viz_mark_demo:n #1 {
+  \semio_viz_mark_draw:nnn {#1} { } { 40, 20 }
+}
+
+\NewDocumentCommand \SemioVizMark { m O{} m } { \semio_viz_mark_draw:nnn {#1} {#2} {#3} }
+\NewDocumentCommand \SemioVizPath { m O{} } { \semio_viz_mark_keys_reset: \keys_set:nn { semio / viz / mark } {#2} \semio_viz_path_demo:n {#1} }
+%endregion Registry
+
+\ExplSyntaxOff

@@ -61,6 +61,20 @@
         "cwd": "print",
         "command": "bun ./script.ts test exhaustive"
       }
+    },
+    "test-viz": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test viz"
+      }
+    },
+    "test-viz-full": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test viz full"
+      }
     }
   }
 }

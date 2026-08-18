@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, TEST_LEVELS } from "../repo/lib/js/index.ts";
@@ -46,6 +46,48 @@ const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
   { id: "zwischenbericht", tex: "template/zukunftbau/zwischenbericht.tex" },
   { id: "kompaktbericht", tex: "template/zukunftbau/kompaktbericht.tex" },
 ];
+
+const VIZ_GALLERY_DIR = join(printRoot, "template/viz-gallery");
+const VIZ_TAXONOMY_PATH = join(printRoot, "asset/viz-taxonomy.md");
+
+function vizTemplates(): readonly { readonly id: string; readonly tex: string }[] {
+  if (!existsSync(VIZ_GALLERY_DIR)) return [];
+  return readdirSync(VIZ_GALLERY_DIR)
+    .filter((name) => name.endsWith(".tex") && !name.includes("-dark"))
+    .sort()
+    .map((name) => ({ id: basename(name, ".tex"), tex: `template/viz-gallery/${name}` }));
+}
+
+function parseVizTaxonomyLeaves(md: string): string[] {
+  const leaves: string[] = [];
+  let section = "";
+  for (const line of md.split(/\n/)) {
+    const header = line.match(/^##\s+(\d+)/);
+    if (header) {
+      section = header[1]!;
+      continue;
+    }
+    const leaf = line.match(/^- .+ `([^`]+)` (?:mark|chart|layout|axis|scale)$/);
+    if (leaf && section) leaves.push(`${section}/${leaf[1]}`);
+  }
+  return leaves;
+}
+
+function parseVizCovers(dir: string): Set<string> {
+  const covers = new Set<string>();
+  if (!existsSync(dir)) return covers;
+  for (const name of readdirSync(dir).filter((file) => file.endsWith(".tex"))) {
+    const source = readFileSync(join(dir, name), "utf8");
+    for (const match of source.matchAll(/% viz-covers:\s+(\S+)/g)) covers.add(match[1]!);
+  }
+  return covers;
+}
+
+function assertVizCoverage(): { readonly leaves: number; readonly missing: readonly string[] } {
+  const leaves = parseVizTaxonomyLeaves(readFileSync(VIZ_TAXONOMY_PATH, "utf8"));
+  const covers = parseVizCovers(VIZ_GALLERY_DIR);
+  return { leaves: leaves.length, missing: leaves.filter((leaf) => !covers.has(leaf)) };
+}
 
 function deriveDarkTexSource(lightSource: string): string {
   if (/\btheme=dark\b/.test(lightSource)) throw new Error("source already has theme=dark; use the light source as canonical");
@@ -613,20 +655,55 @@ class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const tectonic = await ensureTectonic();
     emitSemioTokensSty();
+    if (segments[0] === "viz") {
+      const filter = segments.slice(1);
+      const templates = vizTemplates().filter((template) => filter.length === 0 || filter.includes(template.id) || filter.includes(template.id.replace(/^viz-/, "")));
+      if (templates.length === 0) throw new Error(`unknown viz gallery id(s): ${filter.join(", ")}`);
+      for (const template of templates) await compileTemplate(tectonic, template);
+      return;
+    }
     for (const template of resolveTemplates(segments)) await compileTemplate(tectonic, template);
   }
 }
 
 class WatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "viz") {
+      await watchVizTemplates(segments.slice(1));
+      return;
+    }
     await watchTemplates(segments);
   }
+}
+
+async function watchVizTemplates(filter: string[]): Promise<void> {
+  const templates = vizTemplates().filter((template) => filter.length === 0 || filter.includes(template.id) || filter.includes(template.id.replace(/^viz-/, "")));
+  if (templates.length === 0) throw new Error(`unknown viz gallery id(s): ${filter.join(", ")}`);
+  const tectonic = await ensureTectonic();
+  emitSemioTokensSty();
+  const rebuild = async () => {
+    for (const template of templates) {
+      try {
+        await compileTemplate(tectonic, template);
+      } catch (error) {
+        console.error(`[DEBUG] print viz watch rebuild failed for ${template.id}:`, error);
+      }
+    }
+  };
+  await rebuild();
+  console.log(`[DEBUG] print watching viz ${templates.map((template) => template.id).join(", ")}`);
 }
 
 //#region ⏱️Test
 /** ⏱️Fundamental unit tests (pure functions, no Tectonic/network/fs I/O) always run; the full 12-PDF Tectonic build only runs at the `long` level and above. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "viz") {
+      this.runUnitTests();
+      this.runVizCoverage();
+      if (segments[1] === "full") await this.runVizBuild();
+      return;
+    }
     const { level } = resolveTestLevel(segments);
     this.runUnitTests();
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await this.runTectonicBuild();
@@ -695,6 +772,20 @@ class TestScript extends BundleScript {
     assert.throws(() => resolveTemplates(["not-a-template"]));
     //#endregion
 
+    //#region viz coverage
+    const taxonomy = readFileSync(VIZ_TAXONOMY_PATH, "utf8");
+    const vizLeaves = parseVizTaxonomyLeaves(taxonomy);
+    assert.ok(vizLeaves.includes("0/dot"));
+    assert.ok(vizLeaves.includes("1/vertical-bar"));
+    assert.equal(new Set(vizLeaves).size, vizLeaves.length);
+    const vizCovers = parseVizCovers(VIZ_GALLERY_DIR);
+    assert.ok(vizCovers.has("0/dot"));
+    assert.ok(vizCovers.has("1/vertical-bar"));
+    const coverage = assertVizCoverage();
+    assert.equal(coverage.missing.length, 0, `viz coverage missing: ${coverage.missing.join(", ")}`);
+    assert.ok(coverage.leaves >= 200);
+    //#endregion
+
     //#region Window layout
     const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
@@ -742,6 +833,22 @@ class TestScript extends BundleScript {
       }
     }
     console.log(`print: all ${TEMPLATES.length * 2} template PDFs built`);
+  }
+
+  private runVizCoverage(): void {
+    const coverage = assertVizCoverage();
+    if (coverage.missing.length > 0) throw new Error(`viz coverage missing ${coverage.missing.length}/${coverage.leaves}: ${coverage.missing.join(", ")}`);
+    console.log(`print: viz coverage ${coverage.leaves}/${coverage.leaves} leaves`);
+  }
+
+  private async runVizBuild(): Promise<void> {
+    emitSemioTokensSty();
+    await fetchPrintFonts();
+    const tectonic = await ensureTectonic();
+    const templates = vizTemplates();
+    if (templates.length === 0) throw new Error("no viz gallery templates");
+    for (const template of templates) await compileTemplate(tectonic, template);
+    console.log(`print: all ${templates.length * 2} viz gallery PDFs built`);
   }
 }
 //#endregion ⏱️Test

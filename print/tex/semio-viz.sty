@@ -1,0 +1,161 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz}[2026/08/18 v0.1.0 semio viz]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-window}
+\RequirePackage{semio-viz-data}
+\RequirePackage{semio-viz-scale}
+\RequirePackage{semio-viz-mark}
+\RequirePackage{semio-viz-axis}
+\RequirePackage{semio-viz-layout}
+\usetikzlibrary{calc,arrows.meta,shapes.geometric,decorations.pathreplacing}
+
+\providecommand{\semio@viz@frame@width}{80}
+\providecommand{\semio@viz@frame@height}{40}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-viz } { unknown-chart }
+  { Unknown~viz~chart~kind~'#1'. }
+\msg_new:nnn { semio-viz } { unit-in-number }
+  { Viz~key~'#1'~takes~a~plain~millimetre~number,~got~'#2'. }
+%endregion Diagnostics
+
+%region StyleVocabulary
+\tikzset{
+  semio~viz~picture/.style={
+    x=1mm, y=1mm,
+    every~node/.append~style={ outer~sep=0pt, font=\SemioSans },
+  },
+}
+%endregion StyleVocabulary
+
+%region Keys
+\tl_new:N \l_semio_viz_title_tl
+\tl_new:N \l_semio_viz_window_tl
+\tl_new:N \l_semio_viz_width_tl
+\tl_new:N \l_semio_viz_height_tl
+
+\cs_new_protected:Npn \semio_viz_number_check:nn #1#2 {
+  \regex_match:nnT { [a-zA-Z] } {#2}
+    { \msg_error:nnnn { semio-viz } { unit-in-number } {#1} {#2} }
+}
+
+\keys_define:nn { semio / viz / figure } {
+  title  .tl_set:N = \l_semio_viz_title_tl,
+  window .tl_set:N = \l_semio_viz_window_tl,
+  width  .code:n = {
+    \semio_viz_number_check:nn { width } {#1}
+    \tl_set:Nn \l_semio_viz_width_tl {#1}
+  },
+  height .code:n = {
+    \semio_viz_number_check:nn { height } {#1}
+    \tl_set:Nn \l_semio_viz_height_tl {#1}
+  },
+}
+
+\cs_new_protected:Npn \semio_viz_figure_keys_reset: {
+  \tl_clear:N \l_semio_viz_title_tl
+  \tl_clear:N \l_semio_viz_window_tl
+  \tl_set:Nn \l_semio_viz_width_tl { \semio@viz@frame@width }
+  \tl_set:Nn \l_semio_viz_height_tl { \semio@viz@frame@height }
+}
+%endregion Keys
+
+%region Figure
+\cs_new_protected:Npn \semio_viz_figure_open:n #1 {
+  \begin{Figure}[#1]
+  \begin{tikzpicture}[ semio~viz~picture ]
+  \useasboundingbox (0,0) rectangle ( \l_semio_viz_width_tl , \l_semio_viz_height_tl ) ;
+  \fp_set:Nn \l_semio_viz_width_fp { \l_semio_viz_width_tl }
+  \fp_set:Nn \l_semio_viz_height_fp { \l_semio_viz_height_tl }
+}
+
+\cs_new_protected:Npn \semio_viz_figure_begin:n #1 {
+  \semio_viz_figure_keys_reset:
+  \keys_set:nn { semio / viz / figure } {#1}
+  \tl_set:Nx \l_tmpa_tl {
+    title = { \exp_not:V \l_semio_viz_title_tl } ,
+    break = false ,
+    \exp_not:V \l_semio_viz_window_tl
+  }
+  \exp_args:NV \semio_viz_figure_open:n \l_tmpa_tl
+  \bool_set_true:N \l_semio_viz_in_figure_bool
+  \semio_viz_data_demo:
+}
+
+\cs_new_protected:Npn \semio_viz_figure_end: {
+  \bool_set_false:N \l_semio_viz_in_figure_bool
+  \end{tikzpicture}
+  \end{Figure}
+}
+
+\NewDocumentEnvironment { VizFigure } { O{} }
+  { \semio_viz_figure_begin:n {#1} }
+  { \semio_viz_figure_end: }
+%endregion Figure
+
+%region ChartKinds
+\seq_new:N \g_semio_viz_chart_kinds_seq
+
+\cs_new_protected:Npn \semio_viz_chart_kind_define:nnn #1#2#3 {
+  \seq_if_in:NnF \g_semio_viz_chart_kinds_seq {#1}
+    { \seq_gput_right:Nn \g_semio_viz_chart_kinds_seq {#1} }
+  \tl_if_exist:cF { g_semio_viz_chart_ \tl_to_str:n {#1} _family_tl } { \tl_new:c { g_semio_viz_chart_ \tl_to_str:n {#1} _family_tl } }
+  \tl_gset:cn { g_semio_viz_chart_ \tl_to_str:n {#1} _family_tl } {#2}
+  \tl_if_exist:cF { g_semio_viz_chart_ \tl_to_str:n {#1} _opts_tl } { \tl_new:c { g_semio_viz_chart_ \tl_to_str:n {#1} _opts_tl } }
+  \tl_gset:cn { g_semio_viz_chart_ \tl_to_str:n {#1} _opts_tl } {#3}
+}
+
+\NewDocumentCommand \SemioVizChartKind { m m m } { \semio_viz_chart_kind_define:nnn {#1} {#2} {#3} }
+
+\cs_new_protected:Npn \semio_viz_chart:nn #1#2 {
+  \semio_viz_frame_require:n { SemioVizChart }
+  \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
+    {
+      \tl_set:Nx \l_semio_viz_family_tl { \tl_use:c { g_semio_viz_chart_ \tl_to_str:n {#1} _family_tl } }
+      \exp_args:NV \semio_viz_layout:nn \l_semio_viz_family_tl {#2}
+    }
+    { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_demo:n #1 {
+  \semio_viz_frame_require:n { SemioVizDemo }
+  \seq_if_in:NnTF \g_semio_viz_mark_kinds_seq {#1}
+    { \semio_viz_mark_demo:n {#1} }
+    {
+      \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
+        { \semio_viz_chart:nn {#1} { data=demo, x=cat, y=val } }
+        { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
+    }
+}
+
+\NewDocumentCommand \SemioVizChart { m O{} } { \semio_viz_chart:nn {#1} {#2} }
+\NewDocumentCommand \SemioVizDemo { m } { \semio_viz_demo:n {#1} }
+%endregion ChartKinds
+
+\ExplSyntaxOff
+
+\RequirePackage{semio-viz-chart-comparison}
+\RequirePackage{semio-viz-chart-ranking}
+\RequirePackage{semio-viz-chart-distribution}
+\RequirePackage{semio-viz-chart-part}
+\RequirePackage{semio-viz-chart-trend}
+\RequirePackage{semio-viz-chart-correlation}
+\RequirePackage{semio-viz-chart-flow}
+\RequirePackage{semio-viz-chart-hierarchy}
+\RequirePackage{semio-viz-chart-network}
+\RequirePackage{semio-viz-chart-geo}
+\RequirePackage{semio-viz-chart-multivariate}
+\RequirePackage{semio-viz-chart-uncertainty}
+\RequirePackage{semio-viz-chart-statistical}
+\RequirePackage{semio-viz-chart-financial}
+\RequirePackage{semio-viz-chart-calendar}
+\RequirePackage{semio-viz-chart-text}
+\RequirePackage{semio-viz-chart-science}
+\RequirePackage{semio-viz-chart-process}
+\RequirePackage{semio-viz-chart-chrome}

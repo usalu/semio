@@ -979,6 +979,17 @@
       }
     },
     {
+      "name": "🛠️dev🖨️print📊viz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:print:viz",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 175.1
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3155,6 +3166,17 @@
       "presentation": {
         "group": "4_build",
         "order": 102
+      }
+    },
+    {
+      "name": "📦build🖨️print📊viz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:print:viz",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 102.1
       }
     },
     {

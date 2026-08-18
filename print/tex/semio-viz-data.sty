@@ -1,0 +1,210 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-data}[2026/08/18 v0.1.0 semio viz data]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-viz } { unknown-table }
+  { Unknown~viz~table~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-column }
+  { Unknown~column~'#2'~in~table~'#1'. }
+\msg_new:nnn { semio-viz } { empty-data }
+  { Viz~table~'#1'~has~no~rows. }
+%endregion Diagnostics
+
+%region Tables
+\seq_new:N \g_semio_viz_table_names_seq
+\tl_new:N \l_semio_viz_cell_tl
+\int_new:N \l_semio_viz_col_int
+\int_new:N \l_semio_viz_row_int
+
+\cs_new_protected:Npn \semio_viz_table_cs:n #1 { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq }
+\cs_new_protected:Npn \semio_viz_table_cols_cs:n #1 { g_semio_viz_table_ \tl_to_str:n {#1} _cols_clist }
+
+\tl_new:N \l_semio_viz_tab_tl
+\tl_new:N \l_semio_viz_colname_tl
+
+\cs_new_protected:Npn \semio_viz_table_bind:n #1 {
+  \tl_set:Nx \l_semio_viz_tab_tl {#1}
+}
+\cs_new_protected:Npn \semio_viz_table_bind_col:n #1 {
+  \tl_set:Nx \l_semio_viz_colname_tl {#1}
+}
+
+\cs_new_protected:Npn \semio_viz_table_exist:nTF #1#2#3 {
+  \semio_viz_table_bind:n {#1}
+  \exp_args:NV \semio_viz_table_exist_chk:nTF \l_semio_viz_tab_tl {#2} {#3}
+}
+\cs_new_protected:Npn \semio_viz_table_exist_chk:nTF #1#2#3 {
+  \seq_if_in:NnTF \g_semio_viz_table_names_seq {#1} {#2} {#3}
+}
+
+\cs_new_protected:Npn \semio_viz_table_require:n #1 {
+  \semio_viz_table_bind:n {#1}
+  \exp_args:NV \semio_viz_table_require_chk:n \l_semio_viz_tab_tl
+}
+\cs_new_protected:Npn \semio_viz_table_require_chk:n #1 {
+  \seq_if_in:NnF \g_semio_viz_table_names_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-table } {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_table_new:nn #1#2 {
+  \semio_viz_table_bind:n {#1}
+  \exp_args:NV \semio_viz_table_new_aux:nn \l_semio_viz_tab_tl {#2}
+}
+\cs_new_protected:Npn \semio_viz_table_new_aux:nn #1#2 {
+  \seq_if_in:NnTF \g_semio_viz_table_names_seq {#1}
+    {
+      \seq_gclear:c { g_semio_viz_table_ #1 _rows_seq }
+      \clist_gset:cn { g_semio_viz_table_ #1 _cols_clist } {#2}
+    }
+    {
+      \seq_gput_right:Nn \g_semio_viz_table_names_seq {#1}
+      \cs_if_exist:cF { g_semio_viz_table_ #1 _rows_seq } { \seq_new:c { g_semio_viz_table_ #1 _rows_seq } }
+      \cs_if_exist:cF { g_semio_viz_table_ #1 _cols_clist } { \clist_new:c { g_semio_viz_table_ #1 _cols_clist } }
+      \clist_gset:cn { g_semio_viz_table_ #1 _cols_clist } {#2}
+    }
+}
+
+\cs_new_protected:Npn \semio_viz_table_row:nn #1#2 {
+  \semio_viz_table_require:n {#1}
+  \seq_gput_right:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } {#2}
+}
+
+\cs_new_protected:Npn \semio_viz_table_nrows:nN #1#2 {
+  \semio_viz_table_require:n {#1}
+  \int_set:Nn #2 { \seq_count:c { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_index:nnN #1#2#3 {
+  \semio_viz_table_require:n {#1}
+  \semio_viz_table_bind_col:n {#2}
+  \int_zero:N #3
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _cols_clist } {
+    \int_incr:N \l_tmpa_int
+    \tl_set:Nn \l_tmpb_tl {##1}
+    \tl_if_eq:NNT \l_semio_viz_colname_tl \l_tmpb_tl { \int_set_eq:NN #3 \l_tmpa_int }
+  }
+  \int_compare:nNnT #3 = { 0 } { \msg_error:nnn { semio-viz } { unknown-column } { \l_semio_viz_colname_tl } }
+}
+
+\cs_new_protected:Npn \semio_viz_table_cell:nnnN #1#2#3#4 {
+  \semio_viz_table_col_index:nnN {#1} {#3} \l_semio_viz_col_int
+  \tl_set:Nx #4 {
+    \clist_item:nn { \seq_item:cn { g_semio_viz_table_ \l_semio_viz_tab_tl _rows_seq } {#2} } { \int_use:N \l_semio_viz_col_int }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_row_clist:nnN #1#2#3 {
+  \tl_set:Nx #3 { \seq_item:cn { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq } {#2} }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_fp_fold:nnnN #1#2#3#4 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \int_compare:nNnT \l_semio_viz_row_int = { 0 } { \msg_error:nnn { semio-viz } { empty-data } {#1} }
+  \fp_set:Nn #4 {#3}
+  \int_step_inline:nn { \l_semio_viz_row_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+    \fp_set:Nn \l_tmpa_fp { \l_semio_viz_cell_tl }
+    \fp_set:Nn #4 { \fp_eval:n { min(#4, \l_tmpa_fp) } }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_min:nnN #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \fp_zero:N #3
+  \int_compare:nNnF \l_semio_viz_row_int = { 0 } {
+    \semio_viz_table_cell:nnnN {#1} { 1 } {#2} \l_semio_viz_cell_tl
+    \tl_if_empty:NF \l_semio_viz_cell_tl { \fp_set:Nn #3 { \l_semio_viz_cell_tl } }
+    \int_step_inline:nn { \l_semio_viz_row_int } {
+      \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+      \tl_if_empty:NF \l_semio_viz_cell_tl {
+        \fp_set:Nn #3 { \fp_eval:n { min(#3, \l_semio_viz_cell_tl) } }
+      }
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_max:nnN #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \fp_set:Nn #3 { 1 }
+  \int_compare:nNnF \l_semio_viz_row_int = { 0 } {
+    \semio_viz_table_cell:nnnN {#1} { 1 } {#2} \l_semio_viz_cell_tl
+    \tl_if_empty:NF \l_semio_viz_cell_tl { \fp_set:Nn #3 { \l_semio_viz_cell_tl } }
+    \int_step_inline:nn { \l_semio_viz_row_int } {
+      \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+      \tl_if_empty:NF \l_semio_viz_cell_tl {
+        \fp_set:Nn #3 { \fp_eval:n { max(#3, \l_semio_viz_cell_tl) } }
+      }
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_sum:nnN #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \fp_zero:N #3
+  \int_step_inline:nn { \l_semio_viz_row_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+    \fp_add:Nn #3 { \l_semio_viz_cell_tl }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_col_mean:nnN #1#2#3 {
+  \semio_viz_table_col_sum:nnN {#1} {#2} #3
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \fp_set:Nn #3 { \fp_eval:n { #3 / \l_semio_viz_row_int } }
+}
+
+\seq_new:N \l_semio_viz_sort_seq
+\cs_new_protected:Npn \semio_viz_table_col_median:nnN #1#2#3 {
+  \seq_clear:N \l_semio_viz_sort_seq
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \int_step_inline:nn { \l_semio_viz_row_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} {#2} \l_semio_viz_cell_tl
+    \seq_put_right:NV \l_semio_viz_sort_seq \l_semio_viz_cell_tl
+  }
+  \seq_sort:Nn \l_semio_viz_sort_seq {
+    \fp_compare:nNnTF { ##1 } > { ##2 } { \sort_return_swapped: } { \sort_return_same: }
+  }
+  \int_set:Nn \l_tmpa_int { \seq_count:N \l_semio_viz_sort_seq }
+  \int_if_odd:nTF { \l_tmpa_int } {
+    \fp_set:Nn #3 { \seq_item:Nn \l_semio_viz_sort_seq { \int_eval:n { (\l_tmpa_int + 1) / 2 } } }
+  } {
+    \fp_set:Nn #3 { \fp_eval:n {
+      ( \seq_item:Nn \l_semio_viz_sort_seq { \l_tmpa_int / 2 } +
+        \seq_item:Nn \l_semio_viz_sort_seq { \l_tmpa_int / 2 + 1 } ) / 2
+    } }
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_table_stack:nnn #1#2#3 {
+  \semio_viz_table_nrows:nN {#1} \l_semio_viz_row_int
+  \fp_zero:N \l_tmpa_fp
+  \int_step_inline:nn { \l_semio_viz_row_int } {
+    \semio_viz_table_cell:nnnN {#1} {##1} {#3} \l_semio_viz_cell_tl
+    \tl_set:Nx \l_tmpa_tl { \seq_item:cn { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq } {##1} }
+    \tl_put_right:Nx \l_tmpa_tl { , \fp_eval:n { \l_tmpa_fp } , \fp_eval:n { \l_tmpa_fp + \l_semio_viz_cell_tl } }
+    \seq_gset_item:cnn { g_semio_viz_table_ \tl_to_str:n {#1} _rows_seq } {##1} { \l_tmpa_tl }
+    \fp_add:Nn \l_tmpa_fp { \l_semio_viz_cell_tl }
+  }
+  \clist_gput_right:cn { g_semio_viz_table_ \tl_to_str:n {#1} _cols_clist } { stack0, stack1 }
+}
+
+\cs_new_protected:Npn \semio_viz_data_demo: {
+  \semio_viz_table_new:nn { demo } { cat, val, val2, grp, t }
+  \semio_viz_table_row:nn { demo } { A, 4, 2, x, 1 }
+  \semio_viz_table_row:nn { demo } { B, 7, 3, x, 2 }
+  \semio_viz_table_row:nn { demo } { C, 3, 5, y, 3 }
+  \semio_viz_table_row:nn { demo } { D, 8, 4, y, 4 }
+  \semio_viz_table_row:nn { demo } { E, 5, 6, x, 5 }
+}
+
+\NewDocumentCommand \SemioVizTable { m m } { \semio_viz_table_new:nn {#1} {#2} }
+\NewDocumentCommand \SemioVizRow { m m } { \semio_viz_table_row:nn {#1} {#2} }
+%endregion Tables
+
+\ExplSyntaxOff

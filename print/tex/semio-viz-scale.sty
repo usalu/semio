@@ -1,0 +1,177 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-viz-scale}[2026/08/18 v0.1.0 semio viz scales]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-viz-data}
+
+\ExplSyntaxOn
+
+%region Diagnostics
+\msg_new:nnn { semio-viz } { unknown-scale }
+  { Unknown~viz~scale~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-scale-kind }
+  { Unknown~viz~scale~kind~'#1'. }
+%endregion Diagnostics
+
+%region Registry
+\seq_new:N \g_semio_viz_scale_names_seq
+\seq_new:N \g_semio_viz_scale_kinds_seq
+\tl_new:N \l_semio_viz_scale_kind_tl
+\fp_new:N \l_semio_viz_domain_lo_fp
+\fp_new:N \l_semio_viz_domain_hi_fp
+\fp_new:N \l_semio_viz_range_lo_fp
+\fp_new:N \l_semio_viz_range_hi_fp
+
+\cs_new_protected:Npn \semio_viz_scale_kind_define:n #1 {
+  \seq_gput_right:Nn \g_semio_viz_scale_kinds_seq {#1}
+}
+
+\semio_viz_scale_kind_define:n { linear }
+\semio_viz_scale_kind_define:n { log }
+\semio_viz_scale_kind_define:n { symlog }
+\semio_viz_scale_kind_define:n { pow }
+\semio_viz_scale_kind_define:n { sqrt }
+\semio_viz_scale_kind_define:n { band }
+\semio_viz_scale_kind_define:n { point }
+\semio_viz_scale_kind_define:n { ordinal }
+\semio_viz_scale_kind_define:n { quantize }
+\semio_viz_scale_kind_define:n { quantile }
+\semio_viz_scale_kind_define:n { threshold }
+
+\cs_new_protected:Npn \semio_viz_scale_define:nnnn #1#2#3#4 {
+  \seq_if_in:NnF \g_semio_viz_scale_kinds_seq {#2}
+    { \msg_error:nnn { semio-viz } { unknown-scale-kind } {#2} }
+  \seq_if_in:NnF \g_semio_viz_scale_names_seq {#1}
+    { \seq_gput_right:Nn \g_semio_viz_scale_names_seq {#1} }
+  \tl_if_exist:cF { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } { \tl_new:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \tl_gset:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } {#2}
+  \clist_if_exist:cF { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \clist_new:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+  \clist_gset:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {#3}
+  \clist_if_exist:cF { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { \clist_new:c { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } }
+  \clist_gset:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } {#4}
+}
+
+\cs_new_protected:Npn \semio_viz_scale_require:n #1 {
+  \seq_if_in:NnF \g_semio_viz_scale_names_seq {#1}
+    { \msg_error:nnn { semio-viz } { unknown-scale } {#1} }
+}
+
+\cs_new_protected:Npn \semio_viz_scale_numeric_prep:n #1 {
+  \semio_viz_scale_require:n {#1}
+  \fp_set:Nn \l_semio_viz_domain_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_domain_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { 2 } }
+  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
+  \fp_compare:nNnT { \l_semio_viz_domain_hi_fp } = { \l_semio_viz_domain_lo_fp } { \fp_add:Nn \l_semio_viz_domain_hi_fp { 1 } }
+}
+
+\cs_new_protected:Npn \semio_viz_scale_map:nnN #1#2#3 {
+  \semio_viz_scale_numeric_prep:n {#1}
+  \tl_set:Nx \l_semio_viz_scale_kind_tl { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl {
+    { log } {
+      \fp_set:Nn #3 { \fp_eval:n {
+        \l_semio_viz_range_lo_fp + ( ln(max(#2, 1e-9)) - ln(max(\l_semio_viz_domain_lo_fp, 1e-9)) )
+          / ( ln(max(\l_semio_viz_domain_hi_fp, 1e-8)) - ln(max(\l_semio_viz_domain_lo_fp, 1e-9)) )
+          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+      } }
+    }
+    { sqrt } {
+      \fp_set:Nn #3 { \fp_eval:n {
+        \l_semio_viz_range_lo_fp + ( sqrt(max(#2, 0)) - sqrt(max(\l_semio_viz_domain_lo_fp, 0)) )
+          / ( sqrt(max(\l_semio_viz_domain_hi_fp, 0)) - sqrt(max(\l_semio_viz_domain_lo_fp, 0)) + 1e-9 )
+          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+      } }
+    }
+    { pow } {
+      \fp_set:Nn #3 { \fp_eval:n {
+        \l_semio_viz_range_lo_fp + ( (#2)^2 - (\l_semio_viz_domain_lo_fp)^2 )
+          / ( (\l_semio_viz_domain_hi_fp)^2 - (\l_semio_viz_domain_lo_fp)^2 + 1e-9 )
+          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+      } }
+    }
+    { symlog } {
+      \fp_set:Nn #3 { \fp_eval:n {
+        \l_semio_viz_range_lo_fp + ( sinh(#2) - sinh(\l_semio_viz_domain_lo_fp) )
+          / ( sinh(\l_semio_viz_domain_hi_fp) - sinh(\l_semio_viz_domain_lo_fp) + 1e-9 )
+          * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+      } }
+    }
+    { band } {
+      \semio_viz_scale_band_map:nnN {#1} {#2} #3
+    }
+    { point } {
+      \semio_viz_scale_band_map:nnN {#1} {#2} #3
+    }
+    { ordinal } {
+      \semio_viz_scale_band_map:nnN {#1} {#2} #3
+    }
+  } {
+    \fp_set:Nn #3 { \fp_eval:n {
+      \l_semio_viz_range_lo_fp + ( #2 - \l_semio_viz_domain_lo_fp )
+        / ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp )
+        * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+    } }
+  }
+}
+
+\int_new:N \l_semio_viz_band_int
+\cs_new_protected:Npn \semio_viz_scale_band_map:nnN #1#2#3 {
+  \int_zero:N \l_semio_viz_band_int
+  \int_zero:N \l_tmpa_int
+  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
+    \int_incr:N \l_tmpa_int
+    \tl_if_eq:nnT {##1} {#2} { \int_set_eq:NN \l_semio_viz_band_int \l_tmpa_int }
+  }
+  \int_compare:nNnT \l_semio_viz_band_int = { 0 } { \int_set:Nn \l_semio_viz_band_int { 1 } }
+  \int_set:Nn \l_tmpb_int { \clist_count:c { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } }
+  \fp_set:Nn \l_semio_viz_range_lo_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 1 } }
+  \fp_set:Nn \l_semio_viz_range_hi_fp { \clist_item:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _range_clist } { 2 } }
+  \fp_set:Nn #3 { \fp_eval:n {
+    \l_semio_viz_range_lo_fp + ( \l_semio_viz_band_int - 0.5 )
+      / \l_tmpb_int * ( \l_semio_viz_range_hi_fp - \l_semio_viz_range_lo_fp )
+  } }
+}
+
+\seq_new:N \l_semio_viz_palette_seq
+\cs_new_protected:Npn \semio_viz_palette_categorical: {
+  \seq_set_from_clist:Nn \l_semio_viz_palette_seq {
+    semio-primary, semio-secondary, semio-tertiary, semio-info, semio-success, semio-warning, semio-danger
+  }
+}
+
+\cs_new_protected:Npn \semio_viz_scale_color:nnN #1#2#3 {
+  \semio_viz_palette_categorical:
+  \int_zero:N \l_tmpa_int
+  \int_zero:N \l_tmpb_int
+  \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } {
+    \int_incr:N \l_tmpa_int
+    \tl_if_eq:nnT {##1} {#2} { \int_set_eq:NN \l_tmpb_int \l_tmpa_int }
+  }
+  \int_compare:nNnT \l_tmpb_int = { 0 } { \int_set:Nn \l_tmpb_int { 1 } }
+  \int_set:Nn \l_tmpa_int { \int_mod:nn { \l_tmpb_int - 1 } { \seq_count:N \l_semio_viz_palette_seq } + 1 }
+  \tl_set:Nx #3 { \seq_item:Nn \l_semio_viz_palette_seq { \l_tmpa_int } }
+}
+
+\seq_new:N \l_semio_viz_ticks_seq
+\cs_new_protected:Npn \semio_viz_scale_ticks:nN #1#2 {
+  \semio_viz_scale_require:n {#1}
+  \seq_clear:N #2
+  \tl_set:Nx \l_semio_viz_scale_kind_tl { \tl_use:c { g_semio_viz_scale_ \tl_to_str:n {#1} _kind_tl } }
+  \str_case:VnF \l_semio_viz_scale_kind_tl {
+    { band } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
+    { point } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
+    { ordinal } { \clist_map_inline:cn { g_semio_viz_scale_ \tl_to_str:n {#1} _domain_clist } { \seq_put_right:Nn #2 {##1} } }
+  } {
+    \semio_viz_scale_numeric_prep:n {#1}
+    \int_step_inline:nn { 5 } {
+      \seq_put_right:Nx #2 { \fp_eval:n { \l_semio_viz_domain_lo_fp + (##1 - 1) / 4 * ( \l_semio_viz_domain_hi_fp - \l_semio_viz_domain_lo_fp ) } }
+    }
+  }
+}
+
+\NewDocumentCommand \SemioVizScale { m m m m } { \semio_viz_scale_define:nnnn {#1} {#2} {#3} {#4} }
+%endregion Registry
+
+\ExplSyntaxOff

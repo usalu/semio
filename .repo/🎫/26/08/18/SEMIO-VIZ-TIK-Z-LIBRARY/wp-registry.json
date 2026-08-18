@@ -1,0 +1,2194 @@
+[
+  {
+    "id": "0/dot",
+    "slug": "dot",
+    "title": "Dot",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/circle",
+    "slug": "circle",
+    "title": "Circle",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/square",
+    "slug": "square",
+    "title": "Square",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/rectangle",
+    "slug": "rectangle",
+    "title": "Rectangle",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/triangle",
+    "slug": "triangle",
+    "title": "Triangle",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/diamond",
+    "slug": "diamond",
+    "title": "Diamond",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/cross",
+    "slug": "cross",
+    "title": "Cross",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/plus",
+    "slug": "plus",
+    "title": "Plus",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/star",
+    "slug": "star",
+    "title": "Star",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/custom-glyph",
+    "slug": "custom-glyph",
+    "title": "Custom glyph",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/icon",
+    "slug": "icon",
+    "title": "Icon mark",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/image",
+    "slug": "image",
+    "title": "Image mark",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/text",
+    "slug": "text",
+    "title": "Text mark",
+    "kind": "mark",
+    "family": "mark",
+    "section": "0"
+  },
+  {
+    "id": "0/straight-line",
+    "slug": "straight-line",
+    "title": "Straight line",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/polyline",
+    "slug": "polyline",
+    "title": "Polyline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/step-line",
+    "slug": "step-line",
+    "title": "Step line",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/curved-line",
+    "slug": "curved-line",
+    "title": "Curved line",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/bezier",
+    "slug": "bezier",
+    "title": "Bezier curve",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/spline",
+    "slug": "spline",
+    "title": "Spline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/catmull-rom",
+    "slug": "catmull-rom",
+    "title": "Catmull-Rom spline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/basis-spline",
+    "slug": "basis-spline",
+    "title": "Basis spline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/cardinal-spline",
+    "slug": "cardinal-spline",
+    "title": "Cardinal spline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/monotone-spline",
+    "slug": "monotone-spline",
+    "title": "Monotone spline",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/closed-curve",
+    "slug": "closed-curve",
+    "title": "Closed curve",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/polygon",
+    "slug": "polygon",
+    "title": "Polygon",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/filled-path",
+    "slug": "filled-path",
+    "title": "Filled path",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/ribbon",
+    "slug": "ribbon",
+    "title": "Ribbon",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/band",
+    "slug": "band",
+    "title": "Band",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/envelope",
+    "slug": "envelope",
+    "title": "Envelope",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/circular-arc",
+    "slug": "circular-arc",
+    "title": "Circular arc",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/elliptical-arc",
+    "slug": "elliptical-arc",
+    "title": "Elliptical arc",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/annular-arc",
+    "slug": "annular-arc",
+    "title": "Annular arc",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/sector",
+    "slug": "sector",
+    "title": "Sector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/wedge",
+    "slug": "wedge",
+    "title": "Wedge",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/straight-connector",
+    "slug": "straight-connector",
+    "title": "Straight connector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/orthogonal-connector",
+    "slug": "orthogonal-connector",
+    "title": "Orthogonal connector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/curved-connector",
+    "slug": "curved-connector",
+    "title": "Curved connector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/elbow-connector",
+    "slug": "elbow-connector",
+    "title": "Elbow connector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/bundled-connector",
+    "slug": "bundled-connector",
+    "title": "Bundled connector",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/arrow",
+    "slug": "arrow",
+    "title": "Arrow",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/bidirectional-arrow",
+    "slug": "bidirectional-arrow",
+    "title": "Bidirectional arrow",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/rectangular-region",
+    "slug": "rectangular-region",
+    "title": "Rectangular region",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/circular-region",
+    "slug": "circular-region",
+    "title": "Circular region",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/polygonal-region",
+    "slug": "polygonal-region",
+    "title": "Polygonal region",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/voronoi-region",
+    "slug": "voronoi-region",
+    "title": "Voronoi region",
+    "kind": "mark",
+    "family": "voronoi",
+    "section": "0"
+  },
+  {
+    "id": "0/convex-hull",
+    "slug": "convex-hull",
+    "title": "Convex hull",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/concave-hull",
+    "slug": "concave-hull",
+    "title": "Concave hull",
+    "kind": "mark",
+    "family": "path",
+    "section": "0"
+  },
+  {
+    "id": "0/label",
+    "slug": "label",
+    "title": "Label",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/callout",
+    "slug": "callout",
+    "title": "Callout",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/leader-line",
+    "slug": "leader-line",
+    "title": "Leader line",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/bracket",
+    "slug": "bracket",
+    "title": "Bracket",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/brace",
+    "slug": "brace",
+    "title": "Brace",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/highlight-region",
+    "slug": "highlight-region",
+    "title": "Highlight region",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/reference-line",
+    "slug": "reference-line",
+    "title": "Reference line",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/reference-band",
+    "slug": "reference-band",
+    "title": "Reference band",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "0/reference-point",
+    "slug": "reference-point",
+    "title": "Reference point",
+    "kind": "mark",
+    "family": "anno",
+    "section": "0"
+  },
+  {
+    "id": "1/vertical-bar",
+    "slug": "vertical-bar",
+    "title": "Vertical bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/horizontal-bar",
+    "slug": "horizontal-bar",
+    "title": "Horizontal bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/grouped-bar",
+    "slug": "grouped-bar",
+    "title": "Grouped bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/clustered-bar",
+    "slug": "clustered-bar",
+    "title": "Clustered bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/stacked-bar",
+    "slug": "stacked-bar",
+    "title": "Stacked bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/percent-stacked-bar",
+    "slug": "percent-stacked-bar",
+    "title": "100% stacked bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/diverging-stacked-bar",
+    "slug": "diverging-stacked-bar",
+    "title": "Diverging stacked bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/floating-bar",
+    "slug": "floating-bar",
+    "title": "Floating bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/range-bar",
+    "slug": "range-bar",
+    "title": "Range bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/overlapping-bar",
+    "slug": "overlapping-bar",
+    "title": "Overlapping bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/nested-bar",
+    "slug": "nested-bar",
+    "title": "Nested bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/thin-bar",
+    "slug": "thin-bar",
+    "title": "Thin bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/rounded-bar",
+    "slug": "rounded-bar",
+    "title": "Rounded bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/lollipop-bar",
+    "slug": "lollipop-bar",
+    "title": "Lollipop bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/bullet-bar",
+    "slug": "bullet-bar",
+    "title": "Bullet-style bar chart",
+    "kind": "chart",
+    "family": "bullet",
+    "section": "1"
+  },
+  {
+    "id": "1/paired-bar",
+    "slug": "paired-bar",
+    "title": "Paired bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/mirrored-bar",
+    "slug": "mirrored-bar",
+    "title": "Mirrored bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/butterfly",
+    "slug": "butterfly",
+    "title": "Butterfly chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/tornado",
+    "slug": "tornado",
+    "title": "Tornado chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/population-pyramid",
+    "slug": "population-pyramid",
+    "title": "Population pyramid",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/column",
+    "slug": "column",
+    "title": "Column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/grouped-column",
+    "slug": "grouped-column",
+    "title": "Grouped column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/stacked-column",
+    "slug": "stacked-column",
+    "title": "Stacked column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/percent-stacked-column",
+    "slug": "percent-stacked-column",
+    "title": "100% stacked column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/floating-column",
+    "slug": "floating-column",
+    "title": "Floating column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/range-column",
+    "slug": "range-column",
+    "title": "Range column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "1"
+  },
+  {
+    "id": "1/dot-plot",
+    "slug": "dot-plot",
+    "title": "Dot plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/cleveland-dot",
+    "slug": "cleveland-dot",
+    "title": "Cleveland dot plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/grouped-dot",
+    "slug": "grouped-dot",
+    "title": "Grouped dot plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/dumbbell",
+    "slug": "dumbbell",
+    "title": "Dumbbell chart",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/arrow-dot",
+    "slug": "arrow-dot",
+    "title": "Arrow plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/lollipop",
+    "slug": "lollipop",
+    "title": "Lollipop chart",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "1/stem",
+    "slug": "stem",
+    "title": "Stem chart",
+    "kind": "chart",
+    "family": "dot",
+    "section": "1"
+  },
+  {
+    "id": "2/ranked-bar",
+    "slug": "ranked-bar",
+    "title": "Ranked bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "2"
+  },
+  {
+    "id": "2/ranked-column",
+    "slug": "ranked-column",
+    "title": "Ranked column chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "2"
+  },
+  {
+    "id": "2/slope",
+    "slug": "slope",
+    "title": "Slope chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "2"
+  },
+  {
+    "id": "2/bump",
+    "slug": "bump",
+    "title": "Bump chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "2"
+  },
+  {
+    "id": "2/ranked-lollipop",
+    "slug": "ranked-lollipop",
+    "title": "Ranked lollipop",
+    "kind": "chart",
+    "family": "dot",
+    "section": "2"
+  },
+  {
+    "id": "2/ordered-dot",
+    "slug": "ordered-dot",
+    "title": "Ordered dot plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "2"
+  },
+  {
+    "id": "2/unit-chart",
+    "slug": "unit-chart",
+    "title": "Unit chart",
+    "kind": "chart",
+    "family": "waffle",
+    "section": "2"
+  },
+  {
+    "id": "2/pictogram",
+    "slug": "pictogram",
+    "title": "Pictogram chart",
+    "kind": "chart",
+    "family": "waffle",
+    "section": "2"
+  },
+  {
+    "id": "2/isotype",
+    "slug": "isotype",
+    "title": "Isotype chart",
+    "kind": "chart",
+    "family": "waffle",
+    "section": "2"
+  },
+  {
+    "id": "3/histogram",
+    "slug": "histogram",
+    "title": "Histogram",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/variable-width-histogram",
+    "slug": "variable-width-histogram",
+    "title": "Variable-width histogram",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/density",
+    "slug": "density",
+    "title": "Density plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/kernel-density",
+    "slug": "kernel-density",
+    "title": "Kernel density estimate",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/ridgeline",
+    "slug": "ridgeline",
+    "title": "Ridgeline plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/joy",
+    "slug": "joy",
+    "title": "Joy plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/frequency-polygon",
+    "slug": "frequency-polygon",
+    "title": "Frequency polygon",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/cumulative-freq",
+    "slug": "cumulative-freq",
+    "title": "Cumulative frequency",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/ogive",
+    "slug": "ogive",
+    "title": "Ogive",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/boxplot",
+    "slug": "boxplot",
+    "title": "Box plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/letter-value-box",
+    "slug": "letter-value-box",
+    "title": "Letter-value box plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/violin",
+    "slug": "violin",
+    "title": "Violin plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/bean",
+    "slug": "bean",
+    "title": "Bean plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/bee-swarm",
+    "slug": "bee-swarm",
+    "title": "Beeswarm plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/strip",
+    "slug": "strip",
+    "title": "Strip plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/jitter",
+    "slug": "jitter",
+    "title": "Jitter plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/sina",
+    "slug": "sina",
+    "title": "Sina plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/raincloud",
+    "slug": "raincloud",
+    "title": "Raincloud plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/quantile-box",
+    "slug": "quantile-box",
+    "title": "Quantile box plot",
+    "kind": "chart",
+    "family": "dist",
+    "section": "3"
+  },
+  {
+    "id": "3/hexbin",
+    "slug": "hexbin",
+    "title": "Hexbin chart",
+    "kind": "chart",
+    "family": "hexbin",
+    "section": "3"
+  },
+  {
+    "id": "3/rectbin",
+    "slug": "rectbin",
+    "title": "Rectbin chart",
+    "kind": "chart",
+    "family": "heat",
+    "section": "3"
+  },
+  {
+    "id": "3/contour",
+    "slug": "contour",
+    "title": "Contour plot",
+    "kind": "chart",
+    "family": "heat",
+    "section": "3"
+  },
+  {
+    "id": "3/filled-contour",
+    "slug": "filled-contour",
+    "title": "Filled contour",
+    "kind": "chart",
+    "family": "heat",
+    "section": "3"
+  },
+  {
+    "id": "4/pie",
+    "slug": "pie",
+    "title": "Pie chart",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/donut",
+    "slug": "donut",
+    "title": "Donut chart",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/exploded-pie",
+    "slug": "exploded-pie",
+    "title": "Exploded pie chart",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/half-pie",
+    "slug": "half-pie",
+    "title": "Half pie / gauge pie",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/sunburst",
+    "slug": "sunburst",
+    "title": "Sunburst",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/multi-level-donut",
+    "slug": "multi-level-donut",
+    "title": "Multi-level donut",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/rose",
+    "slug": "rose",
+    "title": "Rose chart",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/nightingale",
+    "slug": "nightingale",
+    "title": "Nightingale rose",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/polar-area",
+    "slug": "polar-area",
+    "title": "Polar area chart",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/treemap",
+    "slug": "treemap",
+    "title": "Treemap",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/squarify-treemap",
+    "slug": "squarify-treemap",
+    "title": "Squarified treemap",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/slice-dice-treemap",
+    "slug": "slice-dice-treemap",
+    "title": "Slice-and-dice treemap",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/icicle",
+    "slug": "icicle",
+    "title": "Icicle chart",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/mosaic",
+    "slug": "mosaic",
+    "title": "Mosaic plot",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/marimekko",
+    "slug": "marimekko",
+    "title": "Marimekko / Mekko",
+    "kind": "chart",
+    "family": "tree",
+    "section": "4"
+  },
+  {
+    "id": "4/waffle",
+    "slug": "waffle",
+    "title": "Waffle chart",
+    "kind": "chart",
+    "family": "waffle",
+    "section": "4"
+  },
+  {
+    "id": "4/gridplot",
+    "slug": "gridplot",
+    "title": "Grid plot",
+    "kind": "chart",
+    "family": "waffle",
+    "section": "4"
+  },
+  {
+    "id": "4/stacked-percent-area",
+    "slug": "stacked-percent-area",
+    "title": "100% stacked area",
+    "kind": "chart",
+    "family": "area",
+    "section": "4"
+  },
+  {
+    "id": "4/funnel",
+    "slug": "funnel",
+    "title": "Funnel chart",
+    "kind": "chart",
+    "family": "funnel",
+    "section": "4"
+  },
+  {
+    "id": "4/pyramid-part",
+    "slug": "pyramid-part",
+    "title": "Pyramid chart",
+    "kind": "chart",
+    "family": "funnel",
+    "section": "4"
+  },
+  {
+    "id": "4/gauge",
+    "slug": "gauge",
+    "title": "Gauge",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "4/bullet",
+    "slug": "bullet",
+    "title": "Bullet chart",
+    "kind": "chart",
+    "family": "bullet",
+    "section": "4"
+  },
+  {
+    "id": "4/progress-bar",
+    "slug": "progress-bar",
+    "title": "Progress bar",
+    "kind": "chart",
+    "family": "bar",
+    "section": "4"
+  },
+  {
+    "id": "4/radial-progress",
+    "slug": "radial-progress",
+    "title": "Radial progress",
+    "kind": "chart",
+    "family": "pie",
+    "section": "4"
+  },
+  {
+    "id": "5/line",
+    "slug": "line",
+    "title": "Line chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/multi-line",
+    "slug": "multi-line",
+    "title": "Multi-line chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/step",
+    "slug": "step",
+    "title": "Step chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/spline-line",
+    "slug": "spline-line",
+    "title": "Spline line chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/area",
+    "slug": "area",
+    "title": "Area chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/stacked-area",
+    "slug": "stacked-area",
+    "title": "Stacked area chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/streamgraph",
+    "slug": "streamgraph",
+    "title": "Streamgraph",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/difference",
+    "slug": "difference",
+    "title": "Difference chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/range-area",
+    "slug": "range-area",
+    "title": "Range area chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/horizon",
+    "slug": "horizon",
+    "title": "Horizon chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/sparkline",
+    "slug": "sparkline",
+    "title": "Sparkline",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/sparklines-band",
+    "slug": "sparklines-band",
+    "title": "Sparkband",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/connected-scatter",
+    "slug": "connected-scatter",
+    "title": "Connected scatter",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/cycle",
+    "slug": "cycle",
+    "title": "Cycle plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/seasonal",
+    "slug": "seasonal",
+    "title": "Seasonal plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/index-chart",
+    "slug": "index-chart",
+    "title": "Index chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "5/fan",
+    "slug": "fan",
+    "title": "Fan chart",
+    "kind": "chart",
+    "family": "area",
+    "section": "5"
+  },
+  {
+    "id": "5/control",
+    "slug": "control",
+    "title": "Control chart",
+    "kind": "chart",
+    "family": "line",
+    "section": "5"
+  },
+  {
+    "id": "6/scatter",
+    "slug": "scatter",
+    "title": "Scatter plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/bubble",
+    "slug": "bubble",
+    "title": "Bubble chart",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/scatter-matrix",
+    "slug": "scatter-matrix",
+    "title": "Scatterplot matrix",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/qq",
+    "slug": "qq",
+    "title": "Q-Q plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/pp",
+    "slug": "pp",
+    "title": "P-P plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/residual",
+    "slug": "residual",
+    "title": "Residual plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/lag",
+    "slug": "lag",
+    "title": "Lag plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "6"
+  },
+  {
+    "id": "6/heatmap",
+    "slug": "heatmap",
+    "title": "Heatmap",
+    "kind": "chart",
+    "family": "heat",
+    "section": "6"
+  },
+  {
+    "id": "6/correlation-matrix",
+    "slug": "correlation-matrix",
+    "title": "Correlation matrix",
+    "kind": "chart",
+    "family": "heat",
+    "section": "6"
+  },
+  {
+    "id": "6/voronoi-scatter",
+    "slug": "voronoi-scatter",
+    "title": "Voronoi scatter",
+    "kind": "chart",
+    "family": "voronoi",
+    "section": "6"
+  },
+  {
+    "id": "6/density-2d",
+    "slug": "density-2d",
+    "title": "2d density",
+    "kind": "chart",
+    "family": "heat",
+    "section": "6"
+  },
+  {
+    "id": "7/sankey",
+    "slug": "sankey",
+    "title": "Sankey diagram",
+    "kind": "chart",
+    "family": "sankey",
+    "section": "7"
+  },
+  {
+    "id": "7/alluvial",
+    "slug": "alluvial",
+    "title": "Alluvial diagram",
+    "kind": "chart",
+    "family": "sankey",
+    "section": "7"
+  },
+  {
+    "id": "7/parallel-sets",
+    "slug": "parallel-sets",
+    "title": "Parallel sets",
+    "kind": "chart",
+    "family": "sankey",
+    "section": "7"
+  },
+  {
+    "id": "7/chord",
+    "slug": "chord",
+    "title": "Chord diagram",
+    "kind": "chart",
+    "family": "chord",
+    "section": "7"
+  },
+  {
+    "id": "7/arc-flow",
+    "slug": "arc-flow",
+    "title": "Arc diagram",
+    "kind": "chart",
+    "family": "net",
+    "section": "7"
+  },
+  {
+    "id": "7/hive",
+    "slug": "hive",
+    "title": "Hive plot",
+    "kind": "chart",
+    "family": "net",
+    "section": "7"
+  },
+  {
+    "id": "7/od-matrix",
+    "slug": "od-matrix",
+    "title": "Origin-destination matrix",
+    "kind": "chart",
+    "family": "heat",
+    "section": "7"
+  },
+  {
+    "id": "8/tree",
+    "slug": "tree",
+    "title": "Node-link tree",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/cluster-tree",
+    "slug": "cluster-tree",
+    "title": "Cluster dendrogram",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/tidy-tree",
+    "slug": "tidy-tree",
+    "title": "Tidy tree",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/radial-tree",
+    "slug": "radial-tree",
+    "title": "Radial tree",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/circular-dendrogram",
+    "slug": "circular-dendrogram",
+    "title": "Circular dendrogram",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/pack",
+    "slug": "pack",
+    "title": "Circle pack",
+    "kind": "chart",
+    "family": "pack",
+    "section": "8"
+  },
+  {
+    "id": "8/nested-circles",
+    "slug": "nested-circles",
+    "title": "Nested circles",
+    "kind": "chart",
+    "family": "pack",
+    "section": "8"
+  },
+  {
+    "id": "8/enclosure",
+    "slug": "enclosure",
+    "title": "Enclosure diagram",
+    "kind": "chart",
+    "family": "pack",
+    "section": "8"
+  },
+  {
+    "id": "8/indented-tree",
+    "slug": "indented-tree",
+    "title": "Indented tree",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "8/sunburst-hierarchy",
+    "slug": "sunburst-hierarchy",
+    "title": "Sunburst hierarchy",
+    "kind": "chart",
+    "family": "pie",
+    "section": "8"
+  },
+  {
+    "id": "8/icicle-hierarchy",
+    "slug": "icicle-hierarchy",
+    "title": "Icicle hierarchy",
+    "kind": "chart",
+    "family": "tree",
+    "section": "8"
+  },
+  {
+    "id": "9/force",
+    "slug": "force",
+    "title": "Force-directed graph",
+    "kind": "chart",
+    "family": "force",
+    "section": "9"
+  },
+  {
+    "id": "9/arc",
+    "slug": "arc",
+    "title": "Arc graph",
+    "kind": "chart",
+    "family": "net",
+    "section": "9"
+  },
+  {
+    "id": "9/adjacency",
+    "slug": "adjacency",
+    "title": "Adjacency matrix",
+    "kind": "chart",
+    "family": "heat",
+    "section": "9"
+  },
+  {
+    "id": "9/radial-network",
+    "slug": "radial-network",
+    "title": "Radial network",
+    "kind": "chart",
+    "family": "net",
+    "section": "9"
+  },
+  {
+    "id": "9/layered-graph",
+    "slug": "layered-graph",
+    "title": "Layered / Sugiyama graph",
+    "kind": "chart",
+    "family": "net",
+    "section": "9"
+  },
+  {
+    "id": "9/bipartite",
+    "slug": "bipartite",
+    "title": "Bipartite graph",
+    "kind": "chart",
+    "family": "net",
+    "section": "9"
+  },
+  {
+    "id": "9/ego",
+    "slug": "ego",
+    "title": "Ego network",
+    "kind": "chart",
+    "family": "force",
+    "section": "9"
+  },
+  {
+    "id": "10/choropleth",
+    "slug": "choropleth",
+    "title": "Choropleth",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/proportional-symbol",
+    "slug": "proportional-symbol",
+    "title": "Proportional symbol map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/dot-density-map",
+    "slug": "dot-density-map",
+    "title": "Dot density map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/isoline",
+    "slug": "isoline",
+    "title": "Isoline map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/isopleth",
+    "slug": "isopleth",
+    "title": "Isopleth map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/cartogram",
+    "slug": "cartogram",
+    "title": "Cartogram",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/hexbin-map",
+    "slug": "hexbin-map",
+    "title": "Hexbin map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/tile-grid-map",
+    "slug": "tile-grid-map",
+    "title": "Tile grid map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/flow-map",
+    "slug": "flow-map",
+    "title": "Flow map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "10/connection-map",
+    "slug": "connection-map",
+    "title": "Connection map",
+    "kind": "chart",
+    "family": "geo",
+    "section": "10"
+  },
+  {
+    "id": "11/parallel-coordinates",
+    "slug": "parallel-coordinates",
+    "title": "Parallel coordinates",
+    "kind": "chart",
+    "family": "parallel",
+    "section": "11"
+  },
+  {
+    "id": "11/radar",
+    "slug": "radar",
+    "title": "Radar chart",
+    "kind": "chart",
+    "family": "radar",
+    "section": "11"
+  },
+  {
+    "id": "11/spider",
+    "slug": "spider",
+    "title": "Spider chart",
+    "kind": "chart",
+    "family": "radar",
+    "section": "11"
+  },
+  {
+    "id": "11/star-plot",
+    "slug": "star-plot",
+    "title": "Star plot",
+    "kind": "chart",
+    "family": "radar",
+    "section": "11"
+  },
+  {
+    "id": "11/andrews",
+    "slug": "andrews",
+    "title": "Andrews plot",
+    "kind": "chart",
+    "family": "parallel",
+    "section": "11"
+  },
+  {
+    "id": "11/chernoff",
+    "slug": "chernoff",
+    "title": "Chernoff faces",
+    "kind": "chart",
+    "family": "special",
+    "section": "11"
+  },
+  {
+    "id": "11/profile",
+    "slug": "profile",
+    "title": "Profile plot",
+    "kind": "chart",
+    "family": "parallel",
+    "section": "11"
+  },
+  {
+    "id": "11/table-lens",
+    "slug": "table-lens",
+    "title": "Table lens",
+    "kind": "chart",
+    "family": "heat",
+    "section": "11"
+  },
+  {
+    "id": "12/error-bar",
+    "slug": "error-bar",
+    "title": "Error bar chart",
+    "kind": "chart",
+    "family": "dist",
+    "section": "12"
+  },
+  {
+    "id": "12/confidence-band",
+    "slug": "confidence-band",
+    "title": "Confidence band",
+    "kind": "chart",
+    "family": "area",
+    "section": "12"
+  },
+  {
+    "id": "12/prediction-interval",
+    "slug": "prediction-interval",
+    "title": "Prediction interval",
+    "kind": "chart",
+    "family": "area",
+    "section": "12"
+  },
+  {
+    "id": "12/gradient-interval",
+    "slug": "gradient-interval",
+    "title": "Gradient interval",
+    "kind": "chart",
+    "family": "dist",
+    "section": "12"
+  },
+  {
+    "id": "12/quantile-dot",
+    "slug": "quantile-dot",
+    "title": "Quantile dot plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "12"
+  },
+  {
+    "id": "12/fan-uncertainty",
+    "slug": "fan-uncertainty",
+    "title": "Fan uncertainty",
+    "kind": "chart",
+    "family": "area",
+    "section": "12"
+  },
+  {
+    "id": "12/hypothetical-outcome",
+    "slug": "hypothetical-outcome",
+    "title": "Hypothetical outcome plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "12"
+  },
+  {
+    "id": "13/qq-stat",
+    "slug": "qq-stat",
+    "title": "Normal Q-Q",
+    "kind": "chart",
+    "family": "dot",
+    "section": "13"
+  },
+  {
+    "id": "13/residual-leverage",
+    "slug": "residual-leverage",
+    "title": "Residual vs leverage",
+    "kind": "chart",
+    "family": "dot",
+    "section": "13"
+  },
+  {
+    "id": "13/cooks",
+    "slug": "cooks",
+    "title": "Cook's distance",
+    "kind": "chart",
+    "family": "bar",
+    "section": "13"
+  },
+  {
+    "id": "13/acf",
+    "slug": "acf",
+    "title": "Autocorrelation",
+    "kind": "chart",
+    "family": "bar",
+    "section": "13"
+  },
+  {
+    "id": "13/pacf",
+    "slug": "pacf",
+    "title": "Partial autocorrelation",
+    "kind": "chart",
+    "family": "bar",
+    "section": "13"
+  },
+  {
+    "id": "13/roc",
+    "slug": "roc",
+    "title": "ROC curve",
+    "kind": "chart",
+    "family": "line",
+    "section": "13"
+  },
+  {
+    "id": "13/precision-recall",
+    "slug": "precision-recall",
+    "title": "Precision-recall",
+    "kind": "chart",
+    "family": "line",
+    "section": "13"
+  },
+  {
+    "id": "13/forest",
+    "slug": "forest",
+    "title": "Forest plot",
+    "kind": "chart",
+    "family": "dot",
+    "section": "13"
+  },
+  {
+    "id": "13/bland-altman",
+    "slug": "bland-altman",
+    "title": "Bland-Altman",
+    "kind": "chart",
+    "family": "dot",
+    "section": "13"
+  },
+  {
+    "id": "14/candlestick",
+    "slug": "candlestick",
+    "title": "Candlestick",
+    "kind": "chart",
+    "family": "bar",
+    "section": "14"
+  },
+  {
+    "id": "14/ohlc",
+    "slug": "ohlc",
+    "title": "OHLC bar",
+    "kind": "chart",
+    "family": "bar",
+    "section": "14"
+  },
+  {
+    "id": "14/kagi",
+    "slug": "kagi",
+    "title": "Kagi",
+    "kind": "chart",
+    "family": "line",
+    "section": "14"
+  },
+  {
+    "id": "14/renko",
+    "slug": "renko",
+    "title": "Renko",
+    "kind": "chart",
+    "family": "bar",
+    "section": "14"
+  },
+  {
+    "id": "14/point-figure",
+    "slug": "point-figure",
+    "title": "Point and figure",
+    "kind": "chart",
+    "family": "special",
+    "section": "14"
+  },
+  {
+    "id": "14/waterfall",
+    "slug": "waterfall",
+    "title": "Waterfall chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "14"
+  },
+  {
+    "id": "14/volume",
+    "slug": "volume",
+    "title": "Volume bars",
+    "kind": "chart",
+    "family": "bar",
+    "section": "14"
+  },
+  {
+    "id": "14/equity-curve",
+    "slug": "equity-curve",
+    "title": "Equity curve",
+    "kind": "chart",
+    "family": "area",
+    "section": "14"
+  },
+  {
+    "id": "15/calendar-heatmap",
+    "slug": "calendar-heatmap",
+    "title": "Calendar heatmap",
+    "kind": "chart",
+    "family": "calendar",
+    "section": "15"
+  },
+  {
+    "id": "15/github-contrib",
+    "slug": "github-contrib",
+    "title": "Contribution calendar",
+    "kind": "chart",
+    "family": "calendar",
+    "section": "15"
+  },
+  {
+    "id": "15/gantt",
+    "slug": "gantt",
+    "title": "Gantt chart",
+    "kind": "chart",
+    "family": "gantt",
+    "section": "15"
+  },
+  {
+    "id": "15/timeline",
+    "slug": "timeline",
+    "title": "Timeline",
+    "kind": "chart",
+    "family": "gantt",
+    "section": "15"
+  },
+  {
+    "id": "15/swimlane",
+    "slug": "swimlane",
+    "title": "Swimlane",
+    "kind": "chart",
+    "family": "gantt",
+    "section": "15"
+  },
+  {
+    "id": "15/spiral",
+    "slug": "spiral",
+    "title": "Spiral chart",
+    "kind": "chart",
+    "family": "calendar",
+    "section": "15"
+  },
+  {
+    "id": "15/polar-clock",
+    "slug": "polar-clock",
+    "title": "Polar clock",
+    "kind": "chart",
+    "family": "calendar",
+    "section": "15"
+  },
+  {
+    "id": "16/word-cloud",
+    "slug": "word-cloud",
+    "title": "Word cloud",
+    "kind": "chart",
+    "family": "text",
+    "section": "16"
+  },
+  {
+    "id": "16/bar-of-words",
+    "slug": "bar-of-words",
+    "title": "Word bar chart",
+    "kind": "chart",
+    "family": "bar",
+    "section": "16"
+  },
+  {
+    "id": "16/phrase-net",
+    "slug": "phrase-net",
+    "title": "Phrase net",
+    "kind": "chart",
+    "family": "net",
+    "section": "16"
+  },
+  {
+    "id": "16/alluvial-text",
+    "slug": "alluvial-text",
+    "title": "Text alluvial",
+    "kind": "chart",
+    "family": "sankey",
+    "section": "16"
+  },
+  {
+    "id": "17/function",
+    "slug": "function",
+    "title": "Function plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "17"
+  },
+  {
+    "id": "17/parametric",
+    "slug": "parametric",
+    "title": "Parametric plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "17"
+  },
+  {
+    "id": "17/polar",
+    "slug": "polar",
+    "title": "Polar plot",
+    "kind": "chart",
+    "family": "radar",
+    "section": "17"
+  },
+  {
+    "id": "17/vector-field",
+    "slug": "vector-field",
+    "title": "Vector field",
+    "kind": "chart",
+    "family": "science",
+    "section": "17"
+  },
+  {
+    "id": "17/streamline",
+    "slug": "streamline",
+    "title": "Streamline plot",
+    "kind": "chart",
+    "family": "science",
+    "section": "17"
+  },
+  {
+    "id": "17/phase",
+    "slug": "phase",
+    "title": "Phase portrait",
+    "kind": "chart",
+    "family": "science",
+    "section": "17"
+  },
+  {
+    "id": "17/ternary",
+    "slug": "ternary",
+    "title": "Ternary plot",
+    "kind": "chart",
+    "family": "science",
+    "section": "17"
+  },
+  {
+    "id": "17/smith",
+    "slug": "smith",
+    "title": "Smith chart",
+    "kind": "chart",
+    "family": "science",
+    "section": "17"
+  },
+  {
+    "id": "17/bode",
+    "slug": "bode",
+    "title": "Bode plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "17"
+  },
+  {
+    "id": "17/nyquist",
+    "slug": "nyquist",
+    "title": "Nyquist plot",
+    "kind": "chart",
+    "family": "line",
+    "section": "17"
+  },
+  {
+    "id": "18/flowchart",
+    "slug": "flowchart",
+    "title": "Flowchart",
+    "kind": "chart",
+    "family": "process",
+    "section": "18"
+  },
+  {
+    "id": "18/state-machine",
+    "slug": "state-machine",
+    "title": "State machine",
+    "kind": "chart",
+    "family": "process",
+    "section": "18"
+  },
+  {
+    "id": "18/activity",
+    "slug": "activity",
+    "title": "Activity diagram",
+    "kind": "chart",
+    "family": "process",
+    "section": "18"
+  },
+  {
+    "id": "18/sequence-diagram",
+    "slug": "sequence-diagram",
+    "title": "Sequence diagram",
+    "kind": "chart",
+    "family": "process",
+    "section": "18"
+  },
+  {
+    "id": "18/event-storm",
+    "slug": "event-storm",
+    "title": "Event storm",
+    "kind": "chart",
+    "family": "process",
+    "section": "18"
+  },
+  {
+    "id": "19/axis-linear",
+    "slug": "axis-linear",
+    "title": "Linear axis",
+    "kind": "axis",
+    "family": "bar",
+    "section": "19"
+  },
+  {
+    "id": "19/axis-log",
+    "slug": "axis-log",
+    "title": "Log axis",
+    "kind": "axis",
+    "family": "bar",
+    "section": "19"
+  },
+  {
+    "id": "19/axis-band",
+    "slug": "axis-band",
+    "title": "Band axis",
+    "kind": "axis",
+    "family": "bar",
+    "section": "19"
+  },
+  {
+    "id": "19/grid-cartesian",
+    "slug": "grid-cartesian",
+    "title": "Cartesian grid",
+    "kind": "axis",
+    "family": "bar",
+    "section": "19"
+  },
+  {
+    "id": "19/legend-swatch",
+    "slug": "legend-swatch",
+    "title": "Swatch legend",
+    "kind": "axis",
+    "family": "bar",
+    "section": "19"
+  },
+  {
+    "id": "19/legend-gradient",
+    "slug": "legend-gradient",
+    "title": "Gradient legend",
+    "kind": "axis",
+    "family": "heat",
+    "section": "19"
+  },
+  {
+    "id": "19/legend-size",
+    "slug": "legend-size",
+    "title": "Size legend",
+    "kind": "axis",
+    "family": "dot",
+    "section": "19"
+  }
+]
