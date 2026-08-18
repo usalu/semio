@@ -115,7 +115,20 @@ pub fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
+//#region 🏗️Construction
+/// 🏗️ Hand-rolled `ArtifactBuilder` — the generic `semio_framework_plugin::app::SnapshotBuilder<S, M>`
+/// (ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM`, `📓️w4-sequence-report.md`'s
+/// zero-boilerplate replacement) does NOT fit here: its `ArtifactBuilder` impl requires `S: Default`,
+/// and `WiresSnapshot` deliberately has none — `content` is a composed `ArtifactChild` that needs a
+/// freshly-minted, content-addressed handle (`empty_wires_snapshot()`'s
+/// `wires_content_child_handle_and_cache`), not a blanket zero value. This is the same class of
+/// "the generic doesn't fit, keep the hand-rolled type" finding as `📓️w4-sequence-report.md`
+/// `## recipeGaps` #1 (there for `ArtifactInferrer`, here for `ArtifactBuilder`). No current caller
+/// exercises `ArtifactBuilder` for this subset (confirmed: zero references outside this module,
+/// `derive_artifact_facets!`'s deleted generated wrapper, and the deleted `io_registry`) — kept as
+/// real, correctly-typed SDK equipment matching the fan-out's established `Construction` convention,
+/// not dead API (mirrors how `SurfaceDeclaration.mutation_roster` is kept unread, per debt tracked in
+/// `📓️w1-c-report.md` openQuestion 3).
 pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
     use crate::artifacts::wires::schema::diff::WiresDiff;
@@ -166,69 +179,7 @@ pub mod derived_construction {
     }
 }
 pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::wires::WiresSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct WiresParts {
-        pub snapshot: Option<WiresSnapshot>,
-    }
-
-    pub struct WiresAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for WiresAnalyzerAnalysis {
-        type Parts = WiresParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.wires", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = WiresParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <WiresSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <WiresSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec WiresBuilderFacets {
-        construction: WiresBuilderConstruction,
-        analysis: WiresAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::WiresComposerComposition,
-    }
-    builder: WiresBuilder,
-    analyzer: WiresAnalyzer,
-    composer: WiresComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#endregion 🏗️Construction
 
 //#region 🔖️DocumentHelpers
 /// 🧬️ Pure helpers over `DslValue`-shaped documents — dissolved from the former `⚙️engine` (ticket

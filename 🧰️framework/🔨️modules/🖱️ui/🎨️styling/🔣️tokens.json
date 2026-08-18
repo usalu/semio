@@ -55,27 +55,27 @@
     "mono": "\"Share Tech Mono\", \"Noto Emoji\", \"Noto Emoji 0\", \"Noto Emoji 1\", \"Noto Emoji 2\", \"Noto Emoji 3\", \"Noto Emoji 4\", \"Noto Emoji 5\", \"Noto Emoji 6\", \"Noto Emoji 7\", \"Noto Emoji 8\", \"Noto Emoji 9\", \"Noto Emoji 10\", \"Noto Emoji 11\""
   },
   "fontFaces": [
-    { "family": "Anta", "src": "font/anta/🔤️latin.woff2" },
-    { "family": "Anta Extended", "src": "font/anta/🔤️latin-ext.woff2" },
-    { "family": "Anta Math", "src": "font/anta/🔤️math.woff2" },
-    { "family": "Anta Symbols", "src": "font/anta/🔤️symbols.woff2" },
-    { "family": "Kelly Slab", "src": "font/kelly-slab/🔤️latin.woff2" },
-    { "family": "Kelly Slab Extended", "src": "font/kelly-slab/🔤️latin-ext.woff2" },
-    { "family": "Kelly Slab Cyrillic", "src": "font/kelly-slab/🔤️cyrillic.woff2" },
-    { "family": "Share Tech Mono", "src": "font/share-tech-mono/🔤️latin.woff2" },
-    { "family": "Noto Emoji", "src": "font/noto-emoji/🔤️emoji-400.woff2" },
-    { "family": "Noto Emoji 0", "src": "font/noto-emoji/🔤️0-400.woff2" },
-    { "family": "Noto Emoji 1", "src": "font/noto-emoji/🔤️1-400.woff2" },
-    { "family": "Noto Emoji 2", "src": "font/noto-emoji/🔤️2-400.woff2" },
-    { "family": "Noto Emoji 3", "src": "font/noto-emoji/🔤️3-400.woff2" },
-    { "family": "Noto Emoji 4", "src": "font/noto-emoji/🔤️4-400.woff2" },
-    { "family": "Noto Emoji 5", "src": "font/noto-emoji/🔤️5-400.woff2" },
-    { "family": "Noto Emoji 6", "src": "font/noto-emoji/🔤️6-400.woff2" },
-    { "family": "Noto Emoji 7", "src": "font/noto-emoji/🔤️7-400.woff2" },
-    { "family": "Noto Emoji 8", "src": "font/noto-emoji/🔤️8-400.woff2" },
-    { "family": "Noto Emoji 9", "src": "font/noto-emoji/🔤️9-400.woff2" },
-    { "family": "Noto Emoji 10", "src": "font/noto-emoji/🔤️1🔤️0-400.woff2" },
-    { "family": "Noto Emoji 11", "src": "font/noto-emoji/🔤️1🔤️1-400.woff2" }
+    { "family": "Anta", "src": "🔤️fonts/🔤️anta/🔤️latin.woff2" },
+    { "family": "Anta Extended", "src": "🔤️fonts/🔤️anta/🔤️latin-ext.woff2" },
+    { "family": "Anta Math", "src": "🔤️fonts/🔤️anta/🔤️math.woff2" },
+    { "family": "Anta Symbols", "src": "🔤️fonts/🔤️anta/🔤️symbols.woff2" },
+    { "family": "Kelly Slab", "src": "🔤️fonts/🔤️kelly-slab/🔤️latin.woff2" },
+    { "family": "Kelly Slab Extended", "src": "🔤️fonts/🔤️kelly-slab/🔤️latin-ext.woff2" },
+    { "family": "Kelly Slab Cyrillic", "src": "🔤️fonts/🔤️kelly-slab/🔤️cyrillic.woff2" },
+    { "family": "Share Tech Mono", "src": "🔤️fonts/🔤️share-tech-mono/🔤️latin.woff2" },
+    { "family": "Noto Emoji", "src": "🔤️fonts/😀️noto-emoji/🔤️emoji-400.woff2" },
+    { "family": "Noto Emoji 0", "src": "🔤️fonts/😀️noto-emoji/🔤️0-400.woff2" },
+    { "family": "Noto Emoji 1", "src": "🔤️fonts/😀️noto-emoji/🔤️1-400.woff2" },
+    { "family": "Noto Emoji 2", "src": "🔤️fonts/😀️noto-emoji/🔤️2-400.woff2" },
+    { "family": "Noto Emoji 3", "src": "🔤️fonts/😀️noto-emoji/🔤️3-400.woff2" },
+    { "family": "Noto Emoji 4", "src": "🔤️fonts/😀️noto-emoji/🔤️4-400.woff2" },
+    { "family": "Noto Emoji 5", "src": "🔤️fonts/😀️noto-emoji/🔤️5-400.woff2" },
+    { "family": "Noto Emoji 6", "src": "🔤️fonts/😀️noto-emoji/🔤️6-400.woff2" },
+    { "family": "Noto Emoji 7", "src": "🔤️fonts/😀️noto-emoji/🔤️7-400.woff2" },
+    { "family": "Noto Emoji 8", "src": "🔤️fonts/😀️noto-emoji/🔤️8-400.woff2" },
+    { "family": "Noto Emoji 9", "src": "🔤️fonts/😀️noto-emoji/🔤️9-400.woff2" },
+    { "family": "Noto Emoji 10", "src": "🔤️fonts/😀️noto-emoji/🔤️10-400.woff2" },
+    { "family": "Noto Emoji 11", "src": "🔤️fonts/😀️noto-emoji/🔤️11-400.woff2" }
   ],
   "canvasFonts": {
     "mapLabelSansFallback": "sans-serif",
@@ -369,6 +369,11 @@
     "glassSaturate": 1.45,
     "veilAlphaExtraSteps": 1,
     "zStep": 10
+  },
+  "presence": {
+    "hues": [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
+    "light": { "s": 0.68, "l": 0.32 },
+    "dark": { "s": 0.72, "l": 0.62 }
   },
   "appearances": {
     "light": {

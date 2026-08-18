@@ -71,7 +71,21 @@ Ticket path (use this exact path for `ticket_reopen`/`ticket_close`):
 - **Mirroring the native codec under both `📥️import` and `📤️export`.** Not implementable (one trait impl per type).
   See the CORRECTION block in `📓️design.md` §1.
 
-## ⏱️ Agent turn discipline (learned the hard way, twice)
+## ⏱️ Agent turn discipline — PUT THIS AT THE TOP OF EVERY AGENT BRIEF
+
+**Three agents lost work to this before it was written down. It must appear in the brief itself, not only here —
+an agent launched before this file was updated never sees it, and a mid-flight `SendMessage` usually arrives too
+late.** Paste this verbatim into every future dispatch:
+
+> Do not end your turn waiting on a Monitor or a background build — your background children are killed when your
+> turn ends, so the build dies instead of completing. Block inside a single Bash call with `timeout: 600000` (the
+> 10-minute max). If it times out, re-issue the identical command; cargo caches, so it resumes rather than
+> restarts. Repeat until it returns. `Blocking waiting for file lock on build directory` is expected while sibling
+> agents run — keep re-issuing, do not treat it as failure. Stay in ONE continuous turn until your report is
+> written. If you run out of budget with edits done but verification incomplete, write the report anyway with
+> honest partial numbers, clearly labelled — never claim a test passed that you did not observe pass.
+
+## ⏱️ Agent turn discipline (learned the hard way, three times)
 
 **Never end your turn waiting on a background build.** When an agent's turn ends, its background children are
 killed and the work is lost. The stdio repair agent did exactly this — kicked off a baseline `cargo check` in the
@@ -88,3 +102,33 @@ restarting. Keep working in one continuous turn until done.
 
 Under heavy fan-out the machine carries 90+ concurrent cargo processes; `Blocking waiting for file lock` is normal
 and expected, not a failure. Be patient rather than retrying in a tight loop.
+
+## 🚦 Concurrency cap — a shared `CARGO_TARGET_DIR` SERIALIZES every agent
+
+**Do not run more than ~3 build-heavy agents at once on this ticket.**
+
+Every agent is told to use the same `CARGO_TARGET_DIR=<ticket>/🎯️target`. Cargo takes an **exclusive lock on the
+build directory**, so N concurrent agents do not build in parallel — they queue. Each agent waits behind the others
+for *every one* of its many builds, so wall-clock per agent grows with N while total throughput stays flat.
+
+**Evidence (corrected).** The honest evidence is: repeated `Blocking waiting for file lock on build directory`
+messages in agent output, and single `cargo check`/`nextest` invocations taking 30–60 minutes that normally take
+2–3, plus 11 agents dispatched yielding 2 reports. An earlier note in this file claimed "133 cargo processes" —
+**that number was wrong**: `ps aux | grep '[c]argo'` also matches the `/bin/zsh -c source …` wrapper of every shell
+call, which inflated it by ~42. The real figure at the same moment was ~67 cargo+rustc processes across a handful
+of genuinely-running builds. The conclusion stands on the lock messages and the wall-clock, not on the process
+count.
+
+The original plan noted "cargo flock serializes; `Blocking waiting for file lock` is normal". That is true and
+harmless at 2–3 agents. At 11 it is pathological, and it was a coordinator error to read "disjoint file boundaries"
+as "safe to run 11 at once" — **the build directory is a shared resource the ownership table never modelled**, the
+same blind spot as workspace membership.
+
+Options, in order of preference:
+1. **Cap concurrency at 3.** Keeps cache reuse (the reason to share a target dir at all) with tolerable waiting.
+2. Per-agent `CARGO_TARGET_DIR` — genuinely parallel, but each agent rebuilds the whole dependency tree
+   (~10 min and tens of GB each). Only worth it for a long-running agent on a big crate, e.g. the stdio repair.
+3. Serialize deliberately: one agent at a time, which is slower in agent-count terms but has the shortest
+   wall-clock per plugin.
+
+Do NOT kill running agents to enforce this — they lose their work. Let the queue drain, then dispatch at the cap.

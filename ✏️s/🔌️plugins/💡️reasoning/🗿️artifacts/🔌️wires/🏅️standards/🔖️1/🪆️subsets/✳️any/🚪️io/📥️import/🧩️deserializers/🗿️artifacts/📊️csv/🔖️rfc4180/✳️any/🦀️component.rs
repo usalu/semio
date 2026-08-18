@@ -1,19 +1,33 @@
-//! wires <- csv
-//! 🐛️ Same baseline-broken `headers`/`rows` mismatch as the export leaf (see its module doc) — stdio's
-//! `CsvSnapshot` is `has_header`/`records` now, and `WiresSnapshot`'s derived JSON never had a
-//! "headers"/"rows" shape to begin with. Left as an honest no-op (fresh empty document) pending a real
-//! wires<->csv design.
-use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
+//! 🚪️ wires <- csv — foreign `Deserializer<WiresSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). A flat CSV grid has no
+//! node/edge graph concept, so this hop stays the pre-migration honest no-op (a fresh empty
+//! document) — `IoFidelity::Lossy`.
+//!
+//! 🐛️ Fixes a pre-migration bug (same class `📓️w4-sequence-report.md` fixed for `sequence`'s own
+//! csv leaf): the old `deserialize_bytes` decoded the incoming bytes as a `WiresSnapshot` pack
+//! directly instead of as a `CsvSnapshot` pack first. This impl decodes the foreign `CsvSnapshot`
+//! first, as the `FROM: CSV_DIALECT` coordinate requires, proving the payload is real CSV before
+//! discarding it.
+
+use crate::artifacts::wires::WiresSnapshot;
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
-pub fn register() {}
+pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &CsvSnapshot) -> Result<WiresSnapshot, store::TextError> {
-    let _ = (from, STDIO_CSV_DOCUMENT_SCHEMA);
-    Ok(crate::artifacts::wires::empty_wires_snapshot())
-}
+pub struct CsvIntoWires;
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<WiresSnapshot, store::TextError> {
-    <WiresSnapshot as store::ArtifactPack>::decode_pack(bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+impl Deserializer<WiresSnapshot> for CsvIntoWires {
+    const FROM: Dialect = CSV_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn deserialize(payload: &IoPayload) -> IoResult<WiresSnapshot> {
+        let _ = STDIO_CSV_DOCUMENT_SCHEMA;
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(IoError { message: "CsvIntoWires: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
+        };
+        let _csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("CsvIntoWires: csv decode failed: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(crate::artifacts::wires::empty_wires_snapshot()))
+    }
 }

@@ -190,6 +190,7 @@ pub mod derived_composition {
     mod tests {
         use super::*;
         use crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle};
+        use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 
         #[test]
         fn clean_document_validates_with_no_diagnostics() {

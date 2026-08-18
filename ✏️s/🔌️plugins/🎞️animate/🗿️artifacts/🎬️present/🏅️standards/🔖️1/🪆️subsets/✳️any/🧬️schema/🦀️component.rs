@@ -97,120 +97,16 @@ pub fn present_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::present::schema::diff::PresentDiff;
-    use crate::artifacts::present::schema::mutations::PresentMutation;
-    use crate::artifacts::present::schema::snapshot::PresentSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct PresentBuilderConstruction {
-        snapshot: PresentSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for PresentBuilderConstruction {
-        type Snapshot = PresentSnapshot;
-        type Mutation = PresentMutation;
-        type Diff = PresentDiff;
-        fn empty() -> Self { Self { snapshot: PresentSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PresentSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PresentSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::present::PresentSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct PresentParts {
-        pub snapshot: Option<PresentSnapshot>,
-    }
-
-    pub struct PresentAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for PresentAnalyzerAnalysis {
-        type Parts = PresentParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.present", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = PresentParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <PresentSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <PresentSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec PresentBuilderFacets {
-        construction: derived_construction::PresentBuilderConstruction,
-        analysis: derived_analysis::PresentAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::PresentComposerComposition,
-    }
-    builder: PresentBuilder,
-    analyzer: PresentAnalyzer,
-    composer: PresentComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#region 🏗️Construction
+/// 🏗️ Replaces the deleted `derive_artifact_facets!`-generated `PresentBuilder`/`PresentAnalyzer`/
+/// `PresentComposer` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2) — the
+/// generic construction/mutation-application path every trivial subset (no custom analysis/
+/// composition logic beyond ordinary `Mutation`/`MutationDiff` algebra) now uses. Never referenced
+/// by `ArtifactInferrer` (orphan-rule violation, see `🚪️io/💡️inferences/🦀️component.rs`'s own
+/// `PresentInferrer` marker) — kept only as the documented replacement anchor, mirroring
+/// `🎬️sequence`'s identical shape.
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::present::PresentSnapshot, crate::artifacts::present::PresentMutation>;
+//#endregion 🏗️Construction
 
 //#region 🔖️Error
 /// 🎞️ Errors from present deck envelope materialization (ticket

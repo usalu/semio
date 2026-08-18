@@ -8,7 +8,7 @@ pub fn register() {}
 pub fn serialize(from: &LayoutSnapshot) -> Result<SvgSnapshot, store::PackError> {
     let text = <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from);
     let doc = parse_svg_xml(&text).map_err(|e| store::PackError::Schema(e))?;
-    Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc, lexical: None })
+    Ok(SvgSnapshot { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
 }
 
 pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {

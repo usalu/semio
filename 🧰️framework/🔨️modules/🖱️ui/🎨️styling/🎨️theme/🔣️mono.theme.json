@@ -335,6 +335,11 @@
       "windowMeasureRowMinUiSpacing": 5.625
     }
   },
+  "presence": {
+    "hues": [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
+    "light": { "s": 0.68, "l": 0.32 },
+    "dark": { "s": 0.72, "l": 0.62 }
+  },
   "appearances": {
     "light": {
       "board": {

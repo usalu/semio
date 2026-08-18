@@ -530,3 +530,29 @@ Repointed both member entries (root `Cargo.toml` is registrar-owned, so this was
 **M2 gets the credit and behaved correctly:** it hit the failure, diagnosed it precisely to the moved path, refused to fabricate acceptance results while the workspace was unloadable, and reported rather than guessing. It did set a background Monitor to poll for the fix — which cannot survive its turn boundary here — so I told it to stop polling and run acceptance in the foreground now.
 
 This is the third distinct class of peer half-landed change this ticket has absorbed: a moved generated file (ui-styling), a renamed type set (presence), and now a moved crate. All three shared the same signature — the artifact moved, its registration did not.
+
+### W3 declaration sweep — 32 of 33 plugins now declare activation
+
+Measured directly across the fleet (`grep -c '\.activation('` per plugin root):
+
+**32 of 33 plugins carry activation declarations.** 🗄️stdio 37, 📕️norm 16, 🧩️puzzle 4, 🧱️block 4, 🗒️note/🌀️procedural/🏗️fem/🔱️trinity/🪐️space 3, the rest 1–2. Only `🎪️demonstrator` is untouched, which is correct — it was always sequenced last because it bundles panes from six other plugins.
+
+That is the substantive half of W3: every plugin now tells the registry *when it needs to exist*, which is the precondition for "installed packages consume no runtime resources". The remaining half is descriptor emission.
+
+**Descriptors committed: 1 of 33** (`🗒️note`). The blocker is uniform and already diagnosed: `try_library()` fails with `no declared <kind> capability owns the runtime claims` (SDK `🔌️plugin/🦀️component.rs:2568`) whenever a definition's declared capability claim-set does not exactly equal its runtime claims. M0 measured ~35 of stdio's 36 formats failing it. Every packet was instructed — and each complied — to emit **no** descriptor rather than commit placeholder `assembly-failed` data.
+
+That rule is pre-existing and orthogonal to this ticket's ABI work: `🗒️note` proves the emission path is sound where a plugin's declarations are internally consistent. Bringing the other 32 into consistency is a per-plugin data-correctness task, not a runtime one, and it is the single largest remaining item in W3.
+
+### ⚠️ M5 finding: the jobs / timers / async-invoke surface is NOT wired in the guest SDK
+
+The most consequential report of this wave, and it corrects both the plan and my own brief.
+
+1. **It overturned the audit's WFC attribution.** I told M5 (following `📓️luna-imports-audit.md`) that 🧩️puzzle carried wave-function-collapse precompute. M5 checked and found the real 10 930-LOC WFC solver lives in `🌀️procedural/🗿️artifacts/🧩️assembly` and is currently **unmounted/dormant** — puzzle does not contain it. It verified against the code instead of trusting the audit or the brief, which is exactly right; the audit was a `rg` census and this is what censuses miss.
+
+2. **`Effect::SpawnJob`, timer-driven ticks, and async `host::extensions::invoke` are all blocked by missing shared-SDK plumbing**, with file:line evidence in `📓️terra-M5-report.md`. The WIT declares `start-job`/`step-job`/`cancel-job` and A2 built the executor and request registry, but the guest-side path from a plugin's code to a spawned job is not connected. No W3 packet can move long-running work off the turn loop until that lands.
+
+**Consequence, stated plainly:** the "long computations become resumable jobs" half of W3 is **not achievable by the migration packets** and was mis-scoped in `📓️design-abi.md` §6 and in every M-packet brief I wrote. The declaration half (activation events, execution modes, capability requests) *is* landing — 32 of 33 plugins now carry it. The jobs half needs a new SDK packet first.
+
+This is a gap in our own W1/W2 work, not a peer's: A2 delivered the WIT and the executor, A2b made the bridge compile, but nothing exercised `spawn_job` end to end, and no acceptance gate covered it. The lesson matches the WIT reserved-keyword episode — a contract that compiles is not a contract that runs, and nothing in W1/W2 ever ran a job.
+
+**Follow-up packet required before the jobs work can proceed:** wire `Effect::SpawnJob` → host `start_job`/`step_job` → `Event::JobCompleted` end to end, with a test that actually spawns, steps and completes a job — the same "prove it runs, not just compiles" bar the scale fixture sets.

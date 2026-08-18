@@ -61,6 +61,12 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
     encode_option, hex_decode, hex_encode, SemioMeshDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{
+    SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology,
+};
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `✳️brep`/`✳️flow`'s own facets document).

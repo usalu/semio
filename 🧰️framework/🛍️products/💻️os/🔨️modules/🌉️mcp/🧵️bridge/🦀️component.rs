@@ -13,9 +13,17 @@
 //! `AppCommand.command`, each `AppFrames.frames[i]`) are carried as length-prefixed byte blobs; what
 //! goes inside them (the real packed `ShellState`) is `💻️os/🔨️modules/🖥️shell`'s concern (P9), not
 //! this codec's.
+//!
+//! P1c (`📓️sol-P1c-packet.md`) makes the bridge LIVE: `🔖️BridgeHandle`/`🔖️BridgeToken` below plus the
+//! real `mod server` (`🔖️BridgeServer`) that mounts `/bridge` alongside `/mcp` on the same axum app
+//! `🚚️transport/🦀️component.rs`'s `HttpTransport::router` builds.
 
 use crate::errors::{GatewayError, GatewayErrorCode};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 
 //#region 🔖️BridgeVersion
 pub const BRIDGE_VERSION: u16 = 1;
@@ -442,34 +450,266 @@ impl GatewayToShell {
 }
 //#endregion 🔖️GatewayToShell
 
+//#region 🔖️BridgeHandle
+/// 🆔️ One live `/bridge` connection's id — `Copy`/`Eq`/`Hash` so it keys a map and passes around
+/// freely; `Display` is the same string the connection's own `Welcome.connection` field carries.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ShellConnectionId(u64);
+
+impl std::fmt::Display for ShellConnectionId {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "conn_{}", self.0)
+    }
+}
+
+struct ConnectionEntry {
+    outbox: tokio::sync::mpsc::UnboundedSender<GatewayToShell>,
+    last_shell_state: Option<ShellToGateway>,
+    last_instances: Option<Vec<BridgeInstanceRef>>,
+    last_command_result: Option<(u64, bool, Option<String>)>,
+    last_approval: Option<(String, ApprovalDecision, Option<String>)>,
+}
+
+#[derive(Default)]
+struct BridgeInner {
+    next_id: AtomicU64,
+    connections: Mutex<HashMap<ShellConnectionId, ConnectionEntry>>,
+}
+
+/// 🖇️ The seam a later packet reaches live `/bridge` connections through WITHOUT this facet
+/// depending on theirs — P6's policy engine routes a parked approval to a connected shell via
+/// [`send_to`](Self::send_to)/[`broadcast`](Self::broadcast); a future `ui.*` tool pushes a
+/// `ShellCommand` the same way; `semio://ui/shell`/`context_resolve` read
+/// [`last_shell_state`](Self::last_shell_state). None of that wiring happens in THIS file
+/// (`📓️sol-P1c-packet.md` §3: "do not wire it into P6's files … just publish the API") — obtain a
+/// `BridgeHandle` from [`server::bridge_router`] or [`crate::HttpTransport::router`]'s returned tuple.
+#[derive(Clone, Default)]
+pub struct BridgeHandle {
+    inner: Arc<BridgeInner>,
+}
+
+impl BridgeHandle {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn register(&self) -> (ShellConnectionId, tokio::sync::mpsc::UnboundedReceiver<GatewayToShell>) {
+        let id = ShellConnectionId(self.inner.next_id.fetch_add(1, Ordering::Relaxed));
+        let (outbox, inbox) = tokio::sync::mpsc::unbounded_channel();
+        self.inner.connections.lock().expect("bridge connections lock poisoned").insert(id, ConnectionEntry { outbox, last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None });
+        (id, inbox)
+    }
+
+    fn unregister(&self, id: ShellConnectionId) {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").remove(&id);
+    }
+
+    /// 📝️ Records the effect of one received [`ShellToGateway`] frame against its connection —
+    /// `Hello`/`Ping`/`Bye` never reach here (the read loop handles all three inline).
+    fn record(&self, id: ShellConnectionId, frame: ShellToGateway) {
+        let mut connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
+        let Some(entry) = connections.get_mut(&id) else { return };
+        match frame {
+            ShellToGateway::ShellState { .. } | ShellToGateway::ShellStatePatch { .. } => entry.last_shell_state = Some(frame),
+            ShellToGateway::Instances { entries } => entry.last_instances = Some(entries),
+            ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => entry.last_command_result = Some((in_reply_to, ok, fault)),
+            ShellToGateway::Approval { approval_id, decision, note } => entry.last_approval = Some((approval_id, decision, note)),
+            ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AppFrames { .. } => {}
+        }
+    }
+
+    /// 📤️ Pushes one frame to exactly one live connection — `false` if that connection no longer
+    /// exists or its outbox is closed (the connection's own task will unregister it shortly after).
+    pub fn send_to(&self, id: ShellConnectionId, frame: GatewayToShell) -> bool {
+        let connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
+        match connections.get(&id) {
+            Some(entry) => entry.outbox.send(frame).is_ok(),
+            None => false,
+        }
+    }
+
+    /// 📢️ Pushes one frame to EVERY live connection — returns how many it actually reached.
+    pub fn broadcast(&self, frame: GatewayToShell) -> usize {
+        let connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
+        connections.values().filter(|entry| entry.outbox.send(frame.clone()).is_ok()).count()
+    }
+
+    pub fn connections(&self) -> Vec<ShellConnectionId> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").keys().copied().collect()
+    }
+
+    /// 🧭️ The last `ShellState`/`ShellStatePatch` frame received on this connection. Applying a patch
+    /// onto a base state is `💻️os/🔨️modules/🖥️shell`'s reducer's job, not this facet's — a caller that
+    /// needs the merged/canonical state feeds whatever this returns through that reducer.
+    pub fn last_shell_state(&self, id: ShellConnectionId) -> Option<ShellToGateway> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_shell_state.clone())
+    }
+
+    pub fn last_instances(&self, id: ShellConnectionId) -> Option<Vec<BridgeInstanceRef>> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_instances.clone())
+    }
+
+    pub fn last_command_result(&self, id: ShellConnectionId) -> Option<(u64, bool, Option<String>)> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_command_result.clone())
+    }
+
+    pub fn last_approval(&self, id: ShellConnectionId) -> Option<(String, ApprovalDecision, Option<String>)> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_approval.clone())
+    }
+}
+//#endregion 🔖️BridgeHandle
+
+//#region 🔖️BridgeToken
+/// 🎲️ The `/bridge` connection secret, freshly minted per process start — a DIFFERENT secret from the
+/// `/mcp` bearer token (`📋️master.md` §2.1: "token minted at start, 0600 file"). Same
+/// dependency-free blake3-mixed scheme as `🎫️handles::mint_id` (no `rand`/`uuid` added for this).
+pub fn mint_bridge_token() -> String {
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+    let counter = COUNTER.fetch_add(1, Ordering::Relaxed);
+    let now_ns = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_nanos()).unwrap_or(0);
+    let entropy_marker = Box::new(counter);
+    let entropy = format!("{now_ns}:{counter}:{:p}:{}", entropy_marker.as_ref(), std::process::id());
+    blake3::hash(entropy.as_bytes()).to_hex().to_string()
+}
+
+fn home_dir() -> Option<PathBuf> {
+    for variable in ["HOME", "USERPROFILE"] {
+        if let Ok(value) = std::env::var(variable) {
+            if !value.is_empty() {
+                return Some(PathBuf::from(value));
+            }
+        }
+    }
+    None
+}
+
+/// 🏠️ `~/.semio/agent/bridge-token` — overridable by `semio-os-mcp http`'s `--bridge-token-file`.
+pub fn default_bridge_token_path() -> PathBuf {
+    home_dir().unwrap_or_else(|| PathBuf::from(".")).join(".semio").join("agent").join("bridge-token")
+}
+
+/// 🔐️ Creates the parent directory if missing, writes `token` verbatim, and (unix only) chmods the
+/// file `0600` — best-effort on non-unix targets (no POSIX mode bits there; the file still inherits
+/// the parent directory's normal ACLs), documented rather than silently claimed as `0600` everywhere.
+pub fn write_bridge_token_file(path: &Path, token: &str) -> Result<(), GatewayError> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot create bridge token directory `{}`: {error}", parent.display())))?;
+    }
+    std::fs::write(path, token).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot write bridge token file `{}`: {error}", path.display())))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot chmod bridge token file `{}`: {error}", path.display())))?;
+    }
+    Ok(())
+}
+//#endregion 🔖️BridgeToken
+
 //#region 🔖️BridgeServer
-/// 🌐️ WebSocket skeleton over axum's `ws` — echoes `Hello` → `Welcome` and nothing else yet.
-/// Wiring this into the real gateway process (dispatch of every other frame kind, `ShellState`
-/// broadcast, approval routing) is explicitly out of this packet's scope (`📌️sol-P1b-packet.md` §2.4:
-/// "Do not wire the WebSocket server yet if that forces you into the shell's territory").
+/// 🌐️ The real `/bridge` websocket endpoint (P1c) — mounted onto the SAME axum app `/mcp` lives on
+/// (`🚚️transport/🦀️component.rs`'s `HttpTransport::router` calls [`bridge_router`] and `.merge()`s the
+/// result). Auth: `Origin` must be loopback/`null`/allowlisted (`403` otherwise — the identical policy
+/// `/mcp` uses, via `crate::transport::origin_allowed`), and `?token=` must match the minted bridge
+/// token (`401` otherwise, constant-time compared via `crate::transport::constant_time_eq`) — BOTH
+/// checked before the websocket upgrade completes, so a rejected client gets a plain HTTP error
+/// status, never a silently-closed socket.
 pub mod server {
-    use super::{BridgeFlags, GatewayToShell, ShellToGateway, BRIDGE_VERSION};
+    use super::{BridgeHandle, GatewayToShell, ShellToGateway, BRIDGE_VERSION};
     use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-    use axum::response::Response;
+    use axum::extract::{Query, State};
+    use axum::http::{HeaderMap, StatusCode};
+    use axum::response::{IntoResponse, Response};
     use axum::routing::get;
     use axum::Router;
+    use futures::{SinkExt, StreamExt};
+    use serde::Deserialize;
+    use std::sync::Arc;
 
-    pub fn bridge_router() -> Router {
-        Router::new().route("/bridge", get(upgrade))
+    #[derive(Deserialize)]
+    struct BridgeQuery {
+        token: Option<String>,
     }
 
-    async fn upgrade(ws: WebSocketUpgrade) -> Response {
-        ws.on_upgrade(handle_socket)
+    #[derive(Clone)]
+    struct BridgeServerState {
+        token: Arc<str>,
+        allowed_origins: Arc<Vec<String>>,
+        handle: BridgeHandle,
     }
 
-    /// 🤝️ Reads exactly one frame; if it's a `Hello`, replies `Welcome`; anything else (or a second
-    /// frame) is left to a later packet's real dispatch loop.
-    async fn handle_socket(mut socket: WebSocket) {
-        let Some(Ok(Message::Binary(bytes))) = socket.recv().await else { return };
-        let Ok(ShellToGateway::Hello { shell_session_id, .. }) = ShellToGateway::decode(&bytes) else { return };
-        let _ = BridgeFlags::NONE; // keeps the import meaningful if the Hello arm above is ever trimmed
-        let welcome = GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: format!("conn_{shell_session_id}"), principal: "agent:local".to_string() };
-        let _ = socket.send(Message::Binary(welcome.encode().into())).await;
+    /// 🏗️ Builds the `/bridge` route + its [`BridgeHandle`] — never bound to a socket by itself; a
+    /// caller `.merge()`s the returned [`Router`] into the app it actually serves.
+    pub fn bridge_router(token: impl Into<String>, allowed_origins: Vec<String>) -> (Router, BridgeHandle) {
+        let handle = BridgeHandle::new();
+        let state = BridgeServerState { token: Arc::from(token.into().as_str()), allowed_origins: Arc::new(allowed_origins), handle: handle.clone() };
+        let router = Router::new().route("/bridge", get(upgrade)).with_state(state);
+        (router, handle)
+    }
+
+    async fn upgrade(ws: WebSocketUpgrade, Query(query): Query<BridgeQuery>, headers: HeaderMap, State(state): State<BridgeServerState>) -> Response {
+        let origin = headers.get(axum::http::header::ORIGIN).and_then(|value| value.to_str().ok());
+        if !crate::transport::origin_allowed(origin, &state.allowed_origins) {
+            return (StatusCode::FORBIDDEN, "origin not allowed").into_response();
+        }
+        let provided = query.token.unwrap_or_default();
+        if !crate::transport::constant_time_eq(provided.as_bytes(), state.token.as_bytes()) {
+            return (StatusCode::UNAUTHORIZED, "invalid bridge token").into_response();
+        }
+        let handle = state.handle.clone();
+        ws.on_upgrade(move |socket| handle_socket(socket, handle))
+    }
+
+    /// 🔁️ One connection's full lifecycle: the OPENING frame must decode as `Hello` (anything else,
+    /// or a closed/errored socket, ends the connection immediately without ever registering it) →
+    /// reply `Welcome` → loop reading client frames (`Ping`→`Pong` inline, `Bye`/close ends the loop,
+    /// `ShellState`/`ShellStatePatch`/`Instances`/`ShellCommandResult`/`Approval` recorded via
+    /// [`BridgeHandle::record`]; a frame that fails to decode is skipped rather than killing the
+    /// connection) while concurrently draining this connection's OWN outbox
+    /// ([`BridgeHandle::send_to`]/[`BridgeHandle::broadcast`] push onto it) to the socket.
+    async fn handle_socket(socket: WebSocket, handle: BridgeHandle) {
+        let (mut sender, mut receiver) = socket.split();
+        let Some(Ok(Message::Binary(bytes))) = receiver.next().await else { return };
+        let Ok(ShellToGateway::Hello { .. }) = ShellToGateway::decode(&bytes) else { return };
+
+        let (id, mut outbox) = handle.register();
+        let welcome = GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: id.to_string(), principal: "agent:local".to_string() };
+        if sender.send(Message::Binary(welcome.encode().into())).await.is_err() {
+            handle.unregister(id);
+            return;
+        }
+
+        loop {
+            tokio::select! {
+                incoming = receiver.next() => {
+                    match incoming {
+                        Some(Ok(Message::Binary(bytes))) => match ShellToGateway::decode(&bytes) {
+                            Ok(ShellToGateway::Ping) => {
+                                if sender.send(Message::Binary(GatewayToShell::Pong.encode().into())).await.is_err() {
+                                    break;
+                                }
+                            }
+                            Ok(ShellToGateway::Bye) => break,
+                            Ok(frame) => handle.record(id, frame),
+                            Err(_malformed) => {}
+                        },
+                        Some(Ok(Message::Close(_))) | None => break,
+                        Some(Ok(_)) => {}
+                        Some(Err(_)) => break,
+                    }
+                }
+                pushed = outbox.recv() => {
+                    match pushed {
+                        Some(frame) => {
+                            if sender.send(Message::Binary(frame.encode().into())).await.is_err() {
+                                break;
+                            }
+                        }
+                        None => break,
+                    }
+                }
+            }
+        }
+        handle.unregister(id);
     }
 }
 //#endregion 🔖️BridgeServer
@@ -606,27 +846,137 @@ mod quick {
 mod long {
     use super::server::bridge_router;
     use super::*;
+    use futures::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
-    #[tokio::test]
-    async fn bridge_websocket_replies_welcome_to_hello() {
+    async fn boot(token: &str, allowed_origins: Vec<String>) -> (std::net::SocketAddr, BridgeHandle, tokio::task::JoinHandle<()>) {
+        let (router, handle) = bridge_router(token.to_string(), allowed_origins);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         let server_task = tokio::spawn(async move {
-            axum::serve(listener, bridge_router()).await.unwrap();
+            axum::serve(listener, router).await.unwrap();
         });
+        (addr, handle, server_task)
+    }
 
-        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge")).await.expect("client connects");
-        let hello = ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::WgpuNative, shell_session_id: "shell-42".into(), principal_actor: "agent:local".into(), flags: BridgeFlags::NONE };
-        use futures::{SinkExt, StreamExt};
-        socket.send(TungsteniteMessage::Binary(hello.encode().into())).await.unwrap();
+    fn hello(session_id: &str) -> ShellToGateway {
+        ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::WgpuNative, shell_session_id: session_id.into(), principal_actor: "agent:local".into(), flags: BridgeFlags::NONE }
+    }
 
-        let response = socket.next().await.expect("a response frame").expect("a valid ws message");
-        let TungsteniteMessage::Binary(bytes) = response else { panic!("expected a binary frame") };
-        let decoded = GatewayToShell::decode(&bytes).unwrap();
-        assert_eq!(decoded, GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: "conn_shell-42".into(), principal: "agent:local".into() });
+    async fn recv_frame(socket: &mut (impl StreamExt<Item = Result<TungsteniteMessage, tokio_tungstenite::tungstenite::Error>> + Unpin)) -> GatewayToShell {
+        let message = socket.next().await.expect("a response frame").expect("a valid ws message");
+        let TungsteniteMessage::Binary(bytes) = message else { panic!("expected a binary frame, got {message:?}") };
+        GatewayToShell::decode(&bytes).unwrap()
+    }
 
+    #[tokio::test]
+    async fn bridge_websocket_replies_welcome_to_hello() {
+        let (addr, _handle, server_task) = boot("secret", vec![]).await;
+        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        socket.send(TungsteniteMessage::Binary(hello("shell-42").encode().into())).await.unwrap();
+        let welcome = recv_frame(&mut socket).await;
+        assert!(matches!(welcome, GatewayToShell::Welcome { bridge_version, ref principal, .. } if bridge_version == BRIDGE_VERSION && principal == "agent:local"));
         server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn wrong_token_is_rejected_before_the_websocket_upgrade() {
+        let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
+        let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=wrong-token")).await;
+        assert!(result.is_err(), "a mismatched token must never complete the websocket handshake");
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn missing_token_is_rejected() {
+        let (addr, _handle, server_task) = boot("correct-token", vec![]).await;
+        let result = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge")).await;
+        assert!(result.is_err());
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn an_evil_origin_is_rejected_before_the_websocket_upgrade() {
+        let (addr, _handle, server_task) = boot("secret", vec![]).await;
+        let mut request = format!("ws://{addr}/bridge?token=secret").into_client_request().unwrap();
+        request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
+        let result = tokio_tungstenite::connect_async(request).await;
+        assert!(result.is_err(), "a non-loopback Origin must never complete the websocket handshake");
+        server_task.abort();
+    }
+
+    /// 🔁️ The full scenario `📓️sol-P1c-packet.md`'s acceptance list names in one place: `Hello`→
+    /// `Welcome`, a `ShellState` publish becomes readable via [`BridgeHandle::last_shell_state`], a
+    /// server-pushed `ShellCommand` reaches the client, and the client's `ShellCommandResult` becomes
+    /// readable via [`BridgeHandle::last_command_result`].
+    #[tokio::test]
+    async fn full_bridge_lifecycle_hello_state_push_and_command_result() {
+        let (addr, handle, server_task) = boot("secret", vec![]).await;
+        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=secret")).await.expect("client connects");
+        socket.send(TungsteniteMessage::Binary(hello("shell-1").encode().into())).await.unwrap();
+        let _welcome = recv_frame(&mut socket).await;
+
+        let id = handle.connections().first().copied().expect("exactly one connection registered");
+        assert!(handle.last_shell_state(id).is_none());
+
+        let state_frame = ShellToGateway::ShellState { revision: 5, state: vec![9, 9, 9] };
+        socket.send(TungsteniteMessage::Binary(state_frame.clone().encode().into())).await.unwrap();
+        // Ping/Pong round trip as a synchronization barrier — the connection task processes frames
+        // strictly in arrival order, so by the time Pong comes back the ShellState above is recorded.
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+        assert_eq!(handle.last_shell_state(id), Some(state_frame));
+
+        let pushed = GatewayToShell::ShellCommand { seq: 7, command: vec![1, 2, 3] };
+        assert!(handle.send_to(id, pushed.clone()), "send_to must reach the live connection");
+        assert_eq!(recv_frame(&mut socket).await, pushed);
+
+        let result_frame = ShellToGateway::ShellCommandResult { in_reply_to: 7, ok: true, fault: None };
+        socket.send(TungsteniteMessage::Binary(result_frame.encode().into())).await.unwrap();
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+        assert_eq!(handle.last_command_result(id), Some((7, true, None)));
+
+        assert_eq!(handle.broadcast(GatewayToShell::Pong), 1, "broadcast must reach exactly the one live connection");
+        assert_eq!(recv_frame(&mut socket).await, GatewayToShell::Pong);
+
+        drop(socket);
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn send_to_an_unknown_connection_returns_false() {
+        let handle = BridgeHandle::new();
+        assert!(!handle.send_to(ShellConnectionId(999), GatewayToShell::Pong));
+    }
+
+    #[test]
+    fn mint_bridge_token_produces_distinct_high_entropy_tokens() {
+        let a = mint_bridge_token();
+        let b = mint_bridge_token();
+        assert_ne!(a, b);
+        assert_eq!(a.len(), 64, "blake3 hex digest is 64 chars");
+    }
+
+    #[test]
+    fn write_bridge_token_file_creates_parents_and_is_readable_back() {
+        let dir = std::env::temp_dir().join(format!("semio-mcp-bridge-token-test-{}-{}", std::process::id(), blake3::hash(b"bridge-token-test").to_hex()));
+        let path = dir.join("bridge-token");
+        write_bridge_token_file(&path, "the-token").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "the-token");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+            assert_eq!(mode, 0o600);
+        }
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn default_bridge_token_path_ends_with_the_frozen_suffix() {
+        assert!(default_bridge_token_path().ends_with(Path::new(".semio").join("agent").join("bridge-token")));
     }
 }
 //#endregion 🧪️Tests

@@ -55,7 +55,14 @@ impl protocol::InferenceSpec<WriterSnapshot> for WriterInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::writer::standards::v1::subsets::any::schema::WriterBuilder {
+/// 🪧️ Zero-sized marker anchor for `ArtifactInferrer::infer` (takes `&Self::Snapshot`, never
+/// `&self` — a pure type-level anchor, no live callers by value). NOT `semio_framework_plugin::
+/// app::SnapshotBuilder<WriterSnapshot, WriterMutation>`: that is a foreign, non-`#[fundamental]`
+/// generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>` is an orphan-rule
+/// violation (E0117) regardless of the type parameters being local — see `📓️w4-sequence-report.md`
+/// `## recipeGaps` #1, the first agent to hit and document this exact trap.
+pub struct WriterInferrer;
+impl ArtifactInferrer for WriterInferrer {
     type Snapshot = WriterSnapshot;
     type Inference = WriterInference;
 }

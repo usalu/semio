@@ -301,6 +301,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::editor::wires::testkit::{metabolism_app, new_app, render};
+    use semio_framework_plugin::EditorApp;
 
     //#region 🔖️CommandSurface
     /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every

@@ -54,7 +54,15 @@ impl protocol::InferenceSpec<PresentSnapshot> for PresentInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::present::standards::v1::subsets::any::schema::PresentBuilderFacets {
+/// 🎯️ Local zero-sized marker (not `schema::Construction`/`SnapshotBuilder<S, M>` — that is a
+/// foreign generic struct, so `impl ArtifactInferrer for SnapshotBuilder<PresentSnapshot,
+/// PresentMutation>` is an orphan-rule violation, E0117; confirmed by `🎬️sequence`'s identical
+/// pass, ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM `📓️w4-sequence-report.md`
+/// `## recipeGaps` #1). `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so this
+/// type is a pure type-level anchor.
+pub struct PresentInferrer;
+
+impl ArtifactInferrer for PresentInferrer {
     type Snapshot = PresentSnapshot;
     type Inference = PresentInference;
 }

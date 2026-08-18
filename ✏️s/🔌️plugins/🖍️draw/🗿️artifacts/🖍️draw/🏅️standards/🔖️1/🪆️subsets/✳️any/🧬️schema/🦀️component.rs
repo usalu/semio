@@ -2,7 +2,7 @@
 
 use crate::artifacts::draw::{
     default_draw_trace_params, default_draw_transform, ArtifactDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody,
-    DrawLayerBase, DrawLayerNode, DrawLine, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment,
+    DrawLayerBase, DrawLayerNode, DrawLine, DrawMutation, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody, DrawSnapshot, DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment,
     StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};

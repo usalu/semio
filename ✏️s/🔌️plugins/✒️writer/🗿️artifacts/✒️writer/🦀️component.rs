@@ -266,12 +266,13 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.writer.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Writer")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Writer")?)?)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::writer::schema::writer_artifact_schema_descriptor())
-        .inferences([crate::artifacts::writer::schema::inferences::writer_artifact_inference_descriptor()])
-        .composers(crate::artifacts::writer::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::writer::WriterPlayApp>>()
-        .try_build()
+/// 🗿️ Declaration-tree root (design.md §1/§2) — ONE standard (`1`), atomic cutover: the old
+/// `.artifact(declaration())` + `.editor::<>()`/`.viewer::<>()` channel is deleted in the SAME pass
+/// (plugin root `🦀️component.rs`), never coexisting with this. `kind` uses `WRITER_DIALECT`'s own
+/// `artifact_kind` ("s.writer.writer") — the documented canonical coordinate, not guessed.
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse(WRITER_DIALECT.artifact_kind).expect("canonical writer kind"), localization: &[], standards: vec![crate::artifacts::writer::standards::v1::standard()] }
 }
 //#endregion 🔖️Declaration

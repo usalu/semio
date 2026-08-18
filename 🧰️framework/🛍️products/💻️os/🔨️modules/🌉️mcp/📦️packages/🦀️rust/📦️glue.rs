@@ -1,6 +1,6 @@
 //! 🌉️ `semio-framework-os-mcp` glue — mounts every `🌉️mcp` facet (`⚠️errors`/`🧬️schema`/`🧭️protocol`/
 //! `🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge`/`🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`/
-//! `🧫️fixtures`/`🎬️actions`/`🛡️policy`/`🏠️workspace`) plus the module root, exactly as `🏃️run`/`🖥️shell`'s
+//! `🧫️fixtures`/`🔀️dispatch`/`🛡️policy`/`🏠️workspace`) plus the module root, exactly as `🏃️run`/`🖥️shell`'s
 //! own glue files mount theirs.
 
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: `store`
@@ -49,7 +49,7 @@ pub mod conformance;
 #[path = "../../🧫️fixtures/🦀️component.rs"]
 pub mod fixtures;
 
-#[path = "../../🎬️actions/🦀️component.rs"]
+#[path = "../../🔀️dispatch/🦀️component.rs"]
 pub mod actions;
 
 #[path = "../../🛡️policy/🦀️component.rs"]

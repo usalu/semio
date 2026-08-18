@@ -52,6 +52,11 @@ blake3 = "1.8.2"
 # repo's other axum+tokio product crate.
 axum = { version = "0.8", features = ["ws"] }
 tokio = { workspace = true, features = ["full"] }
+# 🌊️ P1c: `SinkExt`/`StreamExt` (`WebSocket::split`) for the REAL `/bridge` connection loop
+# (`🧵️bridge/🦀️component.rs`'s `mod server::handle_socket`) — promoted from dev-only (P1b's websocket
+# TEST used it) to a real dependency now that production code uses it too. Same version hub already
+# depends on for its own websocket endpoints.
+futures = "0.3"
 # 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: the
 # `🏠️workspace` facet's real `store::sync::ArtifactHost`/`PersistenceBinding` binding layer — the
 # `sync` feature is exactly what mounts `🏪️store/🔄️sync/🦀️component.rs` into this crate
@@ -79,8 +84,6 @@ tempfile = "3.14"
 # 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
 # version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).
 tokio-tungstenite = "0.26"
-# 🌊️ `SinkExt`/`StreamExt` for the websocket test client above — same version hub already depends on.
-futures = "0.3"
 # 🧪️ `ServiceExt::oneshot` drives the real `axum::Router` in-process for every HTTP transport test —
 # already in this crate's dependency graph transitively via `axum`; declared directly (util feature
 # only) so tests can `use tower::ServiceExt`.

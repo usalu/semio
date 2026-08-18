@@ -188,10 +188,25 @@ impl Host {
         self.registry.emit(Effect::SetTimer { id, after_ms, repeat });
     }
 
-    pub fn spawn_job(&self, job: u64, kind: impl Into<String>, input: Vec<u8>, placement: JobPlacement) {
-        self.registry.emit(Effect::SpawnJob { job, kind: kind.into(), input, placement });
+    /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): moves a genuinely long-
+    /// running computation off this turn's own budget. Allocates its `job` id from the SAME
+    /// `RequestRegistry` counter every other `host::*` call uses (`self.call`'s `RequestId`) —
+    /// `job == req.0` is the correlation the host's completion, `Event::JobCompleted{job, ..}`,
+    /// resolves against (`⚛️reactor/🦀️component.rs`'s `Event::JobCompleted` routing step), so no
+    /// separate job/request mapping table is needed on either side of the component boundary. The
+    /// host drives `start-job`/`step-job` under a `JobBudget` across as many turns as the job
+    /// needs — see `🖥️host/🧵️shard/🦀️component.rs`'s `ShardLoop::pump`, the generic executor that
+    /// was previously missing entirely (`📓️terra-M5-report.md` §4(a): "no code anywhere reads a
+    /// `TurnResult.effects` entry matching `Effect::SpawnJob{kind, ...}` and spawns/drives a job
+    /// for it").
+    pub async fn spawn_job(&self, kind: impl Into<String>, input: Vec<u8>, placement: JobPlacement) -> Result<Vec<u8>, Fault> {
+        let kind = kind.into();
+        self.call(move |req| Effect::SpawnJob { job: req.0, kind, input, placement }).await
     }
 
+    /// 🛑️ `job` must be one this SAME instance's own `host::jobs::spawn` call returned — cancelling
+    /// an id minted by the `RequestRegistry`'s `req` counter, exactly as `respond`/every other
+    /// `req`-carrying effect already assumes about ids it did not itself allocate.
     pub fn cancel_job(&self, job: u64) {
         self.registry.emit(Effect::CancelJob { job });
     }

@@ -1,0 +1,25 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-styling:test
+
+> nx run @semio-tech/ui-styling:test
+
+> bun ./📜️script.ts test
+
+[0m[1mbun test [0m[2mv1.3.14 (0d9b296a)[0m
+
+[0m[32m 30 pass[0m
+[0m[2m 0 fail[0m
+ 129 expect() calls
+Ran 30 tests across 1 file. [0m[2m[[1m1058.00ms[0m[2m][0m
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-styling
+
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/ui-styling:test
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+

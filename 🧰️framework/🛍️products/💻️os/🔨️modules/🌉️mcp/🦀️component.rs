@@ -643,7 +643,10 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 //#region 🔖️HttpEntrypoint
 /// ⚙️ Options `📦️bin.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
 /// [--bind <addr>] --token <t> [--folder <dir>] [--hub <url> --space <id> [--token <t>]]
-/// [--principal <id>] [--scopes a,b] [--audit-dir <dir>] [--allow-origin <origin>]…`).
+/// [--principal <id>] [--scopes a,b] [--audit-dir <dir>] [--allow-origin <origin>]…
+/// [--bridge-token-file <path>]`). `bridge_token_file` (P1c) is WHERE the freshly-minted `/bridge`
+/// secret is written, not the secret itself — unlike `token` (the `/mcp` bearer, chosen by whoever
+/// starts the process), the bridge token is always generated fresh at startup (`📋️master.md` §2.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
     pub port: u16,
@@ -655,19 +658,30 @@ pub struct HttpOptions {
     pub scopes: Vec<String>,
     pub audit_dir: Option<String>,
     pub allow_origin: Vec<String>,
+    pub bridge_token_file: Option<String>,
 }
 
-/// 🚪️ Boots an axum-backed [`HttpTransport`] (Streamable HTTP, dual-era) bound to `bind:port`,
-/// serving until the process is killed — the HTTP analogue of [`run_stdio`]. Fails fast (before
-/// binding a socket) if the audit directory cannot be created, so a misconfigured `--audit-dir`
-/// surfaces immediately rather than on the first audit write a later packet wires in.
+/// 🚪️ Boots an axum-backed [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` + `/bridge` on the
+/// SAME socket) bound to `bind:port`, serving until the process is killed — the HTTP analogue of
+/// [`run_stdio`]. Fails fast (before binding a socket) if the audit directory cannot be created, so a
+/// misconfigured `--audit-dir` surfaces immediately rather than on the first audit write a later
+/// packet wires in. Mints a FRESH `/bridge` secret every start (`bridge::mint_bridge_token`), writes
+/// it `0600` to `bridge_token_file` (default `~/.semio/agent/bridge-token`), and prints the bridge URL
+/// + token ONCE on stderr so a dev server/shell process can pick either up (`📋️master.md` §2.1: "token
+/// minted at start, 0600 file").
 pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit_dir = options.audit_dir.clone().map(std::path::PathBuf::from).unwrap_or_else(default_audit_dir);
     let audit: std::sync::Arc<dyn AuditSink> = std::sync::Arc::new(FileAuditSink::new(audit_dir)?);
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref())?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
-    let transport_options = HttpTransportOptions::new(options.token).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
+
+    let bridge_token = mint_bridge_token();
+    let bridge_token_path = options.bridge_token_file.clone().map(std::path::PathBuf::from).unwrap_or_else(default_bridge_token_path);
+    write_bridge_token_file(&bridge_token_path, &bridge_token)?;
+    eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge?token={bridge_token}  (also written to {})", options.port, bridge_token_path.display());
+
+    let transport_options = HttpTransportOptions::new(options.token, bridge_token).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
     let mut transport = HttpTransport::new(transport_options);
     transport.serve(server)
 }
@@ -708,7 +722,7 @@ mod quick {
 
     #[test]
     fn http_options_round_trip_into_a_transport_bind_addr_and_token() {
-        let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), token: "t".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![] };
+        let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), token: "t".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![], bridge_token_file: None };
         assert_eq!(options.port, 7401);
         assert_eq!(options.bind, "127.0.0.1");
     }

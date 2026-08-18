@@ -116,18 +116,21 @@ impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
 pub const HEADER_MISMATCH: i64 = -32020;
 
 /// ⚙️ `HttpTransport` construction options — bind address (default `127.0.0.1:6300`, never
-/// `0.0.0.0`), the required bearer token, and an explicit `Origin` allowlist beyond the always-allowed
-/// loopback/`null` set.
+/// `0.0.0.0`), the required `/mcp` bearer token, the SEPARATE `/bridge` query-string token (P1c —
+/// freshly minted per process start, distinct secret from the MCP bearer, see
+/// `📓️sol-P1c-packet.md`'s design), and an explicit `Origin` allowlist beyond the always-allowed
+/// loopback/`null` set (shared by both endpoints).
 #[derive(Debug, Clone)]
 pub struct HttpTransportOptions {
     pub bind_addr: SocketAddr,
     pub bearer_token: String,
+    pub bridge_token: String,
     pub allowed_origins: Vec<String>,
 }
 
 impl HttpTransportOptions {
-    pub fn new(bearer_token: impl Into<String>) -> Self {
-        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), bearer_token: bearer_token.into(), allowed_origins: Vec::new() }
+    pub fn new(bearer_token: impl Into<String>, bridge_token: impl Into<String>) -> Self {
+        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), bearer_token: bearer_token.into(), bridge_token: bridge_token.into(), allowed_origins: Vec::new() }
     }
 
     pub fn bind_addr(mut self, addr: SocketAddr) -> Self {
@@ -208,18 +211,24 @@ impl HttpTransport {
     }
 
     /// 🧪️ Builds the real axum [`Router`] WITHOUT binding a socket — the foreground, deterministic
-    /// entry point every HTTP test in this crate drives via `tower::ServiceExt::oneshot` (no port
-    /// allocation, no background process, no timing races).
-    pub fn router(&self, server: McpServer) -> (Router, HttpEventPublisher) {
+    /// entry point every `/mcp` HTTP test in this crate drives via `tower::ServiceExt::oneshot` (no
+    /// port allocation, no background process, no timing races). `/bridge` is a real websocket
+    /// upgrade, which `oneshot` cannot drive (it never performs a genuine hyper connection upgrade) —
+    /// tests exercising `/bridge` bind a real ephemeral (`:0`) socket instead (`mod long` in this file
+    /// and in `🧵️bridge/🦀️component.rs`), same as P1a/P1b's own websocket tests already did.
+    pub fn router(&self, server: McpServer) -> (Router, HttpEventPublisher, crate::bridge::BridgeHandle) {
         let events = Arc::new(Mutex::new(EventLog::default()));
         let state = HttpState { server: Arc::new(Mutex::new(server)), bearer_token: Arc::from(self.options.bearer_token.as_str()), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
-        let router = Router::new().route("/mcp", post(handle_post).get(handle_get)).with_state(state);
-        (router, HttpEventPublisher { events })
+        let mcp_router = Router::new().route("/mcp", post(handle_post).get(handle_get)).with_state(state);
+        let (bridge_router, bridge_handle) = crate::bridge::server::bridge_router(self.options.bridge_token.clone(), self.options.allowed_origins.clone());
+        let router = mcp_router.merge(bridge_router);
+        (router, HttpEventPublisher { events }, bridge_handle)
     }
 
-    /// ▶️ Binds `self.options.bind_addr` and serves forever — the real binary's entry point.
+    /// ▶️ Binds `self.options.bind_addr` and serves forever (`/mcp` + `/bridge` on the SAME socket) —
+    /// the real binary's entry point.
     pub async fn run(&self, server: McpServer) -> Result<(), GatewayError> {
-        let (router, _events) = self.router(server);
+        let (router, _events, _bridge) = self.router(server);
         let listener = tokio::net::TcpListener::bind(self.options.bind_addr).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot bind {}: {error}", self.options.bind_addr)))?;
         axum::serve(listener, router).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("http transport io error: {error}")))
     }
@@ -243,14 +252,18 @@ fn is_loopback_or_null(origin: &str) -> bool {
     matches!(host, "localhost" | "127.0.0.1" | "::1")
 }
 
-fn origin_allowed(origin: Option<&str>, allowed_origins: &[String]) -> bool {
+/// 🔓️ Also used by `🧵️bridge`'s websocket upgrade handler (`pub(crate)`, same crate, one Origin
+/// policy shared by both `/mcp` and `/bridge`) — never made fully `pub`, this is an internal seam.
+pub(crate) fn origin_allowed(origin: Option<&str>, allowed_origins: &[String]) -> bool {
     match origin {
         None => true,
         Some(value) => is_loopback_or_null(value) || allowed_origins.iter().any(|allowed| allowed == value),
     }
 }
 
-fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+/// 🔓️ Also used by `🧵️bridge`'s `?token=` comparison (`pub(crate)`) — one constant-time comparison
+/// helper, not duplicated.
+pub(crate) fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
     }
@@ -480,7 +493,7 @@ mod long {
     }
 
     fn transport() -> HttpTransport {
-        HttpTransport::new(HttpTransportOptions::new("test-token"))
+        HttpTransport::new(HttpTransportOptions::new("test-token", "bridge-token"))
     }
 
     fn post_request(body: serde_json::Value, headers: &[(&str, &str)]) -> Request<Body> {
@@ -494,7 +507,7 @@ mod long {
     //#region 🔖️PostModern
     #[tokio::test]
     async fn modern_tools_list_over_http_returns_200_with_the_json_rpc_result() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "2026-07-28")]);
         let response = router.oneshot(request).await.unwrap();
@@ -506,7 +519,7 @@ mod long {
 
     #[tokio::test]
     async fn legacy_initialize_over_http_returns_200_and_negotiates_legacy() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": { "name": "t", "version": "0" } } });
         let request = post_request(body, &[]);
         let response = router.oneshot(request).await.unwrap();
@@ -518,7 +531,7 @@ mod long {
 
     #[tokio::test]
     async fn a_notification_over_http_is_202_accepted_with_no_body() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "method": "notifications/cancelled" });
         let request = post_request(body, &[]);
         let response = router.oneshot(request).await.unwrap();
@@ -531,7 +544,7 @@ mod long {
     //#region 🔖️ProtocolVersionHeader
     #[tokio::test]
     async fn missing_protocol_version_header_on_a_modern_request_is_400_header_mismatch() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[]);
         let response = router.oneshot(request).await.unwrap();
@@ -543,7 +556,7 @@ mod long {
 
     #[tokio::test]
     async fn mismatched_protocol_version_header_and_body_is_400_header_mismatch() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "2025-11-25")]);
         let response = router.oneshot(request).await.unwrap();
@@ -555,7 +568,7 @@ mod long {
 
     #[tokio::test]
     async fn unsupported_protocol_version_is_400_with_the_supported_list() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "1999-01-01" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "1999-01-01")]);
         let response = router.oneshot(request).await.unwrap();
@@ -570,7 +583,7 @@ mod long {
     //#region 🔖️Security
     #[tokio::test]
     async fn an_evil_origin_is_rejected_with_403() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "https://evil.example").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
@@ -579,7 +592,7 @@ mod long {
 
     #[tokio::test]
     async fn a_loopback_origin_is_accepted() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "http://127.0.0.1:6300").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
@@ -588,7 +601,7 @@ mod long {
 
     #[tokio::test]
     async fn missing_bearer_token_is_401() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
@@ -597,7 +610,7 @@ mod long {
 
     #[tokio::test]
     async fn incorrect_bearer_token_is_401() {
-        let (router, _events) = transport().router(fresh_server());
+        let (router, _events, _bridge) = transport().router(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer wrong-token").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
         let response = router.oneshot(request).await.unwrap();
@@ -611,7 +624,7 @@ mod long {
         let mut tools = InMemoryToolRegistry::new();
         tools.register(Tool::new("ping_tool", serde_json::json!({"type":"object"})), |_arguments| crate::protocol::CallToolResult::ok(vec![], None)).unwrap();
         let server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend));
-        let (router, _events) = transport().router(server);
+        let (router, _events, _bridge) = transport().router(server);
 
         let modern_body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "ping_tool", "arguments": {}, "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let modern_request = post_request(modern_body, &[("MCP-Protocol-Version", "2026-07-28")]);
@@ -631,7 +644,7 @@ mod long {
     //#region 🔖️GetSseResumption
     #[tokio::test]
     async fn get_with_no_last_event_id_replays_every_buffered_notification() {
-        let (router, events) = transport().router(fresh_server());
+        let (router, events, _bridge) = transport().router(fresh_server());
         events.push(JsonRpcNotification::new("notifications/tools/list_changed", None));
         events.push(JsonRpcNotification::new("notifications/resources/list_changed", None));
 
@@ -648,7 +661,7 @@ mod long {
 
     #[tokio::test]
     async fn get_with_last_event_id_resumes_after_that_id_only() {
-        let (router, events) = transport().router(fresh_server());
+        let (router, events, _bridge) = transport().router(fresh_server());
         events.push(JsonRpcNotification::new("notifications/tools/list_changed", None));
         let second_id = events.push(JsonRpcNotification::new("notifications/resources/list_changed", None));
         let _ = second_id;
@@ -661,5 +674,99 @@ mod long {
         assert!(text.contains("resources/list_changed"), "must replay events after Last-Event-ID");
     }
     //#endregion 🔖️GetSseResumption
+
+    //#region 🔖️BridgeOnTheMergedApp
+    /// 🌉️ P1c acceptance: `/bridge` is mounted on the SAME app `/mcp` lives on — this test binds a
+    /// real ephemeral socket to the ACTUAL `HttpTransport::router()` output (not a bridge-only
+    /// router), connects a real `tokio-tungstenite` client, and drives the full scenario
+    /// `📓️sol-P1c-packet.md`'s acceptance list names: `Hello`→`Welcome`, a `ShellState` publish, a
+    /// pushed `ShellCommand` answered by a `ShellCommandResult`, a wrong-token rejection, and a bad-
+    /// `Origin` rejection — all in one foreground `#[tokio::test]`, no background process left running.
+    #[tokio::test]
+    async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
+        use crate::bridge::{BridgeFlags, ShellKind, ShellToGateway, BRIDGE_VERSION};
+        use futures::{SinkExt, StreamExt};
+        use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+        use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
+
+        let transport = HttpTransport::new(HttpTransportOptions::new("mcp-bearer", "bridge-secret"));
+        let (router, _events, bridge_handle) = transport.router(fresh_server());
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        let server_task = tokio::spawn(async move {
+            axum::serve(listener, router).await.unwrap();
+        });
+
+        // /mcp still answers on the SAME bound socket the bridge is about to connect to — proves
+        // both endpoints really are one merged app, not two separate servers on the same port by
+        // coincidence.
+        let mcp_client = reqwest_free_post(addr, "/mcp", "Bearer mcp-bearer", &serde_json::json!({"jsonrpc":"2.0","id":1,"method":"ping"})).await;
+        assert_eq!(mcp_client, 200);
+
+        // Hello -> Welcome.
+        let (mut socket, _response) = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=bridge-secret")).await.expect("client connects with the correct bridge token");
+        let hello = ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::React, shell_session_id: "shell-live".into(), principal_actor: "agent:local".into(), flags: BridgeFlags::NONE };
+        socket.send(TungsteniteMessage::Binary(hello.encode().into())).await.unwrap();
+        let welcome_bytes = match socket.next().await.unwrap().unwrap() {
+            TungsteniteMessage::Binary(bytes) => bytes,
+            other => panic!("expected a binary Welcome frame, got {other:?}"),
+        };
+        assert!(matches!(crate::bridge::GatewayToShell::decode(&welcome_bytes).unwrap(), crate::bridge::GatewayToShell::Welcome { .. }));
+
+        // ShellState publish becomes visible through BridgeHandle.
+        let id = bridge_handle.connections().first().copied().expect("one live connection");
+        let state_frame = ShellToGateway::ShellState { revision: 1, state: vec![7] };
+        socket.send(TungsteniteMessage::Binary(state_frame.clone().encode().into())).await.unwrap();
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        let _pong = socket.next().await.unwrap().unwrap();
+        assert_eq!(bridge_handle.last_shell_state(id), Some(state_frame));
+
+        // A pushed ShellCommand reaches the client, whose ShellCommandResult becomes visible.
+        let pushed = crate::bridge::GatewayToShell::ShellCommand { seq: 1, command: vec![9] };
+        assert!(bridge_handle.send_to(id, pushed.clone()));
+        let received_bytes = match socket.next().await.unwrap().unwrap() {
+            TungsteniteMessage::Binary(bytes) => bytes,
+            other => panic!("expected a binary ShellCommand frame, got {other:?}"),
+        };
+        assert_eq!(crate::bridge::GatewayToShell::decode(&received_bytes).unwrap(), pushed);
+        let result_frame = ShellToGateway::ShellCommandResult { in_reply_to: 1, ok: true, fault: None };
+        socket.send(TungsteniteMessage::Binary(result_frame.encode().into())).await.unwrap();
+        socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
+        let _pong2 = socket.next().await.unwrap().unwrap();
+        assert_eq!(bridge_handle.last_command_result(id), Some((1, true, None)));
+        drop(socket);
+
+        // Wrong token is rejected before the upgrade completes.
+        let wrong_token = tokio_tungstenite::connect_async(format!("ws://{addr}/bridge?token=nope")).await;
+        assert!(wrong_token.is_err(), "a mismatched bridge token must never complete the websocket handshake");
+
+        // Bad Origin is rejected before the upgrade completes.
+        let mut bad_origin_request = format!("ws://{addr}/bridge?token=bridge-secret").into_client_request().unwrap();
+        bad_origin_request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());
+        let bad_origin = tokio_tungstenite::connect_async(bad_origin_request).await;
+        assert!(bad_origin.is_err(), "a non-loopback Origin must never complete the websocket handshake");
+
+        server_task.abort();
+    }
+
+    /// 🧰️ The smallest possible real HTTP/1.1 POST over a bound TCP socket — used ONLY by the
+    /// merged-app test above, which already needs a real listener for the websocket half; avoids
+    /// adding a `reqwest` dependency for one confirming assertion by speaking just enough HTTP/1.1 by
+    /// hand (`Connection: close`, read to EOF, parse the status line) for a single fire-and-forget
+    /// request/response.
+    async fn reqwest_free_post(addr: SocketAddr, path: &str, bearer: &str, body: &serde_json::Value) -> u16 {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let body_bytes = serde_json::to_vec(body).unwrap();
+        let mut stream = tokio::net::TcpStream::connect(addr).await.unwrap();
+        let request = format!("POST {path} HTTP/1.1\r\nHost: {addr}\r\nAuthorization: {bearer}\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: {}\r\n\r\n", body_bytes.len());
+        stream.write_all(request.as_bytes()).await.unwrap();
+        stream.write_all(&body_bytes).await.unwrap();
+        let mut response = Vec::new();
+        stream.read_to_end(&mut response).await.unwrap();
+        let response_text = String::from_utf8_lossy(&response);
+        let status_line = response_text.lines().next().unwrap_or("");
+        status_line.split_whitespace().nth(1).unwrap_or("0").parse().unwrap_or(0)
+    }
+    //#endregion 🔖️BridgeOnTheMergedApp
 }
 //#endregion 🧪️Tests

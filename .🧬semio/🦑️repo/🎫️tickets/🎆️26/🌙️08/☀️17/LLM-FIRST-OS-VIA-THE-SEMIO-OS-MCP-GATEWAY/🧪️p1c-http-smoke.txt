@@ -1,0 +1,12 @@
+=== server stderr (bridge mint line) ===
+[semio-os-mcp] bridge listening on ws://127.0.0.1:7403/bridge?token=3851ce8300c961a2d148fda53cf718239c5eb0a893218104ce02f86fcc339f19  (also written to .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/scratch-bridge-token.txt)
+=== bridge token file permissions ===
+-rw-------@ 1 ueli  staff  64 Aug 18 13:33 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/scratch-bridge-token.txt
+token length: 64
+=== /mcp still works on the merged app ===
+HTTP/1.1 200 OK
+content-type: application/json
+content-length: 36
+date: Tue, 18 Aug 2026 11:33:26 GMT
+
+{"jsonrpc":"2.0","id":1,"result":{}}

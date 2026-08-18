@@ -10,6 +10,7 @@ import { TableAvatar } from "../📻️TableAvatar/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { currentStylingAppearanceName, STYLING_PRESENCE_PALETTES } from "@semio-tech/ui-styling";
 // #endregion 🔌️Adapters
 
 // #region 👥️PresenceBar
@@ -35,6 +36,9 @@ export interface PresencePeer {
   readonly label: string;
   readonly role?: PresenceRole;
   readonly connectedAtMs?: number;
+  /** 🎨️ Hub-assigned session-color palette index (contract freeze §C7.5) — `undefined` for a
+   * folder-only peer with no hub connection, which renders as index 0. */
+  readonly color?: number;
 }
 
 /**
@@ -47,25 +51,52 @@ export interface PresenceBarProps {
   readonly className?: string;
 }
 
-const PRESENCE_HUE_FNV_OFFSET = 0x811c9dc5;
-const PRESENCE_HUE_FNV_PRIME = 0x01000193;
+//#region 🔖️Palette
+/** @emoji 🌓️ Selects which of `STYLING_PRESENCE_PALETTES`'s `light`/`dark` base `{s, l}` {@link presenceColor} resolves against. */
+export type PresenceAppearance = "light" | "dark";
 
-/** @emoji 🎨️ Deterministic FNV-1a hash of the actor id's UTF-8 bytes into an HSL hue (0–359) —
- * byte-for-byte mirrored by the Rust twin's `presence_hue_for_actor` so both shells tint the same
- * peer identically. */
-export function presenceHueForActor(actor: string): number {
-  const bytes = new TextEncoder().encode(actor);
-  let hash = PRESENCE_HUE_FNV_OFFSET;
-  for (const byte of bytes) {
-    hash ^= byte;
-    hash = Math.imul(hash, PRESENCE_HUE_FNV_PRIME);
+/** @emoji 🎨️ Resolved HSL triple — `h` in degrees `[0, 360)`, `s`/`l` in `[0, 1]`. */
+export interface PresenceHsl {
+  readonly h: number;
+  readonly s: number;
+  readonly l: number;
+}
+
+/** @emoji 🎨️ Deterministic per-session palette color for a hub-assigned index (contract freeze §C7.5):
+ * `index % 12` selects one of the 12 base hues (`STYLING_PRESENCE_PALETTES.hues`); `Math.floor(index / 12)`
+ * (`k`) desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
+ * `±0.14` every other cycle (lighter in `"light"`, darker in `"dark"`). Byte-identical to the Rust twin
+ * `presence_color` in `🧊️component.rs`. Replaces the deleted FNV-hash `presenceHueForActor`. */
+export function presenceColor(index: number, appearance: PresenceAppearance): PresenceHsl {
+  const base = index % 12;
+  const k = Math.floor(index / 12);
+  const h = STYLING_PRESENCE_PALETTES.hues[base]!;
+  const baseAppearance = STYLING_PRESENCE_PALETTES[appearance];
+  const s = baseAppearance.s - (k >= 2 ? 0.25 : 0);
+  const lShift = k % 2 === 1 ? 0.14 : 0;
+  const l = appearance === "light" ? baseAppearance.l + lShift : baseAppearance.l - lShift;
+  return { h, s, l };
+}
+
+/** @emoji 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
+ * meaningful when `Math.floor(index / 12) === 0`; callers past the first cycle render {@link presenceColor}'s
+ * HSL inline instead (contract freeze §C7.5). */
+export function presenceCssVar(index: number): string {
+  return `var(--presence-${index % 12})`;
+}
+
+/** @emoji 🎨️ Resolves a peer's ring/border color: the `--presence-N` CSS var for the base cycle, or an
+ * inline `hsl()` literal past it — the {@link presenceColor}/{@link presenceCssVar} split from contract
+ * freeze §C7.5. A peer with no `color` renders index 0. */
+function presenceStyleColor(color: number | undefined, appearance: PresenceAppearance): string {
+  const index = color ?? 0;
+  if (Math.floor(index / 12) === 0) {
+    return presenceCssVar(index);
   }
-  return (hash >>> 0) % 360;
+  const { h, s, l } = presenceColor(index, appearance);
+  return `hsl(${h}deg ${(s * 100).toFixed(2)}% ${(l * 100).toFixed(2)}%)`;
 }
-
-function presenceRingColor(actor: string): string {
-  return `hsl(${presenceHueForActor(actor)}, 65%, 45%)`;
-}
+//#endregion 🔖️Palette
 
 /**
  * PresenceBar renders a compact horizontal roster of peers sharing a presence scope: an avatar per
@@ -80,6 +111,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
   const visible = peers.slice(0, Math.max(max, 0));
   const overflowCount = Math.max(peers.length - visible.length, 0);
   const overflowLabel = useLabel("ui.presence.overflow", { count: overflowCount });
+  const appearance = currentStylingAppearanceName();
 
   if (peers.length === 0) {
     return (
@@ -96,7 +128,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
         const peerTitle = roleLabel ? `${peer.label} (${roleLabel})` : peer.label;
         return (
           <div key={peer.actor} role="listitem" data-row-id={`peer:${peer.actor}`} tabIndex={0} title={peerTitle} aria-label={peerTitle} className="rounded-full">
-            <TableAvatar name={peer.label} style={{ borderColor: presenceRingColor(peer.actor), borderWidth: 2 }} />
+            <TableAvatar name={peer.label} style={{ borderColor: presenceStyleColor(peer.color, appearance), borderWidth: 2 }} />
           </div>
         );
       })}

@@ -2,6 +2,7 @@
 //! 🎨️ Theme colors and metrics for wgpu UI rendering.
 
 use crate::wgpu::geometry::Rect;
+use crate::wgpu::presence_bar::{presence_color, PresenceAppearance, PresenceHsl};
 use ui_styling::appearance::AppearanceName;
 use ui_styling::{
     levels,
@@ -128,6 +129,13 @@ pub struct Theme {
     /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
     pub level_bg: [Rgba; 6],
+    /// 🎨️ The 12 base-cycle (`k = index / 12 == 0`) session-color swatches for this theme's appearance
+    /// (contract freeze §C7.5), indexed by `index % 12` — filled from `ui_styling::presence` via
+    /// `presence_bar::presence_color`. See [`Theme::presence_color`].
+    pub presence: [Rgba; 12],
+    /// 🎨️ The local user's own hub-assigned palette index, if any — `None` before the hub's
+    /// `ServerFrame::Session` handshake or for a folder-only session with no hub connection.
+    pub local_presence: Option<u8>,
 }
 
 impl Default for Theme {
@@ -144,7 +152,32 @@ fn panel_width(ui_spacing_mult: f64) -> f32 {
     (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
 }
 
-fn from_chrome(chrome: &ChromePalette) -> Theme {
+//#region 🔖️Presence
+/// 🎨️ HSL (`h` degrees, `s`/`l` `[0, 1]`) → sRGB8888, standard sector conversion.
+fn hsl_to_srgb8(h: u16, s: f64, l: f64) -> (u8, u8, u8) {
+    let h = f64::from(h).rem_euclid(360.0);
+    let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
+    let x = c * (1.0 - ((h / 60.0).rem_euclid(2.0) - 1.0).abs());
+    let m = l - c / 2.0;
+    let (r1, g1, b1) = match (h / 60.0) as u32 {
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+    let to_u8 = |v: f64| ((v + m) * 255.0).round().clamp(0.0, 255.0) as u8;
+    (to_u8(r1), to_u8(g1), to_u8(b1))
+}
+
+fn presence_rgba(hsl: PresenceHsl) -> Rgba {
+    let (r, g, b) = hsl_to_srgb8(hsl.h, hsl.s, hsl.l);
+    Rgba::from_srgb8(r, g, b, 255)
+}
+//#endregion 🔖️Presence
+
+fn from_chrome(chrome: &ChromePalette, presence_appearance: PresenceAppearance) -> Theme {
     Theme {
         background: Rgba::from_chrome(&chrome.base),
         panel: Rgba::from_chrome(&chrome.level_panel),
@@ -201,16 +234,18 @@ fn from_chrome(chrome: &ChromePalette) -> Theme {
             Rgba::from_chrome(&chrome.level_dialog),
             Rgba::from_chrome(&chrome.level_menu),
         ],
+        presence: std::array::from_fn(|i| presence_rgba(presence_color(i as u8, presence_appearance))),
+        local_presence: None,
     }
 }
 
 impl Theme {
     pub fn light() -> Self {
-        from_chrome(&CHROME_LIGHT)
+        from_chrome(&CHROME_LIGHT, PresenceAppearance::Light)
     }
 
     pub fn dark() -> Self {
-        from_chrome(&CHROME_DARK)
+        from_chrome(&CHROME_DARK, PresenceAppearance::Dark)
     }
 
     pub fn for_name(name: AppearanceName) -> Self {
@@ -236,6 +271,17 @@ impl Theme {
     }
 
     //#endregion 🔖️LevelSurfaces
+
+    //#region 🔖️Presence
+    /// 🎨️ Resolves a peer's palette index to this theme's appearance (contract freeze §C7.5), by
+    /// `index % 12` into the pre-resolved base-cycle swatches. `Theme` is appearance-specific
+    /// (`light()`/`dark()`), so the swatches are already correct for whichever `self` is; the full
+    /// per-cycle desaturate/lighten shift for `index / 12 >= 1` is `presence_bar::presence_color`'s job
+    /// for callers that need it directly.
+    pub fn presence_color(&self, index: u8) -> Rgba {
+        self.presence[(index % 12) as usize]
+    }
+    //#endregion 🔖️Presence
 
     pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
         (blur_px / 4.0).log2().max(0.0).min(max_mip as f32)

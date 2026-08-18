@@ -1,0 +1,15 @@
+796 |   }
+797 | 
+798 |   /** 🚦️ Reports findings without failing, or enforces the identical structured result. */
+799 |   private runTaxonomy(args: string[]): void {
+800 |     const mode = args[0];
+801 |     if (mode !== "report" && mode !== "enforce") throw new Error(`[verify taxonomy] expected report or enforce, got ${JSON.stringify(mode)}.`);
+                                                                 ^
+error: [verify taxonomy] expected report or enforce, got undefined.
+      at runTaxonomy (/Users/ueli/Documents/semio/📜️script.ts:801:60)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:786:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15339:11
+
+Bun v1.3.14 (macOS arm64)

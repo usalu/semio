@@ -221,3 +221,49 @@
   --spacing-compact: 0.2rem;
   --spacing-touch: 0.275rem;
 }
+
+/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */
+:root {
+  --presence-0: hsl(0deg 68% 32%);
+  --presence-1: hsl(210deg 68% 32%);
+  --presence-2: hsl(120deg 68% 32%);
+  --presence-3: hsl(30deg 68% 32%);
+  --presence-4: hsl(270deg 68% 32%);
+  --presence-5: hsl(180deg 68% 32%);
+  --presence-6: hsl(330deg 68% 32%);
+  --presence-7: hsl(60deg 68% 32%);
+  --presence-8: hsl(240deg 68% 32%);
+  --presence-9: hsl(150deg 68% 32%);
+  --presence-10: hsl(300deg 68% 32%);
+  --presence-11: hsl(90deg 68% 32%);
+}
+
+.dark {
+  --presence-0: hsl(0deg 72% 62%);
+  --presence-1: hsl(210deg 72% 62%);
+  --presence-2: hsl(120deg 72% 62%);
+  --presence-3: hsl(30deg 72% 62%);
+  --presence-4: hsl(270deg 72% 62%);
+  --presence-5: hsl(180deg 72% 62%);
+  --presence-6: hsl(330deg 72% 62%);
+  --presence-7: hsl(60deg 72% 62%);
+  --presence-8: hsl(240deg 72% 62%);
+  --presence-9: hsl(150deg 72% 62%);
+  --presence-10: hsl(300deg 72% 62%);
+  --presence-11: hsl(90deg 72% 62%);
+}
+
+@theme {
+  --color-presence-0: var(--presence-0);
+  --color-presence-1: var(--presence-1);
+  --color-presence-2: var(--presence-2);
+  --color-presence-3: var(--presence-3);
+  --color-presence-4: var(--presence-4);
+  --color-presence-5: var(--presence-5);
+  --color-presence-6: var(--presence-6);
+  --color-presence-7: var(--presence-7);
+  --color-presence-8: var(--presence-8);
+  --color-presence-9: var(--presence-9);
+  --color-presence-10: var(--presence-10);
+  --color-presence-11: var(--presence-11);
+}

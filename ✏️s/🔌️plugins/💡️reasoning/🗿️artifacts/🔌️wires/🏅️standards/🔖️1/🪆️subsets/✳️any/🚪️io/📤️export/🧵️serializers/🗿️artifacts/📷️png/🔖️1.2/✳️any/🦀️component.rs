@@ -1,16 +1,25 @@
-//! wires -> png
-use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
-use semio_s_plugin_stdio::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
+//! 🚪️ wires -> png — foreign `Serializer<WiresSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3).
+//!
+//! 🐛️ Fixes a pre-migration bug: the old `serialize` encoded the `WiresSnapshot` to its OWN pack
+//! bytes and then tried to decode those bytes as a `PngSnapshot` pack — a confused type-pun that
+//! would always fail. No real wires-graph<->raster-image mapping exists (a real implementation
+//! would rasterize the board, a genuine feature, not this migration's scope) — this is now an
+//! honest not-yet-implemented stub, the same treatment `📄txt` already had. `IoFidelity::Lossy`.
 
-pub fn register() {}
+use crate::artifacts::wires::WiresSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 
-pub fn serialize(snapshot: &WiresSnapshot) -> Result<PngSnapshot, store::TextError> {
-    let _ = STDIO_PNG_DOCUMENT_SCHEMA;
-    let bytes = <WiresSnapshot as store::ArtifactPack>::encode_pack(snapshot);
-    <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
-}
+pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
 
-pub fn serialize_bytes(snapshot: &WiresSnapshot) -> Result<Vec<u8>, store::TextError> {
-    Ok(<PngSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+pub struct WiresIntoPng;
+
+impl Serializer<WiresSnapshot> for WiresIntoPng {
+    const INTO: Dialect = PNG_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn serialize(_from: &WiresSnapshot) -> IoResult<IoPayload> {
+        Err(IoError { message: "png export not yet implemented".to_string(), diagnostics: Vec::new() })
+    }
 }

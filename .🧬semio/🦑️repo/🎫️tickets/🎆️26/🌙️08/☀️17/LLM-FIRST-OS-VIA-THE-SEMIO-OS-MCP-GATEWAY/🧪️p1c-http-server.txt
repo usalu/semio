@@ -1,0 +1,1 @@
+[semio-os-mcp] bridge listening on ws://127.0.0.1:7403/bridge?token=3851ce8300c961a2d148fda53cf718239c5eb0a893218104ce02f86fcc339f19  (also written to .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/scratch-bridge-token.txt)

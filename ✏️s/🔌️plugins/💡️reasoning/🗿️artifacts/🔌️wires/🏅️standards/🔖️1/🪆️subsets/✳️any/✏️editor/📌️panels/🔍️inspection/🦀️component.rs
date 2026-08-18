@@ -254,7 +254,7 @@ mod tests {
             .expect("valid metabolism fixture mutations");
         let json = serde_json::to_string(&crate::artifacts::wires::schema::dsl_to_json(&document.wires_fixture)).expect("json");
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
-        assert_eq!(ext.mindmap.topics.len(), 7);
+        assert_eq!(ext.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
         assert_eq!(ext.relationship_kind_label(8), Some("is"));
         assert!(ext.validate_identity_set(&[1, 2, 3]).is_ok());

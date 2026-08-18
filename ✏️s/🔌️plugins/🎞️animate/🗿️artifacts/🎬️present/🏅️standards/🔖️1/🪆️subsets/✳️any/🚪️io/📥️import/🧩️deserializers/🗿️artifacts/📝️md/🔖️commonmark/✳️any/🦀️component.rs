@@ -1,14 +1,18 @@
-//! present <- md
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
-//! `MdSnapshot.body: String` -> `blocks: Vec<MdBlock>`). Mirrors the export leaf's degenerate
-//! placeholder exactly: reads the DSL text back out of the single `Paragraph`/`Text` block the
-//! export leaf wrote, rather than a real markdown->present semantic mapping (out of scope here).
-use crate::artifacts::present::schema::snapshot::PresentSnapshot;
-use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
-use semio_s_plugin_stdio::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+//! 🚪️ present <- md — foreign `Deserializer<PresentSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Degenerate placeholder
+//! (unchanged behaviour, pre-dates this ticket): reads the DSL text back out of the single
+//! `Paragraph`/`Text` block the paired export leaf wrote, rather than a real markdown->present
+//! semantic mapping (out of scope here). Still wraps the full `.present` DSL text losslessly in
+//! that one block, so this hop is `IoFidelity::Canonical`, not `Lossy`.
 
-pub fn register() {}
+use crate::artifacts::present::PresentSnapshot;
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::md::schema::snapshot::{MdBlock, MdInline};
+use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
+
+pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
 fn extract_placeholder_text(from: &MdSnapshot) -> String {
     for block in &from.blocks {
@@ -23,13 +27,17 @@ fn extract_placeholder_text(from: &MdSnapshot) -> String {
     String::new()
 }
 
-pub fn deserialize(from: &MdSnapshot) -> Result<PresentSnapshot, store::TextError> {
-    let _ = STDIO_MD_DOCUMENT_SCHEMA;
-    <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&extract_placeholder_text(from))
-}
+pub struct MdIntoPresent;
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<PresentSnapshot, store::TextError> {
-    let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    deserialize(&md)
+impl Deserializer<PresentSnapshot> for MdIntoPresent {
+    const FROM: Dialect = MD_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Canonical;
+    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(IoError { message: "MdIntoPresent: expected a binary md payload".to_string(), diagnostics: Vec::new() });
+        };
+        let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let snapshot = <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&extract_placeholder_text(&md)).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(snapshot))
+    }
 }

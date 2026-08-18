@@ -381,12 +381,18 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::wires::schema::wires_artifact_schema_descriptor())
-        .inferences([crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::wires_artifact_inference_descriptor()])
-        .composers(crate::artifacts::wires::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::wires::ReasoningWiresPlayApp>>()
-        .try_build()
+/// 🗿️ New declaration-tree registration channel (ticket
+/// `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1/§2) — the ONLY channel: the old
+/// `declaration()` (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...)
+/// .document_codec(...)` chain) is deleted outright, not kept alongside this, per the ticket's own
+/// "Rejected approaches" ruling against dual registration. `localization: &[]` is a documented
+/// shortfall: the real en/de localized names (`"Mindmap Wires"`/`"Mindmap-Wires"`) still live on
+/// `definition()`'s `ArtifactCapability` rows above (kept, per debt D1) — wiring them into this
+/// field is real follow-up work, not required for this pass (mirrors `📓️w4-sequence-report.md`
+/// `## openQuestions` #2).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![crate::artifacts::wires::standards::v1::standard()] }
 }
 //#endregion 🔖️Declaration

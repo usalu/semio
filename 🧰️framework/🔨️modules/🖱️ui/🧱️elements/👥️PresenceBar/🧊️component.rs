@@ -11,9 +11,9 @@
 //! Wired as a CRATE-ROOT sibling module of `crate::wgpu::widgets`, `#[path]`-mounted right before
 //! `pub mod widgets` in `📦️glue.rs`, mirroring how `button`/`key_value`/`ring` are mounted there.
 //!
-//! React twin: `🟦️component.tsx` in this same folder — `presence_hue_for_actor` below is a
-//! byte-for-byte mirror of its `presenceHueForActor` (FNV-1a over the actor id's UTF-8 bytes, `% 360`)
-//! so both shells tint a given peer with the identical hue.
+//! React twin: `🟦️component.tsx` in this same folder — the `🔖️Palette` region's `presence_color` below
+//! is byte-for-byte mirrored by its `presenceColor` (contract freeze §C7.5's hub-assigned-index formula)
+//! so both shells tint a given peer identically. Replaces the deleted FNV-hash `presence_hue_for_actor`.
 //!
 //! `data-ui-path` note (requested by the W0 scout): grepping `os/renderer/engine/elements/Table` and
 //! the React `📊️Table` element turned up no `data-ui-path` on table rows — only `data-row-id`. The
@@ -44,21 +44,58 @@ pub struct PresencePeerRow {
     pub label: String,
     pub role: Option<PresenceRole>,
     pub connected_at_ms: Option<i64>,
+    /// 🎨️ Hub-assigned session-color palette index (contract freeze §C7.5) — `None` for a folder-only
+    /// peer with no hub connection, which renders as index 0.
+    pub color: Option<u8>,
 }
 
-const PRESENCE_HUE_FNV_OFFSET: u32 = 0x811c_9dc5;
-const PRESENCE_HUE_FNV_PRIME: u32 = 0x0100_0193;
-
-/// 🎨️ Deterministic FNV-1a hash of the actor id's UTF-8 bytes into an HSL hue (0–359) — see this
-/// module's header doc for the React twin this mirrors.
-pub fn presence_hue_for_actor(actor: &str) -> u16 {
-    let mut hash = PRESENCE_HUE_FNV_OFFSET;
-    for byte in actor.as_bytes() {
-        hash ^= *byte as u32;
-        hash = hash.wrapping_mul(PRESENCE_HUE_FNV_PRIME);
-    }
-    (hash % 360) as u16
+//#region 🔖️Palette
+/// 🎨️ Resolved HSL triple for one presence palette entry — `h` in degrees `[0, 360)`, `s`/`l` in
+/// `[0.0, 1.0]`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PresenceHsl {
+    pub h: u16,
+    pub s: f64,
+    pub l: f64,
 }
+
+/// 🌓️ Selects which of `ui_styling::presence::LIGHT`/`DARK` [`presence_color`] resolves against.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PresenceAppearance {
+    Light,
+    Dark,
+}
+
+/// 🎨️ Deterministic per-session palette color for a hub-assigned index (contract freeze §C7.5):
+/// `index % 12` selects one of the 12 base hues (`ui_styling::presence::HUES`); `index / 12` (`k`)
+/// desaturates by `0.25` once the roster wraps past two full cycles and alternates lightness by
+/// `±0.14` every other cycle (lighter in `Light`, darker in `Dark`). Byte-identical to the TS twin
+/// `presenceColor` in `🟦️component.tsx`.
+pub fn presence_color(index: u8, appearance: PresenceAppearance) -> PresenceHsl {
+    use ui_styling::presence;
+    let base = (index % 12) as usize;
+    let k = index / 12;
+    let h = presence::HUES[base];
+    let (base_s, base_l) = match appearance {
+        PresenceAppearance::Light => presence::LIGHT,
+        PresenceAppearance::Dark => presence::DARK,
+    };
+    let s = base_s - if k >= 2 { 0.25 } else { 0.0 };
+    let l_shift = if k % 2 == 1 { 0.14 } else { 0.0 };
+    let l = match appearance {
+        PresenceAppearance::Light => base_l + l_shift,
+        PresenceAppearance::Dark => base_l - l_shift,
+    };
+    PresenceHsl { h, s, l }
+}
+
+/// 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
+/// meaningful when `index / 12 == 0`; callers past the first cycle render [`presence_color`]'s HSL
+/// inline instead (contract freeze §C7.5).
+pub fn presence_css_var(index: u8) -> String {
+    format!("var(--presence-{})", index % 12)
+}
+//#endregion 🔖️Palette
 
 fn presence_stack(id: String, children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
@@ -120,18 +157,32 @@ mod tests {
     use super::*;
 
     fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {
-        PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None }
+        PresencePeerRow { actor: actor.into(), user_id: None, label: label.into(), role, connected_at_ms: None, color: None }
     }
 
     #[test]
-    fn presence_hue_for_actor_is_deterministic_and_in_range() {
-        let a = presence_hue_for_actor("user:alice#s1");
-        let b = presence_hue_for_actor("user:alice#s1");
-        let c = presence_hue_for_actor("user:bob#s1");
-        assert_eq!(a, b);
-        assert_ne!(a, c);
-        assert!(a < 360);
-        assert!(c < 360);
+    fn presence_color_wraps_after_twelve_with_lightness_then_saturation_shift() {
+        let base = presence_color(0, PresenceAppearance::Light);
+        let cycle_one = presence_color(12, PresenceAppearance::Light); // k=1: same hue, lighter (odd k)
+        let cycle_two = presence_color(24, PresenceAppearance::Light); // k=2: same hue, desaturated, lightness back to base
+        assert_eq!(base.h, cycle_one.h);
+        assert_eq!(base.h, cycle_two.h);
+        assert_eq!(base.s, cycle_one.s, "k=1 stays under the k>=2 desaturation threshold");
+        assert!(cycle_one.l > base.l, "light appearance shifts lightness UP on odd cycles");
+        assert!((cycle_two.s - (base.s - 0.25)).abs() < 1e-9, "k=2 desaturates by 0.25");
+        assert_eq!(cycle_two.l, base.l, "k=2 is even, so no lightness shift");
+
+        let dark_base = presence_color(0, PresenceAppearance::Dark);
+        let dark_cycle_one = presence_color(12, PresenceAppearance::Dark);
+        assert!(dark_cycle_one.l < dark_base.l, "dark appearance shifts lightness DOWN on odd cycles");
+        assert_eq!(dark_base.s, dark_cycle_one.s);
+    }
+
+    #[test]
+    fn presence_css_var_only_addresses_the_base_cycle() {
+        assert_eq!(presence_css_var(0), "var(--presence-0)");
+        assert_eq!(presence_css_var(11), "var(--presence-11)");
+        assert_eq!(presence_css_var(12), "var(--presence-0)", "wraps modulo 12 — callers past k=0 must render inline HSL instead");
     }
 
     #[test]

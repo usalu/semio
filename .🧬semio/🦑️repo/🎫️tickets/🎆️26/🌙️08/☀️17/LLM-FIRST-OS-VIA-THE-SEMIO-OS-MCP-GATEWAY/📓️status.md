@@ -93,3 +93,93 @@ Everything remaining touches surfaces the peer ticket is actively rewriting, so 
 - **their G2** (H1/H3 shells land) → `P10-react-shell`, `P11-wgpu-shell` (adopt `ShellState`/`ShellCommand`, mount `AgentBridge`), then `P12-e2e`.
 - **their G3** (plugin crates unfrozen) → `P13`/`P14` enrichment, then `P15` re-measures the eval.
 - **independent of them**: `P4-hub-agent`, still deferred per D7 until the live hub tickets close.
+
+## 2026-08-18 — W2: their G1 met, our mutation/headless/shell wave
+
+Re-checked their gates before dispatching anything: `cargo check -p semio-framework-plugin-host --lib` **finishes clean**, `CHANNEL_VERSION` is **12** (A4 landed), `✏️s/🔌️plugins/🗒️note/🔣️descriptor.json` is a real committed descriptor, and their status records **W2 complete** (H1–H4). So G1 and G2 are both effectively met and P6/P7/P8/P10 were dispatched.
+
+### The convergent blocker, and why it was mine
+
+P6, P7 and P8 all finished blocked on the **same** 4 type errors in `🗂️catalog/🦀️component.rs`, each correctly refusing to fix a file outside its scope and each filing a lease. Three independent confirmations is a strong signal, and it was right: their E1 had given `ContributionSet`'s four contribution categories their real typed shapes (exactly the follow-up A3's report predicted), so P2's untyped-`DescriptorEntry` helper no longer type-checked.
+
+I fixed it rather than round-tripping it, and took the opportunity the type change created: a `ContributionRow` trait implemented once per category, so each row now yields a genuinely descriptive capability (an inference names its schema and artifact kind; an io entry reads `Import x as y` from `owner`/`counterpart`/`direction`) instead of the old `"{category} contribution from {plugin}"` placeholder. Two traps on the way, both caught by compiling rather than assuming: there are **two** different `IoEntryDescriptor` types in the tree (`🚪️io`'s is `from`/`into`/`fidelity`; `🛂️manifest`'s — the one `ContributionSet` actually uses — is `owner`/`counterpart`/`direction`), and `ArtifactDialect`'s field is `artifact_kind`, not `kind`.
+
+### Five real defects, executable for the first time
+
+With the crate compiling, the suite ran and reported **151 passed, 5 failed** — the first honest signal any of that code had ever had. Both agents diagnosed root causes properly instead of adjusting assertions:
+
+- **P6** proved the "schema validation is broken" hypothesis *wrong* by driving the real compiled schema through a real validator: `translateSelection`'s fixture args never call `.required()`, so `{}` is genuinely valid and the **test** encoded the wrong expectation. It rewrote the test to use a real type violation and added two regression tests. Its second bug was real: `invoke()` revoked the one-shot prepared handle on every call including cache hits, so an idempotent replay failed with `NOT_FOUND` before the idempotency store was consulted — fixed by moving the whole body inside the idempotency closure.
+- **P7** found that the writer (`open_probes`, in-memory) and the readers (cold `FolderSqliteStorage`) were never the same data source, and — the good one — that `a_headless_commit_propagates…` failed with `Closed`, not a timeout, because the test called `subscribe()` **before** `open()`, which by that API's own contract yields an already-dead channel. Reordering fixed it; it explicitly did not paper over a `Closed` by extending a deadline.
+
+### An interop bug the conformance suite earned its keep on
+
+After relocating an `ajv` import to satisfy a real policy finding, the SDK suite went red — and the failure was genuine: **the official MCP client could not parse our `tools/list` at all**. Two distinct defects, both fixed at the one choke point every tool passes through (`ToolRegistry::register`), so no future tool can reintroduce either:
+1. `schemars` emits the bare boolean `true` for a free-form `serde_json::Value` field. That is legal JSON Schema but the SDK's Zod model requires object sub-schemas — `$ZodError` on `action_prepare.outputSchema.properties.preview`, rejecting the whole response. Now normalised to `{}` / `{"not": {}}`, with the boolean-*keyword* list (`additionalProperties`, `uniqueItems`, …) explicitly excluded so a flag is never mistaken for a schema.
+2. `schemars` 0.8 emits **draft-07**, while MCP requires 2020-12. Converted properly — `definitions` → `$defs` and every `#/definitions/` ref repointed — not relabelled. All **25** published schemas now declare 2020-12 with zero stale refs.
+
+P6 independently hit defect (1) too, and separately caught that **Nx had served a cached green against a stale binary** — worth remembering: `--skip-nx-cache` whenever a test result is being used as evidence.
+
+### State
+
+- `cargo test -p semio-framework-os-mcp` → **160 passed, 0 failed, exit 0**; TS conformance → **22/22**.
+- The empty-doctest rustdoc step was disabled with its reasoning recorded: the crate has zero `` ``` `` examples (verified), so it only re-linked dependency rlibs — and with several sessions rebuilding `semio-framework` concurrently, that link intermittently failed on an rlib replaced mid-run. Two consecutive runs named *different* missing rlibs, which is what identified it as a concurrency artifact rather than a defect.
+- **Registrar work applied**: `dev mcp stdio os` / `dev mcp http os` routed in root `📜️script.ts` (proven end to end — the router returns a correct `server/discover`); `.mcp.json` **and all five IDE mirrors** consolidated to `repo` + `semio` with the six legacy neo4j entries removed (each mirror keeps its own repo client slug: cursor/copilot/kiro/codex); launch seed gained `🛠️dev🌉️os-mcp🧵️stdio`, `🛠️dev🌉️os-mcp🌐️http`, `🖱️mcpinspector🌉️os` and the compound `🧭️compound🖥️s⚛️react🌉️os-mcp`, regenerated into `launch.json` (255 configs, valid).
+- I corrupted `.codex/config.toml` mid-edit (my insertion point landed inside an array literal) and repaired it by hand from `git show HEAD:` — `git checkout` is forbidden here, so reading the committed blob and rewriting the file was the only safe route.
+- **P10** delivered `AgentBridge`/`AgentPresence`/`AgentApprovals` (51 tests) importing — not reimplementing — both the bridge codec and the shell reducer. I applied its `ShellHost` mount lease and verified the React suite is **11 failed / 325 passed**, byte-identical to the pre-change baseline, with **zero** agent-related failures among them.
+
+### Live end-to-end proof of the safety gate, and one real runtime gap
+
+Drove the real binary against a real folder space (not a fixture, not a unit test):
+
+- `context_resolve` → a genuine session handle, catalog hash and principal.
+- `action_prepare` on `cad.editor.translateSelection` with **no scopes** → `isError: true`, `PERMISSION_DENIED`, message `principal agent:local lacks required scope documents.write`. The policy gate works end to end through the real MCP surface, and it names the missing scope rather than failing opaquely.
+- The same call **with** `--scopes artifact.read,artifact.write` gets past policy and then fails at `wasmtime: component imports instance wasi:io/poll@0.2.9, but a matching implementation was not found in the linker` — a real gap: the headless workspace's linker does not provide the WASI p2 imports that a `wasm32-wasip2` plugin component needs. Sent back to P7 (as P7b) with the reproduction, and with an explicit instruction to determine whether the fix is adding WASI to our linker or routing through the plugin host's existing linker construction — duplicating that setup would be exactly the divergence CLAUDE.md forbids.
+
+`P1c` is in flight to mount the bridge WebSocket route for real: P10 found (and I confirmed at `🌉️mcp/🦀️component.rs` ~L664/L705) that `run_http` never served `/bridge` and no token minting existed, so the React `AgentBridge` had nothing to dial. The codec was already proven byte-identical across Rust and TS — it was the socket that was missing.
+
+### Taxonomy debt, deliberately deferred
+
+`verify taxonomy report` reports **10 858** findings repo-wide (the repo is far from clean mid-refactor). Exactly **13** name our own paths, and they are legitimate:
+
+| finding | subject | verdict |
+|---|---|---|
+| `collection-empty` / `collection-manifest-missing` / `collection-authored-behavior` | `🌉️mcp/🎬️actions` | **real name collision** — `🎬️actions` is a reserved *semantic collection* in the plugin taxonomy, so our facet directory is being read as a collection. Needs renaming to a non-reserved facet name. |
+| `manifest-child-missing` ×5 | `🌉️mcp`, `🖥️shell`, `AgentBridge`, `AgentPresence`, `AgentApprovals` | each new directory needs its `🔣️component.json` declaring children |
+| `packaging-violation` | `🌉️mcp/📦️packages/🟦️typescript/🧬️schema-validation.ts` | my file, from relocating the `ajv` import — needs the correct packaging placement |
+| `generated-provenance-missing`, `module-production-consumer-minimum`, `module-consumer-graph-mismatch` ×2 | `🖥️shell`, `🌉️mcp` | generated-file provenance header + consumer declarations |
+
+**Not fixed in this wave, on purpose.** `P1c` and `P7b` are editing inside `🌉️mcp` right now, and a directory rename plus `#[path]` rewiring under a live agent is precisely the "don't fight a live rewrite" failure I have been enforcing on every packet. It is queued as a single cleanup pass once both land.
+
+### The live loop closes — verified by me against a running gateway
+
+`P1c` merged the `/bridge` WebSocket route into the same axum app that serves `/mcp` (`🚚️transport` L223–224) and mints a fresh token per start. I booted the real binary and drove it with a **real WebSocket client using the TypeScript codec twin** — the same module the React `AgentBridge` imports:
+
+```
+[semio-os-mcp] bridge listening on ws://127.0.0.1:7411/bridge?token=49d1922c…  (also written to /tmp/semio-tok.I0l2/bridge-token)
+socket OPEN
+sent Hello (variant-tagged)
+received: {"variant":"welcome","bridgeVersion":1,"connection":"conn_0","principal":"agent:local"}
+sent Ping
+received: {"variant":"pong"}
+PASS: live bridge Hello->Welcome and Ping->Pong
+```
+The token file is `-rw-------` (0600), as required.
+
+Security properties, all checked against the running process rather than asserted:
+
+| probe | result |
+|---|---|
+| `/bridge?token=WRONG` | **401** |
+| `/bridge` with `Origin: https://evil.example` | **403** |
+| `POST /mcp` with no bearer | **401** |
+| `POST /mcp` with bearer + `MCP-Protocol-Version: 2026-07-28` | real `tools/list` |
+
+`/mcp` and `/bridge` share one socket, so a shell and an LLM client attach to the same gateway.
+
+Suite after all of it: **169 passed, 0 failed** (up from 160 — P1c and P7 added tests).
+
+### Two coordination notes worth keeping
+
+**I did not fix a peer's broken crate, and that was right.** `semio-framework-ui` went red mid-session (`unresolved import presence_bar::presence_hue_for_actor` — a peer deleted the function, its replacement's own doc comment says so, while a `🎯️targets/🧊️wgpu/📦️glue.rs` re-export still named it). It blocked our builds. But `stat` showed both files had been written **seconds earlier**, so the session was live, not abandoned — the opposite of the stopped-12-hours case where their coordinator correctly did intervene. I warned both running agents (so they would not misattribute it or "helpfully" patch someone else's crate) and waited. The peer fixed it themselves at 13:19:46 and our suite went green again.
+
+**`P7b` reached the right conclusion and stopped at the boundary.** The WASI gap (`wasi:io/poll@0.2.9` missing from the linker) cannot be fixed from `🏠️workspace/**`: our own `world actor` declares exactly one import (`pure`), and the requirement comes from the built `wasm32-wasip2` component itself — so the linker change belongs in `semio-framework-plugin-host`, which is the peer ticket's B1 territory. It filed that rather than duplicating linker setup locally, which would have been exactly the divergence CLAUDE.md forbids. **Real plugin instantiation in headless mode therefore remains open**, pending that lease. Everything up to instantiation — policy, schema validation, prepare, catalog, resources — is proven working.

@@ -12,6 +12,6 @@ pub fn diff(payload: &EditText, base: &WriterSnapshot) -> protocol::MutationOutc
     if crate::artifacts::writer::writer_text(base) == payload.text {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Document text is unchanged.".to_string());
     }
-    protocol::MutationOutcome::new(crate::artifacts::writer::schema::diff::text::diff_set_text(&payload.text, &base.id, &base.language_id))
+    protocol::MutationOutcome::new(crate::artifacts::writer::standards::v1::subsets::any::io::diff::text::diff_set_text(&payload.text, &base.id, &base.language_id))
 }
 //#endregion 🔖️Diff

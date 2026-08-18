@@ -19,6 +19,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use super::aabb::SemioAabb;
+#[cfg(test)]
+use super::aabb::aabb_key;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a mesh snapshot. One field per named inference under

@@ -2921,6 +2921,39 @@
       }
     },
     {
+      "name": "🛠️dev🌉️os-mcp🧵️stdio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev mcp stdio os",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.05
+      }
+    },
+    {
+      "name": "🛠️dev🌉️os-mcp🌐️http",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts dev mcp http os",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.06
+      }
+    },
+    {
+      "name": "🖱️mcpinspector🌉️os",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx --yes @modelcontextprotocol/inspector --config .mcp.json --server semio",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "2_mouse",
+        "order": 31
+      }
+    },
+    {
       "name": "🛠️dev🕸️os-run",
       "type": "node-terminal",
       "request": "launch",
@@ -3946,6 +3979,15 @@
     // #endregion
   ],
   "compounds": [
+    {
+      "name": "🧭️compound🖥️s⚛️react🌉️os-mcp",
+      "configurations": ["🛠️dev🌉️os-mcp🌐️http", "🛠️dev🖥️s⚛️react"],
+      "stopAll": true,
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.16
+      }
+    },
     {
       "name": "🧭️compound🖥️s⚛️react🗄️os-hub",
       "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s⚛️react"],

@@ -394,3 +394,88 @@ Full transcript: `🧪️p7-final-build.txt`.
 poke fixes). No other file in `path_scope` needed a change. `🧪️p7-postunblock-1.txt` through
 `🧪️p7-postunblock-3.txt` and `🧪️p7-final-workspace.txt`/`🧪️p7-final-workspace2.txt`/
 `🧪️p7-final-full.txt`/`🧪️p7-final-build.txt` are the scratch evidence trail for this pass.
+
+## P7b — wasm linker
+
+### What was driven, live, verbatim
+
+```
+$ BIN=.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/semio-os-mcp
+$ WORK=$(mktemp -d /tmp/semio-agent-space.XXXX)
+$ printf '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"action_prepare","arguments":{"capabilityId":"cad.editor.translateSelection","input":{"dx":1.0}},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28"}}}\n' | "$BIN" stdio --folder "$WORK" --scopes artifact.read,artifact.write
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"text":"Internal: instantiating `note`: wasmtime: component imports instance `wasi:io/poll@0.2.9`, but a matching implementation was not found in the linker","type":"text"}],"isError":true,"resultType":"complete","structuredContent":{"code":"INTERNAL","details":null,"message":"Internal: instantiating `note`: wasmtime: component imports instance `wasi:io/poll@0.2.9`, but a matching implementation was not found in the linker","retryable":false}}}
+```
+Reproduced exactly as sol reported — identical error text, identical shape.
+
+### Question 1 — is the fix ours to add, or an existing plugin-host entry point?
+
+**Neither, precisely: there is no existing entry point that wires WASI, and the fix cannot be made
+from `🏠️workspace/**` at all — it has to land in `semio-framework-plugin-host` itself.**
+
+Verified, not assumed:
+- `world actor`'s own WIT (`🔌️plugin/🧬️schema/📜️component.wit:816`) declares exactly one import
+  (`pure`) — no WASI import anywhere in our own world. The `wasi:io/poll@0.2.9` requirement comes
+  transitively from the Rust `wasm32-wasip2` target's own runtime — every real component built for
+  that target needs a full WASI Preview 2 linker regardless of its own WIT world, a well-known
+  wasmtime/wasm32-wasip2 characteristic, not a defect in the descriptor or the WIT.
+- `wasmtime-wasi = "22.0.1"` **is already a declared dependency** of `semio-framework-plugin-host`
+  (and, unused, of `semio-framework-plugin-describe` too) — but a repo-wide grep for
+  `wasmtime_wasi::|WasiCtx|WasiView|add_to_linker` across the entire `🧰️framework` tree returns ZERO
+  matches outside those two `Cargo.toml` dependency lines. Nobody has ever wired it. `ActorHostState`
+  (`🔌️plugin/🖥️host/🦀️component.rs:692`) has no `WasiCtx`/`ResourceTable` fields and no `WasiView`
+  impl; `WasmtimeRuntime::new`'s linker only calls
+  `actor_bindings::semio::framework::pure::add_to_linker`.
+- `🏠️workspace/🦀️component.rs` already calls the ONE shared entry point that exists
+  (`semio_framework_plugin_host::WasmtimeRuntime::new`/`instantiate`/`execute_turn`) rather than
+  constructing a second `Linker` — that half of the architecture was already right; there was nothing
+  to "reuse" that isn't already being reused, because the WASI wiring itself has never been written
+  by anyone, anywhere in this tree.
+- `WasmtimeRuntime`'s `linker: Linker<ActorHostState>` field and `ActorHostState` struct are both
+  **private** to `🔌️plugin/🖥️host/🦀️component.rs` — there is structurally no way to inject additional
+  linker imports from outside that file. The fix cannot be made from `🏠️workspace/**` regardless of
+  how it's written, and that file is explicitly listed in `📌️important.md`'s collision table as B1's
+  (peer ticket) territory, not this packet's.
+
+**Action taken**: filed `…/📓️lease-P7b-wasi-linker.md` (this ticket folder) with the exact fix,
+version-verified against the pinned `wasmtime-wasi = "22.0.1"` source directly
+(`~/.cargo/registry/src/…/wasmtime-wasi-22.0.1/src/{lib,ctx}.rs` — the real `add_to_linker_sync::<T:
+WasiView>` signature and `WasiView { ctx, table }` shape, not generic docs that drift across
+versions) — `ActorHostState` gains `wasi_ctx: WasiCtx` + `resource_table: ResourceTable`, a
+`WasiView` impl, `wasmtime_wasi::add_to_linker_sync(&mut linker)` alongside the existing `pure`
+linker call, and a sandboxed-default `WasiCtxBuilder::new().build()` (no inherited stdio/fs/network —
+matches the plugin host's own "capability-gated imports" security stance; none of `pure`'s three
+functions need real WASI access). Cross-posted a copy to the peer ticket's own folder
+(`…/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️lease-from-LLM-FIRST-OS-P7b-wasi-linker.md`) per
+`📌️important.md`'s own instruction that a peer-owned-file change "is a lease-request posted to their
+ticket folder."
+
+### Question 2 — does a real turn complete once instantiation succeeds?
+
+**Cannot be answered yet, and I am saying so plainly rather than claiming otherwise: instantiation
+itself does not succeed today**, blocked entirely on the lease above. Nothing downstream of
+`WasmtimeRuntime::instantiate` (the `Event::InstanceOpen` turn, and — the actual target of
+`action_prepare` — a real `PureCommand` round trip) can be exercised until it lands. Recorded here so
+this is re-checked, not forgotten, the moment the lease is applied:
+- `activate_plugin_instance` (`🏠️workspace/🦀️component.rs`) already submits a real
+  `Event::InstanceOpen` turn immediately after `instantiate` succeeds — that half is written and
+  compiler-verified, just unexercised until instantiation itself works.
+- `PluginArtifactChannel::exchange`'s `PureCommand` arm (what `action_prepare`/`action_invoke`
+  actually need for a real preview) is **still** the honestly-stubbed `"channel.not-wired"` gap this
+  report's §6 already named — constructing a real `manifest::ActionInvocation{address:
+  ActionAddress{mode_id, window_kind_id, window_instance_id, ..}}` for a headless session with no
+  live window/mode remains undecided design work this packet has not invented an answer for. So even
+  once instantiation is fixed, `action_prepare` will not return a genuine `PreparedActionReport` from
+  this path yet — it will still surface `PLUGIN_UNAVAILABLE`/`"channel.not-wired"`, now for a
+  different, more specific reason than "no backend wired." This is the honest, current ceiling of
+  what P7 can prove end-to-end, and it is unchanged by this packet — only the instantiation floor
+  moved.
+
+### Test suite
+
+`cargo test -p semio-framework-os-mcp` re-run after the WASI investigation; verbatim output and exit
+code recorded once the shared build lock (contended with P1c's own concurrent
+`cargo test -p semio-framework-os-mcp` run against the same `CARGO_TARGET_DIR`, confirmed via `ps
+aux` — both our sessions legitimately share this ticket's target dir) clears. No file in
+`🏠️workspace/**`/`📦️bin.rs`/root `🦀️component.rs`/`Cargo.toml`/`📦️glue.rs` was touched for P7b — this
+was a pure diagnosis-and-lease packet, so the 160/0 baseline from the prior section is not expected
+to regress; confirming that with a fresh run is the only remaining step.

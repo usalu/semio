@@ -7602,8 +7602,8 @@ export { TableAvatar, type TableAvatarProps };
 // #endregion 📻️TableAvatar
 
 // #region 👥️PresenceBar
-import { PresenceBar, presenceHueForActor, PRESENCE_BAR_DEFAULT_MAX, type PresenceBarProps, type PresencePeer, type PresenceRole } from "../../../../🧱️elements/👥️PresenceBar/🟦️component.tsx";
-export { PresenceBar, presenceHueForActor, PRESENCE_BAR_DEFAULT_MAX, type PresenceBarProps, type PresencePeer, type PresenceRole };
+import { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole } from "../../../../🧱️elements/👥️PresenceBar/🟦️component.tsx";
+export { PresenceBar, presenceColor, presenceCssVar, PRESENCE_BAR_DEFAULT_MAX, type PresenceAppearance, type PresenceBarProps, type PresenceHsl, type PresencePeer, type PresenceRole };
 // #endregion 👥️PresenceBar
 
 // #region 🎹️Spinner
@@ -20902,14 +20902,34 @@ if (treeVitest) {
       void uiI18n.changeLanguage("en");
     });
 
-    it("assigns a deterministic per-actor hue that differs across peers", () => {
-      const a = presenceHueForActor("user:alice#s1");
-      const b = presenceHueForActor("user:alice#s1");
-      const c = presenceHueForActor("user:bob#s1");
-      expect(a).toBe(b);
-      expect(a).not.toBe(c);
-      expect(a).toBeGreaterThanOrEqual(0);
-      expect(a).toBeLessThan(360);
+    // 👥️ Pinned index/appearance table (contract freeze §C7.5) — the Rust twin's
+    // `presence_color_wraps_after_twelve_with_lightness_then_saturation_shift` (`🧊️component.rs`)
+    // pins the same formula against the same `ui_styling::presence`-generated constants
+    // (`hues`/`light`/`dark` from `🎨️styling/🔣️tokens.json`), so identical inputs here prove the two
+    // implementations compute byte-identical HSL — this is the "TS twin" half of that cross-check.
+    it("presenceColor matches the Rust twin's pinned index/appearance table", () => {
+      const cases: readonly [index: number, appearance: PresenceAppearance, expected: PresenceHsl][] = [
+        [0, "light", { h: 0, s: 0.68, l: 0.32 }],
+        [5, "light", { h: 180, s: 0.68, l: 0.32 }],
+        [11, "dark", { h: 90, s: 0.72, l: 0.62 }],
+        [12, "light", { h: 0, s: 0.68, l: 0.46 }], // k=1 (odd, <2): lightness +0.14, no desaturation
+        [12, "dark", { h: 0, s: 0.72, l: 0.48 }], // k=1: dark shifts lightness DOWN instead
+        [24, "light", { h: 0, s: 0.43, l: 0.32 }], // k=2 (even, >=2): desaturate -0.25, no lightness shift
+        [25, "dark", { h: 210, s: 0.47, l: 0.62 }], // k=2
+        [37, "light", { h: 210, s: 0.43, l: 0.46 }], // k=3 (odd, >=2): both shifts apply
+      ];
+      for (const [index, appearance, expected] of cases) {
+        const resolved = presenceColor(index, appearance);
+        expect(resolved.h, `index=${index} ${appearance} h`).toBe(expected.h);
+        expect(resolved.s, `index=${index} ${appearance} s`).toBeCloseTo(expected.s, 10);
+        expect(resolved.l, `index=${index} ${appearance} l`).toBeCloseTo(expected.l, 10);
+      }
+    });
+
+    it("presenceCssVar addresses only the base cycle, wrapping modulo 12", () => {
+      expect(presenceCssVar(0)).toBe("var(--presence-0)");
+      expect(presenceCssVar(11)).toBe("var(--presence-11)");
+      expect(presenceCssVar(12)).toBe("var(--presence-0)");
     });
   });
 }

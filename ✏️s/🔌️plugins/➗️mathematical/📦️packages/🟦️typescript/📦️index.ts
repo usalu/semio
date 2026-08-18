@@ -1,13 +1,6 @@
-/** mathematical facet WASM facades */
-export * as mathematical_schema from "../../🗿️artifacts/➗️mathematical/🧬️schema/🟦️component.ts";
-export * as mathematical_snapshot from "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/🟦️component.ts";
-export * as mathematical_snapshot_text from "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
-export * as mathematical_snapshot_binary from "../../🗿️artifacts/➗️mathematical/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
-export * as mathematical_diff from "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/🟦️component.ts";
-export * as mathematical_diff_text from "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/📝️text/🟦️component.ts";
-export * as mathematical_diff_binary from "../../🗿️artifacts/➗️mathematical/🧬️schema/🔺️diff/💾️binary/🟦️component.ts";
-export * as mathematical_mutations from "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/🟦️component.ts";
-export * as mathematical_mutations_text from "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
-export * as mathematical_mutations_binary from "../../🗿️artifacts/➗️mathematical/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
-export * as mathematical_io from "../../🗿️artifacts/➗️mathematical/🚪️io/🟦️component.ts";
-export * as mathematical_decomposer from "../../🗿️artifacts/➗️mathematical/🪓️decomposer/🟦️component.ts";
+/** 📦️ mathematical facet WASM facades — mirrors the declaration-tree taxonomy (ticket
+ * 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM). `🪓️decomposer` and the flat artifact-level
+ * `🧬️schema`/`🚪️io` targets this file pointed at pre-migration never existed in the current tree
+ * (confirmed: zero matching directories) — replaced with the real standard/subset-scoped paths. */
+export * as mathematical_schema from "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
+export * as mathematical_io from "../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️component.ts";

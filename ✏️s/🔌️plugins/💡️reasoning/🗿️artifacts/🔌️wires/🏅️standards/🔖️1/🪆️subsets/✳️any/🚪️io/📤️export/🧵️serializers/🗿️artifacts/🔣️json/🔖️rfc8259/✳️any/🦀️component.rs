@@ -1,16 +1,21 @@
-//! wires -> json
+//! 🚪️ wires -> json — foreign `Serializer<WiresSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Symmetric with the sibling
+//! `Deserializer`: emits `WiresSnapshot`'s own canonical JSON shape verbatim, so `IoFidelity::Exact`.
+
 use crate::artifacts::wires::WiresSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 
-pub fn register() {}
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn serialize(snapshot: &WiresSnapshot) -> Result<JsonSnapshot, store::TextError> {
-    Ok(JsonSnapshot {
-        schema: STDIO_JSON_DOCUMENT_SCHEMA.into(),
-        value: serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?.into(),
-    })
-}
+pub struct WiresIntoJson;
 
-pub fn serialize_bytes(snapshot: &WiresSnapshot) -> Result<Vec<u8>, store::TextError> {
-    serde_json::to_vec_pretty(&serialize(snapshot)?.value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+impl Serializer<WiresSnapshot> for WiresIntoJson {
+    const INTO: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    fn serialize(from: &WiresSnapshot) -> IoResult<IoPayload> {
+        let text = serde_json::to_string_pretty(from).map_err(|error| IoError { message: format!("WiresIntoJson: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Text(text)))
+    }
 }

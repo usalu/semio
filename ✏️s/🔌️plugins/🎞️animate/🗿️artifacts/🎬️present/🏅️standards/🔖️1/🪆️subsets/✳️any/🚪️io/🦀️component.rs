@@ -1,224 +1,66 @@
-//! 🚪️ IO s.present (1/✳️any) — the artifact declaration owns this composer table.
-pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"]
-}
-pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.md", "stdio.pdf", "stdio.png", "stdio.pptx", "stdio.svg", "stdio.txt"]
-}
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use crate::artifacts::present::standards::v1::subsets::any::schema::PresentAnalyzer;
-    use crate::artifacts::present::PresentSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+//! 🚪️ IO s.animate.present (1/✳️any) — `io() -> IoDeclaration` (design.md §2/§3): the native codec
+//! plus every foreign hop, aggregated from the typed `Serializer<PresentSnapshot>`/
+//! `Deserializer<PresentSnapshot>` leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`.
+//! Replaces the old hand-rolled `ArtifactComposition`/`ComposerEntry` dispatch chain outright — all
+//! io now goes exclusively through the `io_mechanism` registry (design.md rule 3).
+//!
+//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
+//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
+//! impls for `PresentSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
+//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `PresentMutation`), and
+//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are computed,
+//! never authored). `NativeCodecs.{snapshot,diff,mutations,inferences}: LanguagePair { text: None,
+//! binary: None }` below leaves their `dsl::LanguageSpec` registration deferred — a real, supported
+//! shape per that type's own doc, matching the stdio pilot's/`🎬️sequence`'s identical documented
+//! deviation; the underlying codec impls these would point at are unchanged and independently
+//! tested either way.
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.present", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_MD: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_PPTX: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
-    const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-
-    pub struct PresentComposerComposition;
-
-    impl ArtifactComposition for PresentComposerComposition {
-        type Snapshot = PresentSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_MD, DEP_PDF, DEP_PNG, DEP_PPTX, DEP_SVG, DEP_TXT]
-        }
-
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
-                    };
-                    let analysis = PresentAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_MD {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PDF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PPTX {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::pptx::v_ecma_376::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_SVG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::present::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-            }
-            Err(ComposeError { message: "PresentComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
-
-//#region 🚪️DerivedIoRegistry
-/// 🗄️ Relocated verbatim from the former artifact-tree `⚙️engine`'s root `component.rs` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — this is the real, typed composer registry
-/// (`ComposerEntry`/`entries()`), mirroring `🧱️block/🗿️artifacts/◻2d/🚪️io/🦀️component.rs`'s
-/// `io_registry` shape exactly. The artifact root's OWN `io_registry` module is a DIFFERENT, thinner
-/// wrapper (`&'static [&'static ComposerEntry]`) that calls this one fully-qualified — never confuse
-/// the two, and never reference this module by a bare `io_registry::` path from outside `🚪️io`.
-pub mod io_registry {
-    use crate::artifacts::present::standards::v1::subsets::any::schema::PresentBuilder as PresentAnyBuilder;
-    use crate::artifacts::present::standards::v1::subsets::any::schema::PresentComposer as PresentAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+//#region 🔖️IoDeclaration
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::present::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::present::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::artifacts::present::{PresentMutation, PresentSnapshot, ANIMATE_DIALECT, PRESENT_DOCUMENT_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const PRESENT_DIALECT: Dialect = Dialect { artifact_kind: "s.present", standard: StandardId("1"), subset: SubsetId("*") };
-    const PRESENT_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::present::PresentSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == PRESENT_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => PresentAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => PresentAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "PresentComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == PRESENT_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::present::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "PresentComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
-    }
-
-    const EXPORT_PPTX_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
-    fn compose_export_pptx(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::pptx::v_ecma_376::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PPTX_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    fn compose_export_svg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    fn compose_export_md(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::present::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub fn entries() -> &'static [ComposerEntry] {
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    composer_entry_of::<PresentAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_PPTX_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pptx },
-                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_svg },
-                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_pdf },
-                    ComposerEntry { writes: EXPORT_MD_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_md },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[PRESENT_DIALECT], compose: compose_export_json },
+                    serializer_entry::<PresentSnapshot, export::json::v_rfc8259::any::PresentIntoJson>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::json::v_rfc8259::any::JsonIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::md::v_commonmark::any::PresentIntoMd>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::md::v_commonmark::any::MdIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::pdf::v1_4::any::PresentIntoPdf>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::pdf::v1_4::any::PdfIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::pptx::v_ecma_376::any::PresentIntoPptx>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::pptx::v_ecma_376::any::PptxIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::svg::v1_1::any::PresentIntoSvg>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::svg::v1_1::any::SvgIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::png::v1_2::any::PresentIntoPng>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::png::v1_2::any::PngIntoPresent>(ANIMATE_DIALECT),
+                    serializer_entry::<PresentSnapshot, export::txt::v_utf_8::any::PresentIntoTxt>(ANIMATE_DIALECT),
+                    deserializer_entry::<PresentSnapshot, import::txt::v_utf_8::any::TxtIntoPresent>(ANIMATE_DIALECT),
                 ]
             })
             .as_slice()
     }
+
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: None, binary: None },
+            diff: LanguagePair { text: None, binary: None },
+            mutations: LanguagePair { text: None, binary: None },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<PresentSnapshot, PresentMutation>(PRESENT_DOCUMENT_SCHEMA.to_string()),
+        },
+        entries: entries(),
+    }
 }
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🔖️IoDeclaration
+
 
 //#region 🔖️MediaCodec
 /// 🖼️ Relocated verbatim from the former artifact-tree `⚙️engine` (ticket

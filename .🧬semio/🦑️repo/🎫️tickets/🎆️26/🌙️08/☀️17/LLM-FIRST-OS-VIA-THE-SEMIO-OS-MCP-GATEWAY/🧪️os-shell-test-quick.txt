@@ -1,0 +1,21 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-shell:test-quick
+
+> nx run @semio-tech/framework-os-shell:test-quick
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  12:53:53
+   Duration  2.94s (transform 1.70s, setup 0ms, import 2.01s, tests 803ms, environment 0ms)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/framework-os-shell
+
+

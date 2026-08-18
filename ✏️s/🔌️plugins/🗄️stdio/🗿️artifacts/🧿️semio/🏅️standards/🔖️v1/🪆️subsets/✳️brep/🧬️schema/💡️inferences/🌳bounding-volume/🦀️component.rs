@@ -440,6 +440,7 @@ impl EdgeBvh {
 mod tests {
     use super::*;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
+    use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;

@@ -421,6 +421,11 @@ pub trait GuestRuntime: Send + Sync {
     /// `PluginInstanceHandle::run_job_to_completion` (`//#region 🔀️PostTurnRelay`) is the only caller.
     fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault>;
     fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
+    /// 🛑️ `jobs.wit`'s `cancel-job` export — added past `design-runtime.md` §2's literal trait
+    /// listing for the SAME reason `start_job` was (that listing names only `execute_turn`/
+    /// `step_job`, but `jobs.wit` declares three functions, and a generic `Effect::CancelJob`
+    /// admission path — `🧵️shard/🦀️component.rs`'s `ShardLoop::pump` — needs somewhere to call).
+    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
     fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
     fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
     fn drop_instance(&self, inst: GuestInstance);
@@ -454,12 +459,18 @@ struct MockInstanceState {
 pub struct MockGuestRuntime {
     now_ms: std::sync::atomic::AtomicI64,
     scripts: Mutex<HashMap<u64, VecDeque<ScriptedOutcome>>>,
+    /// 📼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1): every `events` slice `execute_turn` was
+    /// ever called with, per actor, in call order — `_events` used to be ignored entirely. A test
+    /// proving a job's completion actually reaches the ORIGINATING actor (not just that
+    /// `step_job` returned `Done`) needs to see the synthesized `Event::JobCompleted` really was
+    /// handed to a later `execute_turn` call, which this makes assertable without a real guest.
+    observed_events: Mutex<HashMap<u64, Vec<Event>>>,
 }
 
 #[cfg(test)]
 impl Default for MockGuestRuntime {
     fn default() -> Self {
-        Self { now_ms: std::sync::atomic::AtomicI64::new(0), scripts: Mutex::new(HashMap::new()) }
+        Self { now_ms: std::sync::atomic::AtomicI64::new(0), scripts: Mutex::new(HashMap::new()), observed_events: Mutex::new(HashMap::new()) }
     }
 }
 
@@ -504,6 +515,12 @@ impl MockGuestRuntime {
     pub fn idle_turn() -> TurnResult {
         TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
     }
+
+    /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
+    /// every call, in order — see `observed_events`'s own doc comment for why this exists.
+    pub fn observed_events(&self, actor: RuntimeActorId) -> Vec<Event> {
+        self.observed_events.lock().expect("mock runtime lock poisoned").get(&actor.0).cloned().unwrap_or_default()
+    }
 }
 
 #[cfg(test)]
@@ -517,7 +534,8 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
 
-    fn execute_turn(&self, inst: &mut GuestInstance, _events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
+    fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], _budget: Budget) -> Result<TurnResult, TurnFault> {
+        self.observed_events.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?.entry(inst.actor.0).or_default().extend_from_slice(events);
         let mut scripts = self.scripts.lock().map_err(|_| TurnFault::Host(PluginHostError::LockPoisoned("mock runtime")))?;
         let queue = scripts.entry(inst.actor.0).or_default();
         match queue.pop_front() {
@@ -549,6 +567,15 @@ impl GuestRuntime for MockGuestRuntime {
             Some(ScriptedOutcome::Fault(message)) => Err(TurnFault::Trapped(message)),
             None => Err(TurnFault::Exhausted),
         }
+    }
+
+    /// 🛑️ Mirrors `run_job_to_completion`'s own assumption that cancellation just drops
+    /// bookkeeping (`⚛️reactor/💼️jobs/🦀️component.rs::cancel_job`'s real guest-side counterpart) —
+    /// no scripted outcome to consume, since a cancelled job is never stepped again by whichever
+    /// caller cancelled it (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump` removes it from
+    /// `running_jobs` in the SAME turn it sees the `Effect::CancelJob`).
+    fn cancel_job(&self, _inst: &mut GuestInstance, _job: u64) -> Result<(), TurnFault> {
+        Ok(())
     }
 
     fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
@@ -851,6 +878,17 @@ impl GuestRuntime for WasmtimeRuntime {
             wit_jobs::JobStep::Done(bytes) => JobStep::Done(bytes),
             wit_jobs::JobStep::Failed(bytes) => JobStep::Failed(bytes),
         })
+    }
+
+    fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
+        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
+            return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
+        };
+        // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
+        // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
+        // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
+        // `start_job`/`step_job` need.
+        state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
     }
 
     fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {

@@ -46,7 +46,18 @@ interface Tokens {
   opacities?: Record<string, number>;
   metrics?: Record<string, Record<string, number | number[]>>;
   levels?: StylingLevels;
+  presence?: StylingPresence;
   appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
+}
+
+/** @emoji 👥️ The 12-hue session-color wheel (contract freeze §C7.5) driving `--presence-0..11` CSS vars,
+ * `presence::HUES/LIGHT/DARK` (Rust), and `STYLING_PRESENCE_PALETTES` (TS) — the pure twins in
+ * `👥️PresenceBar/{🧊️component.rs,🟦️component.tsx}` derive every peer's color from these three numbers
+ * plus the hub-assigned palette index. */
+interface StylingPresence {
+  hues: readonly number[];
+  light: { s: number; l: number };
+  dark: { s: number; l: number };
 }
 
 /** @emoji 🌓️ Knobs driving the formula-derived 6-level UI surface system (`base..menu`); see contract at
@@ -158,6 +169,14 @@ const LEVELS_DEFAULT: StylingLevels = {
   glassSaturate: 1.45,
   veilAlphaExtraSteps: 1,
   zStep: 10,
+};
+
+/** @emoji 👥️ Fallback presence palette (contract freeze §C7.5) — used when a `*.theme.json` predates the
+ * `presence` block; `🔣️tokens.json` and every premade theme carry their own copy of these same values. */
+const PRESENCE_DEFAULT: StylingPresence = {
+  hues: [0, 210, 120, 30, 270, 180, 330, 60, 240, 150, 300, 90],
+  light: { s: 0.68, l: 0.32 },
+  dark: { s: 0.72, l: 0.62 },
 };
 
 /** @emoji 🌓️ Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
@@ -354,6 +373,36 @@ function emitPaletteTheme(tokens: Tokens): string {
   return lines.join("\n");
 }
 
+/** @emoji 🔢️ Renders an `[0, 1]` fraction as a clean percent literal (`0.68` → `"68"`), avoiding float
+ * noise in generated CSS. */
+function pct(fraction: number): string {
+  return String(Math.round(fraction * 10000) / 100);
+}
+
+/** @emoji 👥️ Emits `--presence-0..11` under `:root` (light) and `.dark`, plus their `--color-presence-N`
+ * `@theme` aliases (contract freeze §C7.5) — the CSS half of the presence palette; `emitRust`/
+ * `emitTypeScriptTokens` emit the pure-twin half consumed by `👥️PresenceBar`. Only the base cycle
+ * (`index % 12`, i.e. `k = index / 12 === 0`) gets a CSS var; higher cycles render inline HSL via the
+ * `presence_color`/`presenceColor` twins. */
+function emitPalettePresence(tokens: Tokens): string {
+  const presence = tokens.presence ?? PRESENCE_DEFAULT;
+  const lines: string[] = ["/* Generated from framework/ui/styling/🔣️tokens.json — run `bun ./📜️script.ts generate`. */", ":root {"];
+  presence.hues.forEach((h, i) => {
+    lines.push(`  --presence-${i}: hsl(${h}deg ${pct(presence.light.s)}% ${pct(presence.light.l)}%);`);
+  });
+  lines.push("}", "", ".dark {");
+  presence.hues.forEach((h, i) => {
+    lines.push(`  --presence-${i}: hsl(${h}deg ${pct(presence.dark.s)}% ${pct(presence.dark.l)}%);`);
+  });
+  lines.push("}", "", "@theme {");
+  presence.hues.forEach((_, i) => {
+    lines.push(`  --color-presence-${i}: var(--presence-${i});`);
+  });
+  lines.push("}");
+  lines.push("");
+  return lines.join("\n");
+}
+
 function emitJsonConst(name: string, value: unknown, indent = ""): string {
   return `${indent}export const ${name} = ${JSON.stringify(value, null, 2).replaceAll("\n", `\n${indent}`)} as const;\n`;
 }
@@ -390,6 +439,7 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<ty
   lines.push(emitJsonConst("STYLING_OPACITIES", tokens.opacities ?? {}));
   lines.push(emitJsonConst("STYLING_METRICS", resolveMetrics(tokens.metrics)));
   lines.push(emitJsonConst("STYLING_LEVELS", tokens.levels ?? LEVELS_DEFAULT));
+  lines.push(emitJsonConst("STYLING_PRESENCE_PALETTES", tokens.presence ?? PRESENCE_DEFAULT));
   lines.push(emitJsonConst("STYLING_CANVAS_FONTS", tokens.canvasFonts ?? {}));
   for (const group of paletteGroupNames(resolvedAppearances)) {
     const groupPalettes: Record<string, Record<string, number[]>> = {};
@@ -541,6 +591,17 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
     lines.push("");
   }
   //#endregion 🌓️Levels
+  //#region 👥️Presence
+  {
+    const presence = tokens.presence ?? PRESENCE_DEFAULT;
+    lines.push("pub mod presence {");
+    lines.push(`    pub const HUES: [u16; 12] = [${presence.hues.map((h) => `${h}`).join(", ")}];`);
+    lines.push(`    pub const LIGHT: (f64, f64) = (${rustF64Lit(presence.light.s)}, ${rustF64Lit(presence.light.l)});`);
+    lines.push(`    pub const DARK: (f64, f64) = (${rustF64Lit(presence.dark.s)}, ${rustF64Lit(presence.dark.l)});`);
+    lines.push("}");
+    lines.push("");
+  }
+  //#endregion 👥️Presence
   for (const group of paletteGroupNames(resolvedAppearances)) {
     lines.push(`pub struct ${toPascalCase(group)}Palette {`);
     const sample = resolvedAppearances.light?.[group];
@@ -715,9 +776,11 @@ export function generateStylingArtifacts(): void {
   mkdirSync(dirname(pyGeneratedPath), { recursive: true });
   const fonts = emitPaletteFonts(tokens);
   const theme = emitPaletteTheme(tokens);
-  const paletteCss = `${fonts}\n${theme}`;
+  const presenceCss = emitPalettePresence(tokens);
+  const paletteCss = `${fonts}\n${theme}\n${presenceCss}`;
   writeFileSync(join(generatedCssDir, "palette-fonts.css"), fonts, "utf8");
   writeFileSync(join(generatedCssDir, "palette-🎨️theme.css"), theme, "utf8");
+  writeFileSync(join(generatedCssDir, "palette-presence.css"), presenceCss, "utf8");
   writeFileSync(join(stylingOwnerRoot, "🎨️palette.css"), paletteCss, "utf8");
   writeFileSync(join(generatedCssDir, "🟦️tokens.generated.ts"), emitTypeScriptTokens(tokens, resolvedAppearances), "utf8");
   const cs = emitCSharp(tokens);

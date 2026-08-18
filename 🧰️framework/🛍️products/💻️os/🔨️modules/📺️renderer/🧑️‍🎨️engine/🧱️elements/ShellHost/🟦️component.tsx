@@ -478,6 +478,9 @@ import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦�
 
 
 import { SyncAttachCard } from "../ShellSync/🟦️component.tsx";
+import { useAgentBridge } from "../AgentBridge/🟦️component.tsx";
+import { AgentPresence } from "../AgentPresence/🟦️component.tsx";
+import { AgentApprovals } from "../AgentApprovals/🟦️component.tsx";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../ShellSearch/🟦️component.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../UtilityTree/🟦️component.tsx";
 import { coerceWireBytes } from "../PluginRuntime/🟦️component.tsx";
@@ -1083,6 +1086,9 @@ function FrameworkOsShellInner({
   const shellSessionIdRef = useRef<string>(Math.random().toString(36).slice(2));
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
   const shellActorIdRef = useRef<string>(`client-${shellSessionIdRef.current}`);
+  // 🤖️ Agent bridge: stays `disabled` (never throws, never blocks render) until a gateway URL+token
+  // is discovered, so a shell with no agent attached behaves exactly as before.
+  const agentBridge = useAgentBridge({ shellSessionId: shellSessionIdRef.current });
   /** 🪪️ §C3 identity bootstrap — `null` until `DirectoryClient.me()`/`mintSession` resolves (or forever,
    * with no hub env). Mirrored into {@link shellActorIdRef}/`setPluginRuntimeActor` by the effect below,
    * never read directly for the actor id (that's always `shellActorIdRef.current`). */
@@ -6814,6 +6820,8 @@ function FrameworkOsShellInner({
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         <TextSelectionContextMenuHost />
+        <AgentPresence status={agentBridge.status} presence={agentBridge.presence} />
+        <AgentApprovals approvals={agentBridge.pendingApprovals} onDecision={agentBridge.resolveApproval} />
         <ContextMenuController
           title={shellContextMenuTitleLabel}
           open={shellContextMenu != null}

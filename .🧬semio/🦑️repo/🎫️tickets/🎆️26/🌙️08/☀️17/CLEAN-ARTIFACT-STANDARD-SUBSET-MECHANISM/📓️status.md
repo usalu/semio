@@ -439,3 +439,29 @@ target is a strict prerequisite and a much smaller, safer change. The error prof
 The agent is instructed to fix in descending order of error count and produce a real descending curve, and that
 **silently deleting a test to make the suite green is forbidden** — any deletion needs a `## deletedTests`
 justification.
+
+
+## 🚦 W4 throughput post-mortem — I over-parallelized into a serialized resource
+
+**Measured:** 11 concurrent agents → **2 reports**, with repeated `Blocking waiting for file lock on build
+directory` and single builds taking 30–60 min against a normal 2–3, on a shared 69 GB target dir.
+
+⚠️ **Correction to my own first write-up of this**: I initially cited "133 cargo processes". That was wrong —
+`ps aux | grep '[c]argo'` also matches the `/bin/zsh -c source …` wrapper of every shell call, inflating the count
+by ~42; the real figure was ~67 cargo+rustc across a handful of running builds. The diagnosis is unchanged and rests
+on the lock messages and wall-clock, but the process count should not be quoted as evidence.
+
+Root cause: every agent shares `CARGO_TARGET_DIR=<ticket>/🎯️target`, and cargo takes an **exclusive lock on the
+build directory**. The agents were never building in parallel — they were queuing. Each one waits behind ten others
+for every single build, and a cutover involves many builds.
+
+This is a coordinator error, and it is the third of the same shape: I treated "disjoint file boundaries" as
+sufficient for parallelism, when the actual shared resources are (a) Cargo **workspace membership**, (b) the
+**build directory lock**, and (c) agent **turn lifetime**. The hot-file ownership table modelled none of them.
+
+**Corrective action, now binding (`📌️important.md` §Concurrency cap): at most ~3 build-heavy agents at once.**
+Running agents are NOT being killed — that would throw away their work — so the queue drains first, then dispatch
+resumes at the cap.
+
+Honest consequence for the schedule: the remaining ~20 plugins are best run about 3 at a time. The mechanism and
+the recipe are proven; what is left is throughput-bound, not design-bound.

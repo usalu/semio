@@ -90,7 +90,17 @@ pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Opti
 //#endregion 🔖️LookupHelpers
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::wires::standards::v1::subsets::any::schema::WiresBuilder {
+/// 🪪️ Zero-sized marker struct anchoring the `ArtifactInferrer` impl — `ArtifactInferrer::infer`
+/// takes `&Self::Snapshot`, never `&self`, so the impl target is a pure type-level anchor, not a
+/// real value. Ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM`'s recipe (§2) suggests
+/// retargeting a deleted `derive_artifact_facets!`-generated builder type onto the generic
+/// `semio_framework_plugin::app::SnapshotBuilder<S, M>` when the macro is removed — that is a genuine
+/// orphan-rule violation (E0117: `SnapshotBuilder` is a foreign, non-`#[fundamental]` generic struct),
+/// confirmed by `📓️w4-sequence-report.md` `## recipeGaps` #1. This marker struct is that report's
+/// documented fix.
+pub struct WiresInferrer;
+
+impl ArtifactInferrer for WiresInferrer {
     type Snapshot = WiresSnapshot;
     type Inference = WiresInference;
 }

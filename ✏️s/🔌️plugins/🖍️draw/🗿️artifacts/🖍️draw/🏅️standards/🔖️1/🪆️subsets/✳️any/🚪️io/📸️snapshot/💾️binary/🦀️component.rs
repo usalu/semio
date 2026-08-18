@@ -16,20 +16,20 @@ use store::PackError;
 /// `🧬️schema/📸️snapshot/🦀️component.rs` (design.md §1 CORRECTION: unsplit native codec lives at
 /// `🚪️io/<facet>/<representation>/`; `🧬️schema` keeps only the `DrawSnapshot` struct + `Default`).
 impl store::ArtifactPack for DrawSnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(
             <Self as store::ArtifactDsl>::envelope_id(),
             store::semio_format::Component::Pack,
             1,
-        ).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        ).map_err(|e| PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes)
-            .map_err(|e| store::PackError::Schema(e.to_string()))?;
+            .map_err(|e| PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
-            return Err(store::PackError::Schema(format!(
+            return Err(PackError::Schema(format!(
                 "pack envelope mismatch: expected {}, got {}",
                 <Self as store::ArtifactDsl>::envelope_id(),
                 envelope.envelope_id()

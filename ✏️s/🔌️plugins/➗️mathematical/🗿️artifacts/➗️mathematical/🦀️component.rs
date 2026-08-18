@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 //#region 🔖️Constants
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
-/// `crate::artifacts::mathematical::declaration`.
+/// `crate::artifacts::mathematical::artifact`/`🚪️io/🦀️component.rs::io`.
 pub const MATH_DOCUMENT_SCHEMA: &str = "semio.mathematical/v1";
 
 /// 🎯️ This artifact's dialect coordinate (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET

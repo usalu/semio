@@ -1,14 +1,21 @@
-//! ser present to txt
-//! 🐛️ Pre-migration content here referenced `crate::artifacts::json`/`crate::artifacts::txt`,
-//! types that don't exist in this crate (dead code, never mounted by the old glue, never
-//! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
-//! plugin's txt target folder. Left as an honest stub producing this artifact's own real
-//! snapshot type, pending a real txt import/export implementation.
+//! 🚪️ present -> txt — foreign `Serializer<PresentSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Honest not-yet-implemented
+//! stub (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy` since it never
+//! succeeds.
+
 use crate::artifacts::present::PresentSnapshot;
-pub fn register() {}
-pub fn serialize(_from: &PresentSnapshot) -> Result<semio_s_plugin_stdio::artifacts::txt::TxtSnapshot, String> {
-    Err("txt export not yet implemented".into())
-}
-pub fn deserialize_bytes(_bytes: &[u8]) -> Result<PresentSnapshot, String> {
-    Err("txt import not yet implemented".into())
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+
+pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId::ANY };
+
+pub struct PresentIntoTxt;
+
+impl Serializer<PresentSnapshot> for PresentIntoTxt {
+    const INTO: Dialect = TXT_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn serialize(_from: &PresentSnapshot) -> IoResult<IoPayload> {
+        Err(IoError { message: "txt export not yet implemented".into(), diagnostics: Vec::new() })
+    }
 }

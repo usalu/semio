@@ -1,17 +1,28 @@
-//! present <- pdf
+//! 🚪️ present <- pdf — foreign `Deserializer<PresentSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Structural `serde_json`
+//! coercion between `PdfSnapshot`'s and `PresentSnapshot`'s (unrelated) field shapes — not a real
+//! pdf->present semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
+
 use crate::artifacts::present::PresentSnapshot;
-use semio_s_plugin_stdio::artifacts::pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot;
 
-pub fn register() {}
+pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &PdfSnapshot) -> Result<PresentSnapshot, store::TextError> {
-    let _ = STDIO_PDF_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("present<-pdf: {e}"), dsl::TextSpan::at(1, 1)))
-}
+pub struct PdfIntoPresent;
 
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<PresentSnapshot, store::TextError> {
-    let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)
-        .map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    deserialize(&wire)
+impl Deserializer<PresentSnapshot> for PdfIntoPresent {
+    const FROM: Dialect = PDF_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(IoError { message: "PdfIntoPresent: expected a binary pdf payload".to_string(), diagnostics: Vec::new() });
+        };
+        let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let value = serde_json::to_value(&wire).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        let snapshot: PresentSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PdfIntoPresent: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(snapshot))
+    }
 }

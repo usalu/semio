@@ -183,7 +183,7 @@ pub use component::utilities::{utility_button, utility_collection, utility_separ
 pub use geometry::Rect;
 pub use theme::{GlassStyle, Level, Rgba, Theme};
 #[cfg(feature = "wgpu")]
-pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_hue_for_actor, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
+pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_color, presence_css_var, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
 
 // 🖥️ Retained-mode engine surface (feature = "wgpu-engine" only).
 #[cfg(feature = "wgpu-engine")]

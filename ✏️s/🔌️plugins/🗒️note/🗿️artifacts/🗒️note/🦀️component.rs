@@ -8,14 +8,16 @@ use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Register
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
-/// the old side-effecting `register()`, which called five different global registries directly from
-/// a plugin `.setup()` callback. `crate::editor::note::config::schema::register_app_schema()` is the
-/// one exception, still called from this file's own `.setup()`: it registers the `NotePlayApp`
-/// CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has no field for
-/// (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's artifact-scoped
-/// function set. Lives at the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) —
-/// `declaration()` describes the artifact (kind/schema/io/ownership), it is not engine behaviour.
+/// 🔖️ This artifact's OLD-channel definition (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1).
+/// KEPT unread by the new declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
+/// debt D1 — deleted repo-wide only once every plugin has migrated, not this pass): the real en/de
+/// localized names (`"Note"`/`"Notiz"`) still live only on these `ArtifactCapability` rows, and
+/// `crate::editor::note::config::schema::register_app_schema()` (still called from this file's own
+/// `.setup()`) registers the `NotePlayApp` CONFIG/PRESENCE schema, an app-scope concern neither the
+/// old nor the new declaration type has a field for. The `io_registry::entries()`/`NoteComposer`
+/// machinery this comment block's own `"composer"` rows once cross-checked against is deleted
+/// (`🚪️io/🦀️component.rs`'s `io()` replaces it); the capability rows themselves are inert now, kept
+/// only because nothing on this pass's boundary reads or removes `definition()`'s callers.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[

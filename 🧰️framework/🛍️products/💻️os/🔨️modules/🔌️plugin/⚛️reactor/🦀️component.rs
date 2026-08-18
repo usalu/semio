@@ -141,12 +141,16 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
                 }
             }
             Event::JobProgress { .. } => {}
-            Event::JobCompleted { job: _, result } => {
-                // 🧬️ Cold job completions (`semio.io-run`/`semio.io-sniff`) surface through the SAME
-                // completion channel a request-based effect uses — `Respond`-style, keyed by `job`
-                // rather than `req` in this wave's simplified routing (no `req`-per-job correlation
-                // table yet; a future wave that lets a guest AWAIT its own spawned job needs one).
-                let _ = result;
+            Event::JobCompleted { job, result } => {
+                // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): a job spawned
+                // through `host::jobs::spawn` (`🌐host/🦀️component.rs`) allocates its `job` id from
+                // THE SAME `RequestRegistry` counter as every other awaitable `host::*` call — the
+                // `Effect::SpawnJob{job, ..}` this actor emitted carried `job == req.0` — so
+                // `Event::JobCompleted{job, result}` resolves the identical parked `RequestFuture`
+                // an `Event::Completed{req, result}` would, closing the "no `req`-per-job
+                // correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
+                // needed: the request id already IS the job id).
+                REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), crate::host::outcome_to_result(result)));
             }
             Event::Message { .. } => {}
             Event::Timer { id } => {

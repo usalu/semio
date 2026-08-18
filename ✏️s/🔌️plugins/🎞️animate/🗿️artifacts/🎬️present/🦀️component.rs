@@ -379,12 +379,16 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::present::schema::present_artifact_schema_descriptor())
-        .inferences([crate::artifacts::present::standards::v1::subsets::any::schema::inferences::present_artifact_inference_descriptor()])
-        .composers(crate::artifacts::present::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentPlayApp>>()
-        .try_build()
+/// 🗿️ New declaration-tree root (design.md §1/§2 recipe step 6) — replaces the OLD `declaration()`
+/// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).document_codec(...)`
+/// chain) outright, no dual channel (mirrors `🎬️sequence`'s identical atomic cutover). `kind` matches
+/// `ANIMATE_DIALECT.artifact_kind` / `PresentSnapshot`'s own `#[artifact_schema(id = ...)]`
+/// (`"s.animate.present"`), NOT `definition()`'s legacy `ArtifactIdentity` root (`"s.present"`,
+/// kept unread by the new tree per debt D1). `localization: &[]` is a documented shortfall — the
+/// real en/de localized names still live on `definition()`'s kept capability rows.
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.animate.present").expect("canonical animate.present kind"), localization: &[], standards: vec![crate::artifacts::present::standards::v1::standard()] }
 }
 //#endregion 🔖️Declaration

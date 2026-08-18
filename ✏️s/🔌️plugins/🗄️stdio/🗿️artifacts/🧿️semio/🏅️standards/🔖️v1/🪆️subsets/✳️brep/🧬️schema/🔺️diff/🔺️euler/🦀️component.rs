@@ -23,6 +23,8 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3};
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
 
 // #region 🔖️Make
 
