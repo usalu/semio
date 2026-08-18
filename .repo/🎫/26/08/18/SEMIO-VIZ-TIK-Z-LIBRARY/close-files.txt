@@ -17,6 +17,13 @@ package.json
 .repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/wp-registry.md
 .repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/wp-registry.json
 .repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/exhaustive-taxonomy.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/api-contracts.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/catalogue-check.ts
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/review-catalogue.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/review-architecture.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/review-compile.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/review-visual.md
+.repo/🎫/26/08/18/SEMIO-VIZ-TIK-Z-LIBRARY/phase4-review.md
 print/tex/semio-viz-chart-comparison.sty
 print/tex/semio-viz-chart-time-series.sty
 print/tex/semio-viz-chart-distribution.sty

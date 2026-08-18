@@ -22,7 +22,7 @@ Picture: `x=1mm, y=1mm`, origin bottom-left. Keys `width`/`height` are plain mil
 
 ```
 \SemioVizTable{name}{colA, colB, colC}
-\SemioVizRow{name}{a}{1}{2}
+\SemioVizRow{name}{a, 1, 2}
 ```
 
 Internal:
@@ -63,22 +63,22 @@ Mark names are taxonomy-0 slugs. Path generators take `points=` as `x,y;x,y;...`
 
 ```
 \SemioVizAxis[scale=x, orient=bottom]
-\SemioVizGrid[scale=x, scale-y=y]
-\SemioVizLegend[kind=swatch, items={a,b,c}]
+\SemioVizGrid
+\SemioVizLegend[legend=swatch]
 ```
 
 ## Layout families
 
 `\semio_viz_layout:nn {family} {key-vals}` writes geometry into `\g_semio_viz_geom_seq` (each item `x0,y0,x1,y1,cx,cy,label,value,color`).
 
-Families: `bar`, `dot`, `line`, `area`, `pie`, `dist`, `tree`, `net`, `flow`, `geo`, `heat`, `radar`, `parallel`, `waffle`, `funnel`, `gantt`, `bullet`, `pack`, `chord`, `sankey`, `force`, `voronoi`, `hexbin`, `calendar`, `text`, `science`, `process`, `special`.
+Families: `bar`, `dot`, `line`, `area`, `pie`, `dist`, `tree`, `net`, `flow`, `geo`, `heat`, `radar`, `parallel`, `waffle`, `funnel`, `gantt`, `bullet`, `pack`, `chord`, `sankey`, `force`, `voronoi`, `hexbin`, `calendar`, `text`, `science`, `process`, `special`, `path`, `mark`, `anno`, `chrome`.
 
 ## Chart kinds
 
 ```
-\semio_viz_chart_kind_define:nnn {vertical-bar} {bar} {orient=vertical, layout=plain}
-\SemioVizChart{vertical-bar}[data=demo, x=cat, y=val]
-\SemioVizDemo{vertical-bar}
+\semio_viz_chart_kind_define:nnn {vertical-bar-chart} {bar} {data=demo}
+\SemioVizChart{vertical-bar-chart}[data=demo, x=cat, y=val]
+\SemioVizDemo{vertical-bar-chart}
 ```
 
 Every taxonomy leaf slug is a chart kind or a mark kind. Gallery uses `\SemioVizDemo{slug}` plus `% viz-covers: <section>/<slug>`.
