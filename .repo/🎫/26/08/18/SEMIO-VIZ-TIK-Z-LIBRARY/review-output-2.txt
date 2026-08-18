@@ -1,0 +1,139 @@
+mark kinds registered: 61
+section 0 leaves: 56
+section 0 slugs missing from mark registry: none
+mark kinds not in section 0 (aliases): icon, image, text, bezier, catmull-rom
+
+chart kinds registered: 1946
+## chart kinds SHADOWED by a mark kind in \SemioVizDemo dispatch (3)
+- icon: taxonomy 74/icon "Icon" kind=scale family=chrome registered-family=chrome pkg=visual-encodings
+- text: taxonomy 79/text "text" kind=layout family=chrome registered-family=chrome pkg=ultimate-api
+- image: taxonomy 79/image "image" kind=layout family=chrome registered-family=chrome pkg=ultimate-api
+
+## registered chart kinds absent from taxonomy: vertical-bar
+
+## prose-looking leaves (trailing punctuation or >7 words) (9)
+- 79/a-user-should-be-able-to-describe-essentially-any-visualization-as "A user should be able to describe essentially any visualization as:" kind=layout family=chrome
+- 79/this-grammar-then-generates "This grammar then generates:" kind=layout family=chrome
+- 79/conventional-named-charts "conventional named charts," kind=layout family=chrome
+- 79/unusual-chart-variants "unusual chart variants," kind=layout family=chrome
+- 79/domain-specific-scientific-figures "domain-specific scientific figures," kind=layout family=chrome
+- 79/network-and-hierarchical-diagrams "network and hierarchical diagrams," kind=layout family=net
+- 79/maps "maps," kind=layout family=chrome
+- 79/completely-novel-visualizations "completely novel visualizations," kind=layout family=chrome
+- 79/all-as-native-tikz-pgf-output "all as native TikZ/PGF output." kind=layout family=chrome
+
+section 76 leaves (61): timeline-76 table annotation dashboard-76 infographic layout scale axis legend label-76 interactionstate theme bar line area-76 scatter distribution statistical financial polar hierarchy tree dendrogram-76 treemap-76 partition pack network graph matrix arc chord bundling flow sankey-76 alluvial parallelsets geo map projection choropleth symbols contours routes matrix-76 heatmap-76 correlation adjacency diagram flowchart-76 uml architecture process concept scientific field surface signal physics chemistry biology engineering
+section 76 contains a leaf for the 'charts' namespace: false
+
+## collision-suffixed slugs (205)
+   not matching -{section}[-n] rule (0): none
+   first occurrences that did NOT keep the natural slug (0): none
+
+chrome-family kinds: 269; with only data=demo (no scale/orient/legend): 247
+axis-kind leaves: 21
+## axis-kind leaves registered without a scale= option (0): none
+scale-kind leaves: 40; registered with bare data=demo: 39
+
+## section 51 kinds
+- linear-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- log-axis-plot kind=axis family=chrome opts="data=demo,scale=y-log,orient=left"
+- symmetric-log-plot kind=chart family=chrome opts="data=demo"
+- power-scale-plot kind=chart family=chrome opts="data=demo"
+- square-root-scale-plot kind=chart family=chrome opts="data=demo"
+- reciprocal-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- probability-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- date-time-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- categorical-axis-plot kind=axis family=chrome opts="data=demo,scale=x,orient=bottom"
+- discontinuous-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- broken-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- mirrored-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- dual-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- multiple-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- polar-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+- ternary-axis-plot kind=axis family=chrome opts="data=demo,scale=y,orient=left"
+
+## section 78 groups + kinds
+  ### Scales
+    - Linear `linear` scale
+    - Logarithmic `logarithmic` scale
+    - Power `power` scale
+    - Square-root `square-root` scale
+    - Symlog `symlog` scale
+    - Identity `identity` scale
+    - Ordinal `ordinal` scale
+    - Band `band-78` scale
+    - Point `point` scale
+    - Quantile `quantile` scale
+    - Quantize `quantize` scale
+    - Threshold `threshold` scale
+    - Sequential `sequential` scale
+    - Diverging `diverging` scale
+    - Temporal `temporal` scale
+  ### Axes
+    - Cartesian `cartesian` axis
+    - Polar `polar-78` axis
+    - Ternary `ternary` axis
+    - Geographic `geographic` axis
+    - Multiple axes `multiple-axes` axis
+    - Broken axes `broken-axes` axis
+  ### Shape generators
+    - Shape generators `shape-generators` layout
+    - Lines `lines` layout
+    - Areas `areas` layout
+    - Arcs `arcs` layout
+    - Links `links` layout
+    - Symbols `symbols-78` layout
+    - Ribbons `ribbons` layout
+  ### Statistical transforms
+    - Bin `bin` layout
+    - Aggregate `aggregate` layout
+    - Stack `stack-78` layout
+    - Normalize `normalize` layout
+    - KDE `kde` layout
+    - Quantile `quantile-78` layout
+    - Regression `regression` layout
+    - Contours `contours-78` layout
+  ### Geometric transforms
+    - Projection `projection-78` layout
+    - Voronoi `voronoi-78` layout
+    - Delaunay `delaunay-78` layout
+    - Hull `hull` layout
+    - Clip `clip` layout
+    - Interpolate `interpolate` layout
+  ### Hierarchy transforms
+    - Tree `tree-78` layout
+    - Cluster `cluster` layout
+    - Partition `partition-78` layout
+    - Treemap `treemap-78` layout
+    - Pack `pack-78` layout
+  ### Network transforms
+    - Force `force` layout
+    - Sankey `sankey-78` layout
+    - Chord `chord-78` layout
+    - Bundling `bundling-78` layout
+  ### Data transforms
+    - Filter `filter` layout
+    - Sort `sort` layout
+    - Group `group` layout
+    - Nest `nest` layout
+    - Rollup `rollup` layout
+    - Pivot `pivot` layout
+    - Fold `fold` layout
+    - Join `join` layout
+    - Window `window` layout
+  ### Figure infrastructure
+    - Themes `themes` layout
+    - Legends `legends` layout
+    - Labels `labels` layout
+    - Annotations `annotations` layout
+    - Guides `guides` layout
+    - Faceting `faceting` layout
+    - Layout `layout-78` layout
+    - Clipping `clipping` layout
+    - Coordinate transformations `coordinate-transformations` layout
+    - Responsive sizing `responsive-sizing` layout
+    - Export-safe typography `export-safe-typography` layout
+    - Accessibility-friendly patterns `accessibility-friendly-patterns` layout
+    - Grayscale-safe encodings `grayscale-safe-encodings` layout
+
+commands used by generated galleries: SemioVizDemo

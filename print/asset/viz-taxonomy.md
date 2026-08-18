@@ -135,7 +135,6 @@
 
 ### Icon/unit comparison
 
-- Icon/unit comparison `icon-unit-comparison` chart
 - Pictogram chart `pictogram-chart` chart
 - Icon array `icon-array` chart
 - Unit chart `unit-chart` chart
@@ -208,7 +207,6 @@
 
 ### Before/after and change
 
-- Before/after and change `before-after-and-change` chart
 - Slope chart `slope-chart` chart
 - Slopegraph `slopegraph` chart
 - Before-after plot `before-after-plot` chart
@@ -234,7 +232,6 @@
 
 ### Distribution curves
 
-- Distribution curves `distribution-curves` chart
 - Kernel density estimate plot `kernel-density-estimate-plot` chart
 - Multiple KDE plot `multiple-kde-plot` chart
 - Filled density plot `filled-density-plot` chart
@@ -384,7 +381,6 @@
 
 ### Pie family
 
-- Pie family `pie-family` chart
 - Pie chart `pie-chart` chart
 - Exploded pie chart `exploded-pie-chart` chart
 - Nested pie chart `nested-pie-chart` chart
@@ -393,7 +389,6 @@
 
 ### Donut family
 
-- Donut family `donut-family` chart
 - Donut chart `donut-chart` chart
 - Nested donut `nested-donut` chart
 - Multi-ring donut `multi-ring-donut` chart
@@ -401,14 +396,12 @@
 
 ### Radial partitions
 
-- Radial partitions `radial-partitions` chart
 - Sunburst chart `sunburst-chart` chart
 - Multi-level pie chart `multi-level-pie-chart` chart
 - Radial partition chart `radial-partition-chart` chart
 
 ### Rectangular composition
 
-- Rectangular composition `rectangular-composition` chart
 - Stacked bar `stacked-bar` chart
 - 100% stacked bar `100percent-stacked-bar` chart
 - Stacked area `stacked-area` chart
@@ -420,7 +413,6 @@
 
 ### Unit composition
 
-- Unit composition `unit-composition` chart
 - Waffle chart `waffle-chart` chart
 - Unit chart `unit-chart-6` chart
 - Icon array `icon-array-6` chart
@@ -428,7 +420,6 @@
 
 ### Specialized
 
-- Specialized `specialized` chart
 - Parliament chart `parliament-chart` chart
 - Seat chart `seat-chart` chart
 - Coxcomb chart `coxcomb-chart` chart
@@ -439,7 +430,6 @@
 
 ### Trees
 
-- Trees `trees` chart
 - Rooted tree `rooted-tree` chart
 - Binary tree `binary-tree` chart
 - N-ary tree `n-ary-tree` chart
@@ -456,7 +446,6 @@
 
 ### Dendrograms
 
-- Dendrograms `dendrograms` chart
 - Dendrogram `dendrogram` chart
 - Horizontal dendrogram `horizontal-dendrogram` chart
 - Vertical dendrogram `vertical-dendrogram` chart
@@ -466,7 +455,6 @@
 
 ### Space-filling hierarchies
 
-- Space-filling hierarchies `space-filling-hierarchies` chart
 - Treemap `treemap-7` chart
 - Squarified treemap `squarified-treemap` chart
 - Slice-and-dice treemap `slice-and-dice-treemap` chart
@@ -480,7 +468,6 @@
 
 ### Organizational/human hierarchies
 
-- Organizational/human hierarchies `organizational-human-hierarchies` chart
 - Organization chart `organization-chart` chart
 - Family tree `family-tree` chart
 - Genealogy chart `genealogy-chart` chart
@@ -490,7 +477,6 @@
 
 ### Concept hierarchies
 
-- Concept hierarchies `concept-hierarchies` chart
 - Mind map `mind-map` chart
 - Concept tree `concept-tree` chart
 - Taxonomy diagram `taxonomy-diagram` chart
@@ -499,7 +485,6 @@
 
 ### Specialized trees
 
-- Specialized trees `specialized-trees` chart
 - Phylogenetic tree `phylogenetic-tree` chart
 - Cladogram `cladogram` chart
 - Phylogram `phylogram` chart
@@ -517,7 +502,6 @@
 
 ### General node-link graphs
 
-- General node-link graphs `general-node-link-graphs` chart
 - Undirected graph `undirected-graph` chart
 - Directed graph `directed-graph` chart
 - Weighted graph `weighted-graph` chart
@@ -531,7 +515,6 @@
 
 ### Graph layouts
 
-- Graph layouts `graph-layouts` chart
 - Force-directed graph `force-directed-graph` chart
 - Spring layout `spring-layout` chart
 - Fruchterman–Reingold graph `fruchterman-reingold-graph` chart
@@ -547,7 +530,6 @@
 
 ### Dense graph alternatives
 
-- Dense graph alternatives `dense-graph-alternatives` chart
 - Adjacency matrix `adjacency-matrix` chart
 - Node-link matrix hybrid `node-link-matrix-hybrid` chart
 - Arc diagram `arc-diagram` chart
@@ -664,7 +646,6 @@
 
 ### Routes and movement
 
-- Routes and movement `routes-and-movement` chart
 - Route map `route-map` chart
 - Transit map `transit-map` chart
 - Metro map `metro-map` chart
@@ -680,7 +661,6 @@
 
 ### Continuous spatial fields
 
-- Continuous spatial fields `continuous-spatial-fields` chart
 - Contour map `contour-map` chart
 - Isoline map `isoline-map` chart
 - Isopleth map `isopleth-map` chart
@@ -874,7 +854,6 @@
 
 ### Data/software architecture
 
-- Data/software architecture `data-software-architecture` chart
 - Entity–relationship diagram `entity-relationship-diagram` chart
 - Enhanced ER diagram `enhanced-er-diagram` chart
 - Database schema diagram `database-schema-diagram` chart
@@ -940,7 +919,6 @@
 
 ### Volume
 
-- Volume `volume` chart
 - Volume bar chart `volume-bar-chart` chart
 - Volume profile `volume-profile` chart
 - Price-volume chart `price-volume-chart` chart
@@ -956,7 +934,6 @@
 
 ### Performance
 
-- Performance `performance` chart
 - Equity curve `equity-curve` chart
 - Return chart `return-chart` chart
 - Cumulative-return chart `cumulative-return-chart` chart
@@ -966,7 +943,6 @@
 
 ### Accounting/business
 
-- Accounting/business `accounting-business` chart
 - Waterfall chart `waterfall-chart-17` chart
 - Bridge chart `bridge-chart-17` chart
 - P&L bridge `pandl-bridge` chart
@@ -978,7 +954,6 @@
 
 ### Economics
 
-- Economics `economics` chart
 - Supply-demand graph `supply-demand-graph` chart
 - Lorenz curve `lorenz-curve-17` chart
 - Phillips curve `phillips-curve` chart
@@ -1247,7 +1222,6 @@
 
 ### Transform geometry
 
-- Transform geometry `transform-geometry` chart
 - Translation `translation` chart
 - Rotation `rotation` chart
 - Reflection `reflection` chart
@@ -1844,9 +1818,9 @@
 
 - Linear-axis plot `linear-axis-plot` axis
 - Log-axis plot `log-axis-plot` axis
-- Symmetric-log plot `symmetric-log-plot` chart
-- Power-scale plot `power-scale-plot` chart
-- Square-root scale plot `square-root-scale-plot` chart
+- Symmetric-log plot `symmetric-log-plot` axis
+- Power-scale plot `power-scale-plot` axis
+- Square-root scale plot `square-root-scale-plot` axis
 - Reciprocal-axis plot `reciprocal-axis-plot` axis
 - Probability-axis plot `probability-axis-plot` axis
 - Date/time-axis plot `date-time-axis-plot` axis
@@ -2392,6 +2366,7 @@
 
 ### charts
 
+- charts `charts` layout
 - bar `bar` layout
 - line `line` layout
 - area `area-76` layout
@@ -2518,7 +2493,6 @@
 
 ### Shape generators
 
-- Shape generators `shape-generators` layout
 - Lines `lines` layout
 - Areas `areas` layout
 - Arcs `arcs` layout
@@ -2593,7 +2567,6 @@
 
 ### A user should be able to describe essentially any visualization as:
 
-- A user should be able to describe essentially any visualization as: `a-user-should-be-able-to-describe-essentially-any-visualization-as` layout
 - data `data` layout
 - tabular `tabular` layout
 - hierarchical `hierarchical` layout
@@ -2641,15 +2614,4 @@
 - annotation `annotation-79` layout
 - theme `theme-79` layout
 - composition `composition` layout
-
-### This grammar then generates:
-
-- This grammar then generates: `this-grammar-then-generates` layout
-- conventional named charts, `conventional-named-charts` layout
-- unusual chart variants, `unusual-chart-variants` layout
-- domain-specific scientific figures, `domain-specific-scientific-figures` layout
-- network and hierarchical diagrams, `network-and-hierarchical-diagrams` layout
-- maps, `maps` layout
-- completely novel visualizations, `completely-novel-visualizations` layout
-- all as native TikZ/PGF output. `all-as-native-tikz-pgf-output` layout
 

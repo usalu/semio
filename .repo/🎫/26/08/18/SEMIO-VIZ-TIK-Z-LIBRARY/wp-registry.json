@@ -768,14 +768,6 @@
     "section": "1"
   },
   {
-    "id": "1/icon-unit-comparison",
-    "slug": "icon-unit-comparison",
-    "title": "Icon/unit comparison",
-    "kind": "chart",
-    "family": "bar",
-    "section": "1"
-  },
-  {
     "id": "1/pictogram-chart",
     "slug": "pictogram-chart",
     "title": "Pictogram chart",
@@ -1240,14 +1232,6 @@
     "section": "2"
   },
   {
-    "id": "2/before-after-and-change",
-    "slug": "before-after-and-change",
-    "title": "Before/after and change",
-    "kind": "chart",
-    "family": "line",
-    "section": "2"
-  },
-  {
     "id": "2/slope-chart",
     "slug": "slope-chart",
     "title": "Slope chart",
@@ -1379,14 +1363,6 @@
     "id": "3/polar-histogram",
     "slug": "polar-histogram",
     "title": "Polar histogram",
-    "kind": "chart",
-    "family": "dist",
-    "section": "3"
-  },
-  {
-    "id": "3/distribution-curves",
-    "slug": "distribution-curves",
-    "title": "Distribution curves",
     "kind": "chart",
     "family": "dist",
     "section": "3"
@@ -2272,14 +2248,6 @@
     "section": "5"
   },
   {
-    "id": "6/pie-family",
-    "slug": "pie-family",
-    "title": "Pie family",
-    "kind": "chart",
-    "family": "pie",
-    "section": "6"
-  },
-  {
     "id": "6/pie-chart",
     "slug": "pie-chart",
     "title": "Pie chart",
@@ -2320,14 +2288,6 @@
     "section": "6"
   },
   {
-    "id": "6/donut-family",
-    "slug": "donut-family",
-    "title": "Donut family",
-    "kind": "chart",
-    "family": "pie",
-    "section": "6"
-  },
-  {
     "id": "6/donut-chart",
     "slug": "donut-chart",
     "title": "Donut chart",
@@ -2360,14 +2320,6 @@
     "section": "6"
   },
   {
-    "id": "6/radial-partitions",
-    "slug": "radial-partitions",
-    "title": "Radial partitions",
-    "kind": "chart",
-    "family": "bullet",
-    "section": "6"
-  },
-  {
     "id": "6/sunburst-chart",
     "slug": "sunburst-chart",
     "title": "Sunburst chart",
@@ -2389,14 +2341,6 @@
     "title": "Radial partition chart",
     "kind": "chart",
     "family": "bullet",
-    "section": "6"
-  },
-  {
-    "id": "6/rectangular-composition",
-    "slug": "rectangular-composition",
-    "title": "Rectangular composition",
-    "kind": "chart",
-    "family": "chrome",
     "section": "6"
   },
   {
@@ -2464,14 +2408,6 @@
     "section": "6"
   },
   {
-    "id": "6/unit-composition",
-    "slug": "unit-composition",
-    "title": "Unit composition",
-    "kind": "chart",
-    "family": "chrome",
-    "section": "6"
-  },
-  {
     "id": "6/waffle-chart",
     "slug": "waffle-chart",
     "title": "Waffle chart",
@@ -2501,14 +2437,6 @@
     "title": "Pictogram",
     "kind": "chart",
     "family": "waffle",
-    "section": "6"
-  },
-  {
-    "id": "6/specialized",
-    "slug": "specialized",
-    "title": "Specialized",
-    "kind": "chart",
-    "family": "pie",
     "section": "6"
   },
   {
@@ -2550,14 +2478,6 @@
     "kind": "chart",
     "family": "pie",
     "section": "6"
-  },
-  {
-    "id": "7/trees",
-    "slug": "trees",
-    "title": "Trees",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
   },
   {
     "id": "7/rooted-tree",
@@ -2664,14 +2584,6 @@
     "section": "7"
   },
   {
-    "id": "7/dendrograms",
-    "slug": "dendrograms",
-    "title": "Dendrograms",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
-  },
-  {
     "id": "7/dendrogram",
     "slug": "dendrogram",
     "title": "Dendrogram",
@@ -2715,14 +2627,6 @@
     "id": "7/cluster-dendrogram",
     "slug": "cluster-dendrogram",
     "title": "Cluster dendrogram",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
-  },
-  {
-    "id": "7/space-filling-hierarchies",
-    "slug": "space-filling-hierarchies",
-    "title": "Space-filling hierarchies",
     "kind": "chart",
     "family": "tree",
     "section": "7"
@@ -2808,14 +2712,6 @@
     "section": "7"
   },
   {
-    "id": "7/organizational-human-hierarchies",
-    "slug": "organizational-human-hierarchies",
-    "title": "Organizational/human hierarchies",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
-  },
-  {
     "id": "7/organization-chart",
     "slug": "organization-chart",
     "title": "Organization chart",
@@ -2864,14 +2760,6 @@
     "section": "7"
   },
   {
-    "id": "7/concept-hierarchies",
-    "slug": "concept-hierarchies",
-    "title": "Concept hierarchies",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
-  },
-  {
     "id": "7/mind-map",
     "slug": "mind-map",
     "title": "Mind map",
@@ -2907,14 +2795,6 @@
     "id": "7/decision-tree",
     "slug": "decision-tree",
     "title": "Decision tree",
-    "kind": "chart",
-    "family": "tree",
-    "section": "7"
-  },
-  {
-    "id": "7/specialized-trees",
-    "slug": "specialized-trees",
-    "title": "Specialized trees",
     "kind": "chart",
     "family": "tree",
     "section": "7"
@@ -3016,14 +2896,6 @@
     "section": "7"
   },
   {
-    "id": "8/general-node-link-graphs",
-    "slug": "general-node-link-graphs",
-    "title": "General node-link graphs",
-    "kind": "chart",
-    "family": "net",
-    "section": "8"
-  },
-  {
     "id": "8/undirected-graph",
     "slug": "undirected-graph",
     "title": "Undirected graph",
@@ -3099,14 +2971,6 @@
     "id": "8/cyclic-graph",
     "slug": "cyclic-graph",
     "title": "Cyclic graph",
-    "kind": "chart",
-    "family": "net",
-    "section": "8"
-  },
-  {
-    "id": "8/graph-layouts",
-    "slug": "graph-layouts",
-    "title": "Graph layouts",
     "kind": "chart",
     "family": "net",
     "section": "8"
@@ -3205,14 +3069,6 @@
     "title": "Radial network",
     "kind": "chart",
     "family": "bullet",
-    "section": "8"
-  },
-  {
-    "id": "8/dense-graph-alternatives",
-    "slug": "dense-graph-alternatives",
-    "title": "Dense graph alternatives",
-    "kind": "chart",
-    "family": "net",
     "section": "8"
   },
   {
@@ -3896,14 +3752,6 @@
     "section": "10"
   },
   {
-    "id": "10/routes-and-movement",
-    "slug": "routes-and-movement",
-    "title": "Routes and movement",
-    "kind": "chart",
-    "family": "geo",
-    "section": "10"
-  },
-  {
     "id": "10/route-map",
     "slug": "route-map",
     "title": "Route map",
@@ -3995,14 +3843,6 @@
     "id": "10/flow-map-10",
     "slug": "flow-map-10",
     "title": "Flow map",
-    "kind": "chart",
-    "family": "geo",
-    "section": "10"
-  },
-  {
-    "id": "10/continuous-spatial-fields",
-    "slug": "continuous-spatial-fields",
-    "title": "Continuous spatial fields",
     "kind": "chart",
     "family": "geo",
     "section": "10"
@@ -5136,14 +4976,6 @@
     "section": "15"
   },
   {
-    "id": "15/data-software-architecture",
-    "slug": "data-software-architecture",
-    "title": "Data/software architecture",
-    "kind": "chart",
-    "family": "process",
-    "section": "15"
-  },
-  {
     "id": "15/entity-relationship-diagram",
     "slug": "entity-relationship-diagram",
     "title": "Entity–relationship diagram",
@@ -5560,14 +5392,6 @@
     "section": "17"
   },
   {
-    "id": "17/volume",
-    "slug": "volume",
-    "title": "Volume",
-    "kind": "chart",
-    "family": "line",
-    "section": "17"
-  },
-  {
     "id": "17/volume-bar-chart",
     "slug": "volume-bar-chart",
     "title": "Volume bar chart",
@@ -5640,14 +5464,6 @@
     "section": "17"
   },
   {
-    "id": "17/performance",
-    "slug": "performance",
-    "title": "Performance",
-    "kind": "chart",
-    "family": "line",
-    "section": "17"
-  },
-  {
     "id": "17/equity-curve",
     "slug": "equity-curve",
     "title": "Equity curve",
@@ -5691,14 +5507,6 @@
     "id": "17/portfolio-allocation-chart",
     "slug": "portfolio-allocation-chart",
     "title": "Portfolio allocation chart",
-    "kind": "chart",
-    "family": "line",
-    "section": "17"
-  },
-  {
-    "id": "17/accounting-business",
-    "slug": "accounting-business",
-    "title": "Accounting/business",
     "kind": "chart",
     "family": "line",
     "section": "17"
@@ -5765,14 +5573,6 @@
     "title": "KPI chart",
     "kind": "chart",
     "family": "bullet",
-    "section": "17"
-  },
-  {
-    "id": "17/economics",
-    "slug": "economics",
-    "title": "Economics",
-    "kind": "chart",
-    "family": "line",
     "section": "17"
   },
   {
@@ -7533,14 +7333,6 @@
     "title": "L-system drawing",
     "kind": "chart",
     "family": "science",
-    "section": "26"
-  },
-  {
-    "id": "26/transform-geometry",
-    "slug": "transform-geometry",
-    "title": "Transform geometry",
-    "kind": "chart",
-    "family": "geo",
     "section": "26"
   },
   {
@@ -11243,7 +11035,7 @@
     "id": "51/symmetric-log-plot",
     "slug": "symmetric-log-plot",
     "title": "Symmetric-log plot",
-    "kind": "chart",
+    "kind": "axis",
     "family": "chrome",
     "section": "51"
   },
@@ -11251,7 +11043,7 @@
     "id": "51/power-scale-plot",
     "slug": "power-scale-plot",
     "title": "Power-scale plot",
-    "kind": "chart",
+    "kind": "axis",
     "family": "chrome",
     "section": "51"
   },
@@ -11259,7 +11051,7 @@
     "id": "51/square-root-scale-plot",
     "slug": "square-root-scale-plot",
     "title": "Square-root scale plot",
-    "kind": "chart",
+    "kind": "axis",
     "family": "chrome",
     "section": "51"
   },
@@ -14432,6 +14224,14 @@
     "section": "76"
   },
   {
+    "id": "76/charts",
+    "slug": "charts",
+    "title": "charts",
+    "kind": "layout",
+    "family": "chrome",
+    "section": "76"
+  },
+  {
     "id": "76/bar",
     "slug": "bar",
     "title": "bar",
@@ -15144,14 +14944,6 @@
     "section": "78"
   },
   {
-    "id": "78/shape-generators",
-    "slug": "shape-generators",
-    "title": "Shape generators",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "78"
-  },
-  {
     "id": "78/lines",
     "slug": "lines",
     "title": "Lines",
@@ -15560,14 +15352,6 @@
     "section": "78"
   },
   {
-    "id": "79/a-user-should-be-able-to-describe-essentially-any-visualization-as",
-    "slug": "a-user-should-be-able-to-describe-essentially-any-visualization-as",
-    "title": "A user should be able to describe essentially any visualization as:",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
     "id": "79/data",
     "slug": "data",
     "title": "data",
@@ -15939,70 +15723,6 @@
     "id": "79/composition",
     "slug": "composition",
     "title": "composition",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/this-grammar-then-generates",
-    "slug": "this-grammar-then-generates",
-    "title": "This grammar then generates:",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/conventional-named-charts",
-    "slug": "conventional-named-charts",
-    "title": "conventional named charts,",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/unusual-chart-variants",
-    "slug": "unusual-chart-variants",
-    "title": "unusual chart variants,",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/domain-specific-scientific-figures",
-    "slug": "domain-specific-scientific-figures",
-    "title": "domain-specific scientific figures,",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/network-and-hierarchical-diagrams",
-    "slug": "network-and-hierarchical-diagrams",
-    "title": "network and hierarchical diagrams,",
-    "kind": "layout",
-    "family": "net",
-    "section": "79"
-  },
-  {
-    "id": "79/maps",
-    "slug": "maps",
-    "title": "maps,",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/completely-novel-visualizations",
-    "slug": "completely-novel-visualizations",
-    "title": "completely novel visualizations,",
-    "kind": "layout",
-    "family": "chrome",
-    "section": "79"
-  },
-  {
-    "id": "79/all-as-native-tikz-pgf-output",
-    "slug": "all-as-native-tikz-pgf-output",
-    "title": "all as native TikZ/PGF output.",
     "kind": "layout",
     "family": "chrome",
     "section": "79"

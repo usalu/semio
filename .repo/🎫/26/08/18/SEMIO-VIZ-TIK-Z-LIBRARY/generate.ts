@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📊 Ticket generator: parse the exhaustive taxonomy into galleries and chart kinds. Run from repo root. */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 type Kind = "mark" | "chart" | "layout" | "axis" | "scale";
@@ -34,13 +34,21 @@ function stripDecor(title: string): string {
   return title.trim().replace(/^\*\*(.+)\*\*$/, "$1").replace(/^`(.+)`$/, "$1").trim();
 }
 
-function isCategoryName(title: string): boolean {
-  if (title.includes(" / ")) return true;
-  if (/\b(visualizations|capabilities|namespaces|encodings|transforms|infrastructure|objective|equivalents|primitives|summaries|diagnostics|displays)\b/i.test(title)) return true;
-  if (/(charts|plots|diagrams|maps|families|types|views|structures|representations|indicators|algorithms|histograms|scatterplots|distributions)$/i.test(title)) return true;
-  if (/^(lines|areas|arcs|connections|regions|points|marks|scales|axes|position|size|shape|appearance|orientation)$/i.test(title)) return true;
-  if (/^(line|text|compound) encoding$/i.test(title)) return true;
-  if (/-based /i.test(title) || /-family /i.test(title)) return true;
+const LEAF_AND_GROUP = new Set([
+  "flowchart", "bode plot", "control chart", "combination chart",
+  "charts", "hierarchy", "network", "flow", "geo", "matrix", "diagram", "scientific",
+  "data", "transform", "mark", "encoding", "guide",
+]);
+
+function isLeafAndGroup(title: string): boolean {
+  return LEAF_AND_GROUP.has(stripDecor(title).toLowerCase().replace(/:$/, "").trim());
+}
+
+function isProse(title: string): boolean {
+  const text = stripDecor(title);
+  if (/,$/.test(text)) return true;
+  if (/[.]$/.test(text) && text.split(/\s+/).length >= 4) return true;
+  if (/:$/.test(text) && text.split(/\s+/).length >= 4) return true;
   return false;
 }
 
@@ -53,7 +61,7 @@ function kindFor(sectionId: string, group: string, title: string): Kind {
     if (/^axes$/i.test(group)) return "axis";
     return "layout";
   }
-  if (sectionId === "51" && /\baxis\b/i.test(title)) return "axis";
+  if (sectionId === "51" && /\b(axis|plot)\b/i.test(title)) return "axis";
   if (/\b(legend|grid)\b/i.test(title) && /axis|legend|grid|chrome|guide/i.test(group)) return "axis";
   return "chart";
 }
@@ -164,20 +172,22 @@ function flattenSection(section: { id: string; title: string; roots: Node[] }, u
     return { slug, title, kind, family };
   };
   const collect = (groupTitle: string, node: Node, into: Leaf[]): void => {
+    if (isProse(node.title)) return;
     if (node.children.length === 0) {
       into.push(toLeaf(groupTitle, node.title));
       return;
     }
-    if (!isCategoryName(node.title)) into.push(toLeaf(groupTitle, node.title));
+    if (isLeafAndGroup(node.title)) into.push(toLeaf(groupTitle, node.title));
     for (const child of node.children) collect(groupTitle, child, into);
   };
   for (const root of section.roots) {
+    if (isProse(root.title) && root.children.length === 0) continue;
     if (root.children.length === 0) {
       general.push(toLeaf("General", root.title));
       continue;
     }
     const leaves: Leaf[] = [];
-    if (!isCategoryName(root.title)) leaves.push(toLeaf(root.title, root.title));
+    if (isLeafAndGroup(root.title)) leaves.push(toLeaf(root.title, root.title));
     for (const child of root.children) collect(root.title, child, leaves);
     if (leaves.length > 0) groups.push({ title: root.title, leaves });
   }
@@ -240,7 +250,8 @@ function extraOpts(leaf: Leaf): string {
   if (leaf.family !== "chrome") return "";
   if (/gradient/.test(leaf.slug) || /gradient/.test(leaf.title.toLowerCase())) return ",legend=gradient";
   if (/legend-size|size legend/.test(`${leaf.slug} ${leaf.title.toLowerCase()}`)) return ",legend=size";
-  if (leaf.kind !== "axis") return "";
+  if (leaf.kind !== "axis" && leaf.kind !== "scale") return "";
+  if (/symlog|symmetric-log/.test(`${leaf.slug} ${leaf.title.toLowerCase()}`)) return ",scale=y,orient=left";
   if (/log/.test(leaf.slug) || /\blog\b/.test(leaf.title.toLowerCase())) return ",scale=y-log,orient=left";
   if (/band|categorical/.test(`${leaf.slug} ${leaf.title.toLowerCase()}`)) return ",scale=x,orient=bottom";
   return ",scale=y,orient=left";
@@ -248,9 +259,6 @@ function extraOpts(leaf: Leaf): string {
 
 const KEEP_CATEGORY: Record<string, string> = { "1": "comparison", "3": "distribution" };
 const CATEGORY_STOP = new Set(["and", "or", "the", "a", "an", "for", "of", "in", "to", "with", "visualizations", "charts", "diagrams"]);
-const PUBLIC_CHART_ALIASES: readonly { readonly slug: string; readonly family: string; readonly section: string }[] = [
-  { slug: "vertical-bar", family: "bar", section: "1" },
-];
 
 function categorySlug(section: Section, used: Set<string>): string {
   const kept = KEEP_CATEGORY[section.id];
@@ -284,11 +292,6 @@ function chartPackage(section: Section, category: string): string {
     `%region Kinds`,
     ...kindLines(section),
   ];
-  for (const alias of PUBLIC_CHART_ALIASES) {
-    if (alias.section !== section.id) continue;
-    if (section.groups.some((group) => group.leaves.some((leaf) => leaf.slug === alias.slug))) continue;
-    lines.push(`\\SemioVizChartKind{${alias.slug}}{${alias.family}}{data=demo}`);
-  }
   lines.push(`%endregion Kinds`);
   return `${lines.join("\n")}\n`;
 }
@@ -332,6 +335,13 @@ for (const pack of packages) {
   writeFileSync(join(printRoot, "tex", `semio-viz-chart-${pack.category}.sty`), chartPackage(section, pack.category));
 }
 writeFileSync(join(printRoot, "tex", "semio-viz-charts.sty"), chartsLoader(packages));
+const keepPackages = new Set(packages.map((pack) => `semio-viz-chart-${pack.category}.sty`));
+for (const name of readdirSync(join(printRoot, "tex"))) {
+  if (!/^semio-viz-chart-.+\.sty$/.test(name)) continue;
+  if (keepPackages.has(name)) continue;
+  unlinkSync(join(printRoot, "tex", name));
+  console.log(`print viz prune ${name}`);
+}
 writeFileSync(join(ticket, "category-packages.json"), JSON.stringify(packages, null, 2));
 const counts = new Map<string, number>();
 for (const leaf of all) counts.set(leaf.family, (counts.get(leaf.family) ?? 0) + 1);

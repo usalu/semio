@@ -303,9 +303,9 @@
 \cs_new_protected:Npn \semio_viz_layout:nn #1#2 {
   \semio_viz_layout_keys_reset:
   \keys_set:nn { semio / viz / layout } {#2}
-  \seq_if_in:NnF \g_semio_viz_layout_families_seq {#1}
+  \seq_if_in:NnTF \g_semio_viz_layout_families_seq {#1}
+    { \use:c { semio_viz_family_ \tl_to_str:n {#1} : } }
     { \msg_error:nnn { semio-viz } { unknown-layout } {#1} }
-  \use:c { semio_viz_family_ \tl_to_str:n {#1} : }
 }
 
 % 🧩 Dispatches a layout family onto the bound table.

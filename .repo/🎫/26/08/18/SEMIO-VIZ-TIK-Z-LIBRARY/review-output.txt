@@ -1,0 +1,165 @@
+sections parsed: 80
+bullets total (depth>=1): 2060
+parent bullets (have children): 104
+terminal bullets (no children): 1956
+manifest leaves: 2001
+
+## parents promoted to leaves (45)
+- 1 L113 d1 "Icon/unit comparison" (children=6)
+- 2 L177 d1 "Before/after and change" (children=7)
+- 3 L198 d1 "Distribution curves" (children=10)
+- 6 L324 d1 "Pie family" (children=5)
+- 6 L330 d1 "Donut family" (children=4)
+- 6 L335 d1 "Radial partitions" (children=3)
+- 6 L339 d1 "Rectangular composition" (children=8)
+- 6 L348 d1 "Unit composition" (children=4)
+- 6 L353 d1 "Specialized" (children=5)
+- 7 L361 d1 "Trees" (children=13)
+- 7 L375 d1 "Dendrograms" (children=6)
+- 7 L382 d1 "Space-filling hierarchies" (children=10)
+- 7 L393 d1 "Organizational/human hierarchies" (children=6)
+- 7 L400 d1 "Concept hierarchies" (children=5)
+- 7 L406 d1 "Specialized trees" (children=12)
+- 8 L421 d1 "General node-link graphs" (children=10)
+- 8 L432 d1 "Graph layouts" (children=12)
+- 8 L445 d1 "Dense graph alternatives" (children=6)
+- 10 L542 d1 "Routes and movement" (children=12)
+- 10 L555 d1 "Continuous spatial fields" (children=11)
+- 14 L665 d1 "Flowchart" (children=6)
+- 15 L716 d1 "Data/software architecture" (children=21)
+- 17 L774 d1 "Volume" (children=3)
+- 17 L785 d1 "Performance" (children=6)
+- 17 L792 d1 "Accounting/business" (children=8)
+- 17 L801 d1 "Economics" (children=8)
+- 26 L1028 d1 "Transform geometry" (children=5)
+- 31 L1151 d1 "Bode plot" (children=2)
+- 42 L1378 d1 "Control chart" (children=9)
+- 48 L1512 d1 "Combination chart" (children=8)
+- 76 L2007 d1 "hierarchy" (children=5)
+- 76 L2013 d1 "network" (children=5)
+- 76 L2019 d1 "flow" (children=3)
+- 76 L2023 d1 "geo" (children=6)
+- 76 L2030 d1 "matrix" (children=3)
+- 76 L2034 d1 "diagram" (children=5)
+- 76 L2040 d1 "scientific" (children=7)
+- 78 L2106 d1 "Shape generators" (children=6)
+- 79 L2166 d1 "A user should be able to describe essentially any visualization as:" (children=12)
+- 79 L2167 d2 "data" (children=6)
+- 79 L2174 d2 "transform" (children=7)
+- 79 L2182 d2 "mark" (children=9)
+- 79 L2192 d2 "encoding" (children=10)
+- 79 L2207 d2 "guide" (children=3)
+- 79 L2214 d1 "This grammar then generates:" (children=7)
+
+## parents dropped as categories (59)
+- 0 L4 d1 "Points / marks" (children=13)
+- 0 L18 d1 "Lines" (children=11)
+- 0 L30 d1 "Areas" (children=5)
+- 0 L36 d1 "Arcs" (children=5)
+- 0 L42 d1 "Connections" (children=7)
+- 0 L50 d1 "Regions" (children=6)
+- 0 L57 d1 "Annotation primitives" (children=9)
+- 1 L69 d1 "Bar charts" (children=20)
+- 1 L90 d1 "Column charts" (children=6)
+- 1 L97 d1 "Dot-based comparison" (children=8)
+- 1 L106 d1 "Ranking charts" (children=6)
+- 2 L122 d1 "Line charts" (children=12)
+- 2 L135 d1 "Area charts" (children=10)
+- 2 L146 d1 "Specialized temporal charts" (children=30)
+- 3 L187 d1 "Histograms" (children=10)
+- 3 L209 d1 "Box-family plots" (children=7)
+- 3 L217 d1 "Violin-family plots" (children=6)
+- 3 L224 d1 "Point-based distributions" (children=10)
+- 3 L235 d1 "Quantile and diagnostic distributions" (children=7)
+- 3 L243 d1 "Classical statistical displays" (children=3)
+- 4 L249 d1 "Scatterplots" (children=12)
+- 4 L262 d1 "Density-based relationships" (children=6)
+- 4 L269 d1 "Correlation summaries" (children=7)
+- 4 L277 d1 "Statistical relationship diagnostics" (children=10)
+- 8 L452 d1 "Edge-centric visualizations" (children=5)
+- 8 L458 d1 "Ego/community views" (children=9)
+- 8 L468 d1 "Specialized graph types" (children=16)
+- 10 L509 d1 "Base maps" (children=8)
+- 10 L518 d1 "Statistical maps" (children=12)
+- 10 L531 d1 "Distortion maps" (children=5)
+- 10 L537 d1 "Grid/tile maps" (children=4)
+- 10 L567 d1 "Terrain representations" (children=7)
+- 10 L575 d1 "Coordinate/cartographic structures" (children=7)
+- 10 L583 d1 "Specialized maps" (children=10)
+- 14 L672 d1 "Business-process diagrams" (children=7)
+- 14 L680 d1 "Logic diagrams" (children=8)
+- 14 L689 d1 "Flow structures" (children=7)
+- 15 L699 d1 "UML structural diagrams" (children=7)
+- 15 L707 d1 "UML behavioral diagrams" (children=3)
+- 15 L711 d1 "UML interaction diagrams" (children=4)
+- 17 L765 d1 "Price charts" (children=8)
+- 17 L778 d1 "Financial indicators" (children=6)
+- 74 L1927 d1 "Position" (children=4)
+- 74 L1932 d1 "Size" (children=6)
+- 74 L1939 d1 "Shape" (children=3)
+- 74 L1943 d1 "Appearance" (children=6)
+- 74 L1950 d1 "Orientation" (children=3)
+- 74 L1954 d1 "Line encoding" (children=4)
+- 74 L1959 d1 "Text encoding" (children=4)
+- 74 L1964 d1 "Compound encodings" (children=3)
+- 76 L1998 d1 "charts" (children=8)
+- 78 L2083 d1 "Scales" (children=15)
+- 78 L2099 d1 "Axes" (children=6)
+- 78 L2113 d1 "Statistical transforms" (children=8)
+- 78 L2122 d1 "Geometric transforms" (children=6)
+- 78 L2129 d1 "Hierarchy transforms" (children=5)
+- 78 L2135 d1 "Network transforms" (children=4)
+- 78 L2140 d1 "Data transforms" (children=9)
+- 78 L2150 d1 "Figure infrastructure" (children=13)
+
+## terminal bullets absent from manifest (0)
+
+## repeated titles within the same section (5)
+- 74: "Width" x2
+- 74: "Rotation" x2
+- 76: "matrix" x2
+- 78: "Quantile" x2
+- 79: "text" x2
+
+## duplicate global slugs (0)
+## slugs with numeric tail not equal to own section (may be natural digits) (0)
+
+## kind rule violations (0)
+
+kinds: mark=64 chart=1662 axis=21 scale=40 layout=214
+section 51: linear-axis-plot:axis log-axis-plot:axis symmetric-log-plot:chart power-scale-plot:chart square-root-scale-plot:chart reciprocal-axis-plot:axis probability-axis-plot:axis date-time-axis-plot:axis categorical-axis-plot:axis discontinuous-axis-plot:axis broken-axis-plot:axis mirrored-axis-plot:axis dual-axis-plot:axis multiple-axis-plot:axis polar-axis-plot:axis ternary-axis-plot:axis
+
+gallery files: 81 (80 numbered)
+## manifest leaves without cover (0): 
+## covers without manifest leaf (0): 
+## cover key / demo slug mismatches (0)
+
+loader requires 79 chart packages; 94 chart .sty files on disk
+## stale chart packages not required by loader (15): calendar, chrome, correlation, financial, geo, hierarchy, network, part, process, ranking, science, statistical, text, trend, uncertainty
+## required chart packages missing on disk (0): 
+registered chart kinds (required packages only): 1946
+## chart kinds registered more than once (0)
+mark kinds discovered in semio-viz-mark.sty via kind_define: 0
+demo slugs total 2001; unresolved against chart kinds + detected mark kinds: 56
+  first unresolved: dot, circle, square, rectangle, triangle, diamond, cross, plus, star, custom-glyph, icon-mark, image-mark, text-mark, straight-line, polyline, step-line, curved-line, bezier-curve, spline, catmull-rom-spline, basis-spline, cardinal-spline, monotone-spline, closed-curve, polygon
+
+families: chrome=269 science=215 geo=212 process=171 dist=141 heat=137 net=134 line=93 gantt=77 tree=72 bar=58 pack=46 dot=45 path=40 bullet=39 pie=37 chord=30 text=30 radar=26 area=22 anno=21 funnel=16 mark=13 sankey=12 waffle=11 special=7 calendar=6 force=6 parallel=5 voronoi=4 flow=4 hexbin=2
+layout families implemented (heuristic): 
+## families used by kinds but not found as layout impl (32): mark, path, voronoi, anno, bar, dot, bullet, line, waffle, area, gantt, calendar, heat, dist, parallel, radar, science, geo, pie, pack, chrome, tree, net, force, chord, sankey, flow, funnel, hexbin, text, process, special
+
+viz-api.tex exists: true
+  \SemioVizChart: api=true
+  \SemioVizMark: api=true
+  \SemioVizPath: api=true
+  \SemioVizLayout: api=true
+  \SemioVizAxis: api=true
+  \SemioVizGrid: api=true
+  \SemioVizLegend: api=true
+  \SemioVizTable: api=true
+  \SemioVizRow: api=true
+  \SemioVizScale: api=true
+public commands declared across semio-viz*.sty: SemioVizAxis SemioVizChart SemioVizChartKind SemioVizDemo SemioVizGrid SemioVizLayout SemioVizLegend SemioVizMark SemioVizPath SemioVizRow SemioVizScale SemioVizTable env:VizFigure
+## public SemioViz* commands NOT exercised in viz-api.tex (2): SemioVizChartKind, SemioVizDemo
+
+taxonomy.md leaves: 2001; json leaves: 2001; equal sets: true
+wp-registry.json identical to viz-taxonomy.json: true

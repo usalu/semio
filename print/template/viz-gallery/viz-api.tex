@@ -13,7 +13,7 @@
 \SemioVizScale{api-y}{linear}{0, 10}{8, 32}
 \SemioVizScale{api-sym}{symlog}{-10, 10}{8, 32}
 \SemioVizScale{api-q}{quantize}{0, 10}{8, 32}
-\SemioVizChart{vertical-bar}[data=api, x=cat, y=val]
+\SemioVizChart{vertical-bar-chart}[data=api, x=cat, y=val]
 \end{VizFigure}
 \section{Marks and paths}
 \begin{VizFigure}[title={Mark and path}, width=80, height=40]
@@ -24,7 +24,7 @@
 \section{Layout, axis, grid, legend}
 \begin{VizFigure}[title={Layout, axis, grid, legend}, width=80, height=40]
 \SemioVizLayout{dot}[data=demo, x=cat, y=val]
-\SemioVizAxis[orient=left, scale=y]
+\SemioVizAxis[orient=left, scale=api-sym]
 \SemioVizGrid
 \SemioVizLegend[legend=gradient]
 \end{VizFigure}

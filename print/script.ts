@@ -113,7 +113,7 @@ function vizGallerySources(): string {
 }
 
 function assertVizApi(): { readonly missing: readonly string[] } {
-  const source = vizGallerySources();
+  const source = readFileSync(join(VIZ_GALLERY_DIR, "viz-api.tex"), "utf8");
   return { missing: VIZ_API_COMMANDS.filter((command) => !source.includes(command)) };
 }
 
@@ -835,7 +835,10 @@ class TestScript extends BundleScript {
     const vizLeaves = parseVizTaxonomyLeaves(taxonomy);
     assert.ok(vizLeaves.includes("0/dot"));
     assert.ok(vizLeaves.includes("1/vertical-bar-chart"));
+    assert.ok(vizLeaves.includes("76/charts"));
+    assert.ok(!vizLeaves.includes("7/trees"));
     assert.ok(vizLeaves.length > 1500);
+    assert.ok(vizLeaves.length < 2000);
     assert.equal(new Set(vizLeaves.map((leaf) => leaf.split("/")[0])).size, 80);
     assert.equal(new Set(vizLeaves).size, vizLeaves.length);
     const vizCovers = parseVizCovers(VIZ_GALLERY_DIR);
