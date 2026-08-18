@@ -465,3 +465,67 @@ resumes at the cap.
 
 Honest consequence for the schedule: the remaining ~20 plugins are best run about 3 at a time. The mechanism and
 the recipe are proven; what is left is throughput-bound, not design-bound.
+
+
+## ✅️ W4 results so far — two plugins fully verified, nine cut over
+
+**Reports lag the work.** Tracking progress by report-file count (2 of 11) badly understated reality; measuring the
+code directly showed **9 of 11 plugins already carrying the full declaration tree** (root `declare_artifact` +
+`artifact()` + `subset()`): sequence, vcs, forms, note, sourcing, dag, mathematical, writer, draw. `reasoning` and
+`animate` were still mid-flight with 64 and 49 dirty files. Lesson: measure the tree, not the paperwork.
+
+| plugin | baseline → final | tests | wasm | policies |
+|---|---|---|---|---|
+| `🎬️sequence` | 16 errors → **0** | not runnable → **146/146** | clean | 18 → 10 breaches |
+| `🌿️vcs` | 3 errors → **0** | **59/59** | clean | **0 breaches on all 7** |
+
+`🌿️vcs` independently confirmed two hazards this ticket had already diagnosed, from the receiving end:
+- the `🖍️draw` fan-out left the repo-root `Cargo.toml` member list stale for ~20 min, breaking cargo repo-wide;
+- the shared `CARGO_TARGET_DIR` lock queued its final verification behind 30+ processes.
+Both were waited out per ticket rules rather than chased — the protocol worked as designed.
+
+It also hit the same `SnapshotBuilder` orphan-rule violation the sequence pilot documented, and applied the same
+fix (a local marker struct for `ArtifactInferrer`). That recipeGap is now confirmed twice and is real, not a
+one-off.
+
+A third ticket (`MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`) landed an additive edit on the vcs plugin root
+mid-pass; left in place, compiles clean. Peer traffic in this tree is constant and the boundaries are holding.
+
+
+## 📐️ W4 batch 1 — all 11 plugins structurally converted
+
+Measured statically (no builds, no added contention):
+
+| plugin | root `declare_artifact` | `artifact()` | report | verified |
+|---|---|---|---|---|
+| `🎬️sequence` | ✅️ | ✅️ | ✅️ | **16→0 err, 146/146, wasm clean** |
+| `🌿️vcs` | ✅️ | ✅️ | ✅️ | **3→0 err, 59/59, wasm clean, 0/7 policy breaches** |
+| `📋️forms` `🗒️note` `🪵️sourcing` `🕸️dag` `➗️mathematical` `✒️writer` `🖍️draw` `💡️reasoning` `🎞️animate` | ✅️ | ✅️ | pending | agents still verifying |
+
+All 11 show `dirty=0` — their work is committed. `💡️reasoning` and `🎞️animate`, which were partial at the last
+check, have since completed their trees.
+
+**So the structural cutover of batch 1 is done; what is outstanding is verification and reports, not code.**
+10 of 11 agents are still in their verification phase, which is why only 2 reports exist. Dispatching more agents
+now would breach the concurrency cap and slow the ones finishing, so the next batch waits for slots.
+
+Also live in this repo right now: 3 other interactive Claude sessions (`semio-12`, `semio-e1`, `semio-ce`). Peer
+traffic is continuous; the boundary rules are what keep this safe.
+
+
+### ✅️ `🎞️animate` verified — 7 pre-existing errors → 0, **244/244 tests pass**
+
+wasm check still queued behind the shared lock at report-write time; the agent correctly left that line marked
+pending rather than claiming it, and stayed in-turn per the turn-discipline rule.
+
+Two things worth keeping from its report:
+- It waited out a **peer's uncommitted ` M` edit** on a file it needed (a concurrent ticket mid-change), per
+  CLAUDE.md's "work simultaneously with others" mandate, instead of overwriting. The boundary protocol held again.
+- It flagged that `pdf`/`pptx` io leaves were **pre-existing placeholders** — a structural `serde_json` coercion
+  between unrelated struct shapes, not a real semantic mapping. It marked them `Lossy` and left them, explicitly
+  out of scope. That is the honest call, and it is a real backlog item: those two leaves are fake conversions that
+  will silently produce garbage if anyone relies on them. Recorded here so W6/W7 does not mistake them for working
+  codecs.
+
+**Running tally: 3 of 11 batch-1 plugins verified** (sequence 146/146, vcs 59/59 + 0/7 policy breaches,
+animate 244/244) — 449 tests passing across them, all three from crates that could not compile at baseline.

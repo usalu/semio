@@ -42,6 +42,7 @@ import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
   pluginComponentBridgeSource,
+  SHARD_WORKER_FILE,
   shardWorkerSource,
   rewritePreview2ShimImports,
   transpilePluginComponent,
@@ -57,6 +58,15 @@ import pixelmatch from "pixelmatch";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
+
+/** @emoji 🧵️ Publishes the single package-agnostic shard worker at `🔌️plugin-modules/_shard/`, the
+ * URL `ShardClient` pool members are constructed from (H2 design). Idempotent: rewritten on every
+ * plugin build so a source change to `shardWorkerSource` always reaches the browser. */
+function publishShardWorker(): void {
+  const shardDir = join(pluginOutRoot, "_shard");
+  mkdirSync(shardDir, { recursive: true });
+  writeFileSync(join(shardDir, SHARD_WORKER_FILE), shardWorkerSource());
+}
 const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 const playgroundSessionPath = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🤖️generated/🟦️session.ts");
 
@@ -721,7 +731,7 @@ async function readPackageName(cratePath: string): Promise<string> {
 /** @emoji 🧹 Drops renamed/orphaned bridge artifacts in a plugin out dir before rewriting current outputs. */
 function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: string): void {
   if (!existsSync(outDir)) return;
-  const keepFiles = new Set(["🟨️host-shim.js", "🟨️plugin-worker.js"]);
+  const keepFiles = new Set(["🟨️host-shim.js"]);
   const currentBridgeFile = `${jsBase}.js`;
   for (const entry of readdirSync(outDir, { withFileTypes: true })) {
     if (entry.isDirectory()) continue;
@@ -776,20 +786,23 @@ function syncBuiltExtensionsToInstallRoot(entries: readonly PluginRegistryEntry[
   }
 }
 
-/** @emoji 🛂️ `describe`s one just-built plugin/extension component into `<owner>/🤖️generated/`
- * (`📓️design-abi.md` §3) — best-effort, non-fatal: zero plugin crates export the new `describe` WIT
- * interface yet (W3's `M0`…`M8` migrate them one at a time after this packet), so every call fails
- * today against the old-ABI wasm every crate still builds; failing the whole plugin build over that
+/** @emoji 🛂️ `describe`s one just-built plugin/extension component into `<owner>/` — the plugin/
+ * extension OWNER ROOT, sibling of the tracked `🛂️manifest.json` (`📓️design-abi.md` §3, path
+ * corrected by D0-descriptor-plumbing per the registrar ruling in `📌️important.md`: NOT
+ * `🤖️generated/`, which is globally gitignored and would mean a "checked-in" descriptor could never
+ * survive a commit) — best-effort, non-fatal: most plugin crates have not migrated to the new
+ * `describe` WIT export yet (W3's `M0`…`M8`/D-packets migrate them one at a time), so every call still
+ * fails today against the old-ABI wasm most crates build; failing the whole plugin build over that
  * would regress `dev`/`build` for the entire fleet. `📇️registry:check`'s own descriptor gate is what
  * tracks "not yet migrated" — this step just keeps a migrated crate's descriptor fresh automatically. */
 function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string): void {
   const describeScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📜️script.ts");
-  const ownerGeneratedDir = join(repoRoot, target.cratePath, "..", "..", "🤖️generated");
-  const status = runCmdStatus("bun", [describeScript, "describe", artifact, "--out", ownerGeneratedDir], { cwd: repoRoot, budgetMs: buildBudgetMs() });
+  const ownerRoot = join(repoRoot, target.cratePath, "..", "..");
+  const status = runCmdStatus("bun", [describeScript, "describe", artifact, "--out", ownerRoot], { cwd: repoRoot, budgetMs: buildBudgetMs() });
   if (status !== 0) {
     console.log(`[DEBUG] describe skipped for ${target.pluginId} (not yet migrated to the world-actor \`describe\` export, or its wasm isn't built for it) — see 📓️design-abi.md §3`);
   } else {
-    console.log(`[DEBUG] described ${target.pluginId} -> ${ownerGeneratedDir}`);
+    console.log(`[DEBUG] described ${target.pluginId} -> ${ownerRoot}`);
   }
 }
 
@@ -815,7 +828,12 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   transpilePluginComponent(artifact, outDir, componentBase, pluginWebMaterializeContext());
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
-  writeFileSync(join(outDir, "🟨️plugin-worker.js"), shardWorkerSource());
+  // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): the shard worker is ONE package-agnostic module
+  // multiplexed by `actorId` across a bounded pool (`🎭️actor/…/🧵️shard-client.ts`), so its canonical
+  // home is the shared `_shard/` dir — published once per build, never copied per plugin. H1-react's
+  // `PluginRuntime.getShardClient()` fetches only `/plugin-modules/_shard/🟨️shard-worker.js`, so the
+  // legacy per-plugin `🟨️plugin-worker.js` write (packet H2's stopgap) is dead weight — removed.
+  publishShardWorker();
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/extensions/...`
   // from the SSE event, so the install root must already serve the new files.
   publishBuiltExtension(target, outDir);
@@ -1420,6 +1438,11 @@ function releasePluginBuildLease(variant: string): void {
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     ensureAppleDeveloperDir();
+    // 🧵️ The shard worker is one package-agnostic file with no per-plugin cargo dependency — publish
+    // it unconditionally before any lease/build branching below so `SKIP_PLUGIN_BUILD=1` (the hub
+    // `users` launcher's mode, and `multi`, neither of which ever reaches `buildPlugin`) still leaves
+    // `/plugin-modules/_shard/🟨️shard-worker.js` on disk for `PluginRuntime.getShardClient()` to fetch.
+    publishShardWorker();
     if (segments[0] === "multi") {
       // 🐚️ The multi-shell harness mounts several already-built playground variants' plugin modules
       // side by side (see `🧩️multi.tsx`) — it doesn't own any one variant's plugin/engine build, so it
@@ -4130,11 +4153,156 @@ class ScaleFixtureCheckScript extends BundleScript {
 }
 //#endregion 🔖️ScaleFixture
 
+//#region 🔖️Bench
+/** ⚖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `bun ./📜️script.ts bench plugins
+ * [--renderer native|react|wgpu] [--count 50] [--extensions 50] [--shards 8] [--out <path>]` — the
+ * dev-side harness the root `bench` verb (`/📜️script.ts` `//#region 🔖️BenchScript`) routes into.
+ * Budget 1 (registry parse) is measured HERE, directly, in JS — no wasm/kernel involved, so it never
+ * needs the native/web split. Budgets 2-8 are measured by the renderer-specific harness: `native`
+ * drives `semio-wgpu-native --scale/--scale-wasm/--shards/--report`
+ * (`📺️renderer/…/🧊️wgpu/📦️glue.rs`'s `scale_bench` module — real `Kernel`/`ShardLoop`/
+ * `WasmtimeRuntime`, real scale-fixture wasm component, see that module's own doc for its honest
+ * single-physical-ShardLoop scope note); `react`/`wgpu` (web) are NOT run by this packet — they would
+ * reuse `//#region 🔬️ParityScript`'s `🔖️ServerPool` machinery (`findFreeParityPortPair`,
+ * `startParityDevServer`) rather than a second server pool, but that wiring was not exercised this
+ * session, so those rows report `"skipped"` with a reason, never a fabricated pass.
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️design-workforce.md §4
+ */
+const BENCH_TICKET_DIR_DEFAULT = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME";
+
+function benchOutDir(): string {
+  const configured = process.env.BENCH_OUT_DIR ?? BENCH_TICKET_DIR_DEFAULT;
+  const dir = resolve(repoRoot, configured);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function benchTargetDir(): string {
+  const dir = join(benchOutDir(), "🎯️target-v1b");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+type BenchBudgetDefinition = Readonly<{ id: number; description: string; nativeThreshold?: string; webThreshold?: string }>;
+
+/** 📓️ `design-workforce.md` §4, verbatim, ONE const — descriptions + threshold numbers as data, never
+ * scattered literals. The pass/fail MATH for budgets 2-8 lives on whichever side measures them (this
+ * table is not re-evaluated here); budget 1's math lives in `benchRegistryRow` right below it. */
+const BENCH_BUDGETS: readonly BenchBudgetDefinition[] = [
+  { id: 1, description: "Registry: 2550 records parsed, instantiations == 0, < 150ms", nativeThreshold: "150ms", webThreshold: "150ms" },
+  { id: 2, description: "Cold boot to first interactive frame, only on-startup-finished actors live", nativeThreshold: "1500ms", webThreshold: "2500ms" },
+  { id: 3, description: "Activate 50 plugins + 50 extensions of one plugin: active_actors==100, shards==K, no shard > ceil(100/K)+1" },
+  { id: 4, description: "Memory <= K x 512MiB + 256MiB headroom (web Worker count==K); native RSS <= 1.5GiB", nativeThreshold: "1.5GiB RSS" },
+  { id: 5, description: "Interactive p95 command->patch, 40 cpu actors saturating background", nativeThreshold: "8ms", webThreshold: "16ms" },
+  { id: 6, description: "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", nativeThreshold: "pause <= 250ms" },
+  { id: 7, description: "stateful actor LRU-suspended and resumed -> identical state hash" },
+  { id: 8, description: "Capability revoked at runtime -> denied completion, actor stays alive, quota counters zero" },
+] as const;
+
+function benchFlag(segments: readonly string[], name: string, fallback: string): string {
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i]!;
+    if (segment === `--${name}` && segments[i + 1] !== undefined) return segments[i + 1]!;
+    if (segment.startsWith(`--${name}=`)) return segment.slice(name.length + 3);
+  }
+  return fallback;
+}
+
+/** ⏱️ Budget 1 — measured directly: reads+parses the on-disk registry.json this run generated,
+ * timing ONLY that (never touches wasm/kernel, so `instantiations == 0` is true by construction, not
+ * merely asserted). */
+function benchRegistryRow(registryPath: string, expectedRecordCount: number): Record<string, unknown> {
+  const t0 = performance.now();
+  const raw = readFileSync(registryPath, "utf8");
+  const parsed = JSON.parse(raw) as { recordCount: number };
+  const elapsedMs = performance.now() - t0;
+  const pass = parsed.recordCount === expectedRecordCount && elapsedMs < 150;
+  return {
+    id: 1,
+    description: BENCH_BUDGETS[0]!.description,
+    status: pass ? "pass" : "fail",
+    measured: { elapsedMs, recordCount: parsed.recordCount, instantiations: 0 },
+    threshold: { maxMs: 150, instantiations: 0 },
+    note: "measured by this dev script directly (bun readFileSync + JSON.parse) — no wasm/kernel touched",
+  };
+}
+
+function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string): Record<string, unknown> {
+  return {
+    id: budget.id,
+    description: budget.description,
+    status: "skipped",
+    measured: null,
+    threshold: budget.webThreshold ?? null,
+    note: `${renderer} web-renderer bench not run this session — the harness would reuse 🔬️ParityScript's 🔖️ServerPool (findFreeParityPortPair/startParityDevServer), not a second server pool, but that wiring was not exercised here. --renderer native is the verified path.`,
+  };
+}
+
+class BenchPluginsScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const renderer = benchFlag(segments, "renderer", "native");
+    const pluginCount = Number(benchFlag(segments, "count", "50"));
+    const extensionsPerPlugin = Number(benchFlag(segments, "extensions", "50"));
+    const shardCount = Number(benchFlag(segments, "shards", "8"));
+    const outDir = benchOutDir();
+    const outPath = benchFlag(segments, "out", join(outDir, `terra-v1b-bench-${renderer}.json`));
+
+    const registryPath = join(outDir, "🔣️bench-registry.json");
+    // 🔁️ Reuses `renderScaleFixtureArtifacts` verbatim (`//#region 🔖️ScaleFixture` above) — same
+    // deterministic generator the committed `🤖️generated/🔣️registry.json` comes from, just scoped to
+    // THIS run's `--count`/`--extensions` rather than whatever happens to be checked in.
+    const { registryJson, registry } = renderScaleFixtureArtifacts(pluginCount, extensionsPerPlugin, 1);
+    writeFileSync(registryPath, registryJson);
+
+    const rows: Record<string, unknown>[] = [benchRegistryRow(registryPath, registry.recordCount)];
+
+    if (renderer === "native") {
+      const targetDir = benchTargetDir();
+      const cargoEnv = { ...process.env, CARGO_TARGET_DIR: targetDir };
+      console.log(`[DEBUG] bench: building scale-fixture wasm (CARGO_TARGET_DIR=${targetDir})`);
+      if (runCmdStatus("cargo", ["build", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2", "--features", "component-guest"], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
+        throw new Error("bench: scale-fixture wasm build failed");
+      }
+      const wasmPath = join(targetDir, "wasm32-wasip2", "debug", "semio_framework_os_scale_fixture.wasm");
+      if (!existsSync(wasmPath)) throw new Error(`bench: expected wasm artifact missing: ${wasmPath}`);
+      const nativeReportPath = join(outDir, "🔣️bench-native-raw.json");
+      const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
+      console.log(`[DEBUG] bench: running native scale-bench (shards=${shardCount})`);
+      if (runCmdStatus("bun", [wgpuScript, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
+        throw new Error("bench: native scale-bench run failed");
+      }
+      const nativeReport = JSON.parse(readFileSync(nativeReportPath, "utf8")) as { budgets: Record<string, unknown>[] };
+      rows.push(...nativeReport.budgets);
+    } else if (renderer === "react" || renderer === "wgpu") {
+      for (const budget of BENCH_BUDGETS.slice(1)) rows.push(benchWebSkippedRow(budget, renderer));
+    } else {
+      throw new Error(`bench plugins: unknown --renderer ${renderer} (expected native|react|wgpu)`);
+    }
+
+    const report = { renderer, pluginCount, extensionsPerPlugin, shardCount, seed: 1, generatedAt: new Date().toISOString(), budgets: rows };
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
+    console.log(`[DEBUG] bench: wrote report -> ${outPath}`);
+    console.log(`[DEBUG] bench summary: ${rows.map((r) => `${(r as { id: number }).id}:${(r as { status: string }).status}`).join(" ")}`);
+  }
+}
+//#endregion 🔖️Bench
+
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
   .register("test", TestScript)
   .register("verify", VerifyScript)
+  .register(
+    "bench",
+    class extends BundleScript {
+      async run(segments: string[]): Promise<void> {
+        const sub = segments[0];
+        if (sub === "plugins") return new BenchPluginsScript(this.root).run(segments.slice(1));
+        throw new Error(`unknown bench subcommand: ${sub ?? "<none>"} (expected plugins)`);
+      }
+    },
+  )
   .register(
     "generate",
     class extends BundleScript {

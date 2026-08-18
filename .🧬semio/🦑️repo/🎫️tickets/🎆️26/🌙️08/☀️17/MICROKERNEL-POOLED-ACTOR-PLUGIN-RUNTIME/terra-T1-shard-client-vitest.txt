@@ -1,0 +1,22 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-actor:test
+
+> nx run @semio-tech/framework-actor:test  [existing outputs match the cache, left as is]
+
+> bun ./📜️script.ts test
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  30 passed (30)
+   Start at  15:49:48
+   Duration  180ms (transform 116ms, setup 0ms, import 130ms, tests 31ms, environment 2ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/framework-actor
+
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+

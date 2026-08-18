@@ -27,6 +27,7 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework::io::io_mechanism::Deserializer;
 
     #[test]
     fn writer_into_json_round_trips_through_json_into_writer() {

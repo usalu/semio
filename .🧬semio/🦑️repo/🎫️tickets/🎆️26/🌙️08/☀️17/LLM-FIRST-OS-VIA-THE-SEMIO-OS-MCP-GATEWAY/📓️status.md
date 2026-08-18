@@ -183,3 +183,29 @@ Suite after all of it: **169 passed, 0 failed** (up from 160 — P1c and P7 adde
 **I did not fix a peer's broken crate, and that was right.** `semio-framework-ui` went red mid-session (`unresolved import presence_bar::presence_hue_for_actor` — a peer deleted the function, its replacement's own doc comment says so, while a `🎯️targets/🧊️wgpu/📦️glue.rs` re-export still named it). It blocked our builds. But `stat` showed both files had been written **seconds earlier**, so the session was live, not abandoned — the opposite of the stopped-12-hours case where their coordinator correctly did intervene. I warned both running agents (so they would not misattribute it or "helpfully" patch someone else's crate) and waited. The peer fixed it themselves at 13:19:46 and our suite went green again.
 
 **`P7b` reached the right conclusion and stopped at the boundary.** The WASI gap (`wasi:io/poll@0.2.9` missing from the linker) cannot be fixed from `🏠️workspace/**`: our own `world actor` declares exactly one import (`pure`), and the requirement comes from the built `wasm32-wasip2` component itself — so the linker change belongs in `semio-framework-plugin-host`, which is the peer ticket's B1 territory. It filed that rather than duplicating linker setup locally, which would have been exactly the divergence CLAUDE.md forbids. **Real plugin instantiation in headless mode therefore remains open**, pending that lease. Everything up to instantiation — policy, schema validation, prepare, catalog, resources — is proven working.
+
+### Taxonomy debt resolved — one real fix, the rest correctly left alone
+
+I said I would clear the 13 findings once the live agents landed. Doing so honestly meant separating a genuine defect from repo-wide convention, which is what the numbers show:
+
+- **Fixed (uniquely ours, a real collision):** `🌉️mcp/🎬️actions` → **`🌉️mcp/🔀️dispatch`**. `🎬️actions` is a *reserved semantic collection* name in the plugin taxonomy — the only such reserved name matching action/dispatch/invoke — so our facet directory was being parsed as a collection and produced three findings at once (`collection-empty`, `collection-manifest-missing`, `collection-authored-behavior`). The Rust module is named `actions`, so the fix was the directory plus one `#[path]` line; every `crate::actions::…` reference stayed valid. Compiles clean, suite unaffected. `🔀️` was verified as an ordinary facet prefix already in use (`◻2d/🔀️booleans`, `🗣️dsl/🔀️dsl-value-serde`), not reserved.
+- **Left alone (repo convention, not our defect):** `manifest-child-missing` fires on **every** established sibling — `🏃️run`, `🏪️store`, `🌿️vcs`, `🔁️workflow`, `🪐️space`, `📇️directory` — and on 91 elements, **4 354 findings repo-wide**. Adding `🔣️component.json` to only our five directories would make us inconsistent with a convention the repo has not adopted, not more correct.
+- **Kept with the trade-off recorded:** the `packaging-violation` on `📦️packages/🟦️typescript/🧬️schema-validation.ts`. I moved the `ajv` import there to fix a real `not-to-unlisted` policy error (a module-root file must not reach for an external package). Moving it back would simply trade one lint for the other. Only 11 such findings exist repo-wide and one of them is the peer ticket's `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts` — the same shape, placed there by their design on purpose. Keeping the dependency inside the package that declares it is the more defensible half of the trade.
+
+### Final state
+
+| check | result |
+|---|---|
+| `cargo test -p semio-framework-os-mcp` | **169 passed, 0 failed** |
+| `cargo test -p semio-framework-os-shell` | **10 passed, 0 failed** (1 ignored — the fixture writer) |
+| `bun nx run @semio-tech/framework-os-mcp:test-quick --skip-nx-cache` | **22 passed** (real SDK client) |
+| warnings from our code | **0** (the 2 remaining are `semio-framework-os-kernel`'s `📡️spr/📡️wire` and `semio-framework-plugin-host`'s `🧵️shard`, both peer-owned) |
+| React shell after mounting the agent elements | 11 failed / 325 passed — **identical to the pre-change baseline**, none agent-related |
+
+### Open, with owners — not silently dropped
+
+1. **Real plugin instantiation in headless mode** — blocked on a WASI linker change that belongs in `semio-framework-plugin-host` (peer B1 territory), leased by P7b. Everything up to instantiation is proven; the mutation path beyond it is not yet exercised against a real wasm plugin.
+2. **`run_http` drops the `BridgeHandle`** — P1c published `send_to`/`broadcast` and flagged that the production path does not retain the handle yet, so a parked approval cannot yet be pushed to a connected shell from the HTTP entrypoint. A few lines, once a real in-process consumer exists.
+3. **Eval accuracy 50 % top-1 / 73.5 % top-3** — a data problem, not a search problem: no real plugin action carries `use_when` yet. Waits on their W3 finishing the plugin migration, then P13/P14 enrichment and a P15 re-measure. Do not tune the scorer against the current empty-metadata corpus.
+4. **Hub agent principal (P4)** — still deferred per D7 while `FINISH-HUB-SPACES` rewrites the auth flow.
+5. **P12 browser e2e** — now unblocked by the live bridge; not yet written.

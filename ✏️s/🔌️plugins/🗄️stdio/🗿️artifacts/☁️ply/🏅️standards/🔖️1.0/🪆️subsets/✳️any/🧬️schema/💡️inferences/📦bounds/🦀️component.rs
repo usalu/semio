@@ -92,7 +92,7 @@ pub fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::ply::schema::snapshot::{PlyFormat, PlyRow};
+    use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
     use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
 
     fn vertex_element(rows: Vec<[f64; 3]>) -> PlyElement {

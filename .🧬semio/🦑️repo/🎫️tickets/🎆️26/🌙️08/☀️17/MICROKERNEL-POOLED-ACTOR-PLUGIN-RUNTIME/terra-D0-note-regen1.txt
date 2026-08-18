@@ -1,0 +1,660 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling cpufeatures v0.2.17
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `outcome_to_result` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:21:15
+   |
+21 | pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+   |               ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `set_instance_actor` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
+      |
+14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+      |                   ^^^^^^^^^^^^^^^^^^
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
+     |
+2589 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2607 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2608 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3617:9
+     |
+3615 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3616 |         definitions: ArtifactDefinitionRegistry,
+3617 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3618 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3619 |         inference_services: ArtifactInferenceServiceRegistry,
+3620 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+   Compiling sha2 v0.10.9
+warning: unused import: `GltfDocument`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:19:213
+   |
+19 | ...Buffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+   |                                                              ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-note v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust)
+error[E0603]: crate `store` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:108:40
+    |
+108 |         let decoded = semio_framework::store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+    |                                        ^^^^^ private crate
+    |
+note: the crate `store` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:10:1
+    |
+ 10 | extern crate semio_framework_os_kernel as store;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+108 -         let decoded = semio_framework::store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+108 +         let decoded = crate::dsl::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+    |
+108 -         let decoded = semio_framework::store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+108 +         let decoded = semio_framework_os_kernel::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+    |
+
+error[E0603]: crate `dsl` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:109:83
+    |
+109 | ...   let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as Pack...
+    |                                                                                 ^^^ private crate
+    |
+note: the crate `dsl` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:5:1
+    |
+  5 | extern crate semio_framework_os_kernel as dsl;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+109 -         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+109 +         let mut descriptor: semio_framework::PackageDescriptor = crate::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+    |
+109 -         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+109 +         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+    |
+109 -         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+109 +         let mut descriptor: semio_framework::PackageDescriptor = semio_framework_os::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+    |
+109 -         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+109 +         let mut descriptor: semio_framework::PackageDescriptor = semio_framework_os_kernel::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+    |
+    = and 1 other candidate
+
+error[E0603]: crate `dsl` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:114:46
+    |
+114 |         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+    |                                              ^^^ private crate
+    |
+note: the crate `dsl` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:5:1
+    |
+  5 | extern crate semio_framework_os_kernel as dsl;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+114 -         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+114 +         let prehash_value = crate::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+    |
+114 -         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+114 +         let prehash_value = semio_framework::to_dsl_value(&descriptor).expect("encode for hashing");
+    |
+114 -         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+114 +         let prehash_value = semio_framework_os::to_dsl_value(&descriptor).expect("encode for hashing");
+    |
+114 -         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+114 +         let prehash_value = semio_framework_os_kernel::to_dsl_value(&descriptor).expect("encode for hashing");
+    |
+    = and 1 other candidate
+
+error[E0603]: crate `store` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:115:46
+    |
+115 |         let prehash_bytes = semio_framework::store::pack_rt::encode_wire_value(&prehash_value);
+    |                                              ^^^^^ private crate
+    |
+note: the crate `store` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:10:1
+    |
+ 10 | extern crate semio_framework_os_kernel as store;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+115 -         let prehash_bytes = semio_framework::store::pack_rt::encode_wire_value(&prehash_value);
+115 +         let prehash_bytes = crate::dsl::pack_rt::encode_wire_value(&prehash_value);
+    |
+115 -         let prehash_bytes = semio_framework::store::pack_rt::encode_wire_value(&prehash_value);
+115 +         let prehash_bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&prehash_value);
+    |
+
+error[E0603]: crate `dsl` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:118:44
+    |
+118 |         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |                                            ^^^ private crate
+    |
+note: the crate `dsl` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:5:1
+    |
+  5 | extern crate semio_framework_os_kernel as dsl;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+118 -         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+118 +         let final_value = crate::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |
+118 -         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+118 +         let final_value = semio_framework::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |
+118 -         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+118 +         let final_value = semio_framework_os::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |
+118 -         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+118 +         let final_value = semio_framework_os_kernel::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |
+    = and 1 other candidate
+
+error[E0603]: crate `store` is private
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:119:44
+    |
+119 |         let final_bytes = semio_framework::store::pack_rt::encode_wire_value(&final_value);
+    |                                            ^^^^^ private crate
+    |
+note: the crate `store` is defined here
+   --> 🧰️framework/📦️packages/🦀️rust/📦️glue.rs:10:1
+    |
+ 10 | extern crate semio_framework_os_kernel as store;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider importing one of these functions instead
+    |
+119 -         let final_bytes = semio_framework::store::pack_rt::encode_wire_value(&final_value);
+119 +         let final_bytes = crate::dsl::pack_rt::encode_wire_value(&final_value);
+    |
+119 -         let final_bytes = semio_framework::store::pack_rt::encode_wire_value(&final_value);
+119 +         let final_bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&final_value);
+    |
+
+warning: `testkit` is ambiguous
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:120:19
+    |
+120 |     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mut...
+    |                   ^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `testkit` could refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:9
+    |
+289 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `testkit` could also refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:290:9
+    |
+290 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🦀️component.rs:337:1
+    |
+337 | / /// 🌱 Ephemeral, session-side cache of every text block's live paragraphs, keyed by
+338 | | /// `NoteTextChild::child_id` — NEVER persisted, NEVER a durable field on `NoteSnapshot`/`NoteBlockNode`
+339 | | /// (matches the `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base).
+340 | | /// Exists because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet
+...   |
+348 | | /// store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a handle can in principle go
+349 | | /// uncached — [`note_block_text`] fails soft (empty `Vec`) rather than panicking.
+    | |_---------------------------------------------------------------------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:25:49
+   |
+25 |     #[state(artifact)] pub artifact: Option<Box<crate::artifacts::note::schema::NoteArtifact>>,
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+25 -     #[state(artifact)] pub artifact: Option<Box<crate::artifacts::note::schema::NoteArtifact>>,
+25 +     #[state(artifact)] pub artifact: Option<Box<NoteArtifact>>,
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:351:24
+    |
+351 |         let mut by_id: std::collections::BTreeMap<_, _> = next
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+351 -         let mut by_id: std::collections::BTreeMap<_, _> = next
+351 +         let mut by_id: BTreeMap<_, _> = next
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:386:18
+    |
+386 |     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+386 -     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+386 +     assets: &mut BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:386:53
+    |
+386 |     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+386 -     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+386 +     assets: &mut std::collections::BTreeMap<String, NoteImageAsset>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:552:50
+    |
+552 | pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+552 - pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+552 + pub fn note_asset_upsert_diff(key: &str, asset: &NoteImageAsset) -> NoteDiff {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:553:23
+    |
+553 |     let mut entries = std::collections::BTreeMap::new();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     let mut entries = std::collections::BTreeMap::new();
+553 +     let mut entries = BTreeMap::new();
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:560:23
+    |
+560 |     let mut entries = std::collections::BTreeMap::new();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+560 -     let mut entries = std::collections::BTreeMap::new();
+560 +     let mut entries = BTreeMap::new();
+    |
+
+warning: unused import: `crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs:82:13
+   |
+82 |         use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `clone_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^            ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^                                    ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteTextParagraph` and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:11:59
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                                                           ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:91:26
+   |
+91 |         let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+91 -         let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+91 +         let (x, y, ..) = block_bounds(clone);
+   |
+
+warning: unused imports: `block_bounds`, `block_id`, `clone_block`, `create_block_by_kind`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^                             ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteTextParagraph` and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:11:59
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                                                           ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, `find_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, `find_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutat...
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, and `create_block_by_kind`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block...
+  |                                      ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |                                                                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, and `create_block_by_kind`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block...
+  |                                      ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |                                                                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:4:52
+  |
+4 | ...block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |                  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, and `move_block_to_container`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:7:96
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `NoteBlockNode`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^
+
+warning: unused import: `NOTE_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🦀️component.rs:6:44
+  |
+6 | use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+  |                                            ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `serde_json::Value`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🦀️component.rs:9:5
+  |
+9 | use serde_json::Value;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `empty_note_snapshot` and `semio_example_snapshot`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-fixture-json/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{empty_note_snapshot, semio_example_snapshot};
+  |                                      ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:108:23
+    |
+108 |         let decoded = semio_framework::store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+108 -         let decoded = semio_framework::store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+108 +         let decoded = store::pack_rt::decode_wire_value(&assembled).expect("decode describe_plugin() output");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:109:66
+    |
+109 | ...   let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as Pack...
+    |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+109 -         let mut descriptor: semio_framework::PackageDescriptor = semio_framework::dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+109 +         let mut descriptor: semio_framework::PackageDescriptor = dsl::from_dsl_value(decoded).expect("decode as PackageDescriptor");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:114:29
+    |
+114 |         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+114 -         let prehash_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+114 +         let prehash_value = dsl::to_dsl_value(&descriptor).expect("encode for hashing");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:115:29
+    |
+115 |         let prehash_bytes = semio_framework::store::pack_rt::encode_wire_value(&prehash_value);
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+115 -         let prehash_bytes = semio_framework::store::pack_rt::encode_wire_value(&prehash_value);
+115 +         let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value);
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:118:27
+    |
+118 |         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+118 -         let final_value = semio_framework::dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+118 +         let final_value = dsl::to_dsl_value(&descriptor).expect("encode final descriptor");
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/../../🦀️component.rs:119:27
+    |
+119 |         let final_bytes = semio_framework::store::pack_rt::encode_wire_value(&final_value);
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+119 -         let final_bytes = semio_framework::store::pack_rt::encode_wire_value(&final_value);
+119 +         let final_bytes = store::pack_rt::encode_wire_value(&final_value);
+    |
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:481:13
+    |
+481 |         let app = NotePlayApp;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0603`.
+warning: `semio-s-plugin-note` (lib test) generated 42 warnings
+error: could not compile `semio-s-plugin-note` (lib test) due to 6 previous errors; 43 warnings emitted

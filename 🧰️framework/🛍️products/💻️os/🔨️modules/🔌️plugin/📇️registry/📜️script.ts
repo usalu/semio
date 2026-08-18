@@ -143,11 +143,21 @@ function findPluginCargoFiles(root: string): string[] {
 
 /** 🔣️ Where a crate's static descriptor (`semio-framework-plugin-describe`'s output) lives, relative
  * to its own Cargo.toml directory: two levels up (out of `📦️packages/🦀️rust`) into the crate's OWNER
- * root, then `🤖️generated/` — the same "sibling of `📦️packages`" convention `🎭️actor`'s own
- * `🤖️generated/🟦️actor.ts` already uses (`🎭️actor/📦️packages/🦀️rust/📜️script.ts`'s
- * `generatedBindingsPath`). Every plugin crate's `📜️script.ts describe` command and the dev
- * `📜️script.ts` wasip2-build step both write to `--out <owner>/🤖️generated`. */
-const DESCRIPTOR_JSON_REL_PATH = ["..", "..", "🤖️generated", "🔣️descriptor.json"];
+ * root — sibling of the tracked `🛂️manifest.json`, with NO further `🤖️generated/` segment.
+ *
+ * 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (D0): this used to append `🤖️generated/`, by analogy
+ * with `🎭️actor`'s generated TS bindings. But `🤖️generated/**` is globally gitignored, so a
+ * descriptor written there can never survive a commit — and a descriptor's whole purpose is to be
+ * the checked-in, static answer to "what does this package contribute" that the registry reads
+ * WITHOUT instantiating any wasm. The analogy was to a directory holding regenerable build output;
+ * a descriptor is a tracked artifact, so it inherits the opposite convention.
+ *
+ * Consequence while the paths disagreed: `plugin-registry:check` reported `🗒️note` as having no
+ * descriptor while a real, fresh, committed one sat at the owner root and `descriptor_is_fresh()`
+ * passed against it. The gate and the test were reading different files and both looked green.
+ * `descriptor_is_fresh()` (`🔌️plugin/🦀️component.rs`), the dev `📜️script.ts` build step, and every
+ * plugin crate's own `📜️script.ts describe` command all use the owner root; this is the last leg. */
+const DESCRIPTOR_JSON_REL_PATH = ["..", "..", "🔣️descriptor.json"];
 
 /** 🎬️ `kernel::ActivationEvent`'s default (externally tagged) serde JSON shape, decoded into
  * `📓️design-abi.md` §2's canonical dash-separated string form. Unit variant `OnStartupFinished`

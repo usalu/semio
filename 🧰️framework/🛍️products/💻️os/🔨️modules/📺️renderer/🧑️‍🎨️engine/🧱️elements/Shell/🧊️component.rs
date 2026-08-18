@@ -323,6 +323,14 @@ fn presence_peer_rows_for_surface(peers: &[PresencePeer], attached_surface: Opti
                 _ => None,
             },
             connected_at_ms: Some(peer.connected_at_ms),
+            // 🎨️ The wire `PresencePeer` (`📡️spr/📡️wire`) carries no colour field — the hub assigns
+            // session colours out of band via its `Session` frame, and this shell tracks no such
+            // roster. `None` is the row's documented "no hub connection" value and renders as
+            // palette index 0. Mapped as absent rather than fabricated, matching the identical
+            // decision on this file's own outbound heartbeat; remote peers therefore all render at
+            // index 0 in wgpu until either the wire carries the colour or the shell keeps a
+            // Session-frame roster, which is the presence ticket's call, not this one's.
+            color: None,
         })
         .collect()
 }

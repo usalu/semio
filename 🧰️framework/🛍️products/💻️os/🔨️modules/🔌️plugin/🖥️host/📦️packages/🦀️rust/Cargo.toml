@@ -14,6 +14,13 @@ workspace = true
 [lib]
 path = "📦️glue.rs"
 
+# 👶️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards, `design-runtime.md` §2: "the
+# `semio-shard` `[[bin]]` runs over stdio"). Hosts one `ShardLoop` over `process_transport::
+# StdioTransport` — see `🧵️shard/👶️child/🦀️main.rs`'s own module doc for the CLI contract.
+[[bin]]
+name = "semio-shard"
+path = "../../🧵️shard/👶️child/🦀️main.rs"
+
 [dependencies]
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }

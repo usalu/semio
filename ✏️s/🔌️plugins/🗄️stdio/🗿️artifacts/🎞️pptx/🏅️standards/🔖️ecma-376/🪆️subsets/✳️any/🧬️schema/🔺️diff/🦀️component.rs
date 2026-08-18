@@ -17,6 +17,8 @@
 //! too (docx already flagged the same hoist).
 
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+#[cfg(test)]
+use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;

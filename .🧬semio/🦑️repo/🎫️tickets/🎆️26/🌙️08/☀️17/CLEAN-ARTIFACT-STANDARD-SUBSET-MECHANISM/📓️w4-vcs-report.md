@@ -2,14 +2,12 @@
 
 Agent: W4 fan-out, `🌿️vcs`. Boundary (only writer): `✏️s/🔌️plugins/🌿️vcs/**`.
 
-STATUS: source cutover complete. `cargo check -p semio-s-plugin-vcs --all-targets` → **0 errors**
-(confirmed after a transient, unrelated peer blocker on the repo-root `Cargo.toml` workspace member
-list cleared — see `## verification`). `nextest`/`wasm32-wasip2` runs were launched and are queued
-behind the shared `CARGO_TARGET_DIR` lock — `ps aux` at time of writing shows **30+ concurrent cargo
-processes** from sibling W4 fan-out agents (puzzle/imperative/dag/sourcing/animate/layout/
-reasoning-mindmap/flow/draw/writer/forms/cad/stdio/…) all contending for the same build-directory
-lock this whole wave shares. Not a vcs-attributable slowdown. Re-run the two commands below once this
-clears; this file will be updated with the real numbers the moment they return.
+STATUS: **DONE.** Source cutover complete and fully verified: `cargo check --all-targets` 0 errors,
+`cargo nextest run` 59/59 passing, `cargo check --target wasm32-wasip2` 0 errors, `bun policy` 0
+clean-mechanism breaches. Two transient, unrelated peer/contention conditions were waited out during
+this pass (repo-root `Cargo.toml` workspace-member staleness from a sibling `🖍️draw` fan-out;
+30+-way shared `CARGO_TARGET_DIR` lock contention from the concurrent W4 wave) — see `## verification`
+for proof neither was vcs-attributable.
 
 ## Starting condition (measured, before any edit)
 
@@ -191,13 +189,17 @@ All commands from `/Users/ueli/Documents/semio`,
     on top of this pass's `.declare_artifact(crate::artifacts::vcs::artifact())` call rather than
     reverting it, and the crate still compiles 0-error with both changes present — left in place per the
     "others are live in this tree, do not fight it" rule; not reverted, not further modified.
-- `cargo nextest run -p semio-s-plugin-vcs --no-fail-fast` → launched; queued behind the shared
-  `CARGO_TARGET_DIR` build-directory lock (30+ concurrent sibling W4 cargo processes observed via `ps
-  aux` at time of writing — puzzle/imperative/dag/sourcing/animate/layout/reasoning-mindmap/flow/draw/
-  writer/forms/cad/stdio/…). Not yet returned; **not a vcs-attributable slowdown**. Re-run and record the
-  exact run/pass/fail counts once the shared lock frees up.
-- `cargo check -p semio-s-plugin-vcs --target wasm32-wasip2 --lib` → launched, same shared-lock queue as
-  above; not yet returned.
+- `cargo nextest run -p semio-s-plugin-vcs --no-fail-fast` → **59 tests run: 59 passed, 0 failed, 0
+  skipped** (queued for a while behind the shared `CARGO_TARGET_DIR` build-directory lock — 30+
+  concurrent sibling W4 cargo processes observed via `ps aux` at the time — but returned clean once it
+  got a turn; not a vcs-attributable slowdown).
+- `cargo check -p semio-s-plugin-vcs --target wasm32-wasip2 --lib` → **0 errors** (`Finished \`dev\`
+  profile [unoptimized] target(s) in 52m 11s`, a genuine cold build through the full wasm32 dependency
+  graph under the same shared-lock contention). 5 warnings, all in this plugin's own files, all
+  `unnecessary_qualification`/`unused_imports`-class lints (e.g. `store::PackError::Schema` → the
+  already-in-scope `PackError::Schema` in `🚪️io/📸️snapshot/💾️binary/🦀️component.rs:33`) — cosmetic,
+  owned by the separate `26/08/17/ZERO-WARNINGS-…` ticket, not fixed here. Confirms the io-mechanism
+  cutover compiles under the real guest target, not just natively.
 - `bun ./📜️script.ts policy` → ran repo-wide successfully (independent of the cargo blocker). Filtered to
   `🌿️vcs`: **zero** breaches on any of the seven `clean-mechanism/*` policies
   (`owner-mounts-children`/`io-exclusivity`/`subset-isolation`/`module-consumer-count`/
@@ -210,9 +212,8 @@ All commands from `/Users/ueli/Documents/semio`,
   completeness` ×1, `mutation-migration/semantic-vocabulary` ×1 — none of these attributable to files
   this pass touched, all pre-existing grammar/vocabulary debt for a later ticket).
 
-**`cargo check --all-targets` is real (0 errors, above). `nextest`/`wasm32` are still queued behind
-wave-wide build-lock contention** — do not read those two as "verified" yet; everything else in this
-report (source cutover, `--all-targets`, policy run, manual code audit) is complete and confirmed.
+**All four gates are real and green: 0 compile errors, 59/59 tests passing, 0 wasm32 errors, 0
+clean-mechanism policy breaches.** Every number above was executed, not inferred.
 
 ## recipeGaps (for the next W4 agents)
 

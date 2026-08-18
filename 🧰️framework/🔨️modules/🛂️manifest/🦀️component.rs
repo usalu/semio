@@ -6794,6 +6794,7 @@ mod app_label_tests {
         ui_wgpu::wgpu::UiState::export().unwrap();
         ui_wgpu::wgpu::UiStatus::export().unwrap();
         ui_wgpu::wgpu::UiPresence::export().unwrap();
+        ui_wgpu::wgpu::UiPeerMark::export().unwrap();
         ui_wgpu::wgpu::UiDropOverlaySpec::export().unwrap();
         ui_wgpu::wgpu::UiTextNode::export().unwrap();
         ui_wgpu::wgpu::UiButtonNode::export().unwrap();
@@ -6913,6 +6914,7 @@ mod app_label_tests {
         crate::ui::AppRole::export().unwrap();
         crate::ArtifactDialect::export().unwrap();
         crate::ui::AppRef::export().unwrap();
+        crate::ui::AppIo::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::ProgramContributionEntry::export().unwrap();

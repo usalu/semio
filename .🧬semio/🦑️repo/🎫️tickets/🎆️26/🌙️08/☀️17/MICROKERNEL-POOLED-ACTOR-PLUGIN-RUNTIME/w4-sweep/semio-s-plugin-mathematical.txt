@@ -1,0 +1,138 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
+     |
+2589 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2607 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2608 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3617:9
+     |
+3615 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3616 |         definitions: ArtifactDefinitionRegistry,
+3617 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3618 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3619 |         inference_services: ArtifactInferenceServiceRegistry,
+3620 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: function `outcome_to_result` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:21:15
+   |
+21 | pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+   |               ^^^^^^^^^^^^^^^^^
+
+warning: function `set_instance_actor` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
+      |
+14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+      |                   ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unused import: `GltfDocument`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:19:213
+   |
+19 | ...Buffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+   |                                                              ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
+    Checking semio-s-plugin-mathematical v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust)
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/././././././././../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs:196:6
+    |
+196 | impl store::ArtifactDsl for MathematicalSnapshot {
+    |      ^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+196 - impl store::ArtifactDsl for MathematicalSnapshot {
+196 + impl ArtifactDsl for MathematicalSnapshot {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/././././././././../../🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️component.rs:210:77
+    |
+210 | ...   let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio...
+    |                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+210 -         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+210 +         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    |
+
+warning: `semio-s-plugin-mathematical` (lib) generated 2 warnings (run `cargo fix --lib -p semio-s-plugin-mathematical` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 21.71s

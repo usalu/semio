@@ -132,3 +132,21 @@ Options, in order of preference:
    wall-clock per plugin.
 
 Do NOT kill running agents to enforce this — they lose their work. Let the queue drain, then dispatch at the cap.
+
+## 🧮 Coordinator: do NOT run your own verification sweeps during a fan-out
+
+Each fan-out agent already verifies its own plugin (`cargo check --all-targets`, `nextest`, wasm, policy) as part
+of its brief. A coordinator-run sweep over the same crates duplicates that work AND adds to the shared
+build-directory lock queue, slowing every agent down — it makes the thing it is trying to measure worse.
+
+Measure completion **statically** instead, which costs nothing:
+
+```
+grep -l "declare_artifact(" <plugin>/🦀️component.rs        # root cut over?
+grep -rl "pub fn artifact()"  <plugin>/🗿️artifacts          # artifact root?
+grep -rl "pub fn subset()"    <plugin>/🗿️artifacts          # subset root?
+git status --porcelain -- <plugin> | wc -l                  # is it actively producing?
+```
+
+Take the compile/test numbers from the agents' own reports. Only run a sweep when the field is quiet — e.g. before
+W5/W6/W7, or to establish a baseline before dispatching.

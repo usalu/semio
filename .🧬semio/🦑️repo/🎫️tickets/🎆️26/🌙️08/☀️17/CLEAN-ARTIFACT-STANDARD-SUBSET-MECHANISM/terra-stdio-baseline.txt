@@ -34,6 +34,12 @@ warning: function `outcome_to_result` is never used
    |
    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
+warning: function `set_instance_actor` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
+      |
+14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+      |                   ^^^^^^^^^^^^^^^^^^
+
 warning: fields `child_slots` and `link_slots` are never read
     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
      |
@@ -61,12 +67,6 @@ warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are neve
 3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
      |         ^^^^^^^^^^^
 
-warning: function `set_instance_actor` is never used
-     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
-      |
-14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
-      |                   ^^^^^^^^^^^^^^^^^^
-
 warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
     Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
 warning: unnecessary qualification
@@ -81,37 +81,6 @@ help: remove the unnecessary path segments
 37 - semio_framework_plugin::plugin_exports!(plugin::plugin);
 37 + semio_framework_plugin::plugin_exports!(plugin);
    |
-
-warning: function `parse_ut_mtime` is never used
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
-    |
-246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
-    |    ^^^^^^^^^^^^^^
-    |
-    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
-
-warning: function `hard` is never used
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
-    |
-138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
-    |        ^^^^
-
-warning: function `soft` is never used
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
-    |
-142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
-    |        ^^^^
-
-warning: variant `Ascii` is never constructed
-  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
-   |
-46 | pub enum StlFormat {
-   |          --------- variant in this enum
-47 |     Binary,
-48 |     Ascii,
-   |     ^^^^^
-   |
-   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
 
 error[E0433]: cannot find type `Part21Value` in this scope
    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:271:29
@@ -958,7 +927,6 @@ error[E0425]: cannot find function `verify_r2004_material_frames` in module `dwg
 296 |     let verified = dwg_engine::verify_r2004_material_frames(FIXTURE_BYTES, &classes).expect("typed MATERIAL frames must reencode ex...
     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `dwg_engine`
 
-warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
 error[E0425]: cannot find function `verify_r2004_block_move_action_frames` in module `dwg_engine`
    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🦀️test.rs:303:32
     |
@@ -1805,277 +1773,272 @@ help: consider importing this struct through its public re-export
  653 +     use crate::artifacts::xlsx::schema::snapshot::XlsxCell;
      |
 
-error[E0425]: cannot find function `make_box` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:273:21
+error[E0433]: cannot find type `Mp4Movie` in this scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:180:20
     |
-273 |         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    |                     ^^^^^^^^ not found in this scope
+180 |             movie: Mp4Movie::default(),
+    |                    ^^^^^^^^ use of undeclared type `Mp4Movie`
     |
-help: consider importing this function
+help: consider importing this struct through its public re-export
     |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-    |
-
-error[E0425]: cannot find function `solid_volume` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:274:20
-    |
-274 |         let vol0 = solid_volume(&body, solid, 1e-6).unwrap();
-    |                    ^^^^^^^^^^^^ not found in this scope
-    |
-help: consider importing this function
-    |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
+171 +     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Movie;
     |
 
-error[E0425]: cannot find function `solid_volume` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:278:20
+error[E0433]: cannot find type `Mp4TrackMetadata` in this scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:187:27
     |
-278 |         let vol1 = solid_volume(&body, out, 1e-6).unwrap();
-    |                    ^^^^^^^^^^^^ not found in this scope
+187 |                 metadata: Mp4TrackMetadata::default(),
+    |                           ^^^^^^^^^^^^^^^^ use of undeclared type `Mp4TrackMetadata`
     |
-help: consider importing this function
+help: consider importing this struct through its public re-export
     |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
-    |
-
-error[E0425]: cannot find function `make_box` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:286:21
-    |
-286 |         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-    |                     ^^^^^^^^ not found in this scope
-    |
-help: consider importing this function
-    |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+171 +     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata;
     |
 
-error[E0425]: cannot find function `solid_volume` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:290:19
+error[E0433]: cannot find type `Mp4TrackMetadata` in this scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:200:158
     |
-290 |         let vol = solid_volume(&body, out, 1e-6).unwrap();
-    |                   ^^^^^^^^^^^^ not found in this scope
+200 | ..., width: 32, height: 32, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] } },
+    |                                       ^^^^^^^^^^^^^^^^ use of undeclared type `Mp4TrackMetadata`
     |
-help: consider importing this function
+help: consider importing this struct through its public re-export
     |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;
-    |
-
-error[E0425]: cannot find function `make_box` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:298:21
-    |
-298 |         let solid = make_box(&mut body, 2.0, 2.0, 2.0, &mut rec).unwrap();
-    |                     ^^^^^^^^ not found in this scope
-    |
-help: consider importing this function
-    |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+171 +     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata;
     |
 
-error[E0425]: cannot find function `make_box` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:308:21
+error[E0433]: cannot find type `Mp4TrackMetadata` in this scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:225:128
     |
-308 |         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    |                     ^^^^^^^^ not found in this scope
+225 | ..., width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
+    |                                       ^^^^^^^^^^^^^^^^ use of undeclared type `Mp4TrackMetadata`
     |
-help: consider importing this function
+help: consider importing this struct through its public re-export
     |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
-    |
-
-error[E0425]: cannot find function `make_box` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🎨️blend/🦀️component.rs:319:21
-    |
-319 |         let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    |                     ^^^^^^^^ not found in this scope
-    |
-help: consider importing this function
-    |
-261 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+171 +     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata;
     |
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:490:95
+warning: duplicated attribute
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1382:9
+     |
+1382 |         #[test]
+     |         ^^^^^^^
+     |
+     = note: `#[warn(duplicate_macro_attributes)]` on by default
+
+warning: duplicated attribute
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:481:5
     |
-490 |         let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X });
-    |                                                                                               ^^^^ use of undeclared type `Vec3`
+481 |     #[test]
+    |     ^^^^^^^
+
+warning: unused imports: `SemioMesh` and `SemioPrimitive`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1024/✳️any/🦀️component.rs:17:79
+   |
+17 | use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+   |                                                                               ^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
     |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
     |
-490 -         let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X });
-490 +         let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec::X });
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
     |
-help: consider importing one of these items
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
     |
-406 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
+error[E0599]: no method named `absorb` found for struct `artifacts::step::standards::v_ap214::subsets::any::schema::diff::component::StepEntitiesDiff` in the current scope
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1392:12
+     |
+ 329 | pub struct StepEntitiesDiff {
+     | --------------------------- method `absorb` not found for this struct
+...
+1392 |         d1.absorb(d2);
+     |            ^^^^^^
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `absorb`, perhaps you need to implement one of them:
+             candidate #1: `dsl::MutationDiff`
+             candidate #2: `semio_framework_plugin::ArtifactBuilder`
+help: there is a method `absorb_into` with a similar name
+     |
+1392 |         d1.absorb_into(d2);
+     |                  +++++
+
+error[E0599]: no method named `absorb` found for struct `artifacts::step::standards::v_ap214::subsets::any::schema::diff::component::StepEntitiesDiff` in the current scope
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1411:12
+     |
+ 329 | pub struct StepEntitiesDiff {
+     | --------------------------- method `absorb` not found for this struct
+...
+1411 |         d1.absorb(d2);
+     |            ^^^^^^
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `absorb`, perhaps you need to implement one of them:
+             candidate #1: `dsl::MutationDiff`
+             candidate #2: `semio_framework_plugin::ArtifactBuilder`
+help: there is a method `absorb_into` with a similar name
+     |
+1411 |         d1.absorb_into(d2);
+     |                  +++++
+
+error[E0599]: no method named `absorb` found for struct `artifacts::step::standards::v_ap214::subsets::any::schema::diff::component::StepEntitiesDiff` in the current scope
+    --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:1428:12
+     |
+ 329 | pub struct StepEntitiesDiff {
+     | --------------------------- method `absorb` not found for this struct
+...
+1428 |         d1.absorb(d2);
+     |            ^^^^^^
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `absorb`, perhaps you need to implement one of them:
+             candidate #1: `dsl::MutationDiff`
+             candidate #2: `semio_framework_plugin::ArtifactBuilder`
+help: there is a method `absorb_into` with a similar name
+     |
+1428 |         d1.absorb_into(d2);
+     |                  +++++
+
+error[E0609]: no field `compressed_size` on type `&DwgRawPage`
+     --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🚪️io/🦀️component.rs:11461:30
+      |
+11461 |                 assert!(page.compressed_size > 0, "section {} page {} has zero compressed size", section.name, page.page_number);
+      |                              ^^^^^^^^^^^^^^^ unknown field
+      |
+      = note: available fields are: `page_number`, `file_address`, `start_offset`, `decoded`, `error`
+
+error[E0599]: no method named `print_diff` found for struct `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:656:29
     |
-406 +     use semio_framework_3d::engine::Vec3;
+656 |             let printed = d.print_diff();
+    |                             ^^^^^^^^^^ method not found in `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff`
     |
-406 +     use semio_framework_3d::mesh::Vec3;
+   ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:583:8
     |
-406 +     use semio_framework_geometry::Vec3;
+583 |     fn print_diff(&self) -> String;
+    |        ---------- the method is available for `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` here
+    |
+   ::: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:318:1
+    |
+318 | pub struct StlDiff {
+    | ------------------ method `print_diff` not found for this struct
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `DiffCodec` which provides `print_diff` is implemented but not in scope; perhaps you want to import it
+    |
+324 +     use crate::dsl::DiffCodec;
     |
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:535:67
+error[E0599]: no associated function or constant named `parse_diff` found for struct `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:658:35
     |
-535 |         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
-    |                                                                   ^^^^ use of undeclared type `Vec3`
+658 |             let parsed = StlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+    |                                   ^^^^^^^^^^ associated function or constant not found in `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff`
     |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
+   ::: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:318:1
     |
-535 -         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
-535 +         let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec::Z).unwrap();
+318 | pub struct StlDiff {
+    | ------------------ associated function or constant `parse_diff` not found for this struct
     |
-help: consider importing one of these items
+    = help: items from traits can only be used if the trait is in scope
+help: trait `DiffCodec` which provides `parse_diff` is implemented but not in scope; perhaps you want to import it
     |
-406 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-406 +     use semio_framework_3d::engine::Vec3;
-    |
-406 +     use semio_framework_3d::mesh::Vec3;
-    |
-406 +     use semio_framework_geometry::Vec3;
+324 +     use crate::dsl::DiffCodec;
     |
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:561:91
+error[E0599]: no method named `encode_diff` found for struct `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:661:29
     |
-561 |         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
-    |                                                                                           ^^^^ use of undeclared type `Vec3`
+661 |             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+    |                             ^^^^^^^^^^^ method not found in `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff`
     |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
+   ::: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:585:8
     |
-561 -         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
-561 +         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec::Z, &mut rec).unwrap();
+585 |     fn encode_diff(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError>;
+    |        ----------- the method is available for `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` here
     |
-help: consider importing one of these items
+   ::: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:318:1
     |
-406 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
+318 | pub struct StlDiff {
+    | ------------------ method `encode_diff` not found for this struct
     |
-406 +     use semio_framework_3d::engine::Vec3;
+    = help: items from traits can only be used if the trait is in scope
+help: trait `DiffCodec` which provides `encode_diff` is implemented but not in scope; perhaps you want to import it
     |
-406 +     use semio_framework_3d::mesh::Vec3;
-    |
-406 +     use semio_framework_geometry::Vec3;
-    |
-
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🔺️euler/🦀️component.rs:581:91
-    |
-581 |         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
-    |                                                                                           ^^^^ use of undeclared type `Vec3`
-    |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
-    |
-581 -         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec3::Z, &mut rec).unwrap();
-581 +         let face = make_planar_face_from_wire(&mut body, &wire, Pnt3::new(0.0, 0.0, 0.0), Vec::Z, &mut rec).unwrap();
-    |
-help: consider importing one of these items
-    |
-406 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-406 +     use semio_framework_3d::engine::Vec3;
-    |
-406 +     use semio_framework_3d::mesh::Vec3;
-    |
-406 +     use semio_framework_geometry::Vec3;
+324 +     use crate::dsl::DiffCodec;
     |
 
-error[E0425]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:311:89
+error[E0599]: no associated function or constant named `decode_diff` found for struct `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff` in the current scope
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:662:36
     |
-311 |     fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {
-    |                                                                                         ^^^^
+662 |             let decoded = StlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+    |                                    ^^^^^^^^^^^ associated function or constant not found in `artifacts::stl::standards::v_ascii::subsets::any::schema::diff::component::StlDiff`
     |
-   ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:436:1
+   ::: ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:318:1
     |
-436 | pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
-    | ------------------------------------------------------------------------------------------------ similarly named struct `Vec` defined here
+318 | pub struct StlDiff {
+    | ------------------ associated function or constant `decode_diff` not found for this struct
     |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
+    = help: items from traits can only be used if the trait is in scope
+help: there is a method `encode_diff` with a similar name, but with different arguments
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:585:5
     |
-311 -     fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {
-311 +     fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec) -> FaceId {
+585 |     fn encode_diff(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError>;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: trait `DiffCodec` which provides `decode_diff` is implemented but not in scope; perhaps you want to import it
     |
-help: consider importing one of these items
-    |
-308 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-308 +     use semio_framework_3d::engine::Vec3;
-    |
-308 +     use semio_framework_3d::mesh::Vec3;
-    |
-308 +     use semio_framework_geometry::Vec3;
+324 +     use crate::dsl::DiffCodec;
     |
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:349:149
-    |
-349 | ...:new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
-    |                                                   ^^^^ use of undeclared type `Vec3`
-    |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
-    |
-349 -         let f0 = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec3::Z);
-349 +         let f0 = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Vec::Z);
-    |
-help: consider importing one of these items
-    |
-308 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-308 +     use semio_framework_3d::engine::Vec3;
-    |
-308 +     use semio_framework_3d::mesh::Vec3;
-    |
-308 +     use semio_framework_geometry::Vec3;
-    |
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️test.rs:14:45
+   |
+14 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+   |                                             ^^^^^^^^^^^^^^^^
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:350:149
-    |
-350 | ...:new(2.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Vec3::Z);
-    |                                                   ^^^^ use of undeclared type `Vec3`
-    |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
-    |
-350 -         let f1 = make_loose_quad(&mut body, Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Vec3::Z);
-350 +         let f1 = make_loose_quad(&mut body, Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(2.0, 0.0, 0.0), Pnt3::new(2.0, 1.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Vec::Z);
-    |
-help: consider importing one of these items
-    |
-308 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-308 +     use semio_framework_3d::engine::Vec3;
-    |
-308 +     use semio_framework_3d::mesh::Vec3;
-    |
-308 +     use semio_framework_geometry::Vec3;
-    |
+warning: unused import: `ArtifactAnalyzer`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/📚️examples/🌱️metabolism/🧪️tests/🦀️test.rs:13:45
+   |
+13 | use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactBuilder};
+   |                                             ^^^^^^^^^^^^^^^^
 
-error[E0433]: cannot find type `Vec3` in this scope
-   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🔺️diff/🧵️sew/🦀️component.rs:360:154
+warning: unused import: `protocol::command::DiffAlgebra`
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:173:9
     |
-360 | ...new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec3::Z);
-    |                                                   ^^^^ use of undeclared type `Vec3`
-    |
-    = note: type alias `crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::bounding_volume::tests::Vec3` exists but is inaccessible
-help: a struct with a similar name exists
-    |
-360 -         let bottom = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec3::Z);
-360 +         let bottom = make_loose_quad(&mut body, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(1.0, 1.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), -Vec::Z);
-    |
-help: consider importing one of these items
-    |
-308 +     use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3;
-    |
-308 +     use semio_framework_3d::engine::Vec3;
+173 |     use protocol::command::DiffAlgebra;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some errors have detailed explanations: E0422, E0425, E0433, E0599, E0609.
+For more information about an error, try `rustc --explain E0422`.
+warning: `semio-s-plugin-stdio` (lib test) generated 7 warnings (1 duplicate)
+error: could not compile `semio-s-plugin-stdio` (lib test) due to 181 previous errors; 7 warnings emitted
+3d::engine::Vec3;
     |
 308 +     use semio_framework_3d::mesh::Vec3;
     |

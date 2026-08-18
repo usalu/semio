@@ -32,7 +32,8 @@ use dsl::{from_dsl_value, to_dsl_value};
 /// 🎞️ The exact binary channel a live UI speaks — re-exported so an `AppChannelHost` implementor
 /// never needs a direct `protocol` dependency just to name these types.
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
-use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PluginManifest, PortMultiplicity};
+use semio_framework::{media_types_compatible, Media, MediaClass, MediaCompat, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, PackageDescriptor, PluginManifest, PortMultiplicity};
+use semio_framework_actor::ActorId as RuntimeActorId;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -1191,16 +1192,21 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 /// batch as `Event::AppCommandEvent`s in one `execute_turn` call and reads back `Effect::Respond`
 /// effects correlated by `req.0 == seq`.
 ///
-/// 🚧️ **Known, documented gap** (not silently papered over): loading a REAL plugin end to end is
-/// still blocked upstream of this file — `PluginManifest` used to come from a wasm call
-/// (`WasmPluginRuntime::read_manifest`, calling the OLD `plugin.manifest()` export, itself now gone),
-/// and `world actor`'s `describe()` interface replaces it with a build-time-only packed
-/// `PackageDescriptor` (packet E1, concurrently in flight, not wired into this crate). Until a
-/// decoder for that descriptor lands, `load_runtime_recursive` below fails loudly and immediately —
-/// exactly like every other genuinely-unreachable-until-a-real-`world-actor`-component-exists path
-/// this ticket's packets have already hit (`WasmtimeRuntime::instantiate` against `stdio.wasm`,
-/// `IoRouter::compose`'s dispatch, `Effect::IoRun`). `run_transaction`/`undo_transaction_group`'s
-/// `exec`/`plan` closures have the SAME gap one layer up — full per-command reply correlation and
+/// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (R1-native-manifest): `load_runtime_recursive` now
+/// reads a real `PluginManifest` — via `PackageDescriptor` (packet E1's build-time-emitted
+/// `🛂️descriptor.semio`), NOT via a wasm call. `design-abi.md` §3's freshness test
+/// (`descriptor_is_fresh`) already byte-compares each plugin's OWN native `describe()` build against
+/// its committed `🛂️descriptor.semio`, and this ticket's whole premise (2550 installed records, zero
+/// runtime resources) forbids re-instantiating a component just to read its manifest — so
+/// `descriptor_path_for_plugin` (populated from the registry's `cratePath`, see `📦️bin.rs`) is tried
+/// FIRST: zero instantiations. Only a plugin with no committed descriptor yet (most of the 33 today
+/// — packet D0 is still landing the emission plumbing) falls through to a hard, honest error; a live
+/// `describe()` fallback is DESIGNED (this struct's own doc, `📓️terra-R1-report.md` §1) but not
+/// wired here — it needs a `GuestRuntime::describe` seam on `🔌️plugin/🖥️host/🦀️component.rs`, a
+/// file two sibling packets (P1, T1) are live in right now (lease-requested, not edited).
+///
+/// 🚧️ **Still a documented gap**: `run_transaction`/`undo_transaction_group`'s `exec`/`plan`
+/// closures have a DIFFERENT gap one layer up — full per-command reply correlation and
 /// contributed-mutation planning over `execute_turn`'s effects is a real post-turn dispatch loop that
 /// belongs with the kernel/scheduler (H1-H4/T1), not this packet — they compile and are correctly
 /// typed, but always return a clearly-worded `TransactionError` today.
@@ -1208,6 +1214,12 @@ impl<H: AppChannelHost> SpaceRunner<H> {
 pub struct WasmtimeNodeHost {
     runtime: Arc<dyn semio_framework_plugin_host::GuestRuntime>,
     plugin_path_for_plugin: HashMap<String, PathBuf>,
+    /// 📦️ `plugin_id -> its committed 🛂️descriptor.semio path` (registry `cratePath`-derived, see
+    /// `📦️bin.rs`'s `resolve_descriptor_paths`) — `load_runtime_recursive`'s FIRST, zero-instantiation
+    /// manifest source (this struct's own doc). A plugin absent from this map, or whose file does not
+    /// exist on disk yet, has no committed descriptor — `load_runtime_recursive` fails loudly for it
+    /// rather than falling back to a live `describe()` call (not wired here — see this struct's doc).
+    descriptor_path_for_plugin: HashMap<String, PathBuf>,
     /// 🧬️ Content-addressed compiled-component cache, one entry per plugin id — mirrors
     /// `SharedWasmtimeEngine`'s own on-disk `.cwasm` cache one level up (in-process, per-host-instance).
     compiled_for_plugin: HashMap<String, semio_framework_plugin_host::CompiledHandle>,
@@ -1251,9 +1263,11 @@ pub struct WasmtimeNodeHost {
     /// this counter, same as the deleted `WasmPluginRuntime`-backed version did.
     #[allow(dead_code)]
     next_handle: u32,
-    /// 🧬️ Not read yet — `open`'s real body (its own doc comment) mints a fresh `RuntimeActorId`
-    /// from this counter per `GuestRuntime::instantiate` call, once a manifest decoder unblocks it.
-    #[allow(dead_code)]
+    /// ✅️ R1-native-manifest: `load_runtime_recursive` mints each loaded plugin's OWN
+    /// `RuntimeActorId` (`ActorId::new(0, 0, ordinal, 0)`) from this counter, one per plugin, for the
+    /// `PluginInstanceHandle` registered with `io_router`/`inference_router` (post-turn job dispatch
+    /// — see `PluginInstanceHandle`'s own doc). `open`'s own per-app-instance actor minting (its doc
+    /// comment) is a SEPARATE, still-unwired concern.
     next_actor_ordinal: u64,
     /// 🗺️ `handle -> (plugin_id, instance_id)` — the SAME addressing scheme `WasmPluginRuntime` used
     /// (one runtime hosting many `create_app`-minted instance ids); the live `GuestInstance` for
@@ -1270,10 +1284,14 @@ impl WasmtimeNodeHost {
     /// 🗺️ `plugin_path_for_plugin` maps a plugin id (`WorkflowNode::plugin_id`, the same id
     /// `PLUGIN_WASM_ARTIFACTS`' first tuple element names) to the compiled `.wasm` component path the
     /// dev shell build already produces under `framework/os/dev/plugin-modules/<plugin id>/`.
-    pub fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<dyn BlobStore>) -> Self {
+    /// `descriptor_path_for_plugin` maps the SAME plugin id to its committed `🛂️descriptor.semio`
+    /// (registry `cratePath`-derived — see `📦️bin.rs`'s `resolve_descriptor_paths`); absent entries
+    /// simply have no committed descriptor yet (this struct's own doc).
+    pub fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<dyn BlobStore>) -> Self {
         Self {
             runtime: Arc::new(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).expect("shared wasmtime engine builds")),
             plugin_path_for_plugin,
+            descriptor_path_for_plugin,
             compiled_for_plugin: HashMap::new(),
             manifests: HashMap::new(),
             blob_store,
@@ -1316,6 +1334,10 @@ impl WasmtimeNodeHost {
         &self.instance_directory
     }
 
+    pub fn app_router(&self) -> &semio_framework_plugin_host::AppRouter {
+        &self.app_router
+    }
+
     fn manifest_for(&mut self, plugin_id: &str) -> Result<&PluginManifest, RunError> {
         let mut loading = Vec::new();
         self.load_runtime_recursive(plugin_id, &mut loading)?;
@@ -1328,10 +1350,38 @@ impl WasmtimeNodeHost {
     /// `loading` guards against a cycle that only becomes visible once a manifest is actually read
     /// (unlike `PluginGraph`'s own cycle check, which only fires once every member is registered).
     ///
-    /// 🚧️ Always fails today — see this struct's own doc comment. Kept as the real recursive-load
-    /// shape (compile a component, walk its manifest's dependencies, register with every router in
-    /// the SAME order the OLD `WasmPluginRuntime`-backed version did) so wiring in a real manifest
-    /// decoder later is a one-line change at the marked spot, not a redesign.
+    /// ✅️ R1-native-manifest: reads `plugin_id`'s manifest from `descriptor_path_for_plugin`'s
+    /// committed `🛂️descriptor.semio` (packet E1's `describe_component` emitter output, decoded the
+    /// SAME way `🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs`'s own `describe_component` decodes
+    /// a live `describe()` return: `store::pack_rt::decode_wire_value` then `dsl::from_dsl_value`) —
+    /// zero wasm instantiations (this struct's own doc). No live-`describe()` fallback yet — that
+    /// needs a `GuestRuntime` seam on `🔌️plugin/🖥️host/🦀️component.rs`, out of `path_scope` this
+    /// packet (lease-requested, see `📓️terra-R1-report.md`) — so a plugin with no committed
+    /// descriptor fails loudly here instead of silently instantiating to compensate.
+    fn read_committed_descriptor(&self, plugin_id: &str) -> Result<PackageDescriptor, RunError> {
+        let Some(path) = self.descriptor_path_for_plugin.get(plugin_id) else {
+            return Err(RunError::Host(format!(
+                "plugin `{plugin_id}` has no committed `🛂️descriptor.semio` registered (regenerate the registry: `bun nx run @semio-tech/plugin-registry:generate`) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)"
+            )));
+        };
+        if !path.is_file() {
+            return Err(RunError::Host(format!(
+                "plugin `{plugin_id}` has no committed descriptor at `{}` yet (packet D0 is still landing per-plugin emission) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)",
+                path.display()
+            )));
+        }
+        let bytes = std::fs::read(path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
+        let decoded = store::pack_rt::decode_wire_value(&bytes).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a pack: {error}", path.display())))?;
+        from_dsl_value(decoded).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: decoding `{}` as a PackageDescriptor: {error}", path.display())))
+    }
+
+    /// ✅️ R1-native-manifest: the real recursive-load shape the OLD gap's own doc comment spelled
+    /// out — compile the component, decode its committed descriptor (`read_committed_descriptor`,
+    /// zero instantiations), recurse over `manifest.dependencies` BEFORE this plugin's own routers
+    /// see it (contract §4 rule 5's load-order requirement), instantiate ONE `GuestInstance` for
+    /// post-turn job dispatch (`PluginInstanceHandle`'s own doc — `io-run`/`io-sniff`/`infer`, never
+    /// this turn's own `execute_turn`), register with every router in the SAME order the OLD
+    /// `WasmPluginRuntime`-backed version did, then the SAME `owned_surface_gaps` hard-gate.
     fn load_runtime_recursive(&mut self, plugin_id: &str, loading: &mut Vec<String>) -> Result<(), RunError> {
         if self.manifests.contains_key(plugin_id) {
             return Ok(());
@@ -1348,20 +1398,93 @@ impl WasmtimeNodeHost {
             let compiled = self.runtime.compile(&package, &bytes).map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }
-        // 🚧️ NOT YET WIRED: `PluginManifest` has no `world actor` source anymore (this struct's own
-        // doc comment) — `describe()`'s packed `PackageDescriptor` (packet E1) is the eventual
-        // replacement, not decoded by this crate today. Once it is, this is where the walk continues:
-        // decode the manifest, recurse `load_runtime_recursive` over `manifest.dependencies`,
-        // `self.runtime.instantiate(&compiled, ActorId(fresh), &[], &budget)` to get a `GuestInstance`,
-        // wrap it in a `PluginInstanceHandle` and register that with `io_router`/`inference_router`
-        // (mirroring `IoRouter::register_plugin`'s new signature — pre-decoded rosters, no wasm call),
-        // `plugin_graph.register`, `mutation_router.register_plugin`, `app_router.register_manifest`,
-        // then the SAME `owned_surface_gaps` hard-gate the OLD `WasmPluginRuntime`-backed version had,
-        // before finally `self.manifests.insert(...)`. Every router this file uses already accepts
-        // exactly this shape (verified by `semio-framework-plugin-host`'s own compiling test suite).
-        Err(RunError::Host(format!(
-            "plugin `{plugin_id}` compiled successfully but its manifest cannot be read: `world actor` has no manifest-reading export (the old `plugin.manifest()` WIT call is gone with `WasmPluginRuntime`); `describe()`'s PackageDescriptor (packet E1) is not wired into this crate yet"
-        )))
+
+        let descriptor = self.read_committed_descriptor(plugin_id)?;
+        let manifest = descriptor.manifest;
+
+        for dependency in &manifest.dependencies {
+            self.load_runtime_recursive(&dependency.plugin_id, loading)?;
+        }
+
+        let compiled = self.compiled_for_plugin.get(plugin_id).cloned().expect("just compiled or already present above");
+        let actor = RuntimeActorId::new(0, 0, self.next_actor_ordinal as u32, 0);
+        self.next_actor_ordinal += 1;
+        // ⚖️ `GuestRuntime::instantiate`'s `Budget` is `semio_framework::kernel::Budget` (the
+        // `reactor::poll`-shaped one — fuel/deadline_ms/max_effects/max_patch_bytes/max_frames), NOT
+        // `semio_framework_actor::Budget` (a different, later-wave shape by the same name — see
+        // `🎠️kernel/🦀️component.rs` vs `🎭️actor/🦀️component.rs`, both named `Budget`). Literal
+        // mirrors the sibling MCP gateway's own one-off-instantiate budget
+        // (`🌉️mcp/🏠️workspace/🦀️component.rs`'s `activate_plugin_instance`), the closest real
+        // precedent for "compile once, instantiate once, no live turn loop yet".
+        let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
+        let instance = self.runtime.instantiate(&compiled, actor, &[], &budget).map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
+        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.runtime), instance));
+
+        let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
+        // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/
+        // `sniffs` — `io_schema::IoEntryDescriptor`'s fields (a DIFFERENT type of the same name in
+        // `🚪️io/🧬️schema/🦀️component.rs`) the descriptor schema does not emit yet. `&[]` here is
+        // honest, not a shortcut: fabricating a fidelity/sniffs value would be a real correctness
+        // lie, and `note`'s own committed descriptor has zero `io_entries` either way, so this gap
+        // is invisible on today's only fully-wired smoke path. A future packet must either widen
+        // `ContributionSet.io_entries` with those two fields at emission time (E1/A2) or resolve
+        // them from `IoFidelityDeclaration` elsewhere before this can be more than `&[]`.
+        self.io_router.register_plugin(plugin_id, Arc::clone(&handle), &artifact_dialect_entries, &[]).map_err(|error| RunError::Host(error.to_string()))?;
+
+        let mut mutation_roster: Vec<semio_framework_plugin_host::HostMutationRosterEntry> = descriptor
+            .contributions
+            .mutation_services
+            .iter()
+            .map(|service| semio_framework_plugin_host::HostMutationRosterEntry {
+                mutation_id: service.mutation_id.clone(),
+                verb: service.semantics.verb.clone(),
+                entity: service.semantics.entity.clone(),
+                kind: service.semantics.kind.clone(),
+                record: service.semantics.record.clone(),
+                contributor: None,
+                artifact_kind: None,
+            })
+            .collect();
+        for contribution in &descriptor.contributions.artifact_contributions {
+            for mutation in &contribution.mutations {
+                mutation_roster.push(semio_framework_plugin_host::HostMutationRosterEntry {
+                    mutation_id: mutation.mutation_id.clone(),
+                    verb: mutation.semantics.verb.clone(),
+                    entity: mutation.semantics.entity.clone(),
+                    kind: mutation.semantics.kind.clone(),
+                    record: mutation.semantics.record.clone(),
+                    contributor: Some(plugin_id.to_string()),
+                    artifact_kind: Some(contribution.artifact_kind.clone()),
+                });
+            }
+        }
+        self.mutation_router.register_roster(plugin_id, &manifest.dependencies, mutation_roster).map_err(|error| RunError::Host(error.to_string()))?;
+
+        let inference_roster: Vec<serde_json::Value> = descriptor
+            .contributions
+            .inference_services
+            .iter()
+            .chain(descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
+            .map(serde_json::to_value)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(RunError::Serde)?;
+        let inference_wire_bytes = serde_json::to_vec(&inference_roster).map_err(RunError::Serde)?;
+        self.inference_router.register_plugin(plugin_id, &manifest.dependencies, Arc::clone(&handle), &inference_wire_bytes).map_err(|error| RunError::Host(error.to_string()))?;
+
+        self.plugin_graph.register(manifest.clone()).map_err(|error| RunError::Host(error.to_string()))?;
+        self.app_router.register_manifest(plugin_id, &manifest).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+
+        let gaps = self.app_router.owned_surface_gaps();
+        if !gaps.is_empty() {
+            return Err(RunError::Host(format!(
+                "plugin `{plugin_id}` loaded but left {} owned-surface gap(s): {}",
+                gaps.len(),
+                gaps.iter().map(|fault| format!("{}: {}", fault.code.0, fault.message)).collect::<Vec<_>>().join("; ")
+            )));
+        }
+
+        self.manifests.insert(plugin_id.to_string(), manifest);
+        Ok(())
     }
 
     /// ✂️ Contract §4.5: refused while any OTHER loaded plugin still depends on `plugin_id`.
@@ -2021,5 +2144,62 @@ mod tests {
         let converted = convert_media(&contract, media).expect("builtin vector->raster converter is registered");
         assert_eq!(converted.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Raster });
     }
+
+    //#region 🔖️NativeManifestSmoke
+    /// 🧭️ Walks up from `CARGO_MANIFEST_DIR` looking for `nx.json` — the SAME strategy
+    /// `📦️bin.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
+    /// own doc explains a `[[bin]]` target does not share the lib's module tree).
+    fn test_repo_root() -> PathBuf {
+        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        loop {
+            if dir.join("nx.json").is_file() {
+                return dir;
+            }
+            assert!(dir.pop(), "walked past the filesystem root looking for nx.json");
+        }
+    }
+
+    /// 🧪️ R1-native-manifest runtime evidence: `🗒️note` is the one plugin with BOTH a committed
+    /// `🛂️descriptor.semio` (`design-abi.md` §3's `descriptor_is_fresh` gate keeps it byte-identical
+    /// to a real native `describe()` build) and a compiled native wasm anywhere in this tree today —
+    /// every other one of the 33 plugin ids has neither yet (`📓️status.md`'s W3 report: descriptor
+    /// emission is fleet-wide blocked on a pre-existing capability-claim rule, packet D0). The wasm
+    /// this test loads lives under SIBLING packet D0's own ticket-scoped target dir (D0 already
+    /// verified this exact file's `describe()` output is sha256-identical to the descriptor this
+    /// test reads — `📓️terra-D0-note-describe1.txt`); the canonical `target/wasm32-wasip2/`
+    /// `resolve_plugin_paths` (`📦️bin.rs`) expects at real CLI runtime is not populated in this tree
+    /// — a separate, unrelated build-step concern from this crate's own loading logic. If that
+    /// scratch wasm is absent (a fresh checkout, or D0's scratch dir cleaned since), this test
+    /// SKIPS rather than fails — it exists to demonstrate the wired path against real bytes when
+    /// they are present, not to assert the sibling packet's own scratch artifact's existence.
+    #[test]
+    fn note_plugin_manifest_loads_from_its_committed_descriptor() {
+        let repo_root = test_repo_root();
+        let descriptor_path = repo_root.join("✏️s/🔌️plugins/🗒️note/🛂️descriptor.semio");
+        assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
+
+        let wasm_path = repo_root.join(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-d0/wasm32-wasip2/debug/semio_s_plugin_note.wasm");
+        if !wasm_path.is_file() {
+            eprintln!("[DEBUG] note_plugin_manifest_loads_from_its_committed_descriptor: SKIPPED — no compiled note wasm at {}", wasm_path.display());
+            return;
+        }
+
+        let mut plugin_paths = HashMap::new();
+        plugin_paths.insert("note".to_string(), wasm_path);
+        let mut descriptor_paths = HashMap::new();
+        descriptor_paths.insert("note".to_string(), descriptor_path);
+        let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default()));
+
+        let manifest = host.manifest_for("note").expect("note must load natively from its committed descriptor, zero live describe() calls");
+        assert_eq!(manifest.plugin_id, "note");
+        assert!(!manifest.apps.is_empty(), "note's real manifest declares at least one app");
+        assert!(manifest.dependencies.is_empty(), "note's committed descriptor declares zero PluginManifest.dependencies");
+
+        let (routed_plugins, _routes) = host.io_router_stats();
+        assert_eq!(routed_plugins, 1, "note must be the one plugin registered with the io router after this load");
+        assert!(host.plugin_graph().is_registered("note").unwrap_or(false), "note must be registered in the plugin graph");
+        assert!(host.app_router().owned_surface_gaps().is_empty(), "note's own panels leave no viewer/editor surface gap");
+    }
+    //#endregion 🔖️NativeManifestSmoke
 }
 //#endregion 🔖️Tests

@@ -1,0 +1,82 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking mutate_once v0.1.2
+    Checking wasmi_collections v0.51.5
+   Compiling litrs v1.0.0
+    Checking roxmltree v0.20.0
+    Checking chinese-variant v1.1.5
+    Checking fast-srgb8 v1.0.0
+    Checking imagesize v0.13.0
+    Checking spin v0.9.8
+    Checking comemo v0.5.1
+    Checking icu_provider_blob v1.5.0
+    Checking kamadak-exif v0.6.1
+    Checking csv v1.4.0
+    Checking chinese-number v0.7.8
+   Compiling document-features v0.2.12
+    Checking typst-syntax v0.14.2
+    Checking wasmi v0.51.5
+    Checking palette v0.7.6
+    Checking usvg v0.45.1
+    Checking read-fonts v0.29.3
+   Compiling wgpu v27.0.1
+    Checking read-fonts v0.35.0
+    Checking lipsum v0.9.1
+    Checking two-face v0.4.5
+    Checking icu_properties v1.5.1
+    Checking hayagriva v0.9.1
+   Compiling num-traits v0.2.19
+    Checking rust_decimal v1.42.0
+    Checking codex v0.2.0
+    Checking wgpu-types v27.0.1
+   Compiling naga v27.0.3
+    Checking regex v1.12.3
+    Checking semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling typst-macros v0.14.2
+   Compiling thiserror v2.0.18
+    Checking raw-window-handle v0.6.2
+    Checking typed-arena v2.0.2
+    Checking profiling v1.0.18
+    Checking foldhash v0.1.5
+    Checking glidesort v0.1.2
+    Checking qcms v0.3.0
+   Compiling getrandom v0.3.4
+    Checking typst-assets v0.14.2
+    Checking az v1.3.0
+   Compiling foldhash v0.2.0
+   Compiling bit-vec v0.8.0
+   Compiling unicode-width v0.2.2
+    Checking static_assertions v1.1.0
+    Checking hashbrown v0.15.5
+   Compiling wasm-encoder v0.220.1
+   Compiling wit-parser v0.220.1
+   Compiling half v2.7.1
+    Checking typst-library v0.14.2
+   Compiling hashbrown v0.16.1
+   Compiling bit-set v0.8.0
+   Compiling codespan-reporting v0.12.0
+    Checking skrifa v0.37.0
+    Checking hayro-font v0.3.0
+    Checking peniko v0.4.1
+    Checking moxcms v0.7.11
+    Checking yazi v0.2.1
+    Checking zeno v0.3.3
+   Compiling arrayvec v0.7.6
+   Compiling rustc-hash v1.1.0
+   Compiling hexf-parse v0.2.1
+   Compiling wasm-metadata v0.220.1
+    Checking gltf-json v1.4.1
+    Checking fontique v0.5.0
+    Checking hayro-interpret v0.4.0
+    Checking skrifa v0.31.3
+    Checking swash v0.2.9
+    Checking num-rational v0.4.2
+    Checking num-iter v0.1.46

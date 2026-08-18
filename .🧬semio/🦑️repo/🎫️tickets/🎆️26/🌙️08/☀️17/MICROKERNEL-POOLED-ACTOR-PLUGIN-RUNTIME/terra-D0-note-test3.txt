@@ -1,0 +1,629 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `outcome_to_result` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:21:15
+   |
+21 | pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+   |               ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
+     |
+2589 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2607 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2608 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3617:9
+     |
+3615 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3616 |         definitions: ArtifactDefinitionRegistry,
+3617 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3618 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3619 |         inference_services: ArtifactInferenceServiceRegistry,
+3620 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: function `set_instance_actor` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
+      |
+14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+      |                   ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unused import: `GltfDocument`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:19:213
+   |
+19 | ...Buffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+   |                                                              ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-note v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust)
+warning: `testkit` is ambiguous
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:120:19
+    |
+120 |     use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mut...
+    |                   ^^^^^^^ ambiguous name
+    |
+    = note: ambiguous because of multiple glob imports of a name in the same module
+note: `testkit` could refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:289:9
+    |
+289 | pub use crate::os_spr::*;
+    |         ^^^^^^^^^^^^^
+    = help: consider updating this dependency to resolve this error
+    = help: if updating the dependency does not resolve the problem report the problem to the author of the relevant crate
+note: `testkit` could also refer to the module defined here
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:290:9
+    |
+290 | pub use crate::os_pack::*;
+    |         ^^^^^^^^^^^^^^
+    = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+    = note: for more information, see issue #114095 <https://github.com/rust-lang/rust/issues/114095>
+    = note: `-W ambiguous-glob-imports` implied by `-W future-incompatible`
+    = help: to override `-W future-incompatible` add `#[allow(ambiguous_glob_imports)]`
+
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🦀️component.rs:337:1
+    |
+337 | / /// 🌱 Ephemeral, session-side cache of every text block's live paragraphs, keyed by
+338 | | /// `NoteTextChild::child_id` — NEVER persisted, NEVER a durable field on `NoteSnapshot`/`NoteBlockNode`
+339 | | /// (matches the `EngineRep` contract: wholly derived, droppable at any instant, rebuilt from base).
+340 | | /// Exists because no `LinkResolver`/child-dispatch seam is wired into `ArtifactApp::handle` yet
+...   |
+348 | | /// store-level undo/redo bypasses `ArtifactApp::handle` entirely, so a handle can in principle go
+349 | | /// uncached — [`note_block_text`] fails soft (empty `Vec`) rather than panicking.
+    | |_---------------------------------------------------------------------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:25:49
+   |
+25 |     #[state(artifact)] pub artifact: Option<Box<crate::artifacts::note::schema::NoteArtifact>>,
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+25 -     #[state(artifact)] pub artifact: Option<Box<crate::artifacts::note::schema::NoteArtifact>>,
+25 +     #[state(artifact)] pub artifact: Option<Box<NoteArtifact>>,
+   |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:351:24
+    |
+351 |         let mut by_id: std::collections::BTreeMap<_, _> = next
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+351 -         let mut by_id: std::collections::BTreeMap<_, _> = next
+351 +         let mut by_id: BTreeMap<_, _> = next
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:386:18
+    |
+386 |     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+386 -     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+386 +     assets: &mut BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:386:53
+    |
+386 |     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+386 -     assets: &mut std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+386 +     assets: &mut std::collections::BTreeMap<String, NoteImageAsset>,
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:552:50
+    |
+552 | pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+552 - pub fn note_asset_upsert_diff(key: &str, asset: &crate::artifacts::note::NoteImageAsset) -> NoteDiff {
+552 + pub fn note_asset_upsert_diff(key: &str, asset: &NoteImageAsset) -> NoteDiff {
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:553:23
+    |
+553 |     let mut entries = std::collections::BTreeMap::new();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+553 -     let mut entries = std::collections::BTreeMap::new();
+553 +     let mut entries = BTreeMap::new();
+    |
+
+warning: unnecessary qualification
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:560:23
+    |
+560 |     let mut entries = std::collections::BTreeMap::new();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+560 -     let mut entries = std::collections::BTreeMap::new();
+560 +     let mut entries = BTreeMap::new();
+    |
+
+warning: unused import: `crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs:82:13
+   |
+82 |         use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `clone_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^            ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^                                    ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteTextParagraph` and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:11:59
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                                                           ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-block/🦀️component.rs:91:26
+   |
+91 |         let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+91 -         let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+91 +         let (x, y, ..) = block_bounds(clone);
+   |
+
+warning: unused imports: `block_bounds`, `block_id`, `clone_block`, `create_block_by_kind`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^                             ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                           ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteTextParagraph` and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️move-block/🦀️component.rs:11:59
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                                                           ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, `find_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-block/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, `find_block`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:4:38
+  |
+4 | ...hema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |           ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutat...
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️delete-selection/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, and `create_block_by_kind`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block...
+  |                                      ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |                                                                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-block/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_bounds`, `block_id_from_tree_row_id`, `block_id`, and `create_block_by_kind`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block...
+  |                                      ^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `change_block_font_size`, `change_block_ink_width`, `change_block_locked`, `change_block_visible`, `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `edit_block_math`, `edit_block_text`, `insert_table_column`, `insert_table_row`, `move_block as move_block_mutation`, `move_block_to_container`, `remove_table_column`, `remove_table_row`, `rename_block`, and `resize_block`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:7:5
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |                                                                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused imports: `NoteBlockNode`, `NoteTextParagraph`, and `NoteTextRun`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️duplicate-selection/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `block_id_from_tree_row_id`, `block_id`, `clone_block`, `create_block_by_kind`, and `offset_block_tree`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:4:52
+  |
+4 | ...block_bounds, block_id, block_id_from_tree_row_id, clone_block, create_block_by_kind, find_block, offset_block_tree};
+  |                  ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `delete_block as delete_block_mutation`, `delete_blocks as delete_blocks_mutation`, `duplicate_block as duplicate_block_mutation`, `duplicate_blocks as duplicate_blocks_mutation`, and `move_block_to_container`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:7:96
+  |
+7 |     change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, delete_block as delete_block_mutation, delete_blocks as delete_blocks_mutation,
+  |                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     duplicate_block as duplicate_block_mutation, duplicate_blocks as duplicate_blocks_mutation, edit_block_math, edit_block_text, insert_table_column, insert_table_row,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+9 |     move_block as move_block_mutation, move_block_to_container, remove_table_column, remove_table_row, rename_block, resize_block,
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `NoteBlockNode`
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️patch-blocks/🦀️component.rs:11:30
+   |
+11 | use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+   |                              ^^^^^^^^^^^^^
+
+warning: unused import: `NOTE_DOCUMENT_SCHEMA`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🦀️component.rs:6:44
+  |
+6 | use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+  |                                            ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `serde_json::Value`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-active-example/🦀️component.rs:9:5
+  |
+9 | use serde_json::Value;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `empty_note_snapshot` and `semio_example_snapshot`
+ --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️set-fixture-json/🦀️component.rs:4:38
+  |
+4 | use crate::artifacts::note::schema::{empty_note_snapshot, semio_example_snapshot};
+  |                                      ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `app`
+   --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:481:13
+    |
+481 |         let app = NotePlayApp;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `NUDGE_STEP` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🦀️component.rs:13:7
+   |
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `NUDGE_STEP_FAST` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🦀️component.rs:14:7
+   |
+14 | const NUDGE_STEP_FAST: f64 = 10.0;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `NUDGE_STEP_FAST` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-up/🦀️component.rs:14:7
+   |
+14 | const NUDGE_STEP_FAST: f64 = 10.0;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `NUDGE_STEP_FAST` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-down/🦀️component.rs:14:7
+   |
+14 | const NUDGE_STEP_FAST: f64 = 10.0;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `NUDGE_STEP_FAST` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-left/🦀️component.rs:14:7
+   |
+14 | const NUDGE_STEP_FAST: f64 = 10.0;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `NUDGE_STEP_FAST` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-right/🦀️component.rs:14:7
+   |
+14 | const NUDGE_STEP_FAST: f64 = 10.0;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `NUDGE_STEP` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-up-fast/🦀️component.rs:13:7
+   |
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+
+warning: constant `NUDGE_STEP` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-down-fast/🦀️component.rs:13:7
+   |
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+
+warning: constant `NUDGE_STEP` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-left-fast/🦀️component.rs:13:7
+   |
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+
+warning: constant `NUDGE_STEP` is never used
+  --> ✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/./././../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection-right-fast/🦀️component.rs:13:7
+   |
+13 | const NUDGE_STEP: f64 = 1.0;
+   |       ^^^^^^^^^^
+
+warning: `semio-s-plugin-note` (lib test) generated 46 warnings (run `cargo fix --lib -p semio-s-plugin-note --tests` to apply 34 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 43.74s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-s-plugin-note v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-d0/debug/deps/semio_s_plugin_note-9442b33d0c1442ae)
+
+running 115 tests
+test artifacts::note::component::tests::artifact_kind_schema_matches_the_store_schema ... ok
+test artifacts::note::component::tests::text_bridge_drops_underline_honestly ... ok
+test artifacts::note::component::tests::text_bridge_collapses_empty_paragraph_shapes ... ok
+test artifacts::note::component::tests::text_bridge_round_trips_paragraphs_through_semio_text_snapshot ... ok
+test artifacts::note::component::tests::note_block_text_fails_soft_on_a_cache_miss ... ok
+test artifacts::note::component::tests::working_scene_caches_by_child_id_and_block_id_never_collides ... ok
+test artifacts::note::standards::v1::subsets::any::io::component::media_tests::imports_empty_dwg_drawing_as_valid_empty_note_snapshot ... ok
+test artifacts::note::standards::v1::subsets::any::io::component::media_tests::note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer ... ok
+test artifacts::note::component::tests::note_document_round_trips_assets_and_grid_settings ... ok
+test artifacts::note::standards::v1::subsets::any::io::mutations::binary::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::io::diff::text::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::io::mutations::binary::semio_protocol_conformance::verify_protocol_bytes_against_encoded_spr ... ok
+test artifacts::note::standards::v1::subsets::any::io::component::media_tests::imports_dwg_polyline_and_text_into_note_blocks ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::binary::semio_protocol_conformance::component_protocol_semio_is_protocol_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::io::mutations::binary::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::note::standards::v1::subsets::any::io::mutations::binary::tests::op_binary_round_trips_and_agrees_with_text ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::binary::tests::command_envelope_round_trip_holds_for_an_applied_operation ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::text::tests::note_dsl_round_trips_representative_document ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::binary::semio_protocol_conformance::verify_protocol_bytes_against_encoded_pack ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::binary::tests::pack_round_trips_representative_document ... ok
+test artifacts::note::standards::v1::subsets::any::io::component::media_tests::document_to_svg_embeds_image_asset_bytes_as_data_uri ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::text::semio_grammar_conformance::component_grammar_semio_is_grammar_dialect ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::binary::tests::pack_round_trips_and_agrees_with_dsl ... ok
+test artifacts::note::standards::v1::subsets::any::io::snapshot::text::tests::semio_example_dsl_round_trips ... ok
+test artifacts::note::standards::v1::subsets::any::schema::component::tests::clone_block_reids_group_children ... ok
+test artifacts::note::standards::v1::subsets::any::schema::diff::component::diff_apply_tests::malformed_nested_parent_rejects_without_changing_the_base ... ok
+test artifacts::note::standards::v1::subsets::any::io::component::media_tests::document_to_svg_dispatches_through_semio_drawing_bridge ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::component::tests::inference_determinism_law ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::outline::component::tests::empty_blocks_produce_an_empty_outline ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::outline::component::tests::outline_flattens_group_children_in_document_order ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::outline::component::tests::outline_is_deterministic ... ok
+test artifacts::note::standards::v1::subsets::any::schema::inferences::outline::component::tests::outline_counts_words_across_text_blocks_only ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::asset_inverse_law_create_replace_delete ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::block_reparent_and_drag_inverse_law ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::change_block_locked_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::create_asset_duplicate_id_is_fatal ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::create_block_duplicate_id_is_fatal ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::create_delete_block_round_trip_grows_and_shrinks_projection ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::delete_asset_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::block_field_inverse_laws ... ok
+test artifacts::note::standards::v1::subsets::any::io::mutations::binary::tests::note_document_text_round_trips_store_with_applied_operation ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::delete_block_at_a_non_last_index_restores_exact_position_on_undo ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::delete_block_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::delete_blocks_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::drag_blocks_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::duplicate_block_missing_source_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::edit_block_text_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::dispatch_registers_semantic_descriptors ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::block_lifecycle_inverse_law_create_delete_duplicate ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::insert_table_row_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::move_block_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::move_block_non_finite_is_fatal ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::remove_table_row_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::replace_asset_payload_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::rename_block_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::resize_block_missing_target_is_error ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::root_scalar_inverse_and_absorb_laws ... ok
+test artifacts::note::standards::v1::subsets::any::schema::mutations::component::tests::table_row_column_inverse_laws ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::component::round_trip_tests::linked_artifact_and_text_content_round_trip_through_text_and_binary ... ok
+test editor::note::commands::ink_apply_events::tests::gesture_with_no_changes_creates_no_edit ... ok
+test artifacts::note::standards::v1::subsets::any::schema::snapshot::component::round_trip_tests::absent_linked_artifact_round_trips_as_none ... ok
+test editor::note::commands::add_block::tests::add_block_action_emits_one_op_and_grows_projection ... ok
+test editor::note::commands::add_block::tests::add_block_then_undo_round_trip ... ok
+test editor::note::commands::save_download::tests::save_download_and_load_request_effects ... ok
+test editor::note::commands::ink_apply_events::tests::gesture_begin_live_commit_produces_single_undo_step ... ok
+test editor::note::commands::set_active_utility::tests::set_active_utility_emits_no_artifact_mutations_but_persists_in_config ... ok
+test editor::note::commands::nudge_selection_up::tests::nudge_fast_actions_use_ten_pixel_step ... ok
+test editor::note::commands::add_block::tests::duplicate_selection_clones_with_offset ... ok
+test editor::note::commands::set_active_utility::tests::world_pick_style_registry_enforcement_allows_the_active_utility_switch ... ok
+test editor::note::commands::add_block::tests::patch_blocks_table_row_and_column_ops_clamp_at_one ... ok
+test editor::note::commands::set_camera::tests::camera_drag_never_creates_a_document_undo_step ... ok
+test editor::note::commands::set_camera::tests::set_camera_writes_config_and_emits_no_artifact_mutations ... ok
+test editor::note::commands::set_grid_subdivisions::tests::set_grid_subdivisions_and_opacity_clamp ... ok
+test editor::note::commands::set_active_example::tests::set_active_example_loads_semio_blocks ... ok
+test editor::note::commands::set_camera::tests::set_camera_zoom_updates_zoom_and_keeps_pan_via_config ... ok
+test editor::note::commands::set_locale::tests::note_labels_resolve_german_locale ... ok
+test editor::note::component::tests::command_ids_are_unique_across_every_row ... ok
+test editor::note::commands::set_active_example::tests::set_fixture_json_replaces_document ... ok
+test editor::note::component::tests::blocks_interaction_domain_is_declared_topology_and_transitive_on_the_composite_window ... ok
+test editor::note::component::tests::every_command_round_trips_through_text_and_binary ... ok
+test editor::note::component::tests::interaction_topology_is_empty_for_a_document_with_no_blocks ... ok
+test editor::note::component::tests::note_labels_resolve_native_by_default ... ok
+test editor::note::component::tests::interaction_topology_walks_group_nesting_into_parent_links ... ok
+test editor::note::component::tests::optional_field_rows_keep_their_pre_migration_bytes ... ok
+test editor::note::component::tests::undo_redo_round_trip_through_the_wrapper ... ok
+test editor::note::component::tests::utility_registry_declares_canvas_utilities_scoped_to_composite_window ... ok
+test editor::note::component::tests::delete_selection_deletes_the_blocks_picked_via_interaction_select ... ok
+test editor::note::component::tests::ingest_operations_is_idempotent_for_note ... ok
+test editor::note::config::component::tests::note_config_default_matches_the_pre_migration_runtime_defaults ... ok
+test editor::note::config::component::tests::note_config_operation_backwards_is_always_a_snapshot_of_the_prior_config ... ok
+test editor::note::config::component::tests::note_config_dsl_pack_round_trips ... ok
+test editor::note::config::component::tests::note_config_operation_text_and_binary_round_trip_every_variant ... ok
+test editor::note::modes::edit::component::tests::the_default_layout_lists_both_edit_windows ... ok
+test editor::note::component::tests::the_manifest_stitches_every_taxonomy_node ... ok
+test editor::note::component::tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+test editor::note::modes::edit::windows::composite::component::tests::definition_declares_the_ink_canvas_surface_and_body_key ... ok
+test editor::note::modes::edit::windows::navigator::component::tests::definition_declares_the_ink_canvas_surface_and_body_key ... ok
+test editor::note::panels::inspection::tests::an_unknown_body_key_renders_a_diagnostic_instead_of_panicking ... ok
+test editor::note::modes::edit::windows::composite::component::tests::renders_composite_canvas ... ok
+test editor::note::panels::document::tests::note_labels_resolve_native_by_default ... ok
+test editor::note::modes::edit::windows::navigator::component::tests::renders_navigator_canvas ... ok
+test editor::note::panels::catalogue::tests::catalogue_resolves_german_locale ... ok
+test plugin::surface_tests::note_editor_and_viewer_share_dialect ... ok
+test editor::note::panels::catalogue::tests::catalogue_lists_every_block_kind ... ok
+test editor::note::panels::inspection::tests::renders_the_document_wide_summary ... ok
+test plugin::surface_tests::note_viewer_never_mutates ... ok
+test viewer::note::component::tests::viewer_dialect_matches_the_artifact_coordinate ... ok
+test viewer::note::modes::view::windows::composite::tests::definition_declares_an_ink_canvas_window ... ok
+test viewer::note::modes::view::windows::composite::tests::render_produces_a_read_only_ink_canvas_scene_for_the_empty_document ... ok
+test viewer::note::component::tests::create_note_viewer_builds_a_definition_for_the_viewer_role ... ok
+test editor::note::commands::nudge_selection_up::tests::nudge_direction_actions_move_selection_without_args ... ok
+test editor::note::panels::document::tests::renders_document_tree ... ok
+test plugin::surface_tests::plugin_assembles_a_real_manifest_not_the_assembly_failed_stub ... ok
+test descriptor_is_fresh ... ok
+
+test result: ok. 115 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+

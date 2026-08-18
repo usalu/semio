@@ -1547,6 +1547,10 @@ export interface ActivationRegistryOptions {
    * beyond this count checkpoints + suspends the least-recently-touched resident actor first. */
   readonly maxResidentActors?: number;
   readonly fetchAssets?: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
+  /** ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): clock for `runtimeMetricsSnapshot`'s
+   * `sampledAtMs`/`startRuntimeMetricsPublisher`'s cadence gate — injectable so both are testable
+   * without real timers, same pattern `ShardClient`'s own `options.now` already uses. */
+  readonly now?: () => number;
 }
 
 export class ActivationRegistry {
@@ -1560,12 +1564,15 @@ export class ActivationRegistry {
   private readonly maxResidentActors: number;
   private readonly fetchAssets: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
   private assetsPromise: Promise<readonly ShardAsset[]> | null = null;
+  private readonly now: () => number;
+  private lastRuntimeMetricsPublishMs: number | null = null;
 
   constructor(options: ActivationRegistryOptions) {
     this.shardClient = options.shardClient;
     this.defaultBudget = options.defaultBudget;
     this.maxResidentActors = options.maxResidentActors ?? 24;
     this.fetchAssets = options.fetchAssets ?? defaultGuestSlimAssetFetcher;
+    this.now = options.now ?? (() => Date.now());
   }
 
   //#region 📖️Manifest
@@ -1654,11 +1661,236 @@ export class ActivationRegistry {
     this.markResident(actorId, pluginId);
   }
 
+  /** 🛑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1, wiring the task manager's "cancel" action to a
+   * REAL dispatch path): the web mirror of `Payload::Cancel`'s now-landed native semantics
+   * (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump`, K1 — "cancels the actor's running jobs +
+   * unregisters the instance"). Unlike `suspend()`, this is NOT resumable: no checkpoint is taken,
+   * and every bookkeeping entry (including `actorPlugin`) is dropped, so a later `resume(actorId)`
+   * correctly throws "unknown actor" rather than silently reviving it. A no-op for an actorId this
+   * registry has never heard of.
+   *
+   * 🚧️ Honest gap, NOT fixed here (would need a file outside this packet's `path_scope`): this
+   * class has no per-actor job-id bookkeeping (`ShardClient.cancelJob` needs a specific job id,
+   * tracked by whoever calls `startJob`/`stepJob` — not `ActivationRegistry`/`ShardClient`), so
+   * "cancels the actor's running jobs" is only reachable here via `dispose()` tearing down the whole
+   * worker-side instance (which implicitly ends any in-flight job), not via an explicit per-job
+   * cancel message. See `📓️terra-T1-report.md` `## honest gaps`. */
+  cancel(actorId: string): void {
+    if (!this.actorPlugin.has(actorId)) return;
+    this.shardClient.dispose(actorId);
+    this.resident.delete(actorId);
+    this.checkpoints.delete(actorId);
+    this.actorPlugin.delete(actorId);
+    const index = this.residencyOrder.indexOf(actorId);
+    if (index !== -1) this.residencyOrder.splice(index, 1);
+  }
+
   isResident(actorId: string): boolean {
     return this.resident.has(actorId);
   }
   //#endregion 🚑️SuspendResume
+
+  //#region 📈️RuntimeMetrics
+  /** 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one row per actor this registry has ever
+   * activated (`actorPlugin` — populated on `markResident`, never cleared on `suspend`, so a
+   * suspended-but-not-forgotten actor still gets a row with `resident: false`). Field-compatible
+   * with the Rust `ActorMetricsSample` the native host publishes, minus the fields only a live
+   * `Kernel`/guest turn can produce (`turns`/`traps`/`wallUsP95`/…) — this registry never held a
+   * `Kernel` (it delegates straight to `ShardClient`, see this file's own header doc), so those are
+   * an honest gap here, not a silent zero-fill. */
+  runtimeMetricsActorRows(): readonly RuntimeMetricsActorRow[] {
+    return [...this.actorPlugin.entries()].map(([actorId, pluginId]) => ({ actorId, pluginId, resident: this.resident.has(actorId), shard: this.shardClient.shardIndexFor(actorId) ?? null }));
+  }
+
+  /** 📈️ The `os.runtime.metrics` payload this side of the boundary can build: per-actor residency
+   * rows plus `ShardClient.shardMetricsSamples` (see that method's own doc comment). `sampledAtMs`
+   * defaults to this registry's own injected clock, same convention as `runtime_metrics_snapshot`'s
+   * `sampled_at_ms` on the Rust side. */
+  runtimeMetricsSnapshot(sampledAtMs: number = this.now()): RuntimeMetricsSnapshot {
+    return { actors: this.runtimeMetricsActorRows(), shards: this.shardClient.shardMetricsSamples(sampledAtMs), sampledAtMs };
+  }
+
+  /** ⏱️ Starts a 2Hz (`RUNTIME_METRICS_PUBLISH_INTERVAL_MS`) publish loop calling `sink(topic,
+   * snapshot)` — `topic` is always `"os.runtime.metrics"`, matching the Rust side's bus topic name.
+   * Returns a `stop()` disposer. Real `setInterval`, not the injected `now` (browser timer loops are
+   * not something the pure-crate clock-injection discipline applies to — only `🎭️actor` itself must
+   * never read a clock); `runtimeMetricsDue` below is what stays unit-testable without real timers.
+   *
+   * 🚧️ GAP (see `📓️terra-T1-report.md` `## honest gaps`): `sink` is the caller's own delivery — no
+   * topic-subscriber fanout exists anywhere in this codebase yet (native or web) for `sink` to plug
+   * into by default; a real bus emit is `ShellHost`'s call to wire (registrar-only, lease-requested). */
+  startRuntimeMetricsPublisher(sink: (topic: string, snapshot: RuntimeMetricsSnapshot) => void): () => void {
+    const interval = setInterval(() => {
+      const nowMs = this.now();
+      if (!runtimeMetricsDue(this.lastRuntimeMetricsPublishMs, nowMs)) return;
+      this.lastRuntimeMetricsPublishMs = nowMs;
+      sink("os.runtime.metrics", this.runtimeMetricsSnapshot(nowMs));
+    }, RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }
+  //#endregion 📈️RuntimeMetrics
 }
+
+/** 📈️ Mirrors `semio_framework_actor::ActorMetricsSample` where this registry has the data for it —
+ * see `ActivationRegistry.runtimeMetricsActorRows`'s own doc comment for exactly which fields are an
+ * honest gap here (no live `Kernel` on this side of the boundary). */
+export interface RuntimeMetricsActorRow {
+  readonly actorId: string;
+  readonly pluginId: string;
+  readonly resident: boolean;
+  readonly shard: number | null;
+}
+
+/** 📈️ Mirrors `semio_framework_actor::RuntimeMetricsSnapshot`'s shape — `kernel` (the aggregate
+ * `KernelMetrics`) is omitted here since this registry never holds a `Kernel` to sample it from.
+ * `shards` is spelled as `ShardClient["shardMetricsSamples"]`'s own return type rather than importing
+ * `ShardMetricsSample` by name — this file's `path_scope` is the `🐚️ActivationRegistry` region only,
+ * and the top-of-file import list sits outside it. */
+export interface RuntimeMetricsSnapshot {
+  readonly actors: readonly RuntimeMetricsActorRow[];
+  readonly shards: ReturnType<ShardClient["shardMetricsSamples"]>;
+  readonly sampledAtMs: number;
+}
+
+/** ⏱️ 2Hz, matching `semio_framework_actor::RUNTIME_METRICS_PUBLISH_INTERVAL_MS`. */
+export const RUNTIME_METRICS_PUBLISH_INTERVAL_MS = 500;
+
+/** ⏱️ Pure cadence gate — the exact TS mirror of `semio_framework_actor::runtime_metrics_due`, kept
+ * as its own exported function (not inlined into `startRuntimeMetricsPublisher`) so it is testable
+ * without fake timers, same reasoning as the Rust side's own doc comment. */
+export function runtimeMetricsDue(lastPublishedMs: number | null, nowMs: number): boolean {
+  if (lastPublishedMs === null) return true;
+  return nowMs - lastPublishedMs >= RUNTIME_METRICS_PUBLISH_INTERVAL_MS;
+}
+
+//#region 🧪️RuntimeMetricsTests
+/** 🧪️ Kept inside the `🐚️ActivationRegistry` region on purpose — this file's other test blocks
+ * (`🧪️ExpandPluginRegistryTests`/`🧪️IoRouterTests`) live at end-of-file, but this packet's
+ * `path_scope` is this region only, and a peer holds `🔖️IoRouter` (must stay byte-identical). */
+if (import.meta.vitest) {
+  const { describe, expect, it, vi } = import.meta.vitest;
+
+  const BUDGET_FIXTURE: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+
+  /** 🧪️ A `ShardWorkerLike` that immediately auto-replies success to every request-bearing message —
+   * enough for `ActivationRegistry.activate`/`suspend` to resolve without hand-delivering replies
+   * (unlike `shard-client.ts`'s own `FakeShardWorker`, which is deliberately manual for THAT file's
+   * out-of-order-reply tests; this region only needs "the round trip completes"). */
+  function fakeShardClient(shardCount = 1): ShardClient {
+    return new ShardClient({
+      shardCount,
+      createWorker: () => {
+        const worker: { postMessage: (message: unknown) => void; terminate: () => void; onmessage: ((event: { readonly data: unknown }) => void) | null; onerror: ((event: unknown) => void) | null } = {
+          postMessage: (message) => {
+            const requestId = (message as { readonly requestId?: string }).requestId;
+            if (requestId) queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId, ok: true, value: undefined } }));
+          },
+          terminate: () => {},
+          onmessage: null,
+          onerror: null,
+        };
+        return worker;
+      },
+    });
+  }
+
+  describe("ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot", () => {
+    it("rows cover both resident and suspended actors, never activated-and-forgotten ones", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, now: () => 500, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+
+      const rows = registry.runtimeMetricsActorRows();
+      expect(rows).toEqual([{ actorId: "actor-1", pluginId: "p1", resident: true, shard: 0 }]);
+
+      await registry.suspend("actor-1");
+      const afterSuspend = registry.runtimeMetricsActorRows();
+      expect(afterSuspend).toEqual([{ actorId: "actor-1", pluginId: "p1", resident: false, shard: null }]);
+    });
+
+    it("snapshot combines actor rows with ShardClient.shardMetricsSamples at the given clock reading", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, now: () => 999, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+
+      const snapshot = registry.runtimeMetricsSnapshot(1_000);
+      expect(snapshot.sampledAtMs).toBe(1_000);
+      expect(snapshot.actors).toHaveLength(1);
+      expect(snapshot.shards).toEqual(shardClient.shardMetricsSamples(1_000));
+    });
+  });
+
+  describe("runtimeMetricsDue", () => {
+    it("gates at the 500ms / 2Hz interval, always due on the first call", () => {
+      expect(runtimeMetricsDue(null, 0)).toBe(true);
+      expect(runtimeMetricsDue(1_000, 1_200)).toBe(false);
+      expect(runtimeMetricsDue(1_000, 1_500)).toBe(true);
+    });
+  });
+
+  describe("ActivationRegistry.startRuntimeMetricsPublisher", () => {
+    it("calls the sink with the os.runtime.metrics topic at the 2Hz interval, and stop() cancels it", () => {
+      vi.useFakeTimers();
+      try {
+        const shardClient = fakeShardClient();
+        const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+        const calls: Array<{ readonly topic: string; readonly snapshot: RuntimeMetricsSnapshot }> = [];
+        const stop = registry.startRuntimeMetricsPublisher((topic, snapshot) => calls.push({ topic, snapshot }));
+
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+        expect(calls).toHaveLength(1);
+        expect(calls[0]!.topic).toBe("os.runtime.metrics");
+
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+        expect(calls).toHaveLength(2);
+
+        stop();
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 3);
+        expect(calls).toHaveLength(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe("ActivationRegistry.cancel", () => {
+    it("disposes the worker-side instance and forgets the actor entirely — resume() afterward throws unknown actor", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+      expect(registry.isResident("actor-1")).toBe(true);
+
+      registry.cancel("actor-1");
+
+      expect(registry.isResident("actor-1")).toBe(false);
+      expect(registry.runtimeMetricsActorRows()).toEqual([]);
+      expect(shardClient.shardIndexFor("actor-1")).toBeUndefined(); // dispose() cleared the routing entry
+      await expect(registry.resume("actor-1")).rejects.toThrow(/unknown actor/);
+    });
+
+    it("is a no-op for an actor this registry never activated", () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      expect(() => registry.cancel("ghost")).not.toThrow();
+    });
+
+    it("cancelling a suspended (non-resident but still tracked) actor still forgets it", async () => {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+      await registry.suspend("actor-1");
+      expect(registry.runtimeMetricsActorRows()).toEqual([{ actorId: "actor-1", pluginId: "p1", resident: false, shard: null }]);
+
+      registry.cancel("actor-1");
+      expect(registry.runtimeMetricsActorRows()).toEqual([]);
+    });
+  });
+}
+//#endregion 🧪️RuntimeMetricsTests
 //#endregion 🐚️ActivationRegistry
 
 //#region 🔌️PluginSource

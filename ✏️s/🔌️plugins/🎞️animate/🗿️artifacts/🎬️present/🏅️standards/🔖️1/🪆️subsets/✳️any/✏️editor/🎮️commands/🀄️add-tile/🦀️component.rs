@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn app_manifest_declares_expected_operations() {
         use semio_framework_plugin::ActionKind;
-        let definition = crate::editor::animate::create_animate_present_app().definition;
+        let definition = crate::editor::animate::create_animate_present_app();
         let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
         for expected in ["addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops"] {
             assert!(operation_ids.contains(&expected), "missing declared operation {expected}");

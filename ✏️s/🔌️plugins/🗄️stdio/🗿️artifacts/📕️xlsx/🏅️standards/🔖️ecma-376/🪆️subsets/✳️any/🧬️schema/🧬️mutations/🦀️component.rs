@@ -7,8 +7,12 @@ use crate::artifacts::xlsx::schema::diff::{
     read_str_lp, split_top_level, strip_brackets, write_str_lp, XlsxDiff,
 };
 use crate::artifacts::xlsx::schema::snapshot::{XlsxCellValue, XlsxSheet, XlsxWorkbook};
+#[cfg(test)]
+use crate::artifacts::xlsx::schema::snapshot::XlsxCell;
 use crate::artifacts::xlsx::XlsxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+#[cfg(test)]
+use crate::artifacts::zip::opc::{OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};

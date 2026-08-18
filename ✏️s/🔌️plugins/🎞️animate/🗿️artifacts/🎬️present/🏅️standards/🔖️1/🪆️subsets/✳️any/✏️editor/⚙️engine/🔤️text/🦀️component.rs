@@ -494,7 +494,7 @@ pub mod text {
         use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::parse_svg_xml;
         let svg_text = renderer.render_svg(markup)?;
         let doc = parse_svg_xml(&svg_text).ok()?;
-        Some(semio_s_plugin_stdio::artifacts::svg::SvgSnapshot { schema: semio_s_plugin_stdio::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc, lexical: None })
+        Some(semio_s_plugin_stdio::artifacts::svg::SvgSnapshot { schema: semio_s_plugin_stdio::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
     }
 
     /// 🖨️ Renders `markup` and returns the SVG text stdio's own real codec re-serialized from the

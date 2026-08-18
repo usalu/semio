@@ -34,7 +34,24 @@ mod actor_bindings {
 /// needs to log, read the clock, or trace — a component that does so during `describe()` is doing
 /// something the descriptor contract does not ask for, but the calls are still satisfied (never
 /// trapped) so a component that calls them for its own bookkeeping still completes.
-struct DescribeHostState;
+struct DescribeHostState {
+    wasi_ctx: wasmtime_wasi::WasiCtx,
+    resource_table: wasmtime::component::ResourceTable,
+}
+
+/// 🌐️ WASI Preview 2, required even though `world actor` declares no wasi import: a real
+/// `wasm32-wasip2` build pulls `wasi:io/poll` and friends in transitively via the Rust target's own
+/// runtime shim, so `pure` alone leaves the linker short and instantiation fails. Sandboxed default
+/// ctx — `describe()` is a pure metadata read and is granted no stdio, filesystem or network.
+impl wasmtime_wasi::WasiView for DescribeHostState {
+    fn ctx(&mut self) -> &mut wasmtime_wasi::WasiCtx {
+        &mut self.wasi_ctx
+    }
+
+    fn table(&mut self) -> &mut wasmtime::component::ResourceTable {
+        &mut self.resource_table
+    }
+}
 
 impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
     fn log(&mut self, level: String, message: String) {
@@ -52,11 +69,18 @@ impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
 //#endregion 🔖️ActorBindings
 
 //#region 🔖️Describe
-/// ⛽️ Fuel cap for the single `describe()` call — generous for a pure struct-building function,
-/// bounded so a malformed or hostile `describe()` cannot hang the build. Distinct constant from (and
-/// much smaller than) any runtime turn-budget fuel figure — this call happens exactly once, at build
-/// time, and does no IO/UI/effect work at all.
-const DESCRIBE_FUEL_BUDGET: u64 = 5_000_000;
+/// ⛽️ Fuel cap for the single `describe()` call, bounded so a malformed or hostile `describe()`
+/// cannot hang the build. This call happens once, at build time, and does no IO/UI/effect work.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (D0/registrar): was `5_000_000`, described as
+/// "generous for a pure struct-building function" — an estimate made against the *shape* of the
+/// function, never against a real component. `🗒️note`'s own `describe()` measured **92_327_773**
+/// fuel on an unoptimized `wasm32-wasip2` build: 18× the old cap, so every real plugin trapped
+/// mid-`AppBuilder::try_build_definition` with a bare "error while executing" and no mention of
+/// fuel. Debug wasm is the build the describe step actually consumes, so it is the build the cap
+/// must be sized against; `2_000_000_000` leaves ~21× headroom over the measured figure while still
+/// bounding a runaway to seconds. Re-measure, do not re-estimate, if a larger plugin trips it.
+const DESCRIBE_FUEL_BUDGET: u64 = 2_000_000_000;
 
 /// 🚨️ Every way `describe_component` can fail, rendered as a plain message for the CLI's stderr.
 #[derive(Debug)]
@@ -106,10 +130,11 @@ pub fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDes
 
     let mut linker = wasmtime::component::Linker::<DescribeHostState>::new(&engine);
     actor_bindings::semio::framework::pure::add_to_linker(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `pure` import: {error}")))?;
+    wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
 
     let component = wasmtime::component::Component::from_binary(&engine, &wasm_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", wasm_path.display())))?;
 
-    let mut store = wasmtime::Store::new(&engine, DescribeHostState);
+    let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
     store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
 
     let (bindings, _instance) = actor_bindings::Actor::instantiate(&mut store, &component, &linker).map_err(|error| DescribeError(format!("instantiating {}: {error}", wasm_path.display())))?;

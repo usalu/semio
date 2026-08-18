@@ -989,7 +989,7 @@ pub mod writer {
     /// BMFF container structure via stdio's own `encode_mp4` below, never hand-rolled here.
     fn build_raw_mp4_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Mp4Snapshot {
         let timescale = (frame_rate.round() as u32).max(1);
-        let samples = frames.iter().map(|pixels| Mp4Sample { data: pixels.clone(), duration: 1, cts_offset: 0, sync: true }).collect();
+        let samples: Vec<Mp4Sample> = frames.iter().map(|pixels| Mp4Sample { data: pixels.clone(), duration: 1, cts_offset: 0, sync: true }).collect();
         let codec = Mp4Codec::default();
         let track = Mp4Track { track_id: 1, timescale, codec, width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
         Mp4Snapshot { tracks: vec![track], ..Mp4Snapshot::default() }
@@ -1237,7 +1237,7 @@ pub mod writer {
             }
         }
         let frames: Vec<Vec<u8>> = all_samples.iter().map(|sample| sample.data.clone()).collect();
-        let track = Mp4Track { track_id: 1, timescale, codec: codec.unwrap_or_default(), width, height, samples: all_samples };
+        let track = Mp4Track { track_id: 1, timescale, codec: codec.unwrap_or_default(), width, height, metadata: Default::default(), chunk_sample_counts: vec![all_samples.len() as u32], samples: all_samples };
         let snapshot = Mp4Snapshot { tracks: vec![track], ..Mp4Snapshot::default() };
         let bytes = encode_mp4(&snapshot);
         fs::write(output, &bytes).map_err(VideoError::io("write concatenated mp4"))?;

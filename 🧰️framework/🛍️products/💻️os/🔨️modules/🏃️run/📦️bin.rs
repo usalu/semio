@@ -113,6 +113,38 @@ fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = Strin
     }
     Ok(resolved)
 }
+
+/// 🪪️ One row of the registry's `🔣️plugins.json` (`bun nx run @semio-tech/plugin-registry:generate`
+/// output) — only the two fields `resolve_descriptor_paths` needs; every other field (capabilities,
+/// contributes, …) is ignored by ordinary serde (no `deny_unknown_fields` here).
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RegistryPluginEntry {
+    plugin_id: String,
+    crate_path: String,
+}
+
+/// ✅️ R1-native-manifest: maps every registered plugin/extension id to its committed
+/// `🛂️descriptor.semio` path — `<cratePath>/../../🛂️descriptor.semio` (`cratePath` ends in
+/// `📦️packages/🦀️rust`; the descriptor sits two levels up, at the plugin crate's own root — see
+/// `describe_component`'s doc, `🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs`). Reads the SAME
+/// generated `🔣️plugins.json` `resolve_plugin_paths` above reads `🦀️artifacts.rs` from (both
+/// produced by the one `plugin-registry:generate` nx target); a plugin id absent here, or whose
+/// file does not exist on disk, simply has no committed descriptor yet — `WasmtimeNodeHost` treats
+/// that as an honest per-plugin load failure, not a hard error at startup.
+fn resolve_descriptor_paths(repo_root: &Path) -> Result<HashMap<String, PathBuf>, String> {
+    let registry_path = repo_root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔣️plugins.json");
+    let text = std::fs::read_to_string(&registry_path).map_err(|error| format!("reading {}: {error}", registry_path.display()))?;
+    let entries: Vec<RegistryPluginEntry> = serde_json::from_str(&text).map_err(|error| format!("parsing {}: {error}", registry_path.display()))?;
+    Ok(entries
+        .into_iter()
+        .filter_map(|entry| {
+            let crate_root = repo_root.join(&entry.crate_path);
+            let crate_root = crate_root.parent()?.parent()?;
+            Some((entry.plugin_id, crate_root.join("🛂️descriptor.semio")))
+        })
+        .collect())
+}
 //#endregion 🔖️PluginArtifacts
 
 /// 🆔️ Single canonical run slot per bundle for this wave — see `SpaceBundle`'s own doc comment on
@@ -268,8 +300,9 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
     let repo_root = find_repo_root()?;
     let plugin_paths = resolve_plugin_paths(&repo_root, relevant_plugin_ids.into_iter())?;
+    let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store: Arc<dyn BlobStore> = Arc::new(bundle.blob_store());
-    let host = WasmtimeNodeHost::new(plugin_paths, Arc::clone(&blob_store));
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store));
     let mut runner = SpaceRunner::new(host, blob_store, args.policy);
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 

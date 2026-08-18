@@ -53,7 +53,7 @@ mod tests {
     type WriterStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
     fn seeded_store() -> WriterStore {
-        WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None))
+        WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture")
     }
 
     #[test]

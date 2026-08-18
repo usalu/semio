@@ -29,7 +29,7 @@ ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
-semio-s-plugin-stdio = { path = "../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
+semio-s-plugin-stdio = { path = "../../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

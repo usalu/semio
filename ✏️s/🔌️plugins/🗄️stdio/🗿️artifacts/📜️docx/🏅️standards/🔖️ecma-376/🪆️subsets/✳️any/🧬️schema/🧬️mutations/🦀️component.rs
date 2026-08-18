@@ -10,8 +10,12 @@ use crate::artifacts::docx::schema::diff::{
     resolve_blocks, DocxBlockPath, DocxDiff, DocxPathSegment,
 };
 use crate::artifacts::docx::schema::snapshot::{DocxBlock, DocxDocument, DocxStyle};
+#[cfg(test)]
+use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxTable, DocxTableCell, DocxTableRow};
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
+#[cfg(test)]
+use crate::artifacts::zip::opc::{OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};

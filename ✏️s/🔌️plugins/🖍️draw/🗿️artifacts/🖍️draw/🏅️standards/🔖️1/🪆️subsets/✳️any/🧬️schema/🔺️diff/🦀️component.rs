@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 #[serde(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.draw.draw")]
 pub struct DrawDiff {
-    #[state(artifact)] pub artifact: Option<Box<crate::artifacts::draw::schema::DrawArtifact>>,
+    #[state(artifact)] pub artifact: Option<Box<DrawArtifact>>,
     #[state(artifact)] pub schema: Option<String>,
     #[state(artifact)] pub id: Option<String>,
     #[state(artifact)] pub title: Option<Option<String>>,
@@ -248,7 +248,7 @@ pub fn apply_layers_delta(
             )
             .at(["reordered"]));
         }
-        let mut by_id: std::collections::BTreeMap<_, _> = next
+        let mut by_id: BTreeMap<_, _> = next
             .into_iter()
             .map(|layer| (crate::artifacts::draw::schema::layer_id(&layer).to_string(), layer))
             .collect();
@@ -450,7 +450,7 @@ fn merge_layer_patch(dst: &mut DrawLayerPatch, mut src: DrawLayerPatch) {
 }
 
 fn apply_assets_delta(
-    assets: &mut std::collections::BTreeMap<String, crate::artifacts::draw::DrawImageAsset>,
+    assets: &mut BTreeMap<String, DrawImageAsset>,
     delta: &DrawAssetsDelta,
 ) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {

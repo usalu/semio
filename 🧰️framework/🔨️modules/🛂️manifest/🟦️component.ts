@@ -98,6 +98,12 @@ import type {
   UiPresence as GeneratedUiPresence,
   UiState as GeneratedUiState,
   UiStatus as GeneratedUiStatus,
+  // 🎫️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION §C8.1: the
+  // `🔖️HostResolvedArgs` region below (`ArtifactKindChoice`/`SurfaceAppChoice`/`artifactKindChoices`)
+  // names all three by hand, unlike `ArgFormat`'s inline `roles: Array<AppRole>` above.
+  AppRole as GeneratedAppRole,
+  AppRef as GeneratedAppRef,
+  ArtifactDialect as GeneratedArtifactDialect,
 } from "./🤖️generated/🟦️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
@@ -1006,6 +1012,196 @@ export type PluginManifest = {
   /** 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused. */
   readonly commands?: readonly CommandDefinition[];
 };
+
+//#region 🔖️HostResolvedArgs
+/** 🎯️ Generated from Rust `AppRole`/`AppRef` (`🛂️manifest/🦀️component.rs`) and `ArtifactDialect`
+ * (`🚪️io/🧬️schema/🦀️component.rs`) — surface role, cross-plugin surface address, and dialect
+ * coordinate; `artifactKindChoices` below needs all three by name (unlike `ArgFormat`'s inline
+ * `roles: Array<AppRole>` above, which never has to name the type itself). Module-private (NOT
+ * re-exported under these bare names): `🎠️kernel/🟦️component.ts` already hand-declares structurally
+ * identical `AppRole`/`AppRef`/`ArtifactDialect` types (see its own `🔖️AppRouter` region doc comment)
+ * that flow through the same `@semio-tech/framework` barrel (`🟦️glue.ts`'s `export *`) — a second
+ * public export of the same bare names here is an ambiguous-export error (`TS2308`) at that barrel,
+ * not a new type callers need. */
+type AppRole = GeneratedAppRole;
+type AppRef = GeneratedAppRef;
+type ArtifactDialect = GeneratedArtifactDialect;
+
+/** 🗂️ TS twin of Rust `ArtifactKindChoice` — one artifact-kind choice offered by an
+ * `ActionArgControl.artifactKind` dialog field, resolved by the host from its live plugin catalogue
+ * (`artifactKindChoices`) into a plain `select` control right before the dialog renders. Round-trips
+ * through `ActionArgOption.value` as JSON via `encodeArtifactKindChoice`/`decodeArtifactKindChoice` —
+ * the frozen wire shape (contract §C8.1): `{"kindId":"s.draw.draw","schema":"draw.document","dialect":
+ * {"artifactKind":"s.draw.draw","standard":"1","subset":"*"},"label":{"en":"Draw","de":"Zeichnung"}}`.
+ * Rust twin: `ArtifactKindChoice` (`🦀️component.rs`) — both codecs must agree byte-for-byte over the
+ * pinned fixtures. */
+export type ArtifactKindChoice = {
+  readonly kindId: string;
+  readonly schema: string;
+  readonly dialect: ArtifactDialect;
+  readonly label: { readonly en: string; readonly de: string };
+};
+
+/** 🎭️ TS twin of Rust `SurfaceAppChoice` — one `(pluginId, appId, role)` choice offered by an
+ * `ActionArgControl.surfaceApp` dialog field, resolved by the host against the dialect coordinate
+ * found in the dialog's seed argument named `dialectArg`. Round-trips through `ActionArgOption.value`
+ * as JSON via `encodeSurfaceAppChoice`/`decodeSurfaceAppChoice`. Rust twin: `SurfaceAppChoice`
+ * (`🦀️component.rs`). */
+export type SurfaceAppChoice = {
+  readonly app: AppRef;
+  readonly role: AppRole;
+};
+
+/** 🧵️ Encodes an `ArtifactKindChoice` into the frozen `ActionArgOption.value` JSON shape — key order
+ * (kindId, schema, dialect, label.en, label.de) matches Rust `encode_artifact_kind_choice`'s
+ * `serde_json::json!` insertion order byte-for-byte. */
+export function encodeArtifactKindChoice(choice: ArtifactKindChoice): string {
+  return JSON.stringify({
+    kindId: choice.kindId,
+    schema: choice.schema,
+    dialect: choice.dialect,
+    label: { en: choice.label.en, de: choice.label.de },
+  });
+}
+
+/** 🧵️ Inverse of {@link encodeArtifactKindChoice}. Throws with a message naming the missing/malformed
+ * field, mirroring Rust `decode_artifact_kind_choice`'s `Result<_, String>` messages. */
+export function decodeArtifactKindChoice(value: string): ArtifactKindChoice {
+  const json = JSON.parse(value) as Record<string, unknown>;
+  if (typeof json.kindId !== "string") throw new Error("artifact kind choice missing string field kindId");
+  if (typeof json.schema !== "string") throw new Error("artifact kind choice missing string field schema");
+  const dialect = json.dialect as Partial<ArtifactDialect> | undefined;
+  if (typeof dialect?.artifactKind !== "string" || typeof dialect.standard !== "string" || typeof dialect.subset !== "string") {
+    throw new Error("artifact kind choice missing field dialect");
+  }
+  const label = json.label as { readonly en?: unknown; readonly de?: unknown } | undefined;
+  if (typeof label?.en !== "string") throw new Error("artifact kind choice missing string field label.en");
+  if (typeof label.de !== "string") throw new Error("artifact kind choice missing string field label.de");
+  return { kindId: json.kindId, schema: json.schema, dialect: { artifactKind: dialect.artifactKind, standard: dialect.standard, subset: dialect.subset }, label: { en: label.en, de: label.de } };
+}
+
+/** 🧵️ Encodes a `SurfaceAppChoice` into its frozen `ActionArgOption.value` JSON shape — must agree
+ * byte-for-byte with Rust `encode_surface_app_choice`. */
+export function encodeSurfaceAppChoice(choice: SurfaceAppChoice): string {
+  return JSON.stringify({ pluginId: choice.app.pluginId, appId: choice.app.appId, role: choice.role });
+}
+
+/** 🧵️ Inverse of {@link encodeSurfaceAppChoice}. */
+export function decodeSurfaceAppChoice(value: string): SurfaceAppChoice {
+  const json = JSON.parse(value) as Record<string, unknown>;
+  if (typeof json.pluginId !== "string") throw new Error("surface app choice missing string field pluginId");
+  if (typeof json.appId !== "string") throw new Error("surface app choice missing string field appId");
+  if (json.role !== "editor" && json.role !== "viewer") throw new Error("surface app choice missing string field role");
+  return { app: { pluginId: json.pluginId, appId: json.appId }, role: json.role };
+}
+
+/** 🗺️ Resolves an app's manifest `label` field's native (terminology-invariant) cell — the wire shape
+ * is `{ native: { en, de }, reuse: { en, de } }` (Rust `LocalizedLabel`'s `Serialize`, see
+ * `ShellHelpers/🟦️component.tsx`'s `resolveManifestLabel` for the full terminology-aware resolver
+ * used at render time). `artifactKindChoices` only ever needs the native cell, matching Rust
+ * `encode_artifact_kind_choice` resolving under `Terminology::Native`. Takes `unknown` because
+ * `AppDefinition.label` is `unknown` on the generated type (no ts-rs mirror for `LocalizedLabel` yet). */
+function resolveNativeLabel(label: unknown): { readonly en: string; readonly de: string } {
+  const native = (label as { readonly native?: { readonly en?: string; readonly de?: string } } | undefined)?.native;
+  return { en: native?.en ?? "", de: native?.de ?? "" };
+}
+
+/** 🗂️ Every artifact-kind choice for the given `roles` — TS twin of Rust `artifact_kind_choices`.
+ * Every app across `manifests` whose `role` is in `roles` and whose `io.documentSchema` is non-empty
+ * contributes one choice per dialect coordinate. Deduped by dialect coordinate (first manifest/app
+ * wins — callers pass owner manifests first so the owner's label wins over a later contributor's),
+ * sorted by coordinate for determinism — the pure resolver behind `ActionArgControl.artifactKind`. */
+export function artifactKindChoices(manifests: readonly PluginManifest[], roles: readonly AppRole[]): ArtifactKindChoice[] {
+  const byCoordinate = new Map<string, ArtifactKindChoice>();
+  for (const manifest of manifests) {
+    for (const raw of manifest.apps) {
+      const app = raw as unknown as { readonly role: AppRole; readonly dialect: ArtifactDialect; readonly label: unknown; readonly io: { readonly documentSchema: string } };
+      if (!roles.includes(app.role) || app.io.documentSchema === "") continue;
+      const coordinate = `${app.dialect.artifactKind}@${app.dialect.standard}/${app.dialect.subset}`;
+      if (byCoordinate.has(coordinate)) continue;
+      byCoordinate.set(coordinate, { kindId: app.dialect.artifactKind, schema: app.io.documentSchema, dialect: app.dialect, label: resolveNativeLabel(app.label) });
+    }
+  }
+  return [...byCoordinate.keys()].sort().map((coordinate) => byCoordinate.get(coordinate)!);
+}
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("🔖️HostResolvedArgs", () => {
+    const PINNED_ARTIFACT_KIND_CHOICE: ArtifactKindChoice = {
+      kindId: "s.draw.draw",
+      schema: "draw.document",
+      dialect: { artifactKind: "s.draw.draw", standard: "1", subset: "*" },
+      label: { en: "Draw", de: "Zeichnung" },
+    };
+    const PINNED_ARTIFACT_KIND_CHOICE_JSON =
+      '{"kindId":"s.draw.draw","schema":"draw.document","dialect":{"artifactKind":"s.draw.draw","standard":"1","subset":"*"},"label":{"en":"Draw","de":"Zeichnung"}}';
+
+    it("encodeArtifactKindChoice matches the contract's pinned byte-identical fixture", () => {
+      expect(encodeArtifactKindChoice(PINNED_ARTIFACT_KIND_CHOICE)).toBe(PINNED_ARTIFACT_KIND_CHOICE_JSON);
+    });
+
+    it("decodeArtifactKindChoice inverts the pinned fixture", () => {
+      expect(decodeArtifactKindChoice(PINNED_ARTIFACT_KIND_CHOICE_JSON)).toEqual(PINNED_ARTIFACT_KIND_CHOICE);
+    });
+
+    it("decodeArtifactKindChoice throws naming the missing field", () => {
+      expect(() => decodeArtifactKindChoice("{}")).toThrow(/kindId/);
+    });
+
+    it("encodeSurfaceAppChoice / decodeSurfaceAppChoice round-trip the frozen shape", () => {
+      const choice: SurfaceAppChoice = { app: { pluginId: "draw", appId: "s.draw.draw@1/*#editor" }, role: "editor" };
+      const json = encodeSurfaceAppChoice(choice);
+      expect(json).toBe('{"pluginId":"draw","appId":"s.draw.draw@1/*#editor","role":"editor"}');
+      expect(decodeSurfaceAppChoice(json)).toEqual(choice);
+    });
+
+    it("decodeSurfaceAppChoice throws on an invalid role", () => {
+      expect(() => decodeSurfaceAppChoice('{"pluginId":"draw","appId":"a","role":"bogus"}')).toThrow(/role/);
+    });
+
+    function fakeManifest(pluginId: string, apps: readonly { role: AppRole; dialect: ArtifactDialect; documentSchema: string; label?: { en: string; de: string } }[]): PluginManifest {
+      return {
+        pluginId,
+        label: pluginId,
+        version: "1.0.0",
+        apps: apps.map((app) => ({ role: app.role, dialect: app.dialect, label: { native: app.label ?? { en: app.dialect.artifactKind, de: app.dialect.artifactKind } }, io: { documentSchema: app.documentSchema } })),
+        workflows: [],
+        examples: [],
+      };
+    }
+
+    it("artifactKindChoices dedupes by dialect coordinate (owner manifest first wins), sorts, and filters by role", () => {
+      const drawDialect: ArtifactDialect = { artifactKind: "s.draw.draw", standard: "1", subset: "*" };
+      const dagDialect: ArtifactDialect = { artifactKind: "s.dag.dag", standard: "1", subset: "*" };
+      // 🗂️ Two manifests: "draw" (the owner plugin, passed first) offers the editor for its own
+      // dialect plus an unrelated app with an empty `documentSchema` (must never surface — it hasn't
+      // opted into `io` yet, mirroring apps that haven't populated `AppIo` in the Rust test's spirit);
+      // "draw-contrib" is a later contributor offering only a viewer for the SAME dialect coordinate
+      // under a different label, proving the owner's (first) label wins once both roles are in scope.
+      const manifests = [
+        fakeManifest("draw", [
+          { role: "editor", dialect: drawDialect, documentSchema: "draw.document", label: { en: "Draw", de: "Zeichnung" } },
+          { role: "editor", dialect: { artifactKind: "s.draw.empty", standard: "1", subset: "*" }, documentSchema: "" },
+        ]),
+        fakeManifest("draw-contrib", [{ role: "viewer", dialect: drawDialect, documentSchema: "draw.document", label: { en: "Draw (fallback)", de: "Zeichnung (fallback)" } }]),
+        fakeManifest("dag", [{ role: "editor", dialect: dagDialect, documentSchema: "dag.document", label: { en: "DAG", de: "DAG" } }]),
+      ];
+
+      const editorOnly = artifactKindChoices(manifests, ["editor"]);
+      expect(editorOnly.map((choice) => choice.kindId)).toEqual(["s.dag.dag", "s.draw.draw"]);
+      expect(editorOnly.find((choice) => choice.kindId === "s.draw.draw")?.label).toEqual({ en: "Draw", de: "Zeichnung" });
+
+      const editorAndViewer = artifactKindChoices(manifests, ["editor", "viewer"]);
+      expect(editorAndViewer.map((choice) => choice.kindId)).toEqual(["s.dag.dag", "s.draw.draw"]);
+      expect(editorAndViewer.find((choice) => choice.kindId === "s.draw.draw")?.label).toEqual({ en: "Draw", de: "Zeichnung" });
+
+      expect(artifactKindChoices(manifests, ["viewer"]).map((choice) => choice.kindId)).toEqual(["s.draw.draw"]);
+    });
+  });
+}
+//#endregion 🔖️HostResolvedArgs
 
 //#region AppManifestProtocol
 /** 🧬️ Generated from Rust `WindowMeasure`/`WindowEngagement*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */

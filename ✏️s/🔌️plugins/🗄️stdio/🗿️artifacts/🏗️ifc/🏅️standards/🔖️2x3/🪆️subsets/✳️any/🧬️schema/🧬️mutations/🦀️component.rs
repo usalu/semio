@@ -8,6 +8,8 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
 };
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
+#[cfg(test)]
+use crate::artifacts::step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};

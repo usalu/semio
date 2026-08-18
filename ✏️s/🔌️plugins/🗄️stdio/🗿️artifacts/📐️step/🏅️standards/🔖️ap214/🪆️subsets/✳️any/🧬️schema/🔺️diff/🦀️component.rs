@@ -1387,9 +1387,9 @@ mod tests {
     #[test]
     fn absorb_insert_then_remove_before_shifts_index() {
         let e = entity(50, "THING", vec![]);
-        let mut d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
+        let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
         let d2 = StepEntitiesDiff { removed: vec![1], ..Default::default() };
-        d1.absorb(d2);
+        let d1 = absorb_entities(Some(d1), Some(d2)).expect("absorb of two non-empty diffs must be Some");
         assert_eq!(d1.removed, vec![1]);
         assert_eq!(d1.added, vec![StepEntityAdded { index: 1, entity: e }]);
         assert!(d1.modified.is_empty());
@@ -1406,9 +1406,9 @@ mod tests {
     fn absorb_insert_insert_same_index_both_survive() {
         let e = entity(50, "A", vec![]);
         let f = entity(51, "B", vec![]);
-        let mut d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
+        let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: e.clone() }], ..Default::default() };
         let d2 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 2, entity: f.clone() }], ..Default::default() };
-        d1.absorb(d2);
+        let d1 = absorb_entities(Some(d1), Some(d2)).expect("absorb of two non-empty diffs must be Some");
         assert_eq!(d1.added, vec![StepEntityAdded { index: 2, entity: e.clone() }, StepEntityAdded { index: 2, entity: f.clone() }]);
         let base = vec![entity(1, "BASE0", vec![]), entity(2, "BASE1", vec![])];
         let applied = d1.apply(&base);
@@ -1423,9 +1423,9 @@ mod tests {
     #[test]
     fn absorb_insert_then_set_field_patches_into_added() {
         let e = entity(50, "A", vec![]);
-        let mut d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 1, entity: e.clone() }], ..Default::default() };
+        let d1 = StepEntitiesDiff { added: vec![StepEntityAdded { index: 1, entity: e.clone() }], ..Default::default() };
         let d2 = StepEntitiesDiff { modified: vec![StepEntityModified { id: 50, diff: StepEntityDiff { name: Some("X".into()), ..Default::default() } }], ..Default::default() };
-        d1.absorb(d2);
+        let d1 = absorb_entities(Some(d1), Some(d2)).expect("absorb of two non-empty diffs must be Some");
         assert!(d1.modified.is_empty());
         assert_eq!(d1.added.len(), 1);
         assert_eq!(d1.added[0].entity.name, "X");

@@ -96,6 +96,20 @@
         }
       }
     },
+    "bench": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts bench",
+        "forwardAllArgs": true,
+        "env": {
+          "DEVELOPER_DIR": "/Library/Developer/CommandLineTools",
+          "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        }
+      }
+    },
     "plugin": {
       "executor": "nx:run-commands",
       "options": {

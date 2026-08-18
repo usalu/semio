@@ -1,0 +1,24 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 5.50s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-p1/debug/deps/semio_framework_plugin_host-cafb77a964529217)
+
+running 1 test
+[semio-shard] pid=1664 package=scale-fixture-a actor=1 ready
+[semio-shard] pid=1665 package=scale-fixture-b actor=2 ready
+[semio-shard] pid=1681 package=scale-fixture-a actor=3 ready
+test component::process_transport::tests::process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.42s
+

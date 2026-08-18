@@ -7,6 +7,8 @@
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::diff::{self, GifDiff, GifImageAdded, GifImageDiff, GifImageModified, GifImagesDiff};
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
+#[cfg(test)]
+use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};

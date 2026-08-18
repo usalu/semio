@@ -1,0 +1,270 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.228
+    Checking cfg-if v1.0.4
+   Compiling serde v1.0.228
+   Compiling libc v0.2.186
+   Compiling version_check v0.9.5
+   Compiling zerocopy v0.8.48
+    Checking equivalent v1.0.2
+    Checking hashbrown v0.17.1
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+    Checking bitflags v2.11.1
+   Compiling anyhow v1.0.102
+   Compiling zmij v1.0.21
+    Checking once_cell v1.21.4
+    Checking memchr v2.8.0
+   Compiling ahash v0.8.12
+    Checking log v0.4.29
+   Compiling jobserver v0.1.35
+    Checking bumpalo v3.20.2
+    Checking indexmap v2.14.0
+   Compiling crc32fast v1.5.0
+   Compiling thiserror v2.0.18
+    Checking errno v0.3.14
+    Checking stable_deref_trait v1.2.1
+   Compiling serde_json v1.0.149
+   Compiling cranelift-isle v0.109.1
+   Compiling cc v1.2.62
+   Compiling target-lexicon v0.12.16
+   Compiling thiserror v1.0.69
+    Checking itoa v1.0.18
+   Compiling io-lifetimes v2.0.4
+   Compiling cranelift-codegen-shared v0.109.1
+    Checking gimli v0.28.1
+   Compiling generic-array v0.14.7
+   Compiling syn v2.0.117
+    Checking pin-project-lite v0.2.17
+   Compiling pkg-config v0.3.33
+   Compiling cranelift-codegen-meta v0.109.1
+   Compiling rustix v1.1.4
+    Checking hashbrown v0.13.2
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+    Checking slice-group-by v0.3.1
+   Compiling serde_derive v1.0.228
+   Compiling synstructure v0.13.2
+   Compiling displaydoc v0.2.5
+   Compiling thiserror-impl v2.0.18
+   Compiling zerovec-derive v0.11.3
+   Compiling wasmtime-versioned-export-macros v22.0.1
+   Compiling cranelift-codegen v0.109.1
+   Compiling thiserror-impl v1.0.69
+   Compiling crossbeam-utils v0.8.21
+    Checking rustc-hash v1.1.0
+   Compiling io-extras v0.18.4
+    Checking semver v1.0.28
+    Checking typenum v1.20.1
+    Checking arbitrary v1.4.2
+    Checking smallvec v1.15.1
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+    Checking hashbrown v0.14.5
+    Checking cranelift-entity v0.109.1
+    Checking zerofrom v0.1.8
+   Compiling object v0.36.7
+    Checking byteorder v1.5.0
+   Compiling cap-primitives v3.4.5
+    Checking cranelift-control v0.109.1
+    Checking litemap v0.8.2
+    Checking regalloc2 v0.9.3
+    Checking cranelift-bforest v0.109.1
+    Checking wasmparser v0.209.1
+    Checking foldhash v0.1.5
+    Checking yoke v0.8.2
+   Compiling rustix v0.38.44
+    Checking futures-core v0.3.32
+    Checking ambient-authority v0.0.2
+    Checking writeable v0.6.3
+    Checking fs-set-times v0.20.3
+    Checking hashbrown v0.15.5
+    Checking zerovec v0.11.6
+    Checking zerotrie v0.2.4
+    Checking cobs v0.3.0
+   Compiling zstd-safe v7.2.4
+    Checking either v1.15.0
+    Checking tinystr v0.8.3
+    Checking potential_utf v0.1.5
+    Checking ipnet v2.12.0
+   Compiling cpp_demangle v0.4.5
+    Checking futures-sink v0.3.32
+    Checking utf8_iter v1.0.4
+    Checking simd-adler32 v0.3.9
+   Compiling heck v0.4.1
+    Checking maybe-owned v0.3.4
+    Checking icu_locale_core v2.2.0
+   Compiling icu_properties_data v2.2.0
+   Compiling icu_normalizer_data v2.2.0
+    Checking crossbeam-epoch v0.9.18
+    Checking icu_collections v2.2.0
+    Checking postcard v1.1.3
+    Checking wasmtime-types v22.0.1
+    Checking icu_provider v2.2.0
+    Checking crypto-common v0.1.7
+    Checking block-buffer v0.10.4
+    Checking serde_spanned v0.6.9
+    Checking toml_datetime v0.6.11
+   Compiling async-trait v0.1.89
+   Compiling futures-macro v0.3.32
+   Compiling blake3 v1.8.5
+   Compiling dirs-sys v0.3.7
+    Checking futures-io v0.3.32
+   Compiling leb128 v0.2.7
+    Checking adler2 v2.0.1
+    Checking futures-task v0.3.32
+    Checking toml_write v0.1.2
+   Compiling unicode-xid v0.2.6
+   Compiling autocfg v1.5.0
+    Checking winnow v0.7.15
+   Compiling id-arena v2.3.0
+    Checking slab v0.4.12
+   Compiling cap-std v3.4.5
+    Checking leb128fmt v0.1.0
+   Compiling rayon-core v1.13.0
+    Checking miniz_oxide v0.8.9
+   Compiling wast v35.0.2
+   Compiling dirs v4.0.0
+   Compiling memoffset v0.9.1
+    Checking toml_edit v0.22.27
+   Compiling wit-parser v0.209.1
+    Checking wasm-encoder v0.209.1
+    Checking futures-util v0.3.32
+    Checking wasm-encoder v0.253.0
+    Checking digest v0.10.7
+    Checking crossbeam-deque v0.8.6
+    Checking itertools v0.12.1
+    Checking cranelift-frontend v0.109.1
+    Checking wasmprinter v0.209.1
+   Compiling wasmtime-fiber v22.0.1
+   Compiling tokio-macros v2.7.0
+    Checking mio v1.2.1
+    Checking dirs-sys-next v0.1.2
+    Checking socket2 v0.6.4
+    Checking getrandom v0.2.17
+    Checking cpufeatures v0.2.17
+   Compiling paste v1.0.15
+    Checking bytes v1.12.1
+    Checking constant_time_eq v0.4.2
+    Checking uuid v1.23.4
+   Compiling wasmtime-cache v22.0.1
+   Compiling zip v2.4.2
+    Checking arrayref v0.3.9
+    Checking arrayvec v0.7.6
+   Compiling inflections v1.1.1
+    Checking unicode-width v0.2.2
+    Checking rustc-demangle v0.1.28
+   Compiling libm v0.2.16
+   Compiling wasmtime-component-macro v22.0.1
+    Checking wasmtime-component-util v22.0.1
+    Checking sha2 v0.10.9
+    Checking tokio v1.52.3
+    Checking rand_core v0.6.4
+    Checking debugid v0.8.0
+    Checking directories-next v2.0.0
+    Checking wast v253.0.0
+   Compiling gltf-derive v1.4.1
+    Checking wasmtime-environ v22.0.1
+    Checking cranelift-wasm v0.109.1
+    Checking icu_properties v2.2.0
+    Checking icu_normalizer v2.2.0
+   Compiling wasmtime-wit-bindgen v22.0.1
+    Checking toml v0.8.23
+   Compiling witx v0.9.1
+    Checking zstd v0.13.3
+   Compiling shellexpand v2.1.2
+    Checking flate2 v1.1.9
+    Checking zopfli v0.8.3
+    Checking cranelift-native v0.109.1
+    Checking fxhash v0.2.1
+   Compiling wasmtime v22.0.1
+    Checking ppv-lite86 v0.2.21
+    Checking wasmtime-asm-macros v22.0.1
+    Checking base64 v0.21.7
+    Checking parking v2.2.1
+   Compiling wiggle-macro v22.0.1
+    Checking fastrand v2.4.1
+   Compiling wiggle-generate v22.0.1
+    Checking wasmtime-cranelift v22.0.1
+    Checking fxprof-processed-profile v0.6.0
+    Checking rand_chacha v0.3.1
+    Checking futures-lite v2.6.1
+    Checking rayon v1.12.0
+    Checking idna_adapter v1.2.2
+    Checking wat v1.253.0
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking gltf-json v1.4.1
+    Checking wasmtime-jit-debug v22.0.1
+    Checking wasmtime-jit-icache-coherence v22.0.1
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling tracing-attributes v0.1.31
+    Checking addr2line v0.21.0
+    Checking tracing-core v0.1.36
+    Checking mach2 v0.4.3
+    Checking encoding_rs v0.8.35
+    Checking core-foundation-sys v0.8.7
+    Checking lazy_static v1.5.0
+    Checking wasmtime-slab v22.0.1
+    Checking base64 v0.22.1
+   Compiling cap-fs-ext v3.4.5
+   Compiling system-interface v0.27.3
+    Checking sptr v0.3.2
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking percent-encoding v2.3.2
+    Checking tracing v0.1.44
+    Checking iana-time-zone v0.1.65
+    Checking idna v1.1.0
+    Checking rand v0.8.6
+    Checking gltf v1.4.1
+    Checking futures-channel v0.3.32
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking form_urlencoded v1.2.2
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking cap-time-ext v3.4.5
+    Checking cap-net-ext v3.4.5
+    Checking cap-rand v3.4.5
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+    Checking futures v0.3.32
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking url v2.5.8
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking wiggle v22.0.1
+    Checking wasmtime-wasi v22.0.1
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+error[E0164]: expected tuple struct or tuple variant, found struct variant `JobStep::Running`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️component.rs:541:43
+    |
+541 |         assert!(matches!(job_outcomes[0], JobStep::Running(None)));
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^ not a tuple struct or tuple variant
+    |
+help: the struct variant's field is being ignored
+    |
+541 -         assert!(matches!(job_outcomes[0], JobStep::Running(None)));
+541 +         assert!(matches!(job_outcomes[0], JobStep::Running { progress: _ }));
+    |
+
+error[E0164]: expected tuple struct or tuple variant, found struct variant `JobStep::Running`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️component.rs:542:43
+    |
+542 |         assert!(matches!(job_outcomes[1], JobStep::Running(Some(bytes)) if bytes == b"halfway"));
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not a tuple struct or tuple variant
+    |
+help: the struct variant's field is being ignored
+    |
+542 -         assert!(matches!(job_outcomes[1], JobStep::Running(Some(bytes)) if bytes == b"halfway"));
+542 +         assert!(matches!(job_outcomes[1], JobStep::Running { progress: _ } if bytes == b"halfway"));
+    |
+
+For more information about this error, try `rustc --explain E0164`.
+error: could not compile `semio-framework-plugin-host` (lib test) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

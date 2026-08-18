@@ -774,6 +774,12 @@ impl Backpressure {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Mailbox {
     pub capacity: u16,
+    /// 🚫️ Excluded from the TS mirror: `ts-rs` has no `TS` impl for `VecDeque`, and this field is
+    /// module-private — no TypeScript consumer can reach the per-lane rings, which cross to the web
+    /// shard as pack bytes via [`Mailbox::pack_encode`], never as a structural JSON object. Emitting
+    /// them would describe a shape the wire never carries. Found the first time typegen was ever run
+    /// for this crate (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, T1's lease).
+    #[cfg_attr(feature = "typegen", ts(skip))]
     lanes: [VecDeque<Envelope>; 4],
     len: u16,
 }
@@ -1346,10 +1352,35 @@ impl ShardTable {
         self.shard_count
     }
 
-    /// 📌️ Pins an actor to a shard chosen by round-robin over the non-exclusive pool.
+    /// 📌️ Pins an actor to the least-loaded shard of the non-exclusive pool, idempotently.
+    ///
+    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b): this was `actor.0 % pool`, which reads the
+    /// LOW bits of the packed id — but the layout is `plugin_ordinal:u16 | kind:u2 | ordinal:u32 |
+    /// generation:u14`, so those low bits are `generation`, which is **0 for every freshly activated
+    /// actor**. Every actor pinned to shard 0; the scale bench measured `perShardCounts {"0": 100}`
+    /// against 8 configured shards. The pooled-shard mechanism this ticket exists to build was
+    /// distributing nothing, and no test caught it because "pin returns a valid shard" passes
+    /// perfectly when every answer is 0.
+    ///
+    /// Least-loaded rather than a hash, because the balance bound is a REQUIREMENT, not a
+    /// preference: `📓️design-workforce.md` §4's budget 3 demands no shard exceed
+    /// `ceil(actors/K)+1`, which a hash cannot guarantee (its bucket variance exceeds that bound
+    /// well before 100 actors) and exact balancing gives by construction. Least-loaded also refills
+    /// the gaps [`unpin`] leaves, which a round-robin counter would stride straight past. Ties break
+    /// on lowest shard id, so placement is deterministic — no clock, no RNG, crate stays pure.
     pub fn pin(&mut self, actor: ActorId) -> ShardId {
+        if let Some(existing) = self.assignment.get(&actor) {
+            return *existing;
+        }
         let pool = self.shard_count.saturating_sub(self.exclusive_reserve).max(1);
-        let shard = ShardId((actor.0 % pool as u64) as u16);
+        let mut load = vec![0usize; pool as usize];
+        for shard in self.assignment.values() {
+            if (shard.0 as usize) < load.len() {
+                load[shard.0 as usize] += 1;
+            }
+        }
+        let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map(|(index, _)| index).unwrap_or(0);
+        let shard = ShardId(chosen as u16);
         self.assignment.insert(actor, shard);
         shard
     }
@@ -1517,6 +1548,13 @@ impl Scheduler {
 
     pub fn mailbox_pressure(&self, actor: ActorId) -> Option<f32> {
         self.actors.get(&actor).map(|e| e.mailbox.pressure())
+    }
+
+    /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): the one piece of an actor's scheduling entry
+    /// [`Kernel::actor_metrics_samples`] needs that [`ActorMeta`] doesn't itself carry — `lane` is
+    /// fixed at [`Scheduler::register_actor`] and never changes, so this is a plain lookup.
+    pub fn lane_of(&self, actor: ActorId) -> Option<Lane> {
+        self.actors.get(&actor).map(|e| e.lane)
     }
 
     pub fn submit(&mut self, envelope: Envelope) -> Backpressure {
@@ -1880,6 +1918,100 @@ impl KernelMetrics {
         Ok(Self { actors: pack::read_u32(bytes, pos, "KernelMetrics::actors")?, shards: pack::read_u32(bytes, pos, "KernelMetrics::shards")?, packages: pack::read_u32(bytes, pos, "KernelMetrics::packages")? })
     }
 }
+
+//#region 🗒️RuntimeMetricsSnapshot
+/// 🗒️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one live actor's row for the `os.runtime.metrics`
+/// publication — [`ActorMetrics`] joined with the kernel-level bookkeeping ([`PackageId`]/[`Lane`]/
+/// [`ActorStatus`]) it doesn't itself carry. Built by [`Kernel::actor_metrics_samples`].
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ActorMetricsSample {
+    pub id: ActorId,
+    pub package: PackageId,
+    pub lane: Lane,
+    pub status: ActorStatus,
+    pub metrics: ActorMetrics,
+}
+
+impl ActorMetricsSample {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.id.pack_encode(out);
+        self.package.pack_encode(out);
+        self.lane.pack_encode(out);
+        self.status.pack_encode(out);
+        self.metrics.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { id: ActorId::pack_decode(bytes, pos)?, package: PackageId::pack_decode(bytes, pos)?, lane: Lane::pack_decode(bytes, pos)?, status: ActorStatus::pack_decode(bytes, pos)?, metrics: ActorMetrics::pack_decode(bytes, pos)? })
+    }
+}
+
+/// 🗒️ One shard's row for the `os.runtime.metrics` publication. `metrics.heartbeat_age_ms` is left at
+/// its `Default` (0) by [`Kernel::shard_metrics_samples`] — the pure crate has no clock/transport of
+/// its own (`important.md`'s purity rule), so a host overlays the real value from its own
+/// `ShardTransport::heartbeat()` reading before publishing.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct ShardMetricsSample {
+    pub shard: ShardId,
+    pub metrics: ShardMetrics,
+}
+
+impl ShardMetricsSample {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.shard.pack_encode(out);
+        self.metrics.pack_encode(out);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self { shard: ShardId::pack_decode(bytes, pos)?, metrics: ShardMetrics::pack_decode(bytes, pos)? })
+    }
+}
+
+/// 🗒️ The exact payload [`KernelMetrics`]'s own doc comment promises: "the host publishes this as bus
+/// topic `os.runtime.metrics` at 2Hz." Built by [`Kernel::runtime_metrics_snapshot`], which takes
+/// `sampled_at_ms` as a parameter rather than reading a clock — the crate core has none (transports
+/// and time are injected, per this crate's own `Cargo.toml` description).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+pub struct RuntimeMetricsSnapshot {
+    pub kernel: KernelMetrics,
+    pub actors: Vec<ActorMetricsSample>,
+    pub shards: Vec<ShardMetricsSample>,
+    pub sampled_at_ms: u64,
+}
+
+impl RuntimeMetricsSnapshot {
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        self.kernel.pack_encode(out);
+        pack::write_vec(out, &self.actors, |o, a| a.pack_encode(o));
+        pack::write_vec(out, &self.shards, |o, s| s.pack_encode(o));
+        pack::write_u64(out, self.sampled_at_ms);
+    }
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
+        Ok(Self {
+            kernel: KernelMetrics::pack_decode(bytes, pos)?,
+            actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode)?,
+            shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode)?,
+            sampled_at_ms: pack::read_u64(bytes, pos, "RuntimeMetricsSnapshot::sampled_at_ms")?,
+        })
+    }
+}
+
+/// ⏱️ 2Hz, matching [`KernelMetrics`]'s doc comment. A `const`, not a config knob — no caller of
+/// [`runtime_metrics_due`] currently needs a different cadence.
+pub const RUNTIME_METRICS_PUBLISH_INTERVAL_MS: u64 = 500;
+
+/// ⏱️ Pure cadence gate for a host's `os.runtime.metrics` publish loop — clock injected via `now_ms`
+/// (never read internally), so a host can drive this off whatever tick source it already has (a
+/// native thread's loop timer, a web `requestAnimationFrame`/`setInterval`). `None` (never published
+/// yet) is always due.
+pub fn runtime_metrics_due(last_published_ms: Option<u64>, now_ms: u64) -> bool {
+    match last_published_ms {
+        None => true,
+        Some(last) => now_ms.saturating_sub(last) >= RUNTIME_METRICS_PUBLISH_INTERVAL_MS,
+    }
+}
+//#endregion 🗒️RuntimeMetricsSnapshot
 //#endregion 📈️Metrics
 
 //#region 🚚️ShardTransport
@@ -2170,6 +2302,39 @@ impl Kernel {
     pub fn actor_failure(&self, actor: ActorId) -> Option<&FailureState> {
         self.actors.get(&actor).map(|m| &m.failure)
     }
+
+    /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one [`ActorMetricsSample`] per live actor —
+    /// the per-actor rows of the `os.runtime.metrics` publication (`KernelMetrics`'s own doc comment).
+    pub fn actor_metrics_samples(&self) -> Vec<ActorMetricsSample> {
+        self.actors.iter().map(|(id, meta)| ActorMetricsSample { id: *id, package: meta.package.clone(), lane: self.scheduler.lane_of(*id).unwrap_or(Lane::Background), status: meta.status.clone(), metrics: meta.metrics.clone() }).collect()
+    }
+
+    /// 📈️ One [`ShardMetricsSample`] per shard holding at least one actor. `busy_ratio` is the
+    /// fraction of that shard's actors currently [`ActorStatus::Active`] — computable purely from
+    /// kernel-tracked status, no clock needed. `heartbeat_age_ms` is left at 0; see
+    /// [`ShardMetricsSample`]'s own doc comment for why a host must overlay it.
+    pub fn shard_metrics_samples(&self) -> Vec<ShardMetricsSample> {
+        let mut per_shard: HashMap<ShardId, (u32, u32)> = HashMap::new();
+        for (id, meta) in &self.actors {
+            let shard = self.shards.shard_of(*id).unwrap_or(ShardId(0));
+            let entry = per_shard.entry(shard).or_insert((0, 0));
+            entry.1 += 1;
+            if meta.status == ActorStatus::Active {
+                entry.0 += 1;
+            }
+        }
+        per_shard
+            .into_iter()
+            .map(|(shard, (active, total))| ShardMetricsSample { shard, metrics: ShardMetrics { actors: total, busy_ratio: if total > 0 { active as f32 / total as f32 } else { 0.0 }, heartbeat_age_ms: 0 } })
+            .collect()
+    }
+
+    /// 📈️ Assembles the full `os.runtime.metrics` payload — [`Kernel::metrics`] plus every actor's and
+    /// shard's sample — for a host to pack-encode and publish. `sampled_at_ms` is the caller's clock
+    /// reading, never read internally (this crate's purity rule: transports and time are injected).
+    pub fn runtime_metrics_snapshot(&self, sampled_at_ms: u64) -> RuntimeMetricsSnapshot {
+        RuntimeMetricsSnapshot { kernel: self.metrics(), actors: self.actor_metrics_samples(), shards: self.shard_metrics_samples(), sampled_at_ms }
+    }
 }
 //#endregion 🏛️Kernel
 
@@ -2232,6 +2397,18 @@ mod tests {
         round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
         round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
         round_trip!(pack_round_trip_kernel_metrics, KernelMetrics, KernelMetrics { actors: 3, shards: 4, packages: 2 });
+        round_trip!(pack_round_trip_actor_metrics_sample, ActorMetricsSample, ActorMetricsSample { id: ActorId::new(1, 0, 2, 0), package: PackageId("s.cad".into()), lane: Lane::UserVisible, status: ActorStatus::Active, metrics: ActorMetrics::default() });
+        round_trip!(pack_round_trip_shard_metrics_sample, ShardMetricsSample, ShardMetricsSample { shard: ShardId(2), metrics: ShardMetrics { actors: 5, busy_ratio: 0.4, heartbeat_age_ms: 8 } });
+        round_trip!(
+            pack_round_trip_runtime_metrics_snapshot,
+            RuntimeMetricsSnapshot,
+            RuntimeMetricsSnapshot {
+                kernel: KernelMetrics { actors: 1, shards: 1, packages: 1 },
+                actors: vec![ActorMetricsSample { id: ActorId::new(0, 0, 0, 0), package: PackageId("s.a".into()), lane: Lane::Interactive, status: ActorStatus::Active, metrics: ActorMetrics::default() }],
+                shards: vec![ShardMetricsSample { shard: ShardId(0), metrics: ShardMetrics { actors: 1, busy_ratio: 1.0, heartbeat_age_ms: 0 } }],
+                sampled_at_ms: 1234,
+            }
+        );
 
         #[test]
         fn pack_round_trip_mailbox() {
@@ -2258,6 +2435,46 @@ mod tests {
             let decoded = ActorRecord::pack_decode(&bytes, &mut pos).unwrap();
             assert_eq!(pos, bytes.len());
             assert_eq!(decoded, record);
+        }
+
+        /// 📌️ The property the old `actor.0 % pool` silently violated: 100 actors of one plugin
+        /// must SPREAD across the pool, not all land on shard 0. Every actor `activate` mints has
+        /// `generation == 0`, and generation occupied the low bits, so the old modulo returned 0 for
+        /// all of them — a bench-measured `perShardCounts {"0": 100}`. Asserts distribution, not
+        /// mere validity: a "pin returns a shard in range" test passes when every answer is 0.
+        #[test]
+        fn pin_spreads_actors_of_one_plugin_across_the_pool() {
+            let mut table = ShardTable::new(ShardKind::Thread, 8, 0);
+            let mut counts: std::collections::BTreeMap<u16, usize> = std::collections::BTreeMap::new();
+            for ordinal in 0..100u32 {
+                *counts.entry(table.pin(ActorId::new(7, 0, ordinal, 0)).0).or_default() += 1;
+            }
+            assert_eq!(counts.values().sum::<usize>(), 100);
+            assert_eq!(counts.len(), 8, "all 8 shards must receive actors, got {counts:?}");
+            assert!(*counts.values().max().unwrap() <= 100 / 8 + 1, "no shard may exceed ceil(100/8)+1: {counts:?}");
+        }
+
+        /// 🔁️ Pinning the same actor twice is idempotent — a re-pin must not consume a second slot
+        /// and skew the balance.
+        #[test]
+        fn pin_is_idempotent_for_the_same_actor() {
+            let mut table = ShardTable::new(ShardKind::Thread, 8, 0);
+            let actor = ActorId::new(3, 0, 11, 0);
+            assert_eq!(table.pin(actor), table.pin(actor));
+        }
+
+        /// 🕳️ `unpin` leaves a gap; the next `pin` must refill it rather than stride past, which is
+        /// exactly what a round-robin counter would do and why placement is least-loaded.
+        #[test]
+        fn pin_refills_the_gap_left_by_unpin() {
+            let mut table = ShardTable::new(ShardKind::Thread, 4, 0);
+            let actors: Vec<ActorId> = (0..8u32).map(|ordinal| ActorId::new(1, 0, ordinal, 0)).collect();
+            for actor in &actors {
+                table.pin(*actor);
+            }
+            let freed = table.shard_of(actors[2]).unwrap();
+            table.unpin(actors[2]);
+            assert_eq!(table.pin(ActorId::new(1, 0, 99, 0)), freed);
         }
 
         #[test]
@@ -2588,6 +2805,52 @@ mod tests {
         }
         //#endregion 🔖️KernelFacade
 
+        //#region 🔖️RuntimeMetricsSnapshot
+        /// 📈️ T1 runtime evidence: drives two real actors (different packages/lanes) through
+        /// `activate`/`submit`/`tick`/`complete`, then asserts `runtime_metrics_snapshot`'s rows —
+        /// package, lane, status, turns, shard — match what the kernel actually did, not a fake.
+        #[test]
+        fn runtime_metrics_snapshot_reflects_real_kernel_activity() {
+            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 8);
+            let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
+            let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
+
+            kernel.submit(env(cad, Lane::Interactive, 1));
+            let decision = kernel.tick(0);
+            assert_eq!(decision.run.len(), 1, "only `cad` has a pending envelope this tick");
+            kernel.complete(cad, ok_turn(), 5).unwrap();
+
+            let snapshot = kernel.runtime_metrics_snapshot(5);
+            assert_eq!(snapshot.sampled_at_ms, 5);
+            assert_eq!(snapshot.kernel.actors, 2);
+            assert_eq!(snapshot.kernel.packages, 2);
+            assert_eq!(snapshot.actors.len(), 2);
+
+            let cad_row = snapshot.actors.iter().find(|row| row.id == cad).expect("cad row present");
+            assert_eq!(cad_row.package, PackageId("s.cad".into()));
+            assert_eq!(cad_row.lane, Lane::Interactive);
+            assert_eq!(cad_row.status, ActorStatus::Active);
+            assert_eq!(cad_row.metrics.turns, 1, "the completed turn must be counted");
+
+            let stdio_row = snapshot.actors.iter().find(|row| row.id == stdio).expect("stdio row present");
+            assert_eq!(stdio_row.package, PackageId("s.stdio".into()));
+            assert_eq!(stdio_row.lane, Lane::Background);
+            assert_eq!(stdio_row.metrics.turns, 0, "stdio never got a turn");
+
+            assert!(!snapshot.shards.is_empty(), "at least one shard row for the two pinned actors");
+            let total_shard_actors: u32 = snapshot.shards.iter().map(|row| row.metrics.actors).sum();
+            assert_eq!(total_shard_actors, 2, "every actor is counted on exactly one shard");
+        }
+
+        #[test]
+        fn runtime_metrics_due_gates_at_the_2hz_interval_and_always_fires_once() {
+            assert!(runtime_metrics_due(None, 0), "never published yet must always be due");
+            assert!(!runtime_metrics_due(Some(1_000), 1_200), "200ms since last publish is inside the 500ms window");
+            assert!(runtime_metrics_due(Some(1_000), 1_500), "exactly the 500ms interval must fire");
+            assert!(runtime_metrics_due(Some(1_000), 2_000), "well past the interval must fire");
+        }
+        //#endregion 🔖️RuntimeMetricsSnapshot
+
         //#region 🔖️ShardTable
         #[test]
         fn shard_sizing_policy_clamps_native_and_web() {
@@ -2638,6 +2901,9 @@ mod tests {
         ShardMetrics::export().unwrap();
         KernelMetrics::export().unwrap();
         ActivationEvent::export().unwrap();
+        ActorMetricsSample::export().unwrap();
+        ShardMetricsSample::export().unwrap();
+        RuntimeMetricsSnapshot::export().unwrap();
     }
     //#endregion 🔖️Typegen
 }

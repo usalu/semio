@@ -11,7 +11,7 @@
 //! "`semio-shard` `[[bin]]` runs over stdio" is P1, not B1b) — this is the seam, not the process.
 
 #[cfg(test)]
-use super::{MockGuestRuntime, PackageHash, PackageId, PackageRef};
+use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
 use super::{GuestInstance, GuestRuntime, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
@@ -34,6 +34,17 @@ pub enum ShardOutcome {
     Turn { actor: u64, result: TurnResult },
     Job { actor: u64, job: u64, step: JobStep },
     Fault { actor: u64, message: String },
+    /// 📸️ `Payload::Suspend`'s outcome — `state` is [`super::GuestRuntime::checkpoint`]'s bytes
+    /// (empty when `Suspend{checkpoint: false}` asked for no snapshot). A caller on the kernel side
+    /// feeds `state` into `Kernel::suspend(actor, Some(state))` (K1's own gap this closes).
+    Checkpoint { actor: u64, state: Vec<u8> },
+    /// ▶️ `Payload::Resume`'s success outcome, sent after [`super::GuestRuntime::restore`] (when the
+    /// envelope carried checkpoint bytes) or immediately (when it did not — nothing to restore).
+    Resumed { actor: u64 },
+    /// 🛑️ `Payload::Cancel`'s outcome: every one of the actor's `running_jobs` was cancelled via
+    /// [`super::GuestRuntime::cancel_job`] and its [`super::GuestInstance`] was unregistered
+    /// (dropped) — see `ShardLoop::pump`'s dispatch arm for the semantics this variant confirms.
+    Cancelled { actor: u64 },
 }
 
 /// 🧵️ design-runtime.md §2. One `ShardLoop` per shard (an OS thread today, a `[[bin]]` process in
@@ -52,6 +63,15 @@ pub struct ShardLoop {
     /// to completion internally — so a job needing N steps needs N `pump()` calls, which is what
     /// proves resumability rather than a single-shot call.
     running_jobs: BTreeSet<(u64, u64)>,
+    /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
+    /// `Effect::SpawnJob` admission — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `placement` used
+    /// to be matched and immediately discarded (`_` in the `Effect::SpawnJob` arm). `Exclusive`
+    /// entries are routed to the FRONT of `to_step`'s per-pump order (see that construction site's
+    /// doc comment) — the honest, in-shard-only approximation of "dedicated" access a single
+    /// `ShardLoop` can give without a cross-shard/`Kernel`-level job-forwarding mechanism, which
+    /// this packet's report flags as a `lease-request` rather than faking. Entries are removed
+    /// alongside their matching `running_jobs` entry everywhere the latter is removed.
+    job_placement: HashMap<(u64, u64), JobPlacement>,
     /// 📨️ `Event::JobCompleted` synthesized when a `running_jobs` entry reaches `Done`/`Failed`,
     /// queued per originating actor and delivered at the TOP of the NEXT `pump()` call (merged
     /// into that call's `events_by_actor`) — so a job's own actor sees the completion on its next
@@ -64,7 +84,7 @@ pub struct ShardLoop {
 
 impl ShardLoop {
     pub fn new(runtime: Arc<dyn GuestRuntime>, transport: Box<dyn ShardTransport>) -> Self {
-        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), pending_completions: HashMap::new() }
+        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new() }
     }
 
     /// 📌️ Adds an already-instantiated actor to this shard's live set — called once per
@@ -86,6 +106,7 @@ impl ShardLoop {
             self.runtime.drop_instance(instance);
         }
         self.running_jobs.retain(|&(job_actor, _)| job_actor != actor.0);
+        self.job_placement.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.pending_completions.remove(&actor.0);
     }
 
@@ -122,14 +143,66 @@ impl ShardLoop {
                     events_by_actor.entry(envelope.to.0).or_default().push(event);
                 }
                 Payload::JobStep { job } => jobs_by_actor.push((envelope.to.0, job)),
-                // 🚧️ `Suspend`/`Resume`/`Cancel` are real `Payload` variants (`semio_framework_actor`,
-                // A1) with no `GuestRuntime` counterpart yet — `checkpoint`/`restore` exist on the
-                // trait but nothing here decides WHEN to call them (that is the scheduler's job,
-                // `design-runtime.md` §"FailurePolicy"/`Kernel::suspend`/`resume`, not built in this
-                // packet). Documented gap, not a silent no-op: surfaced as a `ShardOutcome::Fault` so
-                // a caller sees it rather than the envelope silently vanishing.
-                other @ (Payload::Suspend { .. } | Payload::Resume { .. } | Payload::Cancel(_)) => {
-                    self.send_outcome(&ShardOutcome::Fault { actor: envelope.to.0, message: format!("ShardLoop::pump: {other:?} has no GuestRuntime dispatch yet (needs Kernel::suspend/resume/cancel, not built in this packet)") })?;
+                // 📸️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `checkpoint:bool` gates whether a
+                // snapshot is actually taken — `false` is a plain "stop scheduling me" suspend with
+                // nothing to persist, so `state` comes back empty rather than calling `checkpoint`
+                // for bytes nobody asked for. `ActorStatus::Suspended`/`Kernel::suspend` themselves
+                // live in `🎭️actor` and are out of this file's path_scope — a caller on the OTHER
+                // end of the transport is the one that turns `ShardOutcome::Checkpoint` into a
+                // `Kernel::suspend(actor, Some(state))` call.
+                Payload::Suspend { checkpoint } => {
+                    let actor_id = envelope.to.0;
+                    let outcome = match self.instances.get_mut(&actor_id) {
+                        None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
+                        Some(instance) if checkpoint => match self.runtime.checkpoint(instance) {
+                            Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
+                            Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
+                        },
+                        Some(_) => ShardOutcome::Checkpoint { actor: actor_id, state: Vec::new() },
+                    };
+                    self.send_outcome(&outcome)?;
+                }
+                // ▶️ Mirrors `Suspend`: `checkpoint: None` means "resume as-is, nothing to restore"
+                // (the actor was never asked for a snapshot, or the caller intentionally cold-starts
+                // it) — `restore` is only called when bytes actually arrived.
+                Payload::Resume { checkpoint } => {
+                    let actor_id = envelope.to.0;
+                    let outcome = match self.instances.get_mut(&actor_id) {
+                        None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
+                        Some(instance) => match checkpoint {
+                            Some(state) => match self.runtime.restore(instance, &state) {
+                                Ok(()) => ShardOutcome::Resumed { actor: actor_id },
+                                Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
+                            },
+                            None => ShardOutcome::Resumed { actor: actor_id },
+                        },
+                    };
+                    self.send_outcome(&outcome)?;
+                }
+                // 🛑️ `Payload::Cancel(u64)` carries no doc comment of its own beyond the enum-level
+                // one (`✉️Envelope` region, `🎭️actor/🦀️component.rs`) and there is no OTHER caller
+                // anywhere in the tree to infer intent from — read and confirmed empty before writing
+                // this. Grouped with `Suspend`/`Resume` (actor lifecycle), not `JobStep` (single-job
+                // control, which already has its own guest-side path via `Effect::CancelJob`), so
+                // this is read as actor-level teardown: cancel EVERY job this actor has running via
+                // `GuestRuntime::cancel_job`, then unregister (drop) its instance outright — the bare
+                // `u64` is not consumed (no documented meaning to key behavior off), only surfaced as
+                // the actor id already is. If a future packet's doc comment reveals a narrower
+                // per-job meaning for the `u64`, this arm is the one to revisit.
+                Payload::Cancel(_) => {
+                    let actor_id = envelope.to.0;
+                    if self.instances.contains_key(&actor_id) {
+                        let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
+                        if let Some(instance) = self.instances.get_mut(&actor_id) {
+                            for job in jobs {
+                                let _ = self.runtime.cancel_job(instance, job);
+                            }
+                        }
+                        self.unregister(ActorId(actor_id));
+                        self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id })?;
+                    } else {
+                        self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") })?;
+                    }
                 }
             }
         }
@@ -143,19 +216,22 @@ impl ShardLoop {
             };
             let outcome = match self.runtime.execute_turn(instance, &events, budget_for(actor)) {
                 Ok(result) => {
-                    // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1): the generic `Effect::
-                    // SpawnJob`/`Effect::CancelJob` admission this packet closes — see
-                    // `running_jobs`'s own doc comment. `placement` (inline/isolated/exclusive)
-                    // is accepted but not yet acted on: routing to a DIFFERENT pooled/exclusive
-                    // instance needs the actor pool `Kernel::activate`/`ShardTable` builds
-                    // (`design-runtime.md` §1, `🎭️actor`/`T1-tasks` territory, not `🔌️plugin/**`)
-                    // — every placement runs on the SAME instance that spawned it in this wave, a
-                    // documented gap, not a silently faked one.
+                    // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
+                    // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
+                    // closes — see `running_jobs`'s own doc comment. `placement` (inline/isolated/
+                    // exclusive) is captured into `job_placement` and `Exclusive` is routed to the
+                    // FRONT of `to_step`'s per-pump order (below) — every placement still runs on
+                    // the SAME instance that spawned it (routing to a DIFFERENT pooled/exclusive
+                    // INSTANCE needs the actor pool `Kernel::activate`/`ShardTable` builds,
+                    // `design-runtime.md` §1, `🎭️actor` territory a single `ShardLoop` cannot reach
+                    // on its own — documented gap, not a silently faked one, see the K1 report's
+                    // lease-request).
                     for effect in &result.effects {
                         match effect {
-                            Effect::SpawnJob { job, kind, input, .. } => match self.runtime.start_job(instance, *job, kind, input.clone()) {
+                            Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()) {
                                 Ok(()) => {
                                     self.running_jobs.insert((actor_id, *job));
+                                    self.job_placement.insert((actor_id, *job), *placement);
                                 }
                                 Err(fault) => {
                                     self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) });
@@ -163,6 +239,7 @@ impl ShardLoop {
                             },
                             Effect::CancelJob { job } => {
                                 if self.running_jobs.remove(&(actor_id, *job)) {
+                                    self.job_placement.remove(&(actor_id, *job));
                                     let _ = self.runtime.cancel_job(instance, *job);
                                 }
                             }
@@ -190,6 +267,16 @@ impl ShardLoop {
                 to_step.push(pair);
             }
         }
+        // 🚦 MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `Exclusive`-placed jobs step FIRST this
+        // pump, ahead of `Inline`/`Isolated` ones — a stable sort, so relative order within each
+        // group is otherwise unchanged. This is the honest, IN-SHARD-ONLY approximation of
+        // "dedicated" access `ShardLoop` can give on its own (priority within this shard's single
+        // step phase); it is NOT cross-shard/thread isolation — that needs `Kernel::request_exclusive`
+        // plus a job-forwarding envelope between shards, neither of which exists yet (K1 report's
+        // lease-request). `job_placement` may not have an entry for an externally re-armed
+        // `Payload::JobStep` that this shard never admitted itself (no `SpawnJob` seen) — such a job
+        // sorts as non-exclusive, which is correct: this shard has no placement to honour for it.
+        to_step.sort_by_key(|pair| if matches!(self.job_placement.get(pair), Some(JobPlacement::Exclusive)) { 0u8 } else { 1u8 });
 
         for (actor_id, job) in to_step {
             let Some(instance) = self.instances.get_mut(&actor_id) else {
@@ -199,13 +286,15 @@ impl ShardLoop {
             let outcome = match self.runtime.step_job(instance, job, JOB_STEP_BUDGET) {
                 Ok(step) => {
                     match &step {
-                        JobStep::Running(_) => {}
-                        JobStep::Done(bytes) => {
+                        JobStep::Running { .. } => {}
+                        JobStep::Done { output: bytes } => {
                             self.running_jobs.remove(&(actor_id, job));
+                            self.job_placement.remove(&(actor_id, job));
                             self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Ok(bytes.clone()) });
                         }
-                        JobStep::Failed(bytes) => {
+                        JobStep::Failed { error: bytes } => {
                             self.running_jobs.remove(&(actor_id, job));
+                            self.job_placement.remove(&(actor_id, job));
                             self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(bytes.clone()) });
                         }
                     }
@@ -213,6 +302,7 @@ impl ShardLoop {
                 }
                 Err(fault) => {
                     self.running_jobs.remove(&(actor_id, job));
+                    self.job_placement.remove(&(actor_id, job));
                     self.pending_completions.entry(actor_id).or_default().push(Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault)) });
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault) }
                 }
@@ -304,7 +394,14 @@ mod tests {
     }
 
     fn encode_event_envelope(to: ActorId, seq: u64, event: &Event) -> Vec<u8> {
-        let envelope = Envelope { to, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(serde_json::to_vec(event).expect("encode event")) };
+        encode_payload_envelope(to, seq, Payload::Event(serde_json::to_vec(event).expect("encode event")))
+    }
+
+    /// ✉️ Generic envelope builder for `Suspend`/`Resume`/`Cancel` payload tests —
+    /// `encode_event_envelope` above stays as a thin wrapper over this so existing tests are
+    /// untouched.
+    fn encode_payload_envelope(to: ActorId, seq: u64, payload: Payload) -> Vec<u8> {
+        let envelope = Envelope { to, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
         let mut bytes = Vec::new();
         envelope.pack_encode(&mut bytes);
         bytes
@@ -399,9 +496,9 @@ mod tests {
         // 🔀️ `run_job_to_completion`'s own two-arm shape (Running.../Done) but with TWO `Running`
         // steps first — the resumability proof: a job that finished on step 1 would not
         // distinguish "the budget mechanism resumed it" from "it happened to be a one-shot call".
-        mock.script_job_step(actor, JobStep::Running(None));
-        mock.script_job_step(actor, JobStep::Running(Some(b"halfway".to_vec())));
-        mock.script_job_step(actor, JobStep::Done(b"reconstruction-complete".to_vec()));
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+        mock.script_job_step(actor, JobStep::Running { progress: Some(b"halfway".to_vec()) });
+        mock.script_job_step(actor, JobStep::Done { output: b"reconstruction-complete".to_vec() });
         // 🔚️ Whatever `execute_turn` call eventually receives the `Event::JobCompleted` (pump 4,
         // below) still needs a scripted outcome to return — an ordinary idle turn is enough since
         // this test only asserts what EVENTS that call was given, not its own output.
@@ -441,9 +538,9 @@ mod tests {
             })
             .collect();
         assert_eq!(job_outcomes.len(), 3, "exactly three step_job calls were made — the resumability proof");
-        assert!(matches!(job_outcomes[0], JobStep::Running(None)));
-        assert!(matches!(job_outcomes[1], JobStep::Running(Some(bytes)) if bytes == b"halfway"));
-        assert!(matches!(job_outcomes[2], JobStep::Done(bytes) if bytes == b"reconstruction-complete"));
+        assert!(matches!(job_outcomes[0], JobStep::Running { progress: None }));
+        assert!(matches!(job_outcomes[1], JobStep::Running { progress: Some(bytes) } if bytes == b"halfway"));
+        assert!(matches!(job_outcomes[2], JobStep::Done { output: bytes } if bytes == b"reconstruction-complete"));
 
         // 🎯️ The actual end-to-end proof: the ORIGINATING actor's `execute_turn` was, at some
         // point, handed a real `Event::JobCompleted{job: 777, result: Ok(..)}` — not merely that
@@ -487,4 +584,173 @@ mod tests {
         let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
         assert!(!outcomes.iter().any(|outcome| matches!(outcome, ShardOutcome::Job { .. })), "a cancelled-before-first-step job must never produce a ShardOutcome::Job");
     }
+
+    //#region 🔖️K1SuspendResumePlacement
+    /// 📸️ `Payload::Suspend { checkpoint: true }` must dispatch to `GuestRuntime::checkpoint` and
+    /// surface its bytes in a `ShardOutcome::Checkpoint` — the K1 gap: this envelope used to fault
+    /// out unconditionally instead of reaching `checkpoint` at all.
+    #[test]
+    fn suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(31);
+        let package = PackageRef { package: PackageId("suspend".to_string()), hash: PackageHash([5u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
+
+        let (transport, probe) = LoopbackTransport::paired();
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }));
+
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+
+        let driven = shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump");
+        assert_eq!(driven, 0, "Suspend is handled entirely in the drain loop, not the turn/step phases");
+
+        let outbound = probe.take_outbound();
+        assert_eq!(outbound.len(), 1);
+        let outcome: ShardOutcome = serde_json::from_slice(&outbound[0]).expect("decode outcome");
+        match outcome {
+            ShardOutcome::Checkpoint { actor: reported, state } => {
+                assert_eq!(reported, 31);
+                assert_eq!(state, b"mock-checkpoint:31".to_vec(), "MockGuestRuntime::checkpoint's own deterministic bytes must round-trip unmodified");
+            }
+            other => panic!("expected ShardOutcome::Checkpoint, got {other:?}"),
+        }
+    }
+
+    /// 🎯️ Bench budget #7's "identical state hash" property: the EXACT bytes a `Suspend{checkpoint:
+    /// true}` checkpoint produced, carried through a `Resume{checkpoint: Some(bytes)}` envelope,
+    /// must be the bytes `GuestRuntime::restore` is called with — verified by reaching into the
+    /// restored `GuestInstance`'s own mock state (this file is a descendant module of the host
+    /// crate root that defines `GuestInstanceState`, so the private field is visible here) rather
+    /// than trusting `Resumed` alone, since `MockGuestRuntime::restore` would return `Ok(())` for
+    /// ANY bytes.
+    #[test]
+    fn suspend_then_resume_round_trips_byte_identical_checkpoint_state() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(32);
+        let package = PackageRef { package: PackageId("suspend-resume".to_string()), hash: PackageHash([6u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("mock instantiate");
+
+        let (transport, probe) = LoopbackTransport::paired();
+        probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }));
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+        shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump suspend");
+
+        let suspend_outbound = probe.take_outbound();
+        let checkpoint_bytes = match serde_json::from_slice(&suspend_outbound[0]).expect("decode suspend outcome") {
+            ShardOutcome::Checkpoint { state, .. } => state,
+            other => panic!("expected ShardOutcome::Checkpoint, got {other:?}"),
+        };
+
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Resume { checkpoint: Some(checkpoint_bytes.clone()) }));
+        shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump resume");
+
+        let resume_outbound = probe.take_outbound();
+        let resume_outcome: ShardOutcome = serde_json::from_slice(&resume_outbound[0]).expect("decode resume outcome");
+        assert!(matches!(resume_outcome, ShardOutcome::Resumed { actor: reported } if reported == 32));
+
+        let instance = shard.instances.get(&actor.0).expect("Resume must not drop the instance");
+        let GuestInstanceState::Mock(mock_state) = &instance.state else { panic!("expected a Mock instance") };
+        assert_eq!(mock_state.checkpoint.as_deref(), Some(checkpoint_bytes.as_slice()), "restore must have been called with the EXACT bytes checkpoint produced");
+    }
+
+    /// 🛑️ `Payload::Cancel` must cancel every one of the actor's `running_jobs` (via
+    /// `GuestRuntime::cancel_job`) and unregister its instance — after which no further `step_job`
+    /// call for that job can ever happen, since the (actor, job) pair no longer exists in
+    /// `running_jobs` and the actor itself is no longer registered.
+    #[test]
+    fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(41);
+        let package = PackageRef { package: PackageId("cancel-payload".to_string()), hash: PackageHash([7u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
+
+        let job_id = 555u64;
+        let mut turn = MockGuestRuntime::idle_turn();
+        turn.effects.push(Effect::SpawnJob { job: job_id, kind: "remodel.reconstruct".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
+        mock.script_turn(actor, turn);
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+
+        let (transport, probe) = LoopbackTransport::paired();
+        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+
+        let driven1 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 1");
+        assert_eq!(driven1, 2, "the spawning turn plus the job's first (only scripted) step");
+        probe.take_outbound();
+
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Cancel(0)));
+        let driven2 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 2 (cancel)");
+        assert_eq!(driven2, 0, "Cancel is handled in the drain loop; the actor is unregistered before the turn/step phases run");
+        assert!(!shard.is_registered(actor), "Cancel must unregister the actor's instance");
+        assert_eq!(shard.actor_count(), 0);
+
+        let outbound2 = probe.take_outbound();
+        assert_eq!(outbound2.len(), 1);
+        let outcome: ShardOutcome = serde_json::from_slice(&outbound2[0]).expect("decode cancel outcome");
+        assert!(matches!(outcome, ShardOutcome::Cancelled { actor: reported } if reported == 41));
+
+        // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
+        // would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
+        // Exhausted`) rather than silently succeeding — no such outcome appears.
+        let driven3 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 3");
+        assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
+        assert!(probe.take_outbound().is_empty(), "no further outcome of any kind for the cancelled job");
+    }
+
+    /// 🚦 `JobPlacement::Exclusive` must be honoured rather than silently ignored: an `Exclusive`
+    /// job admitted in the SAME pump as an `Inline` one is stepped FIRST — the shard-local routing
+    /// this packet adds (see `to_step`'s own doc comment for why this is the honest in-shard-only
+    /// approximation, not cross-shard dedicated placement).
+    #[test]
+    fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump() {
+        let mock = Arc::new(MockGuestRuntime::new());
+        let actor = ActorId(51);
+        let package = PackageRef { package: PackageId("placement".to_string()), hash: PackageHash([8u8; 32]) };
+        let compiled = mock.compile(&package, &[]).expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
+
+        let inline_job = 61u64;
+        let exclusive_job = 62u64;
+        let mut turn = MockGuestRuntime::idle_turn();
+        // 🔀️ Inline is pushed FIRST in spawn order, so a passing test proves the sort actually
+        // reorders by placement rather than merely preserving admission order by coincidence.
+        turn.effects.push(Effect::SpawnJob { job: inline_job, kind: "a".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
+        turn.effects.push(Effect::SpawnJob { job: exclusive_job, kind: "b".to_string(), input: Vec::new(), placement: JobPlacement::Exclusive });
+        mock.script_turn(actor, turn);
+        // 🧯️ `Running { progress: None }`, not `Done`/`Failed` — those two `JobStep` variants are a
+        // PRE-EXISTING, out-of-path_scope serde bug (`send_outcome`'s `serde_json::to_vec` panics:
+        // "cannot serialize tagged newtype variant JobStep::Done containing a sequence", the exact
+        // same internally-tagged-newtype hazard `Running`'s own doc comment already names, just never
+        // fixed for `Done`/`Failed` — see this packet's K1 report for the lease-request). This test
+        // only needs to prove STEP ORDER, which `Running` proves identically without touching that
+        // unrelated bug.
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+        mock.script_job_step(actor, JobStep::Running { progress: None });
+
+        let (transport, probe) = LoopbackTransport::paired();
+        probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose));
+        let mut shard = ShardLoop::new(mock, Box::new(transport));
+        shard.register(actor, instance);
+
+        let driven = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump");
+        assert_eq!(driven, 3, "one turn plus two job steps this pump");
+
+        let outbound = probe.take_outbound();
+        let outcomes: Vec<ShardOutcome> = outbound.iter().map(|bytes| serde_json::from_slice(bytes).expect("decode outcome")).collect();
+        let job_order: Vec<u64> = outcomes
+            .iter()
+            .filter_map(|outcome| match outcome {
+                ShardOutcome::Job { job, .. } => Some(*job),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(job_order, vec![exclusive_job, inline_job], "the Exclusive-placed job must be stepped before the Inline one despite being spawned second");
+    }
+    //#endregion 🔖️K1SuspendResumePlacement
 }

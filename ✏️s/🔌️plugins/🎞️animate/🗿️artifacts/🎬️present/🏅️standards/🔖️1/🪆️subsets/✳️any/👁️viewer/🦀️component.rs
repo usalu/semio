@@ -7,7 +7,8 @@
 use crate::artifacts::present::{default_present_snapshot, PresentSnapshot, ANIMATE_DIALECT, PRESENT_DOCUMENT_SCHEMA};
 use crate::viewer::animate::modes::view;
 use crate::viewer::animate::modes::view::windows::tile_editor;
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, InteractionView, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
 use semio_framework_plugin::ArtifactViewer;
 use store::EngineHandles;
 

@@ -1,0 +1,18 @@
+[workspace]
+
+[package]
+name = "m3-describe-fixture"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "m3_describe"
+path = "main.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-s-plugin-flow = { path = "../../../../../../../../✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust", package = "semio-s-plugin-flow" }
+serde_json = "1"
+sha2 = "0.10"

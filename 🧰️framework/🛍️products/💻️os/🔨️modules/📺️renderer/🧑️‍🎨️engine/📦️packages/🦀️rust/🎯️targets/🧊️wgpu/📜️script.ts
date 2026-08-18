@@ -150,15 +150,38 @@ class TrunkServeScript extends BundleScript {
 }
 //#endregion 🌐️ DevServer
 
+/** 🔖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench): `--scale <registry.json>` selects the
+ * headless scale-bench mode (`scale_bench::run` in `📦️glue.rs`) — no ShellState/GPU/winit, no plugin
+ * catalog, so `NativeBuildScript`/`NativeRunScript` skip the plugin-wasm-program build and asset
+ * server entirely in this mode and just build/run `semio-wgpu-native` itself with the scale flags
+ * passed straight through, mirroring `--smoke`'s existing pass-through idiom. */
+function scaleModeArgValue(segments: readonly string[], flag: string): string | undefined {
+  const index = segments.indexOf(flag);
+  return index >= 0 ? segments[index + 1] : undefined;
+}
+
+function scaleModePassthroughArgs(segments: readonly string[]): string[] {
+  const args: string[] = [];
+  for (const flag of ["--scale", "--scale-wasm", "--shards", "--report"]) {
+    const value = scaleModeArgValue(segments, flag);
+    if (value) args.push(flag, value);
+  }
+  return args;
+}
+
 class NativeBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
     const ship = segments.includes("--dist") || segments.includes("--release");
     const cargoArgs = ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin"];
     if (ship) cargoArgs.push("--release");
     if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
       throw new Error("native wgpu renderer build failed");
     }
+    if (segments.includes("--scale")) {
+      console.log("[DEBUG] built native wgpu renderer (scale-bench mode — no plugin catalog build)");
+      return;
+    }
+    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
     const osDevScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts");
     // Recurses into os/dev's own `program` build loop, whose per-plugin `cargo build` calls are individually budgeted.
     const program = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
@@ -173,8 +196,18 @@ class NativeBuildScript extends BundleScript {
 
 class NativeRunScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
     const ship = segments.includes("--dist") || segments.includes("--release");
+    if (segments.includes("--scale")) {
+      await new NativeBuildScript(this.root).run(segments);
+      const cargoArgs = ["run"];
+      if (ship) cargoArgs.push("--release");
+      cargoArgs.push("-p", crateName, "--bin", "semio-wgpu-native", "--features", "native-bin", "--", ...scaleModePassthroughArgs(segments));
+      if (runCmdStatus("cargo", cargoArgs, { cwd: repoRoot, env: process.env, ...daemonBudgetOpts() }) !== 0) {
+        throw new Error("native wgpu scale-bench run failed");
+      }
+      return;
+    }
+    const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
     const buildSegments = segments[0] ? segments : [filterPlugin];
     await new NativeBuildScript(this.root).run(buildSegments);
     ensureAssetServer(filterPlugin);

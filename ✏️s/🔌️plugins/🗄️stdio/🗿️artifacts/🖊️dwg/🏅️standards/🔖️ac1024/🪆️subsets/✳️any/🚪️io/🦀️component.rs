@@ -11452,13 +11452,13 @@ mod tests {
         for name in expected_names {
             assert!(sections.iter().any(|s| s.name == name), "missing real section {name}");
         }
-        // Every located page must carry a real, in-bounds file address and nonzero compressed
+        // Every located page must carry a real, in-bounds file address and nonzero decoded
         // size -- proof this is genuine location, not a stub returning empty placeholders.
         for section in &sections {
             assert!(!section.pages.is_empty(), "section {} has no pages", section.name);
             for page in &section.pages {
                 assert!(page.file_address > 0, "section {} page {} has null address", section.name, page.page_number);
-                assert!(page.compressed_size > 0, "section {} page {} has zero compressed size", section.name, page.page_number);
+                assert!(!page.decoded.is_empty(), "section {} page {} decoded to zero bytes", section.name, page.page_number);
             }
         }
     }

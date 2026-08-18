@@ -1,0 +1,21 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements
+
+stderr | TaskManager/🧪️component.test.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerColumns > includes every required column id in display order, ending with actions 2ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRowAction > mints an ActionDescriptor addressed at os.task-manager with the actor id in args 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRows > localizes lane/status text and carries every metric field through as a number cell 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRows > emits all three row actions (suspend/resume/cancel), each addressed at this row's actor id 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > produces columnsJson/rowsJson that round-trip through JSON.parse into the shape Table/component.tsx expects 1ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > stays valid JSON with a full row set (multiple lanes/statuses) 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > renders one row per actor with its id and package visible 35ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > dispatches the right action for the right actor when a row's suspend/resume/cancel button is clicked 45ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > gives every action button an accessible name naming both the action and the actor (keyboard/screen-reader reachable) 18ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  16:02:55
+   Duration  5.21s (transform 1.53s, setup 118ms, import 4.44s, tests 103ms, environment 412ms)
+

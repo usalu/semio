@@ -3,7 +3,7 @@
 
 use super::mutation::CreateBlock;
 use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::schema::diff::text::forms_diff_from_delta;
+use crate::artifacts::forms::diff::text::forms_diff_from_delta;
 use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff

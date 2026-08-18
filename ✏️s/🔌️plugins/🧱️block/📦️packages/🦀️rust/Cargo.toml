@@ -54,7 +54,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 # 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `InteractionDefinition`/`InteractionRef`/
 # `GranularityDefinition`/`HierarchyProvider`/`HoverSpec`/`SelectionSpec`/`SelectionMode`/`SelectionMethod`/
 # `MergeMode` live in `semio-framework` itself (not re-exported by `semio-framework-plugin`), so apps

@@ -23,7 +23,7 @@ crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
 [dependencies]
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 # 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d moved
 # `algebra`/`optimize`/`lie`/`signal`/`spatial` wholesale into this crate's own artifact schema as
 # `crate::algebra`/`crate::optimize`/`crate::lie`/`crate::signal`/`crate::spatial`. Wave FIXALG (same

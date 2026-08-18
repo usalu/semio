@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio
+
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot > rows cover both resident and suspended actors, never activated-and-forgotten ones 2ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot > snapshot combines actor rows with ShardClient.shardMetricsSamples at the given clock reading 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > runtimeMetricsDue > gates at the 500ms / 2Hz interval, always due on the first call 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.startRuntimeMetricsPublisher > calls the sink with the os.runtime.metrics topic at the 2Hz interval, and stop() cancels it 2ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > disposes the worker-side instance and forgets the actor entirely — resume() afterward throws unknown actor 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > is a no-op for an actor this registry never activated 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > cancelling a suspended (non-resident but still tracked) actor still forgets it 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > expandPluginRegistry > includes transitive dependsOn of primary and consume-matched contributors 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > resolves the highest-minimum-fidelity route regardless of registration order 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > respects maxHops, picking the direct (weaker) shortcut when bounded to 1 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > rejects a different plugin claiming an already-owned (from,into) key 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ownerOf reports the registering plugin 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > carrierEntries returns only the sniff-declaring hops whose from is the given carrier 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioRun executes the whole route hop by hop, feeding each hop's output to the next 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioRun refuses the WHOLE route (no partial execution) when the calling plugin owns any hop 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioIdentify fans sniffHop out across carrier entries, skipping the calling plugin's own, sorted by confidence then coordinate 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioIdentify skips the calling plugin's own carrier entries 0ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  16:13:30
+   Duration  1.07s (transform 119ms, setup 0ms, import 146ms, tests 10ms, environment 705ms)
+

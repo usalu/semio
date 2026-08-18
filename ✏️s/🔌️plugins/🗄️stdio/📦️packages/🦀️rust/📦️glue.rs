@@ -34,6 +34,7 @@ pub use plugin::plugin;
 // `describe::describe_plugin()` against the committed `🛂️descriptor.semio` at this crate's owner
 // root. Mirrors `✏️s/🔌️plugins/🗒️note`'s own `semio_framework_plugin::plugin_exports!(plugin::plugin)`
 // call verbatim — stdio never had this wired up before this packet.
+#[cfg(feature = "plugin-root")]
 semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion Plugin
 

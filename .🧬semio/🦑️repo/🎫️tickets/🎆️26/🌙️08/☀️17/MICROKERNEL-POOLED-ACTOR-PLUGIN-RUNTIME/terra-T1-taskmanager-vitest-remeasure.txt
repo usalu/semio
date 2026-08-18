@@ -1,0 +1,24 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements
+
+stderr | TaskManager/🧪️component.test.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerColumns > includes every required column id in display order, ending with actions 2ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRowAction > mints an ActionDescriptor addressed at os.task-manager with the actor id in args 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRows > localizes lane/status text and carries every metric field through as a number cell 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > taskManagerRows > emits all three row actions (suspend/resume/cancel), each addressed at this row's actor id 0ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > produces columnsJson/rowsJson that round-trip through JSON.parse into the shape Table/component.tsx expects 1ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > buildTaskManagerTableScene > stays valid JSON with a full row set (multiple lanes/statuses) 1ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > renders one row per actor with its id and package visible 38ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > dispatches the right action for the right actor when a row's suspend/resume/cancel button is clicked 44ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > TaskManagerPanel > gives every action button an accessible name naming both the action and the actor (keyboard/screen-reader reachable) 20ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > suspend really checkpoints + disposes the worker-side instance, through a genuine button click 63ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > cancel really disposes and forgets the actor — resume() afterward rejects unknown actor 1ms
+ ✓ |@semio-tech/ui-react| TaskManager/🧪️component.test.tsx > createTaskManagerDispatcher wired to a real ActivationRegistry/ShardClient > resume really re-activates a suspended actor, through a genuine button click 66ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  16:13:31
+   Duration  8.05s (transform 3.04s, setup 159ms, import 6.75s, tests 237ms, environment 720ms)
+

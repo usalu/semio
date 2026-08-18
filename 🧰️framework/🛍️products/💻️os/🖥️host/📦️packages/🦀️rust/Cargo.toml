@@ -33,7 +33,7 @@ ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀
 # and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️component.rs`), deleted this same
 # wave as dead weight with zero production callers. Verified with `grep -rn "semio_framework_3d"` across this
 # crate's whole mounted input set (not just this directory) before removing the line.
-semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
+semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

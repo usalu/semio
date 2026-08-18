@@ -16245,20 +16245,33 @@ pub mod plugin_runtime {
             // (`📌️important.md`, this ticket): descriptors live at the plugin/extension OWNER ROOT,
             // sibling of the tracked `🛂️manifest.json` — NOT under `🤖️generated/`, which is globally
             // gitignored (`.gitignore` 87-88) and would mean this checked-in file could never survive
-            // a commit; `📓️design-abi.md` §3's `🤖️generated` path is superseded. Deliberately NOT a
-            // hard failure when that file doesn't exist yet — most plugin crates have not migrated to
-            // `describe` as of this packet (W3 fans out after E1/E2); `📇️registry:check`'s own
-            // descriptor gate is what tracks "not yet migrated" as a warning, this test only guards
-            // against DRIFT once a crate has opted in by committing its first descriptor.
+            // a commit; `📓️design-abi.md` §3's `🤖️generated` path is superseded.
+            //
+            // 🚦️ D0-descriptor-plumbing ratchet: a missing committed descriptor is a HARD failure only
+            // for a plugin explicitly named in `DESCRIPTOR_MIGRATED_PLUGINS` below — this is the
+            // "explicit opt-in, visible per plugin" gate `important.md` calls for, so the fleet does not
+            // go red before each plugin's own emission packet lands. Extend this list from a plugin's
+            // D-packet report the moment its `🛂️descriptor.semio` + `🔣️descriptor.json` are committed —
+            // never remove a name once added (that would be silently re-hiding a regression). The
+            // repo-wide ratchet metric this ladder climbs against is `📇️registry:check`'s own
+            // "descriptor gate: N/<total> crates have a 🔣️descriptor.json" census line — that count is
+            // the thing that should trend toward `<total>` as this list grows, never this test alone.
             #[cfg(test)]
             #[test]
             fn descriptor_is_fresh() {
                 __semio_install_plugin_bundle();
+                let plugin_id = $crate::plugin_runtime::plugin_manifest().plugin_id;
                 let assembled = $crate::describe::describe_plugin();
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
-                if let Ok(expected) = std::fs::read(expected_path) {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note"];
+                match std::fs::read(expected_path) {
+                    Ok(expected) => {
+                        if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
+                            assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                        }
+                    }
+                    Err(_) => {
+                        assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `describe` and commit 🛂️descriptor.semio + 🔣️descriptor.json");
                     }
                 }
             }
@@ -16583,20 +16596,31 @@ pub mod plugin_runtime {
             static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::component_export_anchor;
 
             // 🛂️ E1-describe (`📓️design-abi.md` §3) — see `plugin_exports!`'s identical test for the
-            // full rationale (native install, no wasm, warn-not-fail via `📇️registry:check` until a
-            // crate commits its first descriptor) and for E2-builder-descriptor's path correction
+            // full rationale (native install, no wasm) and for E2-builder-descriptor's path correction
             // (owner root, not `🤖️generated/` — that's gitignored, see the registrar ruling quoted
             // there). `describe::describe_extension()` is this macro's own counterpart of
             // `describe_plugin()`.
+            //
+            // 🚦️ D0-descriptor-plumbing ratchet — see `plugin_exports!`'s identical test for the full
+            // rationale. `DESCRIPTOR_MIGRATED_EXTENSIONS` starts empty: no extension has committed a
+            // descriptor yet as of this packet; extend it, never shrink it, as each extension's own
+            // emission packet lands.
             #[cfg(test)]
             #[test]
             fn descriptor_is_fresh() {
                 __semio_install_extension_bundle();
+                let extension_id = $crate::plugin_runtime::extension_manifest().extension_id;
                 let assembled = $crate::describe::describe_extension();
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
-                if let Ok(expected) = std::fs::read(expected_path) {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
+                match std::fs::read(expected_path) {
+                    Ok(expected) => {
+                        if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
+                            assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️descriptor.semio + 🔣️descriptor.json");
+                        }
+                    }
+                    Err(_) => {
+                        assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `describe` and commit 🛂️descriptor.semio + 🔣️descriptor.json");
                     }
                 }
             }

@@ -19,6 +19,8 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
     read_str_lp, write_str_lp,
 };
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{ObjRef, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfSnapshot};
+#[cfg(test)]
+use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{PdfIndirectObject, PdfStreamFilter};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};

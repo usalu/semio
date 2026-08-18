@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 
-use crate::artifacts::wires::schema::mutations::text::WiresMutation;
+use crate::artifacts::wires::schema::mutations::WiresMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `WiresMutation` to its binary command form.

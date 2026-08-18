@@ -18,6 +18,16 @@ role = "plugin"
 crate-type = ["cdylib", "rlib"]
 path = "📦️glue.rs"
 
+# 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
+# symbols. stdio is unusual: it is a plugin in its own right AND an rlib dependency of other plugins
+# (space's `🚪️io` deserializers). When a dependent links it, both crates emitted
+# `semio_plugin_install_bundle`/`semio_plugin_bundle_installer_link_shim` and rust-lld failed with
+# `duplicate symbol` — i.e. no plugin could depend on another. Dependents therefore take stdio with
+# `default-features = false`; only its own component build keeps `plugin-root`.
+[features]
+default = ["plugin-root"]
+plugin-root = []
+
 [dependencies]
 async-trait = "0.1.88"
 base64 = "0.22"

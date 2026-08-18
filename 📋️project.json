@@ -349,6 +349,15 @@
         }
       }
     },
+    "bench-plugins": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts bench plugins",
+        "forwardAllArgs": true
+      }
+    },
     "stdio-quick": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -446,6 +455,15 @@
       "dependsOn": ["mutation-outcome-law"],
       "options": {
         "command": "bun ./📜️script.ts verify gate"
+      }
+    },
+    "verify-rust-warnings": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify rust-warnings",
+        "forwardAllArgs": true
       }
     },
     "verify-taxonomy-report": {

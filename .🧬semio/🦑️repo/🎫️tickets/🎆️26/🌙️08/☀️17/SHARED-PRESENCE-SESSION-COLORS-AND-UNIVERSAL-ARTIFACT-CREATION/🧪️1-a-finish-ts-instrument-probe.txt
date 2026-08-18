@@ -1,0 +1,21 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest
+
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > encodeArtifactKindChoice matches the contract's pinned byte-identical fixture 1ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeArtifactKindChoice inverts the pinned fixture 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeArtifactKindChoice throws naming the missing field 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > encodeSurfaceAppChoice / decodeSurfaceAppChoice round-trip the frozen shape 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeSurfaceAppChoice throws on an invalid role 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > artifactKindChoices dedupes by dialect coordinate (owner manifest first wins), sorts, and filters by role 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > encodeArtifactKindChoice matches the contract's pinned byte-identical fixture 2ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeArtifactKindChoice inverts the pinned fixture 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeArtifactKindChoice throws naming the missing field 1ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > encodeSurfaceAppChoice / decodeSurfaceAppChoice round-trip the frozen shape 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > decodeSurfaceAppChoice throws on an invalid role 0ms
+ ✓ |probe-manifest-component| 🟦️component.ts > 🔖️HostResolvedArgs > artifactKindChoices dedupes by dialect coordinate (owner manifest first wins), sorts, and filters by role 0ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  14:05:32
+   Duration  409ms (transform 169ms, setup 0ms, import 201ms, tests 11ms, environment 0ms)
+

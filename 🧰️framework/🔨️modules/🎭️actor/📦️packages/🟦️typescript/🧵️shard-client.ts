@@ -64,6 +64,23 @@ export interface ShardEventEnvelope {
 export type ShardAsset = readonly [name: string, bytes: ArrayBuffer];
 
 export type ShardJobStep = { readonly status: "running"; readonly progress?: Uint8Array } | { readonly status: "done"; readonly value: Uint8Array } | { readonly status: "failed"; readonly value: Uint8Array };
+
+/** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
+ * emitted `🤖️generated/🟦️actor.ts`" reason as `ShardBudget` above) — MICROKERNEL-POOLED-ACTOR-PLUGIN-
+ * RUNTIME T1. Field-for-field with the Rust struct, camelCased. */
+export interface ShardMetrics {
+  readonly actors: number;
+  readonly busyRatio: number;
+  readonly heartbeatAgeMs: number;
+}
+
+/** ⚖️ Stand-in for `semio_framework_actor::ShardMetricsSample` — one row of the `os.runtime.metrics`
+ * publication's shard table, as `ShardClient.shardMetricsSamples` can observe it purely from data this
+ * class already owns (`actorIds`/`pendingRequestIds`/heartbeat state) — no wasm `Kernel` call needed. */
+export interface ShardMetricsSample {
+  readonly shard: number;
+  readonly metrics: ShardMetrics;
+}
 //#endregion 🧬️Types
 
 //#region 🌉️WorkerLike
@@ -92,7 +109,7 @@ type OutboundMessage =
 
 type InboundMessage =
   | { readonly kind: "result"; readonly requestId: string; readonly ok: true; readonly value: unknown }
-  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string }
+  | { readonly kind: "result"; readonly requestId: string; readonly ok: false; readonly error: string; readonly stack?: string; readonly type?: string; readonly framesBytes?: number }
   | { readonly kind: "heartbeat"; readonly turnSeq: number }
   | { readonly kind: "trap"; readonly actorId: string; readonly message: string };
 //#endregion 📨️WireMessages
@@ -118,7 +135,19 @@ function freshHeartbeatState(nowMs: number): ShardHeartbeatState {
 //#endregion ⏱️Heartbeat
 
 //#region 🧵️ShardClient
-type PendingEntry = { readonly resolve: (value: unknown) => void; readonly reject: (error: Error) => void; readonly shardIndex: number; readonly startedAtMs: number };
+/** 🩺️ Rebuilds a worker-side failure as a main-thread `Error` that still carries the worker's own
+ * stack. Without this the only frame a caller ever sees is `handleMessage`, because the structured
+ * clone across `postMessage` cannot carry an `Error` — which is exactly why the collaboration e2e's
+ * `Maximum call stack size exceeded` was undiagnosable. The `[DEBUG] ` line is deliberate, permanent
+ * diagnostic infrastructure the e2e log parses; it is not leftover scaffolding. */
+function graftWorkerStack(actorId: string, reason: string, stack: string | undefined, kind: string | undefined, framesBytes: number | undefined): Error {
+  const error = new Error(reason);
+  if (stack) error.stack = `${stack}\n    \u21b3 main: ${error.stack ?? ""}`;
+  console.log(`[DEBUG] program worker ${actorId || "unknown"} error type=${kind ?? "unknown"} framesBytes=${framesBytes ?? "n/a"}`);
+  return error;
+}
+
+type PendingEntry = { readonly resolve: (value: unknown) => void; readonly reject: (error: Error) => void; readonly shardIndex: number; readonly startedAtMs: number; readonly actorId: string };
 
 type ShardSlot = {
   index: number;
@@ -210,7 +239,7 @@ export class ShardClient {
     slot.pendingRequestIds.delete(message.requestId);
     this.recomputeOldestPending(slot);
     if (message.ok) entry.resolve(message.value);
-    else entry.reject(new Error(message.error));
+    else entry.reject(graftWorkerStack(entry.actorId, message.error, message.stack, message.type, message.framesBytes));
   }
 
   private recomputeOldestPending(slot: ShardSlot): void {
@@ -295,7 +324,7 @@ export class ShardClient {
     }
     return new Promise<T>((resolve, reject) => {
       const startedAtMs = this.now();
-      this.pending.set(requestId, { resolve: resolve as (value: unknown) => void, reject, shardIndex: slot.index, startedAtMs });
+      this.pending.set(requestId, { resolve: resolve as (value: unknown) => void, reject, shardIndex: slot.index, startedAtMs, actorId: "actorId" in message ? message.actorId : "" });
       slot.pendingRequestIds.add(requestId);
       if (slot.heartbeat.oldestPendingStartedAtMs === null) slot.heartbeat.oldestPendingStartedAtMs = startedAtMs;
       slot.worker.postMessage(message);
@@ -413,6 +442,26 @@ export class ShardClient {
     }
   }
   //#endregion ⏱️HeartbeatWatchdog
+
+  //#region 📈️RuntimeMetrics
+  /** 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): one `ShardMetricsSample` per shard, built
+   * purely from state this class already tracks — `actorIds.size` (`ShardMetrics.actors`),
+   * `pendingRequestIds.size / actorIds.size` (`busyRatio`: the fraction of this shard's resident
+   * actors with an in-flight `turn()` right now — the same "busy" proxy `checkHeartbeats` already
+   * uses via `oldestPendingStartedAtMs`), and `nowMs - lastHeartbeatAtMs` (`heartbeatAgeMs`; a shard
+   * that has never heartbeated reports `Number.POSITIVE_INFINITY`, matching `freshHeartbeatState`'s
+   * own "never `nowMs`" convention). Field-compatible with the Rust `ShardMetricsSample` the native
+   * host publishes — see that type's own doc comment for why `heartbeatAgeMs` needs a host overlay
+   * there but not here (this class IS the thing holding the heartbeat clock on web). */
+  shardMetricsSamples(nowMs: number = this.now()): readonly ShardMetricsSample[] {
+    return this.shards.map((slot) => {
+      const actors = slot.actorIds.size;
+      const busyRatio = actors > 0 ? slot.pendingRequestIds.size / actors : 0;
+      const heartbeatAgeMs = Number.isFinite(slot.heartbeat.lastHeartbeatAtMs) ? Math.max(0, nowMs - slot.heartbeat.lastHeartbeatAtMs) : Number.POSITIVE_INFINITY;
+      return { shard: slot.index, metrics: { actors, busyRatio, heartbeatAgeMs } };
+    });
+  }
+  //#endregion 📈️RuntimeMetrics
 
   //#region 🔁️TerminateRebuild
   /** 🔪️ Kills shard `index`'s worker and rejects every in-flight request on it. Actor routing entries
@@ -667,6 +716,39 @@ if (import.meta.vitest) {
       const activatePromise = client.activate("crashy", "https://x/c.js", [], BUDGET);
       workers[0]!.onerror?.(new Error("boom"));
       await expect(activatePromise).rejects.toThrow(/crashed/);
+    });
+  });
+
+  describe("ShardClient.shardMetricsSamples", () => {
+    it("reports zero actors/busyRatio and an infinite heartbeat age for a fresh, never-touched shard", () => {
+      const { client } = harness(2);
+      const samples = client.shardMetricsSamples(1_000);
+      expect(samples).toHaveLength(2);
+      for (const sample of samples) {
+        expect(sample.metrics.actors).toBe(0);
+        expect(sample.metrics.busyRatio).toBe(0);
+        expect(sample.metrics.heartbeatAgeMs).toBe(Number.POSITIVE_INFINITY);
+      }
+    });
+
+    it("counts resident actors and in-flight turns as busyRatio, and ages the heartbeat off the injected clock", async () => {
+      const { client, workers, setNow } = harness(1);
+      setNow(0);
+      const activateA = client.activate("a", "https://x/a.js", [], BUDGET);
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[0] as { requestId: string }).requestId, ok: true, value: undefined });
+      await activateA;
+      const activateB = client.activate("b", "https://x/b.js", [], BUDGET); // second actor, same (only) shard
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[1] as { requestId: string }).requestId, ok: true, value: undefined });
+      await activateB; // both activations settled — only the turn below should count toward busyRatio
+
+      workers[0]!.deliver({ kind: "heartbeat", turnSeq: 1 });
+      void client.turn("a", [], BUDGET); // one in-flight turn out of two resident actors, deliberately never replied
+
+      setNow(300);
+      const [sample] = client.shardMetricsSamples(300);
+      expect(sample!.metrics.actors).toBe(2);
+      expect(sample!.metrics.busyRatio).toBeCloseTo(0.5);
+      expect(sample!.metrics.heartbeatAgeMs).toBe(300);
     });
   });
 

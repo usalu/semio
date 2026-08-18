@@ -6949,6 +6949,7 @@ version = "0.1.0"
 dependencies = [
  "pretty_assertions",
  "semio-framework",
+ "semio-framework-actor",
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-os-kernel",
@@ -7003,6 +7004,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "wasmtime",
+ "wasmtime-wasi",
 ]
 
 [[package]]

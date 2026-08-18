@@ -19,6 +19,8 @@ use crate::artifacts::tiff::schema::diff::{
     read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
 };
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
+#[cfg(test)]
+use crate::artifacts::tiff::schema::snapshot::TiffTag;
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};

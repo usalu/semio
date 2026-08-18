@@ -1,3 +1,105 @@
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on package cache
     Blocking waiting for file lock on build directory
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+error: expected one of `!`, `,`, `.`, `::`, `?`, `{`, `}`, or an operator, found `corner`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:1354:189
+     |
+1354 | ...c![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some("Main".into()), instance_id: None, template_id: None  corner: N...
+     |       ----------------------                                                                                                                         - ^^^^^^ expected one of 8 possible tokens
+     |       |                                                                                                                                              |
+     |       while parsing this struct                                                                                                                      help: try adding a comma: `,`
+
+error[E0277]: the trait bound `Vec<NodeGraphNodeRecord>: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4856:43
+     |
+4856 |                 NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                           ^^^^ the trait `From<&str>` is not implemented for `Vec<NodeGraphNodeRecord>`
+     |
+     = help: the following other types implement trait `From<T>`:
+               `Vec<T, A>` implements `From<BinaryHeap<T, A>>`
+               `Vec<T, A>` implements `From<Box<[T], A>>`
+               `Vec<T, A>` implements `From<VecDeque<T, A>>`
+               `Vec<T>` implements `From<&[T; N]>`
+               `Vec<T>` implements `From<&[T]>`
+               `Vec<T>` implements `From<&mut [T; N]>`
+               `Vec<T>` implements `From<&mut [T]>`
+               `Vec<T>` implements `From<Cow<'_, [T]>>`
+             and 5 others
+     = note: required for `&str` to implement `Into<Vec<NodeGraphNodeRecord>>`
+
+error[E0277]: the trait bound `Vec<NodeGraphEdgeRecord>: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4856:56
+     |
+4856 |                 NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                                        ^^^^ the trait `From<&str>` is not implemented for `Vec<NodeGraphEdgeRecord>`
+     |
+     = help: the following other types implement trait `From<T>`:
+               `Vec<T, A>` implements `From<BinaryHeap<T, A>>`
+               `Vec<T, A>` implements `From<Box<[T], A>>`
+               `Vec<T, A>` implements `From<VecDeque<T, A>>`
+               `Vec<T>` implements `From<&[T; N]>`
+               `Vec<T>` implements `From<&[T]>`
+               `Vec<T>` implements `From<&mut [T; N]>`
+               `Vec<T>` implements `From<&mut [T]>`
+               `Vec<T>` implements `From<Cow<'_, [T]>>`
+             and 5 others
+     = note: required for `&str` to implement `Into<Vec<NodeGraphEdgeRecord>>`
+
+error[E0277]: the trait bound `NodeGraphViewport: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4856:69
+     |
+4856 |                 NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
+     |                                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `NodeGraphViewport`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3314:5
+     |
+3314 |     pub struct NodeGraphViewport {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `&str` to implement `Into<NodeGraphViewport>`
+
+error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4930:85
+     |
+4930 | ...   assert_menu_serializes(UiNode::Text(UiTextNode { menu: None, value: "x".into(), emphasize: None, data_attributes: None, pres...
+     |                                                                               ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `label_impl::Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️label.rs:34:1
+     |
+  34 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<label_impl::Label>`
+
+error[E0277]: the trait bound `label_impl::Label: From<&str>` is not satisfied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:4931:129
+     |
+4931 | ...: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Bu...
+     |                                                     ^^^^ unsatisfied trait bound
+     |
+help: the trait `From<&str>` is not implemented for `label_impl::Label`
+      but trait `From<LabelText>` is implemented for it
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️label.rs:34:1
+     |
+  34 | impl From<LabelText> for Label {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: for that trait implementation, expected `LabelText`, found `&str`
+     = note: required for `&str` to implement `Into<label_impl::Label>`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-ui` (lib test) due to 6 previous errors

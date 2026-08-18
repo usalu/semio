@@ -1,0 +1,1902 @@
+    Checking wgpu-hal v27.0.4
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking typst-library v0.14.2
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking hashlink v0.11.0
+    Checking rusqlite v0.38.0
+    Checking wgpu-core-deps-apple v27.0.0
+    Checking wgpu-core v27.0.3
+    Checking wgpu v27.0.1
+    Checking vello v0.7.0
+    Checking typst-svg v0.14.2
+    Checking typst-layout v0.14.2
+    Checking typst-eval v0.14.2
+    Checking typst-realize v0.14.2
+    Checking vello_svg v0.9.0
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking typst-html v0.14.2
+    Checking typst v0.14.2
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+    Checking semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `outcome_to_result` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/🦀️component.rs:21:15
+   |
+21 | pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+   |               ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `child_slots` and `link_slots` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:2607:9
+     |
+2589 |     pub struct ArtifactDeclaration {
+     |                ------------------- fields in this struct
+...
+2607 |         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+     |         ^^^^^^^^^^^
+2608 |         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
+     |         ^^^^^^^^^^
+
+warning: fields `schemas`, `inferences`, `languages`, and `app_schemas` are never read
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3617:9
+     |
+3615 |     pub(crate) struct PluginRuntimeRegistry {
+     |                       --------------------- fields in this struct
+3616 |         definitions: ArtifactDefinitionRegistry,
+3617 |         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+     |         ^^^^^^^
+3618 |         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
+     |         ^^^^^^^^^^
+3619 |         inference_services: ArtifactInferenceServiceRegistry,
+3620 |         languages: Vec<dsl::LanguageSpec>,
+     |         ^^^^^^^^^
+3621 |         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
+     |         ^^^^^^^^^^^
+
+warning: function `set_instance_actor` is never used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14743:19
+      |
+14743 |     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
+      |                   ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 2 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: unused import: `GltfDocument`
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs:19:213
+   |
+19 | ...Buffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+   |                                                              ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `parse_ut_mtime` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:246:4
+    |
+246 | fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
+    |    ^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `hard` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:138:8
+    |
+138 |     fn hard(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: function `soft` is never used
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/🧬️schema/🦀️component.rs:142:8
+    |
+142 |     fn soft(code: &'static str, message: String) -> Diagnostic {
+    |        ^^^^
+
+warning: variant `Ascii` is never constructed
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs:48:5
+   |
+46 | pub enum StlFormat {
+   |          --------- variant in this enum
+47 |     Binary,
+48 |     Ascii,
+   |     ^^^^^
+   |
+   = note: `StlFormat` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `semio-s-plugin-stdio` (lib) generated 5 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 1 suggestion)
+    Checking semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+    Checking semio-framework-os-flow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust)
+    Checking semio-s-plugin-procedural v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust)
+warning: struct `BeamConfig` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs:31:12
+   |
+31 | pub struct BeamConfig {
+   |            ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `Beam` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs:48:8
+   |
+48 | struct Beam {
+   |        ^^^^
+
+warning: function `score` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs:56:4
+   |
+56 | fn score(domains: &DomainStore) -> f64 {
+   |    ^^^^^
+
+warning: function `build_root` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs:60:4
+   |
+60 | fn build_root<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], metr...
+   |    ^^^^^^^^^^
+
+warning: function `beam_search` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs:94:15
+   |
+94 | pub(crate) fn beam_search<T: Topology>(model: &CompiledModel, topo: &T, beam_config: BeamConfig, seed: u64, init_domains: Option<&[P...
+   |               ^^^^^^^^^^^
+
+warning: methods `is_empty_universe`, `and_not_with`, `is_all_zero`, `is_subset_of`, `intersects`, and `is_well_formed` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎛️bitset/🦀️component.rs:39:12
+    |
+ 18 | impl PatternSet {
+    | --------------- methods in this implementation
+...
+ 39 |     pub fn is_empty_universe(&self) -> bool {
+    |            ^^^^^^^^^^^^^^^^^
+...
+ 96 |     pub fn and_not_with(&mut self, other: &PatternSet) {
+    |            ^^^^^^^^^^^^
+...
+107 |     pub fn is_all_zero(&self) -> bool {
+    |            ^^^^^^^^^^^
+...
+143 |     pub fn is_subset_of(&self, other: &PatternSet) -> bool {
+    |            ^^^^^^^^^^^^
+...
+148 |     pub fn intersects(&self, other: &PatternSet) -> bool {
+    |            ^^^^^^^^^^
+...
+158 |     pub fn is_well_formed(&self) -> bool {
+    |            ^^^^^^^^^^^^^^
+
+warning: function `chunk_seed` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🍰️chunk/🦀️component.rs:24:15
+   |
+24 | pub(crate) fn chunk_seed(world_seed: u64, chunk_x: i64, chunk_y: i64, model_fingerprint: u64) -> u64 {
+   |               ^^^^^^^^^^
+
+warning: function `solve_chunk` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🍰️chunk/🦀️component.rs:42:15
+   |
+42 | pub(crate) fn solve_chunk<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, world_seed: u64, chunk_x: i64, chunk_...
+   |               ^^^^^^^^^^^
+
+warning: enum `PatternSelector` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:24:10
+   |
+24 | pub enum PatternSelector {
+   |          ^^^^^^^^^^^^^^^
+
+warning: methods `matches` and `as_pattern_set` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:31:12
+   |
+30 | impl PatternSelector {
+   | -------------------- methods in this implementation
+31 |     pub fn matches(&self, model: &CompiledModel, p: PatternId) -> bool {
+   |            ^^^^^^^
+...
+39 |     pub fn as_pattern_set(&self, model: &CompiledModel) -> PatternSet {
+   |            ^^^^^^^^^^^^^^
+
+warning: fields `neighbors` and `regions` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:63:5
+   |
+62 | pub struct AdjacencyView {
+   |            ------------- fields in this struct
+63 |     neighbors: Vec<Vec<NodeId>>,
+   |     ^^^^^^^^^
+64 |     regions: Vec<RegionId>,
+   |     ^^^^^^^
+   |
+   = note: `AdjacencyView` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: methods `node_count`, `neighbors`, and `region_of` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:73:12
+   |
+67 | impl AdjacencyView {
+   | ------------------ methods in this implementation
+...
+73 |     pub fn node_count(&self) -> usize {
+   |            ^^^^^^^^^^
+...
+77 |     pub fn neighbors(&self, n: NodeId) -> &[NodeId] {
+   |            ^^^^^^^^^
+...
+81 |     pub fn region_of(&self, n: NodeId) -> RegionId {
+   |            ^^^^^^^^^
+
+warning: enum `Exactness` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:107:10
+    |
+107 | pub enum Exactness {
+    |          ^^^^^^^^^
+
+warning: methods `name` and `exactness` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:114:8
+    |
+113 | pub trait Constraint {
+    |           ---------- methods in this trait
+114 |     fn name(&self) -> &'static str;
+    |        ^^^^
+115 |     fn exactness(&self) -> Exactness;
+    |        ^^^^^^^^^
+
+warning: enum `Scope` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs:15:10
+   |
+15 | pub enum Scope {
+   |          ^^^^^
+
+warning: method `contains` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs:22:8
+   |
+21 | impl Scope {
+   | ---------- method in this implementation
+22 |     fn contains(&self, n: NodeId, adjacency: &AdjacencyView) -> bool {
+   |        ^^^^^^^^
+
+warning: struct `CardinalityConstraint` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs:36:12
+   |
+36 | pub struct CardinalityConstraint {
+   |            ^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs:45:12
+   |
+44 | impl CardinalityConstraint {
+   | -------------------------- associated function in this implementation
+45 |     pub fn new(model: CompiledModel, selector: PatternSelector, scope: Scope, min: u32, max: u32) -> Result<Self, ConstraintError> {
+   |            ^^^
+
+warning: struct `UnionFind` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:14:8
+   |
+14 | struct UnionFind {
+   |        ^^^^^^^^^
+
+warning: associated items `new`, `find`, and `union` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:20:8
+   |
+19 | impl UnionFind {
+   | -------------- associated items in this implementation
+20 |     fn new(n: usize) -> Self {
+   |        ^^^
+...
+24 |     fn find(&mut self, x: usize) -> usize {
+   |        ^^^^
+...
+31 |     fn union(&mut self, a: usize, b: usize) {
+   |        ^^^^^
+
+warning: struct `ConnectivityConstraint` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:53:12
+   |
+53 | pub struct ConnectivityConstraint {
+   |            ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:59:12
+   |
+58 | impl ConnectivityConstraint {
+   | --------------------------- associated function in this implementation
+59 |     pub fn new(model: CompiledModel, selector: PatternSelector) -> Self {
+   |            ^^^
+
+warning: struct `ReachabilityConstraint` is never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:104:12
+    |
+104 | pub struct ReachabilityConstraint {
+    |            ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `new` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔗️constraints-conn/🦀️component.rs:112:12
+    |
+111 | impl ReachabilityConstraint {
+    | --------------------------- associated function in this implementation
+112 |     pub fn new(model: CompiledModel, from: Vec<NodeId>, to: Vec<NodeId>, selector: PatternSelector) -> Self {
+    |            ^^^
+
+warning: variants `Summary` and `Full` are never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🩺️diag/🦀️component.rs:17:5
+   |
+13 | pub enum DiagLevel {
+   |          --------- variants in this enum
+...
+17 |     Summary,
+   |     ^^^^^^^
+...
+25 |     Full,
+   |     ^^^^
+   |
+   = note: `DiagLevel` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: method `level` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🩺️diag/🦀️component.rs:65:12
+   |
+59 | impl EventSink {
+   | -------------- method in this implementation
+...
+65 |     pub fn level(&self) -> DiagLevel {
+   |            ^^^^^
+
+warning: struct `TraceReplay` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🩺️diag/🦀️component.rs:97:12
+   |
+97 | pub struct TraceReplay {
+   |            ^^^^^^^^^^^
+
+warning: associated items `from_report` and `matches` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🩺️diag/🦀️component.rs:104:12
+    |
+103 | impl TraceReplay {
+    | ---------------- associated items in this implementation
+104 |     pub fn from_report(report: &RunReport) -> Self {
+    |            ^^^^^^^^^^^
+...
+118 |     pub fn matches(&self, other: &TraceReplay) -> bool {
+    |            ^^^^^^^
+
+warning: associated items `new_restricted`, `revision`, `sum_w_int`, `restrict`, `assign`, and `debug_assert_consistent` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌐️domain/🦀️component.rs:52:12
+    |
+ 40 | impl Domain {
+    | ----------- associated items in this implementation
+...
+ 52 |     pub fn new_restricted(allowed: &PatternSet, w: &WeightTable) -> Self {
+    |            ^^^^^^^^^^^^^^
+...
+ 69 |     pub fn revision(&self) -> u64 {
+    |            ^^^^^^^^
+...
+ 93 |     pub fn sum_w_int(&self) -> Option<u64> {
+    |            ^^^^^^^^^
+...
+158 |     pub fn restrict(&mut self, allowed: &PatternSet, w: &WeightTable) -> RestrictResult {
+    |            ^^^^^^^^
+...
+189 |     pub fn assign(&mut self, p: PatternId, w: &WeightTable) -> RestrictResult {
+    |            ^^^^^^
+...
+211 |     pub fn debug_assert_consistent(&self, w: &WeightTable) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `len`, `is_empty`, and `debug_assert_consistent` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌐️domain/🦀️component.rs:239:12
+    |
+233 | impl DomainStore {
+    | ---------------- methods in this implementation
+...
+239 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+244 |     pub fn is_empty(&self) -> bool {
+    |            ^^^^^^^^
+...
+270 |     pub fn debug_assert_consistent(&self, w: &WeightTable) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: multiple variants are never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs:14:5
+   |
+10 | pub enum ModelError {
+   |          ---------- variants in this enum
+...
+14 |     UnknownPattern(crate::wfc_engine::ids::PatternId),
+   |     ^^^^^^^^^^^^^^
+15 |     UnknownTile(crate::wfc_engine::ids::TileId),
+   |     ^^^^^^^^^^^
+16 |     UnknownRelation(crate::wfc_engine::ids::RelationId),
+   |     ^^^^^^^^^^^^^^^
+17 |     UnknownPort(crate::wfc_engine::ids::PortId),
+   |     ^^^^^^^^^^^
+18 |     /// 🚨️ The same relation name/id was registered twice.
+19 |     DuplicateRelation(crate::wfc_engine::ids::RelationId),
+   |     ^^^^^^^^^^^^^^^^^
+...
+27 |     AsymmetricInverse {
+   |     ^^^^^^^^^^^^^^^^^
+...
+35 |     InvalidSymmetryGroup {
+   |     ^^^^^^^^^^^^^^^^^^^^
+...
+39 |     IncompatibleSocketRule {
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+...
+44 |     SchemaVersionMismatch {
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ModelError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: multiple variants are never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs:83:5
+   |
+81 | pub enum TopologyError {
+   |          ------------- variants in this enum
+82 |     /// 🚨️ A grid dimension was zero where the topology forbids it.
+83 |     ZeroDimension { axis: &'static str },
+   |     ^^^^^^^^^^^^^
+84 |     /// 🚨️ `width * height` (or `* depth`) overflowed its checked integer type.
+85 |     SizeOverflow,
+   |     ^^^^^^^^^^^^
+86 |     /// 🚨️ A mask's length did not match `width * height` (`* depth`).
+87 |     MaskShapeMismatch { expected: usize, actual: usize },
+   |     ^^^^^^^^^^^^^^^^^
+88 |     /// 🚨️ A referenced `NodeId` is out of range for this topology.
+89 |     UnknownNode(crate::wfc_engine::ids::NodeId),
+   |     ^^^^^^^^^^^
+...
+93 |     InvalidStencil { reason: &'static str },
+   |     ^^^^^^^^^^^^^^
+...
+96 |     BoundaryIncompatible { reason: &'static str },
+   |     ^^^^^^^^^^^^^^^^^^^^
+97 |     /// 🚨️ A node count exceeded `u32::MAX`, the limit `crate::wfc_engine::ids::NodeId` can address.
+98 |     TooManyNodes { count: u64 },
+   |     ^^^^^^^^^^^^
+   |
+   = note: `TopologyError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variants `InvalidBounds`, `UnknownRegion`, `UnknownTag`, `EmptyTupleTable`, `ArityMismatch`, and `UnknownNode` are never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs:126:5
+    |
+124 | pub enum ConstraintError {
+    |          --------------- variants in this enum
+125 |     /// 🚨️ A cardinality/distance bound was internally inconsistent (e.g. `min > max`).
+126 |     InvalidBounds {
+    |     ^^^^^^^^^^^^^
+...
+130 |     UnknownRegion(crate::wfc_engine::ids::RegionId),
+    |     ^^^^^^^^^^^^^
+131 |     UnknownTag(u32),
+    |     ^^^^^^^^^^
+132 |     /// 🚨️ A tuple-table constraint was given zero tuples.
+133 |     EmptyTupleTable,
+    |     ^^^^^^^^^^^^^^^
+134 |     /// 🚨️ A tuple in a tuple-table constraint did not match the declared node-scope arity.
+135 |     ArityMismatch {
+    |     ^^^^^^^^^^^^^
+...
+140 |     UnknownNode(crate::wfc_engine::ids::NodeId),
+    |     ^^^^^^^^^^^
+    |
+    = note: `ConstraintError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variants `ModelTopologyMismatch`, `SeedMissingInStrictMode`, `CheckpointVersionMismatch`, and `CorruptCheckpoint` are never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚠️error/🦀️component.rs:167:5
+    |
+165 | pub enum SolveError {
+    |          ---------- variants in this enum
+166 |     /// 🚨️ A solver was built from a model and topology whose relation universes disagree.
+167 |     ModelTopologyMismatch { reason: &'static str },
+    |     ^^^^^^^^^^^^^^^^^^^^^
+168 |     /// 🚨️ Strict-integer determinism was requested but the model has no integer weight table.
+169 |     SeedMissingInStrictMode,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+170 |     /// 🚨️ A checkpoint's format/schema version does not match this build.
+171 |     CheckpointVersionMismatch { expected: u32, actual: u32 },
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+172 |     /// 🚨️ A checkpoint failed structural revalidation (bitset length, index bound, or fingerprint).
+173 |     CorruptCheckpoint { reason: &'static str },
+    |     ^^^^^^^^^^^^^^^^^
+    |
+    = note: `SolveError` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: struct `EvolveConfig` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧬️evolve/🦀️component.rs:22:12
+   |
+22 | pub struct EvolveConfig {
+   |            ^^^^^^^^^^^^
+
+warning: struct `EvolveResult` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧬️evolve/🦀️component.rs:36:12
+   |
+36 | pub struct EvolveResult {
+   |            ^^^^^^^^^^^^
+
+warning: function `derive_seed` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧬️evolve/🦀️component.rs:45:4
+   |
+45 | fn derive_seed(seed: u64, salt: u64) -> u64 {
+   |    ^^^^^^^^^^^
+
+warning: function `evolve` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧬️evolve/🦀️component.rs:57:8
+   |
+57 | pub fn evolve(base_seed: u64, config: EvolveConfig, scorer: &dyn SoftConstraint, mut solve_one: impl FnMut(u64) -> Option<Vec<Patter...
+   |        ^^^^^^
+
+warning: struct `Sample2d` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:15:12
+   |
+15 | pub struct Sample2d {
+   |            ^^^^^^^^
+
+warning: associated function `new` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:22:12
+   |
+21 | impl Sample2d {
+   | ------------- associated function in this implementation
+22 |     pub fn new(width: usize, height: usize, tiles: Vec<TileId>) -> Self {
+   |            ^^^
+
+warning: struct `Extract2dConfig` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:32:12
+   |
+32 | pub struct Extract2dConfig {
+   |            ^^^^^^^^^^^^^^^
+
+warning: struct `PatternDecoder2d` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:53:12
+   |
+53 | pub struct PatternDecoder2d {
+   |            ^^^^^^^^^^^^^^^^
+
+warning: methods `window`, `anchor_tile`, `window_of`, and `decode` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:59:12
+   |
+58 | impl PatternDecoder2d {
+   | --------------------- methods in this implementation
+59 |     pub fn window(&self) -> usize {
+   |            ^^^^^^
+...
+63 |     pub fn anchor_tile(&self, p: PatternId) -> TileId {
+   |            ^^^^^^^^^^^
+...
+67 |     pub fn window_of(&self, p: PatternId) -> &[TileId] {
+   |            ^^^^^^^^^
+...
+72 |     pub fn decode(&self, assignment: &[PatternId]) -> Vec<TileId> {
+   |            ^^^^^^
+
+warning: struct `ExtractedModel2d` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:81:12
+   |
+81 | pub struct ExtractedModel2d {
+   |            ^^^^^^^^^^^^^^^^
+
+warning: function `window_at` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:86:4
+   |
+86 | fn window_at(sample: &Sample2d, x: usize, y: usize, n: usize, periodic: bool) -> Option<Vec<TileId>> {
+   |    ^^^^^^^^^
+
+warning: function `windows_overlap_compatible` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:103:4
+    |
+103 | fn windows_overlap_compatible(a: &[TileId], b: &[TileId], n: usize, dx: i32, dy: i32) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `extract_2d` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs:119:8
+    |
+119 | pub fn extract_2d(samples: &[Sample2d], cfg: &Extract2dConfig) -> Result<ExtractedModel2d, crate::wfc_engine::error::ModelError> {
+    |        ^^^^^^^^^^
+
+warning: struct `FlowNetwork` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌊️flow/🦀️component.rs:20:8
+   |
+20 | struct FlowNetwork {
+   |        ^^^^^^^^^^^
+
+warning: associated items `new`, `add_edge`, `bfs_augment`, and `max_flow` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌊️flow/🦀️component.rs:27:8
+   |
+26 | impl FlowNetwork {
+   | ---------------- associated items in this implementation
+27 |     fn new(n: usize) -> Self {
+   |        ^^^
+...
+31 |     fn add_edge(&mut self, u: usize, v: usize, capacity: u32) {
+   |        ^^^^^^^^
+...
+43 |     fn bfs_augment(&mut self, s: usize, t: usize) -> u32 {
+   |        ^^^^^^^^^^^
+...
+82 |     fn max_flow(&mut self, s: usize, t: usize) -> u32 {
+   |        ^^^^^^^^
+
+warning: struct `FlowConstraint` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌊️flow/🦀️component.rs:99:12
+   |
+99 | pub struct FlowConstraint {
+   |            ^^^^^^^^^^^^^^
+
+warning: associated items `new` and `compute_max_flow` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🌊️flow/🦀️component.rs:108:12
+    |
+107 | impl FlowConstraint {
+    | ------------------- associated items in this implementation
+108 |     pub fn new(model: CompiledModel, selector: PatternSelector, sources: Vec<NodeId>, sinks: Vec<NodeId>, min_flow: u32) -> Self {
+    |            ^^^
+...
+112 |     fn compute_max_flow(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> u32 {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: enum `Stencil2d` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:17:10
+   |
+17 | pub enum Stencil2d {
+   |          ^^^^^^^^^
+
+warning: methods `offsets` and `validate` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:29:12
+   |
+28 | impl Stencil2d {
+   | -------------- methods in this implementation
+29 |     pub fn offsets(&self) -> Vec<(i32, i32)> {
+   |            ^^^^^^^
+...
+38 |     fn validate(&self) -> Result<(), TopologyError> {
+   |        ^^^^^^^^
+
+warning: function `declare_stencil_relations` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:62:8
+   |
+62 | pub fn declare_stencil_relations(builder: &mut ModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `declare_stencil_relations_tiled` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:78:8
+   |
+78 | pub fn declare_stencil_relations_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variants `Open`, `FixedOutside`, `Wrap`, and `Mirror` are never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:99:5
+    |
+ 97 | pub enum Boundary {
+    |          -------- variants in this enum
+ 98 |     /// 🗺️ No arc is drawn — the edge cell simply has fewer neighbors.
+ 99 |     Open,
+    |     ^^^^
+...
+103 |     FixedOutside(PatternId),
+    |     ^^^^^^^^^^^^
+104 |     /// 🗺️ The axis is periodic: `size - 1` wraps to `0` and vice versa.
+105 |     Wrap,
+    |     ^^^^
+...
+113 |     Mirror,
+    |     ^^^^^^
+    |
+    = note: `Boundary` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated items `new`, `width`, `height`, `node_at`, `inactive_cells`, and `fixed_outside_restrictions` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔲️grid-2d/🦀️component.rs:159:12
+    |
+157 | impl Grid2dTopology {
+    | ------------------- associated items in this implementation
+158 |     #[allow(clippy::too_many_arguments)]
+159 |     pub fn new(width: usize, height: usize, stencil: &Stencil2d, relations: Vec<RelationId>, boundary_x: Boundary, boundary_y: Boun...
+    |            ^^^
+...
+181 |     pub fn width(&self) -> usize {
+    |            ^^^^^
+...
+186 |     pub fn height(&self) -> usize {
+    |            ^^^^^^
+...
+191 |     pub fn node_at(&self, x: usize, y: usize) -> Option<NodeId> {
+    |            ^^^^^^^
+...
+211 |     pub fn inactive_cells(&self) -> Vec<NodeId> {
+    |            ^^^^^^^^^^^^^^
+...
+218 |     pub fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: enum `Stencil3d` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:15:10
+   |
+15 | pub enum Stencil3d {
+   |          ^^^^^^^^^
+
+warning: methods `offsets` and `validate` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:27:12
+   |
+26 | impl Stencil3d {
+   | -------------- methods in this implementation
+27 |     pub fn offsets(&self) -> Vec<(i32, i32, i32)> {
+   |            ^^^^^^^
+...
+36 |     fn validate(&self) -> Result<(), TopologyError> {
+   |        ^^^^^^^^
+
+warning: function `vertex26_offsets` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:58:4
+   |
+58 | fn vertex26_offsets() -> Vec<(i32, i32, i32)> {
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `declare_stencil_relations_3d` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:74:8
+   |
+74 | pub fn declare_stencil_relations_3d(builder: &mut ModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelError> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `declare_stencil_relations_3d_tiled` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:90:8
+   |
+90 | pub fn declare_stencil_relations_3d_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil3d) -> Result<Vec<RelationId>, ModelErro...
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: multiple associated items are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧊️grid-3d/🦀️component.rs:123:12
+    |
+121 | impl Grid3dTopology {
+    | ------------------- associated items in this implementation
+122 |     #[allow(clippy::too_many_arguments)]
+123 |     pub fn new(width: usize, height: usize, depth: usize, stencil: &Stencil3d, relations: Vec<RelationId>, boundary_x: Boundary, bo...
+    |            ^^^
+...
+148 |     pub fn width(&self) -> usize {
+    |            ^^^^^
+...
+152 |     pub fn height(&self) -> usize {
+    |            ^^^^^^
+...
+156 |     pub fn depth(&self) -> usize {
+    |            ^^^^^
+...
+166 |     pub fn node_at(&self, x: usize, y: usize, z: usize) -> Option<NodeId> {
+    |            ^^^^^^^
+...
+187 |     pub fn inactive_cells(&self) -> Vec<NodeId> {
+    |            ^^^^^^^^^^^^^^
+...
+194 |     pub fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variant `WeightedEntropy` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧭️heuristics/🦀️component.rs:17:5
+   |
+12 | pub enum ObserveHeuristic {
+   |          ---------------- variant in this enum
+...
+17 |     WeightedEntropy,
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `ObserveHeuristic` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated items `get`, `index`, and `from_index` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:15:26
+   |
+12 |           impl $name {
+   |           ---------- associated items in this implementation
+...
+15 |               pub const fn get(self) -> u32 {
+   |                            ^^^
+...
+21 |               pub const fn index(self) -> usize {
+   |                            ^^^^^
+...
+28 |               pub const fn from_index(i: usize) -> Self {
+   |                            ^^^^^^^^^^
+...
+47 | / id_newtype!(
+48 | |     /// 🧱️ A tile identity as authored (may map to several `PatternId`s under symmetry expansion).
+49 | |     TileId
+50 | | );
+   | |_- in this macro invocation
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: struct `ConstraintId` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:62:5
+   |
+62 |     ConstraintId
+   |     ^^^^^^^^^^^^
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated items `get`, `index`, and `from_index` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:15:26
+   |
+12 |           impl $name {
+   |           ---------- associated items in this implementation
+...
+15 |               pub const fn get(self) -> u32 {
+   |                            ^^^
+...
+21 |               pub const fn index(self) -> usize {
+   |                            ^^^^^
+...
+28 |               pub const fn from_index(i: usize) -> Self {
+   |                            ^^^^^^^^^^
+...
+60 | / id_newtype!(
+61 | |     /// 🧷️ One registered global/soft constraint instance.
+62 | |     ConstraintId
+63 | | );
+   | |_- in this macro invocation
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated items `get`, `index`, and `from_index` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:15:26
+   |
+12 |           impl $name {
+   |           ---------- associated items in this implementation
+...
+15 |               pub const fn get(self) -> u32 {
+   |                            ^^^
+...
+21 |               pub const fn index(self) -> usize {
+   |                            ^^^^^
+...
+28 |               pub const fn from_index(i: usize) -> Self {
+   |                            ^^^^^^^^^^
+...
+64 | / id_newtype!(
+65 | |     /// 🌳️ One search decision (a branch point in the backtracking tree).
+66 | |     DecisionId
+67 | | );
+   | |_- in this macro invocation
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated items `index` and `from_index` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:21:26
+   |
+12 |           impl $name {
+   |           ---------- associated items in this implementation
+...
+21 |               pub const fn index(self) -> usize {
+   |                            ^^^^^
+...
+28 |               pub const fn from_index(i: usize) -> Self {
+   |                            ^^^^^^^^^^
+...
+68 | / id_newtype!(
+69 | |     /// 🗺️ One named region/zone used for scoped constraints and priorities.
+70 | |     RegionId
+71 | | );
+   | |_- in this macro invocation
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: associated items `get`, `index`, and `from_index` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🆔️ids/🦀️component.rs:15:26
+   |
+12 |           impl $name {
+   |           ---------- associated items in this implementation
+...
+15 |               pub const fn get(self) -> u32 {
+   |                            ^^^
+...
+21 |               pub const fn index(self) -> usize {
+   |                            ^^^^^
+...
+28 |               pub const fn from_index(i: usize) -> Self {
+   |                            ^^^^^^^^^^
+...
+72 | / id_newtype!(
+73 | |     /// 🔌️ One connector/socket slot on a tile or graph node.
+74 | |     PortId
+75 | | );
+   | |_- in this macro invocation
+   |
+   = note: this warning originates in the macro `id_newtype` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: fields `tile` and `orbit_canonical` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:20:9
+   |
+15 | pub struct PatternInfo {
+   |            ----------- fields in this struct
+...
+20 |     pub tile: Option<TileId>,
+   |         ^^^^
+...
+23 |     pub orbit_canonical: Option<PatternId>,
+   |         ^^^^^^^^^^^^^^^
+   |
+   = note: `PatternInfo` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: methods `set_tile`, `set_orbit_canonical`, `add_tag`, `intern_tag`, `set_relation_inverse`, and `deny` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:67:12
+    |
+ 52 | impl ModelBuilder {
+    | ----------------- methods in this implementation
+...
+ 67 |     pub fn set_tile(&mut self, p: PatternId, tile: TileId) {
+    |            ^^^^^^^^
+...
+ 71 |     pub fn set_orbit_canonical(&mut self, p: PatternId, canonical: PatternId) {
+    |            ^^^^^^^^^^^^^^^^^^^
+...
+ 76 |     pub fn add_tag(&mut self, p: PatternId, name: &str) -> u32 {
+    |            ^^^^^^^
+...
+ 85 |     fn intern_tag(&mut self, name: &str) -> u32 {
+    |        ^^^^^^^^^^
+...
+107 |     pub fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
+    |            ^^^^^^^^^^^^^^^^^^^^
+...
+117 |     pub fn deny(&mut self, r: RelationId, src: PatternId, dst: PatternId) {
+    |            ^^^^
+
+warning: fields `base_support`, `tag_names`, and `tag_ids` are never read
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:182:5
+    |
+175 | pub struct CompiledModel {
+    |            ------------- fields in this struct
+...
+182 |     base_support: Vec<u32>,
+    |     ^^^^^^^^^^^^
+183 |     weights: WeightTable,
+184 |     tag_names: Vec<String>,
+    |     ^^^^^^^^^
+185 |     tag_ids: std::collections::HashMap<String, u32>,
+    |     ^^^^^^^
+    |
+    = note: `CompiledModel` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: multiple methods are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:196:12
+    |
+189 | impl CompiledModel {
+    | ------------------ methods in this implementation
+...
+196 |     pub fn relation_count(&self) -> usize {
+    |            ^^^^^^^^^^^^^^
+...
+206 |     pub fn pattern_info(&self, p: PatternId) -> &PatternInfo {
+    |            ^^^^^^^^^^^^
+...
+211 |     pub fn relation_info(&self, r: RelationId) -> &RelationInfo {
+    |            ^^^^^^^^^^^^^
+...
+216 |     pub fn inverse(&self, r: RelationId) -> RelationId {
+    |            ^^^^^^^
+...
+231 |     pub fn base_support(&self, r: RelationId, tgt: PatternId) -> u32 {
+    |            ^^^^^^^^^^^^
+...
+235 |     pub fn tag_id(&self, name: &str) -> Option<u32> {
+    |            ^^^^^^
+...
+239 |     pub fn tag_name(&self, id: u32) -> Option<&str> {
+    |            ^^^^^^^^
+...
+243 |     pub fn full_domain(&self) -> PatternSet {
+    |            ^^^^^^^^^^^
+...
+283 |     pub fn validate(&self) -> Result<(), ModelError> {
+    |            ^^^^^^^^
+...
+304 |     pub fn lint(&self) -> Vec<LintFinding> {
+    |            ^^^^
+...
+329 |     pub fn stats(&self) -> ModelStats {
+    |            ^^^^^
+
+warning: enum `LintFinding` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:351:10
+    |
+351 | pub enum LintFinding {
+    |          ^^^^^^^^^^^
+
+warning: struct `ModelStats` is never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏗️model/🦀️component.rs:364:12
+    |
+364 | pub struct ModelStats {
+    |            ^^^^^^^^^^
+
+warning: struct `ArcSpec` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:14:12
+   |
+14 | pub struct ArcSpec {
+   |            ^^^^^^^
+
+warning: struct `OracleResult` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:24:12
+   |
+24 | pub struct OracleResult {
+   |            ^^^^^^^^^^^^
+
+warning: enum `Violation` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:31:10
+   |
+31 | pub enum Violation {
+   |          ^^^^^^^^^
+
+warning: constant `DEFAULT_STEP_BUDGET` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:35:7
+   |
+35 | const DEFAULT_STEP_BUDGET: u64 = 5_000_000;
+   |       ^^^^^^^^^^^^^^^^^^^
+
+warning: function `enumerate` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:41:8
+   |
+41 | pub fn enumerate(model: &CompiledModel, node_count: usize, arcs: &[ArcSpec], init_domains: &[PatternSet], limit: usize) -> OracleRes...
+   |        ^^^^^^^^^
+
+warning: function `search` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:58:4
+   |
+58 | fn search(
+   |    ^^^^^^
+
+warning: function `check_assignment` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs:119:8
+    |
+119 | pub fn check_assignment(model: &CompiledModel, assignment: &[PatternId], arcs: &[ArcSpec]) -> Result<(), Violation> {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: fields `metrics`, `model_fingerprint`, `seed`, and `events` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:12:9
+   |
+11 | pub struct RunReport {
+   |            --------- fields in this struct
+12 |     pub metrics: Metrics,
+   |         ^^^^^^^
+13 |     pub model_fingerprint: u64,
+   |         ^^^^^^^^^^^^^^^^^
+14 |     pub seed: u64,
+   |         ^^^^
+15 |     pub events: Vec<Event>,
+   |         ^^^^^^
+   |
+   = note: `RunReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `report` is never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:24:9
+   |
+22 | pub struct Solution {
+   |            -------- field in this struct
+23 |     pub assignment: Vec<PatternId>,
+24 |     pub report: RunReport,
+   |         ^^^^^^
+   |
+   = note: `Solution` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `proven` and `report` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:31:9
+   |
+30 | pub struct UnsatReport {
+   |            ----------- fields in this struct
+31 |     pub proven: bool,
+   |         ^^^^^^
+32 |     pub report: RunReport,
+   |         ^^^^^^
+   |
+   = note: `UnsatReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `node` and `report` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:39:9
+   |
+38 | pub struct ContradictionReport {
+   |            ------------------- fields in this struct
+39 |     pub node: NodeId,
+   |         ^^^^
+40 |     pub report: RunReport,
+   |         ^^^^^^
+   |
+   = note: `ContradictionReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `domains` and `decided` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:46:9
+   |
+45 | pub struct PartialState {
+   |            ------------ fields in this struct
+46 |     pub domains: Vec<PatternSet>,
+   |         ^^^^^^^
+47 |     pub decided: Vec<Option<PatternId>>,
+   |         ^^^^^^^
+   |
+   = note: `PartialState` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `0` is never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:56:19
+   |
+56 |     Unsatisfiable(UnsatReport),
+   |     ------------- ^^^^^^^^^^^
+   |     |
+   |     field in this variant
+   |
+   = note: `SolveOutcome` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+   |
+56 -     Unsatisfiable(UnsatReport),
+56 +     Unsatisfiable(()),
+   |
+
+warning: field `0` is never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:57:19
+   |
+57 |     Contradiction(ContradictionReport),
+   |     ------------- ^^^^^^^^^^^^^^^^^^^
+   |     |
+   |     field in this variant
+   |
+   = note: `SolveOutcome` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+   |
+57 -     Contradiction(ContradictionReport),
+57 +     Contradiction(()),
+   |
+
+warning: fields `partial` and `report` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:59:9
+   |
+58 |     BudgetExceeded {
+   |     -------------- fields in this variant
+59 |         partial: PartialState,
+   |         ^^^^^^^
+60 |         report: RunReport,
+   |         ^^^^^^
+   |
+   = note: `SolveOutcome` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `partial` and `report` are never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🏁️outcome/🦀️component.rs:64:9
+   |
+63 |     Cancelled {
+   |     --------- fields in this variant
+64 |         partial: PartialState,
+   |         ^^^^^^^
+65 |         report: RunReport,
+   |         ^^^^^^
+   |
+   = note: `SolveOutcome` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: function `derive_seed` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️parallel/🦀️component.rs:22:4
+   |
+22 | fn derive_seed(base_seed: u64, i: usize) -> u64 {
+   |    ^^^^^^^^^^^
+
+warning: function `multi_start` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️parallel/🦀️component.rs:41:15
+   |
+41 | pub(crate) fn multi_start<T: Topology + Sync>(model: &CompiledModel, topo: &T, config: &SearchConfig, base_seed: u64, init_domains: ...
+   |               ^^^^^^^^^^^
+
+warning: function `halo` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔧️repair/🦀️component.rs:20:15
+   |
+20 | pub(crate) fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: usize) -> Vec<NodeId> {
+   |               ^^^^
+
+warning: function `repair_region` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔧️repair/🦀️component.rs:60:15
+   |
+60 | pub(crate) fn repair_region<T: Topology>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternI...
+   |               ^^^^^^^^^^^^^
+
+warning: variant `Uniform` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎲️sample/🦀️component.rs:16:5
+   |
+11 | pub enum ValueSampler {
+   |          ------------ variant in this enum
+...
+16 |     Uniform,
+   |     ^^^^^^^
+   |
+   = note: `ValueSampler` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variant `Backjump` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:40:5
+   |
+25 | pub enum SearchMode {
+   |          ---------- variant in this enum
+...
+40 |     Backjump,
+   |     ^^^^^^^^
+   |
+   = note: `SearchMode` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Fixed`, `Geometric`, and `Luby` are never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:61:5
+   |
+55 | pub enum RestartSchedule {
+   |          --------------- variants in this enum
+...
+61 |     Fixed(u64),
+   |     ^^^^^
+62 |     /// 🌳️ Attempt `i`'s budget is `base * factor.powi(i)`.
+63 |     Geometric { base: u64, factor: f64 },
+   |     ^^^^^^^^^
+64 |     /// 🌳️ Attempt `i`'s budget is `unit * luby(i + 1)` (the standard Luby restart sequence).
+65 |     Luby(u64),
+   |     ^^^^
+   |
+   = note: `RestartSchedule` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: associated items `new` and `cancel` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:97:12
+    |
+ 96 | impl CancelToken {
+    | ---------------- associated items in this implementation
+ 97 |     pub fn new() -> Self {
+    |            ^^^
+...
+101 |     pub fn cancel(&self) {
+    |            ^^^^^^
+
+warning: function `drive_all` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:337:4
+    |
+337 | fn drive_all<T: Topology>(
+    |    ^^^^^^^^^
+
+warning: function `solve_cancellable` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:471:15
+    |
+471 | pub(crate) fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Optio...
+    |               ^^^^^^^^^^^^^^^^^
+
+warning: function `solve_all` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:567:15
+    |
+567 | pub(crate) fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[Patt...
+    |               ^^^^^^^^^
+
+warning: function `solve_all_with_constraints` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:574:15
+    |
+574 | pub(crate) fn solve_all_with_constraints<T: Topology>(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `solve_all_inner` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs:588:4
+    |
+588 | fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSe...
+    |    ^^^^^^^^^^^^^^^
+
+warning: constant `SOURCE_MODEL_VERSION` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:21:11
+   |
+21 | pub const SOURCE_MODEL_VERSION: u32 = 1;
+   |           ^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `PatternDoc` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:24:12
+   |
+24 | pub struct PatternDoc {
+   |            ^^^^^^^^^^
+
+warning: struct `RelationDoc` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:31:12
+   |
+31 | pub struct RelationDoc {
+   |            ^^^^^^^^^^^
+
+warning: struct `PairDoc` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:40:12
+   |
+40 | pub struct PairDoc {
+   |            ^^^^^^^
+
+warning: struct `SourceModelDoc` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:55:12
+   |
+55 | pub struct SourceModelDoc {
+   |            ^^^^^^^^^^^^^^
+
+warning: associated items `from_model` and `compile` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:67:12
+    |
+ 65 | impl SourceModelDoc {
+    | ------------------- associated items in this implementation
+ 66 |     /// 💾️ Captures `model`'s pattern/relation/tag/allow shape as a serializable document.
+ 67 |     pub fn from_model(model: &CompiledModel) -> Self {
+    |            ^^^^^^^^^^
+...
+101 |     pub fn compile(&self) -> Result<CompiledModel, ModelError> {
+    |            ^^^^^^^
+
+warning: constant `CHECKPOINT_VERSION` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:135:11
+    |
+135 | pub const CHECKPOINT_VERSION: u32 = 1;
+    |           ^^^^^^^^^^^^^^^^^^
+
+warning: struct `CheckpointDoc` is never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:143:12
+    |
+143 | pub struct CheckpointDoc {
+    |            ^^^^^^^^^^^^^
+
+warning: associated items `from_checkpoint` and `into_checkpoint` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/💾️serial/🦀️component.rs:151:12
+    |
+150 | impl CheckpointDoc {
+    | ------------------ associated items in this implementation
+151 |     pub fn from_checkpoint(checkpoint: &Checkpoint) -> Self {
+    |            ^^^^^^^^^^^^^^^
+...
+158 |     pub fn into_checkpoint(self, model: &CompiledModel, node_count: usize) -> Result<Checkpoint, SolveError> {
+    |            ^^^^^^^^^^^^^^^
+
+warning: trait `SoftConstraint` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:11:11
+   |
+11 | pub trait SoftConstraint {
+   |           ^^^^^^^^^^^^^^
+
+warning: struct `ScoreFn` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:17:12
+   |
+17 | pub struct ScoreFn<F: Fn(&[PatternId]) -> f64> {
+   |            ^^^^^^^
+
+warning: enum `BestOfNKeep` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:36:10
+   |
+36 | pub enum BestOfNKeep {
+   |          ^^^^^^^^^^^
+
+warning: struct `Attempt` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:43:12
+   |
+43 | pub struct Attempt {
+   |            ^^^^^^^
+
+warning: function `best_of_n` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:52:8
+   |
+52 | pub fn best_of_n(base_seed: u64, n: u64, keep: BestOfNKeep, scorer: &dyn SoftConstraint, mut solve_one: impl FnMut(u64) -> Option<Ve...
+   |        ^^^^^^^^^
+
+warning: struct `WeightField` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:79:12
+   |
+79 | pub struct WeightField {
+   |            ^^^^^^^^^^^
+
+warning: associated items `identity`, `set`, `get`, and `node_count` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪶️soft/🦀️component.rs:86:12
+   |
+85 | impl WeightField {
+   | ---------------- associated items in this implementation
+86 |     pub fn identity(node_count: usize, pattern_count: usize) -> Self {
+   |            ^^^^^^^^
+...
+90 |     pub fn set(&mut self, n: NodeId, p: PatternId, factor: f64) {
+   |            ^^^
+...
+95 |     pub fn get(&self, n: NodeId, p: PatternId) -> f64 {
+   |            ^^^
+...
+99 |     pub fn node_count(&self) -> usize {
+   |            ^^^^^^^^^^
+
+warning: methods `domain`, `config`, and `constraint` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕸️solver-graph/🦀️component.rs:36:12
+   |
+29 | impl GraphSolverBuilder {
+   | ----------------------- methods in this implementation
+...
+36 |     pub fn domain(mut self, n: NodeId, allowed: PatternSet) -> Self {
+   |            ^^^^^^
+...
+48 |     pub fn config(mut self, cfg: SearchConfig) -> Self {
+   |            ^^^^^^
+...
+55 |     pub fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+   |            ^^^^^^^^^^
+
+warning: multiple methods are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕸️solver-graph/🦀️component.rs:100:12
+    |
+ 84 | impl GraphSolver {
+    | ---------------- methods in this implementation
+...
+100 |     pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    |            ^^^^^^^^^^^^^^^^^
+...
+109 |     pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    |            ^^^^^^^^^
+...
+118 |     pub fn resume(&mut self, checkpoint: &Checkpoint) -> Result<SolveOutcome, SolveError> {
+    |            ^^^^^^
+...
+128 |     pub fn model(&self) -> &CompiledModel {
+    |            ^^^^^
+...
+132 |     pub fn topology(&self) -> &GraphTopology {
+    |            ^^^^^^^^
+...
+140 |     pub fn repair(&self, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, seed: u64) -> SolveOutcome {
+    |            ^^^^^^
+...
+147 |     pub fn solve_beam(&self, beam_config: BeamConfig, seed: u64) -> SolveOutcome {
+    |            ^^^^^^^^^^
+...
+155 |     pub fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SolveOutcome {
+    |            ^^^^^^^^^^^^^^^^^
+
+warning: struct `Grid2dSolverBuilder` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs:18:12
+   |
+18 | pub struct Grid2dSolverBuilder {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `fix`, `domain`, `config`, `constraint`, and `build` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs:28:12
+   |
+27 | impl Grid2dSolverBuilder {
+   | ------------------------ associated items in this implementation
+28 |     pub fn new(model: CompiledModel, topology: Grid2dTopology) -> Self {
+   |            ^^^
+...
+32 |     pub fn fix(mut self, x: usize, y: usize, p: PatternId) -> Result<Self, SolveError> {
+   |            ^^^
+...
+38 |     pub fn domain(mut self, x: usize, y: usize, allowed: PatternSet) -> Result<Self, SolveError> {
+   |            ^^^^^^
+...
+46 |     pub fn config(mut self, cfg: SearchConfig) -> Self {
+   |            ^^^^^^
+...
+53 |     pub fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+   |            ^^^^^^^^^^
+...
+58 |     pub fn build(self) -> Result<Grid2dSolver, SolveError> {
+   |            ^^^^^
+
+warning: struct `Grid2dSolver` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs:79:12
+   |
+79 | pub struct Grid2dSolver {
+   |            ^^^^^^^^^^^^
+
+warning: multiple methods are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs:90:8
+    |
+ 89 | impl Grid2dSolver {
+    | ----------------- methods in this implementation
+ 90 |     fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+    |        ^^^^^^^^^^^^^^
+...
+ 98 |     pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    |            ^^^^^
+...
+105 |     pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    |            ^^^^^^^^^^^^^^^^^
+...
+112 |     pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    |            ^^^^^^^^^
+...
+119 |     pub fn model(&self) -> &CompiledModel {
+    |            ^^^^^
+...
+123 |     pub fn topology(&self) -> &Grid2dTopology {
+    |            ^^^^^^^^
+...
+131 |     pub fn solve_chunk(&self, world_seed: u64, chunk_x: i64, chunk_y: i64, seam_fixed: &[(crate::wfc_engine::ids::NodeId, PatternId...
+    |            ^^^^^^^^^^^
+...
+136 |     pub fn get(&self, solution: &Solution, x: usize, y: usize) -> Option<PatternId> {
+    |            ^^^
+...
+144 |     pub fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
+    |            ^^^^^^^^^^^^
+
+warning: struct `Grid3dSolverBuilder` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs:17:12
+   |
+17 | pub struct Grid3dSolverBuilder {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `new`, `fix`, `domain`, `config`, `constraint`, and `build` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs:27:12
+   |
+26 | impl Grid3dSolverBuilder {
+   | ------------------------ associated items in this implementation
+27 |     pub fn new(model: CompiledModel, topology: Grid3dTopology) -> Self {
+   |            ^^^
+...
+31 |     pub fn fix(mut self, x: usize, y: usize, z: usize, p: PatternId) -> Result<Self, SolveError> {
+   |            ^^^
+...
+37 |     pub fn domain(mut self, x: usize, y: usize, z: usize, allowed: PatternSet) -> Result<Self, SolveError> {
+   |            ^^^^^^
+...
+45 |     pub fn config(mut self, cfg: SearchConfig) -> Self {
+   |            ^^^^^^
+...
+52 |     pub fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+   |            ^^^^^^^^^^
+...
+57 |     pub fn build(self) -> Result<Grid3dSolver, SolveError> {
+   |            ^^^^^
+
+warning: struct `Grid3dSolver` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs:78:12
+   |
+78 | pub struct Grid3dSolver {
+   |            ^^^^^^^^^^^^
+
+warning: multiple methods are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs:89:8
+    |
+ 88 | impl Grid3dSolver {
+    | ----------------- methods in this implementation
+ 89 |     fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+    |        ^^^^^^^^^^^^^^
+...
+ 97 |     pub fn solve(&mut self, seed: u64) -> SolveOutcome {
+    |            ^^^^^
+...
+104 |     pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    |            ^^^^^^^^^^^^^^^^^
+...
+111 |     pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    |            ^^^^^^^^^
+...
+118 |     pub fn model(&self) -> &CompiledModel {
+    |            ^^^^^
+...
+122 |     pub fn topology(&self) -> &Grid3dTopology {
+    |            ^^^^^^^^
+...
+126 |     pub fn get(&self, solution: &Solution, x: usize, y: usize, z: usize) -> Option<PatternId> {
+    |            ^^^
+...
+131 |     pub fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
+    |            ^^^^^^^^^^^^
+
+warning: type alias `VoxelCoord` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕳️sparse-3d/🦀️component.rs:19:10
+   |
+19 | pub type VoxelCoord = (i32, i32, i32);
+   |          ^^^^^^^^^^
+
+warning: struct `SparseVolume` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕳️sparse-3d/🦀️component.rs:22:12
+   |
+22 | pub struct SparseVolume {
+   |            ^^^^^^^^^^^^
+
+warning: multiple associated items are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🕳️sparse-3d/🦀️component.rs:30:12
+   |
+27 | impl SparseVolume {
+   | ----------------- associated items in this implementation
+...
+30 |     pub fn from_coords(coords: impl IntoIterator<Item = VoxelCoord>) -> Self {
+   |            ^^^^^^^^^^^
+...
+43 |     pub fn len(&self) -> usize {
+   |            ^^^
+...
+48 |     pub fn is_empty(&self) -> bool {
+   |            ^^^^^^^^
+...
+53 |     pub fn contains(&self, c: VoxelCoord) -> bool {
+   |            ^^^^^^^^
+...
+59 |     pub fn coord_of(&self, n: NodeId) -> VoxelCoord {
+   |            ^^^^^^^^
+...
+63 |     pub fn node_of(&self, c: VoxelCoord) -> Option<NodeId> {
+   |            ^^^^^^^
+...
+73 |     pub fn to_graph_topology(&self, face_relations: &[(VoxelCoord, RelationId)]) -> Result<GraphTopology, TopologyError> {
+   |            ^^^^^^^^^^^^^^^^^
+
+warning: enum `Transform2d` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:12:10
+   |
+12 | pub enum Transform2d {
+   |          ^^^^^^^^^^^
+
+warning: type alias `Mat2` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:23:6
+   |
+23 | type Mat2 = (i32, i32, i32, i32);
+   |      ^^^^
+
+warning: multiple associated items are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:27:15
+   |
+25 | impl Transform2d {
+   | ---------------- associated items in this implementation
+26 |     /// 🔄️ All 8 elements, identity first.
+27 |     pub const ALL: [Transform2d; 8] = [Transform2d::Identity, Transform2d::Rot90, Transform2d::Rot180, Transform2d::Rot270, Transfor...
+   |               ^^^
+28 |
+29 |     fn matrix(self) -> Mat2 {
+   |        ^^^^^^
+...
+42 |     fn from_matrix(m: Mat2) -> Self {
+   |        ^^^^^^^^^^^
+...
+47 |     pub fn semio_compose_rs(self, other: Transform2d) -> Transform2d {
+   |            ^^^^^^^^^^^^^^^^
+...
+53 |     pub fn inverse(self) -> Transform2d {
+   |            ^^^^^^^
+...
+62 |     pub fn swaps_dimensions(self) -> bool {
+   |            ^^^^^^^^^^^^^^^^
+...
+67 |     pub fn apply_offset(self, (dx, dy): (i32, i32)) -> (i32, i32) {
+   |            ^^^^^^^^^^^^
+...
+74 |     pub fn apply_window(self, width: usize, height: usize, tiles: &[TileId]) -> (usize, usize, Vec<TileId>) {
+   |            ^^^^^^^^^^^^
+
+warning: enum `SymmetryGroup2d` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:98:10
+   |
+98 | pub enum SymmetryGroup2d {
+   |          ^^^^^^^^^^^^^^^
+
+warning: method `elements` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:111:12
+    |
+110 | impl SymmetryGroup2d {
+    | -------------------- method in this implementation
+111 |     pub fn elements(&self) -> Vec<Transform2d> {
+    |            ^^^^^^^^
+
+warning: type alias `Mat3` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:125:6
+    |
+125 | type Mat3 = [[i32; 3]; 3];
+    |      ^^^^
+
+warning: function `mat3_mul` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:127:4
+    |
+127 | fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
+    |    ^^^^^^^^
+
+warning: function `mat3_identity` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:137:4
+    |
+137 | fn mat3_identity() -> Mat3 {
+    |    ^^^^^^^^^^^^^
+
+warning: function `mat3_transpose` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:141:4
+    |
+141 | fn mat3_transpose(a: Mat3) -> Mat3 {
+    |    ^^^^^^^^^^^^^^
+
+warning: struct `Transform3d` is never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:156:12
+    |
+156 | pub struct Transform3d(Mat3);
+    |            ^^^^^^^^^^^
+
+warning: associated items `identity`, `semio_compose_rs`, `inverse`, `apply_offset`, and `determinant` are never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:159:12
+    |
+158 | impl Transform3d {
+    | ---------------- associated items in this implementation
+159 |     pub fn identity() -> Self {
+    |            ^^^^^^^^
+...
+164 |     pub fn semio_compose_rs(self, other: Transform3d) -> Transform3d {
+    |            ^^^^^^^^^^^^^^^^
+...
+169 |     pub fn inverse(self) -> Transform3d {
+    |            ^^^^^^^
+...
+173 |     pub fn apply_offset(self, (dx, dy, dz): (i32, i32, i32)) -> (i32, i32, i32) {
+    |            ^^^^^^^^^^^^
+...
+178 |     pub fn determinant(self) -> i32 {
+    |            ^^^^^^^^^^^
+
+warning: function `rot_x90` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:184:4
+    |
+184 | fn rot_x90() -> Mat3 {
+    |    ^^^^^^^
+
+warning: function `rot_z90` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:188:4
+    |
+188 | fn rot_z90() -> Mat3 {
+    |    ^^^^^^^
+
+warning: function `reflect_x` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:192:4
+    |
+192 | fn reflect_x() -> Mat3 {
+    |    ^^^^^^^^^
+
+warning: function `closure` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:196:4
+    |
+196 | fn closure(generators: &[Mat3]) -> Vec<Mat3> {
+    |    ^^^^^^^
+
+warning: function `cube_rotations_24` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:217:8
+    |
+217 | pub fn cube_rotations_24() -> Vec<Transform3d> {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: function `cube_symmetries_48` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:222:8
+    |
+222 | pub fn cube_symmetries_48() -> Vec<Transform3d> {
+    |        ^^^^^^^^^^^^^^^^^^
+
+warning: enum `SymmetryGroup3d` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:228:10
+    |
+228 | pub enum SymmetryGroup3d {
+    |          ^^^^^^^^^^^^^^^
+
+warning: method `elements` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪞️symmetry/🦀️component.rs:241:12
+    |
+240 | impl SymmetryGroup3d {
+    | -------------------- method in this implementation
+241 |     pub fn elements(&self) -> Vec<Transform3d> {
+    |            ^^^^^^^^
+
+warning: struct `TiledModelBuilder` is never constructed
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🀄️tiled/🦀️component.rs:12:12
+   |
+12 | pub struct TiledModelBuilder {
+   |            ^^^^^^^^^^^^^^^^^
+
+warning: multiple associated items are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🀄️tiled/🦀️component.rs:18:12
+   |
+17 | impl TiledModelBuilder {
+   | ---------------------- associated items in this implementation
+18 |     pub fn new() -> Self {
+   |            ^^^
+...
+23 |     pub fn tile(&mut self, weight: f64) -> TileId {
+   |            ^^^^
+...
+31 |     pub fn tag(&mut self, tile: TileId, name: &str) -> u32 {
+   |            ^^^
+...
+35 |     pub fn relation(&mut self, name: &str) -> RelationId {
+   |            ^^^^^^^^
+...
+39 |     pub fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
+   |            ^^^^^^^^^^^^^^^^^^^^
+...
+43 |     pub fn allow(&mut self, r: RelationId, a: TileId, b: TileId) {
+   |            ^^^^^
+...
+48 |     pub fn deny(&mut self, r: RelationId, a: TileId, b: TileId) {
+   |            ^^^^
+...
+52 |     pub fn allow_mirrored(&mut self, r: RelationId, a: TileId, b: TileId) {
+   |            ^^^^^^^^^^^^^^
+...
+58 |     pub fn allow_where(&mut self, r: RelationId, tiles: &[TileId], pred: impl Fn(TileId, TileId) -> bool) {
+   |            ^^^^^^^^^^^
+...
+68 |     pub fn pattern_of(&self, tile: TileId) -> crate::wfc_engine::ids::PatternId {
+   |            ^^^^^^^^^^
+...
+72 |     pub fn tile_count(&self) -> usize {
+   |            ^^^^^^^^^^
+...
+76 |     pub fn compile(self) -> Result<CompiledModel, ModelError> {
+   |            ^^^^^^^
+
+warning: methods `arc_count`, `out_degree`, and `in_degree` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🗺️topology/🦀️component.rs:60:12
+   |
+53 | impl GraphTopology {
+   | ------------------ methods in this implementation
+...
+60 |     pub fn arc_count(&self) -> usize {
+   |            ^^^^^^^^^
+...
+64 |     pub fn out_degree(&self, n: NodeId) -> usize {
+   |            ^^^^^^^^^^
+...
+68 |     pub fn in_degree(&self, n: NodeId) -> usize {
+   |            ^^^^^^^^^
+
+warning: method `region` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🗺️topology/🦀️component.rs:133:12
+    |
+123 | impl GraphTopologyBuilder {
+    | ------------------------- method in this implementation
+...
+133 |     pub fn region(&mut self, n: NodeId, r: RegionId) -> &mut Self {
+    |            ^^^^^^
+
+warning: function `from_graph_view` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🗺️topology/🦀️component.rs:187:8
+    |
+187 | pub fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(graph_core::EdgeRef) -> RelationId) -> Result<GraphTopolo...
+    |        ^^^^^^^^^^^^^^^
+
+warning: struct `Checkpoint` is never constructed
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🐾️trail/🦀️component.rs:102:12
+    |
+102 | pub struct Checkpoint {
+    |            ^^^^^^^^^^
+
+warning: associated function `new` is never used
+   --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🐾️trail/🦀️component.rs:109:12
+    |
+108 | impl Checkpoint {
+    | --------------- associated function in this implementation
+109 |     pub fn new(domains: Vec<PatternSet>, model_fingerprint: u64, seed: u64) -> Self {
+    |            ^^^
+
+warning: enum `WeightMode` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs:13:10
+   |
+13 | pub enum WeightMode {
+   |          ^^^^^^^^^^
+
+warning: enum `ZeroWeightPolicy` is never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs:21:10
+   |
+21 | pub enum ZeroWeightPolicy {
+   |          ^^^^^^^^^^^^^^^^
+
+warning: field `ln_w` is never read
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs:38:5
+   |
+36 | pub struct WeightTable {
+   |            ----------- field in this struct
+37 |     w: Vec<f64>,
+38 |     ln_w: Vec<f64>,
+   |     ^^^^
+   |
+   = note: `WeightTable` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: methods `is_empty` and `ln_w` are never used
+  --> ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/./../../🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⚖️weights/🦀️component.rs:76:12
+   |
+43 | impl WeightTable {
+   | ---------------- methods in this implementation
+...
+76 |     pub fn is_empty(&self) -> bool {
+   |            ^^^^^^^^
+...
+86 |     pub fn ln_w(&self, p: PatternId) -> f64 {
+   |            ^^^^
+
+warning: `semio-s-plugin-procedural` (lib) generated 164 warnings
+    Finished `dev` profile [unoptimized] target(s) in 47.11s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

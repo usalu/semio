@@ -41,25 +41,18 @@ pub mod host {
         pub topic_contribution: TopicContribution,
     }
 
-    //#region 🔖️ProgramSupervisorState
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum ProgramSupervisorState {
-        Loaded,
-        Running,
-        Crashed,
-        TimedOut,
-        Restarting,
-        Quarantined,
-        Unloaded,
-    }
-    //#endregion 🔖️ProgramSupervisorState
-
     pub struct PluginHost {
         registry: PluginRegistry,
         instances: HashMap<u32, OsInstanceState>,
         next_instance_id: u32,
         programs: HashMap<String, LoadedProgram>,
-        supervisor: HashMap<String, ProgramSupervisorState>,
+        //#region 🔖️Quarantine
+        /// 🚧️ Plugin ids currently held out of rotation for `recovery_ui`. No producer in this crate
+        /// sets this today (nothing here is wired to the actor kernel's `FailureStage::Quarantined` —
+        /// see `📓️terra-C1-report.md`); `load_plugin`/`hot_swap_plugin` clear it on every successful
+        /// or rolled-back load, matching a manual operator restart.
+        quarantined: HashSet<String>,
+        //#endregion 🔖️Quarantine
     }
 
     impl Default for PluginHost {
@@ -70,11 +63,11 @@ pub mod host {
 
     impl PluginHost {
         pub fn new() -> Self {
-            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), supervisor: HashMap::new() }
+            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), quarantined: HashSet::new() }
         }
 
-        pub fn supervisor_state(&self, plugin_id: &str) -> Option<ProgramSupervisorState> {
-            self.supervisor.get(plugin_id).copied()
+        pub fn is_quarantined(&self, plugin_id: &str) -> bool {
+            self.quarantined.contains(plugin_id)
         }
 
         pub fn registry(&self) -> &PluginRegistry {
@@ -100,7 +93,7 @@ pub mod host {
             }
             crate::registry::register_artifact_descriptors(&program.manifest);
             self.programs.insert(plugin_id.clone(), program);
-            self.supervisor.insert(plugin_id.clone(), ProgramSupervisorState::Running);
+            self.quarantined.remove(&plugin_id);
             ProgramHotSwapEvent { plugin_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
         }
 
@@ -109,7 +102,7 @@ pub mod host {
             let rollback = HotSwapRollback { previous_plugin: self.programs.get(&plugin_id).cloned(), instance_generations: self.instances.iter().map(|(id, state)| (*id, state.generation)).collect() };
 
             if let Err(error) = validate_plugin_manifest(&program) {
-                self.supervisor.insert(plugin_id.clone(), ProgramSupervisorState::Loaded);
+                self.quarantined.remove(&plugin_id);
                 return rollback.emit_failure(plugin_id, error);
             }
 
@@ -146,7 +139,7 @@ pub mod host {
             for instance in self.instances.values_mut() {
                 instance.generation += 1;
             }
-            self.supervisor.insert(plugin_id.clone(), ProgramSupervisorState::Running);
+            self.quarantined.remove(&plugin_id);
             ProgramHotSwapEvent { plugin_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
         }
 
@@ -190,8 +183,7 @@ pub mod host {
         /// has no locale on hand at this call site (no `ViewModel` threaded into `recovery_ui`), so
         /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
         pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
-            let quarantined = self.supervisor.get(plugin_id).copied() == Some(ProgramSupervisorState::Quarantined);
-            ui_recovery_panel(plugin_id, quarantined, false)
+            ui_recovery_panel(plugin_id, self.is_quarantined(plugin_id), false)
         }
         //#endregion 🔖️ActionKernel
 
@@ -209,7 +201,7 @@ pub mod host {
 
         fn hot_swap_failed(&mut self, plugin_id: String, error: String, rollback: HotSwapRollback) -> ProgramHotSwapEvent {
             rollback.restore(self);
-            self.supervisor.insert(plugin_id.clone(), ProgramSupervisorState::Loaded);
+            self.quarantined.remove(&plugin_id);
             rollback.emit_failure(plugin_id, error)
         }
 
@@ -1391,7 +1383,7 @@ pub mod host {
         #[test]
         fn recovery_ui_renders_actions_for_quarantined_plugin() {
             let mut host = PluginHost::new();
-            host.supervisor.insert("draw".into(), ProgramSupervisorState::Quarantined);
+            host.quarantined.insert("draw".into());
             let ui = host.recovery_ui("draw");
             match ui {
                 UiNode::Stack(stack) => assert_eq!(stack.children.len(), 5, "title + message + restart/disable/showDiagnostics buttons"),
@@ -4854,7 +4846,7 @@ pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 #[cfg(feature = "os-host-full")]
 pub use host::{
     BackboneDocument, LoadedProgram, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX, OsBackbonePort, OsCollectionDocument, OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost,
-    ProgramHotSwapEvent, ProgramSupervisorState, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack,
+    ProgramHotSwapEvent, create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack,
     import_os_space_from_dsl, import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty,
 };
 #[cfg(feature = "os-host-full")]

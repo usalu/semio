@@ -7080,7 +7080,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "note.document",
+          "documentSchema": "",
           "documentMediaType": {
             "class": "data",
             "form": "value"
@@ -8049,7 +8049,7 @@
           "variants": []
         },
         "io": {
-          "documentSchema": "note.document",
+          "documentSchema": "",
           "documentMediaType": {
             "class": "data",
             "form": "value"
@@ -8066,7 +8066,24 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "de": "Demo",
+            "en": "Demo"
+          },
+          "reuse": {
+            "de": "Demo",
+            "en": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio note.note.dsl v1\nschema=note.document id=semio title=Semio grid-visible=true grid-spacing=32 grid-subdivisions=4 grid-opacity=0.35 snap-enabled=false snap-grid-spacing=8 pencil-width=3 eraser-radius=12\nblocks {\n  text id=text-semio name=Welcome x=48 y=48 width=320 height=120 rotation=0 visible=true locked=false font-size=24 font-weight=normal align=left content=child_id=note-text-5cba14f4835b5558 target=\"text-semio-text!s.stdio.semio@v1/text\"\n}\nassets={\n  asset-1=mime=image/png data=\"data:image/png;base64,abc==\" width=10 height=20\n}\n",
+        "appId": "s.note.note@1/*#editor"
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -8081,25 +8098,7 @@
     ],
     "topicContributions": [],
     "commands": [],
-    "artifactKinds": [
-      {
-        "id": "2d.note",
-        "name": "2D Note",
-        "sourceFormat": "note.document",
-        "componentKind": "note",
-        "dimension": "2d",
-        "mediaCapability": "meshOnly",
-        "mediaType": {
-          "class": "twoD",
-          "form": "document"
-        },
-        "schema": "note.document",
-        "exportFormats": [],
-        "importFormats": [],
-        "exportStdioKinds": [],
-        "importStdioKinds": []
-      }
-    ]
+    "artifactKinds": []
   },
   "activationEvents": [
     {
@@ -8215,150 +8214,11 @@
         "bodyKey": "framework.body.history",
         "children": []
       }
-    ],
-    "ioEntries": [
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.dwg",
-          "standard": "ac1018",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.dxf",
-          "standard": "r12",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.json",
-          "standard": "rfc8259",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.pdf",
-          "standard": "1.4",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.png",
-          "standard": "1.2",
-          "subset": "*"
-        },
-        "direction": "import"
-      },
-      {
-        "owner": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "counterpart": {
-          "artifactKind": "s.stdio.svg",
-          "standard": "1.1",
-          "subset": "*"
-        },
-        "direction": "import"
-      }
-    ],
-    "composerEntries": [
-      {
-        "writes": {
-          "artifactKind": "s.note",
-          "standard": "1",
-          "subset": "*"
-        },
-        "reads": [
-          {
-            "artifactKind": "s.note",
-            "standard": "1",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.dwg",
-            "standard": "ac1018",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.dxf",
-            "standard": "r12",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.json",
-            "standard": "rfc8259",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.pdf",
-            "standard": "1.4",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.png",
-            "standard": "1.2",
-            "subset": "*"
-          },
-          {
-            "artifactKind": "s.stdio.svg",
-            "standard": "1.1",
-            "subset": "*"
-          }
-        ]
-      }
     ]
   },
   "hashes": {
-    "wasmSha256": "212301734cbc159e477b9c9c964d80e6de8023876c6a42519a899c6293edae3e",
-    "coreWasmSha256": "212301734cbc159e477b9c9c964d80e6de8023876c6a42519a899c6293edae3e",
-    "descriptorSha256": "7ba9b6b4f3442ec675321a26f3f3b4bbfffe081034676ad4a362b0fa7bfc0b21"
+    "wasmSha256": "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7",
+    "coreWasmSha256": "a60a593e311b5e4b6e366884638095c8dec2aa0e6bed9792163d6f2cef35a5b7",
+    "descriptorSha256": "1b8c29c800f1fd38f95f6754ec982585b59595a60ddf06fdbbadb6738850a093"
   }
 }

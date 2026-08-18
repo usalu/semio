@@ -252,4 +252,32 @@ attempt any of these myself — real, cross-cutting SDK design work, not a surgi
 
 ## 5. Acceptance
 
-*(filled in as builds complete — see below)*
+Environment: heavy system-wide contention observed throughout (145 concurrent cargo/rustc
+processes at one point, other tickets' target dirs — `target-m2` etc. — visible in `ps aux`), so
+every command here ran far past a normal check's wall time; each was still run to completion in
+one continuous session (auto-backgrounded by the tool past its 10-minute foreground window, waited
+out with a monitor rather than abandoned), never treated as hung.
+
+```
+$ export CARGO_TARGET_DIR=.../🎯️target-m5
+$ cargo check -p semio-s-plugin-puzzle --lib
+    Finished `dev` profile [unoptimized] target(s) in 30m 12s
+$ echo $?
+0
+```
+GREEN. 4 warnings, all pre-existing unused-import/dead-code, none in my edited region (`🦀️component.rs`'s
+`plugin()` builder chain itself has zero warnings). Full log: `🧪️m5-puzzle-lib1.txt`.
+
+```
+$ cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2
+    Finished `dev` profile [unoptimized] target(s) in 41m 24s
+$ echo $?
+0
+```
+GREEN. Full log: `🧪️m5-puzzle-wasm1.txt`. **🧩️puzzle: both acceptance commands pass.**
+
+### 🌀️procedural
+```
+$ cargo check -p semio-s-plugin-procedural --lib
+```
+RUNNING — result pasted below once it completes.

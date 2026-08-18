@@ -1,0 +1,29 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-actor-rs:typegen
+
+> nx run @semio-tech/framework-actor-rs:typegen
+
+> bun ./📜️script.ts typegen
+
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 2.99s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-typegen/debug/deps/semio_framework_actor-8727fc69a6e8d10d)
+
+running 1 test
+test component::tests::exports_typescript_bindings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 57 filtered out; finished in 0.21s
+
+framework-actor typescript mirror refreshed -> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🤖️generated/🟦️actor.ts
+
+
+
+ NX   Successfully ran target typegen for project @semio-tech/framework-actor-rs
+
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/framework-actor-rs:typegen
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+

@@ -2,6 +2,10 @@
 
 #[path = "🧵️shard/🦀️component.rs"]
 pub mod shard;
+// 🚚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): `ProcessTransport`/
+// `StdioTransport` — see that file's own module doc for why they live here and not in `🎭️actor`.
+#[path = "🧵️shard/🚚️process-transport/🦀️component.rs"]
+pub mod process_transport;
 
 use semio_framework::{
     kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
@@ -19,8 +23,9 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use wasmtime::component::{Component, Linker};
+use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
+use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
 
 // 🗑️ `PLUGIN_FUEL_BUDGET` is gone — `design-runtime.md` §1's `Budget.fuel`/`⚖️LaneDefaults` (per-lane,
 // per-turn, threaded through every `GuestRuntime::execute_turn`/`step_job` call) replaces the single
@@ -76,6 +81,24 @@ pub struct SharedEngineConfig {
     pub force_on_demand: bool,
 }
 
+/// 🧩️ Core instances (and memories/tables) the pooling allocator must reserve per component
+/// instance. A `wasm32-wasip2` component is a graph of core modules — guest module, the WASI
+/// adapter, whatever `wit-bindgen` composes — so the core pools must be a multiple of the component
+/// pool, never equal to it. Measured need is small; the headroom is cheap because these pools are
+/// virtual-address reservations, and `build_shared_engine` already falls back to on-demand
+/// allocation if the host refuses the reservation.
+const CORE_INSTANCES_PER_COMPONENT: u32 = 8;
+
+/// 💾️ Linear memories per component instance. Kept far below [`CORE_INSTANCES_PER_COMPONENT`] on
+/// purpose: the memory pool is a VIRTUAL ADDRESS RESERVATION of `total_memories × max_memory_size`,
+/// so multiplying it by the core-instance factor asks the OS for tens of terabytes and the pooling
+/// allocator is refused outright — `build_shared_engine` then silently falls back to on-demand and
+/// the whole pooling design is lost. Core-instance slots are cheap bookkeeping; memory slots are not.
+const MEMORIES_PER_COMPONENT: u32 = 1;
+
+/// 🪑️ Tables per component instance — bookkeeping like core instances, not address space.
+const TABLES_PER_COMPONENT: u32 = 4;
+
 impl Default for SharedEngineConfig {
     fn default() -> Self {
         Self { total_component_instances: 4096, max_memory_bytes: 512 * 1024 * 1024, linear_memory_keep_resident_bytes: 2 * 1024 * 1024, force_on_demand: false }
@@ -98,6 +121,21 @@ pub fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), Pl
         if pooling {
             let mut pooling_cfg = PoolingAllocationConfig::default();
             pooling_cfg.total_component_instances(cfg.total_component_instances);
+            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b): `total_component_instances` alone is
+            // not enough — the pooling allocator meters CORE instances, memories and tables from
+            // separate pools that each default to 1000, and one component instance consumes several
+            // of each (guest module + wasip2 adapter + composed modules). At full scale the bench
+            // died with "maximum concurrent limit of 1000 for core instances reached" while the
+            // component pool still had thousands free. Sized off the component budget rather than
+            // hardcoded, so raising one knob no longer silently leaves the others behind.
+            pooling_cfg.total_core_instances(cfg.total_component_instances * CORE_INSTANCES_PER_COMPONENT);
+            pooling_cfg.total_memories(cfg.total_component_instances * MEMORIES_PER_COMPONENT);
+            pooling_cfg.total_tables(cfg.total_component_instances * TABLES_PER_COMPONENT);
+            // ♻️ The FOURTH sub-pool with its own 1000 default, found only because fixing the third
+            // let the bench run far enough to hit it ("maximum concurrent GC heap limit of 1000
+            // reached"). Every one of these caps is invisible until the scale exceeds it, so they
+            // surface one run at a time; sized off the same component budget as the rest.
+            pooling_cfg.total_gc_heaps(cfg.total_component_instances * MEMORIES_PER_COMPONENT);
             pooling_cfg.max_memory_size(cfg.max_memory_bytes);
             pooling_cfg.linear_memory_keep_resident(cfg.linear_memory_keep_resident_bytes);
             config.allocation_strategy(InstanceAllocationStrategy::Pooling(pooling_cfg));
@@ -162,9 +200,19 @@ pub struct BudgetLimiter {
     pub max_memories: usize,
 }
 
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b): `max_instances` was `1`, `max_tables`/
+/// `max_memories` `8`. Those are *core-module* numbers, and this limiter guards a **component**
+/// store: the component model instantiates one core instance per module in the component graph
+/// (guest module + the `wasm32-wasip2` adapter + whatever else `wit-bindgen` composes), so the very
+/// first real plugin died at its SECOND core instance with `resource limit exceeded: instance count
+/// too high at 2`. Every budget in the scale bench except the pure-JS registry parse failed on that
+/// one line — the runtime could not instantiate ANY real component, and nothing had noticed because
+/// the only path that had ever instantiated one (the `📇️describe` emitter) installs no limiter at
+/// all. Sized to bound a hostile component while leaving ordinary composition room; re-measure
+/// rather than re-guess if a legitimate component ever trips it.
 impl Default for BudgetLimiter {
     fn default() -> Self {
-        Self { max_memory_bytes: 512 * 1024 * 1024, max_table_elements: 100_000, max_instances: 1, max_tables: 8, max_memories: 8 }
+        Self { max_memory_bytes: 512 * 1024 * 1024, max_table_elements: 100_000, max_instances: 256, max_tables: 128, max_memories: 128 }
     }
 }
 
@@ -382,12 +430,34 @@ pub struct JobBudget {
 /// (past `design-runtime.md` §2's literal trait listing) so `🧵️shard/🦀️component.rs`'s `ShardOutcome`
 /// can carry one over a `ShardTransport` — every other outcome shape (`TurnResult`) already derives
 /// both, so this was the one gap.
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1): `Running` is a STRUCT variant, not the newtype
+/// `Running(Option<Vec<u8>>)` this used to be — serde's internal tagging (`#[serde(tag = "kind")]`)
+/// cannot serialize a newtype variant whose payload is itself an `Option<T>` ("cannot serialize
+/// tagged newtype variant ... containing an optional" — a real serde limitation, not a typo).
+/// `ShardLoop::pump`'s job-stepping path never actually SENT a `Running` outcome over a transport
+/// before this packet (no test drove a job past its first step, so a `Running` step never reached
+/// `send_outcome`'s `serde_json::to_vec` — the exact "a contract that compiles is not a contract
+/// that runs" shape this whole packet exists to close), which is how this stayed latent. Every
+/// OTHER `Option`-carrying variant in this crate's kernel types already uses a struct variant for
+/// exactly this reason (e.g. `kernel::Event::JobProgress { job, progress: Option<Vec<u8>> }`).
+///
+/// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1/registrar): `Done`/`Failed` are struct variants
+/// for the SAME reason, found one wave later. J1 fixed only `Running`, because serde's internal
+/// tagging rejects a newtype variant carrying an `Option` — but it rejects one carrying ANY
+/// sequence, and `Vec<u8>` is a sequence: `serde_json` errors with "cannot serialize tagged newtype
+/// variant JobStep::Done containing a sequence". So every *successful* job completion failed to
+/// serialize, on the one path a job must survive to be useful. J1's resumability test drove three
+/// `step_job` calls but asserted on the in-process `JobStep` values rather than on bytes that had
+/// crossed `send_outcome`, so the completion path was proven in memory and never on the wire.
+/// The lesson generalises past serde: **fixing one variant of a defect is not fixing the defect** —
+/// the sibling variants must be re-derived from the rule, not from the symptom that was reported.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum JobStep {
-    Running(Option<Vec<u8>>),
-    Done(Vec<u8>),
-    Failed(Vec<u8>),
+    Running { progress: Option<Vec<u8>> },
+    Done { output: Vec<u8> },
+    Failed { error: Vec<u8> },
 }
 
 /// 🧯️ Why a turn or job step didn't produce a result — distinct from [`PluginHostError`] (host-side
@@ -530,7 +600,7 @@ impl GuestRuntime for MockGuestRuntime {
     }
 
     fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
-        self.queue_for(actor);
+        drop(self.queue_for(actor));
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
 
@@ -727,6 +797,26 @@ struct ActorHostState {
     #[allow(dead_code)]
     asset_map: HashMap<String, Vec<u8>>,
     limiter: BudgetLimiter,
+    wasi_ctx: WasiCtx,
+    resource_table: ResourceTable,
+}
+
+/// 🌐️ WASI Preview 2 for every real `wasm32-wasip2` component. `world actor` itself imports only
+/// `pure` (`log`/`now-ms`/`trace-span`), but the Rust `wasm32-wasip2` target's own runtime shim
+/// pulls in `wasi:io/poll` and friends transitively, so any genuinely-built plugin fails
+/// instantiation with "component imports instance `wasi:io/poll@0.2.9`, but a matching
+/// implementation was not found in the linker" unless the linker carries full WASI. The ctx is the
+/// sandboxed default — no inherited stdio, filesystem, network or environment — matching this
+/// crate's capability-gated stance; widen per [`BrokerCapabilityGrant`] only when a capability
+/// actually needs real WASI access.
+impl WasiView for ActorHostState {
+    fn ctx(&mut self) -> &mut WasiCtx {
+        &mut self.wasi_ctx
+    }
+
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.resource_table
+    }
 }
 
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
@@ -774,6 +864,7 @@ impl WasmtimeRuntime {
         let epoch_ticker = EpochTicker::start(&engine);
         let mut linker = Linker::new(&engine);
         actor_bindings::semio::framework::pure::add_to_linker(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active);
         Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root(), engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
     }
@@ -793,7 +884,7 @@ impl GuestRuntime for WasmtimeRuntime {
     fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         let component = compiled.component.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no wasmtime Component — built by MockGuestRuntime::compile, not WasmtimeRuntime::compile".to_string()))?;
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let host_state = ActorHostState { plugin_id: format!("actor-{}", actor.0), actor, caps: caps.to_vec(), effect_sink: Vec::new(), asset_map: HashMap::new(), limiter: BudgetLimiter::default() };
+        let host_state = ActorHostState { plugin_id: format!("actor-{}", actor.0), actor, caps: caps.to_vec(), effect_sink: Vec::new(), asset_map: HashMap::new(), limiter: BudgetLimiter::default(), wasi_ctx: WasiCtxBuilder::new().build(), resource_table: ResourceTable::new() };
         let mut store = Store::new(&self.engine, host_state);
         store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
         store.set_fuel(budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
@@ -874,9 +965,9 @@ impl GuestRuntime for WasmtimeRuntime {
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
         Ok(match step {
-            wit_jobs::JobStep::Running(bytes) => JobStep::Running(bytes),
-            wit_jobs::JobStep::Done(bytes) => JobStep::Done(bytes),
-            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed(bytes),
+            wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
+            wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
+            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
         })
     }
 
@@ -1258,9 +1349,9 @@ impl PluginInstanceHandle {
         self.runtime.start_job(&mut instance, job, kind, input).map_err(|fault| PluginHostError::Plugin(format!("{kind} start-job: {fault}")))?;
         loop {
             match self.runtime.step_job(&mut instance, job, RELAY_JOB_BUDGET).map_err(|fault| PluginHostError::Plugin(format!("{kind} step-job: {fault}")))? {
-                JobStep::Done(bytes) => return Ok(bytes),
-                JobStep::Failed(bytes) => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&bytes)))),
-                JobStep::Running(_) => continue,
+                JobStep::Done { output } => return Ok(output),
+                JobStep::Failed { error } => return Err(PluginHostError::Plugin(format!("{kind} job failed: {}", String::from_utf8_lossy(&error)))),
+                JobStep::Running { .. } => continue,
             }
         }
     }
@@ -1314,6 +1405,221 @@ fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<
     let code = code.into();
     dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
 }
+
+//#region 📈️RuntimeMetricsPublisher
+/// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): native-side sampling + 2Hz cadence gate for bus
+/// topic `os.runtime.metrics` — `semio_framework_actor::KernelMetrics`'s own doc comment: "the host
+/// publishes this as bus topic `os.runtime.metrics` at 2Hz." Wraps `Kernel::runtime_metrics_snapshot`
+/// (pure, clock-injected) and overlays the one field the pure crate cannot compute itself:
+/// `ShardMetricsSample.metrics.heartbeat_age_ms`, from each shard's own
+/// `ShardTransport::heartbeat()` reading (`🎭️actor/🦀️component.rs`'s `ShardTransport` trait — this
+/// file owns the transports, the pure crate does not).
+///
+/// 🚧️ GAP (see `📓️terra-T1-report.md` `## honest gaps`): nothing in this codebase yet drives a live
+/// `semio_framework_actor::Kernel` on a native thread — `Kernel::new` has zero call sites outside
+/// that crate's own tests and its wasm-only `KernelHost` glue (`grep -rn "Kernel::new(" --include
+/// "*.rs" .`, checked at packet start). This publisher is therefore wired as the exact call the
+/// future kernel-thread owner (H1-H4) makes each pump; it is unit-tested end-to-end against a real
+/// `Kernel`, but nothing currently invokes it at runtime, and no subscriber-fanout for
+/// `Effect::PublishEvent`/`Effect::Subscribe` exists anywhere in this file to hand the payload to
+/// (same `grep` found zero delivery call sites, native or web).
+pub struct RuntimeMetricsPublisher {
+    last_published_ms: Option<u64>,
+}
+
+impl RuntimeMetricsPublisher {
+    pub fn new() -> Self {
+        Self { last_published_ms: None }
+    }
+
+    /// 📡️ Samples `kernel` and returns the pack-encoded `os.runtime.metrics` payload
+    /// (`semio_framework_actor::RuntimeMetricsSnapshot::pack_encode`) when the 2Hz interval elapsed,
+    /// else `None`. `shard_heartbeats` maps each live `ShardId` to its transport's last
+    /// `ShardTransport::heartbeat()` reading — the overlay `Kernel::shard_metrics_samples` cannot do
+    /// itself (see this struct's doc comment).
+    pub fn maybe_sample(&mut self, kernel: &semio_framework_actor::Kernel, now_ms: u64, shard_heartbeats: &HashMap<semio_framework_actor::ShardId, u64>) -> Option<Vec<u8>> {
+        if !semio_framework_actor::runtime_metrics_due(self.last_published_ms, now_ms) {
+            return None;
+        }
+        self.last_published_ms = Some(now_ms);
+        let mut snapshot = kernel.runtime_metrics_snapshot(now_ms);
+        for shard in &mut snapshot.shards {
+            if let Some(&last_beat) = shard_heartbeats.get(&shard.shard) {
+                shard.metrics.heartbeat_age_ms = now_ms.saturating_sub(last_beat) as u32;
+            }
+        }
+        let mut out = Vec::new();
+        snapshot.pack_encode(&mut out);
+        Some(out)
+    }
+}
+
+impl Default for RuntimeMetricsPublisher {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod runtime_metrics_publisher_tests {
+    use super::RuntimeMetricsPublisher;
+    use semio_framework_actor::{ActivationEvent, ActorKind, Envelope, Kernel, Lane, Origin, PackageId, Payload, ShardId, ShardKind, TurnResult, TurnStatus, Usage};
+    use std::collections::HashMap;
+
+    fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelope {
+        Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![1]) }
+    }
+
+    fn ok_turn() -> TurnResult {
+        TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
+    }
+
+    /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
+    /// decodes the published bytes back into a `RuntimeMetricsSnapshot` to prove the payload round-
+    /// trips and carries the heartbeat overlay this file is responsible for.
+    #[test]
+    fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
+        let mut kernel = Kernel::new(ShardKind::Thread, 1, 0, 4);
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
+        kernel.submit(env(actor, Lane::Interactive, 1));
+        kernel.tick(0);
+        kernel.complete(actor, ok_turn(), 0).unwrap();
+
+        let mut publisher = RuntimeMetricsPublisher::new();
+        let heartbeats: HashMap<ShardId, u64> = [(ShardId(0), 400u64)].into_iter().collect();
+
+        let first = publisher.maybe_sample(&kernel, 1_000, &heartbeats).expect("never published yet must be due");
+        let mut pos = 0usize;
+        let decoded = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&first, &mut pos).unwrap();
+        assert_eq!(pos, first.len());
+        assert_eq!(decoded.actors.len(), 1);
+        assert_eq!(decoded.actors[0].metrics.turns, 1);
+        let shard_row = decoded.shards.iter().find(|row| row.shard == ShardId(0)).expect("shard 0 row present");
+        assert_eq!(shard_row.metrics.heartbeat_age_ms, 600, "1_000 - 400 heartbeat overlay");
+
+        assert!(publisher.maybe_sample(&kernel, 1_200, &heartbeats).is_none(), "200ms since last publish is inside the 500ms window");
+        assert!(publisher.maybe_sample(&kernel, 1_500, &heartbeats).is_some(), "exactly the 500ms interval must fire again");
+    }
+
+    //#region 🔖️ScaleFixture
+    /// 🧫️ The 50×50 scale fixture registry (M2's own data source: 50 plugins × 50 extensions each,
+    /// 2550 records, 7 `scaleFixture.profile` behaviour profiles) — see this module's own doc comment
+    /// for why `include_str!` (not `std::fs`) is how a `#[cfg(test)]` block reads it without tripping
+    /// the crate-purity grep this repo's acceptance criteria runs unconditionally over `component.rs`
+    /// files (this one is the HOST, not the pure `🎭️actor` crate, but the same discipline is followed
+    /// here since the file is right next to it and easy to mistake for one).
+    const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../🧫️fixtures/🔌️scale/🤖️generated/🔣️registry.json");
+
+    #[derive(serde::Deserialize)]
+    struct ScaleFixtureRegistry {
+        #[serde(rename = "recordCount")]
+        record_count: u32,
+        records: Vec<ScaleFixtureRecord>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ScaleFixtureRecord {
+        id: String,
+        kind: String,
+        #[serde(rename = "parentId")]
+        parent_id: Option<String>,
+        #[serde(rename = "scaleFixture")]
+        scale_fixture: ScaleFixtureProfile,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ScaleFixtureProfile {
+        profile: String,
+    }
+
+    /// 🧮️ `"scale-fixture-plugin-0007"` → `7` — every record's OWN `plugin_ordinal` for `Kernel::
+    /// activate` is its ancestor plugin's numeric suffix (extensions share their parent plugin's
+    /// ordinal, matching `ActorId`'s bit-packed "which plugin family" semantics).
+    fn plugin_ordinal_from_id(plugin_id: &str) -> u16 {
+        plugin_id.rsplit('-').next().and_then(|suffix| suffix.parse::<u16>().ok()).unwrap_or(0)
+    }
+
+    /// 🛣️ Deterministic, arbitrary profile→lane mapping — realism, not a claimed design contract (the
+    /// scale fixture itself is silent on lane assignment).
+    fn lane_for_profile(profile: &str) -> Lane {
+        match profile {
+            "ui" | "stateful" => Lane::Interactive,
+            "cpu" | "crash" => Lane::UserVisible,
+            "io" | "hang" => Lane::Background,
+            _ => Lane::Maintenance,
+        }
+    }
+
+    /// 📈️ T1 runtime evidence at scale (`📓️terra-T1-report.md`'s acceptance criteria): activates
+    /// every one of the fixture's 2550 real records through a real `Kernel` (not a fake), drives a
+    /// deterministic sample through `submit`/`tick`/`complete` (including a `Faulted` turn for the
+    /// `"crash"` profile), then asserts `RuntimeMetricsPublisher::maybe_sample`'s decoded snapshot
+    /// reflects it — row count, package count, and the specific driven actors' turns/traps.
+    #[test]
+    fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry() {
+        let registry: ScaleFixtureRegistry = serde_json::from_str(SCALE_FIXTURE_REGISTRY_JSON).expect("scale fixture registry must be valid JSON matching the documented shape");
+        assert_eq!(registry.record_count as usize, registry.records.len(), "recordCount header must match the actual records array length");
+        assert_eq!(registry.record_count, 2550, "the documented 50 plugins x (1 + 50 extensions) fixture shape");
+
+        let mut kernel = Kernel::new(ShardKind::Thread, 8, 0, 256);
+        let mut actor_ids = HashMap::new();
+        let mut crash_profile_actor = None;
+
+        for record in &registry.records {
+            let plugin_id = record.parent_id.as_deref().unwrap_or(&record.id);
+            let ordinal = plugin_ordinal_from_id(plugin_id);
+            let lane = lane_for_profile(&record.scale_fixture.profile);
+            let (package, kind) = if record.kind == "plugin" {
+                (PackageId(record.id.clone()), ActorKind::PluginApp { plugin: PackageId(record.id.clone()), app_id: "main".into(), instance_id: 0 })
+            } else {
+                (PackageId(plugin_id.to_string()), ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: record.id.clone() })
+            };
+            let actor = kernel.activate(package, ordinal, kind, lane, None, ActivationEvent::Manual);
+            if record.scale_fixture.profile == "crash" && crash_profile_actor.is_none() {
+                crash_profile_actor = Some(actor);
+            }
+            actor_ids.insert(record.id.clone(), actor);
+        }
+        assert_eq!(actor_ids.len(), 2550, "every record activated exactly one distinct actor");
+
+        // 🎬️ Drive a deterministic sample so the snapshot has non-zero activity to assert on: the
+        // first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
+        let first_record = &registry.records[0];
+        let first_actor = actor_ids[&first_record.id];
+        kernel.submit(env(first_actor, lane_for_profile(&first_record.scale_fixture.profile), 1));
+        kernel.tick(0);
+        kernel.complete(first_actor, ok_turn(), 1).unwrap();
+
+        let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
+        kernel.submit(env(crash_actor, Lane::UserVisible, 1));
+        kernel.tick(1);
+        let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted(b"scale-fixture crash profile".to_vec()), usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+        kernel.complete(crash_actor, faulted, 2).unwrap();
+
+        let mut publisher = RuntimeMetricsPublisher::new();
+        let payload = publisher.maybe_sample(&kernel, 10_000, &HashMap::new()).expect("first sample is always due");
+        let mut pos = 0usize;
+        let snapshot = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&payload, &mut pos).unwrap();
+        assert_eq!(pos, payload.len());
+
+        assert_eq!(snapshot.kernel.actors, 2550);
+        assert_eq!(snapshot.kernel.packages, 50, "50 plugins, each extension's package folds into its parent plugin's PackageId");
+        assert_eq!(snapshot.actors.len(), 2550);
+
+        let first_row = snapshot.actors.iter().find(|row| row.id == first_actor).expect("first record's row present");
+        assert_eq!(first_row.metrics.turns, 1);
+        assert_eq!(first_row.status, semio_framework_actor::ActorStatus::Active);
+
+        let crash_row = snapshot.actors.iter().find(|row| row.id == crash_actor).expect("crash-profile record's row present");
+        assert_eq!(crash_row.metrics.turns, 1);
+        assert_eq!(crash_row.metrics.traps, 1, "the Faulted turn must register as a trap");
+
+        let total_shard_actors: u32 = snapshot.shards.iter().map(|row| row.metrics.actors).sum();
+        assert_eq!(total_shard_actors, 2550, "every one of the 2550 actors is counted on exactly one of the 8 shards");
+    }
+    //#endregion 🔖️ScaleFixture
+}
+//#endregion 📈️RuntimeMetricsPublisher
 
 //#region 🔖️ArtifactSession
 /// 📦️ Opaque pack triple for one artifact lane (document / config / draft). Typed `ArtifactStore`
@@ -3977,9 +4283,9 @@ mod tests {
         let actor = RuntimeActorId(100);
         let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Running(None));
+        mock.script_job_step(actor, JobStep::Running { progress: None });
         let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
-        mock.script_job_step(actor, JobStep::Done(serde_json::to_vec(&io_payload).expect("encode expected result")));
+        mock.script_job_step(actor, JobStep::Done { output: serde_json::to_vec(&io_payload).expect("encode expected result") });
         let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).expect("encode payload");
@@ -3996,7 +4302,7 @@ mod tests {
         let actor = RuntimeActorId(101);
         let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Done(vec![3u8]));
+        mock.script_job_step(actor, JobStep::Done { output: vec![3u8] });
         let handle = PluginInstanceHandle::new(actor, mock.clone() as Arc<dyn GuestRuntime>, instance);
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).expect("encode payload");
@@ -4026,7 +4332,7 @@ mod tests {
         let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).expect("stdio mock compile");
         let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).expect("stdio mock instantiate");
         let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
-        stdio_mock.script_job_step(stdio_actor, JobStep::Done(serde_json::to_vec(&midpoint).expect("encode midpoint")));
+        stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: serde_json::to_vec(&midpoint).expect("encode midpoint") });
         let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, stdio_mock as Arc<dyn GuestRuntime>, stdio_instance));
 
         let gif_mock = Arc::new(MockGuestRuntime::new());
@@ -4034,7 +4340,7 @@ mod tests {
         let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).expect("gif mock compile");
         let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).expect("gif mock instantiate");
         let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
-        gif_mock.script_job_step(gif_actor, JobStep::Done(serde_json::to_vec(&final_payload).expect("encode final")));
+        gif_mock.script_job_step(gif_actor, JobStep::Done { output: serde_json::to_vec(&final_payload).expect("encode final") });
         let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, gif_mock as Arc<dyn GuestRuntime>, gif_instance));
 
         let binary_raw = io_dialect("s.stdio.binary", "raw", "*");

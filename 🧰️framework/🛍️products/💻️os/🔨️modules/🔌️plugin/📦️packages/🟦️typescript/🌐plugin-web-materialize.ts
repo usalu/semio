@@ -65,6 +65,12 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  */
 export function shardWorkerSource(): string {
   return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
+// 🩺️ SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION (1-B): raise the captured-frame
+// cap BEFORE anything else runs so a deep guest recursion's real stack survives \`error.stack\`
+// instead of being truncated to V8's 10-frame default — this worker's stack is otherwise destroyed
+// before \`ShardClient\` ever sees it (the main thread only ever saw one frame: \`at worker.onmessage\`).
+Error.stackTraceLimit = 200;
+
 const actors = new Map(); // actorId -> { api, moduleUrl }
 const inFlightTurnActors = new Set();
 let turnSeq = 0;
@@ -81,10 +87,22 @@ function reply(requestId, value) {
   self.postMessage({ kind: "result", requestId, ok: true, value });
 }
 
-function replyError(requestId, error) {
+// 🩺️ \`frames\` is the request's own bulk payload (the \`turn\` message's \`events\` array — the largest,
+// most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
+// unless it isn't already a binary buffer, so a huge/cyclic payload can't itself blow the stack while
+// we're trying to report a stack overflow.
+function replyError(requestId, error, frames) {
   const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
   const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
-  self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail });
+  let stack;
+  try { stack = error && error.stack ? String(error.stack) : undefined; } catch { stack = undefined; }
+  let type;
+  try { type = (error && error.constructor && error.constructor.name) || typeof error; } catch { type = typeof error; }
+  let framesBytes;
+  try {
+    framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength : frames !== undefined ? JSON.stringify(frames).length : undefined;
+  } catch { framesBytes = undefined; }
+  self.postMessage({ kind: "result", requestId, ok: false, error: (error instanceof Error ? error.message : String(error)) + detail, stack, type, framesBytes });
 }
 
 async function loadActor(actorId, moduleUrl) {
@@ -172,7 +190,7 @@ self.addEventListener("message", async (event) => {
         throw new Error(\`unknown shard worker message kind: \${kind}\`);
     }
   } catch (error) {
-    replyError(requestId, error);
+    replyError(requestId, error, msg.events);
   }
 });
 `;

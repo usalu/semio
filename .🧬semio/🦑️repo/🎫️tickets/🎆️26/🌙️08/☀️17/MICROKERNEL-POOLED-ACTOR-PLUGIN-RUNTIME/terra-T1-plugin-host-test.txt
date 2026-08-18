@@ -1,0 +1,95 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 6.15s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-t1/debug/deps/semio_framework_plugin_host-cafb77a964529217)
+
+running 75 tests
+test component::artifact_inference_router_tests::only_exactly_echoed_guest_results_are_publishable ... ok
+test component::artifact_mutation_router_tests::conflicting_owner_rows_are_rejected_unless_byte_identical ... ok
+test component::artifact_mutation_router_tests::a_contribution_onto_a_non_dependency_is_rejected ... ok
+test component::app_router_tests::duplicate_app_ref_is_a_conflict ... ok
+test component::app_router_tests::contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner ... ok
+test component::app_router_tests::contribution_without_a_declared_dependency_is_rejected ... ok
+test component::app_router_tests::owner_surface_sorts_first_then_plugin_id_then_app_id ... ok
+test component::app_router_tests::unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim ... ok
+test component::app_router_tests::owned_surface_gaps_reports_the_missing_role_only ... ok
+test component::app_router_tests::w1_d_parity_fixture_owner_two_contributors_duplicate_and_unknown_dialect ... ok
+test component::artifact_mutation_router_tests::owner_and_contributed_rows_both_resolve_correctly ... ok
+test component::artifact_mutation_router_tests::unregister_drops_only_that_plugins_rows ... ok
+test component::host_transaction_coordinator_tests::a_cycle_is_rejected ... ok
+test component::host_transaction_coordinator_tests::an_unknown_target_is_rejected_before_any_prepare_is_sent ... ok
+test component::instance_directory_tests::bind_resolve_and_unbind_round_trip ... ok
+test component::host_transaction_coordinator_tests::an_unknown_mutation_is_rejected ... ok
+test component::instance_directory_tests::rebinding_the_same_artifact_id_replaces_the_prior_location ... ok
+test component::host_transaction_coordinator_tests::a_two_member_transaction_commits_and_group_undo_restores_both ... ok
+test component::mock_guest_runtime_tests::checkpoint_then_restore_round_trips_through_a_fresh_instance ... ok
+test component::mock_guest_runtime_tests::controllable_clock_advances_deterministically ... ok
+test component::host_transaction_coordinator_tests::a_chain_deeper_than_max_plan_depth_is_rejected ... ok
+test component::host_transaction_coordinator_tests::a_member_rejection_rolls_back_every_already_prepared_member ... ok
+test component::mock_guest_runtime_tests::drop_instance_forgets_the_actors_script_queue ... ok
+test component::mock_guest_runtime_tests::scripted_fault_surfaces_as_trapped ... ok
+test component::mock_guest_runtime_tests::scripted_turn_is_returned_exactly_once_fifo ... ok
+test component::opening_resolver_tests::step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale ... ok
+test component::opening_resolver_tests::step1_explicit_default_still_in_router_wins ... ok
+test component::opening_resolver_tests::step3_first_entry_when_the_owner_has_no_surface_for_this_role ... ok
+test component::mock_guest_runtime_tests::exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn ... ok
+test component::opening_resolver_tests::step4_unknown_dialect_when_the_router_has_nothing ... ok
+test component::plugin_graph_tests::a_later_registration_that_would_close_a_cycle_is_rejected ... ok
+test component::plugin_graph_tests::contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared ... ok
+test component::plugin_graph_tests::hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement ... ok
+test component::plugin_graph_tests::register_rejects_a_missing_dependency ... ok
+test component::plugin_graph_tests::register_rejects_a_version_mismatch ... ok
+test component::plugin_graph_tests::load_order_respects_a_real_dependency_edge ... ok
+test component::plugin_graph_tests::unload_is_refused_while_a_dependent_is_registered ... ok
+test component::runtime_metrics_publisher_tests::maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host ... ok
+test component::shard::tests::unregister_drops_the_instance_and_shrinks_actor_count ... ok
+test component::shard::tests::cancel_unregisters_the_instance_and_no_further_step_job_happens ... ok
+test component::shard::tests::pump_reports_an_envelope_for_an_unregistered_actor_as_a_fault_not_a_silent_drop ... ok
+test component::shard::tests::suspend_then_resume_round_trips_byte_identical_checkpoint_state ... ok
+test component::shard::tests::suspend_with_checkpoint_true_surfaces_checkpoint_bytes_in_the_outcome ... ok
+test component::shard::tests::pump_drives_one_turn_per_actor_and_reports_it_as_a_shard_outcome ... ok
+test component::shared_wasmtime_engine_tests::compiled_component_round_trips_through_cache_for_a_real_wasm_file ... ok
+test component::shard::tests::cancel_job_effect_stops_a_job_before_it_is_ever_stepped ... ok
+test component::shared_wasmtime_engine_tests::shared_engine_config_hash_is_deterministic_and_config_sensitive ... ok
+test component::tests::io_router_compose_resolves_ownership_but_dispatch_is_not_yet_wired ... ok
+test component::shard::tests::exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump ... ok
+test component::shared_wasmtime_engine_tests::compiled_cache_path_is_namespaced_by_both_hashes ... ok
+test component::shard::tests::spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completion_reaches_the_originating_actor ... ok
+test component::tests::io_router_register_plugin_rejects_conflicting_io_entry_ownership ... ok
+test component::tests::io_router_route_respects_max_hops ... ok
+test component::tests::io_router_run_io_crosses_two_real_plugin_instance_handles ... ok
+test component::tests::io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops ... ok
+test component::tests::io_router_route_is_deterministic_across_load_order ... ok
+test component::tests::io_router_run_io_reentrancy_guard_predicate ... ok
+test component::tests::plugin_instance_handle_drives_io_run_job_to_completion_through_a_running_step ... ok
+test component::tests::plugin_instance_handle_io_sniff_decodes_the_confidence_byte ... ok
+test component::wasmtime_runtime_tests::compile_accepts_a_real_component_and_caches_it ... ok
+test component::tests::wasmtime_runtime_compiles_real_stdio_and_cad_but_neither_exports_actor_yet ... ok
+test component::wasmtime_runtime_tests::instantiate_rejects_a_component_that_does_not_export_the_actor_world ... ok
+test component::wasmtime_runtime_tests::io_run_effect_is_a_reported_error_not_a_silent_mismap ... ok
+test component::wasmtime_runtime_tests::message_endpoint_round_trips_through_wit_and_back ... ok
+test component::wasmtime_runtime_tests::wit_turn_status_conversion_is_a_plain_rename ... ok
+test opening_config::component::tests::opening_preferences_default_is_empty ... ok
+test opening_config::mutations::clear_default_app::mutation::tests::clear_default_app_label_names_role_and_dialect ... ok
+test opening_config::mutations::component::tests::clear_default_app_without_a_pin_is_no_op ... ok
+test opening_config::mutations::component::tests::set_default_app_and_clear_default_app_invert_each_other ... ok
+test opening_config::mutations::component::tests::set_default_app_already_pinned_is_no_op ... ok
+test opening_config::mutations::set_default_app::mutation::tests::set_default_app_label_names_role_and_dialect ... ok
+test component::shared_wasmtime_engine_tests::build_shared_engine_forced_on_demand_reports_on_demand ... ok
+test component::shared_wasmtime_engine_tests::build_shared_engine_defaults_to_pooling ... ok
+test component::shared_wasmtime_engine_tests::epoch_ticker_starts_and_stops_cleanly_around_a_deadline_bearing_store ... ok
+test component::runtime_metrics_publisher_tests::runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry ... ok
+
+test result: ok. 75 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+

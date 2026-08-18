@@ -21,6 +21,7 @@ path = "../../📦️bin.rs"
 
 [dependencies]
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-actor = { workspace = true }
 semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }

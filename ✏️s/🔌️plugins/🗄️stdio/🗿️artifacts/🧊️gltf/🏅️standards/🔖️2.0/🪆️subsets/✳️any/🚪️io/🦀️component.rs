@@ -8,6 +8,10 @@
 //! glb caller now targets this codec's own `.glb` binary dialect directly, so there is no longer
 //! a second container implementation to keep in sync.
 use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
+#[cfg(test)]
+use crate::artifacts::gltf::schema::snapshot::{
+    GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues,
+};
 use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 

@@ -552,7 +552,7 @@ mod tests {
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<DagPlayApp, (bool, bool)>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<DagPlayApp>, (bool, bool)>(
             "mem://dag-convergence",
             DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }),
             DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }),
@@ -566,7 +566,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_dag() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<DagPlayApp, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len());
     }
     //#endregion 🔖️CrossCutting
 }

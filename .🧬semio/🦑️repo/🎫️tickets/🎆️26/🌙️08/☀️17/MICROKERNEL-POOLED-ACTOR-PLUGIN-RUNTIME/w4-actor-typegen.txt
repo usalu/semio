@@ -1,0 +1,68 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-actor-rs:typegen
+
+> nx run @semio-tech/framework-actor-rs:typegen
+
+> bun ./📜️script.ts typegen
+
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling thiserror v2.0.18
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling termcolor v1.4.1
+   Compiling lazy_static v1.5.0
+   Compiling syn v2.0.117
+   Compiling thiserror-impl v2.0.18
+   Compiling serde_derive v1.0.228
+   Compiling ts-rs-macros v10.1.0
+   Compiling ts-rs v10.1.0
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+error[E0277]: the trait bound `VecDeque<component::Envelope>: TS` is not satisfied
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:777:12
+    |
+777 |     lanes: [VecDeque<Envelope>; 4],
+    |            ^^^^^^^^^^^^^^^^^^^^^^^ the trait `TS` is not implemented for `VecDeque<component::Envelope>`
+    |
+    = help: the following other types implement trait `TS`:
+              &T
+              ()
+              (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+              (T10,)
+              (T2, T3, T4, T5, T6, T7, T8, T9, T10)
+              (T3, T4, T5, T6, T7, T8, T9, T10)
+              (T4, T5, T6, T7, T8, T9, T10)
+              (T5, T6, T7, T8, T9, T10)
+            and 98 others
+    = note: required for `[VecDeque<component::Envelope>; 4]` to implement `TS`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-actor` (lib test) due to 3 previous errors
+[0m[31mframework-actor typegen: `cargo test --features typegen` failed — see output above.[0m
+Warning: command "bun ./📜️script.ts typegen" exited with non-zero status code
+
+
+ NX   Running target typegen for project @semio-tech/framework-actor-rs failed
+
+Failed tasks:
+
+- @semio-tech/framework-actor-rs:typegen
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-actor-rs:typegen exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:635:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15420:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

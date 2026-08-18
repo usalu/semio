@@ -193,10 +193,21 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let hovered = inner.hovered_id.as_deref();
+            // 🩹️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining Part A: `SceneQuery`
+            // borrows several `inner` fields alongside a `&mut inner.layout_engine`/`&inner.document_json`
+            // pair in the same call -- pre-existing E0502 (rustc cannot split a borrow through
+            // `RefMut::deref_mut` this way even though the fields are disjoint). Cloning the query
+            // inputs into owned locals first removes the aliasing entirely.
+            let page_id = inner.page_id.clone();
+            let selected_ids = inner.selected_ids.clone();
+            let hovered_id = inner.hovered_id.clone();
+            let chrome_blueprint = inner.chrome_blueprint;
+            let camera = inner.camera.clone();
+            let viewport = inner.viewport.clone();
             let drop_preview = inner.drop_preview.clone();
-            let query = SceneQuery { page_id: &inner.page_id, selected_ids: &inner.selected_ids, hovered_id: hovered, chrome_blueprint: inner.chrome_blueprint, camera: &inner.camera, viewport: &inner.viewport };
-            let scene = build_scene_from_document_json(&mut inner.layout_engine, &inner.document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let document_json = inner.document_json.clone();
+            let query = SceneQuery { page_id: &page_id, selected_ids: &selected_ids, hovered_id: hovered_id.as_deref(), chrome_blueprint, camera: &camera, viewport: &viewport };
+            let scene = build_scene_from_document_json(&mut inner.layout_engine, &document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let clear = infinite_canvas::theme::default_raster_clear();
             inner.gpu.render_frame(&scene, clear).map_err(|e| e)
         }
@@ -204,9 +215,16 @@ mod wasm_session {
         #[wasm_bindgen(js_name = hitTest)]
         pub fn hit_test(&self, sx: f32, sy: f32) -> Result<JsValue, JsValue> {
             let mut inner = self.state.borrow_mut();
-            let hovered = inner.hovered_id.as_deref();
-            let query = SceneQuery { page_id: &inner.page_id, selected_ids: &inner.selected_ids, hovered_id: hovered, chrome_blueprint: true, camera: &inner.camera, viewport: &inner.viewport };
-            let hit = hit_test_document_json(&mut inner.layout_engine, &inner.document_json, sx as f64, sy as f64, &query).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            // 🩹️ same pre-existing E0502 class as `render_frame` above -- owned clones, not a
+            // behavior change.
+            let page_id = inner.page_id.clone();
+            let selected_ids = inner.selected_ids.clone();
+            let hovered_id = inner.hovered_id.clone();
+            let camera = inner.camera.clone();
+            let viewport = inner.viewport.clone();
+            let document_json = inner.document_json.clone();
+            let query = SceneQuery { page_id: &page_id, selected_ids: &selected_ids, hovered_id: hovered_id.as_deref(), chrome_blueprint: true, camera: &camera, viewport: &viewport };
+            let hit = hit_test_document_json(&mut inner.layout_engine, &document_json, sx as f64, sy as f64, &query).map_err(|e| JsValue::from_str(&e.to_string()))?;
             Ok(hit.map(|id| JsValue::from_str(&id)).unwrap_or(JsValue::NULL))
         }
 

@@ -27,7 +27,7 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework = { workspace = true }
-semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust" }
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", default-features = false }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde.workspace = true
 serde_json.workspace = true

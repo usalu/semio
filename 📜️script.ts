@@ -779,6 +779,34 @@ export class LintScript extends Script {
 //#endregion 🔖️LintScript
 
 //#region 🔖️VerifyScript
+/** 🦀️ Every plugin crate name under `✏️s/🔌️plugins`, read from each crate's own `Cargo.toml`. */
+function pluginCrateNames(root: string): string[] {
+  const names: string[] = [];
+  const pluginsRoot = join(root, "✏️s", "🔌️plugins");
+  if (!existsSync(pluginsRoot)) return names;
+  for (const owner of readdirSync(pluginsRoot)) {
+    const manifest = join(pluginsRoot, owner, "📦️packages", "🦀️rust", "Cargo.toml");
+    if (!existsSync(manifest)) continue;
+    const name = readFileSync(manifest, "utf8").match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/)?.[1];
+    if (name) names.push(name);
+  }
+  return names.sort();
+}
+
+/**
+ * 🎯️ Which crates each compilation target exists to prove warning-free, and how to scope the build.
+ * `--all-targets` (tests, benches, examples) is right for native but wrong for the wasm triples:
+ * plugin test harnesses are native-only, so a wasm `--all-targets` clippy fails on code that target
+ * never ships. `wasm32-wasip2` therefore builds the plugins' real component library surface, and
+ * `wasm32-unknown-unknown` the pure actor kernel — the crate whose purity keeps mobile open.
+ */
+function rustWarningTargetScope(root: string, target: string | undefined): { packages: string[]; scopeArgs: string[]; targetArgs: string[] } {
+  if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib", "--features", "component-guest"], targetArgs: ["--target", target] };
+  if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor"], scopeArgs: ["--lib"], targetArgs: ["--target", target] };
+  if (target && target !== "native") throw new Error(`[verify rust-warnings] unknown target ${target} (expected native | wasm32-wasip2 | wasm32-unknown-unknown).`);
+  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [] };
+}
+
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -788,6 +816,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "mutation-outcome-law") {
       this.runMutationOutcomeLaw();
+      return;
+    }
+    if (segments[0] === "rust-warnings") {
+      this.runRustWarnings(segments.slice(1));
       return;
     }
     await this.runGate();
@@ -819,6 +851,35 @@ export class VerifyScript extends Script {
       throw new Error(`[verify mutation-outcome-law] ${breaches.length} breach(es)`);
     }
     console.log("[verify mutation-outcome-law] passed.");
+  }
+
+  /**
+   * 🦀️ Zero-warning gate per compilation target (ticket
+   * `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet `Z1`; exit checklist item 6) —
+   * `verify rust-warnings --target <triple> [-p <crate>…]`. The three targets that must all be
+   * clean are native (host), `wasm32-wasip2` (the plugin fleet's real component build) and
+   * `wasm32-unknown-unknown` (the pure actor kernel, the one that keeps mobile open). With no
+   * explicit `-p`, each target resolves to the crate set that target actually exists to prove.
+   *
+   * Deny-on-warnings is passed as clippy's trailing `-- -D warnings`, NEVER through `RUSTFLAGS`:
+   * `RUSTFLAGS` REPLACES rather than merges with `.cargo/config.toml`'s rustflags (`-Z threads=8`,
+   * the wasm32 `getrandom_backend` cfg, mold) and would break every wasm build — the same reason
+   * [[runCargoLint]] documents for the identical choice.
+   */
+  private runRustWarnings(args: string[]): void {
+    const targetIndex = args.indexOf("--target");
+    const target = targetIndex >= 0 ? args[targetIndex + 1] : undefined;
+    if (targetIndex >= 0 && !target) throw new Error("[verify rust-warnings] --target needs a triple (native | wasm32-wasip2 | wasm32-unknown-unknown).");
+    const explicit: string[] = [];
+    for (let index = 0; index < args.length; index += 1) if (args[index] === "-p" && args[index + 1]) explicit.push(args[index + 1]);
+    const scope = rustWarningTargetScope(this.root, target);
+    const packages = explicit.length > 0 ? explicit : scope.packages;
+    if (packages.length === 0) throw new Error(`[verify rust-warnings] no crates resolved for target ${target ?? "native"}.`);
+    console.log(`[verify rust-warnings] ${target ?? "native"}: ${packages.length} crate(s)…`);
+    for (const pkg of packages) {
+      runCmd("cargo", ["clippy", "-p", pkg, ...scope.scopeArgs, ...scope.targetArgs, "--", "-D", "warnings"], { cwd: this.root, budgetMs: buildBudgetMs() });
+    }
+    console.log(`[verify rust-warnings] ${target ?? "native"} clean.`);
   }
 
   private async runGate(): Promise<void> {
@@ -1301,6 +1362,25 @@ export class TestScript extends Script {
   }
 }
 //#endregion 🔖️TestScript
+
+//#region 🔖️BenchScript
+/**
+ * ⚖️ Plugin-runtime scale bench (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet
+ * `V1`) — drives the seeded 50×50 scale fixture (`🧫️fixtures/🔌️scale`, 2550 records) through the
+ * pooled actor kernel on one renderer and asserts the eight `BENCH_BUDGETS` rows of
+ * `📓️design-workforce.md` §4. The budgets and the harness live in the dev bundle beside the
+ * fixture generator that emits the registry they read, so this verb is a thin router: the numbers
+ * have exactly one home.
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts `#region 🔖️Bench`
+ */
+export class BenchScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0];
+    if (sub !== "plugins") throw new Error(`unknown bench subcommand: ${sub ?? "<none>"} (expected plugins)`);
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:bench", "plugins", ...segments.slice(1)], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+}
+//#endregion 🔖️BenchScript
 
 //#region 🔖️StdioLedgerScript
 type StdioDialectDefinition = Readonly<{
@@ -2551,6 +2631,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("verify", VerifyScript)
   .register("format", FormatScript)
   .register("test", TestScript)
+  .register("bench", BenchScript)
   .register("stdio", StdioScript)
   .register("build", BuildScript)
   .register("cpp", CppScript)

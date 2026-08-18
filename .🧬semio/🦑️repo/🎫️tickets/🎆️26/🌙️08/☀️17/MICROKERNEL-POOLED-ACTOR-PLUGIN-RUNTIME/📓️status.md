@@ -556,3 +556,452 @@ The most consequential report of this wave, and it corrects both the plan and my
 This is a gap in our own W1/W2 work, not a peer's: A2 delivered the WIT and the executor, A2b made the bridge compile, but nothing exercised `spawn_job` end to end, and no acceptance gate covered it. The lesson matches the WIT reserved-keyword episode — a contract that compiles is not a contract that runs, and nothing in W1/W2 ever ran a job.
 
 **Follow-up packet required before the jobs work can proceed:** wire `Effect::SpawnJob` → host `start_job`/`step_job` → `Event::JobCompleted` end to end, with a test that actually spawns, steps and completes a job — the same "prove it runs, not just compiles" bar the scale fixture sets.
+
+### Throughput ceiling reached — 160 concurrent cargo processes
+
+Six packets (M2–M6, J1) building at once on six separate target dirs is 6× the compilation work plus the sibling peer tickets, all contending for one global package-cache lock. My own verification sweep has been queued behind them for ~20 minutes without emitting a line. Several executors have again fallen into wake/idle loops waiting on backgrounded builds, despite explicit instruction — at this contention level a foreground build can exceed any patience threshold, which is what makes the trap so persistent.
+
+**Correction to my earlier "parallel editing is free, parallel building is not" rule:** per-packet target dirs removed the *lock* contention between our packets but multiplied the *total* work, because each dir rebuilds the same shared dependency graph from scratch. The right shape is per-packet dirs with a **cap of ~3 concurrent builders**, not one dir per packet with unlimited concurrency. Recorded for the next wave.
+
+### Consolidated position
+
+**Verified complete (coordinator-run, not from reports):**
+- W1: actor kernel (52/52, purity enforced by grep), contract types (135-file atomic rename, peer region byte-identical), reactor ABI compiling as a real `wasm32-wasip2` component, channel v12 (os-kernel **1003/0** against the peer's recorded 996 baseline), guest SDK on v12, native host with `WasmPluginRuntime`/`ExtensionRuntime`/both `ProgramSupervisorState`/`PLUGIN_FUEL_BUDGET` **deleted** (67/0).
+- W2: all four renderer paths off one-worker-per-plugin — React (321/336, own tests 14/14), web shard pool (316/318 baseline held exactly), wgpu native (kernel thread + v12 ProgramBridge + lazy descriptor scan), wgpu web.
+- Infrastructure: 2550-record scale fixture (byte-identical across runs, different seed → different output), descriptor pipeline, one real committed plugin descriptor.
+
+**W3, honestly:** 32 of 33 plugins declare activation events, execution modes and capability requests — the half that makes "installed packages consume no runtime resources" real. Two halves outstanding: descriptor emission, blocked fleet-wide by a **pre-existing** capability-claim rule (`🗒️note` proves the path works where declarations are internally consistent); and jobs, blocked by **our own** unwired `Effect::SpawnJob` path, now dispatched as `J1`.
+
+**W4 not started.** The 50×50 claim remains *measurable but not measured* — the fixture exists, the bench does not yet run.
+
+**Repo-wide breakage absorbed this session** (none of it ours, all of it blocking everyone): a moved generated file (ui-styling), a renamed presence type set, a moved crate whose workspace member entry was left behind (this one made `cargo metadata` fail for every session on the machine), plus pre-existing broken `#[cfg(test)]` imports in two plugins.
+
+### ⛔️ Wave halted by self-inflicted contention — next session starts here
+
+Load kept climbing (160 → 174 cargo processes) rather than draining: six migration packets plus `J1`, each with its own target dir, each rebuilding the shared dependency graph, on top of the live peer tickets. No verification command of mine has completed in the last ~40 minutes. **This is my scheduling error, not the executors'** — I dispatched six builders at once after explicitly recording, one wave earlier, that parallel building does not scale here.
+
+**Do this first next session, before dispatching anything:**
+1. Let the queue drain to < 12 cargo processes.
+2. Re-run the consolidated sweep: `cargo check -p semio-s-plugin-<name> --lib` across the 32 declared plugins, **≤3 concurrent**, and record the per-crate result table that this wave never got.
+3. Then resume `J1-jobs-end-to-end` — it is the true critical path, since the jobs half of W3 cannot proceed without it.
+
+**Standing rule, corrected twice now and final:** per-packet `🎯️target-*` dirs remove lock contention but multiply total compile work. Cap concurrent *builders* at 3 regardless of how many packets are editing. Editing is free; building is not; separate target dirs do not change that, they only move the bottleneck from the lock to the CPU.
+
+**State of the work is unchanged by the halt** — everything below is already verified and committed to the tree; only the remaining verification runs are outstanding:
+
+| area | state |
+|---|---|
+| W1 contracts (actor kernel, kernel/manifest types, reactor ABI, channel v12, guest SDK) | ✅ verified |
+| W1 native host, legacy runtime deleted | ✅ verified (67/0) |
+| W2 all four renderer paths | ✅ verified |
+| Scale fixture (2550 records, deterministic) | ✅ verified |
+| Descriptor pipeline + 1 real descriptor | ✅ verified |
+| W3 activation declarations | ✅ 32/33 plugins |
+| W3 descriptor emission | ⛔️ pre-existing capability-claim rule, fleet-wide |
+| W3 jobs migration | ⛔️ our own unwired `SpawnJob`, `J1` dispatched |
+| W4 bench / parity / task manager / process shards | ⬜️ not started |
+
+**The 50×50 claim is measurable but still unmeasured.** That sentence should stay in every summary until the bench actually runs.
+
+## 2026-08-18 W4 — session resumed after reboot cleared the contention halt
+
+### ✅ S0 consolidated plugin sweep — 33/33 GREEN, zero red
+
+The per-crate table the halted wave never produced. `cargo check -p <crate> --lib`, 3-wide, three rotating target dirs (`🎯️target-sweep0/1/2`), driver `w4-sweep/run.sh`, raw logs `w4-sweep/<crate>.txt`.
+
+| crate | rc | secs |
+|---|---|---|
+| semio-s-plugin-animate | 0 | 444 |
+| semio-s-plugin-architect | 0 | 339 |
+| semio-s-plugin-block | 0 | 322 |
+| semio-s-plugin-cad | 0 | 285 |
+| semio-s-plugin-dag | 0 | 276 |
+| semio-s-plugin-demonstrator | 0 | 289 |
+| semio-s-plugin-draw | 0 | 61 |
+| semio-s-plugin-energy | 0 | 26 |
+| semio-s-plugin-fem | 0 | 153 |
+| semio-s-plugin-flow | 0 | 123 |
+| semio-s-plugin-forms | 0 | 72 |
+| semio-s-plugin-gis | 0 | 65 |
+| semio-s-plugin-imperative | 0 | 61 |
+| semio-s-plugin-layout | 0 | 76 |
+| semio-s-plugin-lowpoly | 0 | 42 |
+| semio-s-plugin-mathematical | 0 | 22 |
+| semio-s-plugin-norm | 0 | 31 |
+| semio-s-plugin-note | 0 | 59 |
+| semio-s-plugin-playbook | 0 | 23 |
+| semio-s-plugin-procedural | 0 | 47 |
+| semio-s-plugin-process | 0 | 42 |
+| semio-s-plugin-puzzle | 0 | 86 |
+| semio-s-plugin-raster | 0 | 64 |
+| semio-s-plugin-reasoning-mindmap | 0 | 81 |
+| semio-s-plugin-remodel | 0 | 30 |
+| semio-s-plugin-sequence | 0 | 21 |
+| semio-s-plugin-shooting | 0 | 23 |
+| semio-s-plugin-sourcing | 0 | 25 |
+| semio-s-plugin-space | 0 | 58 |
+| semio-s-plugin-stdio | 0 | 44 |
+| semio-s-plugin-trinity | 0 | 64 |
+| semio-s-plugin-vcs | 0 | 22 |
+| semio-s-plugin-writer | 0 | 24 |
+
+**Both crates M1 reported blocked are now green**: `📏️layout` (was: stale `DwgSnapshot`/`DwgDecodeStatus` drift against stdio's evolved API) 76s, and `📋️forms` (was: `BlockListScene` missing `domain_id`, a live peer edit at the time) 72s. M6's repair and the peer's own completion both landed. `🎪️demonstrator` — sequenced last because it bundles panes from six other plugins — also compiles clean at 289s.
+
+Total wall time ~13 min at 3-wide on a freshly rebooted machine, versus the previous wave's 40+ minutes producing nothing at 174 concurrent cargo processes. The corrected standing rule (cap concurrent BUILDERS at 3 regardless of packet count) is now evidenced, not just asserted.
+
+### ✅ V1a registrar scaffolding — `bench` verb + `verify rust-warnings` landed
+
+Registrar-owned files, so sol edited them directly rather than leasing:
+
+- Root `📜️script.ts`: new `//#region 🔖️BenchScript` after `🔖️TestScript`, registered as the `bench` verb. Thin router to `@semio-tech/framework-os-dev:bench` — the budgets and harness belong beside the fixture generator that emits the registry they read, so the numbers have exactly one home.
+- Root `📜️script.ts`: `verify rust-warnings --target <triple> [-p <crate>…]` in `🔖️VerifyScript`, plus helpers `pluginCrateNames` / `rustWarningTargetScope`.
+- Root `📋️project.json`: targets `bench-plugins` and `verify-rust-warnings` (both `cache: false`, `forwardAllArgs`).
+
+**Two design decisions worth recording, both taken from evidence in the tree rather than invented:**
+
+1. **Deny-on-warnings is clippy's trailing `-- -D warnings`, never `RUSTFLAGS`.** `runCargoLint`'s own docstring in the repo library states why: `RUSTFLAGS` REPLACES rather than merges with `.cargo/config.toml`'s rustflags (`-Z threads=8`, the wasm32 `getrandom_backend` cfg, mold), which would break every wasm build. Following the existing rule instead of reaching for the obvious env var avoided reintroducing a defect the repo had already solved once.
+2. **`--all-targets` is native-only.** The wasm triples get `--lib` (plus `--features component-guest` for wasip2): plugin test harnesses are native-only, so a wasm `--all-targets` clippy would fail on code that target never ships. Target→crate-set resolution: `wasm32-wasip2` → the 33 plugin crates; `wasm32-unknown-unknown` → `semio-framework-actor` (the purity-critical one); native → framework + kernel + the fleet.
+
+Verified without spending a build slot: `bench` routes (reaches `BenchScript`, rejects a missing subcommand), `verify rust-warnings --target bogus-triple` rejects with the expected message, `📋️project.json` parses with 65 targets, and the plugin-crate discovery resolves **33** crates — byte-matching the S0 sweep list.
+
+Launch-seed entries deliberately deferred: they must name commands that `T1`/`P1`/`V1b` are still creating, and the seed is regenerated (`plugin-registry:generate`), so adding entries for not-yet-existing verbs would bake a broken launch.json.
+
+### ⚠️ Peer liveness re-check before the descriptor wave — the D-wave scope must bend
+
+Checked before dispatching any descriptor-emission packet, per the standing "live predicate, not derived artifact" rule.
+
+`26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` is **open and active ~40 min ago** (`📓️status.md` 14:38, `📓️w4-animate-report.md` 14:36). Its W4 is migrating plugins from the old `.artifact(declaration())` channel to the new `.declare_artifact(artifact())` tree, **batch 1 = 11 plugins, structurally converted and committed (`dirty=0`)**: 🎬️sequence, 🌿️vcs, 📋️forms, 🗒️note, 🪵️sourcing, 🕸️dag, ➗️mathematical, ✒️writer, 🖍️draw, 💡️reasoning, 🎞️animate. Further batches are queued behind its own concurrency cap. Its log also records three other live interactive sessions in this tree.
+
+**This corrects the D-wave plan, and the correction matters more than the plan did.** An explorer established that the "capability-claim rule blocks emission fleet-wide" line in this log is stale — the rule only fires on the 21 old-channel plugins, and the two worst-cited cases (🗄️stdio, 📐️cad) were already brought into consistency by peer tickets. But the same investigation named the strategically cheaper path as "finish the peer's migration", and **that path is not ours to take**: the peer is actively walking it, plugin by plugin, right now.
+
+Binding decisions for the D-wave:
+
+1. **Never touch a declaration channel.** No `.artifact(…)` → `.declare_artifact(…)` conversions, no `definition()` row deletions. That is the peer's ticket, mid-flight.
+2. **Descriptor emission is orthogonal and stays ours** — it reads whatever surface a plugin registers, through either channel.
+3. **A descriptor emitted for a plugin the peer is about to migrate goes stale on their next commit**, and with D0's hardening that stale file becomes a RED test for every session in this tree. So emission is ordered by peer state: the 11 committed batch-1 plugins are safe; the rest are emitted only if the peer has not opened them, and are otherwise recorded as deferred WITH the attribution, not silently skipped.
+4. Repeating this ticket's own hard-won rule: **don't chase a moving target** — but "don't touch what's live" is not "don't finish what's dead". The distinction is evidence, re-measured per plugin at dispatch time, never inferred from this table later.
+
+### ✅ K1-suspend-resume-placement — accepted, plus a registrar fix that invalidates part of J1's claim
+
+**Landed by the packet** (all in `🖥️host/🧵️shard/🦀️component.rs`): `ShardLoop::pump` now dispatches `Payload::Suspend` → `GuestRuntime::checkpoint`, `Resume` → `restore`, `Cancel` → cancel-all-jobs + unregister, replacing the blanket `Fault` arm; three new struct variants `ShardOutcome::{Checkpoint{actor,state}, Resumed{actor}, Cancelled{actor}}` carry results back over the transport; `Effect::SpawnJob`'s `placement` is captured into a `job_placement` map (it was destructured away with `..` and silently discarded) and `Exclusive` jobs are stepped first via a stable sort. Four tests added.
+
+**Two judgement calls I endorse rather than override:**
+- `Payload::Cancel(u64)` has **no doc comment and no other construction or match site anywhere in the tree** — the packet grepped for one before writing. Rather than invent a meaning for the bare `u64`, it implemented actor-level teardown (the variant sits beside `Suspend`/`Resume`, while per-job cancellation already exists as `Effect::CancelJob{job}` and per-envelope cancellation as `Envelope::cancel_of`), left the `u64` unconsumed, and flagged it for whoever documents it. Deriving intent from the enum's own neighbourhood beats guessing.
+- Cross-shard `Exclusive` routing needs `Kernel`/`ShardTable` wiring a `ShardLoop` cannot reach, so it implemented the honest in-shard approximation, labelled it as such, and filed a lease-request instead of faking placement.
+
+#### 🐛️ The real find: J1's "jobs proven end to end" did not cover the completion path
+
+K1 reported a failing test it correctly refused to fix (3 files outside its scope). I reproduced it in isolation before acting, rather than taking the report's word:
+
+```
+Running -> Ok("{\"kind\":\"running\",\"progress\":[1]}")
+Done    -> Err(Error("cannot serialize tagged newtype variant JobStep::Done containing a sequence"))
+Failed  -> Err(Error("cannot serialize tagged newtype variant JobStep::Failed containing a sequence"))
+```
+
+**J1 fixed `Running` and stopped.** Its own doc comment states the rule as "serde cannot serialize a newtype variant whose payload is itself an `Option`" — but the actual rule is *any sequence*, and `Vec<u8>` is a sequence. So **every successful job completion failed to serialize**, on the single path a job must survive to be worth having. J1's resumability test drove three `step_job` calls and asserted on in-process `JobStep` values rather than on bytes that had crossed `send_outcome` — so the completion path was proven in memory and never on the wire.
+
+Registrar fix applied across the files K1 could not touch: `JobStep::Done{output}` / `Failed{error}` as struct variants, plus all 12 construction/match sites in `🖥️host/🦀️component.rs` and `🧵️shard/🦀️component.rs`. The WIT-generated `JobStep` (guest SDK, scale fixture) is untouched — component-model variants are not serde-tagged, so those newtypes are correct where they are.
+
+**The generalisable lesson, recorded because this ticket has now been bitten by it twice:** fixing one variant of a defect is not fixing the defect. When a rule is discovered through one symptom, re-derive the rule and re-check every sibling — J1 patched the variant that failed rather than the class that was broken, and a green test suite hid the other two for a full wave.
+
+Acceptance (coordinator-run, after the fix):
+```
+cargo check -p semio-framework-plugin-host --all-targets  → Finished, 0 errors, 0 warnings in this crate
+cargo test  -p semio-framework-plugin-host --lib          → ok. 74 passed; 0 failed
+```
+K1 had reported 72 passed / 1 failed; the fix takes it to **74/0** (its own two suspend/resume tests now also exercise a serializable completion). Also cleared an `unused MutexGuard` warning in `MockGuestRuntime::instantiate` (`drop(self.queue_for(actor))` — the entry-creating side effect was the point, the guard was not). One warning remains in `semio-framework-os-kernel` (`unused_assignments`), left for Z1.
+
+### 🔓️ Registrar unblock: descriptor emission was blocked by TWO defects, neither of them the capability rule
+
+D0 hit a wall running the note describe round-trip. Diagnosing it cleared the fleet-wide blocker this ticket has carried since W3 — and neither cause was the capability-claim rule the log blamed for a full wave.
+
+**Defect 1 — WASI Preview 2 was never wired into any linker in this repo.**
+
+```
+component imports instance `wasi:io/poll@0.2.9`, but a matching implementation was not found in the linker
+```
+
+A precise, already-verified lease-request for exactly this was sitting unactioned in our own ticket folder — `📓️lease-from-LLM-FIRST-OS-P7b-wasi-linker.md`, filed by the `P7-headless-workspace` packet of a peer ticket, addressed to "whoever owns `🔌️plugin/🖥️host/**`", i.e. us. It had already established the root cause (`world actor` declares only `pure`; the Rust `wasm32-wasip2` target pulls WASI in transitively, so every real component needs a full WASI linker regardless of its own WIT), confirmed `wasmtime-wasi = "22.0.1"` was a declared-but-never-used dependency, and written the fix against the pinned crate source. **It blocked that peer's entire headless path, our descriptor emission, and our bench — and it sat unread in our folder while we attributed the blockage to something else.** A lease-request nobody reads is indistinguishable from a bug nobody found.
+
+Applied in both places that build a `Linker` (the describe CLI has its own, which the lease did not cover):
+- `🖥️host/🦀️component.rs`: `ActorHostState` gains `wasi_ctx`/`resource_table`, `impl WasiView`, `wasmtime_wasi::add_to_linker_sync` beside the existing `pure::add_to_linker`.
+- `📇️describe/📦️glue.rs`: same shape on `DescribeHostState`, plus `wasmtime-wasi` added to that crate's `Cargo.toml`. Its dependency comment had explicitly reasoned *"no `wasmtime-wasi`: the world declares no wasi import"* — a conclusion drawn from the WIT and disproved the first time a real component was instantiated. Comment replaced with the measured reality.
+- Both ctxs are the sandboxed default (no inherited stdio/fs/network/env), matching the crate's capability-gated stance.
+
+**Defect 2 — the describe fuel cap was ~18× too small, and failed without saying so.**
+
+With WASI linked, instantiation succeeded and execution trapped *inside* the component at `AppBuilder::try_build_definition` with a bare "error while executing" — no mention of fuel. `DESCRIBE_FUEL_BUDGET` was `5_000_000`, documented as "generous for a pure struct-building function": an estimate made against the function's *shape*, never against a real build. Measured actual consumption for `🗒️note`:
+
+```
+[DEBUG] describe fuel remaining after call: Ok(19907672227) of 20000000000   → 92_327_773 consumed
+```
+
+Raised to `2_000_000_000` (~21× headroom over the measured figure, still bounding a runaway to seconds) with the measurement written into the docstring and an instruction to **re-measure, not re-estimate**, if a larger plugin trips it. Probe instrumentation removed.
+
+**Round-trip proof — the thing that was missing:**
+```
+cargo run -p semio-framework-plugin-describe -- describe <note.wasm> --out <probe>  → exit 0
+regenerated 🔣️descriptor.json vs committed ✏️s/🔌️plugins/🗒️note/🔣️descriptor.json  → sha256 IDENTICAL (266 725 bytes, structural diff empty)
+```
+
+The emission path is now proven reproducible end to end against a real `wasm32-wasip2` component. **Both defects were environmental, not per-plugin data problems** — which is why 32 plugins "failed the capability rule": most of them never got far enough to reach it.
+
+### ✅ C1 census cleanup accepted — exit-checklist item 9 measured clean
+
+C1 deleted the last live `ProgramSupervisorState` (`💻️os/🖥️host/🦀️component.rs`, the enum + its ~10 consumers, replaced by the actor kernel's real `ActorStatus`/`FailureStage`) and the process-global `set_host_backbone_channel` (`🏪️store/🦀️component.rs`). Both crate checks finished (`semio-framework-os` 4m53s, `semio-framework-os-kernel`), and I re-ran the census myself rather than accepting the report — the standing lesson is that an executor's file count is not proof.
+
+Full "Replace, never wrap — these must not exist at exit" census, doc-comment prose excluded:
+
+| symbol | live hits | verdict |
+|---|---|---|
+| `PluginWorkerClient` (both copies) | 0 | ✅ gone |
+| `PluginModuleLease` | 0 | ✅ gone |
+| `ExtensionRuntime` | 0 | ✅ gone |
+| `ProgramSupervisorState` (both defs) | 0 | ✅ **C1** |
+| `PLUGIN_FUEL_BUDGET` | 0 | ✅ gone |
+| `PLUGIN_WORKER_UNRESPONSIVE_MS` | 0 | ✅ gone |
+| `INSTANCE_GUARD` / `clear-instance-guard` | 0 | ✅ gone |
+| `install_io_fallback_dispatcher` | 0 | ✅ gone |
+| `set_host_backbone_channel` | 0 | ✅ **C1** |
+| `runSerialized` | 0 | ✅ gone |
+| `loadPluginModuleUncached` | 0 | ✅ gone |
+| `LeasePool` | 14 | ✅ **correct** — all 14 in `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts`, exactly the relocation `📌️important.md` prescribes for the generic pool's 3 non-plugin users. Zero in the kernel. |
+| `WasmPluginRuntime` | 1 | ⚠️ one error-message string in `🏃️run/🦀️component.rs:1363` naming what was removed — R1 is replacing that code path |
+| `host_port` | 3 | ✅ false positives — a URL-parsing local in `Shell/🧊️component.rs` and testcontainers' `get_host_port_ipv4`; unrelated to the deleted WIT import |
+| `exchange(` | 37 | ✅ false positives — see below |
+
+**Naming hazard worth recording, because it will re-fire on every future census.** The banned `exchange` is the WIT-level plugin ABI replaced by `poll(events,budget)→TurnResult`. In `📜️component.wit` the word now survives ONLY in prose describing what it replaced ("the old `exchange(id, cmds)` collapses into this"), and the real export is `poll` — verified. But the host keeps an unrelated internal `TransactionCoordinator::exchange(plugin_id, instance_id, AppCommand) -> Vec<AppFrame>` (`🖥️host/🦀️component.rs:3379` + 36 call sites): a different mechanism that happens to share the word. A grep-based census cannot tell them apart, so **anyone re-running item 9 will see 37 hits and must not read that as the ABI surviving.** Either the census pattern gets narrowed to the WIT surface, or the host method gets a name that is not a banned word.
+
+Item 9 ("none of the must-not-exist symbols remain") is therefore **met**, with the one genuine remainder (`WasmPluginRuntime` in a string) owned by R1.
+
+### ✅ T1 metrics + task manager — accepted, with one honest gap left standing
+
+**(a) Metrics.** `ActorMetricsSample`/`ShardMetricsSample`/`RuntimeMetricsSnapshot` + a `runtime_metrics_due` 2Hz gate added to `🎭️actor/🦀️component.rs` with the clock **always caller-injected**; `RuntimeMetricsPublisher` (native host) and `startRuntimeMetricsPublisher` (web `ActivationRegistry`) both reuse the pre-existing `Origin::Bus`/`Payload::Event` primitive rather than inventing a second bus.
+
+**The gap T1 declared rather than hid, and it is the right call:** nothing in this codebase — native or web — yet drives a live `Kernel` thread or tracks topic subscribers, so the publication path is **correct but unreachable**. It is wired, tested and provably shaped right, and no running process currently calls it. Claiming "metrics published at 2Hz" would have been false; claiming nothing would have lost the work. Recorded as belonging to whoever lands a live kernel thread.
+
+**(b) Task manager.** New `TaskManager` element reuses the existing dual-rendered `SurfaceKind::Table` scene pipeline (it studied `Table`/`Interpreter` first) instead of inventing a new surface kind — so React+wgpu parity is genuine and no out-of-scope renderer file was touched. Plus an i18n'd (en/de, no default language) accessible `TaskManagerPanel`.
+
+**Coordinator-verified, not taken from the report:**
+```
+purity grep on 🎭️actor/🦀️component.rs → only match is the doc comment asserting purity (crate core clean; this is what keeps mobile open)
+🔖️IoRouter region in 🎠️kernel/🟦️component.ts → 240 lines, sha256 ddb2ce7f… — byte-identical to the hash A3 recorded in its own wave
+```
+The peer-region invariant has now survived two independent packets editing the same file, which is the whole point of measuring it each time rather than assuming it.
+
+Reported green: actor 57/57 (was 52/52), plugin-host 75/75, shard-client vitest 30/30, kernel vitest 14/14, TaskManager vitest 9/9. **Note a number disagreement to re-measure, not average:** my own post-K1 run of plugin-host was 74/0. Two measurements of the same suite differ, so the suite gets re-run rather than either figure being quoted.
+
+**Follow-up dispatched:** T1 wrote its suspend/resume/cancel actions as "correctly shaped but not yet dispatched (K1's pending work)" — but K1 landed mid-flight. T1 resumed to wire the three actions through to the real `Payload::Suspend/Resume/Cancel` → `checkpoint`/`restore`/`cancel` paths, so the buttons stop being inert.
+
+**Lease filed and pending with registrar:** `terra-T1-lease-typegen.md` — `🎭️actor/🤖️generated/` is **empty**; ts_rs typegen for this crate has apparently never been run. Until it does, the TS side uses hand-authored stand-in interfaces (the same pattern `🧵️shard-client.ts` already used for `ShardBudget`). Not a hard blocker; queued behind the bench for build-slot reasons.
+
+### ✅ D0 descriptor plumbing accepted + registrar lease actioned — the gate is now honest
+
+**What D0 landed:** one canonical descriptor path (the plugin/extension **owner root**, sibling of the tracked `🛂️manifest.json`), a shared `describePluginComponent()` in `📇️describe/📜️script.ts` registered as a `describe` command + nx target on **all 33** plugin crates, and a hardened `descriptor_is_fresh()` using an explicit per-crate opt-in ratchet (`DESCRIPTOR_MIGRATED_PLUGINS = ["note"]`) so a missing descriptor hard-fails for a listed crate while the unmigrated fleet stays green. `cargo test -p semio-s-plugin-note --lib` → **115/115** including `descriptor_is_fresh`.
+
+**Two findings worth keeping:**
+- It fixed a real pre-existing bug in `ensureBuiltBin()`, which hardcoded `target/debug` and ignored `CARGO_TARGET_DIR` — under this ticket's mandatory ticket-scoped target dirs that would have exec'd a stale or absent binary from the wrong tree.
+- **The committed `🗒️note` descriptor was genuinely stale**: the live peer ticket had migrated note's declaration channel since E2 committed it. Re-running `describe` is the intended maintenance action, and this is the first evidence that descriptors decay when a peer changes declarations — exactly the coupling that makes emitting descriptors for peer-held plugins a bad idea right now.
+
+**Lease actioned by registrar** (`📇️registry/📜️script.ts`, `DESCRIPTOR_JSON_REL_PATH`): dropped the `🤖️generated/` segment. The old constant reasoned by analogy with `🎭️actor`'s generated TS bindings — but that analogy points at a directory holding *regenerable build output*, while a descriptor is a *tracked artifact* whose entire purpose is to be the committed, static answer the registry reads without instantiating wasm. `🤖️generated/**` is globally gitignored, so the old path could never hold a committed descriptor at all.
+
+**The failure mode this had been producing is worth naming:** the gate and the freshness test were reading *different files*, and **both reported green**. `plugin-registry:check` said note had no descriptor while a real, fresh one sat at the owner root and `descriptor_is_fresh()` passed against it. Two green signals, disagreeing, neither wrong on its own terms.
+
+Verified after the lease landed:
+```
+bun nx run @semio-tech/plugin-registry:check    → exit 1: "plugin registry catalog is stale" (the gate could finally SEE descriptor data)
+bun nx run @semio-tech/plugin-registry:generate → exit 0
+bun nx run @semio-tech/plugin-registry:check    → exit 0: "descriptor gate: 1/59 crates have a 🔣️descriptor.json"
+```
+Warnings now name the correct owner-root path and a command that actually exists. **1/59 is the true number** — previously the gate reported 0 while the answer was 1, and would have kept reporting 0 no matter how many descriptors were emitted.
+
+Pre-existing gap D0 found and did not paper over: `🔋️energy` declares no `crate-type` in its `Cargo.toml`, so no wasm artifact is produced for it at all — it cannot be described until that is fixed.
+
+### 🔧️ Bench blocked by a third half-landed peer refactor — fixed, same signature as the other two
+
+The first native bench run died compiling the wgpu renderer:
+```
+error[E0063]: missing field `color` in initializer of `PresencePeerRow`
+  --> 🧱️elements/Shell/🧊️component.rs:316
+```
+`PresencePeerRow` (`🖱️ui/🧱️elements/👥️PresenceBar`) gained `color: Option<u8>` — "hub-assigned session-color palette index (contract freeze §C7.5)" — and this inbound mapping site was not updated. `Shell/🧊️component.rs` is registrar-owned (shared with live presence/hover tickets), so this was mine.
+
+**Resolved by reading the data flow, not by filling the field to make it compile.** The wire `PresencePeer` (`📡️spr/📡️wire/🦀️component.rs:859`) has **no colour field at all** — checked the whole struct, not just the neighbourhood: actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction. The hub assigns session colours out of band through its `Session` frame, and this shell keeps no such roster. So `None` is the only truthful value, it is the row's own documented "no hub connection" default (renders as palette index 0), and it matches the identical decision already recorded 2 000 lines away in this same file for the OUTBOUND heartbeat.
+
+Recorded as a real consequence rather than a silent default: **remote peers all render at palette index 0 in wgpu** until either the wire carries the colour or the shell tracks Session frames. That is the presence ticket's call, not this ticket's.
+
+`cargo check -p semio-framework-os-renderer-wgpu --lib` → **Finished in 2m 01s**, 0 errors.
+
+**This is the fourth distinct half-landed peer change this ticket has absorbed**, and all four share one signature — *the artifact moved, its registration did not*: a moved generated file (ui-styling), a renamed presence type set, a moved crate whose workspace member entry was left behind (that one broke `cargo metadata` for every session on the machine), and now a struct that gained a field its call sites did not. The pattern is stable enough to be worth a check rather than a lesson: after adding a required field to a shared struct, grep its initializers before considering the change landed.
+
+### ✅ T1 follow-up — the task manager's buttons now do something
+
+Dispatched after K1 landed mid-flight, which turned T1's "correctly shaped but not dispatched" actions into closeable work.
+
+- `🎠️kernel/🟦️component.ts` (`ActivationRegistry`): new `cancel(actorId)` disposes the worker instance and forgets the actor, mirroring K1's native semantics (cancel running jobs + unregister) — so a later `resume()` correctly throws rather than silently resurrecting a dead actor.
+- `TaskManager/🟦️component.tsx`: `createTaskManagerDispatcher(registry)` maps suspend/resume/cancel onto `ActivationRegistry`'s real methods, which call through to a real `ShardClient`.
+- 3 new tests build a real `ActivationRegistry` + real `ShardClient` (only `Worker` is faked), render a real panel, click a real button, and assert real state changed — the same bar `AgentApprovals`' own dispatch tests set.
+
+**Native side deliberately left alone, with the right reason**: `Kernel::suspend`/`resume` and `Payload::Cancel` are the correct calls, but nothing drives a live `Kernel` thread natively yet — the same root cause as the metrics publisher gap. It filed **no** lease, correctly observing there is no concrete landable diff to request, only missing infrastructure. A lease-request for "someone should build a thing" would have been noise.
+
+**The number disagreement resolved by re-measurement, not by averaging.** I had plugin-host at 74/0, T1 first reported 75/75. Re-run fresh: **75/75, 0 failed** — and the explanation is that T1's own follow-up added a test, so both earlier figures were correct at the moment they were taken and neither is now. This is the second time today two green measurements of the same suite disagreed; both times the answer was to re-run rather than to pick one.
+
+Also re-verified: actor 57/57, shard-client 30/30, kernel vitest 17/17, TaskManager 12/12, and the peer's `🔖️IoRouter` region **still** byte-identical at 240 lines (md5 `222db26f…`) after a second round of edits to that file.
+
+## 🎯️ THE BENCH RAN — and immediately earned its keep
+
+First real execution of the 50×50 scale bench through `Kernel` + `ShardLoop` + `WasmtimeRuntime` against the real `wasm32-wasip2` fixture component. `bun ./📜️script.ts bench plugins --renderer native --count 50 --extensions 50` → exit 0, report at `terra-v1b-bench-native.json`.
+
+**Run 1 result: `1:pass 2:fail 3:fail 4:fail 5:skipped 6:fail 7:fail 8:fail`**
+
+| # | budget | measured |
+|---|---|---|
+| 1 | registry 2550 records, 0 instantiations, <150 ms | ✅ **4.78 ms**, recordCount 2550, instantiations 0 |
+| 2 | cold boot ≤1.5 s native | ❌ `instance count too high at 2` |
+| 3 | activate 100 actors across K shards | ❌ same |
+| 4 | native RSS ≤1.5 GiB | ❌ same |
+| 5 | interactive p95 ≤8 ms | ⏭️ skipped — budget 4 failed before it could run |
+| 6 | hang killed, shard rebuilt, pause ≤250 ms | ❌ same |
+| 7 | stateful suspend/resume, identical hash | ❌ same |
+| 8 | capability revoked at runtime | ❌ same |
+
+**Six failures, one cause — and it is not a scaling limit.** `wasmtime: resource limit exceeded: instance count too high at 2`. `BudgetLimiter::default()` set `max_instances: 1` (and `max_tables`/`max_memories: 8`). Those are **core-module** numbers guarding a **component** store: the component model instantiates one core instance per module in the component graph (guest module + the `wasm32-wasip2` adapter + whatever `wit-bindgen` composes), so a real plugin dies at its second core instance.
+
+**What that actually means: `WasmtimeRuntime` — the production native host — could never instantiate ANY real component.** Not a slow path, not a scaling ceiling: zero. The whole native runtime this ticket built was, in this one respect, non-functional.
+
+**Why nothing caught it for three waves.** B1 landed `BudgetLimiter` as one of the four pieces that did not depend on A1/A3, and it compiled. W1's acceptance was `cargo check`/`cargo test`. The unit tests use `MockGuestRuntime`, which never instantiates wasm. The ONE path that had ever instantiated a real component end to end — the `📇️describe` emitter — builds its own `Store` and **installs no limiter at all**, so it sailed past. Two independent green signals, neither touching the broken line.
+
+This is the third instance today of the same class, and the sharpest: **a contract that compiles is not a contract that runs, and a test that passes against a mock is not a test of the runtime.** J1's jobs, the WASI linker, and now the resource limiter were each "verified" by a check that structurally could not observe the defect. The bench is the first artifact on this ticket that runs the real thing, and it found this on its first execution.
+
+Raised to `max_instances: 256`, `max_tables`/`max_memories: 128` — bounded against a hostile component, room for ordinary composition, with the instruction to re-measure rather than re-guess. Re-run in flight.
+
+### 📝️ Z1 backlog item found while the bench queued: `[DEBUG] ` used for permanent diagnostics
+
+`📌️important.md` rule 8 reserves the `[DEBUG] ` prefix for **temporary** logs, removed before a packet reports done — that is what makes a later sweep safe to run blind. The new bench code uses it for permanent operator-facing diagnostics instead: `🧊️wgpu/📦️glue.rs` **29**, dev `📜️script.ts` **51**, wgpu `📜️script.ts` **4**. Examples are real error paths (`"scale-bench: failed to read {}"`, `"engine build failed"`, `"wrote <report path>"`) that SHOULD survive.
+
+The hazard is precise: a future sweep that deletes every `[DEBUG] ` line — exactly what the rule licenses — would strip the bench's entire error reporting and leave it failing silently. Repo-wide the count is 312+, so the prefix has already lost its meaning as a marker.
+
+Z1 should re-prefix permanent diagnostics (or drop the marker) rather than delete them, and the distinction is worth stating in `📌️important.md`: `[DEBUG] ` means *delete me*, not *this is a log line*.
+
+### 📊️ Bench run 2 — real actors ran, and the shard pool turned out not to be sharding
+
+With the limiter corrected, actors instantiate and execute. **`1:pass 2:fail 3:fail 4:fail 5:skipped 6:fail 7:PASS 8:fail`** — and the failures are now *measurements* rather than one blocked line.
+
+| # | measured | verdict |
+|---|---|---|
+| 1 | 2.76 ms, 2550 records, 0 instantiations (≤150 ms) | ✅ pass |
+| 2 | **718 ms** cold boot (≤1500 ms) — but 143 actors live and **29 guest traps** | ❌ timing well inside budget; faults fail it |
+| 3 | activeActors **100/100**, shardsReported 8 — but `perShardCounts {"0": 100}`, maxShardLoad **100** vs ceiling **14** | ❌ **all actors on one shard** |
+| 4 | `maximum concurrent limit of 1000 for core instances reached` | ❌ second pool limit |
+| 5 | — | ⏭️ skipped, budget 4 failed first |
+| 6 | trap `cannot enter component instance`, killed=false, siblingsRestored=true | ❌ |
+| 7 | checkpoint `395f1136…` **identical** after suspend→resume, through the REAL `ShardLoop::pump` → `checkpoint`/`restore` path | ✅ **pass** |
+| 8 | `capabilityRequested: false`, survived revoke turn, status Idle | ❌ actor never requested the capability |
+
+**Budget 7 passing is K1's vindication**: suspend → resume → re-checkpoint produces byte-identical state through the production dispatch path that was faulting out this morning. The bench measured the thing the packet claimed, independently.
+
+#### 🐛️ The headline defect: `ShardTable::pin` never distributed anything
+
+Budget 3 activated 100 actors across 8 configured shards and put **all 100 on shard 0**.
+
+`pin` was `ShardId((actor.0 % pool as u64) as u16)`. `ActorId` is bit-packed `plugin_ordinal:u16 | kind:u2 | ordinal:u32 | generation:u14` — **generation occupies the low bits**, and `Kernel::activate` mints every actor at generation 0. So `actor.0 % 8` was `0` for every actor that has ever existed. The pooled-shard multiplexing that is this ticket's entire reason for being was a no-op, in the one line that implements it.
+
+**Why three waves of tests missed it:** the existing coverage asserts pin/pack round-trips and that a pinned actor resolves to a shard. Every one of those passes when the answer is always shard 0. There was no test of the *property* — that N actors occupy more than one shard.
+
+Replaced with **least-loaded** placement, not a hash: budget 3's `no shard > ceil(actors/K)+1` is a hard bound that hash variance breaks well before 100 actors, and exact balancing gives it by construction. Least-loaded also refills the gaps `unpin` leaves, which a round-robin counter strides past. Ties break on lowest id — deterministic, no clock, no RNG, crate stays pure. (I wrote the hash version first, and the new distribution test failed it — the test caught my fix, which is the point of asserting the property rather than the mechanism.)
+
+Three tests added that would have caught the original: `pin_spreads_actors_of_one_plugin_across_the_pool` (8/8 shards occupied, none over ceiling), `pin_is_idempotent_for_the_same_actor`, `pin_refills_the_gap_left_by_unpin`. Actor crate **60 passed / 0 failed**.
+
+#### 🐛️ Second pool limit, same class as the first
+
+Budget 4 died on `maximum concurrent limit of 1000 for core instances reached` while the component pool still had thousands free. `build_shared_engine` set `total_component_instances` and nothing else — but the pooling allocator meters core instances, memories and tables from **separate pools that each default to 1000**, and one component consumes several of each.
+
+Sized off the component budget so raising one knob cannot silently leave the others behind — but **not uniformly**, and that distinction cost a build to learn: multiplying `total_memories` by the core factor makes the reservation `total_memories × max_memory_size` = tens of TiB, the allocator refuses outright, and `build_shared_engine` **silently falls back to on-demand** — losing the entire pooling design while every test still passes. Caught by `build_shared_engine_defaults_to_pooling` flipping to FAILED. Core instances ×8, tables ×4, memories ×1: core/table slots are bookkeeping, memory slots are address space. Host **86 passed / 0 failed**.
+
+### 📊️ Bench run 3 — shard fix confirmed; and the bench was failing itself on the fixture working correctly
+
+**`1:pass 2:fail 3:fail 4:fail 5:skipped 6:PASS 7:PASS 8:PASS`** — four passing.
+
+**Budget 3's distribution is fixed, measured:** `perShardCounts {"0":13,"1":13,"2":13,"3":13,"4":12,"5":12,"6":12,"7":12}`, maxShardLoad **13** against ceiling **14**, all 8 shards occupied, 100/100 actors active. From all-100-on-shard-0 to textbook balance. **Budget 6 and 8 also flipped to pass** — 8's `capabilityRequested` went `false` → `true` because actors now actually reach their `InstanceOpen` turn.
+
+#### 🔍️ But budgets 2 and 3 were failing on a criterion that is not in the spec
+
+Both still reported fail — budget 2 at **669 ms against a 1500 ms threshold**, budget 3 with every specified quantity correct. The only unmet condition in each was `faults == 0`.
+
+That condition is **not in `📓️design-workforce.md` §4**. Budget 2 is a deadline plus "only `on-startup-finished` actors live"; budget 3 is actor count, shard count and per-shard ceiling. Neither mentions faults. And the fixture ships `hang` (393 records) and `crash` (343) **specifically so the watchdog and failure ladder have something to catch** — 29% of the catalog. Requiring zero faults across a random sample of it is requiring the crash profile not to crash.
+
+Measured proof it was that and not a runtime defect: 29 faults across 143 boot actors ≈ 20%, against a 29% hang+crash share of the catalog — the right order for a random draw, and the fuel hypothesis was already excluded because the harness overrides fuel to 200M.
+
+Corrected to count **unexpected** faults only: a trap from an `idle`/`cpu`/`ui`/`io`/`stateful` actor is still a real failure and still fails the budget; a trap from `hang`/`crash` is the fixture doing its job. Implemented as one shared `unexpected_faults()` helper so both budgets use the same rule.
+
+**Worth stating as its own lesson**: this is the mirror image of every other defect found today. Those were runtime bugs hidden by a too-weak check; this was a correct runtime failed by a too-strong one. A red result deserves the same scrutiny as a green one — the wrong response would have been to "fix" the runtime until the crash profile stopped crashing.
+
+Also fixed, same class as the earlier pool bug: budget 4's error moved from `core instances` to `maximum concurrent GC heap limit of 1000 reached` — a THIRD pooling sub-pool with its own 1000 default.
+
+### ✅ P1 process shards — accepted, with the runtime proof the packet was actually for
+
+`ProcessTransport`/`StdioTransport` (length-prefixed, tagged framing) in the plugin-host crate, plus a `semio-shard` `[[bin]]` hosting a real `ShardLoop` + `WasmtimeRuntime` over stdio. The `🎭️actor` crate is untouched — purity grep still matches only its own doc comment, so the mobile-keeping constraint holds and the transport lives host-side exactly as `🚚️ShardTransport`'s doc prescribes.
+
+**It proved the thing rather than compiling the thing.** Built a real `wasm32-wasip2` component (verified component-model magic bytes), spawned two `semio-shard` children, ran real turns, then `kill -9`'d child A **from outside the process** and watched a native port of `ShardClient.checkHeartbeats` detect the EOF, rebuild shard A with a fresh child, and confirm untouched shard B still responsive. Coordinator-verified from its log:
+
+```
+[semio-shard] pid=1664 package=scale-fixture-a actor=1 ready
+[semio-shard] pid=1665 package=scale-fixture-b actor=2 ready
+[semio-shard] pid=1681 package=scale-fixture-a actor=3 ready     ← rebuilt after kill -9
+test process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy ... ok
+```
+
+Three distinct PIDs is the evidence: two spawned, one respawned. This is the first genuine process-isolation demonstration on the ticket, and it mirrors the web `ShardClient`'s semantics rather than inventing different ones.
+
+`cargo check -p semio-framework-plugin-host --all-targets` and `cargo test --lib` both exit 0, **86 passed / 0 failed** — and its arithmetic reconciles with mine exactly (74 baseline + 12 new).
+
+Gaps it flagged rather than glossed: no live scheduler wires `ShardRuntimeKind` yet (pre-existing, grep-confirmed), no multi-actor bootstrap over the child's CLI, no checkpoint-restore across the kill boundary. Launch-entry lease recorded for the registrar.
+
+## ✅ THE 50×50 CLAIM IS NOW MEASURED — 6 of 8 budgets pass
+
+`bun ./📜️script.ts bench plugins --renderer native --count 50 --extensions 50` → exit 0.
+**`1:pass 2:pass 3:pass 4:fail 5:skipped 6:pass 7:pass 8:pass`**
+
+| # | budget | measured | threshold |
+|---|---|---|---|
+| 1 | registry parse, zero instantiations | **2.71 ms**, 2550 records, **0 instantiations** | ≤150 ms ✅ |
+| 2 | cold boot, only startup actors live | **764 ms**, 143/143 startup actors, **0 unexpected faults** | ≤1500 ms ✅ |
+| 3 | 100 actors across K shards | **100/100** active, 8/8 shards, per-shard **13,13,13,13,12,12,12,12**, max 13 | ceiling 14 ✅ |
+| 4 | memory ≤ K×512 MiB + headroom | `maximum concurrent GC heap limit of 1000 reached` | ⛔️ 4th pooling sub-pool |
+| 5 | interactive p95 ≤8 ms | — | ⏭️ depends on budget 4's fleet |
+| 6 | hang killed, shard rebuilt, siblings restored | trap caught, siblings restored, pause 0 ms | ≤250 ms ✅ |
+| 7 | stateful suspend/resume identical hash | `395f1136…` **identical** both sides | ✅ |
+| 8 | capability revoked at runtime | requested ✓, survived revoke + follow-up turn, status Idle | ✅ |
+
+Every one of these is a real number from real `wasm32-wasip2` components executing through the real `Kernel` + `ShardLoop` + `WasmtimeRuntime`. The sentence that has stood in every summary since W4 was scoped — *"the 50×50 claim is measurable but still unmeasured"* — can finally come out.
+
+**Budget 3 is the one that matters most**, because it is the ticket's thesis stated as a number: 100 actors, 8 shards, 12-13 actors per shard. This morning that same measurement was `{"0": 100}`.
+
+### The honest remainder
+
+**Budget 4 is genuinely unmet**, and it is a real constraint rather than a bug: full 2550-actor concurrency hits wasmtime's pooling allocator caps. Four separate sub-pools have now been found this way — component instances, core instances, memories/tables, and GC heaps — **each with its own 1000 default, and each invisible until the scale exceeds it**. They surface strictly one run at a time: fixing one lets the bench run far enough to hit the next. `total_gc_heaps` is now configured too; whether that clears budget 4 or reveals a fifth cap is the next run's answer, not a prediction.
+
+**Budget 5 is skipped, not passed** — it needs budget 4's full fleet. **Web renderers (react/wgpu) were never run** and their rows say `skipped` with a reason, never a fabricated pass. So the measured claim today is precisely: *50 plugins × 50 extensions activate, shard-balance, checkpoint, survive revocation and get their hangs caught — on native, at 100-actor and 143-actor scale.* Not the full 2550 concurrently, and not on the web renderers.
+
+### 🚀️ Budget 4 breakthrough: **all 2550 actors live at 391 MB RSS**
+
+With `total_gc_heaps` configured (the fourth sub-pool), the full-scale run got through:
+
+```
+"activatedCount": 2550, "activeActors": 2550, "rssBytes": 410009600   (391 MB)
+```
+
+**2550 actors — the entire 50×50 catalog — instantiated and live simultaneously in 391 MB.** The budget's own ceiling is 4.25 GiB, so memory comes in at under a tenth of it. This is the "K shards ⇒ ceiling independent of package count" claim from `📋️master.md`'s baseline table, measured: the runtime it replaces managed ~20 plugins before exhausting a 4 GiB-per-module guard region.
+
+Budget 4 still reported `fail` on `faultCount: 516` — the same too-strict criterion I had corrected for budgets 2 and 3 but not this one. 516/2550 ≈ 20%, again the hang+crash share. Same `by_design` filter now applied; re-running.
+
+### ⚠️ Budget 5 ran for the first time — and its failure needs reading carefully
+
+`p95Ms: 237.99` against an 8 ms native threshold, 0 round faults, 30 rounds. But look at the samples: `229.905, 229.957, 229.970, 229.972, 229.973, 229.982, 229.982…` — **thirty samples inside a 0.1 ms band**. That is not contention jitter, it is a constant.
+
+The cause is the harness's own documented limitation, which V1b stated up front rather than hiding: **one physical `ShardLoop` backs all K shard labels**, so `pump()` runs every actor serially on one thread. The interactive turn queues behind 40 `cpu` actors busy-looping their declared milliseconds — ~230 ms of strictly serial work, reproduced to within a tenth of a millisecond every round.
+
+**So budget 5 is measuring the harness, not the kernel.** The kernel's design point is that K shards execute in parallel; a single-threaded driver cannot exercise that no matter how the number comes out. Recording it as a **failure with a known-invalid instrument** — not as evidence the design misses its latency target, and not quietly as "skipped" either. It becomes measurable once a real multi-shard executor drives it (P1's `ProcessTransport` and the thread-shard path are both candidates); until then the row stays red and honest.
+
+This is the counterpart to the `faults == 0` correction: there, a good runtime failed a bad criterion; here, an untested property fails a good criterion measured with the wrong instrument. Both are reasons to read a red row rather than react to it.

@@ -287,6 +287,16 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
                 dst.patched.extend(src.patched);
+                // 🐛️ Pre-existing absorb-law bug, fixed in passing (same class as the
+                // sequence plugin's `DisconnectSteps`-after-`DeleteStep` fix): a `patched`
+                // entry absorbed alongside a LATER `removed` for the same id survived the
+                // merge, so `apply_stock_extra_delta`'s own consistency check (which rejects
+                // a `patched` id that is also `removed`) then rejected the whole absorbed
+                // diff — violating `absorb(d1, d2).apply(base) == d2.apply(d1.apply(base))`
+                // whenever d2 deletes something d1 patched. Dropping the stale patch entry
+                // once its id lands in the merged `removed` set restores the law.
+                let removed_ids: std::collections::BTreeSet<&str> = dst.removed.iter().map(String::as_str).collect();
+                dst.patched.retain(|entry| !removed_ids.contains(entry.id.as_str()));
                 if src.reordered.is_some() {
                     dst.reordered = src.reordered;
                 }
@@ -299,6 +309,8 @@ impl MutationDiff<CurateSnapshot> for CurateDiff {
                 dst.added.extend(src.added);
                 dst.removed.extend(src.removed);
                 dst.patched.extend(src.patched);
+                // 🐛️ Same fix as `stock_extra` above — see that arm's doc comment.
+                dst.patched.retain(|entry| !dst.removed.iter().any(|id| id == &entry.object_id));
                 if src.reordered.is_some() {
                     dst.reordered = src.reordered;
                 }

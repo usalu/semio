@@ -6293,28 +6293,26 @@ pub trait BackboneChannelPort: Send + Sync {
     fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
 }
 
-static HOST_BACKBONE_CHANNEL: Mutex<Option<Arc<dyn BackboneChannelPort>>> = Mutex::new(None);
-
-/// @emoji 🔌️ Injects the plugin host's duplex backbone channel for wasm-sandboxed document stores.
-pub fn set_host_backbone_channel(channel: Arc<dyn BackboneChannelPort>) {
-    if let Ok(mut guard) = HOST_BACKBONE_CHANNEL.lock() {
-        *guard = Some(channel);
-    }
-}
-
-fn host_backbone_channel() -> Option<Arc<dyn BackboneChannelPort>> {
-    HOST_BACKBONE_CHANNEL.lock().ok().and_then(|guard| guard.clone())
-}
-
 /// @emoji 🧵️ Backbone that forwards messages across the wasm sandbox boundary to the host process,
-/// which resolves the real `file://`/`folder://`/`remote://` backbone on its own (native) side.
+/// which resolves the real `file://`/`folder://`/`remote://` backbone on its own (native) side. The
+/// channel is injected per instance via [`PortBackbone::with_channel`] — a pooled multi-instance
+/// actor cannot share one process-global channel (see `important.md`'s "Replace, never wrap" list,
+/// `set_host_backbone_channel`). No caller constructs a real channel yet (A2, `🔌️plugin/🦀️component.rs`'s
+/// `PLUGIN_INIT_ONCE` doc comment: the async `EffectBackbone` bridge is deferred work), so
+/// [`PortBackbone::new`] leaves it unset and `send`/`receive` surface a real "no host backbone
+/// linked" error rather than silently no-op'ing.
 pub struct PortBackbone {
     uri: String,
+    channel: Option<Arc<dyn BackboneChannelPort>>,
 }
 
 impl PortBackbone {
     pub fn new(uri: &str) -> Self {
-        Self { uri: uri.to_string() }
+        Self { uri: uri.to_string(), channel: None }
+    }
+
+    pub fn with_channel(uri: &str, channel: Arc<dyn BackboneChannelPort>) -> Self {
+        Self { uri: uri.to_string(), channel: Some(channel) }
     }
 }
 
@@ -6324,13 +6322,13 @@ impl Backbone for PortBackbone {
     }
 
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
-        let channel = host_backbone_channel().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
+        let channel = self.channel.as_ref().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
         let bytes = message.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
         channel.send(&self.uri, &bytes)
     }
 
     fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
-        let channel = host_backbone_channel().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
+        let channel = self.channel.as_ref().ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
         channel.poll(&self.uri)?.into_iter().map(|bytes| BackboneMessage::decode_op(&bytes).map_err(|e| VcsError::Deserialize(e.to_string()))).collect()
     }
 }
