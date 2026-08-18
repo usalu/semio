@@ -1,10 +1,15 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.editor(…)`/`.viewer(…)` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the old single `.document_app(…)`
-/// registration with the two role-carrying surfaces for `s.architect.program@1/*`.
+/// registration with the two role-carrying surfaces for `s.architect.program@1/*`. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+/// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
+/// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
+/// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("architect")
         .label("Architect")
@@ -14,6 +19,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::architect::ArchitectPlayApp>()
         .viewer::<crate::viewer::architect::ArchitectViewer>(crate::viewer::architect::create_architect_viewer())
         .viewer_mutation_roster::<crate::viewer::architect::ArchitectViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::program::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist architect program edits to the open document".into(), optional: false })
         .try_build()
 }
 

@@ -1,6 +1,6 @@
 //! 🧩️ Sourcing beams module — contributes the beams typology and demo catalogue kinds to the sourcing app.
 
-use semio_framework_plugin::ExtensionBundle;
+use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 use sourcing_curate::artifacts::curate::schema::{beams::BeamsModule, SourcingModule};
 
 //#region 🔖️Bundle
@@ -11,6 +11,9 @@ fn bundle() -> ExtensionBundle {
     let module = BeamsModule;
     ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Beams", "0.1.0")
         .extends("sourcing")
+        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+        // extension only contributes a topic (`sourcing.module`).
+        .mode(ExecutionMode::Declarative)
         .contributes_topic(
             "sourcing.module",
             serde_json::json!({

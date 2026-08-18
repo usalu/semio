@@ -1,0 +1,6 @@
+error: unexpected argument 'policy::' found
+
+Usage: cargo test [OPTIONS] [TESTNAME] [-- [ARGS]...]
+
+For more information, try '--help'.
+exit:1

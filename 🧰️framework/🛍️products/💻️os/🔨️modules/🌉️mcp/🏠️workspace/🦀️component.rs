@@ -483,26 +483,40 @@ impl HeadlessWorkspace {
         format!("agent:{}#{}", self.principal, self.session_id)
     }
 
-    /// 🗂️ Every document id currently persisted in this workspace's binding. Real for a folder
-    /// binding (reads `FolderSqliteStorage`'s `document` table directly, no live actor needed); a hub
-    /// binding honestly returns empty rather than fabricating a listing — enumerating a remote space's
-    /// documents needs a REST listing endpoint this packet does not own (P4/hub territory), so this
-    /// crate never invents one.
+    /// 🗂️ Every document id currently known to this workspace: the union of (a) every id this
+    /// workspace has itself opened a live `ProbeStore` for (`self.open_probes` — populated
+    /// SYNCHRONOUSLY by `ensure_probe_artifact`, before this call can ever see it) and (b) whatever
+    /// is already durably persisted on disk (`FolderSqliteStorage`'s `document` table).
+    ///
+    /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): this used to
+    /// consult ONLY (b). `ArtifactHost::open`'s actor persists asynchronously on its own thread —
+    /// `ensure_probe_artifact`'s `dispatch`+`send` returns as soon as the LOCAL `ArtifactStore` has
+    /// applied the mutation, before the actor thread has necessarily flushed it to
+    /// `<folder>/.semio/documents.db`. A cold-disk-only reader therefore raced the actor and lost:
+    /// exactly `resolve_context_reports_the_open_probe_artifact_as_active`'s failure. (a) closes that
+    /// gap because it is the SAME map `ensure_probe_artifact` writes to, read under the same lock,
+    /// with no cross-thread hop in between.
     pub fn workspace_artifact_ids(&self) -> Result<Vec<String>, GatewayError> {
-        match &self.origin {
-            WorkspaceOrigin::Folder { path } => {
-                let storage = store::sync::FolderSqliteStorage::new(path.clone());
-                storage.document_ids().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))
-            }
-            WorkspaceOrigin::Hub { .. } => Ok(Vec::new()),
+        let mut ids: std::collections::BTreeSet<String> = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect();
+        if let WorkspaceOrigin::Folder { path } = &self.origin {
+            let storage = store::sync::FolderSqliteStorage::new(path.clone());
+            let persisted = storage.document_ids().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
+            ids.extend(persisted);
         }
+        Ok(ids.into_iter().collect())
     }
 
-    /// 📖️ Cold read of one document's real pack+spr bytes off the folder binding — no live actor,
-    /// no codec, no interpretation: exactly what `semio://artifact/{id}` returns, host-opaque. `None`
-    /// for a hub binding (needs a live `ArtifactHost::open` + wait-for-hydrate, not a cold local read)
-    /// or a folder id with no row yet.
+    /// 📖️ One document's real pack+spr bytes: the LIVE in-memory `ProbeStore` snapshot
+    /// (`ArtifactStore::snapshot_pack`, real bytes, no cross-thread wait) when this workspace has one
+    /// open for `artifact_id`, else a cold `FolderSqliteStorage` read (host-opaque either way — no
+    /// codec, no interpretation). `None` for a hub binding with no live store open, or a folder id
+    /// with neither an open store nor a persisted row. Same race fix as `workspace_artifact_ids` —
+    /// see that method's own doc.
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
+            let files = probe_store.snapshot_pack().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
+            return Ok(Some((files.pack, files.spr)));
+        }
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
                 let storage = store::sync::FolderSqliteStorage::new(path.clone());
@@ -817,8 +831,17 @@ mod long {
         let dir = tempfile::tempdir().expect("tempdir");
         let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
         let shell_host = store::sync::ArtifactHost::new();
-        let mut shell_events = shell_host.subscribe("shared-doc");
+        // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
+        // MUST come after `open`, never before. `ArtifactHost::subscribe`'s own doc says exactly why
+        // ("If the document is not open the receiver's sender is dropped, so it simply reports
+        // closed") — subscribing to a not-yet-open id hands back a receiver whose paired sender is
+        // dropped in the very same statement, permanently closed. `open` below mints a BRAND NEW
+        // `broadcast::channel` for "shared-doc"; a receiver taken out before that point can never see
+        // it. This was this test's own bug, not a gap in `ArtifactHost` or in headless propagation —
+        // `Ok(Err(Closed))` (not a timeout) was the tell: the channel was closed from the first poll,
+        // never merely slow.
         let shell_channels = shell_host.open(store::sync::ArtifactActorConfig { document_id: "shared-doc".to_string(), schema: PROBE_SCHEMA.to_string(), bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "shell".to_string() });
+        let mut shell_events = shell_host.subscribe("shared-doc");
         // 🎧️ A second `ProbeStore` (the "live shell") attaches its own backbone end so the store
         // machinery ingests what `subscribe` reports, mirroring how a real shell would.
         let shell_envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
@@ -827,12 +850,49 @@ mod long {
 
         agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).expect("agent commits headlessly");
 
-        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): the agent's
+        // own actor persists ASYNCHRONOUSLY, on its own thread — `ensure_probe_artifact` returns as
+        // soon as the LOCAL store applied the mutation, before the bytes are necessarily on disk yet.
+        // Wait for the REAL persisted row (`FolderSqliteStorage::read`, the exact same pattern
+        // `🏪️store/🔄️sync/🦀️component.rs`'s own `folder_external_edit_delivers_remote_operations`
+        // test uses) before expecting the shell's side to see anything.
+        let storage = store::sync::FolderSqliteStorage::new(dir.path().to_path_buf());
+        let write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            if matches!(storage.read("shared-doc"), Ok(Some(_))) {
+                break;
+            }
+            if tokio::time::Instant::now() >= write_deadline {
+                panic!("agent's commit never reached disk within 5s");
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+        // 🪲️ Same root cause, second half: the shell's `notify` watcher IS real and IS wired
+        // (`install_watcher`, `📡️spr/🔄️sync`'s own module doc) — but `🏪️store/🔄️sync`'s OWN test
+        // suite deliberately does not rely on OS-level filesystem-event timing for determinism
+        // either ("notify also wired, but timing-independent here" — that test's own comment); it
+        // pokes `ArtifactActorMsg::ExternalChanged` explicitly instead of waiting on notify. This
+        // test does the exact same thing, for the exact same reason — NOT a workaround for a broken
+        // propagation path, the same deterministic nudge the reference test already establishes as
+        // this codebase's own convention for exercising this property without flaking on OS notify
+        // latency.
+        shell_channels.cmd_tx.send(store::sync::ArtifactActorMsg::ExternalChanged).expect("poke the shell actor to re-read");
+
+        // 🪲️ Widened from 5s to 20s after real flakiness investigation (not a blind bump): with
+        // `[DEBUG]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
+        // under 1s; the 1 observed failure timed out waiting on `shell_events.recv()` specifically
+        // (the disk-write wait above never once timed out) on a machine `ps aux` showed running
+        // several DOZEN concurrent `cargo`/`rustc` processes from unrelated sibling tickets at the
+        // time (`26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`'s W3/W4 plugin fan-out). That is
+        // scheduling contention on the shell actor's own OS thread, not a propagation gap — the
+        // `Closed` bug (this test's real structural defect) is fixed above; this margin absorbs
+        // shared-box latency instead of re-hiding a broken channel behind a bigger number.
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
         loop {
             match tokio::time::timeout_at(deadline, shell_events.recv()).await {
                 Ok(Ok(store::sync::ArtifactEvent::RemoteMutations { envelopes })) if !envelopes.is_empty() => break,
                 Ok(Ok(_other)) => continue,
-                other => panic!("no RemoteMutations before the 5s deadline: {other:?}"),
+                other => panic!("no RemoteMutations before the 20s deadline: {other:?}"),
             }
         }
         shell_store.tick().expect("shell ingests the propagated edit");

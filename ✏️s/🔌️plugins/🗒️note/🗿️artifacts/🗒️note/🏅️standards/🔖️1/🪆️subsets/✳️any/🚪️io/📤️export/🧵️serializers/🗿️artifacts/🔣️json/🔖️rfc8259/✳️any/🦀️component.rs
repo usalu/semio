@@ -1,33 +1,25 @@
-//! note -> json
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix — see the paired import leaf's doc comment (same wave,
-//! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Mirrors it with the
-//! reverse structural converter and stdio's own real `write_json_pretty` for `serialize_bytes`
-//! (the previous `serde_json::to_vec_pretty(&value)` would have serialized the internally-tagged
-//! `JsonValue` shape verbatim, not real JSON text — a latent bug this fix also corrects).
+//! 🚪️ note -> json — foreign `Serializer<NoteSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). `NoteSnapshot` round-trips
+//! fully through `serde_json` — every field survives both directions — so this hop is
+//! `IoFidelity::Exact`, matching the sequence pilot's identical json-bridge precedent
+//! (`📓️w4-sequence-report.md`). JSON's own native form is text, never a raw-bytes wrapper.
+
 use crate::artifacts::note::NoteSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonMember, JsonSnapshot, JsonValue};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
-pub fn register() {}
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 
-/// 🔁️ Structural `serde_json::Value -> JsonValue` conversion (reverse of the import leaf's
-/// converter — see this file's module doc comment and that leaf's for the stdio_gap this fixes).
-fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
-    match value {
-        serde_json::Value::Null => JsonValue::Null,
-        serde_json::Value::Bool(value) => JsonValue::Bool { value: *value },
-        serde_json::Value::Number(number) => JsonValue::Number { lexeme: number.to_string() },
-        serde_json::Value::String(value) => JsonValue::String { value: value.clone() },
-        serde_json::Value::Array(items) => JsonValue::Array { items: items.iter().map(serde_to_json_value).collect() },
-        serde_json::Value::Object(members) => JsonValue::Object { members: members.iter().map(|(key, value)| JsonMember { key: key.clone(), value: serde_to_json_value(value) }).collect() },
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
+
+pub struct NoteIntoJson;
+
+impl Serializer<NoteSnapshot> for NoteIntoJson {
+    const INTO: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("NoteIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let json = JsonSnapshot::from_value(value);
+        Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&json.value))))
     }
-}
-
-pub fn serialize(from: &NoteSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot::from_value(value))
-}
-pub fn serialize_bytes(snapshot: &NoteSnapshot) -> Result<Vec<u8>, String> {
-    Ok(write_json_pretty(&serialize(snapshot).map_err(|e| e.to_string())?.value).into_bytes())
 }

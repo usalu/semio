@@ -1,7 +1,7 @@
 //! 📝️ Note artifact — the document entity this plugin's app edits: an infinite-canvas block tree
 //! (text/image/table/math/ink/group blocks).
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
@@ -68,81 +68,16 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::note::schema::note_artifact_schema_descriptor())
-        .inferences([crate::artifacts::note::schema::inferences::note_artifact_inference_descriptor()])
-        .composers(crate::artifacts::note::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        // 👁️✏️ `.document_codec` is bound on the RUNTIME `ArtifactApp` trait, which only the SDK's
-        // `EditorApp<E>` adapter implements now — `crate::editor::note::NotePlayApp` itself implements
-        // the authoring trait `ArtifactEditor`, not the runtime one directly.
-        .document_codec::<EditorApp<crate::editor::note::NotePlayApp>>()
-        .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
-/// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                dsl::LanguageSpec {
-                    id: "note.document",
-                    extension: Some("note"),
-                    role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::note::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::note::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.document"),
-                },
-                dsl::LanguageSpec {
-                    id: "note.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::note::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::note::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.op"),
-                },
-                dsl::LanguageSpec {
-                    id: "note.diff",
-                    extension: None,
-                    role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::note::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::note::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: dsl::passthrough_hooks("note.diff"),
-                },
-                dsl::LanguageSpec {
-                    id: "note.pack",
-                    extension: None,
-                    role: dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::note::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "note.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::note::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("note.spr"),
-                },
-            ]
-        })
-        .as_slice()
+/// 🗿️ New declaration tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §2)
+/// — replaces the OLD `declaration()`/`pilot_languages()` pair outright (atomic cutover, no dual
+/// registration channel). `localization: &[]` is a documented shortfall, not an oversight: the real
+/// en/de localized names (`"Note"`/`"Notiz"`) still live on `definition()`'s kept
+/// `ArtifactCapability` rows (debt D1) — wiring them into this field is real follow-up work, not
+/// required for this pass (`📓️recipe-subset.md` §4c, matches the stdio pilot's identical deviation).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![crate::artifacts::note::standards::v1::standard()] }
 }
 //#endregion 🔖️Register
 

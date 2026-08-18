@@ -367,3 +367,176 @@ the entire session, by a verified, independently-triple-confirmed, pre-existing 
 moment that regression is fixed (my lease includes a concrete starting point), re-running exactly
 the commands in this report's §5 is the entire remaining acceptance workload — nothing in
 `🎬️actions`/`🛡️policy`/my own root-file edits is expected to need further changes.
+
+---
+
+## post-unblock fixes
+
+sol fixed `🌉️mcp/🗂️catalog/🦀️component.rs` (replaced the untyped-`DescriptorEntry` helper with a
+`ContributionRow` trait implemented for the four new typed contribution rows). `cargo test -p
+semio-framework-os-mcp` ran for the first time and reported **151 passed, 5 failed** — 3 of the 5
+were P7's own `🏠️workspace` failures (explicitly out of scope, not touched); 2 were real defects in
+this packet's own `🎬️actions` facet. Both are fixed below, with root cause verified directly (not
+guessed) before writing the fix.
+
+### Bug 1 — `invalid_input_against_the_capabilitys_schema_is_input_invalid` — the TEST encoded the wrong expectation, not the validator
+
+**Diagnosis, not assumption**: I did not take sol's two hypotheses ("validator constructed but never
+invoked" / "schema defaulting to permissive `{type:object}`") on faith — I added a temporary
+`#[DEBUG]`-free scratch test (added, run, then removed before this report; never left in the tree) that
+fetched `cad.editor.translateSelection`'s REAL compiled `input_schema`, built a REAL
+`jsonschema::Validator` from it, and checked three concrete cases directly:
+
+```
+[DEBUG] schema = { "properties": { "dx": {"type":"number"}, "dy": {...}, "dz": {...}, "objectIds": {"items":{"type":"string"},"type":"array"} }, "type": "object" }   ← NO "required" array at all
+[DEBUG] validator ok = true
+[DEBUG] empty object valid = true         ← {} passes — because nothing is required
+[DEBUG] dx as string valid = false        ← a real type violation IS correctly rejected
+[DEBUG] extra unknown field valid = false ← additionalProperties:false IS correctly enforced
+```
+
+**Root cause**: `🧫️fixtures/🦀️component.rs`'s `string_array_arg`/`number_arg` helper functions (used
+to build `translateSelection`'s `objectIds`/`dx`/`dy`/`dz` args) never call `ActionArgDef::required()`
+— every arg on this fixture action is optional by construction. `action_input_schema`
+(`🗂️catalog/🦀️component.rs`) only emits a `"required"` array `if !required.is_empty()`, so the
+compiled schema for this specific capability has none. An empty object is therefore **genuinely,
+correctly schema-valid** — `additionalProperties:false` forbids UNKNOWN keys, it does not make known
+ones mandatory. `prepare`'s validation call (`jsonschema::Validator::new(&capability.input_schema)`
+→ `validator.validate(&input)`) was never the problem: it is constructed every time, invoked every
+time, and (proven above) correctly rejects both a type violation and an unrecognised field on this
+exact capability's exact schema.
+
+**Fix**: not a code change to `🎬️actions` — the test's premise was wrong. Rewrote
+`invalid_input_against_the_capabilitys_schema_is_input_invalid` to send `{"dx": "not a number"}` (a
+genuine `type:"number"` violation) instead of `{}`. Added two more tests to make the previously-
+implicit, now-verified behaviour explicit and regression-proof:
+`an_unrecognised_field_against_the_capabilitys_schema_is_input_invalid` (an `additionalProperties`
+violation) and `empty_input_is_valid_for_a_capability_with_no_required_args` (pins down that `{}`
+correctly succeeds for THIS fixture, so nobody re-introduces the same wrong assumption later). Net:
++2 tests in this facet (16 → 18).
+
+### Bug 2 — `idempotent_replay_performs_exactly_one_mutation` — real bug: replay re-resolved an already-revoked one-shot handle
+
+**Root cause, confirmed by the panic itself**: `GatewayError { code: NotFound, message: "unknown
+handle: prep_..." }`. `invoke()`'s original structure resolved `request.prepared_handle` FIRST, then
+did the idempotency-wrapped commit, then **unconditionally revoked the `prep_` handle** at the end —
+including after a cache HIT. So: call 1 (miss) resolves the handle, commits, revokes the handle. Call
+2 (intended replay, same `idempotencyKey`) tries to resolve the SAME now-revoked handle again, at the
+very first step, **before the idempotency lookup ever runs** — `NOT_FOUND`, not a replayed report.
+The idempotency wrapping in the original code only wrapped the COMMIT step, not the handle-resolution
+step that has to happen before the commit can even be attempted.
+
+**Semantics decided, per sol's request**: an idempotency key is the source of truth for a replay —
+the caller should be able to retry with the same key without needing the one-shot prepared handle to
+still be alive. **Fix**: restructured `invoke()` into a thin outer wrapper plus a new private
+`invoke_uncached()`:
+
+- `invoke()`: if `idempotencyKey` is present, the ENTIRE body (handle resolution, policy gate,
+  revision check, commit, audit, handle revocation — all of `invoke_uncached`) now runs INSIDE the
+  `IdempotencyStore::get_or_insert_with` `compute` closure. A cache HIT means `compute` never runs at
+  all, so the prepared handle is never touched on replay. A cache MISS runs the real logic exactly
+  once, exactly as before.
+- `invoke_uncached()`: the previous `invoke()` body, verbatim in logic (resolve/prepare → approve →
+  revision check → commit → verify → audit → revoke), now a plain straight-line private method (the
+  old inner `perform` closure is gone — no longer needed, since idempotency wrapping moved to the
+  caller).
+- A failure during `invoke_uncached` (any cause — permission denied, revision conflict, commit
+  failure) is still threaded out of the infallible `compute` closure via the same `RefCell<Option<
+  GatewayError>>` pattern the original code already used for commit-only failures — now covering the
+  WHOLE call, not just the commit step. Behavior for the non-idempotent-key path
+  (`request.idempotency_key.is_none()`) is unchanged (a direct, unwrapped call to
+  `invoke_uncached`).
+
+No test was weakened — `idempotent_replay_performs_exactly_one_mutation`'s assertions are byte-for-
+byte unchanged (still asserts `TransactionCommit` appears exactly once in the frame log across both
+calls, still asserts `second.replayed == true`); only the implementation changed, to make the test's
+already-correct expectation actually hold.
+
+### A third, real bug found independently while re-verifying the live binary (not flagged by sol — caught by re-running the brief's own §5 acceptance transcript after the other two fixes)
+
+`bun nx run @semio-tech/framework-os-mcp:test-quick` failed (`1 failed | 21 passed`, `$ZodError` at
+`tools[2].outputSchema.properties.preview`, `"Invalid input"`) the first time it ran against a freshly
+rebuilt binary (the earlier "26/26 passing" result in this report's §5, from before catalog.rs was
+fixed, was served from Nx's cache against a stale pre-P6 binary and explicitly flagged as such at the
+time — this is that flag paying off: re-running for real surfaced a genuine issue the cache had been
+hiding). **Root cause**: `schemars::schema_for!(PreparedActionReport)` emits a bare JSON-Schema
+boolean `true` for the `preview: serde_json::Value` field (valid JSON Schema — "any value is valid")
+— but the MCP SDK's own Zod validation of `Tool.outputSchema` rejects a boolean sub-schema outright.
+Exactly the same class of spec-shape mismatch P2's own `capabilities_search_capability` doc comment
+already documents (`type:"array"` vs `type:"object"`) — not a logic bug, a schemars/SDK disagreement
+on JSON Schema's boolean-schema shorthand. **Fix**: `prepared_action_report_output_schema()` (root
+`🦀️component.rs`) generates the schema from the real type as before, then overrides just
+`properties.preview` to the equivalent OBJECT-syntax "any value" form (`{}`). Re-ran
+`bun nx run @semio-tech/framework-os-mcp:test-quick --skip-nx-cache` (forcing a real run, not a cache
+hit) — **22/22 passing, exit 0**.
+
+## Final acceptance — verbatim output, exit codes (re-run after all three fixes)
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo test -p semio-framework-os-mcp actions::
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 142 filtered out; finished in 0.09s
+exit: 0
+```
+Full transcript: `🧪️p6-cargo-test-actions-final.txt`.
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo test -p semio-framework-os-mcp policy::
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 149 filtered out; finished in 0.00s
+exit: 0
+```
+Full transcript: `🧪️p6-cargo-test-policy-final.txt`.
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo test -p semio-framework-os-mcp
+test result: ok. 160 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 44.84s
+exit: 0
+```
+(160 = 151 sol reported passing + 2 new tests this fix wave added, with the previous 5 failures — 2
+mine, 3 P7's own, both sets now green — all accounted for.) Full transcript: `🧪️p6-cargo-test-final.txt`.
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp 2>&1 | grep -c "^warning"
+2
+```
+Same pre-existing peer warning (`📡️wire/🦀️component.rs:448`, `semio-framework-os-kernel`, a file this
+packet never touched) plus its own "generated 1 warning" summary line — zero warnings from any file
+this packet owns. Full transcript: `🧪️p6-cargo-build-post-unblock.txt`.
+
+```
+$ bun nx run @semio-tech/framework-os-mcp:test-quick --skip-nx-cache
+Test Files  5 passed (5)
+     Tests  22 passed (22)
+exit: 0
+```
+Full transcript: `🧪️p6-ts-test-quick-post-fix.txt` (the earlier `🧪️p6-ts-test-quick-post-unblock.txt`
+transcript, showing the real `$ZodError` failure this fix addresses, is kept for the record).
+
+**Live transcript** (real binary, `stdio` mode) — both required scenarios from the brief's §5:
+
+```
+$ printf '...action_prepare capabilityId=cad.editor.translateSelection...' | semio-os-mcp stdio --scopes documents.write,jobs.spawn
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"text":"prepared prep_1530aab3a918f0460432d80573","type":"text"}],"isError":false,"resultType":"complete","structuredContent":{"capabilityId":"cad.editor.translateSelection","expectedRevision":{"artifactId":"mock-artifact-0","cursor":"gen-0","headEditId":"edit-0"},"expiresAtMs":1787048518305,"preparedHandle":"prep_1530aab3a918f0460432d80573","preview":{"opsCount":{"config":0,"document":1,"draft":0},"warnings":[]}}}}
+
+$ printf '...same call, no --scopes...' | semio-os-mcp stdio
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"text":"principal agent:local lacks required scope documents.write","type":"text"}],"isError":true,"resultType":"complete","structuredContent":{"code":"PERMISSION_DENIED","details":null,"message":"principal agent:local lacks required scope documents.write","retryable":false}}}
+```
+Full transcript: `🧪️p6-live-transcript.txt`.
+
+## Updated files/leases list
+
+Modified since the pre-unblock version of this report (all still inside `🎬️actions`/`🛡️policy`/root
+`🦀️component.rs`, this packet's own `path_scope`): `🎬️actions/🦀️component.rs` (`invoke()` split into
+a thin idempotency-aware wrapper + `invoke_uncached()`; one test rewritten, two tests added — 16→18),
+`🦀️component.rs` (new `prepared_action_report_output_schema()` helper, `action_prepare`'s
+`output_schema` now goes through it). New evidence files: `🧪️p6-cargo-test-actions-final.txt`,
+`🧪️p6-cargo-test-policy-final.txt`, `🧪️p6-cargo-test-final.txt`, `🧪️p6-cargo-build-post-unblock.txt`,
+`🧪️p6-ts-test-quick-post-unblock.txt` (the failing-for-real transcript), `🧪️p6-ts-test-quick-post-fix.txt`,
+`🧪️p6-live-transcript.txt`, `🧪️p6-cargo-test-post-unblock.txt` (the 158/0 first-green run, before the
+schema fix). No new leases — `🌉️mcp/🏠️workspace/**` was not touched (P7's own 3 failures resolved on
+their own, visible as passing in the final 160/0 run, not by anything in this packet).
+
+No `[DEBUG]` marker remains in any file this packet owns (confirmed: `grep -rn "\[DEBUG\]"` over
+`🎬️actions/🦀️component.rs`, `🛡️policy/🦀️component.rs`, and this packet's edits to the shared root
+`🦀️component.rs` — empty). The temporary schema-dump scratch test used to diagnose Bug 1 was added,
+run once, and removed in the same work session — it never appears in any committed/final version of
+`🎬️actions/🦀️component.rs`.

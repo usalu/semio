@@ -1,0 +1,5 @@
+=== action_prepare with a granted scope ===
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"text":"prepared prep_1530aab3a918f0460432d80573","type":"text"}],"isError":false,"resultType":"complete","structuredContent":{"capabilityId":"cad.editor.translateSelection","expectedRevision":{"artifactId":"mock-artifact-0","cursor":"gen-0","headEditId":"edit-0"},"expiresAtMs":1787048518305,"preparedHandle":"prep_1530aab3a918f0460432d80573","preview":{"opsCount":{"config":0,"document":1,"draft":0},"warnings":[]}}}}
+
+=== action_prepare with NO scopes granted -> PERMISSION_DENIED ===
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"text":"principal agent:local lacks required scope documents.write","type":"text"}],"isError":true,"resultType":"complete","structuredContent":{"code":"PERMISSION_DENIED","details":null,"message":"principal agent:local lacks required scope documents.write","retryable":false}}}

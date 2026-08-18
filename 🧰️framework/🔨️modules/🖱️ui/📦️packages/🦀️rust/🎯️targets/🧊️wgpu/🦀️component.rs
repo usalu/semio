@@ -3797,6 +3797,10 @@ pub mod ui {
         pub language: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub mode: Option<String>,
+        /// 🪟️ The `InteractionDefinition` id this window's `WindowKindDefinition.interactions` binds
+        /// (mirrors `World3dScene.domain_id`). `None` means this window binds no app domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_id: Option<String>,
     }
 
     /** @emoji 📰️ A chronological feed of host-authored events. `entries_json` is a
@@ -3810,6 +3814,10 @@ pub mod ui {
         pub follow: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub activate_action: Option<String>,
+        /// 🪟️ The `InteractionDefinition` id this window's `WindowKindDefinition.interactions` binds
+        /// (mirrors `World3dScene.domain_id`). `None` means this window binds no app domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_id: Option<String>,
     }
 
     /** @emoji 🧩️ A palette entry for a block kind insertable into a [`BlockListScene`], contributed
@@ -3834,6 +3842,10 @@ pub mod ui {
         pub selected_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub dragging_id: Option<String>,
+        /// 🪟️ The `InteractionDefinition` id this window's `WindowKindDefinition.interactions` binds
+        /// (mirrors `World3dScene.domain_id`). `None` means this window binds no app domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_id: Option<String>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

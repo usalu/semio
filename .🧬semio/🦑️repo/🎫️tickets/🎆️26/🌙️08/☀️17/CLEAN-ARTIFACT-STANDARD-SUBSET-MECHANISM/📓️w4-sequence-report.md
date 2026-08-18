@@ -156,19 +156,47 @@ All commands from `/Users/ueli/Documents/semio`,
 
 - `cargo check -p semio-s-plugin-sequence --lib --keep-going` → **0 errors**, 2 pre-existing warnings
   (unrelated `unused_mut`/`future-incompat` from `block v0.1.6`, not mine).
-- `cargo check -p semio-s-plugin-sequence --all-targets --keep-going` → **0 errors** (down from 16).
-- `cargo nextest run -p semio-s-plugin-sequence --no-fail-fast` → **[FILL IN: still running at report-write
-  time — see addendum below / re-run before trusting this report as final]**.
-- `cargo check -p semio-s-plugin-sequence --target wasm32-wasip2 --lib` → **[FILL IN: cold build in progress
-  at report-write time, ~7min precedent from W1-C]**.
-- `bun ./📜️script.ts policy` → **[FILL IN: running at report-write time]**.
+- `cargo check -p semio-s-plugin-sequence --all-targets --keep-going` → **0 errors** (down from 16), re-verified
+  after every subsequent edit including the last (io-declaration doc-comment fix, see below).
+- `cargo nextest run -p semio-s-plugin-sequence --no-fail-fast` → **146 tests run: 146 passed, 0 failed, 0
+  skipped** (first run after the fixes was 143/146 with the 3 `sequence_snapshot_mutations` cascade failures
+  above; second run, after that fix, is the clean 146/146).
+- `cargo check -p semio-s-plugin-sequence --target wasm32-wasip2 --lib` → **clean, 0 errors** (`Finished \`dev\`
+  profile [unoptimized] target(s) in 13m 12s`, genuine cold build). 2 warnings, both `unused_imports` for the
+  3 `imperative_engine` functions I added to the import list — real, harmless: that whole registration branch
+  is native-only (`#[cfg(not(target_arch = "wasm32"))]`-shaped), so the wasm32 build path never reaches those
+  calls. Confirms the fix compiles under the real guest target, not just natively.
+- `bun ./📜️script.ts policy` → ran repo-wide (25k+ printed lines, full breach set in
+  `.🧬semio/🦑️repo/⚡️cache/breaches/compose.json`, 35220 breaches). Filtered to `🎬️sequence` +
+  `clean-mechanism/*`: **18 → 10** after this pass's `io()` doc-comment fix (see below); by policy:
 
-One blocked mid-session, unrelated, resolved-by-waiting peer collision (not mine, not blocking my final
-numbers): `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs`/`🦀️reconcile.rs` were
-` M` (uncommitted, live peer edit) at one point mid-session and caused a transient `semio-framework-ui` E0507
-failure on one `cargo check` attempt; a retry a few minutes later compiled clean — sequence's own crate has
-zero lines in that file, confirmed by `git status --porcelain` returning empty for every file this agent
-touched.
+  | policy | breaches (this plugin) |
+  |---|---|
+  | `owner-mounts-children` | 4 (unchanged — see `## recipeGaps` #3) |
+  | `subset-isolation` | **0** |
+  | `module-consumer-count` | **0** |
+  | `io-exclusivity` | 6 (unchanged — see below) |
+  | `io-declaration` | 8 → **0** (fixed: `🚪️io/🦀️component.rs`'s doc comment now names every native-codec
+    facet leaf by its real dir name — `policyIoDeclarationBreaches`'s check is a literal substring match on
+    the leaf dir name against the io root file's full text, verified directly against the policy source and
+    against the edited file's content) |
+  | `subset-standalone` | **0** |
+  | `declaration-tree` | **0** (was non-zero before this pass added `artifact()`/`standard()`/`subset()` —
+    no before-snapshot exists to cite a number, but the policy's own checks — "artifact has ≥1 standard",
+    "standard has ≥1 subset", "plugin declares this artifact" — could only have failed before those functions
+    existed) |
+
+  The remaining 10 (`owner-mounts-children` ×4, `io-exclusivity` ×6) are real, not fixed this pass — see
+  `## recipeGaps` #3 for why (deep `📦️glue.rs` mount centralization + `parse_dsl`/`print_dsl` called directly
+  from `✏️editor/🎚️config`, `✏️editor/👥️presence`, and `🧬️schema/🦀️component.rs`'s `sequence_example_json`,
+  none of which this agent introduced — all three predate this ticket and would need editor/command code
+  routed through `host_io_run`, a materially larger change than this pass's scope).
+
+One transient, unrelated, resolved-by-waiting peer collision mid-session (not mine, not in my final numbers):
+`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs`/`🦀️reconcile.rs` were ` M`
+(uncommitted, live peer edit) at one point and caused a transient `semio-framework-ui` E0507 failure on one
+`cargo check` attempt; a retry a few minutes later compiled clean — sequence's own crate has zero lines in
+that file, confirmed by `git status --porcelain` returning empty for every file this agent touched.
 
 ## recipeGaps (for the next ~28 W4 agents)
 

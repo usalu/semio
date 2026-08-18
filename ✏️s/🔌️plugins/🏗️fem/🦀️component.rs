@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(register_all_engines)`
@@ -8,7 +9,12 @@ use semio_framework_plugin::Plugin;
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET dissolved `apps::fem2d`/`apps::fem3d` into
 /// `editor::fem2d`/`editor::fem3d` (each still `Fem2dPlayApp`/`Fem3dPlayApp: ArtifactEditor`) plus new
 /// `viewer::fem2d`/`viewer::fem3d` (`Fem2dViewer`/`Fem3dViewer: ArtifactViewer`) — every subset now
-/// registers one editor and one viewer surface instead of one document app.
+/// registers one editor and one viewer surface instead of one document app. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+/// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s and
+/// `🗄️stdio`'s own shape: one `OnArtifactKind` event per owned kind, read live from each subset's own
+/// `computation_artifact_kind().id` (never hardcoded), `Isolated` execution (nothing here justifies a
+/// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("fem")
         .label("FEM")
@@ -23,6 +29,10 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::fem3d::Fem3dPlayApp>()
         .viewer::<crate::viewer::fem3d::Fem3dViewer>(crate::viewer::fem3d::create_fem3d_viewer())
         .viewer_mutation_roster::<crate::viewer::fem3d::Fem3dViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::fem2d::computation_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::fem3d::computation_artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })
         .try_build()
 }
 

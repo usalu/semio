@@ -449,7 +449,7 @@ mod tests {
     fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
         if let Some(ids) = selected_ids {
             let selected: HashSet<String> = ids.into_iter().collect();
-            ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
+            ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new(), None, &|_id: &str| Vec::new());
         }
         UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }

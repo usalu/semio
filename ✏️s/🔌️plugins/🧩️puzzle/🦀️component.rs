@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old umbrella
@@ -52,6 +53,32 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::puzzle5d::Puzzle5dPlayApp>()
         .viewer::<crate::viewer::puzzle5d::Puzzle5dViewer>(crate::viewer::puzzle5d::create_puzzle5d_viewer())
         .viewer_mutation_roster::<crate::viewer::puzzle5d::Puzzle5dViewer>()
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
+        // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for
+        // stdio/draw/forms/mathematical/layout/raster. One activation per owned artifact kind, read
+        // live from each kind's own `artifact_kind().id` (never hardcoded).
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::puzzle5d::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest {
+            id: CapabilityId("documents.write".into()),
+            scope: "plugin".into(),
+            reason: "persist puzzle2d/puzzle3d/puzzle5d editor edits (brush placement, fill build, engagement commits) to the open document".into(),
+            optional: false,
+        })
+        .requests(CapabilityRequest {
+            id: CapabilityId("ui.dialog".into()),
+            scope: "plugin".into(),
+            reason: "puzzle3d's add-object flow opens the addObject dialog (Effect::OpenDialog)".into(),
+            optional: false,
+        })
+        .requests(CapabilityRequest {
+            id: CapabilityId("shell.clipboard".into()),
+            scope: "plugin".into(),
+            reason: "puzzle5d's copy/cut interception writes fragments to the system clipboard (Effect::ClipboardWrite)".into(),
+            optional: false,
+        })
         .try_build()
 }
 

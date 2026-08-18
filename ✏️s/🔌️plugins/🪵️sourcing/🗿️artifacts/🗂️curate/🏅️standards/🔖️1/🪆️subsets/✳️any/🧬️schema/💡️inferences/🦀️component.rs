@@ -59,7 +59,16 @@ impl protocol::InferenceSpec<CurateSnapshot> for CurateInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::curate::standards::v1::subsets::any::schema::CurateBuilder {
+/// 🧭️ Trivial zero-sized marker — NOT `semio_framework_plugin::app::SnapshotBuilder<CurateSnapshot,
+/// SourcingMutation>` (the `Construction` type alias `🧬️schema/🦀️component.rs` now uses). Targeting
+/// `SnapshotBuilder` directly is a genuine orphan-rule violation (E0117): it is a foreign,
+/// non-`#[fundamental]` generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>`
+/// is illegal regardless of the type parameters being local (confirmed by compiling it — see
+/// `📓️w4-sourcing-report.md` `## recipeGaps`, matching `📓️w4-sequence-report.md`'s identical
+/// finding). `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so the impl target is
+/// a pure type-level anchor with zero live callers repo-wide — a local marker struct is sufficient.
+pub struct CurateInferrer;
+impl ArtifactInferrer for CurateInferrer {
     type Snapshot = CurateSnapshot;
     type Inference = CurateInference;
 }

@@ -1,35 +1,48 @@
-//! note -> pdf
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's svg/dwg-pattern scope — see
-//! `w5b--report.md`): stdio's top-level `pdf::schema`/`pdf::PdfSnapshot` shims were repointed
-//! from the old 1.4 `PageDoc{width,height,text}` stub to 1.7's real multi-page object graph
-//! (`PdfSnapshot.pages: Vec<PdfPage>`, `PdfPage{media_box:[f64;4],crop_box,rotate,text}`) — a
-//! concurrent stdio wave's S-6 canonicalization; `encode_pdf`/`empty_pdf_snapshot` now come
-//! directly from 1.7's own `subsets::any::io`/`subsets::any::schema::snapshot` (the `pdf::engine`
-//! shim they used to reach through is dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-
-//! STATE-MACHINES). `encode_pdf` also now returns `Result<_, PdfEngineError>` instead of
-//! `Result<_, String>`; `.to_string()`d at this leaf's own `String`-error boundary
-//! (`PdfEngineError` implements `Display`).
-use crate::artifacts::note::schema::flatten_blocks;
+//! 🚪️ note -> pdf — foreign `Serializer<NoteSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Flattens every text block's
+//! content onto one PDF page (`stdio_gap`/foreign-lag fix carried over from the pre-migration free
+//! function — stdio's 1.7 multi-page `PdfSnapshot.pages: Vec<PdfPage>`), losing all layout/visual
+//! structure — an honest `IoFidelity::Lossy` hop.
+
 use crate::artifacts::note::io::note_document_bounds;
+use crate::artifacts::note::schema::flatten_blocks;
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;
 use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf;
 use semio_s_plugin_stdio::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::empty_pdf_snapshot;
-use semio_s_plugin_stdio::artifacts::pdf::schema::snapshot::PdfPage;
-pub fn register() {}
-pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifacts::pdf::PdfSnapshot, String> {
-    let (w, h) = note_document_bounds(snapshot);
-    let mut text = String::new();
-    if let Some(title) = &snapshot.title { text.push_str(title); text.push(' '); }
-    for block in flatten_blocks(&snapshot.blocks) {
-        if let NoteBlockNode::Text { content, .. } = block {
-            for p in crate::artifacts::note::note_block_text(content) { for r in &p.runs { text.push_str(&r.text); text.push(' '); } }
+
+pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId::ANY };
+
+pub struct NoteIntoPdf;
+
+impl Serializer<NoteSnapshot> for NoteIntoPdf {
+    const INTO: Dialect = PDF_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+        let (w, h) = note_document_bounds(from);
+        let mut text = String::new();
+        if let Some(title) = &from.title {
+            text.push_str(title);
+            text.push(' ');
         }
+        for block in flatten_blocks(&from.blocks) {
+            if let NoteBlockNode::Text { content, .. } = block {
+                for paragraph in crate::artifacts::note::note_block_text(content) {
+                    for run in &paragraph.runs {
+                        text.push_str(&run.text);
+                        text.push(' ');
+                    }
+                }
+            }
+        }
+        let mut snapshot = empty_pdf_snapshot();
+        let mut page = PdfPage::new(w.max(1) as f64, h.max(1) as f64);
+        page.text = text.trim().to_string();
+        snapshot.pages = vec![page];
+        let bytes = encode_pdf(&snapshot).map_err(|error| IoError { message: format!("NoteIntoPdf: encode failed: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
-    let mut snap = empty_pdf_snapshot();
-    let mut page = PdfPage::new(w.max(1) as f64, h.max(1) as f64);
-    page.text = text.trim().to_string();
-    snap.pages = vec![page];
-    Ok(snap)
 }
-pub fn serialize_bytes(snapshot: &NoteSnapshot) -> Result<Vec<u8>, String> { encode_pdf(&serialize(snapshot)?).map_err(|e| e.to_string()) }

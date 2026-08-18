@@ -148,6 +148,7 @@ fn bundle() -> ExtensionBundle {
     let catalog = RoboticCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Robotic Machines", "0.1.0")
         .extends("process")
+        .mode(semio_framework_plugin::ExecutionMode::Declarative)
         .contributes_topic(
             "process.machines",
             serde_json::json!({

@@ -768,11 +768,12 @@ mod tests {
 // #endregion 🔖️Tests
 
 // #region 🔖️ExtensionGuest
+#[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
     use flow_extension_sdk::{build_manifest_json, evaluate_json};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
-    use semio_framework_plugin::ExtensionBundle;
+    use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
     use serde::Deserialize;
 
     const FLOW_APP_ID: &str = "flow-play";
@@ -805,6 +806,7 @@ mod extension_guest {
         let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
         ExtensionBundle::new("bim", "Bim", "0.1.0")
             .extends("flow")
+            .mode(ExecutionMode::Linked)
             .contributes_topic("flow.extension", flow_topic_payload)
             .contributes_topic("flow.extension", procedural3d_topic_payload)
             .handler("evaluate", |req| {

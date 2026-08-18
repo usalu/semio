@@ -1,126 +1,56 @@
-//! 🚪️ IO s.forms (1/✳️any) — registration now flows through 🎹️composer::register
-//! (called once from ⚙️engine::register), not per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.csv", "stdio.json", "stdio.xlsx", "stdio.zip"] }
-pub fn forms_to_wire(from: &crate::artifacts::forms::FormsSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(from)
-}
-pub fn forms_from_wire(bytes: &[u8]) -> Result<crate::artifacts::forms::FormsSnapshot, store::PackError> {
-    <crate::artifacts::forms::FormsSnapshot as store::ArtifactPack>::decode_pack(bytes)
-}
-pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
-    store::TextError::new(err.to_string(), dsl::TextSpan::at(1, 1))
-}
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::forms::FormsSnapshot;
-    use crate::artifacts::forms::standards::v1::subsets::any::schema::FormsAnalyzer;
+//! 🚪️ IO s.forms (1/✳️any) — `io() -> IoDeclaration` (design.md §2/§3): the native codec plus every
+//! foreign hop, aggregated from the typed `Serializer<FormsSnapshot>`/`Deserializer<FormsSnapshot>`
+//! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Replaces the old hand-rolled
+//! `ArtifactComposition`/`ComposerEntry` dispatch chain (`derived_composition`/`io_registry`)
+//! outright — all io now goes exclusively through the `io_mechanism` registry (design.md rule 3).
+//!
+//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
+//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
+//! impls for `FormsSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
+//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `FormMutation`), and
+//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are
+//! computed, never authored). `NativeCodecs.{snapshot,diff,mutations,inferences}: LanguagePair
+//! { text: None, binary: None }` below leaves their `dsl::LanguageSpec` registration deferred — a
+//! real, supported shape per that type's own doc, matching the stdio pilot's identical documented
+//! deviation (also carried over from this artifact's own pre-existing, now-orphaned
+//! `pilot_languages()`, deleted alongside the old `declaration()` channel — see the artifact root).
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.forms", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-
-    pub struct FormsComposerComposition;
-
-    impl ArtifactComposition for FormsComposerComposition {
-        type Snapshot = FormsSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON]
-        }
-
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
-                    };
-                    let analysis = FormsAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let text: Option<String> = match &source.payload {
-                        AnalyzeSource::Text(t) => Some(t.to_string()),
-                        AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                    };
-                    if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::forms::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                        }
-                    }
-                }
-
-            }
-            Err(ComposeError { message: "FormsComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
-
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
+//#region 🔖️IoDeclaration
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::forms::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::forms::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::artifacts::forms::{FormMutation, FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::forms::standards::v1::subsets::any::schema::FormsComposer as FormsAnyComposer;
-    use crate::artifacts::forms::standards::v1::subsets::any::schema::FormsBuilder as FormsAnyBuilder;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const FORMS_DIALECT: Dialect = Dialect { artifact_kind: "s.forms", standard: StandardId("1"), subset: SubsetId("*") };
-    const FORMS_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::forms::FormsSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == FORMS_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => FormsAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => FormsAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "FormsComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == FORMS_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let text = match &source.payload {
-                IoPayload::Text(t) => t.clone(),
-                IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
-            };
-            return crate::artifacts::forms::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "FormsComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    serializer_entry::<FormsSnapshot, export::json::v_rfc8259::any::FormsIntoJson>(FORMS_DIALECT),
+                    deserializer_entry::<FormsSnapshot, import::json::v_rfc8259::any::JsonIntoForms>(FORMS_DIALECT),
+                    serializer_entry::<FormsSnapshot, export::csv::v_rfc4180::any::FormsIntoCsv>(FORMS_DIALECT),
+                    deserializer_entry::<FormsSnapshot, import::csv::v_rfc4180::any::CsvIntoForms>(FORMS_DIALECT),
+                    serializer_entry::<FormsSnapshot, export::xlsx::v_ecma_376::any::FormsIntoXlsx>(FORMS_DIALECT),
+                    deserializer_entry::<FormsSnapshot, import::xlsx::v_ecma_376::any::XlsxIntoForms>(FORMS_DIALECT),
+                    serializer_entry::<FormsSnapshot, export::zip::v2_0::any::FormsIntoZip>(FORMS_DIALECT),
+                    deserializer_entry::<FormsSnapshot, import::zip::v2_0::any::ZipIntoForms>(FORMS_DIALECT),
+                ]
+            })
+            .as_slice()
     }
 
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let text = crate::artifacts::forms::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    //#endregion 🔖️ExportEntries
-
-
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<FormsAnyComposer>(),
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[FORMS_DIALECT], compose: compose_export_json },
-        ]).as_slice()
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: None, binary: None },
+            diff: LanguagePair { text: None, binary: None },
+            mutations: LanguagePair { text: None, binary: None },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<FormsSnapshot, FormMutation>(FORMS_DOCUMENT_SCHEMA.to_string()),
+        },
+        entries: entries(),
     }
 }
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🔖️IoDeclaration

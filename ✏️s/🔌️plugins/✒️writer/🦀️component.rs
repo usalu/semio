@@ -1,8 +1,13 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration.
+/// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
+/// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
+/// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape. No
+/// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
+/// is honest.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("writer")
         .label("Writer")
@@ -12,6 +17,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::writer::WriterPlayApp>()
         .viewer::<crate::viewer::writer::WriterViewer>(crate::viewer::writer::create_writer_viewer())
         .viewer_mutation_roster::<crate::viewer::writer::WriterViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::writer::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist writer edits to the open document".into(), optional: false })
         .try_build()
 }
 

@@ -131,118 +131,32 @@ pub fn draw_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::draw::{DrawDiff, DrawMutation, DrawSnapshot};
+//#region 🏗️Construction
+/// 🏗️ `DrawSnapshot`/`DrawMutation`'s `ArtifactBuilder` is the ordinary `Mutation`/`MutationDiff`
+/// algebra with no custom build logic beyond that — the old hand-rolled `DrawBuilderConstruction`
+/// (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/`build`) matched
+/// `SnapshotBuilder<S, M>`'s own documented "apply `outcome.diff()` once, fold a rejection into a
+/// Fatal message" idiom exactly, so this subset writes zero builder boilerplate (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE task 3).
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DrawSnapshot, DrawMutation>;
+//#endregion 🏗️Construction
 
-    #[derive(Clone, Debug, Default)]
-    pub struct DrawBuilderConstruction {
-        snapshot: DrawSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
+//#region 🔖️Inferrer
+/// 💡️ Zero-sized `ArtifactInferrer` anchor for `DrawInference` (`💡️inferences/🦀️component.rs`).
+/// Cannot retarget onto `SnapshotBuilder<DrawSnapshot, DrawMutation>` (the old `DrawBuilderFacets`
+/// cluster's replacement) — `SnapshotBuilder` is a foreign, non-`#[fundamental]` generic struct, so
+/// `impl ArtifactInferrer for SnapshotBuilder<DrawSnapshot, DrawMutation>` is an orphan-rule
+/// violation (E0117) regardless of the type parameters being local. `ArtifactInferrer::infer` takes
+/// `&Self::Snapshot`, never `&self`, so the impl target is a pure type-level anchor — a trivial
+/// local marker struct is the correct, and only legal, shape.
+pub struct DrawInferrer;
+//#endregion 🔖️Inferrer
 
-    impl ArtifactBuilder for DrawBuilderConstruction {
-        type Snapshot = DrawSnapshot;
-        type Mutation = DrawMutation;
-        type Diff = DrawDiff;
-        fn empty() -> Self { Self { snapshot: DrawSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<DrawSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<DrawSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <DrawDiff as protocol::MutationDiff<DrawSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::draw::DrawSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct DrawParts {
-        pub snapshot: Option<DrawSnapshot>,
-    }
-
-    pub struct DrawAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for DrawAnalyzerAnalysis {
-        type Parts = DrawParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.draw", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = DrawParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <DrawSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <DrawSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec DrawBuilderFacets {
-        construction: DrawBuilderConstruction,
-        analysis: DrawAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::DrawComposerComposition,
-    }
-    builder: DrawBuilder,
-    analyzer: DrawAnalyzer,
-    composer: DrawComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+// 🧬️ The old hand-rolled `derived_construction`/`derived_analysis` modules and the
+// `derive_artifact_facets!(DrawBuilderFacets { .. })` macro invocation (generated `DrawBuilder`/
+// `DrawAnalyzer`/`DrawComposer`) are deleted outright (design.md §3: all io now goes exclusively
+// through the `io_mechanism` registry — see `🚪️io/🦀️component.rs`'s `pub fn io()`). Confirmed
+// zero external callers of any of the three generated types before deletion (grep, this pass).
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated verbatim from the `⚙️engine` directory (ticket

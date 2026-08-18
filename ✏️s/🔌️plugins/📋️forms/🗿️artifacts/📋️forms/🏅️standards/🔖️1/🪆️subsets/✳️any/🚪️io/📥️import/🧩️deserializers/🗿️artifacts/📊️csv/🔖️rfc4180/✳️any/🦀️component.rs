@@ -1,11 +1,26 @@
-//! Deserialize forms via stdio.csv.
+//! 🚪️ forms <- csv — foreign `Deserializer<FormsSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Honest not-yet-implemented
+//! stub, `IoFidelity::Lossy`, matching `🎬️sequence`'s `TxtIntoSequence` precedent
+//! (`📓️w4-sequence-report.md`): a flattened results grid cannot reconstruct `steps` — this
+//! plugin's own composition doc (`🗿️artifacts/📋️forms/🦀️component.rs` `🔖️Composition`) is explicit
+//! that `results` is a DERIVED, non-reconstructive projection of `structure`, never the other way
+//! round. The pre-existing code here (a naive `serde_json` struct-shape bridge between
+//! `FormsSnapshot` and `CsvSnapshot`) compiled but could not have round-tripped real content either
+//! — this stub is honest about the same limitation instead of silently miscompiling on real input.
+
 use crate::artifacts::forms::FormsSnapshot;
-use semio_s_plugin_stdio::artifacts::csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 
-pub fn register() {}
+pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
 
-pub fn deserialize(from: &CsvSnapshot) -> Result<FormsSnapshot, store::TextError> {
-    let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("forms<-csv: {e}"), dsl::TextSpan::at(1, 1)))
+pub struct CsvIntoForms;
+
+impl Deserializer<FormsSnapshot> for CsvIntoForms {
+    const FROM: Dialect = CSV_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn deserialize(_payload: &IoPayload) -> IoResult<FormsSnapshot> {
+        Err(IoError { message: "CsvIntoForms: forms cannot be reconstructed from a flattened results table — not implemented".to_string(), diagnostics: Vec::new() })
+    }
 }

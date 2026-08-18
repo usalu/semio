@@ -52,7 +52,14 @@ impl protocol::InferenceSpec<NoteSnapshot> for NoteInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::note::standards::v1::subsets::any::schema::NoteBuilder {
+/// 🎯️ Zero-sized marker type — `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`,
+/// so the impl target is a pure type-level anchor with no live callers of the type itself
+/// (`📓️w4-sequence-report.md` recipeGap #1: implementing this trait directly on
+/// `semio_framework_plugin::app::SnapshotBuilder<S, M>` is a real orphan-rule violation, E0117 —
+/// `SnapshotBuilder` is a foreign, non-`#[fundamental]` generic struct).
+pub struct NoteInferrer;
+
+impl ArtifactInferrer for NoteInferrer {
     type Snapshot = NoteSnapshot;
     type Inference = NoteInference;
 }

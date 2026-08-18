@@ -1,0 +1,90 @@
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-framework-os-mcp v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1023:51
+     |
+1023 |         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1023 -         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+1023 +         let meta = serde_json::json!({ "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1024:37
+     |
+1024 |         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1024 -         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+1024 +         let list = server.dispatch(&tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1028:37
+     |
+1028 | ...   let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio:/...
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1028 -         let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1028 +         let read = server.dispatch(&tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1032:43
+     |
+1032 | ...   let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri...
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1032 -         let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1032 +         let subscribed = server.dispatch(&tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: `semio-framework-os-mcp` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-os-mcp --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 45.07s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_framework_os_mcp-b2d91a0e1ba588e2)
+
+running 11 tests
+test policy::quick::auto_approve_parses_the_three_frozen_values_and_nothing_else ... ok
+test policy::quick::ui_raw_control_expands_to_shell_raw ... ok
+test policy::quick::an_unknown_alias_passes_through_as_a_literal_capability_id ... ok
+test policy::quick::artifact_write_expands_to_documents_write_and_jobs_spawn ... ok
+test policy::quick::wildcard_family_grant_covers_any_concrete_member ... ok
+test policy::quick::never_approval_mode_proceeds_without_any_gate ... ok
+test policy::quick::auto_approve_all_waives_the_gate_entirely ... ok
+test policy::quick::authorize_scopes_denies_when_a_required_scope_is_missing ... ok
+test policy::quick::authorize_scopes_allows_when_every_scope_is_granted ... ok
+test policy::quick::a_denied_approval_never_lets_the_gate_proceed ... ok
+test policy::quick::a_destructive_capability_under_when_destructive_requires_approval_then_proceeds_once_resolved ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 149 filtered out; finished in 0.00s
+
+     Running unittests ../../📦️bin.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_os_mcp-45a8dc5119dccb18)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit:0

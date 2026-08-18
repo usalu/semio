@@ -1,0 +1,110 @@
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-framework-os-mcp v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1013:51
+     |
+1013 |         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1013 -         let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+1013 +         let meta = serde_json::json!({ "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1014:37
+     |
+1014 |         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1014 -         let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+1014 +         let list = server.dispatch(&tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1018:37
+     |
+1018 | ...   let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio:/...
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1018 -         let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1018 +         let read = server.dispatch(&tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🧭️protocol/🦀️component.rs:1022:43
+     |
+1022 | ...   let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri...
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1022 -         let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+1022 +         let subscribed = server.dispatch(&tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+     |
+
+warning: `semio-framework-os-mcp` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-os-mcp --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 22.77s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY/🎯️target/debug/deps/semio_framework_os_mcp-b2d91a0e1ba588e2)
+
+running 11 tests
+test workspace::quick::base64_encode_matches_a_known_vector ... ok
+test workspace::quick::find_plugin_entry_reports_a_typed_not_found_for_an_unknown_plugin ... ok
+test workspace::quick::prepare_action_and_invoke_action_are_a_well_formed_plugin_unavailable_not_a_panic ... ok
+test workspace::quick::open_folder_creates_the_directory_if_missing ... ok
+test workspace::quick::read_resource_on_an_unknown_artifact_is_not_found_not_fabricated ... ok
+test workspace::quick::a_fresh_folder_workspace_lists_zero_artifacts ... ok
+test workspace::quick::ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent ... ok
+test workspace::quick::resolve_context_reports_the_open_probe_artifact_as_active ... FAILED
+test workspace::quick::read_resource_artifact_returns_real_bytes_after_a_commit ... FAILED
+test workspace::long::a_headless_commit_propagates_to_a_second_host_on_the_same_folder ... FAILED
+test workspace::long::attempt_plugin_activation_against_a_real_note_wasm_when_available ... ok
+
+failures:
+
+---- workspace::quick::resolve_context_reports_the_open_probe_artifact_as_active stdout ----
+
+thread 'workspace::quick::resolve_context_reports_the_open_probe_artifact_as_active' (31976396) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🏠️workspace/🦀️component.rs:755:9:
+assertion `left == right` failed
+  left: None
+ right: Some("probe-b")
+
+---- workspace::quick::read_resource_artifact_returns_real_bytes_after_a_commit stdout ----
+
+thread 'workspace::quick::read_resource_artifact_returns_real_bytes_after_a_commit' (31976394) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🏠️workspace/🦀️component.rs:764:76:
+read: GatewayError { code: NotFound, message: "no such artifact: probe-c", details: Null, retryable: false }
+
+---- workspace::long::a_headless_commit_propagates_to_a_second_host_on_the_same_folder stdout ----
+
+thread 'workspace::long::a_headless_commit_propagates_to_a_second_host_on_the_same_folder' (31976386) panicked at 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🏠️workspace/🦀️component.rs:835:26:
+no RemoteMutations before the 5s deadline: Ok(Err(Closed))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    workspace::long::a_headless_commit_propagates_to_a_second_host_on_the_same_folder
+    workspace::quick::read_resource_artifact_returns_real_bytes_after_a_commit
+    workspace::quick::resolve_context_reports_the_open_probe_artifact_as_active
+
+test result: FAILED. 8 passed; 3 failed; 0 ignored; 0 measured; 145 filtered out; finished in 4.75s
+
+error: test failed, to rerun pass `-p semio-framework-os-mcp --lib`

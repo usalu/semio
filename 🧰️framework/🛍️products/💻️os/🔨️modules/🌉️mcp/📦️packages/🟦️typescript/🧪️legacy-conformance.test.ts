@@ -24,7 +24,8 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { existsSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { isValidJsonSchema2020_12, resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️component.ts";
+import { resolveMcpBinaryPath, spawnRawMcp } from "../../🟦️component.ts";
+import { isValidJsonSchema2020_12 } from "./🧬️schema-validation.ts";
 import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 const repoRoot = getWorkspaceRoot();

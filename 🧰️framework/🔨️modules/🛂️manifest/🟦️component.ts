@@ -595,7 +595,13 @@ export type ActionSemantics = GeneratedActionSemantics;
  * Priority matches Rust: non-empty `options` always wins Select; a `Slider` presentation OR a fully
  * bounded `Number` wins Slider over plain Number; everything else falls through to Text. */
 export function argControl(def: ActionArgDef): ActionArgControl {
+  // 🛟️ `schema` is the newer stored-truth vocabulary (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY,
+  // packet P3-manifest-schema). Plugin manifests built before that migration — including any stale
+  // `plugin-modules/` wasm still on disk — carry an arg def without it. Reading `.kind` off `undefined`
+  // there threw inside `resolveActionArgDef` during the shell's first render, which blanked the ENTIRE
+  // shell over one un-migrated argument. A missing schema degrades to a plain text control instead.
   const schema = def.schema;
+  if (!schema) return { kind: "text", placeholder: undefined };
   switch (schema.kind) {
     case "string": {
       if (schema.options && schema.options.length > 0) {

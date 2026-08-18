@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<DrawSnapshot> for DrawInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::draw::standards::v1::subsets::any::schema::DrawBuilder {
+impl ArtifactInferrer for crate::artifacts::draw::standards::v1::subsets::any::schema::DrawInferrer {
     type Snapshot = DrawSnapshot;
     type Inference = DrawInference;
 }

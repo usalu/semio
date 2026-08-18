@@ -1,18 +1,29 @@
-//! note <- dwg
+//! 🚪️ note <- dwg — foreign `Deserializer<NoteSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Maps `Line`/`LwPolyline`
+//! entities onto ink blocks and `Text` entities onto text blocks — a real, honest domain mapping
+//! over typed `DwgGeometry` fields (not hand-rolled byte manipulation), but not full CAD fidelity,
+//! so this hop is `IoFidelity::Lossy`.
+
 use crate::artifacts::note::NoteSnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::schema::snapshot::{decode_dwg, encode_dwg};
-use semio_s_plugin_stdio::artifacts::dwg::{dwg_from_bytes, DwgDrawing, DwgSnapshot};
-pub fn register() {}
-/// 🔁️ `DwgSnapshot` carries a structured `drawing: DwgLogicalDrawing`, not raw bytes — round-trips
-/// through `encode_dwg` to reach the byte-oriented `deserialize_bytes` below (mirrors the export
-/// side's own `serialize`/`serialize_bytes` split, which already goes bytes-first).
-pub fn deserialize(from: &DwgSnapshot) -> Result<NoteSnapshot, String> {
-    let bytes = encode_dwg(from).map_err(|error| error.to_string())?;
-    deserialize_bytes(&bytes)
-}
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
-    let _meta = decode_dwg(bytes)?;
-    let drawing: DwgDrawing = dwg_from_bytes(bytes)?;
-    let value = crate::artifacts::note::io::note_document_json_from_dwg(&drawing)?;
-    serde_json::from_value(value).map_err(|e| e.to_string())
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::dwg::dwg_from_bytes;
+
+pub const DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId::ANY };
+
+pub struct DwgIntoNote;
+
+impl Deserializer<NoteSnapshot> for DwgIntoNote {
+    const FROM: Dialect = DWG_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(IoError { message: "DwgIntoNote: expected a binary dwg payload".to_string(), diagnostics: Vec::new() });
+        };
+        let drawing = dwg_from_bytes(bytes).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let value = crate::artifacts::note::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let snapshot: NoteSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(snapshot))
+    }
 }

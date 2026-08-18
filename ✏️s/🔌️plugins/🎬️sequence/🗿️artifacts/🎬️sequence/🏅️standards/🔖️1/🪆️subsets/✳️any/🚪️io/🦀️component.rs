@@ -3,6 +3,16 @@
 //! `Deserializer<SequenceSnapshot>` leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`.
 //! Replaces the old hand-rolled `ArtifactComposition`/`ComposerEntry` dispatch chain outright — all
 //! io now goes exclusively through the `io_mechanism` registry (design.md rule 3).
+//!
+//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
+//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
+//! impls for `SequenceSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
+//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `SequenceMutation`), and
+//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are computed,
+//! never authored). `NativeCodecs.{snapshot,diff,mutations,inferences}: LanguagePair { text: None,
+//! binary: None }` below leaves their `dsl::LanguageSpec` registration deferred — a real, supported
+//! shape per that type's own doc, matching the stdio pilot's identical documented deviation; the
+//! underlying codec impls these would point at are unchanged and independently tested either way.
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {

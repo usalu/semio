@@ -1,0 +1,18 @@
+1 semio-s-plugin-architect
+1 semio-s-plugin-block
+1 semio-s-plugin-cad
+1 semio-s-plugin-demonstrator
+1 semio-s-plugin-energy
+1 semio-s-plugin-fem
+1 semio-s-plugin-flow
+1 semio-s-plugin-gis
+1 semio-s-plugin-lowpoly
+1 semio-s-plugin-norm
+1 semio-s-plugin-procedural
+1 semio-s-plugin-process
+1 semio-s-plugin-puzzle
+1 semio-s-plugin-remodel
+1 semio-s-plugin-shooting
+1 semio-s-plugin-space
+1 semio-s-plugin-trinity
+DONE

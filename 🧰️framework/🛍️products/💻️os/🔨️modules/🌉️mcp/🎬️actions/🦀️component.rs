@@ -516,11 +516,55 @@ impl ActionAdapter {
     //#endregion 🔖️Cancel
 
     //#region 🔖️Invoke
-    /// 🚀️ `action.invoke` = prepare (if not already prepared) + Approve + Commit + Verify. The
-    /// `expectedRevision` staleness check runs BEFORE any `TransactionPrepare`/`TransactionCommit` is
-    /// sent — only a `ReadHistory` (a pure read) precedes it, so a stale caller never causes a mutation
-    /// attempt.
+    /// 🚀️ `action.invoke` = prepare (if not already prepared) + Approve + Commit + Verify — the
+    /// public entry point. When `idempotencyKey` is supplied, the IDEMPOTENCY LOOKUP RUNS FIRST,
+    /// before any prepared-handle resolution: `IdempotencyStore::get_or_insert_with`'s `compute`
+    /// closure (which resolves the handle, checks policy, checks the revision, and commits) only runs
+    /// on a genuine cache MISS. A cache HIT therefore returns the stored `InvocationReport`
+    /// (`replayed: true`) without ever touching the prepared handle again — this is deliberate: a
+    /// `prep_` handle is one-shot (revoked the instant its first `invoke` completes, §🔖️PrepareAndPreview/
+    /// this region), so a replay that re-resolved it would always fail with `NOT_FOUND` (the bug a
+    /// post-unblock review caught, see `📓️terra-P6-report.md` "post-unblock fixes"). The idempotency
+    /// key, not the prepared handle, is the source of truth for what a replay returns.
     pub fn invoke(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, request: InvokeRequest, instance: u32, now_ms: u64) -> Result<InvocationReport, GatewayError> {
+        match &request.idempotency_key {
+            Some(key) => {
+                let failure: std::cell::RefCell<Option<GatewayError>> = std::cell::RefCell::new(None);
+                let placeholder_capability_id = request.capability_id.clone().or_else(|| request.prepared_handle.clone()).unwrap_or_default();
+                let report = self.idempotency.get_or_insert_with(&principal.id, key, now_ms, || match self.invoke_uncached(catalog, principal, session, &request, instance, now_ms) {
+                    Ok(report) => report,
+                    Err(error) => {
+                        let failed = InvocationReport {
+                            invocation_id: self.next_invocation_id(),
+                            capability_id: placeholder_capability_id.clone(),
+                            status: InvocationStatus::Failed,
+                            affected_resources: Vec::new(),
+                            revision_before: None,
+                            revision_after: None,
+                            diff_uri: None,
+                            warnings: vec![error.message.clone()],
+                            undo_token: None,
+                            postconditions: Vec::new(),
+                            replayed: false,
+                        };
+                        *failure.borrow_mut() = Some(error);
+                        failed
+                    }
+                });
+                match failure.into_inner() {
+                    Some(error) => Err(error),
+                    None => Ok(report),
+                }
+            }
+            None => self.invoke_uncached(catalog, principal, session, &request, instance, now_ms),
+        }
+    }
+
+    /// 🚀️ The real, always-fresh invocation logic — resolve/prepare → Approve → revision check →
+    /// Commit → Verify → audit → revoke the one-shot `prep_` handle. Never called twice for the SAME
+    /// idempotency key within its TTL window (`invoke`'s own job); called directly when no
+    /// `idempotencyKey` was supplied at all.
+    fn invoke_uncached(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, request: &InvokeRequest, instance: u32, now_ms: u64) -> Result<InvocationReport, GatewayError> {
         let invocation_id = self.next_invocation_id();
 
         let (prep_handle_id, record): (Option<String>, PreparedActionRecord) = if let Some(handle) = &request.prepared_handle {
@@ -562,25 +606,22 @@ impl ActionAdapter {
             return Err(error);
         }
 
-        let capability_id = record.capability_id.clone();
-        let ops = record.ops.clone();
         let effects_writes: Vec<String> = capability.effects.writes.iter().map(|selector| selector.0.clone()).collect();
-        let perform = || -> Result<InvocationReport, GatewayError> {
-            let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
-            let txn_id = self.transaction_prepare_with_retry(record.instance, ops.clone(), &format!("agent invoke {capability_id}"), origin, now_ms)?;
-            match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
+        let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
+        let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), &format!("agent invoke {}", record.capability_id), origin, now_ms) {
+            Ok(txn_id) => match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
                 Ok(AppFrame::TransactionCommitted { edit_id, .. }) => {
                     let after = match self.exchange_one(record.instance, AppCommand::ReadHistory) {
                         Ok(AppFrame::HistorySnapshot(revision)) => revision,
                         _ => current.clone(),
                     };
                     let undo_record = UndoRecord { members: vec![UndoMember { instance: record.instance, txn_id: txn_id.clone() }] };
-                    let undo_token = self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Capability { capability_id: capability_id.clone() }, serde_json::to_value(&undo_record).unwrap_or_default(), now_ms);
+                    let undo_token = self.handles.mint(HandleKind::Undo, session.clone(), Attachment::Capability { capability_id: record.capability_id.clone() }, serde_json::to_value(&undo_record).unwrap_or_default(), now_ms);
                     Ok(InvocationReport {
                         invocation_id: invocation_id.clone(),
-                        capability_id: capability_id.clone(),
+                        capability_id: record.capability_id.clone(),
                         status: InvocationStatus::Succeeded,
-                        affected_resources: effects_writes.clone(),
+                        affected_resources: effects_writes,
                         revision_before: Some(current.clone()),
                         revision_after: Some(after),
                         diff_uri: None,
@@ -595,46 +636,11 @@ impl ActionAdapter {
                     let _ = self.exchange_one(record.instance, AppCommand::TransactionRollback { txn_id: txn_id.clone() });
                     Err(error)
                 }
-            }
+            },
+            Err(error) => Err(error),
         };
 
-        // 🔁️ Idempotency wraps ONLY the commit — the revision/approval gates above always re-run (they
-        // are cheap reads/lookups, not mutations); `IdempotencyStore::get_or_insert_with`'s `compute`
-        // signature is infallible (`FnOnce() -> InvocationReport`, P1b's own public API, outside this
-        // packet's `path_scope` to change), so a `perform()` failure is threaded out via `failure`
-        // rather than through the store's return type — the store still only calls `compute` once per
-        // key per TTL window, so a failed attempt is (like a success) cached for the window's duration.
-        let outcome: Result<InvocationReport, GatewayError> = if let Some(key) = &request.idempotency_key {
-            let failure: std::cell::RefCell<Option<GatewayError>> = std::cell::RefCell::new(None);
-            let report = self.idempotency.get_or_insert_with(&principal.id, key, now_ms, || match perform() {
-                Ok(report) => report,
-                Err(error) => {
-                    let failed = InvocationReport {
-                        invocation_id: invocation_id.clone(),
-                        capability_id: capability_id.clone(),
-                        status: InvocationStatus::Failed,
-                        affected_resources: Vec::new(),
-                        revision_before: Some(current.clone()),
-                        revision_after: None,
-                        diff_uri: None,
-                        warnings: vec![error.message.clone()],
-                        undo_token: None,
-                        postconditions: Vec::new(),
-                        replayed: false,
-                    };
-                    *failure.borrow_mut() = Some(error);
-                    failed
-                }
-            });
-            match failure.into_inner() {
-                Some(error) => Err(error),
-                None => Ok(report),
-            }
-        } else {
-            perform()
-        };
-
-        match &outcome {
+        match &commit_result {
             Ok(report) => self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Allowed, Some(current.clone()), report.revision_after.clone(), "succeeded", None, report.undo_token.clone(), now_ms),
             Err(error) => self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input }, AuditDecision::Denied { code: error.code }, Some(current.clone()), None, "failed", Some(error.clone()), None, now_ms),
         }
@@ -643,7 +649,7 @@ impl ActionAdapter {
             self.handles.revoke(&handle);
         }
 
-        outcome
+        commit_result
     }
     //#endregion 🔖️Invoke
 
@@ -795,6 +801,7 @@ impl ActionAdapter {
 #[cfg(test)]
 mod quick {
     use super::*;
+
     use crate::audit::InMemoryAuditSink;
     use crate::catalog::{compile, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure};
     use crate::fixtures;
@@ -1149,15 +1156,50 @@ mod quick {
         assert_eq!(error.code, GatewayErrorCode::NotFound);
     }
 
+    /// 🐛️ post-unblock fix: this test originally sent `{}` and asserted `INPUT_INVALID`, on the wrong
+    /// assumption that translateSelection's `dx`/`dy`/`dz`/`objectIds` args are required. They are
+    /// not — `🧫️fixtures/🦀️component.rs`'s `string_array_arg`/`number_arg` helpers never call
+    /// `ActionArgDef::required()`, so the compiled `input_schema` has no `"required"` array at all,
+    /// and `{}` is genuinely schema-valid (confirmed directly: a `jsonschema::Validator` built from
+    /// this exact capability's `input_schema` reports `is_valid(&json!({}))  == true`). The test
+    /// encoded the wrong expectation, not a defect in `prepare`'s validation — `prepare` itself was
+    /// already correctly invoking the validator (confirmed: the same validator correctly rejects a
+    /// wrong-typed `dx` and an `additionalProperties:false`-violating unknown field). Fixed by
+    /// asserting against genuinely-invalid input instead of an incorrectly-assumed-required field.
     #[test]
     fn invalid_input_against_the_capabilitys_schema_is_input_invalid() {
         let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
         let catalog = real_fixture_catalog();
         let session = SessionHandle::new("sess_1");
         let principal = principal(&["artifact.write"]);
-        // translateSelection requires dx/dy/dz/objectIds — send nothing.
-        let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({}), 0, 0).unwrap_err();
+        // `dx` is declared `ArgSchema::Number` — a string value violates the schema's `type: "number"`.
+        let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": "not a number"}), 0, 0).unwrap_err();
         assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    }
+
+    /// 🐛️ post-unblock fix, second half: the schema's `additionalProperties: false` is the OTHER real
+    /// enforcement point translateSelection's own args never exercise (none of them are required) —
+    /// an unrecognised field must still be rejected.
+    #[test]
+    fn an_unrecognised_field_against_the_capabilitys_schema_is_input_invalid() {
+        let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+        let catalog = real_fixture_catalog();
+        let session = SessionHandle::new("sess_1");
+        let principal = principal(&["artifact.write"]);
+        let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"notARealArg": 1}), 0, 0).unwrap_err();
+        assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    }
+
+    /// ✅️ The flip side of the fix above, made explicit rather than left implicit: `{}` genuinely IS
+    /// valid input for translateSelection (no arg is required in this fixture), so `prepare` must
+    /// succeed for it — pinning down the exact behaviour the two tests above now correctly assume.
+    #[test]
+    fn empty_input_is_valid_for_a_capability_with_no_required_args() {
+        let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+        let catalog = real_fixture_catalog();
+        let session = SessionHandle::new("sess_1");
+        let principal = principal(&["artifact.write"]);
+        adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({}), 0, 0).expect("no arg is required, so {} must be accepted");
     }
 
     #[test]

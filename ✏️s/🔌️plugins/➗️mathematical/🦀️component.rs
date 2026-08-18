@@ -3,14 +3,20 @@
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)` escape
-/// hatch; `.setup()` itself is gone (W1c) — `MathematicalPlayApp::app_schema()` now answers the one
-/// thing it used to survive for, registered automatically by `register_document_app` below.
-///
-/// `.document_app::<…>(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1)
-/// is replaced by two independent surfaces: `.editor::<…>(…)` (mutation-capable) and
-/// `.viewer::<…>(…)` (read-only) for the same `s.mathematical.mathematical@1/*` dialect.
+/// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
+/// tree) replaces `.artifact(...)`/`.editor::<>()`/`.viewer::<>()` outright — the old channel is
+/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+/// ticket forbids). The old `.artifact(declaration())` channel's `.composers(...)` registered a
+/// native composer entry with NO matching `composer` capability row in `definition()` — the exact
+/// bug that shipped this plugin's WASM manifest as `assembly-failed` (every `try_build()` call
+/// faulted on the capability-row mismatch); `.declare_artifact(...)`'s io hops are typed
+/// `Serializer`/`Deserializer` entries validated by `io_register`, not `ComposerEntry` capability
+/// rows, so this cutover fixes the manifest as a side effect, not a separate fix.
+/// `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay: they are an orthogonal,
+/// still-supported opt-in (`contributor.list-artifact-mutations`) the new declaration tree's
+/// `SurfaceDeclaration.mutation_roster` field does not yet wire live (`📓️w1-c-report.md`
+/// openQuestion 3) — not a second registration of the artifact/schema/io itself.
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
 /// activates one instance whenever a `"computation.mathematical"` artifact
@@ -22,10 +28,8 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("mathematical")
         .label("Mathematical")
         .version("0.1.0")
-        .artifact(crate::artifacts::mathematical::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::mathematical::MathematicalPlayApp>(crate::editor::mathematical::create_mathematical_app())
+        .declare_artifact(crate::artifacts::mathematical::artifact())
         .editor_mutation_roster::<crate::editor::mathematical::MathematicalPlayApp>()
-        .viewer::<crate::viewer::mathematical::MathematicalViewer>(crate::viewer::mathematical::create_mathematical_viewer())
         .viewer_mutation_roster::<crate::viewer::mathematical::MathematicalViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::mathematical::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

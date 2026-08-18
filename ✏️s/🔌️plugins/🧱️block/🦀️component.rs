@@ -4,7 +4,8 @@
 //! only the identity/metadata/compatibility/representation/camera shapes common to every dimension live
 //! here, reached as `crate::*` from every `🗿️artifacts/<a>` node.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Identity
@@ -142,7 +143,11 @@ pub struct BlockMeta {
 /// `⚙️engine`-dissolution restructure settled. Every app's CONFIG/PRESENCE schema now registers via
 /// `ArtifactApp::app_schema()` (ticket W1c) instead — an app-scope concern `ArtifactDeclaration`
 /// has no field for by design (see that struct's doc) — so `.setup()` is gone from this plugin
-/// entirely.
+/// entirely. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
+/// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each
+/// dimension's own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering
+/// all three editors' persisted mutations.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("block")
         .label("Block")
@@ -162,6 +167,11 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::block5d::Block5dPlayApp>()
         .viewer::<crate::viewer::block5d::Block5dViewer>(crate::viewer::block5d::create_block5d_viewer())
         .viewer_mutation_roster::<crate::viewer::block5d::Block5dViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::block2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::block3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::block5d::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist block2d/block3d/block5d edits to the open document".into(), optional: false })
         .try_build()
 }
 //#endregion 🔌️Registration

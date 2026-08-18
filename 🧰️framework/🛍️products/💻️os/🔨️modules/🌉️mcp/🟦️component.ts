@@ -9,7 +9,6 @@
 import { type ChildProcessByStdio, spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
-import Ajv2020 from "ajv/dist/2020.js";
 
 //#region 🔖️BinaryPath
 /** 📁️ This ticket's own scratch `CARGO_TARGET_DIR` (packet brief §3.1) — every packet in
@@ -131,22 +130,6 @@ export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"]): R
 }
 //#endregion 🔖️RawJsonRpc
 
-//#region 🔖️SchemaValidation
-/** ✅️ True iff `schema` is a structurally valid JSON Schema draft 2020-12 document — compiling it
- * with a real `Ajv2020` instance (`ajv` 8.20, already vendored as a transitive dependency of the
- * installed `@modelcontextprotocol/sdk` — packet brief §3.2 names `ajv` explicitly) is itself the
- * proof: Ajv rejects anything that doesn't parse as a schema under that draft. A fresh instance per
- * call avoids `$id` collisions across unrelated tool schemas sharing no registry. */
-export function isValidJsonSchema2020_12(schema: unknown): { readonly valid: true } | { readonly valid: false; readonly error: string } {
-  try {
-    new Ajv2020({ strict: false }).compile(schema as object);
-    return { valid: true };
-  } catch (error) {
-    return { valid: false, error: String(error) };
-  }
-}
-//#endregion 🔖️SchemaValidation
-
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -164,16 +147,5 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("isValidJsonSchema2020_12", () => {
-    it("accepts a well-formed object schema", () => {
-      const result = isValidJsonSchema2020_12({ type: "object", properties: { x: { type: "string" } }, required: ["x"] });
-      expect(result.valid).toBe(true);
-    });
-
-    it("rejects a schema whose keyword values are structurally invalid", () => {
-      const result = isValidJsonSchema2020_12({ type: "object", properties: "not-an-object" });
-      expect(result.valid).toBe(false);
-    });
-  });
 }
 //#endregion 🧪️Tests

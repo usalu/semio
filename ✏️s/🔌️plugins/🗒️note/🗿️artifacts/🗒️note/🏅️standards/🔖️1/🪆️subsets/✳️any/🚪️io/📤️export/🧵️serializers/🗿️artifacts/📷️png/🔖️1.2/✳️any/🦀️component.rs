@@ -1,24 +1,36 @@
-//! note -> png
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's svg/dwg-pattern scope — see
-//! `w5b--report.md`): `PngSnapshot` was restructured from a `RasterImage{width,height,rgba}`
-//! wrapper into a real chunk-level model (`width`/`height`/`pixels` directly on the snapshot,
-//! plus IHDR/PLTE/tRNS/ancillary fields) by a concurrent stdio wave. Fixed as a minimal
-//! lagging-call-site update — the canonical always-8bit-RGBA `pixels` payload this leaf already
-//! built is exactly what `PngSnapshot.pixels` wants, just without the old wrapper struct.
+//! 🚪️ note -> png — foreign `Serializer<NoteSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Rasterizes to an opaque white
+//! canvas sized to the document bounds — no block content is actually painted (unchanged behaviour
+//! from the pre-migration free function) — an honest `IoFidelity::Lossy` hop.
+
+use crate::artifacts::note::io::note_document_bounds;
 use crate::artifacts::note::NoteSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::png::io::encode_png;
 use semio_s_plugin_stdio::artifacts::png::schema::empty_png_snapshot;
-pub fn register() {}
-pub fn serialize(snapshot: &NoteSnapshot) -> Result<semio_s_plugin_stdio::artifacts::png::PngSnapshot, String> {
-    let (w, h) = crate::artifacts::note::io::note_document_bounds(snapshot);
-    let width = w.max(1); let height = h.max(1);
-    let mut rgba = vec![255u8; (width as usize) * (height as usize) * 4];
-    for px in rgba.chunks_mut(4) { px[3] = 255; }
-    let mut snap = empty_png_snapshot();
-    snap.width = width;
-    snap.height = height;
-    snap.pixels = rgba;
-    Ok(snap)
+
+pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
+
+pub struct NoteIntoPng;
+
+impl Serializer<NoteSnapshot> for NoteIntoPng {
+    const INTO: Dialect = PNG_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn serialize(from: &NoteSnapshot) -> IoResult<IoPayload> {
+        let (w, h) = note_document_bounds(from);
+        let width = w.max(1);
+        let height = h.max(1);
+        let mut rgba = vec![255u8; (width as usize) * (height as usize) * 4];
+        for px in rgba.chunks_mut(4) {
+            px[3] = 255;
+        }
+        let mut snapshot = empty_png_snapshot();
+        snapshot.width = width;
+        snapshot.height = height;
+        snapshot.pixels = rgba;
+        let bytes = encode_png(&snapshot).map_err(|error| IoError { message: format!("NoteIntoPng: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+    }
 }
-pub fn serialize_bytes(snapshot: &NoteSnapshot) -> Result<Vec<u8>, String> { encode_png(&serialize(snapshot)?) }

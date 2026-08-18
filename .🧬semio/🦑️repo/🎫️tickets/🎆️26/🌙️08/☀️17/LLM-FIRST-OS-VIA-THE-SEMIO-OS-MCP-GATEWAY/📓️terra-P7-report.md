@@ -270,3 +270,127 @@ Edited: `🌉️mcp/📦️bin.rs`, `🌉️mcp/🦀️component.rs`, `🌉️mc
 `🌉️mcp/📦️packages/🦀️rust/📦️glue.rs`. Nothing outside `path_scope` was touched; no git-modifying
 command was run; no `[DEBUG] ` markers left in owned paths (grep-verified, §4-adjacent check in this
 session).
+
+## post-unblock fixes
+
+sol fixed `🗂️catalog/🦀️component.rs` (replaced the untyped `DescriptorEntry` helper with a
+`ContributionRow` trait) and the crate compiled for the first time. `cargo test -p
+semio-framework-os-mcp` then ran and reported 151 passed / 5 failed (3 mine, 2 P6's — P6's fixed in
+parallel, not touched here). All 3 of mine were real, first-ever-executed signal — investigated and
+fixed for real, not papered over.
+
+### 1. `resolve_context_reports_the_open_probe_artifact_as_active` — `left: None, right: Some("probe-b")`
+
+**Root cause**: `workspace_artifact_ids()`/`read_artifact_bytes()` only ever did a COLD read through
+`FolderSqliteStorage` (disk). `ensure_probe_artifact()` — the only writer — populates
+`self.open_probes` (an in-memory map) and wakes `ArtifactHost`'s actor via
+`ArtifactActorMsg::LocalMutations`, but that actor persists to `<folder>/.semio/documents.db`
+**asynchronously on its own thread**. `ensure_probe_artifact` returns as soon as the LOCAL
+`ArtifactStore::dispatch` call applied the mutation — before the actor thread has necessarily
+flushed anything to disk. The reader (cold disk read) and the writer (in-memory map + async actor)
+were never the same data source, exactly as sol's diagnosis predicted: "the registry the writer
+populates and the one the reader consults are not the same."
+
+**Fix**: `workspace_artifact_ids()` now unions `self.open_probes`' keys (the SAME map the writer
+populates, read under the same lock, zero cross-thread hop) with whatever is already durably
+persisted on disk. `resolve_context`'s `active_artifact_id` derives from this union, so it now sees
+`"probe-b"` immediately, synchronously, with no race window at all.
+
+### 2. `read_resource_artifact_returns_real_bytes_after_a_commit` — `NotFound("no such artifact: probe-c")`
+
+**Same root cause as (1)**, same fix's other half: `read_artifact_bytes()` now checks
+`self.open_probes` first — if a live `ProbeStore` is open for `artifact_id`, it returns REAL
+in-memory bytes via `ArtifactStore::snapshot_pack()` (no cross-thread wait, no disk round trip at
+all) — and only falls back to the cold `FolderSqliteStorage` read when nothing is open in-process.
+Both fixes are additive reads (union / try-live-first-then-cold), not new writes — the on-disk
+persistence path (and the backbone attachment that drives it) is completely unchanged.
+
+### 3. `a_headless_commit_propagates_to_a_second_host_on_the_same_folder` — `Ok(Err(Closed))`
+
+**Two distinct bugs, found in sequence — sol's hint ("very likely a dropped handle/guard... find
+what closes") was exactly right for the first one.**
+
+**Bug 3a — the actual `Closed`, a bug in the TEST, not in propagation.** The test called
+`shell_host.subscribe("shared-doc")` **before** `shell_host.open(...)`. `ArtifactHost::subscribe`'s
+own doc states the exact behavior verbatim: "If the document is not open the receiver's sender is
+dropped, so it simply reports closed." Subscribing to a not-yet-open id hands back a receiver paired
+with a sender (`let (_tx, rx) = broadcast::channel(1);`) that is dropped in the very same statement —
+permanently closed from the first poll. `open()` then mints a **brand-new** `broadcast::channel` for
+the same id; a receiver taken out beforehand can never see it. Fix: reordered `subscribe` to happen
+**after** `open` (one line moved, `🏠️workspace/🦀️component.rs`'s `long` test module). This alone
+turned `Ok(Err(Closed))` into a genuine `Err(Elapsed(()))` — i.e., the channel now stays open and the
+only remaining question was propagation *timing*, not propagation *existence*.
+
+**Bug 3b — real, benign timing, not a wiring gap.** With 3a fixed, the property largely worked but
+occasionally still missed a 5s window. Instrumented with temporary `[DEBUG]` tracing (removed before
+this report) across 10 runs: the disk-write wait **never once** timed out (the agent's commit always
+reached `.semio/documents.db` well under 1s); of 10 runs waiting on `shell_events.recv()` after a
+deterministic `ArtifactActorMsg::ExternalChanged` poke, 9 delivered `RemoteMutations` in well under
+1s and 1 hit the 5s deadline. `ps aux` at the time showed several dozen concurrent `cargo`/`rustc`
+processes from the sibling `MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` ticket's W3/W4 plugin fan-out —
+real OS-thread scheduling contention on a heavily shared box, not a dropped/never-fired event. This
+is the SAME reason `🏪️store/🔄️sync/🦀️component.rs`'s own reference test
+(`folder_external_edit_delivers_remote_operations`) explicitly pokes `ExternalChanged` rather than
+trusting the `notify` watcher's timing ("notify also wired, but timing-independent here" — that
+test's own comment) — I adopted the identical, already-established pattern rather than inventing a
+new one. Fix: added the same deterministic poke (after confirming the write really landed on disk,
+polling `FolderSqliteStorage::read` the same way the reference test does) and widened the
+post-poke wait from 5s to 20s, with the investigation numbers above recorded in the code comment so
+the reasoning survives — not a blind bump to hide a `Closed`, which was already fixed by 3a and is a
+categorically different failure mode (`Closed` fires instantly, on the very first poll; `Elapsed`
+only after the full deadline, and only under measured external load).
+
+**The property itself is real and proven, not merely tested-around**: a headless agent's commit
+(`HeadlessWorkspace::ensure_probe_artifact`, going through the real `ArtifactStore` →
+`ArtifactHost::send` → folder-persisted pack+spr path) reaches a second, independent
+`ArtifactHost`/`ArtifactStore` pair watching the same folder, delivered as a real
+`ArtifactEvent::RemoteMutations`, ingested via `store.tick()`, visible in the second store's own
+`snapshot()`. This is exactly §6 of the packet brief.
+
+### Verification — verbatim, exit codes
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo test -p semio-framework-os-mcp workspace::
+running 11 tests
+test workspace::quick::find_plugin_entry_reports_a_typed_not_found_for_an_unknown_plugin ... ok
+test workspace::quick::base64_encode_matches_a_known_vector ... ok
+test workspace::quick::open_folder_creates_the_directory_if_missing ... ok
+test workspace::quick::prepare_action_and_invoke_action_are_a_well_formed_plugin_unavailable_not_a_panic ... ok
+test workspace::quick::read_resource_on_an_unknown_artifact_is_not_found_not_fabricated ... ok
+test workspace::quick::a_fresh_folder_workspace_lists_zero_artifacts ... ok
+test workspace::quick::resolve_context_reports_the_open_probe_artifact_as_active ... ok
+test workspace::quick::read_resource_artifact_returns_real_bytes_after_a_commit ... ok
+test workspace::quick::ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent ... ok
+test workspace::long::a_headless_commit_propagates_to_a_second_host_on_the_same_folder ... ok
+test workspace::long::attempt_plugin_activation_against_a_real_note_wasm_when_available ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 149 filtered out; finished in 4.98s
+```
+Full transcript: `🧪️p7-final-workspace2.txt`.
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo test -p semio-framework-os-mcp
+test result: ok. 160 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 56.07s
+$ echo $?
+0
+```
+Full transcript: `🧪️p7-final-full.txt` (includes `bin.rs` unit tests — 0, none declared — and doc-tests —
+0). Every pre-existing P1a/P1b/P2/P6 test plus every `🏠️workspace` test is green; nothing in this
+ticket's `semio-framework-os-mcp` crate is failing or ignored.
+
+```
+$ CARGO_TARGET_DIR=<ticket>/🎯️target cargo build -p semio-framework-os-mcp --bin semio-os-mcp
+$ echo $?
+0
+$ grep -c "^warning" <build output>
+2   (both lines belong to ONE warning — `📡️spr/📡️wire`'s pre-existing `pos` assignment, named in
+     §6 of the brief as not mine — plus its own "generated 1 warning" summary line)
+```
+Full transcript: `🧪️p7-final-build.txt`.
+
+### Files touched by this fix pass
+
+`🏠️workspace/🦀️component.rs` only (the 2 read-path fixes + the `long` test's subscribe-order and
+poke fixes). No other file in `path_scope` needed a change. `🧪️p7-postunblock-1.txt` through
+`🧪️p7-postunblock-3.txt` and `🧪️p7-final-workspace.txt`/`🧪️p7-final-workspace2.txt`/
+`🧪️p7-final-full.txt`/`🧪️p7-final-build.txt` are the scratch evidence trail for this pass.

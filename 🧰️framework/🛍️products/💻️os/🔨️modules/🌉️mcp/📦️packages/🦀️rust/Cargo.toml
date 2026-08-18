@@ -14,6 +14,12 @@ workspace = true
 
 [lib]
 path = "📦️glue.rs"
+# 📚️ This crate carries no ``` doc examples (verified: zero fenced blocks in its sources), so the
+# rustdoc pass has nothing to run — it only re-links every dependency rlib. With several sessions
+# rebuilding `semio-framework`/`semio-framework-ui` concurrently in this shared tree, that link
+# step intermittently fails on an rlib replaced mid-run. Skipping it removes a false failure
+# without losing a single assertion; add real doc examples and this flips back on.
+doctest = false
 
 [[bin]]
 name = "semio-os-mcp"

@@ -46,6 +46,7 @@ import {
 import {
   AppChannelClient,
   type AppFrameValue,
+  type ArtifactPresencePeer,
   decodeConflictsFromWire,
   decodeFaultFromWire,
   decodeMergeReportFromWire,
@@ -109,7 +110,17 @@ export type PluginWasmHandle = {
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
   readonly detachBackbone?: (instanceId: number) => Promise<void>;
-  readonly ephemeralSnapshot?: (instanceId: number) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number } | null>;
+  /** 👥️ `interaction` (contract-freeze §C7.6) is the app's own declared-broadcast selection/hover
+   * slice — `encode_presence_interaction` output, empty when no domain is declared or broadcasting
+   * right now. */
+  readonly ephemeralSnapshot?: (
+    instanceId: number,
+  ) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number; readonly interaction: readonly number[] } | null>;
+  /** 👥️ Pushes the document-wide presence roster into this instance's plugin app — the ONLY plugin
+   * ingress for peers (contract-freeze §C7.6). `ownColor` is this actor's own hub-assigned palette
+   * index (`null` for a folder-only session with no hub); `peers` is the whole roster with the
+   * caller's own actor already dropped. */
+  readonly pushPresence?: (instanceId: number, ownColor: number | null, peers: readonly ArtifactPresencePeer[]) => Promise<void>;
   /** 🔁️ H1-react (design-abi.md §2) — delivers the result of an `Effect::InvokeExtension` back to
    * the ORIGINATING instance's actor as `Event::Completed{req, outcome}`, resuming the guest SDK
    * future `RequestRegistry` parked on `req`. Replaces the old `responseAction` redispatch —
@@ -707,7 +718,20 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     // here — every real call site in `ShellHost/🟦️component.tsx` already optional-chains these.
     attachBackbone: undefined,
     detachBackbone: undefined,
+    // 🚧️ Same channel-v12 retirement as `attachBackbone`/`detachBackbone` above: the old
+    // `AppFrame::Ephemeral` poll was the literal `exchange(id, [])` drain design-abi.md §4 names as
+    // retired outright — `ProgramBridge/🧊️component.rs`'s native twin (`ephemeral_snapshot`) stubs the
+    // identical call with an explicit error for the same reason. `Ephemeral` frames still arrive
+    // unsolicited on every real `exchange()` reply (`plugin_exchange` appends one to every batch,
+    // contract-freeze §C7.6) — a future packet that wants an on-demand snapshot here should cache the
+    // most recently observed `Ephemeral` frame per instance rather than resurrecting the retired poll.
     ephemeralSnapshot: undefined,
+    // 👥️ Contract-freeze §C7.6 — the ONLY plugin ingress for peers. `AppChannelClient.pushPresence`
+    // encodes each `ArtifactPresencePeer` and sends the `AppCommand::Presence` frame; a plain `Done`
+    // reply, nothing further decoded here.
+    pushPresence: async (instanceId, ownColor, peers) => {
+      await requireChannel(instanceId).pushPresence(ownColor, peers);
+    },
     documentPack: (instanceId) => requireChannel(instanceId).documentPack(),
     transactionPrepare: async (instanceId, txnId, request) => {
       const frames =

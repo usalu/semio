@@ -391,10 +391,16 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🔖️Declaration
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring note's
-/// `pilot_languages()` convention. Sole caller is `declaration()` below (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
+/// 📌️ ⚠️ DEAD (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): was the sole grammar/
+/// protocol source for the OLD `declaration()` (`.languages(pilot_languages())`), deleted below in
+/// the atomic cutover to `artifact()`/`.declare_artifact(...)`. Kept only as a documented historical
+/// marker of why `NativeCodecs.{snapshot,diff,mutations,inferences}: LanguagePair { text: None,
+/// binary: None }` in `🚪️io/🦀️component.rs::io()` is a deliberate scope-narrowing, not an
+/// oversight — the five roles below are exactly the five `dsl::LanguageSpec`s that field still
+/// needs wiring one day. Handcrafted facet grammars (text) and protocols (binary) for in-process
+/// execution — built once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't
+/// `const fn`, mirroring note's `pilot_languages()` convention.
+#[allow(dead_code)]
 fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
@@ -424,8 +430,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "mathematical.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::mathematical::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::artifacts::mathematical::io::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::mathematical::io::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("mathematical.diff"),
@@ -494,14 +500,33 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::mathematical::schema::mathematical_artifact_schema_descriptor())
-        .inferences([crate::artifacts::mathematical::standards::v1::subsets::any::schema::inferences::mathematical_artifact_inference_descriptor()])
-        .composers(crate::artifacts::mathematical::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>>()
-        .try_build()
+/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): the whole
+/// `s.mathematical.mathematical` artifact through the declaration tree — one standard (`1`), one
+/// subset (`any`). Replaces the OLD `declaration()`/`ArtifactDeclaration::builder(...)` channel
+/// outright (atomic cutover; both channels never coexist — the OLD channel's `.composers(...)`
+/// registered a native composer entry (`MathematicalComposerComposition`, writing the
+/// non-canonical, under-qualified `Dialect{artifact_kind:"s.mathematical",...}` coordinate) with
+/// NO matching `composer` capability row in `definition()` above — `definition()` only ever
+/// declared composer capabilities for the two EXPORT directions (`s.stdio.md`/`s.stdio.json`), never
+/// for this artifact's own native composer — which is exactly what shipped this plugin's WASM
+/// manifest as `assembly-failed` (`try_build()`'s `runtime_capability_requirements`/capability-row
+/// mismatch faulted every `try_build()` call). `declare_artifact`/`artifact()` do not run that same
+/// composer-capability preflight at all — the new tree's io hops are typed `Serializer`/
+/// `Deserializer` entries validated by `io_register`, not `ComposerEntry` capability rows — so this
+/// cutover fixes the manifest as a side effect of deleting the broken channel, not a separate fix.
+/// `localization: &[]` is a documented shortfall, not an oversight — the real en/de localized
+/// descriptors still live on `definition()`'s `ArtifactCapability` rows above (kept per debt D1,
+/// deleted repo-wide only in W6); wiring them into this field too is real follow-up work, not
+/// required for the tree to register or for any law to hold (mirrors `🎬️sequence`'s and the stdio
+/// pilot's own documented deviation).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration {
+        kind: ArtifactKindId::parse("s.mathematical.mathematical").expect("canonical mathematical.mathematical kind"),
+        localization: &[],
+        standards: vec![crate::artifacts::mathematical::standards::v1::standard()],
+    }
 }
 //#endregion 🔖️Declaration
 

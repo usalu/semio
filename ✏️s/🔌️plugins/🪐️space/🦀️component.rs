@@ -25,7 +25,8 @@ use semio_framework_os::{document_backbone_ref, VcsError};
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
-use semio_framework_plugin::{app_labels, Plugin};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{app_labels, ExecutionMode, Plugin};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use store::LocalStorageBackbonePort;
@@ -496,7 +497,13 @@ pub fn home_space_rows(directory: &store::os_directory::DirectoryReadModel) -> V
 //#region 🔌️Registration
 /// 🔌️ Builds the S Studio plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) builds all artifact, app-schema, and codec
-/// contributions as immutable data before the aggregate registration commit.
+/// contributions as immutable data before the aggregate registration commit. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+/// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof: one `OnArtifactKind`
+/// event per owned kind (`home`/`space`, read live from each's own `artifact_kind().id`), `Isolated`
+/// execution (grepped for `.handler(…)`, a `🧩️extensions/` dir, and self-tick loops — none found,
+/// despite this crate having the heaviest `Effect` usage in the repo), and one `documents.write` ask
+/// covering both editors' persisted mutations. No quota declared — no measured need found.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("s")
         .label("S Studio")
@@ -514,6 +521,10 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::space_index::SpaceIndexViewer>()
         .document_app::<crate::engine::space::SpaceApp>(crate::engine::space::create_space_app())
         .foreign_document_codec::<crate::engine::space::SpaceApp>(OS_SPACE_SCHEMA)
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::home::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::space::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist home/space-index edits to the open document".into(), optional: false })
         .try_build()
 }
 //#endregion 🔌️Registration

@@ -1,8 +1,11 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration.
+/// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
+/// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
+/// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("animate")
         .label("Animate")
@@ -12,6 +15,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::animate::AnimatePresentPlayApp>()
         .viewer::<crate::viewer::animate::AnimatePresentViewer>(crate::viewer::animate::create_animate_present_viewer())
         .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::present::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist animate present edits to the open document".into(), optional: false })
         .try_build()
 }
 

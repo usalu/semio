@@ -3,13 +3,14 @@
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the old `.setup(engine::register)`
-/// escape hatch; `.setup()` itself is gone (W1c) — `DrawPlayApp::app_schema()` now answers the one
-/// thing it used to survive for, registered automatically by `register_document_app` below.
-/// ✏️👁️ `.document_app(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1)
-/// is replaced by two role-split registrations: `.editor::<E>(…)` (mutation-capable) and
-/// `.viewer::<V>(…)` (read-only) for the same `s.draw.draw@1/*` dialect.
+/// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(…)` (new declaration
+/// tree) replaces `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` outright — the old
+/// channel is NOT kept alongside it (a second parallel registration channel is the compatibility
+/// layer this ticket forbids). `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay: they
+/// are an orthogonal, still-supported opt-in (`contributor.list-artifact-mutations`) the new
+/// declaration tree's `SurfaceDeclaration.mutation_roster` does not yet wire live (`📓️w1-c-report.md`
+/// openQuestion 3) — not a second registration of the artifact/schema/io itself.
 /// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
 /// activates one instance whenever a `"2d.drawing"` artifact
@@ -24,10 +25,8 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("draw")
         .label("Draw")
         .version("0.1.0")
-        .artifact(crate::artifacts::draw::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::draw::DrawPlayApp>(crate::editor::draw::create_draw_app())
+        .declare_artifact(crate::artifacts::draw::artifact())
         .editor_mutation_roster::<crate::editor::draw::DrawPlayApp>()
-        .viewer::<crate::viewer::draw::DrawViewer>(crate::viewer::draw::create_draw_viewer())
         .viewer_mutation_roster::<crate::viewer::draw::DrawViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::draw::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

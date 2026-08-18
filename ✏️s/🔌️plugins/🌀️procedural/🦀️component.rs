@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::{FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
@@ -63,6 +64,25 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         // trait bounds (`Snapshot: ArtifactDsl + ArtifactPack`, `Mutation`/`Command`: `OpText`/`OpBinary`)
         // are unsatisfied until assembly's schema gains its missing artifact-facet descriptor + leaf
         // set — see `📓️w2-p5-assembly-notes.md`. Wire once that lands.
+        //
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
+        // `.requests(…)` (`📓️design-abi.md` §3/§6). Only procedural2d/procedural3d get an
+        // activation event: `assembly` (its 10,930 LOC `wfc_engine` solve, see
+        // `🗿️artifacts/🧩️assembly/…/🧬️schema/💡️inferences/🦀️component.rs`) is not mounted as an
+        // `.artifact(…)`/`.editor(…)` on this plugin yet (the comment above), so it is not part of
+        // this plugin's real activation surface — see `📓️terra-M5-report.md` for why its
+        // `store::InferredField::compute` solve is the genuine "WFC precompute" this packet's brief
+        // named, and why moving it to `Effect::SpawnJob`'s `semio.infer` job kind is blocked
+        // upstream, not by anything in this crate.
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural2d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::procedural3d::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest {
+            id: CapabilityId("documents.write".into()),
+            scope: "plugin".into(),
+            reason: "persist procedural2d/procedural3d editor edits (flow graph parameter/node changes) to the open document".into(),
+            optional: false,
+        })
         .try_build()
 }
 

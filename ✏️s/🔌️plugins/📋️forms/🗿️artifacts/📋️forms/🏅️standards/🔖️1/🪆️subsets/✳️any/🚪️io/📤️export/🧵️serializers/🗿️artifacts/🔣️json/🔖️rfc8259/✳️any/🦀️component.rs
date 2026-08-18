@@ -1,17 +1,24 @@
-//! Serialize forms to stdio.json.
+//! 🚪️ forms -> json — foreign `Serializer<FormsSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Direct `serde_json`
+//! serialization of every field, so this hop is `IoFidelity::Exact`.
+
 use crate::artifacts::forms::FormsSnapshot;
-use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-/// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's
-/// own key-order/lexeme-preserving model, not `serde_json::Value` -- see json's snapshot module).
-pub fn register() {}
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn serialize(from: &FormsSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot::from_value(value))
-}
+pub struct FormsIntoJson;
 
-pub fn serialize_text(from: &FormsSnapshot) -> Result<String, store::PackError> {
-    Ok(<FormsSnapshot as store::ArtifactDsl>::print_dsl(from))
+impl Serializer<FormsSnapshot> for FormsIntoJson {
+    const INTO: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    fn serialize(from: &FormsSnapshot) -> IoResult<IoPayload> {
+        let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("FormsIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let bytes = serde_json::to_vec_pretty(&value).map_err(|error| IoError { message: format!("FormsIntoJson: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+    }
 }

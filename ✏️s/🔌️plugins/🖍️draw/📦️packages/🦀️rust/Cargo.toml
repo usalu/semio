@@ -24,7 +24,7 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio" }
-fsm = { path = "../../🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
+fsm = { path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust", package = "semio-s-plugin-draw-fsm" }
 semio_s_2d = { path = "../../../../../🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust", package = "semio-framework-2d" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

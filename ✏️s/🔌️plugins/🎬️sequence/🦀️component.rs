@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
@@ -9,7 +10,10 @@ use semio_framework_plugin::Plugin;
 /// ticket forbids). `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay: they are an
 /// orthogonal, still-supported opt-in (`contributor.list-artifact-mutations`) the new declaration
 /// tree's `SurfaceDeclaration.mutation_roster` field does not yet wire live (`📓️w1-c-report.md`
-/// openQuestion 3) — not a second registration of the artifact/schema/io itself.
+/// openQuestion 3) — not a second registration of the artifact/schema/io itself. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
+/// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
+/// shape.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sequence")
         .label("Sequence")
@@ -17,6 +21,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .declare_artifact(crate::artifacts::sequence::artifact())
         .editor_mutation_roster::<crate::editor::sequence::SequencePlayApp>()
         .viewer_mutation_roster::<crate::viewer::sequence::SequenceViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::sequence::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist sequence edits to the open document".into(), optional: false })
         .try_build()
 }
 

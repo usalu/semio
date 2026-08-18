@@ -158,6 +158,7 @@ fn bundle() -> ExtensionBundle {
     let catalog = MetalCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Metal Machines", "0.1.0")
         .extends("process")
+        .mode(semio_framework_plugin::ExecutionMode::Declarative)
         .contributes_topic(
             "process.machines",
             serde_json::json!({

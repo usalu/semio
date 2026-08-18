@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::{HostMediaHandlerDeclaration, Plugin};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) declares both owned artifacts (`gismap`,
@@ -29,6 +30,25 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::gis3d::Gis3dPlayApp>()
         .viewer::<crate::viewer::gisterrain::GisTerrainViewer>(crate::viewer::gisterrain::create_gisterrain_viewer())
         .viewer_mutation_roster::<crate::viewer::gisterrain::GisTerrainViewer>()
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
+        // `.requests(…)` (`📓️design-abi.md` §3/§6). Only `gismap` gets an activation event:
+        // `gisterrain` is a composed CHILD artifact (`Option<store::ArtifactChild<SemioMeshSnapshot>>`
+        // on `gismap`'s own snapshot), never a standalone `ArtifactKindSpec` — confirmed by grep,
+        // `🗿️artifacts/🏔️gisterrain/🦀️component.rs` defines no `artifact_kind()` function.
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::gismap::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest {
+            id: CapabilityId("documents.write".into()),
+            scope: "plugin".into(),
+            reason: "persist gis2d/gis3d editor edits (map features, terrain) to the open gismap document".into(),
+            optional: false,
+        })
+        .requests(CapabilityRequest {
+            id: CapabilityId("shell.navigate".into()),
+            scope: "plugin".into(),
+            reason: "the `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(),
+            optional: false,
+        })
         .try_build()
 }
 

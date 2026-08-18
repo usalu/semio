@@ -318,21 +318,23 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::curate::schema::curate_artifact_schema_descriptor())
-        .inferences([crate::artifacts::curate::standards::v1::subsets::any::schema::inferences::curate_artifact_inference_descriptor()])
-        .composers(crate::artifacts::curate::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurateApp>>()
-        .try_build()
+/// 🌳️ This artifact's declaration tree root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-
+/// MECHANISM, design.md §2) — one standard (`1`), one subset (`any`). Replaces the OLD
+/// `declaration()`/`ArtifactDeclaration::builder(...)` channel outright (atomic cutover with the
+/// plugin root edit — no dual registration). `localization: &[]` is a documented shortfall: the
+/// real en/de localized names still live on `definition()`'s kept capability rows (debt D1).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sourcing.curate").expect("canonical sourcing.curate kind"), localization: &[], standards: vec![crate::artifacts::curate::standards::v1::standard()] }
 }
 
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
-/// `OnceLock`-backed `io_registry::entries()` convention. Relocated alongside `declaration()` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2) — its only caller.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) — built once and leaked to a
+/// `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Consumed by
+/// `🚪️io/🦀️component.rs`'s `io()` (via `language_spec`) to populate `NativeCodecs`'s
+/// `LanguagePair`s — the new declaration tree's home for what the OLD `declaration()`'s
+/// `.languages(...)` call used to register.
+pub(crate) fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -361,8 +363,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "sourcing.curate.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::curate::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::artifacts::curate::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::artifacts::curate::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("sourcing.curate.diff"),
@@ -390,6 +392,12 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
             ]
         })
         .as_slice()
+}
+
+/// 🔎️ Finds `pilot_languages()`'s entry for one `dsl::LanguageRole` — the lookup `io()` uses to
+/// populate each `NativeCodecs` facet's `LanguagePair`.
+pub(crate) fn language_spec(role: dsl::LanguageRole) -> Option<&'static dsl::LanguageSpec> {
+    pilot_languages().iter().find(|spec| spec.role == role)
 }
 //#endregion 🔖️Register
 

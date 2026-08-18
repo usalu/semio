@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract for the energy plugin.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the energy plugin. `.artifact(…)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// M1) replaces the old bare `crate::artifacts::model::engine::register()` call made before
@@ -26,6 +27,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::model::EnergyModelEditor>()
         .viewer::<crate::viewer::model::EnergyModelViewer>(crate::viewer::model::create_energy_model_viewer())
         .viewer_mutation_roster::<crate::viewer::model::EnergyModelViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::model::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist energy model edits to the open document".into(), optional: false })
         .try_build()
 }
 

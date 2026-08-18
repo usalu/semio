@@ -403,9 +403,12 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 ---
 
 Introduce a new framework product: server
-A server contains everything from api, auth, database, ui for different kind of users with different permissions (admin, manager, …), etc.
-A server must be deployable on edge, on-prem,  etc.
+A server contains everything from api, auth, database, ui for different kind of users with different permissions (admin, manager, …), realtime peer to peer communication, etc.
+It is designed to be compatible with the os as client and uses CQRS Dual-Bus Actor Model instead of CRUD, is collaborative-first, local-first compatible, etc.
+It uses the same ui system as os, similar patterns, etc.
+A server must be deployable on edge, on-prem, etc.
 The hub is an instance of a server.
+mit-bestand/zentrale will be another instance of the server (specific designed for the reuse of builidng components szenarios).
 
 ---
 

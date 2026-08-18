@@ -1,26 +1,30 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
-/// escape hatch; `.setup()` itself is gone (W1c) — `DagPlayApp::app_schema()` now answers the one
-/// thing it used to survive for, registered automatically by `register_document_app` below.
-///
-/// ✏️👁️ `.document_app::<X>(App)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract
-/// §2.1) is deleted, not deprecated — `s.dag.dag@1/*` now registers its two role surfaces
-/// independently: `.editor::<E>(AppDefinition)` for the mutating authoring surface, `.viewer::<V>
-/// (AppDefinition)` for the read-only one. Both derive their canonical id from `DAG_DIALECT` +
-/// `AppRole`; neither takes a hand-written id.
+/// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2) is the ONLY registration
+/// channel for `s.dag.dag` — it walks artifact→standard→subset and registers schema, io,
+/// viewer/editor surfaces and examples in one pass, replacing the old `.artifact(declaration())`
+/// + `.editor::<E>(AppDefinition)` + `.viewer::<V>(AppDefinition)` triple atomically (no dual
+/// registration — that is a forbidden compatibility layer, already rejected once on this ticket).
+/// `.editor_mutation_roster()`/`.viewer_mutation_roster()` are KEPT — an orthogonal opt-in
+/// (`contributor.list-artifact-mutations`) `SurfaceDeclaration.mutation_roster` does not yet wire
+/// live, so keeping them is not a second registration of the artifact/schema/io itself (same
+/// reasoning the `🎬️sequence` W4 pass documented). `.activation()`/`.execution()`/`.requests()`
+/// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
+/// live peer) — untouched by this pass.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("dag")
         .label("DAG")
         .version("0.1.0")
-        .artifact(crate::artifacts::dag::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::dag::DagPlayApp>(crate::editor::dag::create_dag_app())
+        .declare_artifact(crate::artifacts::dag::artifact())
         .editor_mutation_roster::<crate::editor::dag::DagPlayApp>()
-        .viewer::<crate::viewer::dag::DagViewer>(crate::viewer::dag::create_dag_viewer())
         .viewer_mutation_roster::<crate::viewer::dag::DagViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::dag::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist dag edits to the open document".into(), optional: false })
         .try_build()
 }
 

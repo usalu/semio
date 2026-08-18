@@ -1,21 +1,33 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration. `.setup()` is gone (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `SourcingCurateApp::app_schema()` now answers
-/// the app-scope config/presence schema call it used to carry, registered automatically by
-/// `register_document_app` below. `.document_app::<X>(create_x_app())` split into `.editor()` +
-/// `.viewer()` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET, contract §2.1).
+/// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
+/// tree) replaces `.artifact(...)`/`.editor::<>()`/`.viewer::<>()` outright — the old channel is
+/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+/// ticket forbids). `.editor_mutation_roster()`/`.viewer_mutation_roster()` stay: they are an
+/// orthogonal, still-supported opt-in (`contributor.list-artifact-mutations`) the new declaration
+/// tree's `SurfaceDeclaration.mutation_roster` field does not yet wire live (`📓️w1-c-report.md`
+/// openQuestion 3) — not a second registration of the artifact/schema/io itself.
+/// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M2, `📓️design-abi.md` §3): the host activates
+/// one instance whenever a `"catalogue.sourcing"` artifact (`crate::artifacts::curate::
+/// artifact_kind().id`) is opened, this plugin's actor runs `Isolated` (no publisher trust assumed
+/// beyond the sandbox default — nothing in this crate's own effects, all UI-chrome/RPC `Effect`
+/// variants with no documented `CapabilityId`, justifies otherwise), and it asks the broker for
+/// document write access to persist edits.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
-        .artifact(crate::artifacts::curate::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::sourcing::SourcingCurateApp>(crate::editor::sourcing::create_sourcing_curate_app())
+        .declare_artifact(crate::artifacts::curate::artifact())
         .editor_mutation_roster::<crate::editor::sourcing::SourcingCurateApp>()
-        .viewer::<crate::viewer::sourcing::SourcingViewer>(crate::viewer::sourcing::create_sourcing_viewer())
         .viewer_mutation_roster::<crate::viewer::sourcing::SourcingViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::curate::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist sourcing catalogue edits to the open document".into(), optional: false })
         .try_build()
 }
 

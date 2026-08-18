@@ -55,7 +55,19 @@ impl protocol::InferenceSpec<MathematicalSnapshot> for MathematicalInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::mathematical::standards::v1::subsets::any::schema::MathematicalBuilder {
+/// 🌱 Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: the old impl target
+/// (`derive_artifact_facets!`-generated `MathematicalBuilder`, deleted in the same pass) is gone.
+/// `semio_framework_plugin::app::SnapshotBuilder<S, M>` (the recipe's literally-suggested
+/// replacement) does NOT work here — it is a foreign, non-`#[fundamental]` generic struct, so
+/// `impl ArtifactInferrer for SnapshotBuilder<MathematicalSnapshot, MathematicalMutation>` is an
+/// orphan-rule violation (E0117) regardless of the type parameters being local (confirmed by
+/// `🎬️sequence`'s identical W4 pass, `📓️w4-sequence-report.md` `## recipeGaps` #1).
+/// `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self`, so the impl target is a pure
+/// type-level anchor with zero live callers repo-wide (grepped) — a trivial local zero-sized
+/// marker struct is the real fix.
+pub struct MathematicalInferrer;
+
+impl ArtifactInferrer for MathematicalInferrer {
     type Snapshot = MathematicalSnapshot;
     type Inference = MathematicalInference;
 }

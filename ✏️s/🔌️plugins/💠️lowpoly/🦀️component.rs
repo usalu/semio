@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -20,6 +21,16 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::lowpoly::LowpolyPlayApp>()
         .viewer::<crate::viewer::lowpoly::LowpolyViewer>(crate::viewer::lowpoly::create_lowpoly_viewer())
         .viewer_mutation_roster::<crate::viewer::lowpoly::LowpolyViewer>()
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
+        // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed.
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::lowpoly::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest {
+            id: CapabilityId("documents.write".into()),
+            scope: "plugin".into(),
+            reason: "persist lowpoly mesh-edit/paint/UV editor edits to the open document".into(),
+            optional: false,
+        })
         .try_build()
 }
 

@@ -1,194 +1,68 @@
-//! 🚪️ IO s.curate (1/✳️any) — registration now flows through `ArtifactDeclaration.composers`
-//! (declared once by the artifact root's `declaration()`, walked by `PluginBuilder::build()`), not
-//! per-leaf register().
-pub fn import_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
-pub fn export_stdio_kinds() -> &'static [&'static str] { &["stdio.json", "stdio.obj", "stdio.png", "stdio.stl", "stdio.txt", "stdio.zip"] }
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use semio_framework_plugin::{ArtifactComposition, Dialect, StandardId, SubsetId, Composition, ComposeError, ComposeSource, AnalyzeSource};
-    use crate::artifacts::curate::CurateSnapshot;
-    use crate::artifacts::curate::standards::v1::subsets::any::schema::CurateAnalyzer;
+//! 🚪️ IO s.sourcing.curate (1/✳️any) — `io() -> IoDeclaration` (design.md §2/§3): the native codec
+//! plus every foreign hop, aggregated from the typed `Serializer<CurateSnapshot>`/
+//! `Deserializer<CurateSnapshot>` leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`.
+//! Replaces the old hand-rolled `ArtifactComposition`/`ComposerEntry` dispatch chain
+//! (`derived_composition`/`io_registry`) outright — all io now goes exclusively through the
+//! `io_mechanism` registry (design.md rule 3).
+//!
+//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
+//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
+//! impls for `CurateSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
+//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `SourcingMutation`), and
+//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are
+//! computed, never authored). Unlike most W4 subsets, this artifact already carries real
+//! hand-authored `dsl::LanguageSpec`s (`pilot_languages()`, artifact root) from the OLD
+//! `declaration().languages(...)` channel — `NativeCodecs` below wires them in via
+//! `crate::artifacts::curate::language_spec` rather than leaving every `LanguagePair` `None`.
+//!
+//! ⚠️ Fidelity honesty: `json` import/export is a genuine structural `serde_json::Value` bridge
+//! (`IoFidelity::Exact`). `zip`/`png`/`stl`/`obj` import/export are PRE-EXISTING non-functional
+//! stubs (the old code tried to decode/encode bytes as the wrong artifact's own pack format —
+//! confirmed by inspection, not fixed this pass, no domain-correct geometry↔catalog mapping is
+//! defined anywhere) — carried over behaviorally unchanged, labeled `IoFidelity::Lossy` for
+//! honesty, same treatment as `txt`'s pre-existing "not yet implemented" stub. See
+//! `📓️w4-sourcing-report.md` `## openQuestions`.
 
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.curate", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_OBJ: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_STL: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
-    const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-
-
-    pub struct CurateComposerComposition;
-
-    impl ArtifactComposition for CurateComposerComposition {
-        type Snapshot = CurateSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_OBJ, DEP_PNG, DEP_STL, DEP_TXT, DEP_ZIP]
-        }
-
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
-                    };
-                    let analysis = CurateAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_OBJ {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_STL {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_TXT {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_ZIP {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::curate::io::import::deserializers::artifacts::zip::v2_0::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-
-            }
-            Err(ComposeError { message: "CurateComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
-
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
+//#region 🔖️IoDeclaration
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::curate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::curate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::artifacts::curate::{language_spec, CurateSnapshot, SourcingMutation, SOURCING_CURATE_SCHEMA, SOURCING_DIALECT};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
-    use semio_framework_plugin::{ArtifactBuilder, ComposerEntry, ComposedArtifact, ComposeError, Dialect, StandardId, SubsetId, ErasedComposeSource, IoPayload, IoConfidence, composer_entry_of};
-    use crate::artifacts::curate::standards::v1::subsets::any::schema::CurateComposer as CurateAnyComposer;
-    use crate::artifacts::curate::standards::v1::subsets::any::schema::CurateBuilder as CurateAnyBuilder;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const CURATE_DIALECT: Dialect = Dialect { artifact_kind: "s.curate", standard: StandardId("1"), subset: SubsetId("*") };
-    const CURATE_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::curate::CurateSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == CURATE_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => CurateAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => CurateAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "CurateComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == CURATE_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::curate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "CurateComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
+        ENTRIES
+            .get_or_init(|| {
+                vec![
+                    serializer_entry::<CurateSnapshot, export::zip::v2_0::any::CurateIntoZip>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::zip::v2_0::any::ZipIntoCurate>(SOURCING_DIALECT),
+                    serializer_entry::<CurateSnapshot, export::png::v1_2::any::CurateIntoPng>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::png::v1_2::any::PngIntoCurate>(SOURCING_DIALECT),
+                    serializer_entry::<CurateSnapshot, export::json::v_rfc8259::any::CurateIntoJson>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::json::v_rfc8259::any::JsonIntoCurate>(SOURCING_DIALECT),
+                    serializer_entry::<CurateSnapshot, export::stl::v_ascii::any::CurateIntoStl>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::stl::v_ascii::any::StlIntoCurate>(SOURCING_DIALECT),
+                    serializer_entry::<CurateSnapshot, export::obj::v3_0::any::CurateIntoObj>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::obj::v3_0::any::ObjIntoCurate>(SOURCING_DIALECT),
+                    serializer_entry::<CurateSnapshot, export::txt::v_utf_8::any::CurateIntoTxt>(SOURCING_DIALECT),
+                    deserializer_entry::<CurateSnapshot, import::txt::v_utf_8::any::TxtIntoCurate>(SOURCING_DIALECT),
+                ]
+            })
+            .as_slice()
     }
 
-    const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
-    fn compose_export_zip(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::curate::io::export::serializers::artifacts::zip::v2_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_ZIP_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::curate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::curate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    fn compose_export_stl(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::curate::io::export::serializers::artifacts::stl::v_ascii::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    fn compose_export_obj(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::curate::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    //#endregion 🔖️ExportEntries
-
-
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![
-            composer_entry_of::<CurateAnyComposer>(),
-            ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[CURATE_DIALECT], compose: compose_export_zip },
-            ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[CURATE_DIALECT], compose: compose_export_png },
-            ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[CURATE_DIALECT], compose: compose_export_json },
-            ComposerEntry { writes: EXPORT_STL_DIALECT, reads: &[CURATE_DIALECT], compose: compose_export_stl },
-            ComposerEntry { writes: EXPORT_OBJ_DIALECT, reads: &[CURATE_DIALECT], compose: compose_export_obj },
-        ]).as_slice()
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: language_spec(dsl::LanguageRole::Document), binary: language_spec(dsl::LanguageRole::Pack) },
+            diff: LanguagePair { text: language_spec(dsl::LanguageRole::Diff), binary: None },
+            mutations: LanguagePair { text: language_spec(dsl::LanguageRole::Ops), binary: language_spec(dsl::LanguageRole::Spr) },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<CurateSnapshot, SourcingMutation>(SOURCING_CURATE_SCHEMA.to_string()),
+        },
+        entries: entries(),
     }
 }
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🔖️IoDeclaration

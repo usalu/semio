@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -17,6 +18,25 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::remodel::RemodelPlayApp>()
         .viewer::<crate::viewer::remodel::RemodelViewer>(crate::viewer::remodel::create_remodel_viewer())
         .viewer_mutation_roster::<crate::viewer::remodel::RemodelViewer>()
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
+        // `.requests(…)` (`📓️design-abi.md` §3/§6). See `📓️terra-M5-report.md` for why
+        // `run_whole_pipeline`'s synchronous structure-from-motion loop (`🎮️commands/🚀️run-reconstruction`,
+        // `🚀️run-stage`, `🚀️retry-stage`) is this packet's genuine "SfM" long-running-compute finding,
+        // and why its `Effect::SpawnJob` conversion is blocked upstream, not by anything in this crate.
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodel::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest {
+            id: CapabilityId("documents.write".into()),
+            scope: "plugin".into(),
+            reason: "persist reconstruction results (job status, sparse cloud, camera trajectory, mesh, qc, geo products) to the open document".into(),
+            optional: false,
+        })
+        .requests(CapabilityRequest {
+            id: CapabilityId("ui.dialog".into()),
+            scope: "plugin".into(),
+            reason: "the import-frames command opens a file-open dialog (Effect::RequestFileOpen) and import-video opens a media-frame-picker dialog (Effect::RequestMediaFrames)".into(),
+            optional: false,
+        })
         .try_build()
 }
 

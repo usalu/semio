@@ -1,13 +1,22 @@
-//! note <- png
-//!
-//! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
-//! `PngSnapshot`'s `RasterImage` wrapper -> direct `width`/`height`/`pixels` fields).
+//! 🚪️ note <- png — foreign `Deserializer<NoteSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Wraps the whole PNG as one
+//! data-uri image asset/block — real pixel content is carried but not decomposed into note
+//! structure, so this hop is `IoFidelity::Lossy`.
+
 use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot};
 use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
-use semio_s_plugin_stdio::artifacts::png::io::encode_png;
-use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
+use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::png::io::decode_png;
 use std::collections::BTreeMap;
-pub fn register() {}
+
+pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId::ANY };
+
+pub struct PngIntoNote;
+
+/// 🔤️ Minimal, dependency-free base64 encoder (this repo's "no external libraries for runtime
+/// purposes" rule) — unchanged from the pre-migration free function.
 fn b64(bytes: &[u8]) -> String {
     const TABLE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::new();
@@ -24,18 +33,23 @@ fn b64(bytes: &[u8]) -> String {
     }
     out
 }
-pub fn deserialize(from: &PngSnapshot) -> Result<NoteSnapshot, String> {
-    let bytes = encode_png(from)?;
-    let key = "png-import".to_string();
-    let mut snap = empty_note_snapshot();
-    snap.id = create_note_id("png-import");
-    snap.title = Some("Imported PNG".into());
-    let mut assets = BTreeMap::new();
-    assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(&bytes)), width: Some(from.width as f64), height: Some(from.height as f64) });
-    snap.assets = assets;
-    snap.blocks.push(NoteBlockNode::Image { id: "png-image-1".into(), name: "PNG".into(), x: 0.0, y: 0.0, width: from.width.max(1) as f64, height: from.height.max(1) as f64, rotation: 0.0, visible: true, locked: false, image_key: key });
-    Ok(snap)
-}
-pub fn deserialize_bytes(bytes: &[u8]) -> Result<NoteSnapshot, String> {
-    deserialize(&semio_s_plugin_stdio::artifacts::png::io::decode_png(bytes)?)
+
+impl Deserializer<NoteSnapshot> for PngIntoNote {
+    const FROM: Dialect = PNG_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Lossy;
+    fn deserialize(payload: &IoPayload) -> IoResult<NoteSnapshot> {
+        let IoPayload::Binary(bytes) = payload else {
+            return Err(IoError { message: "PngIntoNote: expected a binary png payload".to_string(), diagnostics: Vec::new() });
+        };
+        let png = decode_png(bytes).map_err(|error| IoError { message: format!("PngIntoNote: decode failed: {error}"), diagnostics: Vec::new() })?;
+        let key = "png-import".to_string();
+        let mut snap = empty_note_snapshot();
+        snap.id = create_note_id("png-import");
+        snap.title = Some("Imported PNG".into());
+        let mut assets = BTreeMap::new();
+        assets.insert(key.clone(), NoteImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{}", b64(bytes)), width: Some(png.width as f64), height: Some(png.height as f64) });
+        snap.assets = assets;
+        snap.blocks.push(NoteBlockNode::Image { id: "png-image-1".into(), name: "PNG".into(), x: 0.0, y: 0.0, width: png.width.max(1) as f64, height: png.height.max(1) as f64, rotation: 0.0, visible: true, locked: false, image_key: key });
+        Ok(IoOutcome::clean(snap))
+    }
 }

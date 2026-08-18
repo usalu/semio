@@ -5,7 +5,7 @@
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
 use semio_framework_plugin::app::ArtifactContribution;
-use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExtensionBundle};
+use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use semio_s_plugin_cad::artifacts::cad::mutations::create_node::mutation::CreateNode;
 use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadNode, CadSnapshot, CAD_DOCUMENT_SCHEMA};
@@ -104,6 +104,12 @@ fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0")
         .extends("cad")
         .depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"))
+        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+        // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
+        // artifact, one composite mutation + one inference (both dispatched by the host through
+        // the contributed-mutation/inference registries as bounded Cold job kinds at invocation
+        // time, not by running this extension's own actor).
+        .mode(ExecutionMode::Declarative)
         .contributes_topic(
             "cad.computer",
             serde_json::json!({

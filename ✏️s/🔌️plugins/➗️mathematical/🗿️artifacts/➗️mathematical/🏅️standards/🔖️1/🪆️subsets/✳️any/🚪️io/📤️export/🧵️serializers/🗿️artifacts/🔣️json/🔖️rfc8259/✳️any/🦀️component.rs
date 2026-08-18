@@ -1,14 +1,24 @@
-//! Serialize mathematical to stdio.json.
+//! 🚪️ mathematical -> json — foreign `Serializer<MathematicalSnapshot>` (ticket
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Direct `serde_json`
+//! serialization of every field, so this hop is `IoFidelity::Exact`.
+
 use crate::artifacts::mathematical::MathematicalSnapshot;
-use semio_s_plugin_stdio::artifacts::json::JsonSnapshot;
+use semio_framework::io::io_mechanism::Serializer;
+use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+use semio_framework_plugin::{StandardId, SubsetId};
+use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 
-pub fn register() {}
+pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
-pub fn serialize(from: &MathematicalSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot::from_value(value))
-}
+pub struct MathematicalIntoJson;
 
-pub fn serialize_text(from: &MathematicalSnapshot) -> Result<String, store::PackError> {
-    Ok(<MathematicalSnapshot as store::ArtifactDsl>::print_dsl(from))
+impl Serializer<MathematicalSnapshot> for MathematicalIntoJson {
+    const INTO: Dialect = JSON_DIALECT;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
+    fn serialize(from: &MathematicalSnapshot) -> IoResult<IoPayload> {
+        let _ = STDIO_JSON_DOCUMENT_SCHEMA;
+        let value = serde_json::to_value(from).map_err(|error| IoError { message: format!("MathematicalIntoJson: {error}"), diagnostics: Vec::new() })?;
+        let bytes = serde_json::to_vec_pretty(&value).map_err(|error| IoError { message: format!("MathematicalIntoJson: {error}"), diagnostics: Vec::new() })?;
+        Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
+    }
 }

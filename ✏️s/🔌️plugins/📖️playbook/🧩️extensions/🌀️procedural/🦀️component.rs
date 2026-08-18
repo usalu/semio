@@ -8,7 +8,7 @@ use semio_framework::mesh_from_indexed;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, WorldSunConfig,
+    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -800,7 +800,7 @@ fn module_plugin_bundle() -> Result<Plugin, semio_framework_plugin::PluginAssemb
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
-    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").contributes_topic(
+    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").mode(ExecutionMode::Declarative).contributes_topic(
         "playbook.blockKind",
         serde_json::json!({
             "appId": "playbook-play",

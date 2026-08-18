@@ -1,13 +1,6 @@
-/** vcs facet WASM facades */
-export * as vcs_schema from "../../🗿️artifacts/🌿️vcs/🧬️schema/🟦️component.ts";
-export * as vcs_snapshot from "../../🗿️artifacts/🌿️vcs/🧬️schema/📸️snapshot/🟦️component.ts";
-export * as vcs_snapshot_text from "../../🗿️artifacts/🌿️vcs/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
-export * as vcs_snapshot_binary from "../../🗿️artifacts/🌿️vcs/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
-export * as vcs_diff from "../../🗿️artifacts/🌿️vcs/🧬️schema/🔺️diff/🟦️component.ts";
-export * as vcs_diff_text from "../../🗿️artifacts/🌿️vcs/🧬️schema/🔺️diff/📝️text/🟦️component.ts";
-export * as vcs_diff_binary from "../../🗿️artifacts/🌿️vcs/🧬️schema/🔺️diff/💾️binary/🟦️component.ts";
-export * as vcs_mutations from "../../🗿️artifacts/🌿️vcs/🧬️schema/🧬️mutations/🟦️component.ts";
-export * as vcs_mutations_text from "../../🗿️artifacts/🌿️vcs/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
-export * as vcs_mutations_binary from "../../🗿️artifacts/🌿️vcs/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
-export * as vcs_io from "../../🗿️artifacts/🌿️vcs/🚪️io/🟦️component.ts";
-export * as vcs_decomposer from "../../🗿️artifacts/🌿️vcs/🪓️decomposer/🟦️component.ts";
+/** 📦️ vcs facet WASM facades — mirrors the declaration-tree taxonomy (ticket
+ * 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM). `🪓️decomposer` and the flat artifact-level
+ * `🧬️schema`/`🚪️io` targets this file pointed at pre-migration never existed in the current tree
+ * (confirmed: zero matching directories) — replaced with the real standard/subset-scoped paths. */
+export * as vcs_schema from "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
+export * as vcs_io from "../../🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️component.ts";

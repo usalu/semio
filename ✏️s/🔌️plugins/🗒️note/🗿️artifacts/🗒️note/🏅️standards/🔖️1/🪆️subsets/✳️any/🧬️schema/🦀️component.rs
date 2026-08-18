@@ -173,7 +173,7 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🔖️DocumentHelpers
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::schema::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
+const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Monotonic id generator for freshly created/duplicated/imported blocks.
 pub fn create_note_id(prefix: &str) -> String {
@@ -678,118 +678,14 @@ pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_
 }
 //#endregion 🔖️DocumentHelpers
 
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::note::{NoteDiff, NoteMutation, NoteSnapshot};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct NoteBuilderConstruction {
-        snapshot: NoteSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for NoteBuilderConstruction {
-        type Snapshot = NoteSnapshot;
-        type Mutation = NoteMutation;
-        type Diff = NoteDiff;
-        fn empty() -> Self { Self { snapshot: NoteSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<NoteSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<NoteSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::note::NoteSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct NoteParts {
-        pub snapshot: Option<NoteSnapshot>,
-    }
-
-    pub struct NoteAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for NoteAnalyzerAnalysis {
-        type Parts = NoteParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.note", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = NoteParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <NoteSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <NoteSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec NoteBuilderFacets {
-        construction: derived_construction::NoteBuilderConstruction,
-        analysis: derived_analysis::NoteAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::NoteComposerComposition,
-    }
-    builder: NoteBuilder,
-    analyzer: NoteAnalyzer,
-    composer: NoteComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#region 🏗️Construction
+/// 🏗️ Ordinary `Mutation`/`MutationDiff` algebra is all this subset needs (no custom analysis/
+/// composition logic beyond it) — the old hand-rolled `NoteBuilderConstruction` (which only
+/// differed from this in swallowing a failed `apply` into a diagnostics `Vec` instead of erroring)
+/// is retired in favor of the SDK's generic replacement (ticket
+/// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, `📓️recipe-subset.md` §4d/step 6).
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::note::NoteSnapshot, crate::artifacts::note::NoteMutation>;
+//#endregion 🏗️Construction
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -129,118 +129,14 @@ pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::vcs::{VcsDiff, VcsDemoMutation, VcsSnapshot};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct VcsBuilderConstruction {
-        snapshot: VcsSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for VcsBuilderConstruction {
-        type Snapshot = VcsSnapshot;
-        type Mutation = VcsDemoMutation;
-        type Diff = VcsDiff;
-        fn empty() -> Self { Self { snapshot: VcsSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<VcsSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<VcsSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <VcsDiff as protocol::MutationDiff<VcsSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::vcs::VcsSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct VcsParts {
-        pub snapshot: Option<VcsSnapshot>,
-    }
-
-    pub struct VcsAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for VcsAnalyzerAnalysis {
-        type Parts = VcsParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.vcs", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = VcsParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <VcsSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <VcsSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec VcsBuilderFacets {
-        construction: VcsBuilderConstruction,
-        analysis: VcsAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::VcsComposerComposition,
-    }
-    builder: VcsBuilder,
-    analyzer: VcsAnalyzer,
-    composer: VcsComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#region 🏗️Construction
+/// 🏗️ W1-C's generic `SnapshotBuilder<Snapshot, Mutation>` (design.md §5 step 3) — replaces the
+/// deleted `derive_artifact_facets!`-generated `VcsBuilder`/`VcsAnalyzer`/`VcsComposer` cluster
+/// (`derived_construction`/`derived_analysis`/`derived_composition`, all confirmed dead —
+/// zero repo-wide references outside this plugin) with the ordinary `Mutation`/`MutationDiff`
+/// algebra this subset needs; all io now goes exclusively through `io::io()` (design.md rule 3).
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>;
+//#endregion 🏗️Construction
 
 //#region 🧪️Tests
 #[cfg(test)]

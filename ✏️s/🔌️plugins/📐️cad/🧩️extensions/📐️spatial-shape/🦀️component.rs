@@ -1,6 +1,6 @@
 //! 🧩️ CAD spatial-shape extension — contributes shape stat/property computers to `cad-play`.
 
-use semio_framework_plugin::ExtensionBundle;
+use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 use serde::Serialize;
 
 //#region 🔖️Manifest
@@ -33,6 +33,9 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", "0.1.0")
         .extends("cad")
+        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+        // extension only contributes a topic (`cad.computer`).
+        .mode(ExecutionMode::Declarative)
         .contributes_topic(
             "cad.computer",
             serde_json::json!({

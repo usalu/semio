@@ -100,118 +100,15 @@ pub fn dag_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::dag::{DagDiff, DagMutation, DagSnapshot};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct DagBuilderConstruction {
-        snapshot: DagSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for DagBuilderConstruction {
-        type Snapshot = DagSnapshot;
-        type Mutation = DagMutation;
-        type Diff = DagDiff;
-        fn empty() -> Self { Self { snapshot: DagSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<DagSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<DagSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <DagDiff as protocol::MutationDiff<DagSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::dag::DagSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct DagParts {
-        pub snapshot: Option<DagSnapshot>,
-    }
-
-    pub struct DagAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for DagAnalyzerAnalysis {
-        type Parts = DagParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.dag", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = DagParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <DagSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <DagSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec DagBuilderFacets {
-        construction: DagBuilderConstruction,
-        analysis: DagAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::DagComposerComposition,
-    }
-    builder: DagBuilder,
-    analyzer: DagAnalyzer,
-    composer: DagComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#region 🏗️Construction
+/// 🏗️ This subset needs no custom build/analysis/composition logic beyond the ordinary
+/// `Mutation`/`MutationDiff` algebra — the generic `SnapshotBuilder<S, M>` (W1-C task 3's
+/// trivial-subset shape) replaces the old hand-rolled `DagBuilderConstruction` +
+/// `DagAnalyzerAnalysis` + `derive_artifact_facets!`-generated `DagBuilder`/`DagAnalyzer`/
+/// `DagComposer` outright. All io now goes exclusively through the `io_mechanism` registry
+/// (`🚪️io/🦀️component.rs`'s `io()`), replacing the old `DagComposerComposition`/`io_registry`.
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DagSnapshot, DagMutation>;
+//#endregion 🏗️Construction
 
 //#region ⚠️ Errors
 /// ⚠️ Errors from DAG play app edge-connection building. Relocated from the deleted `⚙️engine`

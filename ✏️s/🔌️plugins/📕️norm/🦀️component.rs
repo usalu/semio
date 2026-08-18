@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::{Plugin, PluginAssemblyError};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
@@ -9,6 +10,11 @@ use semio_framework_plugin::{Plugin, PluginAssemblyError};
 /// call per family with the role-split pair — the shared `NormConfig`/`NormPresence` config/presence
 /// schema every one of the fifteen `PlayApp`s uses is still registered idempotently by whichever
 /// editor binds first (`ArtifactEditor::app_schema()` override), mirroring the `🗒️note` exemplar.
+/// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
+/// crate's migration proof: one `OnArtifactKind` event per owned norm family, read live from each
+/// family's own `artifact_kind().id` (never hardcoded, same standard `🗄️stdio`'s 36-kind migration
+/// set), `Isolated` execution, one `documents.write` ask covering all fifteen editors.
 pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -103,6 +109,23 @@ pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::vdi3805::Vdi3805PlayApp>()
         .viewer::<crate::viewer::vdi3805::Vdi3805Viewer>(crate::viewer::vdi3805::create_vdi3805_viewer())
         .viewer_mutation_roster::<crate::viewer::vdi3805::Vdi3805Viewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din4108::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din16798::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din18599::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1990::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1991::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1992::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1993::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1994::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1995::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1996::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1997::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1998::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1999::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::iso16757::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::vdi3805::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist norm family edits to the open document".into(), optional: false })
         .try_build()
 }
 

@@ -40,7 +40,7 @@ mod tests {
 
     #[test]
     fn vcs_demo_mutation_round_trips_store() {
-        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None));
+        let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.document", "vcs", empty_vcs_snapshot(), None)).expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").counter, 3);
     }

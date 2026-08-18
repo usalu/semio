@@ -27,7 +27,7 @@ mod tests {
     use crate::editor::mathematical::commands::{node_graph_edit, node_graph_viewport, set_directed};
     use crate::editor::mathematical::testkit::{dispatch, math_app, MathApp};
     use crate::editor::mathematical::MathematicalCommand;
-    use crate::artifacts::mathematical::mathematical_graph;
+    use crate::artifacts::mathematical::{mathematical_graph, MathematicalCamera};
 
     fn node_graph_edit(operation: serde_json::Value) -> MathematicalCommand {
         MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: serde_json::to_string(&vec![operation]).unwrap() })
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<crate::editor::mathematical::MathematicalPlayApp, _>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(
             "mem://mathematical-convergence",
             node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 9.0, "y": 9.0 })),
             MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false }),
@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn ingest_operations_is_idempotent_for_mathematical() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<crate::editor::mathematical::MathematicalPlayApp, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len());
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len());
     }
 }
 //#endregion 🧪️Tests

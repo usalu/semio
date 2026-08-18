@@ -1,5 +1,26 @@
-//! 🚪️ IO s.note (1/✳️any) — registration now flows through 🎹️composer::register, called once from
-//! this plugin's `.setup()` (see the artifact root's `declaration()`), not per-leaf register().
+//! 🚪️ IO s.note.note (1/✳️any) — `io() -> IoDeclaration` (design.md §2/§3): the native codec plus
+//! every foreign hop, aggregated from the typed `Serializer<NoteSnapshot>`/`Deserializer<NoteSnapshot>`
+//! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Replaces the old hand-rolled
+//! `ArtifactComposition`/`ComposerEntry` dispatch chain outright — all io now goes exclusively
+//! through the `io_mechanism` registry (design.md rule 3).
+//!
+//! This root owns four native-codec facets, each relocated here verbatim from `🧬️schema/` (design.md
+//! §1 CORRECTION): `📸️snapshot/📝️text` + `📸️snapshot/💾️binary` (the real `ArtifactDsl`/`ArtifactPack`
+//! impls for `NoteSnapshot`), `🔺️diff/📝️text` + `🔺️diff/💾️binary`, `🧬️mutations/📝️text` +
+//! `🧬️mutations/💾️binary` (the real `OpText`/`OpBinary` impls for `NoteMutation`), and
+//! `💡️inferences/📝️text` + `💡️inferences/💾️binary` (declaration-only — inference values are
+//! computed, never authored). Unlike the stdio/sequence pilots, this subset already carried real
+//! hand-authored grammars/protocols for `document`/`op`/`diff`/`pack`/`spr` (the old artifact root's
+//! `pilot_languages()`) — `NativeCodecs` below wires them in for real rather than deferring to
+//! `LanguagePair{None,None}`.
+//!
+//! `note_document_bounds`/`note_document_to_svg`/`note_document_json_from_dwg` and friends below
+//! (unchanged, relocated nowhere) are real domain-mapping helpers the foreign leaves in
+//! `📥️import`/`📤️export` call — `note_document_to_svg` still bridges through the OLD
+//! `semio_framework_plugin::io_dispatch`/`ComposerEntry` mechanism to reach stdio's registered
+//! semio/drawing→svg composer, because stdio's own `drawing` subset has not yet migrated onto the
+//! new `io_mechanism` registry (ticket status.md wave W2, not this plugin's boundary) — a real,
+//! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework_plugin::{io_dispatch, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
@@ -16,104 +37,6 @@ pub fn import_stdio_kinds() -> &'static [&'static str] {
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.pdf", "stdio.png", "stdio.svg"]
 }
-//#region 🎹️DerivedComposition
-pub mod derived_composition {
-    use crate::artifacts::note::standards::v1::subsets::any::schema::NoteAnalyzer;
-    use crate::artifacts::note::NoteSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
-
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.note", standard: StandardId("1"), subset: SubsetId("*") };
-    const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    const DEP_DXF: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
-    const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    const DEP_PNG: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-
-    pub struct NoteComposerComposition;
-
-    impl ArtifactComposition for NoteComposerComposition {
-        type Snapshot = NoteSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_PDF, DEP_PNG, DEP_SVG]
-        }
-
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
-                    };
-                    let analysis = NoteAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_DWG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_DXF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::dxf::v_r12::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PDF {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::pdf::v1_4::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_PNG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_SVG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::artifacts::note::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-            }
-            Err(ComposeError { message: "NoteComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
 
 //#region 🔖️MediaExport
 pub fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
@@ -538,119 +461,111 @@ mod media_tests {
 }
 //#endregion 🧪️Tests
 
-//#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::artifacts::note::standards::v1::subsets::any::schema::NoteBuilder as NoteAnyBuilder;
-    use crate::artifacts::note::standards::v1::subsets::any::schema::NoteComposer as NoteAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+
+//#region 🔖️IoDeclaration
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+    use crate::artifacts::note::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::artifacts::note::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::artifacts::note::standards::v1::subsets::any::io::{diff, mutations, snapshot};
+    use crate::artifacts::note::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
+    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
-    /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
-    /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
-    /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
-    /// leaves (which already convert this artifact's snapshot straight to target-format bytes/text) as
-    /// their own `ComposerEntry` rows: `writes` = the target format's dialect, `reads` = just this
-    /// artifact's own dialect. `register_composer_entries` already inserts BOTH an Import key (target
-    /// reads from us) and an Export key (we export to target) per entry, so no framework change was
-    /// needed, only populating the missing direction. Generated by generators/w15_add_export_entries.py
-    /// -- hand-validated pattern on note/json first (see that file's own tests), pilot kept as reference.
-    const NOTE_DIALECT: Dialect = Dialect { artifact_kind: "s.note", standard: StandardId("1"), subset: SubsetId("*") };
-    const NOTE_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::note::NoteSnapshot, ComposeError> {
-        if let Some(source) = sources.iter().find(|s| s.dialect == NOTE_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => NoteAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => NoteAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-            };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "NoteComposer export: build() failed".into(), diagnostics });
-        }
-        if let Some(source) = sources.iter().find(|s| s.dialect == NOTE_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
-            let bytes: Vec<u8> = match &source.payload {
-                IoPayload::Text(t) => t.as_bytes().to_vec(),
-                IoPayload::Binary(b) => b.clone(),
-            };
-            return crate::artifacts::note::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
-        }
-        Err(ComposeError { message: "NoteComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
+    /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset already carried before this
+    /// ticket (the old artifact root's `pilot_languages()`) — `OnceLock` because `dsl::passthrough_hooks`
+    /// is not `const fn` (matches the fixture's own `std1_strict_entries()` pattern,
+    /// `📓️recipe-subset.md` §5 gotcha 5). Indices: 0=document 1=op 2=diff 3=pack 4=spr.
+    fn languages() -> &'static [dsl::LanguageSpec; 5] {
+        static LANGUAGES: OnceLock<[dsl::LanguageSpec; 5]> = OnceLock::new();
+        LANGUAGES.get_or_init(|| {
+            [
+                dsl::LanguageSpec {
+                    id: "note.document",
+                    extension: Some("note"),
+                    role: dsl::LanguageRole::Document,
+                    grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("note.document"),
+                },
+                dsl::LanguageSpec {
+                    id: "note.op",
+                    extension: None,
+                    role: dsl::LanguageRole::Ops,
+                    grammar: Some(mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("note.op"),
+                },
+                dsl::LanguageSpec {
+                    id: "note.diff",
+                    extension: None,
+                    role: dsl::LanguageRole::Diff,
+                    grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: dsl::passthrough_hooks("note.diff"),
+                },
+                dsl::LanguageSpec {
+                    id: "note.pack",
+                    extension: None,
+                    role: dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("note.pack"),
+                },
+                dsl::LanguageSpec {
+                    id: "note.spr",
+                    extension: None,
+                    role: dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    hooks: dsl::passthrough_hooks("note.spr"),
+                },
+            ]
+        })
     }
 
-    const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    fn compose_export_svg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::svg::v1_1::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
-    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::pdf::v1_4::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    fn compose_export_json(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    const EXPORT_DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
-    fn compose_export_dxf(sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let snapshot = rebuild_native_snapshot(sources)?;
-        let bytes = crate::artifacts::note::io::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-        Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
-    }
-    //#endregion 🔖️ExportEntries
-
-    pub fn entries() -> &'static [ComposerEntry] {
+    fn entries() -> &'static [IoEntry] {
+        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    composer_entry_of::<NoteAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_svg },
-                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_pdf },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dwg },
-                    ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[NOTE_DIALECT], compose: compose_export_dxf },
+                    serializer_entry::<NoteSnapshot, export::svg::v1_1::any::NoteIntoSvg>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::svg::v1_1::any::SvgIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::pdf::v1_4::any::NoteIntoPdf>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::pdf::v1_4::any::PdfIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::png::v1_2::any::NoteIntoPng>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::png::v1_2::any::PngIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::json::v_rfc8259::any::NoteIntoJson>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::json::v_rfc8259::any::JsonIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::dwg::v_ac1018::any::NoteIntoDwg>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::dwg::v_ac1018::any::DwgIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::dxf::v_r12::any::NoteIntoDxf>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::dxf::v_r12::any::DxfIntoNote>(NOTE_DIALECT),
                 ]
             })
             .as_slice()
     }
 
-    //#region 🧪️Tests
-    /// 🧪️ Reference pilot (hand-maintained, not regenerated by w15_add_export_entries.py) proving the
-    /// export-entry pattern is genuinely correct, not just compiling -- a real round-trip through the
-    /// typed registry. Every other artifact's export entries follow this exact mechanical shape.
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn every_export_target_writes_its_own_dialect_and_reads_only_the_native_dialect() {
-            for entry in entries().iter().skip(1) {
-                assert_eq!(entry.reads, &[NOTE_DIALECT], "export entry writing {:?} should read only the native dialect", entry.writes);
-            }
-        }
+    let langs = languages();
+    IoDeclaration {
+        native: NativeCodecs {
+            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
+            diff: LanguagePair { text: Some(&langs[2]), binary: None },
+            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
+            inferences: None,
+            codec: store::ArtifactCodec::of::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA.to_string()),
+        },
+        entries: entries(),
     }
-    //#endregion 🧪️Tests
 }
-//#endregion 🚪️DerivedIoRegistry
+//#endregion 🔖️IoDeclaration

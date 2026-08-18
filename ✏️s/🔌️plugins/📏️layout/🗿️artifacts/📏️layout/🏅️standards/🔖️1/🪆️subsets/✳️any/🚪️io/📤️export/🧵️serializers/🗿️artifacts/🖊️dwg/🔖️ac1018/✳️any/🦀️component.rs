@@ -1,27 +1,21 @@
 //! Serialize layout to stdio.dwg.
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::dwg::{DwgDecodeStatus, DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::dwg::schema::snapshot::decode_dwg;
+use semio_s_plugin_stdio::artifacts::dwg::DwgSnapshot;
 
 pub fn register() {}
 
+/// 🩹️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining Part A: the old body
+/// constructed a `DwgSnapshot { bytes, section_names, sections, decode_status: SentinelOnly, .. }`
+/// sentinel that no longer exists on the real R2004+ `DwgSnapshot` (see stdio's
+/// `📸️snapshot/🦀️component.rs`) -- this is stale drift, the same class E2 already fixed inside
+/// `🗒️note`'s sibling serializer. There is no raw-byte field left to stash synthetic JSON in, so
+/// route through the same honest path `🗒️note` uses instead of inventing one: this leaf's own DSL
+/// text is SVG (see the sibling `🎨️svg` serializer in this directory), so render it to SVG and
+/// decode it through the real `svg_to_dwg_bytes` -> `decode_dwg` pipeline -- a genuine (if
+/// minimal) decode rather than a fabricated status.
 pub fn serialize(from: &LayoutSnapshot) -> Result<DwgSnapshot, store::PackError> {
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    let bytes = serde_json::to_vec(&value).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(DwgSnapshot {
-        schema: STDIO_DWG_DOCUMENT_SCHEMA.into(),
-        version: String::new(),
-        bytes,
-        section_names: Vec::new(),
-        // 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: this
-        // serializer emits synthetic JSON bytes, not a real R2004+ file -- honest `SentinelOnly`
-        // rather than fabricating a decode status.
-        sections: Vec::new(),
-        decode_status: DwgDecodeStatus::SentinelOnly,
-        // 🩹️ w5b-close fix: `maintenance_version`/`codepage` are real R2004+ header fields
-        // (stdio's own `DwgSnapshot::default()` also zeroes both) -- honest zero, consistent
-        // with this leaf's already-synthetic `bytes`/`sections`/`SentinelOnly` decode status
-        // above; no real DWG header exists here to read them from.
-        maintenance_version: 0,
-        codepage: 0,
-    })
+    let text = <LayoutSnapshot as store::ArtifactDsl>::print_dsl(from);
+    let bytes = semio_framework_os::svg_to_dwg_bytes(&text).map_err(store::PackError::Schema)?;
+    decode_dwg(&bytes).map_err(store::PackError::Schema)
 }

@@ -318,6 +318,23 @@ fn transaction_begin_input_schema() -> serde_json::Value {
     })
 }
 
+/// 🐛️ post-unblock fix: `schemars::schema_for!(PreparedActionReport)` emits a bare JSON-Schema
+/// boolean `true` for `PreparedActionReport.preview`'s `serde_json::Value` field (valid JSON Schema —
+/// `true` means "any value is valid") — but the MCP SDK's own Zod validation of `Tool.outputSchema`
+/// rejects a boolean sub-schema outright, caught live by `bun nx run
+/// @semio-tech/framework-os-mcp:test-quick` (`$ZodError` at `tools[2].outputSchema.properties.preview`,
+/// "Invalid input"). The exact same class of bug P2's own `capabilities_search_capability` doc
+/// comment already documents for `type:"array"` vs `type:"object"` — a spec-shape detail schemars/the
+/// SDK disagree on, not a logic error. Fixed by overriding just that one sub-schema to the equivalent
+/// OBJECT-syntax "any value" form (`{}`) after generating the rest of the schema from the real type.
+fn prepared_action_report_output_schema() -> serde_json::Value {
+    let mut schema = serde_json::to_value(schemars::schema_for!(PreparedActionReport)).unwrap_or(serde_json::Value::Null);
+    if let Some(preview) = schema.pointer_mut("/properties/preview") {
+        *preview = serde_json::json!({});
+    }
+    schema
+}
+
 fn action_prepare_handler(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, arguments: serde_json::Value) -> CallToolResult {
     let capability_id = match arguments.get("capabilityId").and_then(serde_json::Value::as_str) {
         Some(id) => id,
@@ -430,7 +447,7 @@ pub fn build_tool_registry(catalog: std::sync::Arc<Catalog>, actions: std::sync:
     let mut action_prepare = Tool::new("action_prepare", action_prepare_input_schema());
     action_prepare.title = Some("Prepare Action".to_string());
     action_prepare.description = Some("Validates input, checks policy, captures the current revision, and dry-runs the capability — returns a PreparedActionReport.".to_string());
-    action_prepare.output_schema = Some(serde_json::to_value(schemars::schema_for!(PreparedActionReport)).unwrap_or(serde_json::Value::Null));
+    action_prepare.output_schema = Some(prepared_action_report_output_schema());
     let (c, a, p) = (catalog.clone(), actions.clone(), principal.clone());
     registry.register(action_prepare, move |arguments| action_prepare_handler(&c, &a, &p, arguments)).expect("action_prepare is a valid tool name");
 

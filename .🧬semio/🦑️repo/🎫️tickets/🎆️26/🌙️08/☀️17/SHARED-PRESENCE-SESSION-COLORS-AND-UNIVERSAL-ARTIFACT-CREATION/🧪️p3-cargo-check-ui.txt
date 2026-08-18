@@ -1,0 +1,8 @@
+error: failed to load manifest for workspace member `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust`
+referenced by workspace at `/Users/ueli/Documents/semio/Cargo.toml`
+
+Caused by:
+  failed to read `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

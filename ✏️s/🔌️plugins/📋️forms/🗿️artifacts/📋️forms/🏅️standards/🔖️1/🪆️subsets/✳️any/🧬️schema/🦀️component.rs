@@ -293,105 +293,13 @@ pub fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::forms::{FormsDiff, FormMutation, FormsSnapshot};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct FormsBuilderConstruction {
-        snapshot: FormsSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for FormsBuilderConstruction {
-        type Snapshot = FormsSnapshot;
-        type Mutation = FormMutation;
-        type Diff = FormsDiff;
-        fn empty() -> Self { Self { snapshot: FormsSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<FormsSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::forms::FormsSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct FormsParts {
-        pub snapshot: Option<FormsSnapshot>,
-    }
-
-    pub struct FormsAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for FormsAnalyzerAnalysis {
-        type Parts = FormsParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.forms", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = FormsParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <FormsSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
+//#region 🏗️Construction
+/// 🏗️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: the old hand-rolled
+/// `FormsBuilderConstruction` (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/
+/// `build`) did nothing beyond the ordinary `Mutation`/`MutationDiff` algebra — a trivial subset,
+/// per the SDK's own `SnapshotBuilder<S, M>` (W1-C task 3).
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::forms::FormsSnapshot, crate::artifacts::forms::FormMutation>;
+//#endregion 🏗️Construction
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -419,7 +327,7 @@ mod tests {
         let mut spec = building_component_spec();
         let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
         let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
-        spec = apply_form_edit_mutation(&spec, &operation).expect("valid mutation diff");
+        spec = apply_form_edit_mutation(&spec, &operation);
         assert_eq!(forms_steps(&spec)[0].blocks[0].label, "Renamed");
     }
 
@@ -472,16 +380,3 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec FormsBuilderFacets {
-        construction: FormsBuilderConstruction,
-        analysis: FormsAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::FormsComposerComposition,
-    }
-    builder: FormsBuilder,
-    analyzer: FormsAnalyzer,
-    composer: FormsComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets

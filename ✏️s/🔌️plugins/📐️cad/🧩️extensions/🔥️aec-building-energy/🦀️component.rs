@@ -1,6 +1,6 @@
 //! 🧩️ CAD aec-building-energy extension — contributes energy computers and STEP import to `cad-play`.
 
-use semio_framework_plugin::ExtensionBundle;
+use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -67,6 +67,9 @@ fn computers_manifest() -> CadComputersManifest {
 fn bundle() -> ExtensionBundle {
     ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", "0.1.0")
         .extends("cad")
+        // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
+        // extension only contributes a topic (`cad.computer`).
+        .mode(ExecutionMode::Declarative)
         .contributes_topic(
             "cad.computer",
             serde_json::json!({

@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(register_trinity_exports)`
@@ -9,7 +10,10 @@ use semio_framework_plugin::Plugin;
 /// automatically by each `register_document_app` call below. `.editor(…)`/`.viewer(…)` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§2.4) replace the retired
 /// `.document_app(…)` call for both artifacts — each dialect now registers one mutation-capable
-/// editor and one read-only viewer surface.
+/// editor and one read-only viewer surface. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
+/// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
+/// own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering both editors.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("trinity")
         .label("Trinity")
@@ -24,6 +28,10 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::rewrite::TrinityRewritePlayApp>()
         .viewer::<crate::viewer::rewrite::TrinityRewriteViewer>(crate::viewer::rewrite::create_trinity_rewrite_viewer())
         .viewer_mutation_roster::<crate::viewer::rewrite::TrinityRewriteViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::jack::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::rewrite::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewrite edits to the open document".into(), optional: false })
         .try_build()
 }
 

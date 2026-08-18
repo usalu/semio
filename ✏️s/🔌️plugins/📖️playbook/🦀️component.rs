@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -8,7 +9,12 @@ use semio_framework_plugin::Plugin;
 /// one thing it used to survive for, registered automatically by `register_document_app` below.
 /// `.editor()`/`.viewer()` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.4)
 /// replace the retired `.document_app()` — one mutation-capable surface, one read-only surface, both
-/// over the same `PLAYBOOK_DIALECT` coordinate.
+/// over the same `PLAYBOOK_DIALECT` coordinate. `.activation(…)`/`.execution(…)`/`.requests(…)`
+/// (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M4, `📓️design-abi.md` §5/§6) are this
+/// crate's proof-of-migration: the host activates one instance whenever a `"text.playbook"`
+/// artifact (`crate::artifacts::playbook::artifact_kind().id`) is opened, this plugin's own actor
+/// runs `Isolated` (its one `🧩️extensions/🌀️procedural` runs `Declarative` instead — see that
+/// extension's own `bundle()`), and it asks the broker for document write access to persist edits.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("playbook-play")
         .label("Playbook")
@@ -18,6 +24,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::playbook::PlaybookPlayApp>()
         .viewer::<crate::viewer::playbook::PlaybookViewer>(crate::viewer::playbook::create_playbook_viewer())
         .viewer_mutation_roster::<crate::viewer::playbook::PlaybookViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::playbook::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist playbook step-list edits to the open document".into(), optional: false })
         .try_build()
 }
 

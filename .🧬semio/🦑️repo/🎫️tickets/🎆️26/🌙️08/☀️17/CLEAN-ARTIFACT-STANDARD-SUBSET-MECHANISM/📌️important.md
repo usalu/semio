@@ -70,3 +70,21 @@ Ticket path (use this exact path for `ticket_reopen`/`ticket_close`):
   `📇️registry` in one pass.
 - **Mirroring the native codec under both `📥️import` and `📤️export`.** Not implementable (one trait impl per type).
   See the CORRECTION block in `📓️design.md` §1.
+
+## ⏱️ Agent turn discipline (learned the hard way, twice)
+
+**Never end your turn waiting on a background build.** When an agent's turn ends, its background children are
+killed and the work is lost. The stdio repair agent did exactly this — kicked off a baseline `cargo check` in the
+background, armed a monitor, and ended its turn "waiting to be resumed". Nothing was waiting; the build died.
+
+Instead, **block inside a single Bash call** and pass a long `timeout` (up to 600000 ms):
+
+```
+cargo check -p <crate> --all-targets --keep-going 2>&1 | tee /tmp/base.txt | grep -cE '^error'
+```
+
+If it exceeds the timeout, re-issue the same command — cargo caches, so the second run resumes rather than
+restarting. Keep working in one continuous turn until done.
+
+Under heavy fan-out the machine carries 90+ concurrent cargo processes; `Blocking waiting for file lock` is normal
+and expected, not a failure. Be patient rather than retrying in a tight loop.

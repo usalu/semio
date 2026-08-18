@@ -474,3 +474,59 @@ Also fixed, all verified by targeted `tsc` rather than assumed: a missed `HostEf
 **Acceptance:** `framework-renderer-react` 321/336 (15 pre-existing failures identified by name and root cause); the packet's own tests isolated → **14/14**; `framework-os` baseline reconfirmed **322/324** — the same 2 pre-existing wasm-artifact failures, zero regression.
 
 **W2 is now complete**: H1 (React), H2 (web shard pool), H3 (wgpu native, verified partial), H4 folded into H2/H3's TypeScript. All four renderer paths are off one-worker-per-plugin and onto the actor kernel.
+
+### M1-small-plugins — 3 of 5 green; 2 blocked upstream
+
+Coordinator-run `cargo check -p <crate> --lib`:
+
+| crate | result |
+|---|---|
+| `semio-s-plugin-draw` | **Finished**, 0 errors |
+| `semio-s-plugin-mathematical` | **Finished**, 0 errors |
+| `semio-s-plugin-raster` | **Finished**, 0 errors |
+| `semio-s-plugin-layout` | blocked — stale `semio_s_plugin_stdio::artifacts::dwg::DwgDecodeStatus` import and `DwgSnapshot` has no field `bytes` |
+| `semio-s-plugin-forms` | blocked — `BlockListScene has no field domain_id` in `📖️playbook`, a live peer edit (uncommitted, ~9-min-old mtime when M1 saw it) |
+
+**M1 corrected me, with evidence, and was right.** I read "2 `.activation(` per crate" off a grep and told it that looked thin next to stdio's 36. It checked and showed each of these five owns exactly **one** artifact kind — so one activation event is the honest number, and my grep had counted a doc-comment mention. Pushing back with a citation rather than padding the count to match my expectation is exactly the behaviour I want.
+
+It also verified M0's two wiring findings did **not** apply here — all five already request `component-guest` and already call `plugin_exports!` — instead of assuming the previous packet's bugs were universal.
+
+**Two fixes I made as registrar** (pre-existing, not from this ticket): `➗️mathematical`'s and `🖍️draw`'s `#[cfg(test)]` modules used `EditorApp`/`App` without importing them, while the working `🗒️note` reference imports both explicitly. Adding the imports took draw and mathematical from failing to green — their test code had simply never compiled.
+
+**The two blocked crates are both upstream, neither ours.** `📏️layout` carries the same stale-`DwgSnapshot`-field problem E2 already fixed inside `🗒️note`; `📋️forms` is blocked by an actively-edited peer file. Recorded rather than patched — `📖️playbook` is outside this ticket's scope and was live.
+
+**Descriptors: none emitted for the five.** M1 ran out of budget before emission after its own build got backgrounded. Correctly, it committed nothing rather than a placeholder.
+
+## W3 full fan-out — five packets, all 33 plugins + 26 extensions covered
+
+User direction: finish end to end **in conjunction with the other ongoing work**, without stopping. That changes one standing rule — packets are now **authorized to fix pre-existing and peer-owned breakage that blocks them**, subject to: re-read from disk immediately before each edit, never rewrite a whole file, no git-modifying commands, list every out-of-scope file touched with its reason, and **still leave anything under active edit** (checked via `git log --date=iso` + mtime + running cargo) and report it instead. The "don't chase a moving target" rule survives; the "don't touch anything that isn't yours" rule is relaxed to "fix what's dead, report what's live".
+
+| packet | crates | target dir |
+|---|---|---|
+| `M2` | 📐️cad +4 ext, 🪵️sourcing +3 ext | `🎯️target-m2` |
+| `M3` | 🌊️flow +9 ext (largest family) | `🎯️target-m3` |
+| `M4` | 📜️imperative +5, 📖️playbook +1, 🏭️process +4 | `🎯️target-m4` |
+| `M5` | 🧩️puzzle, 🌀️procedural, 🌍️gis, 💠️lowpoly, 📸️remodel | `🎯️target-m5` |
+| `M6` | 14 remaining plugins + repair of 📏️layout | `🎯️target-m6` |
+
+Design decisions carried into the briefs so they are not re-derived: flow's 9 and imperative's 5 extensions are `Linked` (same publisher, real evaluators); process's 4, sourcing's 3, cad's 4 and playbook's 1 are `Declarative` (no handlers → no wasm ever runs) — each brief requires verifying that by grepping `.handler(` rather than trusting the classification. Long-running work moves to jobs: puzzle's WFC, remodel's SfM, fem's solver, flow/brep's tessellation (exclusive placement). `HostEffect::InvokeExtension`'s `response_action` is gone — flow and procedural must use `host::extensions::invoke(...).await` resolved by a `req`-correlated `Event::Completed`, not a reintroduced callback id. 🪐️space is the only crate calling `host_now_ms` directly (~81 effect sites, heaviest in the repo).
+
+Two blockers routed into the packets that own the surrounding code rather than patched centrally: `📖️playbook`'s `BlockListScene { domain_id }` against a struct with no such field (→ M4, with a liveness re-check first, since it was a live edit when M1 hit it), and `📏️layout`'s stale `DwgSnapshot`/`DwgDecodeStatus` drift against stdio's evolved API (→ M6, same class E2 already fixed inside 🗒️note).
+
+### 🚨 Repo-wide workspace breakage found by M2 and fixed by registrar
+
+`cargo metadata --no-deps` was exiting **101** — the entire workspace was unloadable, so *every* cargo command on this machine failed, for every session, not just this ticket:
+
+```
+error: failed to load manifest for workspace member
+       `✏️s/🔌️plugins/🖍️draw/🔄️fsm/📦️packages/🦀️rust`
+       referenced by workspace at `/Cargo.toml`
+```
+
+Cause: a peer session moved the two `🔄️fsm` crates out of `✏️s/🔌️plugins/🖍️draw/🔄️fsm/` into the command co-location path `…/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/` — `git status` shows the renames staged (`R` entries) — but root `Cargo.toml` still listed the old paths. Classic half-landed move: the files went, the registry entry didn't.
+
+Repointed both member entries (root `Cargo.toml` is registrar-owned, so this was mine to do). `cargo metadata --no-deps` now exits **0**. This unblocked all five in-flight W3 packets *and* every peer session on the box.
+
+**M2 gets the credit and behaved correctly:** it hit the failure, diagnosed it precisely to the moved path, refused to fabricate acceptance results while the workspace was unloadable, and reported rather than guessing. It did set a background Monitor to poll for the fix — which cannot survive its turn boundary here — so I told it to stop polling and run acceptance in the foreground now.
+
+This is the third distinct class of peer half-landed change this ticket has absorbed: a moved generated file (ui-styling), a renamed type set (presence), and now a moved crate. All three shared the same signature — the artifact moved, its registration did not.

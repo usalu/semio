@@ -172,6 +172,7 @@ fn bundle() -> ExtensionBundle {
     let catalog = WoodCatalog;
     ExtensionBundle::new(EXTENSION_ID, "Process Wood Machines", "0.1.0")
         .extends("process")
+        .mode(semio_framework_plugin::ExecutionMode::Declarative)
         .contributes_topic(
             "process.machines",
             serde_json::json!({

@@ -299,6 +299,16 @@ impl InMemoryToolRegistry {
         if !is_valid_tool_name(&tool.name) {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("tool name `{}` violates ^[a-zA-Z0-9_-]{{1,64}}$", tool.name)));
         }
+        // 🧷️ Normalize here rather than at each call site: this is the one choke point every tool
+        // passes through, so no future registration can reintroduce a boolean sub-schema that makes
+        // the official SDK reject the entire `tools/list` response. See `schema::normalize_boolean_subschemas`.
+        let mut tool = tool;
+        crate::schema::convert_draft07_to_2020_12(&mut tool.input_schema);
+        crate::schema::normalize_boolean_subschemas(&mut tool.input_schema);
+        if let Some(output_schema) = tool.output_schema.as_mut() {
+            crate::schema::convert_draft07_to_2020_12(output_schema);
+            crate::schema::normalize_boolean_subschemas(output_schema);
+        }
         self.handlers.insert(tool.name.clone(), Arc::new(handler));
         self.tools.insert(tool.name.clone(), tool);
         Ok(())

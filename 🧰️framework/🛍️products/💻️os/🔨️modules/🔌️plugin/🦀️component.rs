@@ -16621,8 +16621,8 @@ pub mod plugin_runtime {
         use super::ContextMenuWireRequest;
         use crate::app::{deserializer_entry_of, serializer_entry_of, ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
         use crate::app::{
-            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, ChildEmit, CommandView, ConfigView, DraftView, Emit, HistoryCommandFilter, HistoryView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation,
-            PluginApp, VcsArtifactApp,
+            ui_history_panel, ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactView, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu,
+            NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, VcsArtifactApp,
         };
         use crate::{selection_count_phrase, ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewModel};
         use protocol::{Mutation, MutationDiff};
@@ -16632,10 +16632,11 @@ pub mod plugin_runtime {
         use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
         use serde::{Deserialize, Serialize};
         use serde_json::json;
+        use std::collections::BTreeMap;
         use store::{ArtifactPack, EngineHandles};
         use store::{Backbone, BackboneMessage, MemoryBackbone};
         use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
-        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+        use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef, UiPeerMark, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
         /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs
         /// (`TestApp::APP_ID`, the `App::builder` ids below, every `CommandAddress`/`ActionAddress`/
@@ -17394,7 +17395,11 @@ pub mod plugin_runtime {
 
             assert_eq!(app.presence_store.generation(), 1, "presence lane never received the command's emission");
             assert_eq!(app.transient_store.generation(), 1, "transient lane never received the command's emission");
-            assert_eq!(app.ephemeral_snapshot(), (NoPresence::default().encode_pack(), 1, 1), "object-safe channel snapshot must carry the typed presence pack and both generations");
+            assert_eq!(
+                app.ephemeral_snapshot(),
+                EphemeralSnapshot { presence: NoPresence::default().encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
+                "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
+            );
 
             // 🧾️ Neither ephemeral lane may appear in history: they have no edits, no undo, and no
             // command-log rows of their own — the document's single edit is the only thing recorded.
@@ -17415,7 +17420,113 @@ pub mod plugin_runtime {
             assert_eq!(app.presence_store.generation(), 0);
             assert_eq!(app.transient_store.generation(), 0);
         }
+
+        /// 👥️ Contract-freeze §C7.6, "zero app-side code": an app that merely DECLARES an interaction
+        /// domain with `broadcast: true` (nothing app-specific) must see its live selection show up in
+        /// `ephemeral_snapshot().interaction` — assembled purely from `AppDefinition.interactions` plus
+        /// the framework-owned `interaction_store`/`interaction_hover` state.
+        #[test]
+        fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
+            let mut app = interaction_app_under_test();
+            // 🧪️ `interaction_topology`'s fixture only knows "item-1" once `doc.snapshot.label` is
+            // non-empty (see that fn's own doc comment) — without this seed, `validate_state` prunes
+            // the pick as an unknown id and the domain never shows up in `interaction_state()`.
+            app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
+            app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
+
+            let snapshot = app.ephemeral_snapshot();
+            assert!(!snapshot.interaction.is_empty(), "a broadcasting domain with a live selection must not encode to empty bytes");
+            let mut pos = 0usize;
+            let decoded = protocol::decode_presence_interaction(&snapshot.interaction, &mut pos).expect("interaction bytes decode");
+            assert_eq!(decoded.app_id, app.app_id());
+            assert_eq!(decoded.domains.len(), 1);
+            assert_eq!(decoded.domains[0].domain, "items");
+            assert_eq!(decoded.domains[0].selected, vec!["item-1".to_string()]);
+        }
         //#endregion 🔖️EphemeralLaneTests
+
+        //#region 🔖️AdoptPresenceTests
+        fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> protocol::PresencePeer {
+            protocol::PresencePeer {
+                actor: actor.to_string(),
+                connected_at_ms: 1,
+                label: None,
+                presence_pack: with_pack.then(|| NoPresence::default().encode_pack()),
+                user_id: None,
+                role: None,
+                drag_ghost_json: None,
+                interaction: None,
+                color,
+                surface: None,
+                views: Vec::new(),
+                ui: None,
+            }
+        }
+
+        /// 👥️ Contract-freeze §C7.6: `adopt_presence` (1) adopts an app-typed `presence_pack` into
+        /// `presence_store` ONLY when one is present, (2) unconditionally upserts `color`/`surface`/
+        /// `interaction` into `peer_presence` for every peer in the roster, and (3) treats the roster
+        /// as the single source of truth — a peer absent from a later call is dropped from BOTH maps.
+        #[test]
+        fn adopt_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
+            let mut app = VcsArtifactApp::new(TestApp::default());
+            let alice = sample_presence_peer("user:alice#s1", Some(3), true);
+            let bob = sample_presence_peer("user:bob#s1", Some(5), false);
+
+            app.adopt_presence(Some(9), &[alice.clone(), bob], 1000).expect("adopt roster");
+            assert_eq!(app.own_color, Some(9));
+            assert_eq!(app.presence_store.peers().len(), 1, "only the peer carrying a presence_pack adopts into presence_store");
+            assert_eq!(app.presence_store.peers()[0].0, "user:alice#s1");
+            assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
+            assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
+            assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
+
+            // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
+            app.adopt_presence(Some(9), &[alice], 2000).expect("adopt roster after bob leaves");
+            assert_eq!(app.presence_store.peers().len(), 1);
+            assert_eq!(app.peer_presence.len(), 1);
+            assert!(app.peer_presence.contains_key("user:alice#s1"));
+            assert!(!app.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
+        }
+        //#endregion 🔖️AdoptPresenceTests
+
+        //#region 🔖️InteractionViewPeersTests
+        #[test]
+        fn interaction_view_peers_selecting_returns_actor_and_color() {
+            let mut peers: BTreeMap<String, PeerPresence> = BTreeMap::new();
+            let mark_interaction = |selected: &[&str], hovered: &[&str]| {
+                Some(protocol::PresenceInteraction {
+                    app_id: "draw".to_string(),
+                    domains: vec![protocol::PresenceDomain {
+                        domain: "items".to_string(),
+                        granularity: "item".to_string(),
+                        selected: selected.iter().map(|id| id.to_string()).collect(),
+                        hovered: hovered.iter().map(|id| id.to_string()).collect(),
+                    }],
+                })
+            };
+            peers.insert("user:zed#s1".to_string(), PeerPresence { color: Some(7), surface: None, interaction: mark_interaction(&["item-1"], &[]) });
+            peers.insert("user:alice#s1".to_string(), PeerPresence { color: Some(2), surface: None, interaction: mark_interaction(&["item-1"], &[]) });
+            peers.insert("user:bob#s1".to_string(), PeerPresence { color: Some(4), surface: None, interaction: mark_interaction(&[], &["item-1"]) });
+
+            let state = protocol::InteractionState::default();
+            let hover = InteractionHoverState::new();
+            let view = InteractionView { state: &state, hover: &hover, peers: &peers };
+
+            let selecting = view.peers_selecting("items", "item-1");
+            assert_eq!(selecting.len(), 2, "only alice and zed selected item-1");
+            assert_eq!(selecting[0].actor, "user:alice#s1", "sorted by actor");
+            assert_eq!(selecting[0].color, Some(2));
+            assert_eq!(selecting[1].actor, "user:zed#s1");
+            assert_eq!(selecting[1].color, Some(7));
+            assert!(view.peers_selecting("items", "item-2").is_empty(), "no peer selected item-2");
+
+            let hovering = view.peers_hovering("items", "item-1");
+            assert_eq!(hovering.len(), 1);
+            assert_eq!(hovering[0].actor, "user:bob#s1");
+            assert_eq!(hovering[0].color, Some(4));
+        }
+        //#endregion 🔖️InteractionViewPeersTests
 
         //#region 🔖️CompositionTests
         /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, boxed as `Box<dyn
@@ -18497,6 +18608,21 @@ pub mod plugin_runtime {
             app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta()).expect("seed label");
             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).expect("interactionSelect");
 
+            // 👥️ Contract-freeze §C7.6: a peer also selecting "item-1" in the same domain, plus this
+            // session's own color, must land on the stamped item's `presence.color`/`presence.peers`.
+            app.own_color = Some(9);
+            app.peer_presence.insert(
+                "user:alice#s1".to_string(),
+                PeerPresence {
+                    color: Some(3),
+                    surface: None,
+                    interaction: Some(protocol::PresenceInteraction {
+                        app_id: "s.test.synthetic@1/*#editor".to_string(),
+                        domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
+                    }),
+                },
+            );
+
             // 🕹️ Stamp directly (unit-level, independent of any real `UiTree`-producing app render): a
             // hand-built domain-bound tree with a row the app itself marks selected=false must come out
             // selected=true after `stamp_and_cache_interaction_ui` — the framework wins.
@@ -18512,7 +18638,10 @@ pub mod plugin_runtime {
             let state = app.interaction_state();
             app.stamp_and_cache_interaction_ui(&mut node, &state);
             let UiNode::Tree(tree) = &node else { panic!("still a Tree node") };
-            assert!(tree.sections[0].items[0].presence.selected, "framework stamping must win over app-supplied presence");
+            let stamped = &tree.sections[0].items[0].presence;
+            assert!(stamped.selected, "framework stamping must win over app-supplied presence");
+            assert_eq!(stamped.color, Some(9), "the item is stamped with THIS session's own color unconditionally");
+            assert_eq!(stamped.peers, vec![UiPeerMark { actor: "user:alice#s1".to_string(), color: Some(3), hovered: false, selected: true, label: "user:alice#s1".to_string() }]);
         }
         //#endregion 🔖️InteractionDispatchTests
     }

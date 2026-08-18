@@ -1,13 +1,6 @@
-/** draw facet WASM facades */
-export * as draw_schema from "../../🗿️artifacts/🖍️draw/🧬️schema/🟦️component.ts";
-export * as draw_snapshot from "../../🗿️artifacts/🖍️draw/🧬️schema/📸️snapshot/🟦️component.ts";
-export * as draw_snapshot_text from "../../🗿️artifacts/🖍️draw/🧬️schema/📸️snapshot/📝️text/🟦️component.ts";
-export * as draw_snapshot_binary from "../../🗿️artifacts/🖍️draw/🧬️schema/📸️snapshot/💾️binary/🟦️component.ts";
-export * as draw_diff from "../../🗿️artifacts/🖍️draw/🧬️schema/🔺️diff/🟦️component.ts";
-export * as draw_diff_text from "../../🗿️artifacts/🖍️draw/🧬️schema/🔺️diff/📝️text/🟦️component.ts";
-export * as draw_diff_binary from "../../🗿️artifacts/🖍️draw/🧬️schema/🔺️diff/💾️binary/🟦️component.ts";
-export * as draw_mutations from "../../🗿️artifacts/🖍️draw/🧬️schema/🧬️mutations/🟦️component.ts";
-export * as draw_mutations_text from "../../🗿️artifacts/🖍️draw/🧬️schema/🧬️mutations/📝️text/🟦️component.ts";
-export * as draw_mutations_binary from "../../🗿️artifacts/🖍️draw/🧬️schema/🧬️mutations/💾️binary/🟦️component.ts";
-export * as draw_io from "../../🗿️artifacts/🖍️draw/🚪️io/🟦️component.ts";
-export * as draw_decomposer from "../../🗿️artifacts/🖍️draw/🪓️decomposer/🟦️component.ts";
+/** 📦️ draw facet WASM facades — mirrors the declaration-tree taxonomy (ticket
+ * 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM). `🪓️decomposer` and the flat artifact-level
+ * `🧬️schema`/`🚪️io` targets this file pointed at pre-migration never existed in the current tree
+ * (confirmed: zero matching directories) — replaced with the real standard/subset-scoped paths. */
+export * as draw_schema from "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️component.ts";
+export * as draw_io from "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🟦️component.ts";

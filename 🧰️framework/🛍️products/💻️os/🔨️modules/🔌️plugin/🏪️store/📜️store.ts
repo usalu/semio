@@ -8,11 +8,11 @@ import { strToU8, unzipSync, zipSync } from "fflate";
 import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 import {
   PLUGIN_HOST_SHIM_FILE,
-  PLUGIN_WORKER_FILE,
+  SHARD_WORKER_FILE,
   ensurePreview2ShimVendorAt,
   hostShimSource,
   pluginComponentBridgeSource,
-  pluginWorkerSource,
+  shardWorkerSource,
   transpilePluginComponent,
   type PluginWebMaterializeContext,
 } from "../📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
@@ -247,7 +247,7 @@ export const webMaterialize: ExtensionMaterializer = async ({ wasmBytes, assets,
     writeFileSync(artifactPath, wasmBytes);
     transpilePluginComponent(artifactPath, outDir, componentBase, materializeCtx);
     writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-    writeFileSync(join(outDir, PLUGIN_WORKER_FILE), pluginWorkerSource());
+    writeFileSync(join(outDir, SHARD_WORKER_FILE), shardWorkerSource());
     writeFileSync(join(outDir, `${jsBase}.js`), pluginComponentBridgeSource(componentBase, EXTENSION_COMPONENT_FILE));
   } finally {
     rmSync(artifactDir, { recursive: true, force: true });

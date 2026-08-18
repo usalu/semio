@@ -42,7 +42,7 @@ import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
   pluginComponentBridgeSource,
-  pluginWorkerSource,
+  shardWorkerSource,
   rewritePreview2ShimImports,
   transpilePluginComponent,
   type PluginWebMaterializeContext,
@@ -815,7 +815,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   transpilePluginComponent(artifact, outDir, componentBase, pluginWebMaterializeContext());
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
-  writeFileSync(join(outDir, "🟨️plugin-worker.js"), pluginWorkerSource());
+  writeFileSync(join(outDir, "🟨️plugin-worker.js"), shardWorkerSource());
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/extensions/...`
   // from the SSE event, so the install root must already serve the new files.
   publishBuiltExtension(target, outDir);

@@ -53,7 +53,15 @@ impl protocol::InferenceSpec<DagSnapshot> for DagInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::dag::standards::v1::subsets::any::schema::DagBuilder {
+/// 🎯️ `ArtifactInferrer::infer` takes `&Self::Snapshot`, never `&self` — the impl target is a
+/// pure type-level anchor, not a live instance. Retargeting onto `semio_framework_plugin::app::
+/// SnapshotBuilder<DagSnapshot, DagMutation>` (the recipe's literal suggestion for a deleted
+/// `derive_artifact_facets!` builder type) is illegal — `SnapshotBuilder` is a foreign,
+/// non-`#[fundamental]` generic struct, so `impl ArtifactInferrer for SnapshotBuilder<Local, Local>`
+/// is an orphan-rule violation (E0117) regardless of the type PARAMETERS being local. A trivial
+/// local zero-sized marker struct is the real fix (recipeGaps of the `🎬️sequence` W4 pass).
+pub struct DagInferrer;
+impl ArtifactInferrer for DagInferrer {
     type Snapshot = DagSnapshot;
     type Inference = DagInference;
 }

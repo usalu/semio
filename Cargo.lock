@@ -7282,6 +7282,7 @@ dependencies = [
 name = "semio-s-plugin-dag"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-graph",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -8074,6 +8075,7 @@ dependencies = [
 name = "semio-s-plugin-vcs"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",

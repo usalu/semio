@@ -1,0 +1,42 @@
+Target file (OUT OF W4-draw boundary — repo root, shared by every plugin):
+  📜️script.ts (repo root)
+
+## Why this is a patch, not a direct W4-draw edit
+
+A pre-existing "known plugin-shape exceptions" lookup table (populated by an earlier ticket's
+census, `📓️w0-b-plugin-shape.md`) carries one entry for the path this pass just moved:
+
+```
+"✏️s/🔌️plugins/🖍️draw/🔄️fsm": "→ 🗿️artifacts/draw/🏅️standards/🔖️1/⚙️engine/fsm/; the nested
+✨️macros sub-crate needs a crate-boundary specialist, not a plain directory move — 📓️w0-b-plugin-
+shape.md §5.",
+```
+
+Two things are now stale about this entry:
+1. The source path `✏️s/🔌️plugins/🖍️draw/🔄️fsm` no longer exists — this pass moved it (see
+   `📓️w4-draw-report.md` `## fsm decision`).
+2. The anticipated target (`⚙️engine/fsm/`) is itself a forbidden plugin-/standard-level shape
+   under THIS ticket's `📓️design.md` §4 module rule — this pass counted `🔄️fsm`'s real consumers
+   (exactly one: `✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️component.rs`'s gesture statechart)
+   and inlined it at that sole consumer instead:
+   `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/`
+   (crate pair unchanged internally — `✨️macros`'s proc-macro sibling still cannot be merged into
+   the main plugin crate; only external-repo-relative paths were recomputed, matching the earlier
+   note's own caution about needing a real relocation, not a naive one).
+
+Since this table's own file is a shared, repo-root file outside `✏️s/🔌️plugins/🖍️draw/**`, updating
+it is a patch, not a direct edit.
+
+## The edit
+
+Find the line above (in the large `knownExceptions`-shaped object literal, alongside the other
+`🔱️trinity`/`🔋️energy`/`🧩️puzzle` entries referencing `📓️w0-b-plugin-shape.md §5`) and delete it —
+the path it described is now on the new declaration-tree taxonomy (design.md, this ticket), not a
+still-open pre-existing violation.
+
+## Verification note
+
+Low-severity, non-blocking: this table appears to be report-mode/inventory-only (no build/test
+depends on it landing before this ticket's own compile/test verification), so leaving it stale
+does not block anything — flagging for cleanliness per CLAUDE.md ("no leftover migration debt"),
+not because it breaks a check.

@@ -1,0 +1,11 @@
+0 semio-s-plugin-sourcing
+1 semio-s-plugin-animate
+1 semio-s-plugin-dag
+1 semio-s-plugin-mathematical
+1 semio-s-plugin-playbook
+1 semio-s-plugin-reasoning
+1 semio-s-plugin-writer
+3 semio-s-plugin-imperative
+9 semio-s-plugin-layout
+16 semio-s-plugin-raster
+DONE

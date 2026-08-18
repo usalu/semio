@@ -554,8 +554,22 @@ export class DevScript extends Script {
       return;
     }
     if (a === "stdio") {
-      this.runMcpStdioRepo(segments.slice(1));
+      const rest = segments.slice(1);
+      if ((rest[0] ?? "").trim().toLowerCase() === "os") {
+        this.runMcpOs("stdio", rest.slice(1));
+        return;
+      }
+      this.runMcpStdioRepo(rest);
       return;
+    }
+    if (a === "http") {
+      const rest = segments.slice(1);
+      if ((rest[0] ?? "").trim().toLowerCase() === "os") {
+        this.runMcpOs("http", rest.slice(1));
+        return;
+      }
+      console.error("[dev] `dev mcp http` currently serves only the os gateway — use `dev mcp http os`.");
+      process.exit(1);
     }
     const mode = a === "repo" ? "repo" : "default";
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
@@ -588,6 +602,18 @@ export class DevScript extends Script {
       },
       ...daemonBudgetOpts(),
     });
+  }
+
+  /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio or Streamable HTTP.
+   * `stdio` is what `.mcp.json` launches; `http` defaults to port 6300 (outside the 6012–6205
+   * catalog range and the 7300+ bench pool). Extra argv passes straight through to the binary
+   * (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
+  private runMcpOs(transport: "stdio" | "http", extra: string[]): void {
+    const args = ["run", "--quiet", "-p", "semio-framework-os-mcp", "--bin", "semio-os-mcp", "--", transport, ...extra];
+    if (transport === "http" && !extra.includes("--port")) {
+      args.push("--port", process.env.S_OS_MCP_PORT ?? "6300");
+    }
+    runCmd("cargo", args, { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private runMcpStdioRepo(slugs: string[]): void {

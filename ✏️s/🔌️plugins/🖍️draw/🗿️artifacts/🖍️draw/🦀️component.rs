@@ -394,71 +394,6 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     }
 }
 
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
-/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
-/// `🗒️note`'s own `pilot_languages()` convention. Relocated from `⚙️engine/🦀️component.rs` alongside
-/// `declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE) — `declaration()`'s only
-/// caller, kept private.
-fn pilot_languages() -> &'static [dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                dsl::LanguageSpec {
-                    id: "draw.document",
-                    extension: Some("draw"),
-                    role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::draw::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("draw.document"),
-                },
-                dsl::LanguageSpec {
-                    id: "draw.op",
-                    extension: None,
-                    role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::draw::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("draw.op"),
-                },
-                dsl::LanguageSpec {
-                    id: "draw.diff",
-                    extension: None,
-                    role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::draw::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: dsl::passthrough_hooks("draw.diff"),
-                },
-                dsl::LanguageSpec {
-                    id: "draw.pack",
-                    extension: None,
-                    role: dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::draw::snapshot::pack::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("draw.pack"),
-                },
-                dsl::LanguageSpec {
-                    id: "draw.spr",
-                    extension: None,
-                    role: dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::draw::spr::COMPONENT_PROTOCOL_PATH),
-                    hooks: dsl::passthrough_hooks("draw.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-
 /// 🎯️ The `s.draw.draw@1/*` surface dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
 /// contract §2.1) — lives at the ARTIFACT level, not under `editor`/`viewer`, specifically so a
 /// viewer file can read it without ever importing through the sibling editor module. `artifact_kind`
@@ -467,16 +402,15 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
 pub const DRAW_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.draw.draw", standard: semio_framework::StandardId("1"), subset: semio_framework::SubsetId::ANY };
 
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) —
-/// replaces the old side-effecting `register()`, which called four different global registries
-/// directly from a plugin `.setup()` callback. `crate::editor::draw::config::schema::register_app_schema()`
-/// is the one exception, still called from `🖍️draw/🦀️component.rs`'s own `.setup()`: it registers the
-/// `DrawPlayApp` CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
-/// no field for (see that struct's own doc).
-/// 🔀️ The `⚙️engine` directory this function moved out of has since been dissolved into
-/// `🧬️schema/`/`🚪️io/`/the app (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the
-/// `.composers(...)` call below is re-qualified onto `subsets::any::io::io_registry`, the real
-/// `io_registry`'s new home.
+/// 🔖️ This artifact's OLD capability-row definition (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) — kept per debt D1 (`📌️important.md`), not
+/// deleted repo-wide until W6; `crate::editor::draw::config::schema::register_app_schema()` is the
+/// one exception, still called from `🖍️draw/🦀️component.rs`'s own `.setup()`: it registers the
+/// `DrawPlayApp` CONFIG/PRESENCE schema, an app-scope concern neither this nor the new declaration
+/// tree (`artifact()`, below) has a field for. Superseded as the schema/io/surface registration
+/// channel by `artifact()` (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — this
+/// function's only remaining reader is the `en`/`de` localized name pair (see `artifact()`'s own
+/// `localization: &[]` doc).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -513,13 +447,21 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     Ok(definition)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::draw::schema::draw_artifact_schema_descriptor())
-        .inferences([crate::artifacts::draw::schema::inferences::draw_artifact_inference_descriptor()])
-        .composers(crate::artifacts::draw::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::draw::DrawPlayApp>>()
-        .try_build()
+/// 🌳️ This artifact's declaration tree root (design.md §1/§2) — replaces the old `declaration()`
+/// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).languages(...)
+/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel
+/// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows,
+/// above) is kept per debt D1 — not deleted repo-wide until W6 — and `artifact_kind()` is kept
+/// because `🦀️component.rs`'s own `.activation(...)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) still reads `artifact_kind().id`; neither has
+/// any caller left in this function.
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration {
+        kind: ArtifactKindId::parse("s.draw.draw").expect("canonical draw kind"),
+        localization: &[],
+        standards: vec![crate::artifacts::draw::standards::v1::standard()],
+    }
 }
 //#endregion 🔖️ArtifactKind

@@ -29,6 +29,8 @@ mod tests {
     use super::*;
     use crate::editor::forms::testkit::{dispatch, forms_app, render};
     use crate::editor::forms::{FormsCommand, FORMS_PLAY_BODY_TRY};
+    use crate::artifacts::forms::forms_steps;
+    use serde_json::Map;
 
     fn seed_example(app: &mut crate::editor::forms::testkit::FormsApp, example_id: &str) {
         dispatch(app, FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: example_id.into() }));

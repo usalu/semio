@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(register_exports)`
@@ -8,7 +9,13 @@ use semio_framework_plugin::Plugin;
 /// one thing it used to survive for, registered automatically by `.editor(…)` below.
 /// `.editor(…)`/`.viewer(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the
 /// old single `.document_app(…)` call — one surface per role, both bound to the same
-/// `crate::artifacts::imperative::IMPERATIVE_DIALECT`.
+/// `crate::artifacts::imperative::IMPERATIVE_DIALECT`. `.activation(…)`/`.execution(…)`/
+/// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M4, `📓️design-abi.md`
+/// §5/§6) are this crate's proof-of-migration: the host activates one instance whenever a
+/// `"computation.imperative"` artifact (`crate::artifacts::imperative::artifact_kind().id`) is
+/// opened, this plugin's own actor runs `Isolated` (its 5 `🧩️extensions/` run `Linked` instead —
+/// see each extension's own `bundle()`), and it asks the broker for document write access to
+/// persist edits.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("imperative")
         .label("Imperative")
@@ -18,6 +25,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::imperative::ImperativePlayApp>()
         .viewer::<crate::viewer::imperative::ImperativeViewer>(crate::viewer::imperative::create_imperative_viewer())
         .viewer_mutation_roster::<crate::viewer::imperative::ImperativeViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::imperative::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist imperative graph edits to the open document".into(), optional: false })
         .try_build()
 }
 

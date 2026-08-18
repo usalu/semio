@@ -205,6 +205,43 @@ uncompileable with a duplicate `const` (removed, as it blocked all verification)
 
 **Resume step 2 is therefore done** — subsets can now move their native codecs without breaking taxonomy enforce.
 
+
+## ▶️ W4 plugin fan-out — STARTED (the gate lifted)
+
+**The peers landed.** HEAD moved to `abd29c08d0` (2026-08-18 10:38); `semio-framework` is green again (0 errors).
+Working **in conjunction with** the ongoing peer work now rather than waiting on it.
+
+### ✅️ D8 closed for real
+`cargo nextest -p semio-framework-os --features os-host-full` → **110 run / 103 pass / 7 fail** — exactly the
+predicted baseline. The dead `os_reachable_*` deletion is now compile-and-test verified, not just grep-verified.
+
+### ✅️ `🎬️sequence` — FIRST COMPLETE PLUGIN CUTOVER, GREEN
+
+`📓️w4-sequence-report.md`. **16 pre-existing compile errors → 0. Tests: could not run at baseline (crate did not
+compile) → 146 run / 146 pass / 0 fail.** wasm32-wasip2 clean. Clean-mechanism breaches 18 → 10.
+
+This is the proof the whole mechanism works end to end on a real plugin: declaration tree built, plugin root
+**atomically** cut over to `.declare_artifact(...)` with the old `.artifact()`/`.editor()`/`.viewer()` channel
+deleted in the same edit, all 8 foreign io leaves rewritten as typed `Serializer`/`Deserializer` impls with honest
+`IoFidelity`, native codec physically relocated to `🚪️io/` per the CORRECTION, forbidden plugin-level shapes
+(`🎟️capabilities`/`🔧️setup`/`🛂️manifest`) deleted.
+
+**Two real bugs found only because the crate compiled for the first time:**
+1. `sequence_snapshot_mutations` emitted a redundant `DisconnectSteps` for edges already cascade-deleted by
+   `DeleteStep`, breaking the delete action in `RemoveStep`/`DeleteSelection`/`NodeGraphEdit`.
+2. The CSV importer decoded incoming bytes as a `SequenceSnapshot` pack instead of a `CsvSnapshot` pack — it would
+   have silently misbehaved on any real CSV import.
+
+Both are the kind of defect that only surfaces when dead code becomes live code. Expect more of them.
+
+### ▶️ In flight (parallel, disjoint trees)
+`🌿️vcs` · `📋️forms` · `🖍️draw` · `🗒️note` — each briefed with `📓️w4-sequence-report.md` as the worked example and
+its `## recipeGaps` as the trap list.
+
+### Standing instruction for every fan-out agent
+A plugin that is red **before** the cutover is the agent's to fix — those files are inside its boundary. Exit
+condition is **0 errors + green tests**, not "no worse than baseline". `🎬️sequence` proved that is achievable.
+
 ## Final state of this session
 
 The **framework mechanism is built end to end and green**. **No plugin is cut over.** That is not a scheduling
@@ -323,3 +360,82 @@ other sessions are actively rewriting. That is the opposite of what this ticket 
    --all-targets` reaching 0 — check that first, before spending any agent on W2.
 5. Then **W2 stdio** (all 36 artifacts + delete `📇️registry`, D6), then **W3/W4** plugin fan-out using
    `📓️recipe-subset.md`, then **W5** serializer, **W6** deletion + policy ratchet (debts D1-D7), **W7** verify + close.
+
+### 📋️ W4 dispatch ledger
+
+| plugin | baseline errors | state |
+|---|---|---|
+| `🎬️sequence` | 16 | ✅️ **done — 0 errors, 146/146 pass, wasm clean** |
+| `🌿️vcs` | ? | ▶️ running |
+| `📋️forms` | ? | ▶️ running |
+| `🖍️draw` | ? | ▶️ running (also: `🔄️fsm` module decision, artifact-level `📚️examples` move) |
+| `🗒️note` | ? | ▶️ running (also: `assembly-failed` manifest check) |
+| `🪵️sourcing` | 0 | ▶️ running (also: manifest check, `🧩️extensions` decision) |
+| `🕸️dag` | 1 | ▶️ running |
+| `➗️mathematical` | 1 | ▶️ running (also: manifest check, non-canonical artifact id `a` → `s.mathematical.…`) |
+| `🎞️animate` `📖️playbook` `💡️reasoning` `✒️writer` | 1 each | queued |
+| `📜️imperative` | 3 | queued |
+| `📏️layout` | 9 | queued |
+| `🖨️raster` | 16 | queued |
+| flow/process/fem/gis/lowpoly/remodel/puzzle/block/architect/energy/space/trinity/demonstrator/norm/shooting/cad/procedural | surveying | queued |
+| `🗄️stdio` (36 artifacts, atomic, deletes `📇️registry`) | 268 (test target) | ⛔️ blocked — D6 |
+
+**Health survey result (batch 2): most plugins are nearly green** — sourcing 0, animate/dag/mathematical/playbook/
+reasoning/writer 1 each, imperative 3, layout 9, raster 16. The fan-out is far more tractable than the earlier
+"plugins are already red" reading suggested; only stdio is genuinely hard.
+
+### ⚠️ COORDINATION HAZARD FOUND — a `🔨️modules` promotion that is a Cargo workspace member breaks EVERY crate
+
+The batch-3 survey reported "1 error" for all 17 remaining plugins. That number is **not plugin health** — it is a
+single workspace-level failure:
+
+```
+error: failed to load manifest for workspace member `✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust`
+  Caused by: failed to load manifest for dependency `semio-s-plugin-draw-fsm`
+```
+
+`🖍️draw`'s `🔄️fsm` is its **own crate and a root-`Cargo.toml` workspace member**. While the draw agent is mid-move
+(promoting it to `🖍️draw/🔨️modules/🔄️fsm` per design.md §4), the workspace manifest cannot resolve — so
+`cargo check -p <anything>` fails for **every** crate in the repo, including crates that agent never touches.
+
+**Consequences, binding for the rest of this wave:**
+1. **`🧪️plugin-health-batch3.txt` is invalid** — measured during that window. Re-survey after draw lands; the real
+   baselines are almost certainly 0.
+2. A plugin whose module promotion touches a **workspace member** is NOT boundary-isolated the way the ownership
+   table assumes. `🖍️draw` (`🔄️fsm`), `🔱️trinity` (`🔨️modules/🔌️jack/{🐚️shell,🧠️lsp}`) and `🔋️energy`
+   (`🔨️modules/⚡️simulation`) all have their own crates — **these three must run alone**, never concurrently with
+   other plugin agents, and the root `Cargo.toml` `members` edit is coordinator-owned.
+3. Concurrent agents seeing this error must report `blocked-peer` and wait, not "fix" the workspace — it is
+   transient and self-resolving.
+
+This is exactly the class of hazard the hot-file ownership table exists for; the table just did not model
+*workspace membership* as a shared resource. It does now.
+
+### ▶️ W4 in flight (10 concurrent, disjoint trees)
+
+`🌿️vcs` · `📋️forms` · `🖍️draw` · `🗒️note` · `🪵️sourcing` · `🕸️dag` · `➗️mathematical` · `✒️writer` · `💡️reasoning` · `🎞️animate`
+
+**Deliberately NOT dispatched concurrently** (workspace-member hazard above — each must run alone):
+`🖍️draw` was already in flight when the hazard was found, so it stays; `🔱️trinity` and `🔋️energy` are held back
+until the field is clear.
+
+Remaining after this batch: playbook, imperative, layout, raster, flow, process, fem, gis, lowpoly, remodel,
+puzzle, block, architect, space, demonstrator, norm, shooting, cad, procedural, trinity, energy — plus stdio (D6).
+
+### ▶️ stdio unblock dispatched (D6 critical path)
+
+The `FULL-STDIO-…` peer's last commit is `d9542d156a` (2026-08-18 12:22) and the stdio tree is **clean** — so the
+268 test-target errors are no longer anyone's in-flight work; they are simply **unowned breakage nobody is fixing**.
+Waiting for them to clear was therefore the wrong call, and that is why the earlier "gate" framing was too passive.
+
+Dispatched a dedicated agent with a **narrowly scoped** mission: make the stdio *test target* compile and its suite
+run green. Explicitly **not** the declaration-tree cutover — no `subset()`/`standard()`/`artifact()` roots, no
+`📇️registry` deletion, no `declare_artifact`. That stays W2, and it stays atomic (D6).
+
+Rationale for the split: the cutover is unverifiable while the test target does not build, so repairing the test
+target is a strict prerequisite and a much smaller, safer change. The error profile supports that — `E0422`/`E0425`/
+`E0433`/`E0599` dominate, i.e. test code calling moved/renamed APIs, not deep logic breakage.
+
+The agent is instructed to fix in descending order of error count and produce a real descending curve, and that
+**silently deleting a test to make the suite green is forbidden** — any deletion needs a `## deletedTests`
+justification.

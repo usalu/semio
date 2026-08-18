@@ -1,0 +1,68 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-mcp:test-quick
+
+> nx run @semio-tech/framework-os-mcp:test-quick
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript
+
+stderr | 🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+
+stderr | 🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+unknown format "uint64" ignored in schema at path "#/properties/expiresAtMs"
+
+ ❯ |@semio-tech/framework-os-mcp| 🧪️legacy-conformance.test.ts (8 tests | 1 failed) 159ms
+     × tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls 85ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os-mcp| 🧪️legacy-conformance.test.ts > semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0) > tools/list is schema-valid, every name matches ^[a-zA-Z0-9_-]{1,64}$, byte-identical across two calls
+AssertionError: tool action_invoke outputSchema: Error: no schema with key or ref "http://json-schema.org/draft-07/schema#": expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ ð§ªï¸legacy-conformance.test.ts:91:113
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 21 passed (22)
+   Start at  12:13:19
+   Duration  842ms (transform 1.12s, setup 0ms, import 1.68s, tests 430ms, environment 1ms)
+
+Warning: command "bun ./📜️script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/framework-os-mcp failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-mcp:test-quick
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-mcp:test-quick exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:635:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15339:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

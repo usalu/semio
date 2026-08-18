@@ -48,7 +48,14 @@ impl protocol::InferenceSpec<FormsSnapshot> for FormsInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::forms::standards::v1::subsets::any::schema::FormsBuilder {
+/// 🎯️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM: `ArtifactInferrer::infer` takes
+/// `&Self::Snapshot` (never `&self`), so the impl target is a pure type-level anchor — a local
+/// zero-sized marker, not the deleted `derive_artifact_facets!`-generated `FormsBuilder`
+/// (retargeting onto `semio_framework_plugin::app::SnapshotBuilder<S, M>` is an orphan-rule
+/// violation: it is a foreign, non-`#[fundamental]` generic struct — confirmed by the
+/// `🎬️sequence` fan-out pass, `📓️w4-sequence-report.md` `## recipeGaps` #1).
+pub struct FormsInferrer;
+impl ArtifactInferrer for FormsInferrer {
     type Snapshot = FormsSnapshot;
     type Inference = FormsInference;
 }
