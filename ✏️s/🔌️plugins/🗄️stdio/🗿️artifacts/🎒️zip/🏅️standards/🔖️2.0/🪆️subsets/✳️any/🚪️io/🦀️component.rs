@@ -242,7 +242,11 @@ fn parse_extra_fields(bytes: &[u8]) -> Result<Vec<ParsedExtraField>, ZipError> {
 
 /// 🕰️ Info-ZIP extended-timestamp (`UT`, 0x5455) mtime, if present and flagged. Local-header
 /// copies may also carry atime/ctime; only mtime is surfaced as a typed convenience field —
-/// recognized metadata is projected into named logical entry fields.
+/// recognized metadata is projected into named logical entry fields. 🕳️ Genuinely unwired: `ZipEntry`
+/// (`../../🧬️schema/📸️snapshot/🦀️component.rs`) has no `mtime` field yet for this to feed, so no
+/// caller exists (found while chasing a Z1 zero-warnings `dead_code` warning — flagged for
+/// follow-up rather than fixed here, since adding the field is a snapshot-schema decision).
+#[allow(dead_code, reason = "no ZipEntry.mtime field to feed yet — see comment above, follow-up needed")]
 fn parse_ut_mtime(fields: &[ParsedExtraField]) -> Option<i64> {
     let f = fields.iter().find(|f| f.id == EXTRA_UT)?;
     if f.payload.len() < 5 || f.payload[0] & 0x01 == 0 {

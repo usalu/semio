@@ -8,7 +8,10 @@ export default defineConfig({
   test: {
     name: "@semio-tech/framework-os-dev",
     environment: "jsdom",
-    include: ["📜️script.ts"],
+    // 🩹️ `include` MUST stay empty: this is an in-source (`import.meta.vitest`) suite collected via
+    // `includeSource`. Listing the same file in BOTH keys made vitest collect it twice and report
+    // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
+    include: [],
     includeSource: ["📜️script.ts"],
     coverage: { include: ["📜️script.ts"] },
   },

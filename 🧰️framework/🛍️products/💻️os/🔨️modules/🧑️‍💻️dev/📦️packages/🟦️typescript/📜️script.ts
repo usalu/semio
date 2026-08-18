@@ -41,11 +41,12 @@ import { DEFAULT_HOST_VARIANT } from "../../../../../../../🧰️framework/🛍
 import {
   ensurePreview2ShimVendorAt,
   hostShimSource,
+  PLUGIN_HOST_SHIM_FILE,
   pluginComponentBridgeSource,
   SHARD_WORKER_FILE,
   shardWorkerSource,
   rewritePreview2ShimImports,
-  transpilePluginComponent,
+  transpilePluginComponentAsync,
   type PluginWebMaterializeContext,
 } from "../../../🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
 import {
@@ -120,6 +121,31 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
   if (!backboneDatabaseCtor) ({ Database: backboneDatabaseCtor } = await import("bun:sqlite"));
   return backboneDatabaseCtor;
 }
+type BackboneSqliteHandle = InstanceType<typeof import("bun:sqlite").Database>;
+
+/** @emoji 🗄️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): per-path `bun:sqlite` handle cache.
+ * `readBackbonePayload`/`writeBackbonePayload` used to `new Database(dbPath)` — and re-run the
+ * (idempotent but non-free) `CREATE TABLE IF NOT EXISTS` — on EVERY single read/write request, so a
+ * hot dev-editing loop against one folder-backed document reopened the same file every keystroke's
+ * autosave. Lifetime: opened once, then held open for the lifetime of THIS dev-server process — never
+ * explicitly closed or evicted. A dev session only ever touches a handful of distinct folder URIs (the
+ * open studio, plus maybe one or two app documents), so the cache's total size is bounded by session
+ * variety, not by request volume; there is no observed need for a size/idle eviction policy for that few
+ * long-lived, cheap-to-hold connections. If that assumption ever stops holding (e.g. a scripted session
+ * that iterates many distinct folders), add one then — not speculatively here. */
+const backboneDbHandles = new Map<string, BackboneSqliteHandle>();
+
+async function backboneDbHandleFor(dbPath: string): Promise<BackboneSqliteHandle> {
+  const existing = backboneDbHandles.get(dbPath);
+  if (existing) return existing;
+  const Database = await backboneDatabaseCtorLazy();
+  const db = new Database(dbPath);
+  db.run(
+    "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
+  );
+  backboneDbHandles.set(dbPath, db);
+  return db;
+}
 
 /** @emoji 🗂️ Same convention as `vcs::FolderSqliteStorage` (`.semio/documents.db`, a `document(id,
  * schema, json, updated_at)` table) so a folder-bound studio opened by the browser dev path and a
@@ -139,11 +165,7 @@ async function readBackbonePayload(uri: string, documentId: string | null): Prom
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "documents.db");
     if (!existsSync(dbPath)) return null;
-    const Database = await backboneDatabaseCtorLazy();
-    const db = new Database(dbPath);
-    db.run(
-      "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
-    );
+    const db = await backboneDbHandleFor(dbPath);
     const row = db.query("SELECT pack, spr FROM document WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { pack?: Uint8Array; spr?: Uint8Array } | null;
     if (!row?.pack) return null;
     const pack = row.pack instanceof Uint8Array ? row.pack : new Uint8Array(row.pack as ArrayBuffer);
@@ -166,11 +188,7 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
     const folder = uri.slice("folder://".length);
     const dbPath = join(folder, ".semio", "documents.db");
     mkdirSync(dirname(dbPath), { recursive: true });
-    const Database = await backboneDatabaseCtorLazy();
-    const db = new Database(dbPath);
-    db.run(
-      "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
-    );
+    const db = await backboneDbHandleFor(dbPath);
     db.run(
       "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
       [documentId ?? SPACE_FOLDER_DOCUMENT_ID, schema ?? "", pack, spr, Date.now()],
@@ -216,6 +234,28 @@ function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) 
 type BackboneServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
 type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
 
+/** @emoji 💓️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): both dev SSE endpoints below previously
+ * wrote `: connected\n\n` once on connect and nothing else until a real event fired — a quiet dev
+ * session (no file edits, no plugin rebuild) could sit for minutes with nothing crossing the wire, which
+ * is exactly the shape a browser or an intermediary dev proxy's idle-connection timeout (commonly in the
+ * 30-60s range) silently kills with no client-visible `close`/`error` event, leaving the tab's
+ * `EventSource` looking "connected" while actually dead. Periodic `: keepalive\n\n` SSE comments (valid
+ * per the SSE spec — a line starting with `:` is ignored by `EventSource` but still resets any
+ * intermediary's idle timer) fix that. `req.on("close")` already fires reliably on a real disconnect, so
+ * clearing this timer there is the only cleanup needed. */
+const SSE_KEEPALIVE_INTERVAL_MS = 15_000;
+
+function startSseKeepalive(res: BackboneServerResponse): () => void {
+  const timer = setInterval(() => {
+    try {
+      res.write(": keepalive\n\n");
+    } catch {
+      clearInterval(timer);
+    }
+  }, SSE_KEEPALIVE_INTERVAL_MS);
+  return () => clearInterval(timer);
+}
+
 /** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
  * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
  * `🟦️backbone-🟦️worker.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
@@ -243,8 +283,12 @@ export function semioBackboneVitePlugin() {
           res.setHeader("cache-control", "no-cache");
           res.setHeader("connection", "keep-alive");
           res.write(": connected\n\n");
+          const stopKeepalive = startSseKeepalive(res);
           const unsubscribe = subscribeFolderWatch(uri, res);
-          req.on("close", unsubscribe);
+          req.on("close", () => {
+            stopKeepalive();
+            unsubscribe();
+          });
           return;
         }
         const documentId = requestUrl.searchParams.get("documentId");
@@ -372,7 +416,11 @@ export function semioPluginHotSwapVitePlugin() {
         const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules() };
         res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
         subscribers.add(res);
-        req.on("close", () => subscribers.delete(res));
+        const stopKeepalive = startSseKeepalive(res);
+        req.on("close", () => {
+          stopKeepalive();
+          subscribers.delete(res);
+        });
       });
     },
   };
@@ -743,6 +791,47 @@ function cleanStalePluginOutputs(outDir: string, jsBase: string, componentBase: 
 }
 
 
+/** @emoji 🧹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): sweeps generated extension-module output
+ * (`defaultExtensionInstallRoot()`, entirely gitignored — `.gitignore:90`) left over from BEFORE the
+ * `world actor` ABI flip. The SOURCE is already correct — `webMaterialize` (`🏪️store/📜️store.ts`) and
+ * `publishBuiltExtension` below both write the CURRENT `hostShimSource()` (only `log`/`nowMs`/
+ * `traceSpan`) on every successful materialize — the problem is purely stale disk state from
+ * extension crates whose `cargo build` now fails under the new ABI (most haven't migrated their WIT
+ * world yet): their old, pre-flip output was written by a materializer version that no longer exists,
+ * and a failing rebuild never reaches the overwrite step to replace it, so it sits there and keeps
+ * being served. Two invariants make it safe to delete WITHOUT nuking a currently-valid install:
+ *   1. `🟨️plugin-worker.js` (the pre-H2 one-worker-per-plugin bootstrap) is never written by ANY
+ *      current code path (H2 replaced it with the shared `_shard/` worker) — its mere presence on disk
+ *      proves it is stale, unconditionally.
+ *   2. `🟨️host-shim.js` IS still written on every successful materialize, so staleness there is
+ *      decided by content, not existence: byte-compare against the current `hostShimSource()` and
+ *      delete on mismatch — a future successful build rewrites it, same as any other cache miss.
+ * Deliberately narrow: does not delete the whole extension directory (its compiled `.wasm`/`.js` may
+ * still be old-ABI too, but that is a bigger "should an unbuildable extension's install be evicted
+ * outright" product call, flagged as a further finding rather than decided here). Runs once per
+ * `preparePluginBuildTargets` call (dev boot + full catalog rebuild), not on every incremental
+ * hot-swap. */
+function sweepStaleExtensionModuleOutputs(root: string = extensionOutRoot): void {
+  if (!existsSync(root)) return;
+  const currentHostShim = hostShimSource();
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const dir = join(root, entry.name);
+    const staleWorkerPath = join(dir, "🟨️plugin-worker.js");
+    if (existsSync(staleWorkerPath)) rmSync(staleWorkerPath, { force: true });
+    const shimPath = join(dir, PLUGIN_HOST_SHIM_FILE);
+    if (existsSync(shimPath)) {
+      let shimContent: string | undefined;
+      try {
+        shimContent = readFileSync(shimPath, "utf8");
+      } catch {
+        shimContent = undefined;
+      }
+      if (shimContent !== currentHostShim) rmSync(shimPath, { force: true });
+    }
+  }
+}
+
 /** @emoji 🧩️ Mirrors a just-built extension crate from `plugin-modules/` into the runtime `/extensions` install root so catalog loads resolve without a separate `.sxt` install step. */
 function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string): void {
   if (target.role !== "extension") return;
@@ -772,7 +861,7 @@ function publishBuiltExtension(target: PluginRegistryEntry, builtOutDir: string)
     join(extensionOutRoot, EXTENSION_WATCH_MARKER),
     `${JSON.stringify({ kind: "installed", extensionId: target.pluginId, version: record.version, installedAt, emittedAt: Date.now() })}\n`,
   );
-  console.log(`[DEBUG] published extension ${target.pluginId} -> ${moduleUrl}`);
+  console.log(`published extension ${target.pluginId} -> ${moduleUrl}`);
 }
 
 /** @emoji 🧩️ Seeds `/extensions` from any extension crates already present under `plugin-modules/` (covers restart without rebuild). */
@@ -800,13 +889,18 @@ function describeBuiltPlugin(target: PluginRegistryEntry, artifact: string): voi
   const ownerRoot = join(repoRoot, target.cratePath, "..", "..");
   const status = runCmdStatus("bun", [describeScript, "describe", artifact, "--out", ownerRoot], { cwd: repoRoot, budgetMs: buildBudgetMs() });
   if (status !== 0) {
-    console.log(`[DEBUG] describe skipped for ${target.pluginId} (not yet migrated to the world-actor \`describe\` export, or its wasm isn't built for it) — see 📓️design-abi.md §3`);
+    console.log(`describe skipped for ${target.pluginId} (not yet migrated to the world-actor \`describe\` export, or its wasm isn't built for it) — see 📓️design-abi.md §3`);
   } else {
-    console.log(`[DEBUG] described ${target.pluginId} -> ${ownerRoot}`);
+    console.log(`described ${target.pluginId} -> ${ownerRoot}`);
   }
 }
 
-async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
+/** @emoji 🎯️ One target's CARGO stage only: `cargo build` + the `describe` emitter (which itself
+ * shells out to `cargo build -p semio-framework-plugin-describe` — see that script's doc — so it
+ * belongs on the serial/cargo side, not the parallel materialize side below, even though it is not
+ * technically compiling `target` itself). Never call two of these concurrently — see
+ * `buildPluginCatalog`'s doc for why cargo must stay serial. */
+async function buildPluginCargo(target: PluginRegistryEntry): Promise<{ readonly target: PluginRegistryEntry; readonly artifact: string }> {
   const packageName = await readPackageName(target.cratePath);
   const profile = pluginWasmProfile();
   if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
@@ -815,6 +909,17 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const cargoTargetRoot = process.env.CARGO_TARGET_DIR ? resolve(repoRoot, process.env.CARGO_TARGET_DIR) : join(repoRoot, "target");
   const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
   describeBuiltPlugin(target, artifact);
+  return { target, artifact };
+}
+
+/** @emoji 🎯️ One target's MATERIALIZE stage: jco transpile, `wasm-opt`, bridge/host-shim file
+ * emission, extension publish, hot-swap marker — everything downstream of a finished cargo artifact
+ * that touches neither the shared `target/` build-directory lock nor the global `~/.cargo`
+ * package-cache lock, so it is safe to run several of these at once (see `buildPluginCatalog`). Does
+ * NOT call `publishShardWorker()` — that write is identical content for every target in a catalog run,
+ * so callers publish it once rather than redundantly per plugin (still "idempotent: rewritten on every
+ * plugin build" per its own doc, just once per BUILD rather than once per PLUGIN). */
+async function materializePlugin(target: PluginRegistryEntry, artifact: string): Promise<void> {
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
@@ -825,21 +930,126 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
   // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
   // was pure duplicate ~60MB-class weight per plugin; native `os run` now reads straight from `target/`.
-  transpilePluginComponent(artifact, outDir, componentBase, pluginWebMaterializeContext());
+  // 🚀️ T-P8: the ASYNC (non-blocking-spawn) transpile — see its doc — is what makes `buildPluginCatalog`'s
+  // bounded-parallel materialize stage actually overlap in wall-clock time, not just in scheduling.
+  await transpilePluginComponentAsync(artifact, outDir, componentBase, pluginWebMaterializeContext());
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
-  // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): the shard worker is ONE package-agnostic module
-  // multiplexed by `actorId` across a bounded pool (`🎭️actor/…/🧵️shard-client.ts`), so its canonical
-  // home is the shared `_shard/` dir — published once per build, never copied per plugin. H1-react's
-  // `PluginRuntime.getShardClient()` fetches only `/plugin-modules/_shard/🟨️shard-worker.js`, so the
-  // legacy per-plugin `🟨️plugin-worker.js` write (packet H2's stopgap) is dead weight — removed.
-  publishShardWorker();
   // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/extensions/...`
   // from the SSE event, so the install root must already serve the new files.
   publishBuiltExtension(target, outDir);
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
-  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${profile}) -> ${outDir}`);
+  console.log(`built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${pluginWasmProfile()}) -> ${outDir}`);
+}
+
+/** @emoji 🎯️ Builds exactly one target end to end (cargo then materialize then the shared shard-worker
+ * publish) — used where only one crate is being built at a time, so there is no concurrency to bound:
+ * the file-watch rebuild loop (`watchPluginRebuilds`, which deliberately serializes overlapping rebuild
+ * requests onto the SAME `target/` cargo lock) and the two-crate collab-e2e prebuild. The full-catalog
+ * entry points (`buildPlugins`/`buildPluginsStreaming`) go through `buildPluginCatalog` instead, which
+ * pipelines this same pair of stages across many targets. */
+async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
+  const { artifact } = await buildPluginCargo(target);
+  await materializePlugin(target, artifact);
+  publishShardWorker();
+}
+
+/** @emoji 🧵️ Minimal counting semaphore bounding how many `fn()` calls run concurrently. Local to this
+ * file rather than promoted to the shared repo-lib — this packet's ownership (`📌️important.md`
+ * registrar-only list) is scoped to `📜️script.ts` and `🌐plugin-web-materialize.ts` only. FIFO wakeup,
+ * never reorders which caller gets the next free slot. */
+function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T>) => Promise<T> } {
+  let active = 0;
+  const queue: Array<() => void> = [];
+  async function acquire(): Promise<void> {
+    if (active < limit) {
+      active++;
+      return;
+    }
+    await new Promise<void>((wake) => queue.push(wake));
+    active++;
+  }
+  function release(): void {
+    active--;
+    queue.shift()?.();
+  }
+  return {
+    async run<T>(fn: () => Promise<T>): Promise<T> {
+      await acquire();
+      try {
+        return await fn();
+      } finally {
+        release();
+      }
+    },
+  };
+}
+
+/** @emoji 🧵️ Concurrency cap for the MATERIALIZE stage only (see `buildPluginCatalog`) — jco transpile
+ * and `wasm-opt` are each single-process, mostly-single-threaded-per-invocation CPU-bound subprocesses,
+ * and each holds a decoded wasm module plus jco's own intermediate JS AST in memory while running. 4 is
+ * a deliberately small constant, not tied to `hardwareConcurrency`: unlike the cargo stage (one process
+ * for the whole build, sharing rustc's own parallelism internally), materialize concurrency is
+ * ~N-processes-at-once, and an unbounded `Promise.all` over a ~20-58-plugin catalog risks the same class
+ * of machine-saturation `📌️important.md` records for parallel cargo (174 concurrent processes, 40
+ * minutes, nothing produced) — just with jco/wasm-opt instead of rustc. `SEMIO_MATERIALIZE_CONCURRENCY`
+ * overrides it for measurement/tuning. */
+function materializeConcurrencyLimit(): number {
+  const override = process.env.SEMIO_MATERIALIZE_CONCURRENCY;
+  if (override) {
+    const parsed = Number.parseInt(override, 10);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return 4;
+}
+
+/** @emoji 🚰️ Builds a whole catalog of `orderedTargets`: the CARGO stage runs strictly serially, one
+ * `cargo build` at a time, in `orderedTargets`' own order — never two overlapping, exactly as before
+ * this packet, since parallel `cargo` is the repeatedly-machine-saturating failure mode
+ * `📌️important.md` records. The MATERIALIZE stage for each target that finished its cargo build is
+ * enqueued into a bounded pool (`materializeConcurrencyLimit()`, default 4) WITHOUT the cargo loop
+ * waiting for it — so target N+1's `cargo build` runs concurrently with target N's (and N-1's, up to the
+ * cap) jco/wasm-opt/file-emission pass, instead of the old fully-interleaved `buildPlugin` forcing every
+ * cargo build to wait out the previous target's ENTIRE materialize pass first. This is the actual fix
+ * for the serialized-materialize-stage finding: overlap, not just "run materialize in parallel with
+ * itself". `publishShardWorker()` (identical content for every target) is written once at the end
+ * rather than once per target. Injectable `cargoFn`/`materializeFn`/`publishShardWorkerFn` so this can
+ * be exercised in tests without a real `cargo`/`jco`/`wasm-opt` toolchain or filesystem writes. */
+async function buildPluginCatalog(
+  orderedTargets: readonly PluginRegistryEntry[],
+  cargoFn: (target: PluginRegistryEntry) => Promise<{ readonly artifact: string }> = buildPluginCargo,
+  materializeFn: (target: PluginRegistryEntry, artifact: string) => Promise<void> = materializePlugin,
+  concurrencyLimit: number = materializeConcurrencyLimit(),
+  publishShardWorkerFn: () => void = publishShardWorker,
+): Promise<{ readonly failedPluginIds: readonly string[] }> {
+  const limiter = createConcurrencyLimiter(concurrencyLimit);
+  const failed: string[] = [];
+  const materializeTasks: Promise<void>[] = [];
+  for (const target of orderedTargets) {
+    let cargoResult: { readonly artifact: string };
+    try {
+      cargoResult = await cargoFn(target);
+    } catch (error) {
+      failed.push(target.pluginId);
+      console.error(`plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
+      continue;
+    }
+    const { artifact } = cargoResult;
+    materializeTasks.push(
+      limiter.run(async () => {
+        try {
+          await materializeFn(target, artifact);
+        } catch (error) {
+          failed.push(target.pluginId);
+          console.error(`plugin materialize failed: ${target.pluginId}`, error);
+        }
+      }),
+    );
+  }
+  await Promise.all(materializeTasks);
+  publishShardWorkerFn();
+  return { failedPluginIds: failed };
 }
 
 export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
@@ -885,12 +1095,13 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   if (existsSync(stalePublicPlugins)) {
     rmSync(stalePublicPlugins, { recursive: true, force: true });
   }
+  sweepStaleExtensionModuleOutputs();
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
   if (filterPlugin && !isHostPluginFilter(filterPlugin)) {
-    console.log(`[DEBUG] program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
+    console.log(`program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
-    console.log(`[DEBUG] program build scope: all (${targets.length} plugin crates)`);
+    console.log(`program build scope: all (${targets.length} plugin crates)`);
   }
   return targets;
 }
@@ -907,39 +1118,27 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
 export async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureAppleDeveloperDir();
   const targets = await preparePluginBuildTargets(filterPlugin);
-  const failed: string[] = [];
-  for (const target of targets) {
-    try {
-      await buildPlugin(target);
-    } catch (error) {
-      failed.push(target.pluginId);
-      console.error(`[DEBUG] plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
-    }
-  }
-  const builtCount = targets.length - failed.length;
-  console.log(`[DEBUG] plugin catalog build summary: ${builtCount}/${targets.length} crate(s) produced .wasm`);
-  if (failed.length > 0) {
-    console.log(`[DEBUG] plugin catalog build failures (${failed.length}): ${failed.join(", ")}`);
+  const { failedPluginIds } = await buildPluginCatalog(targets);
+  const builtCount = targets.length - failedPluginIds.length;
+  console.log(`plugin catalog build summary: ${builtCount}/${targets.length} crate(s) produced .wasm`);
+  if (failedPluginIds.length > 0) {
+    console.log(`plugin catalog build failures (${failedPluginIds.length}): ${failedPluginIds.join(", ")}`);
   }
 }
 
 /** @emoji 🌊️ Host-plugin-first, best-effort variant of `buildPlugins` for the dev runner's streaming
  * boot (`DevScript`, react renderer only): the shell's boot effect gates only on the host/primary
- * plugin (see os-core's `hostConfig` path), so building it first gets the shell out of its "waiting for
- * host program" state fastest — every other crate streams in afterward via the `.hot-swap`/SSE channel,
- * in whatever order the registry lists them. Still serial (concurrent `cargo build`s just contend on
- * the shared `target/` lock) but a single broken crate no longer aborts the rest of the catalog. */
+ * plugin (see os-core's `hostConfig` path), so building it first (and cargo-building it before any
+ * other crate) gets the shell out of its "waiting for host program" state fastest — every other crate
+ * streams in afterward via the `.hot-swap`/SSE channel, in whatever order the registry lists them.
+ * `buildPluginCatalog` keeps the cargo stage itself serial (concurrent `cargo build`s just contend on
+ * the shared `target/` lock) but overlaps each target's MATERIALIZE stage with the next target's cargo
+ * build (T-P8) — a single broken crate no longer aborts the rest of the catalog either way. */
 export async function buildPluginsStreaming(filterPlugin?: string): Promise<void> {
   const targets = await preparePluginBuildTargets(filterPlugin);
   const hostPluginId = resolvePlaygroundFilter(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT).pluginId;
   const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
-  for (const target of ordered) {
-    try {
-      await buildPlugin(target);
-    } catch (error) {
-      console.error(`[DEBUG] program build failed, continuing with remaining targets: ${target.pluginId}`, error);
-    }
-  }
+  await buildPluginCatalog(ordered);
 }
 
 class PluginBuildScript extends BundleScript {
@@ -1092,7 +1291,7 @@ class PluginSizeScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     const rows = collectPluginWasmSizeRows();
     if (rows.length === 0) {
-      console.log("[DEBUG] no built plugin core wasm modules found under plugin-modules/ — run `plugin` (build) first");
+      console.log("no built plugin core wasm modules found under plugin-modules/ — run `plugin` (build) first");
       return;
     }
     const previousRows: readonly PluginWasmSizeRow[] = existsSync(PLUGIN_SIZE_REPORT_PATH) ? (JSON.parse(readFileSync(PLUGIN_SIZE_REPORT_PATH, "utf8")) as PluginWasmSizeRow[]) : [];
@@ -1102,7 +1301,7 @@ class PluginSizeScript extends BundleScript {
     let totalData = 0;
     let totalName = 0;
     let totalFunctions = 0;
-    console.log(`[DEBUG] plugin wasm size report (${rows.length} modules)`);
+    console.log(`plugin wasm size report (${rows.length} modules)`);
     for (const row of rows) {
       totalBytes += row.totalBytes;
       totalCode += row.codeBytes;
@@ -1114,10 +1313,10 @@ class PluginSizeScript extends BundleScript {
       const deltaLabel = delta === null ? "(new)" : delta === 0 ? "(=)" : `(${delta > 0 ? "+" : ""}${formatPluginSizeBytes(delta)})`;
       const maxLabel = row.memoryMaxPages === null ? "unbounded" : `${row.memoryMaxPages}pg`;
       console.log(
-        `[DEBUG]   ${row.pluginId.padEnd(16)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} fns=${row.functionCount} mem=${row.memoryInitialPages ?? "?"}/${maxLabel} ${deltaLabel}`,
+        `  ${row.pluginId.padEnd(16)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} fns=${row.functionCount} mem=${row.memoryInitialPages ?? "?"}/${maxLabel} ${deltaLabel}`,
       );
     }
-    console.log(`[DEBUG] total: ${formatPluginSizeBytes(totalBytes)} (code ${formatPluginSizeBytes(totalCode)}, data ${formatPluginSizeBytes(totalData)}, name ${formatPluginSizeBytes(totalName)}, ${totalFunctions} functions across ${rows.length} modules)`);
+    console.log(`total: ${formatPluginSizeBytes(totalBytes)} (code ${formatPluginSizeBytes(totalCode)}, data ${formatPluginSizeBytes(totalData)}, name ${formatPluginSizeBytes(totalName)}, ${totalFunctions} functions across ${rows.length} modules)`);
     writeFileSync(PLUGIN_SIZE_REPORT_PATH, `${JSON.stringify(rows, null, 2)}\n`);
 
     const engineRows = collectEngineWasmSizeRows();
@@ -1128,7 +1327,7 @@ class PluginSizeScript extends BundleScript {
     let engineTotalCode = 0;
     let engineTotalData = 0;
     let engineTotalName = 0;
-    console.log(`[DEBUG] engine wasm size report (${engineRows.length} modules)`);
+    console.log(`engine wasm size report (${engineRows.length} modules)`);
     for (const row of engineRows) {
       engineTotalBytes += row.totalBytes;
       engineTotalCode += row.codeBytes;
@@ -1137,9 +1336,9 @@ class PluginSizeScript extends BundleScript {
       const previousRow = previousEngineByKey.get(`${row.engineId}/${row.file}`);
       const delta = previousRow ? row.totalBytes - previousRow.totalBytes : null;
       const deltaLabel = delta === null ? "(new)" : delta === 0 ? "(=)" : `(${delta > 0 ? "+" : ""}${formatPluginSizeBytes(delta)})`;
-      console.log(`[DEBUG]   ${row.engineId.padEnd(40)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} ${deltaLabel}`);
+      console.log(`  ${row.engineId.padEnd(40)} total=${formatPluginSizeBytes(row.totalBytes)} code=${formatPluginSizeBytes(row.codeBytes)} data=${formatPluginSizeBytes(row.dataBytes)} name=${formatPluginSizeBytes(row.nameBytes)} ${deltaLabel}`);
     }
-    console.log(`[DEBUG] engine total: ${formatPluginSizeBytes(engineTotalBytes)} (code ${formatPluginSizeBytes(engineTotalCode)}, data ${formatPluginSizeBytes(engineTotalData)}, name ${formatPluginSizeBytes(engineTotalName)} across ${engineRows.length} modules)`);
+    console.log(`engine total: ${formatPluginSizeBytes(engineTotalBytes)} (code ${formatPluginSizeBytes(engineTotalCode)}, data ${formatPluginSizeBytes(engineTotalData)}, name ${formatPluginSizeBytes(engineTotalName)} across ${engineRows.length} modules)`);
     writeFileSync(ENGINE_SIZE_REPORT_PATH, `${JSON.stringify(engineRows, null, 2)}\n`);
   }
 }
@@ -1191,7 +1390,7 @@ function watchPluginRebuilds(targets: readonly PluginRegistryEntry[]): void {
         try {
           await buildPlugin(target);
         } catch (error) {
-          console.error("[DEBUG] program watch rebuild failed", error);
+          console.error("program watch rebuild failed", error);
         }
       }
     } finally {
@@ -1205,7 +1404,7 @@ function watchPluginRebuilds(targets: readonly PluginRegistryEntry[]): void {
       void drain();
     });
   }
-  console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
+  console.log("watching plugin crates for hot-swap rebuilds");
 }
 
 class PluginWatchScript extends BundleScript {
@@ -1254,7 +1453,7 @@ export async function buildEngineWasm(variant: string, renderer: string): Promis
     const editorPkgWasm = join(repoRoot, "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor_bg.wasm");
     const flowPkgWasm = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm");
     if (existsSync(surfacePkgJs) && existsSync(editorPkgWasm) && existsSync(flowPkgWasm)) {
-      console.log("[DEBUG] reusing existing engine wasm pkg/ (set FORCE_ENGINE_BUILD=1 to rebuild)");
+      console.log("reusing existing engine wasm pkg/ (set FORCE_ENGINE_BUILD=1 to rebuild)");
       return;
     }
   }
@@ -1788,7 +1987,7 @@ class PluginCapabilityLintScript extends BundleScript {
       for (const failure of blocking) console.error(`[plugin-capability-lint] ${failure}`);
       throw new Error(`plugin capability lint failed (${blocking.length} issue(s), ${checkedPackageCount} plugin package(s) evaluated)`);
     }
-    console.log(`[DEBUG] program capability lint passed (${checkedPackageCount} plugin package(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
+    console.log(`program capability lint passed (${checkedPackageCount} plugin package(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
   }
 }
 
@@ -1899,7 +2098,7 @@ class CapabilityLayeringLintScript extends BundleScript {
       for (const failure of blocking) console.error(`[capability-layering-lint] ${failure}`);
       throw new Error(`capability layering lint failed (${blocking.length} issue(s), ${checkedEdgeCount} cross-role edge(s) evaluated)`);
     }
-    console.log(`[DEBUG] capability layering lint passed (${checkedEdgeCount} cross-role edge(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
+    console.log(`capability layering lint passed (${checkedEdgeCount} cross-role edge(s) evaluated, ${grandfathered.length} grandfathered warning(s))`);
   }
 }
 //#endregion 🔖️CapabilityLayeringLint
@@ -1958,7 +2157,7 @@ class PluginIndexExportPathLintScript extends BundleScript {
       console.warn(`[plugin-index-export-path-lint] WARN ${relative(repoRoot, indexPath)}: ${deadSpecs.length}/${total} relative export path(s) resolve to nothing (${cause})`);
     }
     console.log(
-      `[DEBUG] plugin index export path lint: ${totalDead}/${totalAll} dead relative export path(s) across ${pluginsWithDeadPaths} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE)`,
+      `plugin index export path lint: ${totalDead}/${totalAll} dead relative export path(s) across ${pluginsWithDeadPaths} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE)`,
     );
   }
 }
@@ -2085,7 +2284,7 @@ class HostHandleReachLintScript extends BundleScript {
       }
     }
     console.log(
-      `[DEBUG] host handle reach lint: ${totalBreaches} breach site(s) across ${pluginsWithBreaches} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE); fixing is cross-session work (process3d is another session's, cad is this ticket's, the trait model reaches 💻️os/🖥️host) and is deliberately not attempted here`,
+      `host handle reach lint: ${totalBreaches} breach site(s) across ${pluginsWithBreaches} plugin(s) — REPORT ONLY, does not gate (26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE); fixing is cross-session work (process3d is another session's, cad is this ticket's, the trait model reaches 💻️os/🖥️host) and is deliberately not attempted here`,
     );
   }
 }
@@ -2191,18 +2390,18 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   const pageErrors: string[] = [];
   page.on("pageerror", (err) => pageErrors.push(String(err)));
 
-  console.log(`[DEBUG] navigating to ${baseUrl}`);
+  console.log(`navigating to ${baseUrl}`);
   await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
   await page.waitForFunction(() => /home/i.test(document.body.innerText) && /Demo Studio|New Studio/i.test(document.body.innerText) && document.querySelectorAll("#root *").length > 150, { timeout: 120_000 });
 
   const deadline = Date.now() + timeoutMs;
   const booted = await waitForStudioE2eCondition(page, ({ text }) => /Home/i.test(text) && /Studios|Search/i.test(text) && /Demo Studio|New Studio/i.test(text), "home shell with studios", deadline);
-  console.log(`[DEBUG] home loaded (${booted.children} nodes)`);
+  console.log(`home loaded (${booted.children} nodes)`);
   spaceE2eAssert(/Demo Studio|Studios/i.test(booted.text), "home studios vfs should list seeded studio");
 
   await openStudioE2e(page, deadline);
   const pathAfterCreate = await page.evaluate(() => location.pathname);
-  console.log(`[DEBUG] studio loaded at ${pathAfterCreate}`);
+  console.log(`studio loaded at ${pathAfterCreate}`);
   spaceE2eAssert(pathAfterCreate.startsWith("/spaces/"), "studio uri should be under /spaces/");
 
   await page.waitForFunction(() => document.querySelector(".semio-node-graph-host") != null, { timeout: 30_000 });
@@ -2211,21 +2410,21 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   spaceE2eAssert(!/Missing window:/i.test(bodyText), "all studio windows should render");
   spaceE2eAssert((await page.locator(".semio-node-graph-host").count()) > 0, "node graph host should render");
   spaceE2eAssert((await page.locator(".semio-text-editor-host").count()) > 0, "compiled dag editor should render");
-  console.log("[DEBUG] three studio windows rendered");
+  console.log("three studio windows rendered");
 
   let spawnMode: string | null = null;
   try {
     spawnMode = await spawnStudioE2eDrawFromEngagement(page);
-    console.log(`[DEBUG] spawn via ${spawnMode}`);
+    console.log(`spawn via ${spawnMode}`);
   } catch {
     spawnMode = await spawnStudioE2eDrawFromPalette(page);
     spaceE2eAssert(spawnMode === "palette", "draw spawn should work via engagement rail or command palette");
-    console.log(`[DEBUG] spawn via ${spawnMode}`);
+    console.log(`spawn via ${spawnMode}`);
   }
 
   await page.keyboard.press("Meta+z");
   await page.waitForTimeout(1500);
-  console.log("[DEBUG] undo issued");
+  console.log("undo issued");
 
   await openStudioE2eCommandPalette(page);
   const paletteInput = page.locator("[role='dialog'] [data-slot='command-input']").first();
@@ -2241,30 +2440,30 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
       .count()) > 0,
     "checkpoint command should be in command palette",
   );
-  console.log("[DEBUG] studio commands in palette");
+  console.log("studio commands in palette");
   await page.keyboard.press("Escape");
 
   await page.keyboard.press("Meta+f");
   await page.waitForTimeout(500);
   spaceE2eAssert((await page.locator("[role='dialog'] [data-slot='command-input']").count()) > 0, "find palette should open");
-  console.log("[DEBUG] find palette available");
+  console.log("find palette available");
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "← Home" }).click({ force: true });
   await waitForStudioE2eCondition(page, ({ text }) => text.includes("Demo Studio") || text.includes("New Studio"), "home via studio bar", deadline);
-  console.log("[DEBUG] studio home bar navigation works");
+  console.log("studio home bar navigation works");
 
   const demoStudioRow = page.locator('[data-row-id="studio:default"]');
   if (await demoStudioRow.count()) {
     await demoStudioRow.dblclick({ force: true });
     await page.waitForFunction(() => location.pathname.startsWith("/spaces/"), { timeout: 15_000 });
     await waitForStudioE2eCondition(page, ({ text }) => /Catalogue/i.test(text), "opened studio from home vfs", deadline);
-    console.log("[DEBUG] home vfs open studio works");
+    console.log("home vfs open studio works");
   }
 
   const criticalErrors = pageErrors.filter((message) => !isIgnorableStudioE2ePageError(message));
   if (criticalErrors.length !== pageErrors.length) {
-    console.log(`[DEBUG] ignored headless gpu errors: ${pageErrors.filter(isIgnorableStudioE2ePageError).join(" | ")}`);
+    console.log(`ignored headless gpu errors: ${pageErrors.filter(isIgnorableStudioE2ePageError).join(" | ")}`);
   }
   spaceE2eAssert(criticalErrors.length === 0, `page errors: ${criticalErrors.join(" | ")}`);
 
@@ -2942,7 +3141,7 @@ class VerifyScript extends BundleScript {
     }
     if (segments[0] === "e2e") {
       await runStudioE2eVerify(studioUrl, timeoutMs);
-      console.log(`[DEBUG] s studio e2e verify passed (${studioUrl})`);
+      console.log(`s studio e2e verify passed (${studioUrl})`);
       return;
     }
     for (const target of generatePluginRegistry(repoRoot)) {
@@ -2952,7 +3151,7 @@ class VerifyScript extends BundleScript {
     if (runBunxStatus(["vitest", "run"], join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react")) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
-    console.log(`[DEBUG] s studio verify passed (${studioUrl})`);
+    console.log(`s studio verify passed (${studioUrl})`);
   }
 }
 
@@ -3745,6 +3944,15 @@ function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
 //#region 🔖️Sweep
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
   const start = Date.now();
+  // 🎭️ Point playwright at the repo-local browser cache that `📜️script.ts setup` actually populates
+  // (`bunx playwright install --with-deps chromium` → `node_modules/.cache/ms-playwright`). Without
+  // this, `chromium.launch()` falls back to the user-global `~/Library/Caches/ms-playwright`, which
+  // holds whatever an unrelated project installed — here a stale `chromium_headless_shell-1223`
+  // against the required `-1234` — and every parity run dies with "Executable doesn't exist"
+  // suggesting `npx playwright install`, i.e. a download, for a browser the repo had already
+  // installed. The storybook runner (root `📜️script.ts`, `🔖️TestScript`) already sets this; the
+  // parity harness did not, which is what made the whole 58-variant gate unrunnable on a clean box.
+  process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(repoRoot, "node_modules", ".cache", "ms-playwright");
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
   let reactServer: ParityServerHandle | undefined;
@@ -3808,7 +4016,7 @@ class ParitySmokeScript extends BundleScript {
     if (report.boot.react !== "PASS" || report.boot.wgpu !== "PASS") {
       throw new Error(`parity smoke FAILED: boot react=${report.boot.react} wgpu=${report.boot.wgpu}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
     }
-    console.log(`[DEBUG] parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} behavioral=${report.behavioral?.status} (${report.durationMs}ms)`);
+    console.log(`parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} behavioral=${report.behavioral?.status} (${report.durationMs}ms)`);
   }
 }
 
@@ -3825,8 +4033,8 @@ class ParityTriageScript extends BundleScript {
       const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
       const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
-      console.log(`[DEBUG] triage ${variant}: react=${reactBoot.status}${reactBoot.detail ? ` (${reactBoot.detail})` : ""}`);
-      console.log(`[DEBUG] triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
+      console.log(`triage ${variant}: react=${reactBoot.status}${reactBoot.detail ? ` (${reactBoot.detail})` : ""}`);
+      console.log(`triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
     } finally {
       await browser.close();
       stopParityDevServer(reactServer);
@@ -3860,7 +4068,7 @@ class ParityProbeScript extends BundleScript {
       }
       const result = await runParityProbeSuite(reactPage, wgpuPage, suite);
       console.log(JSON.stringify(result, null, 2));
-      console.log(`[DEBUG] probe ${variant}/${suiteName}: ${result.status} (${result.steps.length} step(s))`);
+      console.log(`probe ${variant}/${suiteName}: ${result.status} (${result.steps.length} step(s))`);
       if (result.status !== "PASS") throw new Error(`parity probe ${variant}/${suiteName} FAILED`);
     } finally {
       await browser.close();
@@ -3880,7 +4088,7 @@ class ParityVerifyScript extends BundleScript {
     for (const variant of variants) {
       const report = await verifyParityVariant(variant, ports, { skipDev });
       reports.push(report);
-      console.log(`[DEBUG] ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
+      console.log(`${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
     const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
@@ -3902,11 +4110,11 @@ class ParitySweepScript extends BundleScript {
         report = { variant, boot: { react: "SERVER-FAIL", wgpu: "SERVER-FAIL", detail: String(error) }, durationMs: 0 };
       }
       reports.push(report);
-      console.log(`[DEBUG] sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
+      console.log(`sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"} behavioral=${report.behavioral?.status ?? "-"}`);
     }
     writeParityReport(reports);
     const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL" || r.behavioral?.status === "FAIL");
-    console.log(`[DEBUG] parity sweep complete: ${reports.length - failed.length}/${reports.length} PASS`);
+    console.log(`parity sweep complete: ${reports.length - failed.length}/${reports.length} PASS`);
     if (failed.length > 0) throw new Error(`parity sweep: ${failed.length}/${reports.length} playground(s) failed`);
   }
 }
@@ -4102,7 +4310,7 @@ function writeScaleFixtureArtifacts(repoRoot: string, pluginCount: number, exten
   const { registryJson, catalogJson, registry } = renderScaleFixtureArtifacts(pluginCount, extensionsPerPlugin, seed);
   writeFileSync(join(dir, "🔣️registry.json"), registryJson);
   writeFileSync(join(dir, "🔣️catalog.json"), catalogJson);
-  console.log(`[DEBUG] scale-fixture generate: ${registry.recordCount} records (plugins=${pluginCount} extensions=${extensionsPerPlugin} seed=${seed}) -> ${dir}`);
+  console.log(`scale-fixture generate: ${registry.recordCount} records (plugins=${pluginCount} extensions=${extensionsPerPlugin} seed=${seed}) -> ${dir}`);
   return registry;
 }
 
@@ -4148,7 +4356,7 @@ class ScaleFixtureCheckScript extends BundleScript {
     if (!checkScaleFixtureArtifacts(this.repoRoot)) {
       throw new Error("scale-fixture check: 🤖️generated/{🔣️registry.json,🔣️catalog.json} are stale — run `bun ./📜️script.ts generate scale-fixture`");
     }
-    console.log("[DEBUG] scale-fixture check: fresh");
+    console.log("scale-fixture check: fresh");
   }
 }
 //#endregion 🔖️ScaleFixture
@@ -4259,7 +4467,7 @@ class BenchPluginsScript extends BundleScript {
     if (renderer === "native") {
       const targetDir = benchTargetDir();
       const cargoEnv = { ...process.env, CARGO_TARGET_DIR: targetDir };
-      console.log(`[DEBUG] bench: building scale-fixture wasm (CARGO_TARGET_DIR=${targetDir})`);
+      console.log(`bench: building scale-fixture wasm (CARGO_TARGET_DIR=${targetDir})`);
       if (runCmdStatus("cargo", ["build", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2", "--features", "component-guest"], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
         throw new Error("bench: scale-fixture wasm build failed");
       }
@@ -4267,7 +4475,7 @@ class BenchPluginsScript extends BundleScript {
       if (!existsSync(wasmPath)) throw new Error(`bench: expected wasm artifact missing: ${wasmPath}`);
       const nativeReportPath = join(outDir, "🔣️bench-native-raw.json");
       const wgpuScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📜️script.ts");
-      console.log(`[DEBUG] bench: running native scale-bench (shards=${shardCount})`);
+      console.log(`bench: running native scale-bench (shards=${shardCount})`);
       if (runCmdStatus("bun", [wgpuScript, "native", "--scale", registryPath, "--scale-wasm", wasmPath, "--shards", String(shardCount), "--report", nativeReportPath], { cwd: repoRoot, env: cargoEnv, budgetMs: buildBudgetMs() }) !== 0) {
         throw new Error("bench: native scale-bench run failed");
       }
@@ -4282,8 +4490,8 @@ class BenchPluginsScript extends BundleScript {
     const report = { renderer, pluginCount, extensionsPerPlugin, shardCount, seed: 1, generatedAt: new Date().toISOString(), budgets: rows };
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`);
-    console.log(`[DEBUG] bench: wrote report -> ${outPath}`);
-    console.log(`[DEBUG] bench summary: ${rows.map((r) => `${(r as { id: number }).id}:${(r as { status: string }).status}`).join(" ")}`);
+    console.log(`bench: wrote report -> ${outPath}`);
+    console.log(`bench summary: ${rows.map((r) => `${(r as { id: number }).id}:${(r as { status: string }).status}`).join(" ")}`);
   }
 }
 //#endregion 🔖️Bench
@@ -4472,4 +4680,170 @@ if (import.meta.vitest) {
       expect(stateProbeSnapshot(before).digest).not.toBe(stateProbeSnapshot(after).digest);
     });
   });
+
+  //#region 🔖️T-P8-tests
+  describe("createConcurrencyLimiter (T-P8 bounded-parallel materialize primitive)", () => {
+    it("never runs more than `limit` callbacks concurrently, and still runs every one to completion", async () => {
+      const limiter = createConcurrencyLimiter(2);
+      let active = 0;
+      let maxActive = 0;
+      const tasks = Array.from({ length: 6 }, (_, i) =>
+        limiter.run(async () => {
+          active++;
+          maxActive = Math.max(maxActive, active);
+          await new Promise((r) => setTimeout(r, 5));
+          active--;
+          return i;
+        }),
+      );
+      const results = await Promise.all(tasks);
+      expect(results.slice().sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
+      expect(maxActive).toBeLessThanOrEqual(2);
+      expect(maxActive).toBe(2); // proves it actually overlaps, not just an accidental serialization
+    });
+  });
+
+  describe("buildPluginCatalog (T-P8: cargo stage serial, materialize stage bounded-parallel)", () => {
+    const fakeTarget = (pluginId: string): PluginRegistryEntry => ({
+      pluginId,
+      cratePath: "",
+      packageName: pluginId,
+      wasmOut: `${pluginId}.wasm`,
+      role: "plugin",
+      capabilities: [],
+      contributes: [],
+      consumes: [],
+      dependsOn: [],
+      activationEvents: [],
+      extensionPoints: [],
+    });
+
+    it("never overlaps two cargo calls, overlaps materialize up to the cap, and emits every plugin", async () => {
+      const targets = Array.from({ length: 6 }, (_, i) => fakeTarget(`p${i}`));
+      let cargoActive = 0;
+      let maxCargoActive = 0;
+      let materializeActive = 0;
+      let maxMaterializeActive = 0;
+      const materialized: string[] = [];
+      const cargoFn = async (target: PluginRegistryEntry) => {
+        cargoActive++;
+        maxCargoActive = Math.max(maxCargoActive, cargoActive);
+        await new Promise((r) => setTimeout(r, 5));
+        cargoActive--;
+        return { artifact: `${target.pluginId}.wasm` };
+      };
+      const materializeFn = async (target: PluginRegistryEntry) => {
+        materializeActive++;
+        maxMaterializeActive = Math.max(maxMaterializeActive, materializeActive);
+        await new Promise((r) => setTimeout(r, 15));
+        materializeActive--;
+        materialized.push(target.pluginId);
+      };
+      let shardWorkerPublishCount = 0;
+      const { failedPluginIds } = await buildPluginCatalog(targets, cargoFn, materializeFn, 3, () => {
+        shardWorkerPublishCount++;
+      });
+      expect(failedPluginIds).toEqual([]);
+      expect(materialized.slice().sort()).toEqual(targets.map((t) => t.pluginId).sort());
+      expect(maxCargoActive).toBe(1); // cargo NEVER overlaps itself
+      expect(maxMaterializeActive).toBeGreaterThan(1); // materialize DOES overlap
+      expect(maxMaterializeActive).toBeLessThanOrEqual(3); // never past the cap
+      expect(shardWorkerPublishCount).toBe(1); // once per catalog build, not once per plugin
+    });
+
+    it("continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once", async () => {
+      const targets = [fakeTarget("ok"), fakeTarget("cargo-fails"), fakeTarget("materialize-fails")];
+      const cargoFn = async (target: PluginRegistryEntry) => {
+        if (target.pluginId === "cargo-fails") throw new Error("boom");
+        return { artifact: `${target.pluginId}.wasm` };
+      };
+      const materialized: string[] = [];
+      const materializeFn = async (target: PluginRegistryEntry) => {
+        if (target.pluginId === "materialize-fails") throw new Error("boom");
+        materialized.push(target.pluginId);
+      };
+      const { failedPluginIds } = await buildPluginCatalog(targets, cargoFn, materializeFn, 4, () => {});
+      expect(new Set(failedPluginIds)).toEqual(new Set(["cargo-fails", "materialize-fails"]));
+      expect(materialized).toEqual(["ok"]);
+    });
+  });
+  //#endregion 🔖️T-P8-tests
+
+  //#region 🔖️T-P8-sqlite-handle-cache-tests
+  describe("backboneDbHandleFor (T-P8 per-path sqlite handle cache)", () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), "semio-backbone-db-cache-"));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    it("returns the SAME handle for the same path across repeated calls", async () => {
+      const dbPath = join(root, "a", "documents.db");
+      mkdirSync(dirname(dbPath), { recursive: true });
+      const first = await backboneDbHandleFor(dbPath);
+      const second = await backboneDbHandleFor(dbPath);
+      expect(second).toBe(first);
+    });
+
+    it("returns DISTINCT handles for distinct paths", async () => {
+      const dbPathA = join(root, "a", "documents.db");
+      const dbPathB = join(root, "b", "documents.db");
+      mkdirSync(dirname(dbPathA), { recursive: true });
+      mkdirSync(dirname(dbPathB), { recursive: true });
+      const a = await backboneDbHandleFor(dbPathA);
+      const b = await backboneDbHandleFor(dbPathB);
+      expect(a).not.toBe(b);
+    });
+  });
+  //#endregion 🔖️T-P8-sqlite-handle-cache-tests
+
+  //#region 🔖️T-P8-extension-sweep-tests
+  describe("sweepStaleExtensionModuleOutputs (T-P8 pre-ABI-flip generated-output sweep)", () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), "semio-extension-sweep-"));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    it("removes a planted stale 🟨️plugin-worker.js unconditionally (no code path writes that file anymore)", () => {
+      const dir = join(root, "flow-extension-text");
+      mkdirSync(dir, { recursive: true });
+      const staleWorker = join(dir, "🟨️plugin-worker.js");
+      writeFileSync(staleWorker, "/** pre-H2 leftover */");
+      sweepStaleExtensionModuleOutputs(root);
+      expect(existsSync(staleWorker)).toBe(false);
+    });
+
+    it("removes a planted stale 🟨️host-shim.js whose content predates the current pure-only ABI", () => {
+      const dir = join(root, "flow-extension-text");
+      mkdirSync(dir, { recursive: true });
+      const staleShim = join(dir, PLUGIN_HOST_SHIM_FILE);
+      writeFileSync(staleShim, "/** @generated semio plugin host shim */\nexport function readDocument(handle) { throw `unsupported: ${handle}`; }\n");
+      sweepStaleExtensionModuleOutputs(root);
+      expect(existsSync(staleShim)).toBe(false);
+    });
+
+    it("keeps a 🟨️host-shim.js whose content already matches the current hostShimSource()", () => {
+      const dir = join(root, "note");
+      mkdirSync(dir, { recursive: true });
+      const freshShim = join(dir, PLUGIN_HOST_SHIM_FILE);
+      writeFileSync(freshShim, hostShimSource());
+      sweepStaleExtensionModuleOutputs(root);
+      expect(existsSync(freshShim)).toBe(true);
+      expect(readFileSync(freshShim, "utf8")).toBe(hostShimSource());
+    });
+
+    it("is a no-op against a missing root", () => {
+      expect(() => sweepStaleExtensionModuleOutputs(join(root, "does-not-exist"))).not.toThrow();
+    });
+  });
+  //#endregion 🔖️T-P8-extension-sweep-tests
 }

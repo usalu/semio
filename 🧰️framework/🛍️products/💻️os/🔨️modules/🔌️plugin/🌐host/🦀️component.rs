@@ -17,7 +17,9 @@ use semio_framework::{Fault, MediaType};
 /// 🩹️ Decodes a `RequestOutcome` into the `Result<Vec<u8>, Fault>` every `host::*` async call
 /// resolves to — `Err` bytes are `dsl::encode_fault_bytes` output, the SAME convention every
 /// synchronous `host_*` wrapper already used. Called from `⚛️reactor/🦀️component.rs`'s
-/// `Event::Completed` routing step before it hands the result to `RequestRegistry::resolve`.
+/// `Event::Completed` routing step before it hands the result to `RequestRegistry::resolve` —
+/// that routing step lives in `wit_bridge`, so this is gated identically (native never reaches it).
+#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),

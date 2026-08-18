@@ -1,0 +1,237 @@
+    Updating crates.io index
+     Locking 35 packages to latest compatible versions
+      Adding wit-bindgen v0.57.1 (available: v0.60.0)
+ Downloading crates ...
+  Downloaded macro-string v0.2.0
+  Downloaded wit-bindgen-rust v0.57.1
+  Downloaded wit-bindgen-rust-macro v0.57.1
+  Downloaded wasm-metadata v0.247.0
+  Downloaded wit-bindgen-core v0.57.1
+  Downloaded wasm-encoder v0.247.0
+  Downloaded wit-parser v0.247.0
+  Downloaded wasmparser v0.247.0
+  Downloaded wit-component v0.247.0
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded rustc-literal-escaper v0.0.8
+  Downloaded wasip3 v0.6.0+wasi-0.3.0-rc-2026-03-15
+   Compiling compiler_builtins v0.1.160 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)
+   Compiling core v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+   Compiling serde_core v1.0.229
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling foldhash v0.2.0
+   Compiling equivalent v1.0.2
+   Compiling libc v0.2.185
+   Compiling zmij v1.0.23
+   Compiling bitflags v2.13.1
+   Compiling anyhow v1.0.104
+   Compiling semver v1.0.28
+   Compiling serde v1.0.229
+   Compiling hashbrown v0.17.1
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling wit-bindgen v0.57.1
+   Compiling prettyplease v0.2.37
+   Compiling memchr v2.8.3
+   Compiling object v0.37.3
+   Compiling id-arena v2.3.0
+   Compiling leb128fmt v0.1.0
+   Compiling syn v3.0.3
+   Compiling log v0.4.33
+   Compiling unicode-xid v0.2.6
+   Compiling syn v2.0.119
+   Compiling std v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std)
+   Compiling heck v0.5.0
+   Compiling wit-bindgen-rust v0.57.1
+   Compiling wit-bindgen-rust-macro v0.57.1
+   Compiling indexmap v2.14.0
+   Compiling wasmparser v0.247.0
+   Compiling serde_derive v1.0.229
+   Compiling macro-string v0.2.0
+   Compiling rustc-std-workspace-core v1.99.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/rustc-std-workspace-core)
+   Compiling alloc v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc)
+   Compiling adler2 v2.0.1
+   Compiling memchr v2.7.6
+   Compiling panic_abort v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/panic_abort)
+   Compiling cfg-if v1.0.4
+   Compiling rustc-demangle v0.1.27
+   Compiling rustc-literal-escaper v0.0.8
+   Compiling unwind v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/unwind)
+   Compiling rustc-std-workspace-alloc v1.99.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/rustc-std-workspace-alloc)
+   Compiling panic_unwind v0.0.0 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/panic_unwind)
+   Compiling gimli v0.32.3
+   Compiling miniz_oxide v0.8.9
+   Compiling std_detect v0.1.5 (/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std_detect)
+   Compiling wasip3 v0.6.0+wasi-0.3.0-rc-2026-03-15
+   Compiling addr2line v0.25.1
+   Compiling wit-parser v0.247.0
+   Compiling wasm-encoder v0.247.0
+error[E0433]: cannot find `wasi` in `os`
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/fd/raw.rs:24:16
+   |
+24 | use crate::os::wasi::io::OwnedFd;
+   |                ^^^^ could not find `wasi` in `os`
+   |
+note: found an item that was configured out
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/mod.rs:58:17
+   |
+57 |         #[cfg(any(target_env = "p1", target_env = "p2"))]
+   |                  -------------------------------------- the item is gated here
+58 |         pub mod wasi;
+   |                 ^^^^
+
+error[E0433]: cannot find `wasi` in `os`
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/env/wasi.rs:6:16
+   |
+ 6 | use crate::os::wasi::prelude::*;
+   |                ^^^^ could not find `wasi` in `os`
+   |
+note: found an item that was configured out
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/mod.rs:58:17
+   |
+57 |         #[cfg(any(target_env = "p1", target_env = "p2"))]
+   |                  -------------------------------------- the item is gated here
+58 |         pub mod wasi;
+   |                 ^^^^
+
+error[E0433]: cannot find `wasi` in `os`
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:91:16
+   |
+91 | use crate::os::wasi::prelude::*;
+   |                ^^^^ could not find `wasi` in `os`
+   |
+note: found an item that was configured out
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/mod.rs:58:17
+   |
+57 |         #[cfg(any(target_env = "p1", target_env = "p2"))]
+   |                  -------------------------------------- the item is gated here
+58 |         pub mod wasi;
+   |                 ^^^^
+
+error[E0433]: cannot find `wasi` in `os`
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix/dir.rs:24:16
+   |
+24 | use crate::os::wasi::io::{AsRawFd, FromRawFd};
+   |                ^^^^ could not find `wasi` in `os`
+   |
+note: found an item that was configured out
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/mod.rs:58:17
+   |
+57 |         #[cfg(any(target_env = "p1", target_env = "p2"))]
+   |                  -------------------------------------- the item is gated here
+58 |         pub mod wasi;
+   |                 ^^^^
+
+error[E0433]: cannot find `wasi` in `os`
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/paths/wasi.rs:5:16
+   |
+ 5 | use crate::os::wasi::prelude::*;
+   |                ^^^^ could not find `wasi` in `os`
+   |
+note: found an item that was configured out
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/os/mod.rs:58:17
+   |
+57 |         #[cfg(any(target_env = "p1", target_env = "p2"))]
+   |                  -------------------------------------- the item is gated here
+58 |         pub mod wasi;
+   |                 ^^^^
+
+error[E0432]: unresolved imports `super::OwnedFd`, `super::RawFd`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:2458:75
+     |
+2458 |         AsRawFd, DirEntry, DirStream, FromRawFd, InnerReadDir, IntoRawFd, OwnedFd, RawFd, ReadDir,
+     |                                                                           ^^^^^^^  ^^^^^ no `RawFd` in `sys::fs::unix`
+     |                                                                           |
+     |                                                                           no `OwnedFd` in `sys::fs::unix`
+     |
+     = help: consider importing this struct through its public re-export instead:
+             crate::os::fd::OwnedFd
+     = help: consider importing this type alias through its public re-export instead:
+             crate::os::fd::RawFd
+
+error[E0425]: cannot find type `RawFd` in this scope
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:1016:43
+     |
+1016 | pub(crate) fn debug_assert_fd_is_open(fd: RawFd) {
+     |                                           ^^^^^ not found in this scope
+     |
+help: consider importing this type alias through its public re-export
+     |
+  24 + use crate::os::fd::RawFd;
+     |
+
+error[E0425]: cannot find type `RawFd` in this scope
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:1901:28
+     |
+1901 |     fn as_raw_fd(&self) -> RawFd {
+     |                            ^^^^^ not found in this scope
+     |
+help: consider importing this type alias through its public re-export
+     |
+  24 + use crate::os::fd::RawFd;
+     |
+
+error[E0425]: cannot find type `RawFd` in this scope
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:1907:29
+     |
+1907 |     fn into_raw_fd(self) -> RawFd {
+     |                             ^^^^^ not found in this scope
+     |
+help: consider importing this type alias through its public re-export
+     |
+  24 + use crate::os::fd::RawFd;
+     |
+
+error[E0425]: cannot find type `RawFd` in this scope
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/fs/unix.rs:1913:35
+     |
+1913 |     unsafe fn from_raw_fd(raw_fd: RawFd) -> Self {
+     |                                   ^^^^^ not found in this scope
+     |
+help: consider importing this type alias through its public re-export
+     |
+  24 + use crate::os::fd::RawFd;
+     |
+
+error[E0433]: cannot find type `OsStringExt` in this scope
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/env/wasi.rs:67:17
+   |
+67 |                 OsStringExt::from_vec(input[..p].to_vec()),
+   |                 ^^^^^^^^^^^ use of undeclared type `OsStringExt`
+   |
+help: a struct with a similar name exists
+   |
+67 -                 OsStringExt::from_vec(input[..p].to_vec()),
+67 +                 OsString::from_vec(input[..p].to_vec()),
+   |
+
+error[E0433]: cannot find type `OsStringExt` in this scope
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/env/wasi.rs:68:17
+   |
+68 |                 OsStringExt::from_vec(input[p + 1..].to_vec()),
+   |                 ^^^^^^^^^^^ use of undeclared type `OsStringExt`
+   |
+help: a struct with a similar name exists
+   |
+68 -                 OsStringExt::from_vec(input[p + 1..].to_vec()),
+68 +                 OsString::from_vec(input[p + 1..].to_vec()),
+   |
+
+error[E0433]: cannot find type `OsStringExt` in this scope
+  --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/sys/env/wasi.rs:87:21
+   |
+87 |             Ok(Some(OsStringExt::from_vec(bytes)))
+   |                     ^^^^^^^^^^^ use of undeclared type `OsStringExt`
+   |
+help: a struct with a similar name exists
+   |
+87 -             Ok(Some(OsStringExt::from_vec(bytes)))
+87 +             Ok(Some(OsString::from_vec(bytes)))
+   |
+
+Some errors have detailed explanations: E0425, E0432, E0433.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `std` (lib) due to 13 previous errors
+warning: build failed, waiting for other jobs to finish...

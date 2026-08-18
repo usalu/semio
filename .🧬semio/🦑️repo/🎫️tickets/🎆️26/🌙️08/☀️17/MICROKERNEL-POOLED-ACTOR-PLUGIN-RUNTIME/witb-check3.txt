@@ -1,0 +1,19 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking fancy-regex v0.14.0
+   Compiling schemars v0.8.22
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking gltf v1.4.1
+    Checking uuid-simd v0.8.0
+    Checking referencing v0.29.1
+   Compiling schemars_derive v0.8.22
+    Checking idna v1.1.0
+    Checking email_address v0.2.9
+error: couldn't read `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📍️span/🦀️component.rs`: No such file or directory (os error 2)
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:29:3
+   |
+29 |   pub mod span;
+   |   ^^^^^^^^^^^^^
+
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+EXIT:101

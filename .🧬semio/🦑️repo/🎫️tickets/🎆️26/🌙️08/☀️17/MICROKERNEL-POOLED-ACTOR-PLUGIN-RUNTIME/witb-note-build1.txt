@@ -1,0 +1,3 @@
+error: the package 'semio-s-plugin-note' does not contain this feature: component-guest
+help: packages with the missing feature: semio-framework-plugin, semio-s-plugin-flow-extension-brep, semio-s-plugin-flow-extension-dictionary, semio-s-plugin-flow-extension-list, semio-s-plugin-flow-extension-logic, semio-s-plugin-flow-extension-math, semio-s-plugin-flow-extension-primitive, semio-s-plugin-flow-extension-text, semio-s-plugin-flow-extension-bim, semio-s-plugin-flow-extension-draw, semio-framework-os-scale-fixture
+EXIT:101

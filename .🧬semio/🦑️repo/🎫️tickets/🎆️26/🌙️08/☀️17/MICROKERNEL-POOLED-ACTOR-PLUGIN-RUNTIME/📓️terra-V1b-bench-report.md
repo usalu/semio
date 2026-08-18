@@ -1,3 +1,31 @@
+> ## ⚠️ COORDINATOR CORRECTION — this report's results are SUPERSEDED
+>
+> Everything below was accurate when written. It is no longer the ticket's result, and anyone
+> reading it for the bench outcome must use the numbers in this block instead.
+>
+> This report records **`1:pass 2:fail 3:fail 4:fail 5:skipped 6:pass 7:pass 8:pass`** (4/8) and
+> describes budget 4 as *blocked on a wasmtime pooling ceiling `SharedEngineConfig` does not expose,
+> B1-owned, out of scope*. The coordinator fixed exactly that ceiling afterwards. **Final measured
+> state is `1:pass 2:pass 3:pass 4:pass 5:fail 6:pass 7:pass 8:pass` — 7 of 8.**
+>
+> | # | superseding result |
+> |---|---|
+> | 2 | **PASS** — 742 ms, 143/143 startup actors. Was failed by an out-of-spec `faults == 0` criterion; §4 of `📓️status.md` explains why that criterion was wrong (the fixture's `hang`/`crash` profiles trap BY DESIGN — 29% of the catalog). |
+> | 3 | **PASS** — 100/100 actors, 8/8 shards, 13,13,13,13,12,12,12,12. Same criterion correction. |
+> | 4 | **PASS** — **2550/2550 actors live, 390 MB RSS.** Four pooling sub-pools (component instances, core instances, memories/tables, GC heaps) each default to 1000 and surface one run at a time; all four are now configured in `build_shared_engine`. |
+> | 5 | **FAIL, and now RUN rather than skipped** — p95 295 ms vs 8 ms. But 30 samples inside a 0.1 ms band is a constant, not contention: this harness runs ONE physical `ShardLoop` behind all K shard labels, so the interactive turn queues serially behind 40 `cpu` actors. **Recorded as a failure with a known-invalid instrument**, not as a design result. Needs a real multi-shard executor — P1's `ProcessTransport` is proven and available. |
+>
+> Two attributions this report gets wrong, corrected for the record:
+> - The `ShardTable::pin()` shard-0 bug was **found by this bench's own first run** (`perShardCounts {"0": 100}`) and fixed by the coordinator — not "independently confirmed fixed by a concurrent peer".
+> - The pooling ceiling was **not out of scope and is not still open**; it was the coordinator's to fix and is fixed.
+>
+> Current report JSON (`terra-v1b-bench-native.json`, archived as `🔣️bench-native-FINAL.json`) reflects
+> the 7/8 state. Web renderers remain honestly unrun.
+>
+> **The harness itself — `BENCH_BUDGETS`, `scale_bench`, the `--scale/--scale-wasm/--shards/--report`
+> wiring — is this packet's real deliverable and it is sound.** It is what found five separate defects
+> that three waves of `cargo check` and mock-backed tests could not see.
+
 # 📓️ terra — V1b-bench report
 
 Packet **V1b-bench**: turn the ticket's headline claim — "50+ plugins × 50+ extensions concurrently"

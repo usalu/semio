@@ -21,7 +21,7 @@ use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::os_directory::{
+use directory::os_directory::{
     self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView,
 };
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, ArtifactId as ProtocolArtifactId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};

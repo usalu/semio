@@ -1,0 +1,20 @@
+S0 BASELINE (recorded before any edit)
+
+cargo check -p semio-framework-os-kernel --features sync    => GREEN (4m09s)
+cargo check -p semio-framework-os-kernel-db                 => GREEN (1m13s)
+cargo check -p semio-hub                                    => GREEN (3m28s)
+cargo check -p semio-framework-os-kernel --lib --target wasm32-unknown-unknown => GREEN (31s)
+
+PRE-EXISTING FAILURE (not caused by this ticket):
+cargo check -p semio-framework-os-kernel --target wasm32-unknown-unknown
+  => FAILS for bin "spr" and bin "pack" with E0433.
+  These are native CLI bins; they are not wasm targets.
+  => wasm gate for this ticket is therefore `--lib --target wasm32-unknown-unknown`.
+
+PRE-EXISTING TEST-BUILD ISSUES FOUND LATER (baseline only ran `cargo check`, not `cargo test`, on db):
+1. db facade `🦀️component.rs` test `full_round_trip_reachable_purely_through_facade_reexports`
+   used Profile/DurabilityClass/DbError but the facade never re-exported them -> test build failed.
+   FIXED by adding the three re-exports the test's own name asserts.
+2. db_preview test `preview_crate_never_references_wal_shaped_symbols` substring-scans db's
+   Cargo.toml for "db_storage"; a legitimate COMMENT on line 49 tripped it (present in HEAD,
+   confirmed via git diff). FIXED by rewording the comment (no dependency change).

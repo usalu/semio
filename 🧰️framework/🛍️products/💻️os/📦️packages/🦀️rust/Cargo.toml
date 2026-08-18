@@ -19,7 +19,7 @@ path = "📦️glue.rs"
 
 [features]
 default = ["deflate"]
-deflate = ["dep:miniz_oxide"]
+deflate = ["dep:miniz_oxide", "semio-framework-replication/deflate"]
 dsl-fixture-sweep-full = []
 ureq = ["dep:ureq"]
 # 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is a target-independent
@@ -39,6 +39,7 @@ typegen = ["dep:ts-rs"]
 
 [dependencies]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+semio-framework-replication = { workspace = true }
 async-trait = "0.1"
 base64 = "0.22.1"
 blake3 = "1"

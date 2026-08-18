@@ -1,0 +1,53 @@
+    Checking semio-asyncprobe-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host)
+error[E0407]: method `echo` is not a member of trait `AsyncprobeImports`
+  --> 🦀️main.rs:30:5
+   |
+30 | /     async fn echo(&mut self, s: String) -> String {
+31 | |         println!("[host] echo import called from inside guest await: {s}");
+32 | |         format!("echo:{s}")
+33 | |     }
+   | |_____^ not a member of trait `AsyncprobeImports`
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+  --> 🦀️main.rs:55:20
+   |
+55 |     let instance = Asyncprobe::instantiate_async(&mut store, &component, &linker)?;
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl std::future::Future<Output = std::result::Result<Asyncprobe, wasmtime::Error>>`
+   |
+   = help: the nightly-only, unstable trait `Try` is not implemented for `impl std::future::Future<Output = std::result::Result<Asyncprobe, wasmtime::Error>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+  --> 🦀️main.rs:55:82
+   |
+36 | fn main() -> Result<()> {
+   | ----------------------- this is not `async`
+...
+55 |     let instance = Asyncprobe::instantiate_async(&mut store, &component, &linker)?;
+   |                                                                                  ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+  --> 🦀️main.rs:57:5
+   |
+57 | /     store.run_concurrent(async move |accessor| -> Result<()> {
+58 | |         // 🎯️ G3a: ping(41) == 42 — exercises the async export that awaits the async import
+59 | |         // (`echo`) mid-call.
+60 | |         let ping_result = instance.semio_asyncprobe_asyncprobe().call_ping(accessor, 41).await?;
+...  |
+76 | |         Ok(())
+77 | |     })??;
+   | |_______^ the `?` operator cannot be applied to type `impl Future<Output = Result<Result<(), Error>, Error>>`
+   |
+   = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<Result<(), Error>, Error>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+  --> 🦀️main.rs:77:7
+   |
+36 | fn main() -> Result<()> {
+   | ----------------------- this is not `async`
+...
+77 |     })??;
+   |       ^
+   = note: the full name for the type has been written to '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-s1/debug/deps/semio_asyncprobe_host-e2cd0ea90922e18b.long-type-9518920975516357634.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+Some errors have detailed explanations: E0277, E0407.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-asyncprobe-host` (bin "semio-asyncprobe-host") due to 3 previous errors

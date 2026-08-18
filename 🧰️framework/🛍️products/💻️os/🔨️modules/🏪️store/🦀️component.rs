@@ -12356,3 +12356,28 @@ mod tests {
 }
 //#endregion 🧪️Tests
 //#endregion 🧪️Tests
+
+//#region 🔖️InteractionStatePack
+/// 📦️ `ArtifactPack` for `InteractionState` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
+/// W3b: lets `semio-framework-plugin`'s `VcsArtifactApp` own a real `store::ConfigStore<InteractionState,
+/// _>` (persisting selection + active mode/granularity per app instance through the `HistoryLane::Interaction`
+/// mechanism above) exactly like any other `ArtifactStore<P, _>`. `InteractionState` has no `RecordSpec`/
+/// `dsl_derive` record lowering of its own (a small, framework-internal `BTreeMap`-keyed value, not an app
+/// document), so this bridges through the same schema-less `serde_json::Value` pack codec `os_store`'s
+/// own `impl ArtifactPack for DslValue` ("Compose-only pack bridge") already uses, rather than hand-rolling a
+/// codec. MUST live here, not in `semio-framework-plugin`: the orphan rule requires an impl of a foreign
+/// trait for a foreign type to sit in the crate owning one of the two, and both `ArtifactPack` (`os_store`)
+/// and `InteractionState` (this region) are this crate's own — `semio-framework-plugin` only sees both
+/// through its `store`/`protocol` aliases.
+impl crate::os_store::ArtifactPack for protocol::InteractionState {
+    fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+        let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+        crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+    }
+    fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+        let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+        serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+    }
+}
+//#endregion 🔖️InteractionStatePack
+

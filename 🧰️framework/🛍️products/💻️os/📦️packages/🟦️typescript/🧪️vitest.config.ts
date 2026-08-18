@@ -18,7 +18,10 @@ export default defineConfig({
     name: "@semio-tech/framework-os",
     mode: "test",
     environment: "node",
-    include: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"],
+    // 🩹️ `include` MUST stay empty: these are in-source (`import.meta.vitest`) suites collected via
+    // `includeSource`. Listing the same files in BOTH keys made vitest collect each twice and report
+    // double the real test count. Add new in-source files to `includeSource`/`coverage.include` only.
+    include: [],
     coverage: { include: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"] },
     includeSource: ["../../🟦️component.ts", "../../🟦️backbone-worker.ts"],
     passWithNoTests: false,

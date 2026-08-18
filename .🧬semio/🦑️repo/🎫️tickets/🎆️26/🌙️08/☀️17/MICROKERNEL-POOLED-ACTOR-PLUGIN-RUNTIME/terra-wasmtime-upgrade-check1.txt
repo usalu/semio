@@ -1,0 +1,123 @@
+    Checking debugid v0.8.0
+   Compiling wasmtime-internal-jit-debug v47.0.3
+   Compiling thiserror v1.0.69
+   Compiling target-lexicon v0.13.5
+    Checking rayon-core v1.13.0
+   Compiling wasmtime-internal-wit-bindgen v47.0.3
+    Checking zstd v0.13.3
+    Checking io-lifetimes v2.0.4
+    Checking icu_normalizer_data v2.2.0
+    Checking icu_properties_data v2.2.0
+    Checking io-lifetimes v3.0.1
+    Checking wasmtime-internal-unwinder v47.0.3
+    Checking wat v1.253.0
+   Compiling object v0.39.1
+    Checking itertools v0.14.0
+    Checking cranelift-native v0.134.3
+    Checking cranelift-frontend v0.134.3
+   Compiling wasmtime v47.0.3
+   Compiling smallvec v1.15.1
+   Compiling tokio-macros v2.7.0
+    Checking mio v1.2.1
+    Checking socket2 v0.6.4
+    Checking constant_time_eq v0.4.2
+   Compiling wasmtime-internal-component-util v47.0.3
+   Compiling zip v2.4.2
+    Checking arrayvec v0.7.6
+    Checking heck v0.5.0
+   Compiling cap-primitives v4.0.2
+    Checking id-arena v2.3.0
+    Checking unicode-ident v1.0.24
+   Compiling gimli v0.33.0
+    Checking arrayref v0.3.9
+   Compiling inflections v1.1.1
+    Checking tokio v1.52.3
+   Compiling wasmtime-internal-component-macro v47.0.3
+    Checking wasm-compose v0.252.0
+    Checking wasmtime-internal-cranelift v47.0.3
+    Checking wit-parser v0.252.0
+    Checking io-extras v0.19.0
+    Checking blake3 v1.8.5
+   Compiling gltf-derive v1.4.1
+   Compiling wasmtime-environ v47.0.3
+    Checking icu_properties v2.2.0
+    Checking wasmtime-internal-cache v47.0.3
+    Checking icu_normalizer v2.2.0
+   Compiling witx v0.9.1
+    Checking fs-set-times v0.20.3
+    Checking rayon v1.12.0
+    Checking fxprof-processed-profile v0.8.1
+    Checking wasmtime-internal-fiber v47.0.3
+    Checking flate2 v1.1.9
+    Checking tempfile v3.27.0
+    Checking zopfli v0.8.3
+    Checking tracing-core v0.1.36
+    Checking futures v0.3.32
+    Checking addr2line v0.26.1
+    Checking wasmtime-internal-jit-icache-coherence v47.0.3
+   Compiling tracing-attributes v0.1.31
+    Checking encoding_rs v0.8.35
+    Checking maybe-owned v0.3.4
+    Checking ipnet v2.12.0
+   Compiling cap-std v4.0.2
+    Checking parking v2.2.1
+    Checking mach2 v0.6.0
+   Compiling wiggle-macro v47.0.3
+    Checking ambient-authority v0.0.2
+   Compiling wiggle-generate v47.0.3
+    Checking futures-lite v2.6.1
+    Checking idna_adapter v1.2.2
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+    Checking gltf-json v1.4.1
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling cap-fs-ext v4.0.2
+    Checking percent-encoding v2.3.2
+    Checking lazy_static v1.5.0
+    Checking byteorder v1.5.0
+    Checking tracing v0.1.44
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking idna v1.1.0
+    Checking form_urlencoded v1.2.2
+    Checking chacha20 v0.10.1
+    Checking semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Checking gltf v1.4.1
+    Checking url v2.5.8
+    Checking rand v0.10.2
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking wasmtime-wasi v47.0.3
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+error: expected one of: `debug`, `path`, `inline`, `world`, `ownership`, `trappable_error_type`, `interfaces`, `with`, `named_imports`, `additional_derives`, `stringify`, `skip_mut_forwarding_impls`, `require_store_data_send`, `wasmtime_crate`, `anyhow`, `include_generated_code_from_file`, `imports`, `exports`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:775:9
+    |
+775 |         async: false,
+    |         ^^^^^
+
+error[E0433]: cannot find `semio` in `actor_bindings`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:780:21
+    |
+780 | use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, types as wit...
+    |                     ^^^^^ could not find `semio` in `actor_bindings`
+
+error[E0433]: cannot find `exports` in `actor_bindings`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:784:21
+    |
+784 | use actor_bindings::exports::semio::framework::{jobs as wit_jobs, reactor as wit_reactor};
+    |                     ^^^^^^^ could not find `exports` in `actor_bindings`
+
+error[E0432]: unresolved import `wit_effects::Effect`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🦀️component.rs:1080:9
+     |
+1080 |     use wit_effects::Effect as E;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-framework-plugin-host` (lib) due to 4 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `semio-framework-plugin-host` (lib test) due to 4 previous errors
+EXIT=101

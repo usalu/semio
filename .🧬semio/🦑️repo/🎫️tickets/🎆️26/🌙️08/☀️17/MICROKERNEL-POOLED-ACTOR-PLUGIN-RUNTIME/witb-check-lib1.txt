@@ -1,0 +1,39 @@
+    Checking tinystr v0.8.3
+    Checking potential_utf v0.1.5
+    Checking zerocopy v0.8.48
+    Checking num-iter v0.1.46
+    Checking num-complex v0.4.6
+   Compiling async-trait v0.1.89
+    Checking aho-corasick v1.1.4
+    Checking once_cell v1.21.4
+    Checking regex-syntax v0.8.10
+    Checking borrow-or-share v0.2.4
+    Checking icu_collections v2.2.0
+    Checking icu_locale_core v2.2.0
+    Checking bit-vec v0.8.0
+   Compiling wit-bindgen-rust v0.57.1
+   Compiling heck v0.5.0
+    Checking num v0.4.3
+    Checking fluent-uri v0.3.2
+    Checking ahash v0.8.12
+    Checking parking_lot v0.12.5
+    Checking regex-automata v0.4.14
+   Compiling wit-component v0.247.0
+    Checking icu_provider v2.2.0
+    Checking bit-set v0.8.0
+   Compiling wit-bindgen-core v0.57.1
+    Checking gltf-json v1.4.1
+   Compiling prettyplease v0.2.37
+   Compiling serde_derive_internals v0.29.1
+    Checking uuid v1.23.4
+    Checking vsimd v0.8.0
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: couldn't read `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📍️span/🦀️component.rs`: No such file or directory (os error 2)
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:29:3
+   |
+29 |   pub mod span;
+   |   ^^^^^^^^^^^^^
+
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+EXIT:101

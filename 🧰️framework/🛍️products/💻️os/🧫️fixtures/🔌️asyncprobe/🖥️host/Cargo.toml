@@ -1,0 +1,24 @@
+[package]
+name = "semio-asyncprobe-host"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# 🧪️ terra-S1 spike: own workspace root, same reasoning as the guest manifest.
+[workspace]
+
+[[bin]]
+name = "semio-asyncprobe-host"
+path = "🦀️main.rs"
+
+# 🧪️ terra-S1 finding: wasmtime 34.0.2 (the version already cached offline) ships the
+# `component-model-async` Cargo feature and `Config` knobs, but its host-side concurrent-call
+# engine (`src/runtime/component/concurrent.rs`) is essentially all `todo!()` stubs, and
+# `StreamReader<T>`/`FutureReader<T>` (`concurrent/futures_and_streams.rs`) have zero trait impls —
+# not a version-pin nuance, a genuinely unimplemented host runtime. 47.0.3 (fetched over network for
+# this spike) has a real, non-stub `concurrent/` implementation, so that is the candidate tested here.
+[dependencies]
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
+wasmtime-wasi = "47.0.3"
+anyhow = "1"
+futures = "0.3"

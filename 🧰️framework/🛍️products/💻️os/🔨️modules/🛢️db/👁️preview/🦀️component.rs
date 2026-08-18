@@ -31,7 +31,7 @@ use crate::*;
 use crate::db_durability::Frontier;
 use crate::db_ids::{check_len, ActorId, DbError, DbLimits, ArtifactId};
 use crate::db_state::TouchedSet;
-use crate::protocol::MutationEnvelope;
+use protocol::MutationEnvelope;
 use std::collections::HashMap;
 
 //#region 🔖️Identity

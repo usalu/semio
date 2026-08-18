@@ -35,7 +35,8 @@ impl PresentArtifactVcs {
                 PresentStore::new(envelope)
             }
             None => PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::schema::empty_present_snapshot(), None)),
-        };
+        }
+        .map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(Self { store: RefCell::new(store) })
     }
 

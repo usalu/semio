@@ -177,7 +177,7 @@ struct EncodedSegment {
 fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => Ok(raw.to_vec()),
-        1 => deflate_compress(raw),
+        1 => crate::os_pack::codec::deflate_compress(raw),
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
@@ -186,7 +186,7 @@ fn codec_compress(codec: CodecId, raw: &[u8]) -> Result<Vec<u8>, PackError> {
 fn codec_decompress(codec: CodecId, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
     match codec.0 {
         0 => NoCompression.decompress(stored, raw_len, limit),
-        1 => deflate_decompress(stored, raw_len, limit),
+        1 => crate::os_pack::codec::deflate_decompress(stored, raw_len, limit),
         other => Err(PackError::UnsupportedCodec(other)),
     }
 }
@@ -907,58 +907,6 @@ pub fn recover<S: PackSource>(source: &S, limits: &PackLimits) -> Result<Recover
 }
 //#endregion 🔖️Recover
 
-//#region 🔖️Deflate
-/// @emoji 🗜️ Deflate compression (via `miniz_oxide`) as a `CodecId(1)` `CompressionCodec`.
-#[cfg(feature = "deflate")]
-pub struct DeflateCodec;
-
-#[allow(clippy::unnecessary_wraps)] // the `not(feature = "deflate")` arm below also returns `Result`
-fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackError> {
-    #[cfg(feature = "deflate")]
-    {
-        Ok(miniz_oxide::deflate::compress_to_vec(raw, 6))
-    }
-    #[cfg(not(feature = "deflate"))]
-    {
-        let _ = raw;
-        Err(PackError::UnsupportedCodec(1))
-    }
-}
-
-fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
-    if raw_len > limit {
-        return Err(PackError::LimitExceeded("DeflateCodec::decompress raw_len exceeds limit"));
-    }
-    #[cfg(feature = "deflate")]
-    {
-        let out = miniz_oxide::inflate::decompress_to_vec_with_limit(stored, raw_len as usize).map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
-        if out.len() as u64 != raw_len {
-            return Err(PackError::Malformed { what: "deflate", offset: 0, detail: "decompressed length mismatch".to_string() });
-        }
-        Ok(out)
-    }
-    #[cfg(not(feature = "deflate"))]
-    {
-        let _ = stored;
-        Err(PackError::UnsupportedCodec(1))
-    }
-}
-
-#[cfg(feature = "deflate")]
-impl CompressionCodec for DeflateCodec {
-    fn id(&self) -> CodecId {
-        CodecId(1)
-    }
-
-    fn compress(&self, raw: &[u8]) -> Result<Vec<u8>, PackError> {
-        deflate_compress(raw)
-    }
-
-    fn decompress(&self, stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec<u8>, PackError> {
-        deflate_decompress(stored, raw_len, limit)
-    }
-}
-//#endregion 🔖️Deflate
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1327,19 +1275,5 @@ mod tests {
     }
     //#endregion 🔖️Corruption
 
-    //#region 🔖️Deflate
-    #[cfg(feature = "deflate")]
-    #[test]
-    fn deflate_codec_round_trips_and_respects_limit() {
-        let codec = DeflateCodec;
-        let raw = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_vec();
-        let compressed = codec.compress(&raw).unwrap();
-        assert!(compressed.len() < raw.len());
-        let decompressed = codec.decompress(&compressed, raw.len() as u64, 1_000_000).unwrap();
-        assert_eq!(decompressed, raw);
-        let result = codec.decompress(&compressed, raw.len() as u64, 4);
-        assert!(matches!(result, Err(PackError::LimitExceeded(_))));
-    }
-    //#endregion 🔖️Deflate
 }
 //#endregion 🧪️Tests

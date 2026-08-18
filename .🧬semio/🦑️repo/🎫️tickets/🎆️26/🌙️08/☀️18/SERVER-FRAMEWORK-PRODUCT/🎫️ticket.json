@@ -1,0 +1,13 @@
+{
+  "title": "Server Framework Product",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Introduce `server` as a fourth framework product beside os, print and repo: a modular application server (CQRS dual-bus + authority actor turn protocol + replication protocol) that is local-first compatible with the os client, has a hot-attachable authoritative backbone, and of which Hub becomes instance #1 (mit-bestand/zentrale later becomes instance #2).\n\nWaves 1-3 in full:\n- Wave 1: extract the product-neutral wire protocol out of semio-framework-os-kernel into a new shared framework module 🧰️framework/🔨️modules/📡️replication (crate semio-framework-replication, [lib] name = \"protocol\"), plus 🧰️framework/🔨️modules/⚠️diagnostic; rewire all ~45 crates that alias the kernel as `protocol`; move the 20 cross-language wire byte fixtures to one canonical location; move the TS wire codec regions out of the os product into the new module; scaffold the 🖥️server product with real contract types.\n- Wave 2: relocate the db crate (document authority engine) from 💻️os/🔨️modules/🛢️db to 🖥️server/🔨️modules/🛢️db as semio-framework-server-db (lib name stays `db`); build the server core: 🧬️contract (CommandEnvelope/CommandOutcome/QueryEnvelope/QueryConsistency/OfflinePolicy/ActorKey/ModuleManifest/ServerInstanceDefinition), 🎭️authority (AuthorityDirectory, turn pipeline, Decider, DocumentActorAdapter, saga seam), 🗄️storage (AuthorityStore/ProjectionStore/BlobStore/SessionStore, SQLite + fs, StorageProfile::Embedded), 🛡️policy (PolicyEngine, policy templates, PrincipalResolver ladder, AdminGate), 📡️gateway (Server::builder, ServerModule, WS document-sync + event-stream bridges, fanout, presence/color leases, blob HTTP, StaticAppHost, cors) plus a testkit instance with integration tests.\n- Wave 3: migrate Hub onto Server::builder as instance #1, keeping bin os-hub, port 8787, all route URLs and OS_HUB_* env unchanged; directory event log moves into the server AuthorityStore and the three hub directory backends become pure projections; gate is Hub's full integration suite passing with unmodified assertions.\n\nServer must never depend on os. Byte fixtures are moved, never regenerated. No compatibility layers or legacy shims anywhere (greenfield rules).\n\nFull approved plan: /Users/ueli/.claude/plans/introduce-a-new-framework-wiggly-llama.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2569"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e9025f6c2f9c4ae2a71bc23c9dd8bb63"
+  ]
+}

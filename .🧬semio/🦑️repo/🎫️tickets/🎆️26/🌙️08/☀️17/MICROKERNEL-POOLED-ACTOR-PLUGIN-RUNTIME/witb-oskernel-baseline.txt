@@ -1,0 +1,23 @@
+   Compiling syn v2.0.117
+   Compiling serde_json v1.0.149
+   Compiling thiserror-impl v2.0.18
+   Compiling displaydoc v0.2.5
+   Compiling serde_derive v1.0.228
+   Compiling futures-macro v0.3.32
+   Compiling tokio-macros v2.7.0
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling async-trait v0.1.89
+    Checking futures-util v0.3.32
+    Checking tokio v1.52.3
+    Checking thiserror v2.0.18
+    Checking serde v1.0.228
+    Checking zip v2.4.2
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: couldn't read `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📍️span/🦀️component.rs`: No such file or directory (os error 2)
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:29:3
+   |
+29 |   pub mod span;
+   |   ^^^^^^^^^^^^^
+
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error
+EXIT:101

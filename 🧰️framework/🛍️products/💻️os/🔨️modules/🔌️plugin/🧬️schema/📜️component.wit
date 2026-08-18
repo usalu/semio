@@ -203,18 +203,28 @@ interface effects {
     payload: pack,
   }
 
-  record blob-load-effect {
-    req: request-id,
+  /// 🧬️ W0 (design-abi.md §1, SSOT mechanism): the payload half of `blob-load-effect`, extracted
+  /// so a future async host import can take the same shape without the `req` correlation field.
+  record blob-load-params {
     hash: string,
   }
-  record blob-write-effect {
+  record blob-load-effect {
     req: request-id,
+    params: blob-load-params,
+  }
+  /// 🧬️ W0: payload half of `blob-write-effect`, see `blob-load-params`.
+  record blob-write-params {
     media-type: pack,
     bytes: pack,
   }
-
-  record http-request-effect {
+  record blob-write-effect {
     req: request-id,
+    params: blob-write-params,
+  }
+
+  /// 🧬️ W0: payload half of `http-request-effect`, see `blob-load-params`. Named `http-params`
+  /// rather than `http-request-params` per the packet's own worked example.
+  record http-params {
     method: string,
     url: string,
     headers: list<tuple<string, string>>,
@@ -226,18 +236,33 @@ interface effects {
     /// Rust-side field stays named `stream` — only the WIT record field is renamed.
     streaming: bool,
   }
-
-  record document-read-effect {
+  record http-request-effect {
     req: request-id,
+    params: http-params,
+  }
+
+  /// 🧬️ W0: payload half of `document-read-effect`, see `blob-load-params`.
+  record document-read-params {
     doc: u64,
     lane: string,
   }
-  record document-write-effect {
+  record document-read-effect {
     req: request-id,
+    params: document-read-params,
+  }
+  /// 🧬️ W0: payload half of `document-write-effect`, see `blob-load-params`.
+  record document-write-params {
     doc: u64,
     lane: string,
     ops: pack,
   }
+  record document-write-effect {
+    req: request-id,
+    params: document-write-params,
+  }
+  /// 🧬️ W0: NOT wrapped in a `-params` record — the payload is already a single named type
+  /// (`pack`, the wire-value alias from `types.wit`), so a second layer around one already-
+  /// nominal field would be pointless indirection.
   record link-resolve-effect {
     req: request-id,
     link: pack,
@@ -247,62 +272,100 @@ interface effects {
   /// query ("io-routes" | "io-identify" | "io-dialects"), `filter` is that query's JSON-encoded
   /// request (e.g. `{source, target}` for "io-routes"); the `event.completed` answer carries the
   /// JSON-encoded result the old synchronous import used to return directly.
-  record registry-query-effect {
-    req: request-id,
+  ///
+  /// 🧬️ W0: payload half extracted into `registry-query-params`, see `blob-load-params`.
+  record registry-query-params {
     kind: string,
     filter: pack,
+  }
+  record registry-query-effect {
+    req: request-id,
+    params: registry-query-params,
   }
   /// 🌉️ One-hop compose, unchanged semantics from the old `io-compose` host import: routes to
   /// whichever OTHER loaded plugin owns `key`, refusing (via `event.completed` fault) a route back
   /// into the calling plugin.
-  record io-compose-effect {
-    req: request-id,
+  ///
+  /// 🧬️ W0: payload half extracted into `io-compose-params`, see `blob-load-params`.
+  record io-compose-params {
     key: pack,
     sources: pack,
+  }
+  record io-compose-effect {
+    req: request-id,
+    params: io-compose-params,
   }
   /// 🌉️ Absorbs the old `io-run` host import: executes the WHOLE resolved `source -> target` route
   /// (however many plugins own its hops) — the guest never chains hops itself. Refuses the entire
   /// route (no partial execution) if the calling plugin owns any hop, per the preserved
   /// ≤3-hop/cycle-free/reentrancy-guard semantics `important.md` names.
-  record io-run-effect {
-    req: request-id,
+  ///
+  /// 🧬️ W0: payload half extracted into `io-run-params`, see `blob-load-params`.
+  record io-run-params {
     source: string,
     target: string,
     payload: pack,
   }
-
-  record cache-derive-effect {
+  record io-run-effect {
     req: request-id,
+    params: io-run-params,
+  }
+
+  /// 🧬️ W0: payload half of `cache-derive-effect`, see `blob-load-params`.
+  record cache-derive-params {
     engine-id: string,
     input: pack,
   }
-  record cache-read-effect {
+  record cache-derive-effect {
     req: request-id,
+    params: cache-derive-params,
+  }
+  /// 🧬️ W0: payload half of `cache-read-effect`, see `blob-load-params`.
+  record cache-read-params {
     engine-id: string,
     key: pack,
   }
-
-  record open-window-effect {
+  record cache-read-effect {
     req: request-id,
+    params: cache-read-params,
+  }
+
+  /// 🧬️ W0: payload half of `open-window-effect`, see `blob-load-params`. The inner field is
+  /// still named `params` (unchanged from before this refactor, it predates and is unrelated to
+  /// the new outer `open-window-effect.params` field it now nests under).
+  record open-window-params {
     kind: string,
     params: pack,
+  }
+  record open-window-effect {
+    req: request-id,
+    params: open-window-params,
   }
   record close-window-effect {
     window: u64,
   }
-  record dispatch-action-effect {
-    req: request-id,
+  /// 🧬️ W0: payload half of `dispatch-action-effect`, see `blob-load-params`.
+  record dispatch-action-params {
     action: string,
     args: option<pack>,
     delay-ms: u64,
   }
+  record dispatch-action-effect {
+    req: request-id,
+    params: dispatch-action-params,
+  }
   /// 🔁️ Replaces `HostEffect::InvokeExtension` — `response_action` disappears; the SDK resumes the
   /// awaiting future on `event.completed` instead of re-dispatching a named action.
-  record invoke-extension-effect {
-    req: request-id,
+  ///
+  /// 🧬️ W0: payload half extracted into `invoke-extension-params`, see `blob-load-params`.
+  record invoke-extension-params {
     extension-id: string,
     capability: string,
     payload: pack,
+  }
+  record invoke-extension-effect {
+    req: request-id,
+    params: invoke-extension-params,
   }
 
   record notify-effect {
@@ -338,23 +401,31 @@ interface effects {
     args: option<pack>,
   }
 
-  record spawn-plugin-instance-effect {
-    req: request-id,
+  /// 🧬️ W0: payload half of `spawn-plugin-instance-effect`, see `blob-load-params`.
+  record spawn-plugin-instance-params {
     plugin-id: string,
     app-id: string,
     os-instance-id: option<string>,
     label: option<string>,
     document-json: option<string>,
   }
+  record spawn-plugin-instance-effect {
+    req: request-id,
+    params: spawn-plugin-instance-params,
+  }
   record open-plugin-instance-effect {
     plugin-id: string,
     app-id: string,
     os-instance-id: option<string>,
   }
-  record open-dialog-effect {
-    req: request-id,
+  /// 🧬️ W0: payload half of `open-dialog-effect`, see `blob-load-params`.
+  record open-dialog-params {
     dialog-id: string,
     args: option<pack>,
+  }
+  record open-dialog-effect {
+    req: request-id,
+    params: open-dialog-params,
   }
   record icon-render-export-effect {
     items: pack,
@@ -365,15 +436,19 @@ interface effects {
     data: string,
     encoding: option<string>,
   }
-  record request-file-open-effect {
-    req: request-id,
+  /// 🧬️ W0: payload half of `request-file-open-effect`, see `blob-load-params`.
+  record request-file-open-params {
     accept: string,
     read-as: option<string>,
     import-action: string,
     multiple: bool,
   }
-  record request-media-frames-effect {
+  record request-file-open-effect {
     req: request-id,
+    params: request-file-open-params,
+  }
+  /// 🧬️ W0: payload half of `request-media-frames-effect`, see `blob-load-params`.
+  record request-media-frames-params {
     accept: string,
     frame-action: string,
     done-action: string,
@@ -384,6 +459,10 @@ interface effects {
     fps-hint: f64,
     payload: option<string>,
     args: option<pack>,
+  }
+  record request-media-frames-effect {
+    req: request-id,
+    params: request-media-frames-params,
   }
   record load-document-effect {
     doc-pack: pack,
@@ -415,31 +494,50 @@ interface effects {
     ok(pack),
     fault(pack),
   }
+  /// 🧬️ W0: NOT wrapped in a `-params` record — the payload is already a single named type
+  /// (`respond-result`), so a second layer around one already-nominal field would be pointless
+  /// indirection.
   record respond-effect {
     req: request-id,
     outcome: respond-result,
   }
 
-  record storage-read-effect {
-    req: request-id,
+  /// 🧬️ W0: payload half of `storage-read-effect`, see `blob-load-params`.
+  record storage-read-params {
     key: string,
   }
-  record storage-write-effect {
+  record storage-read-effect {
     req: request-id,
+    params: storage-read-params,
+  }
+  /// 🧬️ W0: payload half of `storage-write-effect`, see `blob-load-params`.
+  record storage-write-params {
     key: string,
     value: pack,
   }
-  record storage-delete-effect {
+  record storage-write-effect {
     req: request-id,
+    params: storage-write-params,
+  }
+  /// 🧬️ W0: payload half of `storage-delete-effect`, see `blob-load-params`.
+  record storage-delete-params {
     key: string,
   }
-
-  record request-capability-effect {
+  record storage-delete-effect {
     req: request-id,
+    params: storage-delete-params,
+  }
+
+  /// 🧬️ W0: payload half of `request-capability-effect`, see `blob-load-params`.
+  record request-capability-params {
     id: capability-id,
     scope: string,
     reason: string,
     optional: bool,
+  }
+  record request-capability-effect {
+    req: request-id,
+    params: request-capability-params,
   }
   record release-capability-effect {
     id: capability-id,
@@ -585,14 +683,22 @@ interface events {
   /// 🎯️ ONE generic completion for every `effect` that carries a `req` — the SDK's
   /// `RequestRegistry` decodes `result` by the originating request's own kind; the host never
   /// interprets it.
+  ///
+  /// 🧬️ W0: NOT wrapped in a `-params` record — the payload is already a single named type
+  /// (`completion-result`), so a second layer around one already-nominal field would be pointless
+  /// indirection. Same reasoning as `effects.wit`'s `respond-effect`.
   record completed-event {
     req: request-id,
     outcome: completion-result,
   }
-  record http-chunk-event {
-    req: request-id,
+  /// 🧬️ W0: payload half of `http-chunk-event`, see `effects.wit`'s `blob-load-params`.
+  record http-chunk-params {
     bytes: pack,
     done: bool,
+  }
+  record http-chunk-event {
+    req: request-id,
+    params: http-chunk-params,
   }
   record job-progress-event {
     job: u64,
@@ -618,11 +724,16 @@ interface events {
   /// `artifact-infer`, `artifact-mutation-plan`, `migrate-artifact` — every "someone else calls
   /// INTO this actor" seam is now one inbound `request`, answered with the `respond` effect within
   /// a bounded number of turns, or by spawning a job.
-  record request-event {
-    req: request-id,
+  ///
+  /// 🧬️ W0: payload half extracted into `request-params`, see `effects.wit`'s `blob-load-params`.
+  record request-params {
     origin: message-endpoint,
     capability: string,
     payload: pack,
+  }
+  record request-event {
+    req: request-id,
+    params: request-params,
   }
 
   variant event {

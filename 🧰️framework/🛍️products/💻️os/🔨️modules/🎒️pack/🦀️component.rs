@@ -22,7 +22,7 @@ pub use crate::os_pack::{
 
 //#region 🔖️Format
 #[cfg(feature = "deflate")]
-pub use crate::os_pack::format::DeflateCodec;
+pub use crate::os_pack::codec::DeflateCodec;
 pub use crate::os_pack::format::{
     encode_symbols, read_footer_only, recover, Footer, Header, Manifest, PackFile, PackWriter, RecoveryReport, Superblock, VerificationLevel, WriteOptions, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, HEADER_SIZE, MAGIC,
     OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED, REQUIRED_FOOTER_CHAIN,

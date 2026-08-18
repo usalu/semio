@@ -80,7 +80,7 @@ pub mod model {
     /// @emoji 🧑️‍🤝️‍🧑️ A space member's permission level, string-identical to the `space` crate's
     /// `SpaceRole { Author, Spectator }` (`"author"`/`"spectator"`) — see `SpaceRecord`'s doc for
     /// why this crate re-declares rather than depends. Distinct from the wire-facing
-    /// `protocol::os_directory::DirectorySpaceRole` events/commands carry (see this module root's
+    /// `directory::os_directory::DirectorySpaceRole` events/commands carry (see this module root's
     /// `//#region 🔖️Wire` for the conversion between the two).
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "lowercase")]
@@ -159,7 +159,7 @@ pub mod model {
 
 use error::{DirectoryError, DirectoryResult};
 use model::*;
-use protocol::os_directory::{
+use directory::os_directory::{
     DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, Hlc,
 };
 use std::sync::Arc;

@@ -162,7 +162,7 @@ pub fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFro
 /// replica via `ServerFrame::Commands`.
 ///
 /// 🎯️ Design choice (why not `protocol::extract_range`/`RecordSlice`): that primitive walks a
-/// `.spr` stream for `protocol_core::REC_EDIT`-kind frames — the shape `protocol_history`'s
+/// `.spr` stream for `protocol::wire::REC_EDIT`-kind frames — the shape `protocol_history`'s
 /// history-log format uses. `db_wal`'s WAL segments are also `.spr` containers but frame commands
 /// under the family's own `WAL_COMMAND` (`0x44`) record kind in the `0x40..=0x4F` extension range
 /// (see `db_wal`'s `//#region 🔖️RecordKinds`), never `REC_EDIT` — so `extract_range` structurally

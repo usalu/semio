@@ -8,9 +8,10 @@
  * `ShardClient`, the client-side transport this worker pairs with). V8 reserves a 4 GiB guard region
  * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
  * change that lifts that ceiling. */
+import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { buildBudgetMs, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
@@ -295,6 +296,89 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   optimizePluginCoreModules(outDir, componentBase, ctx);
+  rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
+}
+
+/** @emoji 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): non-blocking subprocess spawn, used ONLY
+ * by {@link transpilePluginComponentAsync} below. The shared repo-lib's `runNodeBinStatus`/
+ * `runCmdStatus` (used by the SYNC {@link transpilePluginComponent} above, which stays exactly as-is
+ * for its one other caller, the extension store's `webMaterialize`) both wrap Node's `spawnSync` —
+ * correct and desired for a genuinely one-at-a-time step (e.g. `cargo build`), but fatal to any attempt
+ * at running several plugins' jco transpile CONCURRENTLY: an async concurrency limiter wrapped around a
+ * synchronous blocking call achieves zero real overlap, since nothing else in this process can run
+ * while the thread is stuck inside `spawnSync`. `stdio` is piped rather than inherited for the same
+ * reason: several of these may be in flight at once, and `"inherit"` would interleave unrelated
+ * processes' output byte-by-byte on the parent's own stdout/stderr; buffered output is instead
+ * surfaced (as one block) only on failure. Reuses the shared repo-lib's `resolveWorkspaceBin` for the
+ * exact same monorepo-aware `.bin/` lookup `runNodeBinStatus` itself uses, rather than
+ * reimplementing it. */
+function spawnAsync(cmd: string, args: readonly string[], cwd: string): Promise<void> {
+  return new Promise((resolveSpawn, rejectSpawn) => {
+    const child = spawn(cmd, args as string[], { cwd, shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    let output = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      output += chunk;
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      output += chunk;
+    });
+    child.on("error", (error) => rejectSpawn(error));
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolveSpawn();
+        return;
+      }
+      rejectSpawn(new Error(`${cmd} ${args.join(" ")} exited with status ${code}\n${output}`));
+    });
+  });
+}
+
+function spawnNodeBinAsync(args: readonly string[], cwd: string): Promise<void> {
+  const binName = args[0]!;
+  const resolved = resolveWorkspaceBin(binName, cwd);
+  const executable = resolved ?? binName;
+  return spawnAsync("node", [executable, ...args.slice(1)], cwd);
+}
+
+/** @emoji 🪶️ Async twin of {@link optimizePluginCoreModules} — same ship-mode-only `wasm-opt` pass,
+ * same `WASM_OPT_ARGS`, just spawned via {@link spawnAsync} instead of `runCmdStatus`'s `spawnSync` so
+ * it can run concurrently with sibling plugins' own optimize pass under
+ * `📜️script.ts`'s bounded-parallel materialize stage (T-P8). */
+async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  if (semioBuildMode() !== "ship") return;
+  if (process.env.SEMIO_WASM_OPT === "0") return;
+  const wasmOptBin = process.env.SEMIO_WASM_OPT_BIN ?? join(ctx.repoRoot, "node_modules/binaryen/bin/wasm-opt");
+  for (const file of readdirSync(outDir)) {
+    if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
+    const coreWasm = join(outDir, file);
+    const optimized = `${coreWasm}.opt`;
+    try {
+      await spawnAsync("bun", [wasmOptBin, coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot);
+    } catch {
+      throw new Error(`wasm-opt failed for ${coreWasm}`);
+    }
+    renameSync(optimized, coreWasm);
+  }
+}
+
+/** @emoji 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): async twin of
+ * {@link transpilePluginComponent} — identical jco invocation, ship-mode `wasm-opt` pass, and
+ * preview2-shim-import rewrite, but spawned non-blockingly so `📜️script.ts`'s bounded-parallel
+ * MATERIALIZE stage (`buildPluginCatalog`) can actually overlap several plugins' transpile/optimize
+ * work in wall-clock time — the sync {@link transpilePluginComponent} above cannot provide that overlap
+ * no matter how it is scheduled from the caller side (see {@link spawnAsync}'s doc). Kept as a SEPARATE
+ * export rather than changing the sync function in place: the extension store's `webMaterialize`
+ * (`🏪️store/📜️store.ts`, outside this packet's owned paths) calls the sync version without awaiting
+ * it, relying on it blocking until done before it deletes the temp artifact directory in its own
+ * `finally` — flipping that function to async out from under that caller would silently race the
+ * artifact's cleanup against jco still reading it. */
+export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  try {
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️host-shim.js"], ctx.repoRoot);
+  } catch {
+    throw new Error(`jco transpile failed for ${artifact}`);
+  }
+  await optimizePluginCoreModulesAsync(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 

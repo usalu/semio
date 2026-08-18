@@ -1,0 +1,4 @@
+[host] echo import called from inside guest await: ping:41
+[host] ping(41) = 42
+[host] run(stream) summed = 21
+[host] G3 PASS

@@ -1,0 +1,10 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  19:45:34
+   Duration  5.21s (transform 1.71s, setup 109ms, import 4.47s, tests 227ms, environment 255ms)
+
+EXIT:0

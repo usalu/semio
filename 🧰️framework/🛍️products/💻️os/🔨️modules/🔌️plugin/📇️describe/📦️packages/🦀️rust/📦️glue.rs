@@ -25,7 +25,6 @@ mod actor_bindings {
     wasmtime::component::bindgen!({
         world: "actor",
         path: "../../../🧬️schema",
-        async: false,
     });
 }
 
@@ -44,12 +43,8 @@ struct DescribeHostState {
 /// runtime shim, so `pure` alone leaves the linker short and instantiation fails. Sandboxed default
 /// ctx — `describe()` is a pure metadata read and is granted no stdio, filesystem or network.
 impl wasmtime_wasi::WasiView for DescribeHostState {
-    fn ctx(&mut self) -> &mut wasmtime_wasi::WasiCtx {
-        &mut self.wasi_ctx
-    }
-
-    fn table(&mut self) -> &mut wasmtime::component::ResourceTable {
-        &mut self.resource_table
+    fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
+        wasmtime_wasi::WasiCtxView { ctx: &mut self.wasi_ctx, table: &mut self.resource_table }
     }
 }
 
@@ -129,15 +124,15 @@ pub fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDes
     let engine = wasmtime::Engine::new(&config).map_err(|error| DescribeError(format!("building wasmtime engine: {error}")))?;
 
     let mut linker = wasmtime::component::Linker::<DescribeHostState>::new(&engine);
-    actor_bindings::semio::framework::pure::add_to_linker(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `pure` import: {error}")))?;
-    wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
+    actor_bindings::semio::framework::pure::add_to_linker::<DescribeHostState, wasmtime::component::HasSelf<DescribeHostState>>(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `pure` import: {error}")))?;
+    wasmtime_wasi::p2::add_to_linker_sync(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
 
     let component = wasmtime::component::Component::from_binary(&engine, &wasm_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", wasm_path.display())))?;
 
     let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
     store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
 
-    let (bindings, _instance) = actor_bindings::Actor::instantiate(&mut store, &component, &linker).map_err(|error| DescribeError(format!("instantiating {}: {error}", wasm_path.display())))?;
+    let bindings = actor_bindings::Actor::instantiate(&mut store, &component, &linker).map_err(|error| DescribeError(format!("instantiating {}: {error}", wasm_path.display())))?;
 
     let descriptor_bytes = bindings.semio_framework_describe().call_describe(&mut store).map_err(|error| DescribeError(format!("calling describe() on {}: {error}", wasm_path.display())))?;
 

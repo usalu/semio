@@ -1,0 +1,1903 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-registry:check
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./📜️script.ts check
+
+plugin taxonomy tree findings (area(s) "✏️s/🔌️plugins" is "mixed" — not failing the gate yet):
+  - ✒️writer: artifact "✒️writer" is missing 🧬️schema/
+  - ✒️writer: artifact "✒️writer" is missing 🚪️io/
+  - ✒️writer: artifact "✒️writer" is missing ⚙️engine/
+  - ✒️writer: artifact "✒️writer" is missing 📚️examples/
+  - ✒️writer: plugin root is missing 🎮️commands/🦀️component.rs
+  - ✒️writer: plugin root is missing 🔨️modules/🦀️component.rs
+  - ✒️writer: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - ✒️writer: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - ✒️writer: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - ✒️writer: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - ➗️mathematical: artifact "➗️mathematical" is missing 🧬️schema/
+  - ➗️mathematical: artifact "➗️mathematical" is missing 🚪️io/
+  - ➗️mathematical: artifact "➗️mathematical" is missing ⚙️engine/
+  - ➗️mathematical: artifact "➗️mathematical" is missing 📚️examples/
+  - ➗️mathematical: plugin root is missing 🎮️commands/🦀️component.rs
+  - ➗️mathematical: plugin root is missing 🔨️modules/🦀️component.rs
+  - ➗️mathematical: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - ➗️mathematical: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - ➗️mathematical: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - ➗️mathematical: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌀️procedural: artifact "🧩️assembly" is missing 🧬️schema/
+  - 🌀️procedural: artifact "🧩️assembly" is missing 🚪️io/
+  - 🌀️procedural: artifact "🧩️assembly" is missing ⚙️engine/
+  - 🌀️procedural: artifact "🧩️assembly" is missing 📚️examples/
+  - 🌀️procedural: artifact "🌀️procedural2d" is missing 🧬️schema/
+  - 🌀️procedural: artifact "🌀️procedural2d" is missing 🚪️io/
+  - 🌀️procedural: artifact "🌀️procedural2d" is missing ⚙️engine/
+  - 🌀️procedural: artifact "🌀️procedural2d" is missing 📚️examples/
+  - 🌀️procedural: artifact "🧊️procedural3d" is missing 🧬️schema/
+  - 🌀️procedural: artifact "🧊️procedural3d" is missing 🚪️io/
+  - 🌀️procedural: artifact "🧊️procedural3d" is missing ⚙️engine/
+  - 🌀️procedural: artifact "🧊️procedural3d" is missing 📚️examples/
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🎼️motif/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🐾️trail/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🚫️nogood/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/📣️propagate/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🗺️topology/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔧️repair/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🪜️hierarchy/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔄️prop-ac4/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️parallel/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🍰️chunk/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔁️prop-ac3/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️hexagonal-mushroom-column/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-generation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-generation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-generation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧change-generation-value/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧change-generation-value/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧change-generation-value/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-generation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-generation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-generation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-synapse/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-widget/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: 🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-generation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌀️procedural: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🌀️procedural: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌀️procedural: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌀️procedural: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌊️flow: artifact "🌊️flow" is missing 🧬️schema/
+  - 🌊️flow: artifact "🌊️flow" is missing 🚪️io/
+  - 🌊️flow: artifact "🌊️flow" is missing ⚙️engine/
+  - 🌊️flow: artifact "🌊️flow" is missing 📚️examples/
+  - 🌊️flow: 🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📐️brep/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📖️dictionary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🏗️bim/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧠️logic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🔤️primitive/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🧮️math/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📃️list/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/🖍️draw/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: 🧩️extensions/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🌊️flow: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🌊️flow: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🌊️flow: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌊️flow: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌊️flow: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌊️flow: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌍️gis: artifact "🗺️gismap" is missing 🧬️schema/
+  - 🌍️gis: artifact "🗺️gismap" is missing 🚪️io/
+  - 🌍️gis: artifact "🗺️gismap" is missing ⚙️engine/
+  - 🌍️gis: artifact "🗺️gismap" is missing 📚️examples/
+  - 🌍️gis: artifact "🏔️gisterrain" is missing 🧬️schema/
+  - 🌍️gis: artifact "🏔️gisterrain" is missing 🚪️io/
+  - 🌍️gis: artifact "🏔️gisterrain" is missing ⚙️engine/
+  - 🌍️gis: artifact "🏔️gisterrain" is missing 📚️examples/
+  - 🌍️gis: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🌍️gis: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🌍️gis: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌍️gis: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌍️gis: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌍️gis: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌍️gis: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌍️gis: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌍️gis: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌍️gis: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🌿️vcs: artifact "🌿️vcs" is missing 🧬️schema/
+  - 🌿️vcs: artifact "🌿️vcs" is missing 🚪️io/
+  - 🌿️vcs: artifact "🌿️vcs" is missing ⚙️engine/
+  - 🌿️vcs: artifact "🌿️vcs" is missing 📚️examples/
+  - 🌿️vcs: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🌿️vcs: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🌿️vcs: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🌿️vcs: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🌿️vcs: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🌿️vcs: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🎞️animate: artifact "🎬️present" is missing 🧬️schema/
+  - 🎞️animate: artifact "🎬️present" is missing 🚪️io/
+  - 🎞️animate: artifact "🎬️present" is missing ⚙️engine/
+  - 🎞️animate: artifact "🎬️present" is missing 📚️examples/
+  - 🎞️animate: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🎞️animate: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🎞️animate: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🎞️animate: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🎞️animate: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🎞️animate: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🎥️shooting: artifact "🎥️shooting" is missing 🧬️schema/
+  - 🎥️shooting: artifact "🎥️shooting" is missing 🚪️io/
+  - 🎥️shooting: artifact "🎥️shooting" is missing ⚙️engine/
+  - 🎥️shooting: artifact "🎥️shooting" is missing 📚️examples/
+  - 🎥️shooting: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🎥️shooting: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🎥️shooting: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🎥️shooting: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🎥️shooting: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🎥️shooting: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🧬️schema/
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 🚪️io/
+  - 🎪️demonstrator: artifact "🎪️playground" is missing ⚙️engine/
+  - 🎪️demonstrator: artifact "🎪️playground" is missing 📚️examples/
+  - 🎪️demonstrator: plugin root is missing 🦀️component.rs
+  - 🎪️demonstrator: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🎪️demonstrator: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🎪️demonstrator: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🎪️demonstrator: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🎪️demonstrator: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🎪️demonstrator: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🎬️sequence: artifact "🎬️sequence" is missing 🧬️schema/
+  - 🎬️sequence: artifact "🎬️sequence" is missing 🚪️io/
+  - 🎬️sequence: artifact "🎬️sequence" is missing ⚙️engine/
+  - 🎬️sequence: artifact "🎬️sequence" is missing 📚️examples/
+  - 🎬️sequence: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🎬️sequence: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🎬️sequence: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🎬️sequence: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🎬️sequence: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🎬️sequence: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🏗️fem: artifact "🧊️3d" is missing 🧬️schema/
+  - 🏗️fem: artifact "🧊️3d" is missing 🚪️io/
+  - 🏗️fem: artifact "🧊️3d" is missing ⚙️engine/
+  - 🏗️fem: artifact "🧊️3d" is missing 📚️examples/
+  - 🏗️fem: artifact "◻2d" is missing 🧬️schema/
+  - 🏗️fem: artifact "◻2d" is missing 🚪️io/
+  - 🏗️fem: artifact "◻2d" is missing ⚙️engine/
+  - 🏗️fem: artifact "◻2d" is missing 📚️examples/
+  - 🏗️fem: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🏗️fem: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🏗️fem: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🏗️fem: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🏗️fem: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🏗️fem: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🏗️fem: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🏗️fem: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🏗️fem: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🏗️fem: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🏛️architect: artifact "🏛️program" is missing 🧬️schema/
+  - 🏛️architect: artifact "🏛️program" is missing 🚪️io/
+  - 🏛️architect: artifact "🏛️program" is missing ⚙️engine/
+  - 🏛️architect: artifact "🏛️program" is missing 📚️examples/
+  - 🏛️architect: 🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏛️architect: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🏛️architect: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🏛️architect: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🏛️architect: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🏛️architect: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🏛️architect: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🏭️process: artifact "🧊️process3d" is missing 🧬️schema/
+  - 🏭️process: artifact "🧊️process3d" is missing 🚪️io/
+  - 🏭️process: artifact "🧊️process3d" is missing ⚙️engine/
+  - 🏭️process: artifact "🧊️process3d" is missing 📚️examples/
+  - 🏭️process: 🛂️manifest/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🔩️metal/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🪵️wood/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🤖️robotic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: 🧩️extensions/🧱️concrete/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🏭️process: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🏭️process: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🏭️process: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🏭️process: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🏭️process: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🏭️process: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 💠️lowpoly: artifact "💠️lowpoly" is missing 🧬️schema/
+  - 💠️lowpoly: artifact "💠️lowpoly" is missing 🚪️io/
+  - 💠️lowpoly: artifact "💠️lowpoly" is missing ⚙️engine/
+  - 💠️lowpoly: artifact "💠️lowpoly" is missing 📚️examples/
+  - 💠️lowpoly: plugin root is missing 🎮️commands/🦀️component.rs
+  - 💠️lowpoly: plugin root is missing 🔨️modules/🦀️component.rs
+  - 💠️lowpoly: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 💠️lowpoly: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 💠️lowpoly: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 💠️lowpoly: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 💡️reasoning: artifact "🔌️wires" is missing 🧬️schema/
+  - 💡️reasoning: artifact "🔌️wires" is missing 🚪️io/
+  - 💡️reasoning: artifact "🔌️wires" is missing ⚙️engine/
+  - 💡️reasoning: artifact "🔌️wires" is missing 📚️examples/
+  - 💡️reasoning: plugin root is missing 🎮️commands/🦀️component.rs
+  - 💡️reasoning: plugin root is missing 🔨️modules/🦀️component.rs
+  - 💡️reasoning: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 💡️reasoning: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 💡️reasoning: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 💡️reasoning: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📋️forms: artifact "📋️forms" is missing 🧬️schema/
+  - 📋️forms: artifact "📋️forms" is missing 🚪️io/
+  - 📋️forms: artifact "📋️forms" is missing ⚙️engine/
+  - 📋️forms: artifact "📋️forms" is missing 📚️examples/
+  - 📋️forms: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📋️forms: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📋️forms: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📋️forms: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📋️forms: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📋️forms: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📏️layout: artifact "📏️layout" is missing 🧬️schema/
+  - 📏️layout: artifact "📏️layout" is missing 🚪️io/
+  - 📏️layout: artifact "📏️layout" is missing ⚙️engine/
+  - 📏️layout: artifact "📏️layout" 📚️examples has no example slug
+  - 📏️layout: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📏️layout: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📏️layout: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📏️layout: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📏️layout: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📏️layout: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📐️cad: artifact "📐️cad" is missing 🧬️schema/
+  - 📐️cad: artifact "📐️cad" is missing 🚪️io/
+  - 📐️cad: artifact "📐️cad" is missing ⚙️engine/
+  - 📐️cad: artifact "📐️cad" 📚️examples has no example slug
+  - 📐️cad: 🧩️extensions/🏢️aec-building/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/📐️spatial-shape/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🏛️aec-building-structure/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: 🧩️extensions/🔥️aec-building-energy/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📐️cad: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📐️cad: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📐️cad: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📐️cad: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📐️cad: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📐️cad: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📕️norm: artifact "📕️din4108" is missing 🧬️schema/
+  - 📕️norm: artifact "📕️din4108" is missing 🚪️io/
+  - 📕️norm: artifact "📕️din4108" is missing ⚙️engine/
+  - 📕️norm: artifact "📕️din4108" is missing 📚️examples/
+  - 📕️norm: artifact "📙️din18599" is missing 🧬️schema/
+  - 📕️norm: artifact "📙️din18599" is missing 🚪️io/
+  - 📕️norm: artifact "📙️din18599" is missing ⚙️engine/
+  - 📕️norm: artifact "📙️din18599" is missing 📚️examples/
+  - 📕️norm: artifact "📗️din16798" is missing 🧬️schema/
+  - 📕️norm: artifact "📗️din16798" is missing 🚪️io/
+  - 📕️norm: artifact "📗️din16798" is missing ⚙️engine/
+  - 📕️norm: artifact "📗️din16798" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1995" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1995" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1995" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1995" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1992" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1992" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1992" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1992" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1993" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1993" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1993" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1993" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1994" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1994" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1994" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1994" is missing 📚️examples/
+  - 📕️norm: artifact "📔️vdi3805" is missing 🧬️schema/
+  - 📕️norm: artifact "📔️vdi3805" is missing 🚪️io/
+  - 📕️norm: artifact "📔️vdi3805" is missing ⚙️engine/
+  - 📕️norm: artifact "📔️vdi3805" is missing 📚️examples/
+  - 📕️norm: artifact "📓️iso16757" is missing 🧬️schema/
+  - 📕️norm: artifact "📓️iso16757" is missing 🚪️io/
+  - 📕️norm: artifact "📓️iso16757" is missing ⚙️engine/
+  - 📕️norm: artifact "📓️iso16757" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1991" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1991" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1991" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1991" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1996" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1996" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1996" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1996" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1998" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1998" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1998" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1998" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1999" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1999" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1999" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1999" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1997" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1997" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1997" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1997" is missing 📚️examples/
+  - 📕️norm: artifact "📘️en1990" is missing 🧬️schema/
+  - 📕️norm: artifact "📘️en1990" is missing 🚪️io/
+  - 📕️norm: artifact "📘️en1990" is missing ⚙️engine/
+  - 📕️norm: artifact "📘️en1990" is missing 📚️examples/
+  - 📕️norm: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📕️norm: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 📕️norm: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 📕️norm: plugin-root is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📕️norm: plugin-root is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📖️playbook: artifact "📖️playbook" is missing 🧬️schema/
+  - 📖️playbook: artifact "📖️playbook" is missing 🚪️io/
+  - 📖️playbook: artifact "📖️playbook" is missing ⚙️engine/
+  - 📖️playbook: artifact "📖️playbook" is missing 📚️examples/
+  - 📖️playbook: 🧩️extensions/🌀️procedural/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 📖️playbook: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📖️playbook: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📖️playbook: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📖️playbook: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📖️playbook: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📖️playbook: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📜️imperative: artifact "📜️imperative" is missing 🧬️schema/
+  - 📜️imperative: artifact "📜️imperative" is missing 🚪️io/
+  - 📜️imperative: artifact "📜️imperative" is missing ⚙️engine/
+  - 📜️imperative: artifact "📜️imperative" is missing 📚️examples/
+  - 📜️imperative: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📜️imperative: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📜️imperative: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📜️imperative: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📜️imperative: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📜️imperative: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 📸️remodel: artifact "📸️remodel" is missing 🧬️schema/
+  - 📸️remodel: artifact "📸️remodel" is missing 🚪️io/
+  - 📸️remodel: artifact "📸️remodel" is missing ⚙️engine/
+  - 📸️remodel: artifact "📸️remodel" is missing 📚️examples/
+  - 📸️remodel: plugin root is missing 🎮️commands/🦀️component.rs
+  - 📸️remodel: plugin root is missing 🔨️modules/🦀️component.rs
+  - 📸️remodel: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 📸️remodel: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 📸️remodel: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 📸️remodel: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🔋️energy: artifact "🔋️model" is missing 🧬️schema/
+  - 🔋️energy: artifact "🔋️model" is missing 🚪️io/
+  - 🔋️energy: artifact "🔋️model" is missing ⚙️engine/
+  - 🔋️energy: artifact "🔋️model" is missing 📚️examples/
+  - 🔋️energy: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🔋️energy: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🔋️energy: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🔋️energy: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🔋️energy: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🔋️energy: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🔱️trinity: artifact "🔌️jack" is missing 🧬️schema/
+  - 🔱️trinity: artifact "🔌️jack" is missing 🚪️io/
+  - 🔱️trinity: artifact "🔌️jack" is missing ⚙️engine/
+  - 🔱️trinity: artifact "🔌️jack" is missing 📚️examples/
+  - 🔱️trinity: artifact "♻️rewrite" is missing 🧬️schema/
+  - 🔱️trinity: artifact "♻️rewrite" is missing 🚪️io/
+  - 🔱️trinity: artifact "♻️rewrite" is missing ⚙️engine/
+  - 🔱️trinity: artifact "♻️rewrite" is missing 📚️examples/
+  - 🔱️trinity: 🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📜️delete-rule-clause/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🔱️trinity: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🔱️trinity: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🔱️trinity: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🔱️trinity: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🔱️trinity: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🔱️trinity: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🔱️trinity: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🔱️trinity: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🔱️trinity: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🔱️trinity: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🕸️dag: artifact "🕸️dag" is missing 🧬️schema/
+  - 🕸️dag: artifact "🕸️dag" is missing 🚪️io/
+  - 🕸️dag: artifact "🕸️dag" is missing ⚙️engine/
+  - 🕸️dag: artifact "🕸️dag" is missing 📚️examples/
+  - 🕸️dag: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🕸️dag: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🕸️dag: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🕸️dag: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🕸️dag: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🕸️dag: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🖍️draw: artifact "🖍️draw" is missing 🧬️schema/
+  - 🖍️draw: artifact "🖍️draw" is missing 🚪️io/
+  - 🖍️draw: artifact "🖍️draw" is missing ⚙️engine/
+  - 🖍️draw: artifact "🖍️draw" is missing 📚️examples/
+  - 🖍️draw: 🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: 🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🖍️draw: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🖍️draw: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🖍️draw: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🖍️draw: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🖍️draw: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🖍️draw: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🖨️raster: artifact "🖨️raster" is missing 🧬️schema/
+  - 🖨️raster: artifact "🖨️raster" is missing 🚪️io/
+  - 🖨️raster: artifact "🖨️raster" is missing ⚙️engine/
+  - 🖨️raster: artifact "🖨️raster" is missing 📚️examples/
+  - 🖨️raster: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🖨️raster: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🖨️raster: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🖨️raster: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🖨️raster: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🖨️raster: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "💬️bcf" is missing 🚪️io/
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "💬️bcf" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "💬️bcf" is missing ⚙️engine/
+  - 🗄️stdio: artifact "💬️bcf" is missing 📚️examples/
+  - 🗄️stdio: artifact "🔣️json" is missing 🚪️io/
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🔣️json" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🔣️json" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🔣️json" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎥️mp4" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎥️mp4" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎥️mp4" is missing 📚️examples/
+  - 🗄️stdio: artifact "📼️avi" is missing 🚪️io/
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📼️avi" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📼️avi" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📼️avi" is missing 📚️examples/
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🚪️io/
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🖊️dxf" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🖊️dxf" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🖊️dxf" is missing 📚️examples/
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🚪️io/
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🏗️ifc" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🏗️ifc" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🏗️ifc" is missing 📚️examples/
+  - 🗄️stdio: artifact "🌦️epw" is missing 🚪️io/
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🌦️epw" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🌦️epw" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🌦️epw" is missing 📚️examples/
+  - 🗄️stdio: artifact "🔊️wav" is missing 🚪️io/
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🔊️wav" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🔊️wav" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🔊️wav" is missing 📚️examples/
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🚪️io/
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🖼️bmp" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🖼️bmp" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🖼️bmp" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎵️mp3" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎵️mp3" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎵️mp3" is missing 📚️examples/
+  - 🗄️stdio: artifact "☁️ply" is missing 🚪️io/
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "☁️ply" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "☁️ply" is missing ⚙️engine/
+  - 🗄️stdio: artifact "☁️ply" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎨️svg" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎨️svg" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎨️svg" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎨️svg" is missing 📚️examples/
+  - 🗄️stdio: artifact "🧿️semio" is missing 🚪️io/
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🧿️semio" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🧿️semio" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🧿️semio" example "📃️note" is missing 🧪️tests/
+  - 🗄️stdio: artifact "🌐️html" is missing 🚪️io/
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🌐️html" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🌐️html" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🌐️html" is missing 📚️examples/
+  - 🗄️stdio: artifact "🧊️obj" is missing 🚪️io/
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🧊️obj" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🧊️obj" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🧊️obj" is missing 📚️examples/
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🚪️io/
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🗜️deflate" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🗜️deflate" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🗜️deflate" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎒️zip" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎒️zip" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎒️zip" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎒️zip" is missing 📚️examples/
+  - 🗄️stdio: artifact "📐️step" is missing 🚪️io/
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📐️step" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📐️step" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📐️step" is missing 📚️examples/
+  - 🗄️stdio: artifact "📄txt" is missing 🚪️io/
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📄txt" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📄txt" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📄txt" is missing 📚️examples/
+  - 🗄️stdio: artifact "📝️md" is missing 🚪️io/
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📝️md" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📝️md" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📝️md" is missing 📚️examples/
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🚪️io/
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🖼️tiff" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🖼️tiff" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🖼️tiff" is missing 📚️examples/
+  - 🗄️stdio: artifact "📰xml" is missing 🚪️io/
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📰xml" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📰xml" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📰xml" is missing 📚️examples/
+  - 🗄️stdio: artifact "💾️binary" is missing 🚪️io/
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "💾️binary" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "💾️binary" is missing ⚙️engine/
+  - 🗄️stdio: artifact "💾️binary" is missing 📚️examples/
+  - 🗄️stdio: artifact "📷️jpg" is missing 🚪️io/
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📷️jpg" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📷️jpg" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📷️jpg" is missing 📚️examples/
+  - 🗄️stdio: artifact "📷️png" is missing 🚪️io/
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📷️png" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📷️png" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📷️png" is missing 📚️examples/
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🚪️io/
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🖊️dwg" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🖊️dwg" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🖊️dwg" is missing 📚️examples/
+  - 🗄️stdio: artifact "📄️pdf" is missing 🚪️io/
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📄️pdf" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📄️pdf" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📄️pdf" is missing 📚️examples/
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🚪️io/
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📕️xlsx" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📕️xlsx" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📕️xlsx" is missing 📚️examples/
+  - 🗄️stdio: artifact "📜️docx" is missing 🚪️io/
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📜️docx" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📜️docx" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📜️docx" is missing 📚️examples/
+  - 🗄️stdio: artifact "☁️las" is missing 🚪️io/
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "☁️las" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "☁️las" is missing ⚙️engine/
+  - 🗄️stdio: artifact "☁️las" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎞️pptx" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎞️pptx" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎞️pptx" is missing 📚️examples/
+  - 🗄️stdio: artifact "🎞️gif" is missing 🚪️io/
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🎞️gif" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🎞️gif" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🎞️gif" is missing 📚️examples/
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🚪️io/
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🧊️gltf" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🧊️gltf" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🧊️gltf" is missing 📚️examples/
+  - 🗄️stdio: artifact "📊️csv" is missing 🚪️io/
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📊️csv" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📊️csv" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📊️csv" is missing 📚️examples/
+  - 🗄️stdio: artifact "📑️tsv" is missing 🚪️io/
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "📑️tsv" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "📑️tsv" is missing ⚙️engine/
+  - 🗄️stdio: artifact "📑️tsv" is missing 📚️examples/
+  - 🗄️stdio: artifact "🟪️stl" is missing 🚪️io/
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/🦀️component.rs
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/🟦️component.ts
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/🔗️component.graphql
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/🔣️component.json
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/🛰️component.proto
+  - 🗄️stdio: artifact "🟪️stl" is missing 🧬️schema/📜️component.wit
+  - 🗄️stdio: artifact "🟪️stl" is missing ⚙️engine/
+  - 🗄️stdio: artifact "🟪️stl" is missing 📚️examples/
+  - 🗄️stdio: 🔧️setup/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🎥️h264/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/📦️boxes/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🚪️io/🏛️spatial/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/📚️examples/📃️note/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/💡️inferences/💾️binary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/💡️inferences/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📽️deck/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌐️envelope/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎥️clip/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🌊️pipeline/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📐️drawing/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🏢️building/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/📄️memo/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖍️sketch/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🕸️graph/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🧊️solid/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🎵️tone/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🖼️swatch/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/📚️examples/🚶️walk/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➡️vector/⚖️predicates/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➡️vector/🔢️matrix/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/🏄️surface/🪡️surface-ops/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➰️curve/🎢️bezier/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➰️curve/✂️curve-ops/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/📸️snapshot/➰️curve/🪢️bspline/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📄️step/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/📦️mesh-io/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/💾️binary/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/💡️inferences/📝️text/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📄remove-frame/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📄remove-frame/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📄remove-frame/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/➕️insert-frame/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/➕️insert-frame/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/➕️insert-frame/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔢️set-bit-depth/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔢️set-bit-depth/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔢️set-bit-depth/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/⏱️set-frame-delay/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/⏱️set-frame-delay/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/⏱️set-frame-delay/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📐️set-dimensions/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📐️set-dimensions/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/📐️set-dimensions/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🎨️set-icc/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🎨️set-icc/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🎨️set-icc/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🌈️set-colorspace/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🌈️set-colorspace/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🌈️set-colorspace/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔀️move-frame/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔀️move-frame/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🔀️move-frame/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🏷️set-metadata-entry/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🏷️set-metadata-entry/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🏷️set-metadata-entry/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🗑️remove-metadata-entry/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🗑️remove-metadata-entry/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🗑️remove-metadata-entry/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🟪️set-frame-pixels/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🟪️set-frame-pixels/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🟪️set-frame-pixels/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🪜️ladder/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📐️part21/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/🧱️brep/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitives/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitives/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitives/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-animation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-animation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-animation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-targets/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-targets/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-targets/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-skin/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-skin/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-skin/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-indices/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-indices/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-indices/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-required-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-required-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-required-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-mesh/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-mesh/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-mesh/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/withdraw-used-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/withdraw-used-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/withdraw-used-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-material/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-material/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-material/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-accessors/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-accessors/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-accessors/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-mesh/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-mesh/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-mesh/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-scenes/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-scenes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-scenes/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-material/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-material/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-material/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-target-attributes/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-target-attributes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-morph-target-attributes/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-material/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-material/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-material/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-camera/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-camera/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-camera/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-skin/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-skin/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-node-skin/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-topology-mode/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-topology-mode/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-topology-mode/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-image/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-image/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-image/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-node/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-node/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-texture/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-texture/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-texture/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-morph-weights/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-morph-weights/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-morph-weights/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-image/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-image/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-image/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/declare-used-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/declare-used-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/declare-used-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-morph-target/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-morph-target/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-morph-target/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-camera/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-camera/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-camera/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer-view/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer-view/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-buffer-view/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-mesh/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-mesh/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-mesh/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-materials/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-materials/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-materials/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-default-scene/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-default-scene/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-default-scene/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-camera/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-camera/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-camera/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-primitive-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️transform-node/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-primitive/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-primitive/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-primitive/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-name/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-name/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-name/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-name/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-name/🧪️contract/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-name/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-name/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-skin/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-skin/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-skin/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-samplers/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-samplers/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-samplers/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-sampler/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-sampler/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-sampler/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-accessor/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-accessor/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-accessor/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffer-views/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffer-views/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffer-views/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-primitive-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-animation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-animation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-animation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-default-scene/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-default-scene/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-default-scene/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-node/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-node/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-images/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-images/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-images/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️bind-node-mesh/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-material/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-material/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-primitive-material/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-meshs/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-meshs/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-meshs/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-animations/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-animations/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-animations/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/require-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/require-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/require-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-indices/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-indices/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-indices/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-name/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-name/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-name/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-required-extensions/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-required-extensions/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-required-extensions/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/transform-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/transform-node/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/transform-node/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unrequire-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unrequire-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unrequire-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-animation/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-animation/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-animation/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-morph-weights/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-morph-weights/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-mesh-morph-weights/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-skin/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-skin/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-skin/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️bind-primitive-material/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-scene-root-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-accessor/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-accessor/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-accessor/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-camera/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-camera/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-node-camera/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitive-attributes/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitive-attributes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-primitive-attributes/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-mesh/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-mesh/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-mesh/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extra-data/🧪️contract/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-scene/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-scene/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-scene/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extra-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extra-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extra-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-descriptive-metadata/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-descriptive-metadata/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-descriptive-metadata/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-mesh/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-mesh/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-mesh/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer-view/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer-view/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer-view/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-primitive-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-skin/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-skin/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-skin/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-cameras/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-cameras/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-cameras/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-scene-root-nodes/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-nodes/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-nodes/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-nodes/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer-view/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer-view/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer-view/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-primitive/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-primitive/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-primitive/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-accessor/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-accessor/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-accessor/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-texture/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-texture/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-texture/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-material/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-material/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-material/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-used-extension/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-used-extension/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-used-extension/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-node-child/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-morph-target-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-morph-target-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/unbind-morph-target-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️top-level-private/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-node/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-node/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-version/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-version/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-asset-version/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-document-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffers/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffers/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-buffers/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-morph-target/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-morph-target/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-morph-target/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-scene-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-image/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-image/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-image/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-skins/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-skins/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-skins/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-used-extensions/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-used-extensions/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-used-extensions/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extension-data/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extension-data/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/change-node-extension-data/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-sampler/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-sampler/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-sampler/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-buffer/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/🧪️contract/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-scene/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-morph-target-attribute/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-morph-target-attribute/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/bind-morph-target-attribute/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-sampler/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-sampler/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-sampler/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-textures/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-textures/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-textures/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-morph-target/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-camera/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-camera/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-camera/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reorder-node-children/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reparent-node/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reparent-node/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/reparent-node/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/delete-buffer/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-texture/🦠️mutation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-texture/🔺️diff/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/move-texture/↩️inverse/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️reparent-node/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/inertia-tensor/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/centroid/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/moments-of-inertia/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/principal-frame/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️mass-distribution/principal-axes/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/elongation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/flatness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/slenderness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/aspect-ratios/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/handles/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/euler-characteristic/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/boundary-loops/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/genus/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/holes/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/reflection-symmetries/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/modularity-ratio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/reflection-symmetry-score/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/rotational-symmetries/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/rotational-symmetry-score/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/repetition-ratio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/gaussian-curvature/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/mean-curvature/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/curvature-histogram/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️curvature/sharp-feature-proportion/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/minimum-distance-to-neighbors/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/overlap-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/clearance-distribution/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↔️clearance/interference-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️adjacency/number-of-contacts/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️adjacency/connected-components/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔗️adjacency/contact-graph-degree/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/reentrant-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/reentrant-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/convex-hull-gap/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕳️concavity/concavity-index/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/material-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/exposed-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/void-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/contact-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/surface-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/enclosed-volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/total-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/volume/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/oriented-bounds/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/footprint-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/overall-size/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/axis-aligned-bounds/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/bounding-box-dimensions/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/projected-area/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/characteristic-length/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/sphericity/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/surface-to-volume-ratio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/compactness-index/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/compactness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/hull-fill-ratio/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/deviation-from-smoothed-geometry/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/deviation-from-ideal/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/irregularity/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/surface-waviness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌊️roughness/normal-variation/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/minimum-thickness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/mean-thickness/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/thickness-distribution/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/↕️thickness/thickness-variability/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️orientation/face-normal-distribution/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️orientation/main-axis-direction/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️orientation/orientation-consistency/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: 🎟️capabilities/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🗄️stdio: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🗄️stdio: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️i-json/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️i-json/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️i-json/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️i-json/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cv20/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cv20/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cv20/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cv20/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️sav/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️sav/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️sav/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️sav/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cobie/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cobie/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cobie/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cobie/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️basic/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️basic/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️basic/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️basic/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️tiny/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️tiny/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️tiny/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️tiny/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️mesh/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️mesh/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️mesh/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️mesh/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cad/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cad/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cad/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cad/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️drawing/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️drawing/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️drawing/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️drawing/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️model/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️model/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️model/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️model/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️audio/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️audio/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️audio/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️audio/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️presentation/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️presentation/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️presentation/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️presentation/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️table/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️table/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️table/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️table/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️brep/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️brep/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️brep/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️brep/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️document/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️document/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️document/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️document/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️animation/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️animation/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️animation/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️animation/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️image/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️image/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️image/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️image/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️value/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️value/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️value/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️value/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️graph/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️graph/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️graph/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️graph/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️object/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️object/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️object/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️object/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️kit/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️kit/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️kit/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️kit/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️flow/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️flow/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️flow/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️flow/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️video/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️video/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️video/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️video/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️text/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️text/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️text/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️text/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️iso21320/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️iso21320/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️iso21320/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️iso21320/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc1/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc1/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc1/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc1/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc6/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc6/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc6/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc6/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc3/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc3/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc3/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc3/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc4/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc4/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc4/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc4/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc5/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc5/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc5/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc5/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc2/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc2/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️cc2/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️cc2/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️valid/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️valid/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️valid/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️valid/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️baseline/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️a/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️a/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️a/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️a/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️x/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️x/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️x/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️x/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️h/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️h/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️h/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️h/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️a/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️a/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️a/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️a/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️vt/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️vt/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️vt/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️vt/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️ua/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️ua/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️ua/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️ua/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️e/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️e/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️e/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️e/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️x/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️x/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️x/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️x/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️strict/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️transitional/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🗄️stdio: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🗒️note: artifact "🗒️note" is missing 🧬️schema/
+  - 🗒️note: artifact "🗒️note" is missing 🚪️io/
+  - 🗒️note: artifact "🗒️note" is missing ⚙️engine/
+  - 🗒️note: artifact "🗒️note" is missing 📚️examples/
+  - 🗒️note: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🗒️note: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🗒️note: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🗒️note: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🗒️note: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🗒️note: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧩️puzzle: artifact "🧊️3d" is missing 🧬️schema/
+  - 🧩️puzzle: artifact "🧊️3d" is missing 🚪️io/
+  - 🧩️puzzle: artifact "🧊️3d" is missing ⚙️engine/
+  - 🧩️puzzle: artifact "🧊️3d" is missing 📚️examples/
+  - 🧩️puzzle: artifact "🖐️5d" is missing 🧬️schema/
+  - 🧩️puzzle: artifact "🖐️5d" is missing 🚪️io/
+  - 🧩️puzzle: artifact "🖐️5d" is missing ⚙️engine/
+  - 🧩️puzzle: artifact "🖐️5d" is missing 📚️examples/
+  - 🧩️puzzle: artifact "◻2d" is missing 🧬️schema/
+  - 🧩️puzzle: artifact "◻2d" is missing 🚪️io/
+  - 🧩️puzzle: artifact "◻2d" is missing ⚙️engine/
+  - 🧩️puzzle: artifact "◻2d" is missing 📚️examples/
+  - 🧩️puzzle: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🧩️puzzle: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧩️puzzle: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧱️block: artifact "🧊️3d" is missing 🧬️schema/
+  - 🧱️block: artifact "🧊️3d" is missing 🚪️io/
+  - 🧱️block: artifact "🧊️3d" is missing ⚙️engine/
+  - 🧱️block: artifact "🧊️3d" is missing 📚️examples/
+  - 🧱️block: artifact "🖐️5d" is missing 🧬️schema/
+  - 🧱️block: artifact "🖐️5d" is missing 🚪️io/
+  - 🧱️block: artifact "🖐️5d" is missing ⚙️engine/
+  - 🧱️block: artifact "🖐️5d" is missing 📚️examples/
+  - 🧱️block: artifact "◻2d" is missing 🧬️schema/
+  - 🧱️block: artifact "◻2d" is missing 🚪️io/
+  - 🧱️block: artifact "◻2d" is missing ⚙️engine/
+  - 🧱️block: artifact "◻2d" is missing 📚️examples/
+  - 🧱️block: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🧱️block: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧱️block: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧱️block: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧱️block: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧱️block: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🧱️block: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🧱️block: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🧱️block: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🪐️space: artifact "🏠️home" is missing 🧬️schema/
+  - 🪐️space: artifact "🏠️home" is missing 🚪️io/
+  - 🪐️space: artifact "🏠️home" is missing ⚙️engine/
+  - 🪐️space: artifact "🏠️home" is missing 📚️examples/
+  - 🪐️space: artifact "🪐️space" is missing 🧬️schema/
+  - 🪐️space: artifact "🪐️space" is missing 🚪️io/
+  - 🪐️space: artifact "🪐️space" is missing ⚙️engine/
+  - 🪐️space: artifact "🪐️space" is missing 📚️examples/
+  - 🪐️space: mode "✳️any/✏️editor/✏️edit" is missing required child "🎮️commands"
+  - 🪐️space: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🪐️space: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🪐️space: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🪐️space: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🪐️space: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🪐️space: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+  - 🪐️space: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🪐️space: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🪐️space: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/
+  - 🪐️space: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/
+  - 🪵️sourcing: artifact "🗂️curate" is missing 🧬️schema/
+  - 🪵️sourcing: artifact "🗂️curate" is missing 🚪️io/
+  - 🪵️sourcing: artifact "🗂️curate" is missing ⚙️engine/
+  - 🪵️sourcing: artifact "🗂️curate" is missing 📚️examples/
+  - 🪵️sourcing: 🧩️extensions/🪵️beams/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🧱️slabs/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: 🧩️extensions/🪟️windows/🦀️component.rs is not declared by any #[path] in 📦️glue.rs
+  - 🪵️sourcing: plugin root is missing 🎮️commands/🦀️component.rs
+  - 🪵️sourcing: plugin root is missing 🔨️modules/🦀️component.rs
+  - 🪵️sourcing: surface "✳️any/👁️viewer" is missing 🎚️config/🧬️schema/
+  - 🪵️sourcing: surface "✳️any/👁️viewer" is missing 👥️presence/🧬️schema/
+  - 🪵️sourcing: surface "✳️any/✏️editor" is missing 🎚️config/🧬️schema/📜️component.wit
+  - 🪵️sourcing: surface "✳️any/✏️editor" is missing 👥️presence/🧬️schema/📜️component.wit
+package discovery problems:
+  - [ambiguous-lang-shape] "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.
+  - [unknown-lang] "🧰️framework/🛍️products/💻️os/📦️packages/fixtures" is not a declared lang (🦀️rust, 🟦️typescript, 🐹️go, 🐍️python, 🔷️dotnet).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/📋️project.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🗄️stdio/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📋️forms/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [ambiguous-lang-shape] "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript" has both a direct manifest and a 🎯️targets/ dir — a lang is either two-level or three-level, never both.
+  - [manifest-without-marker] "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/✨️macros/📦️packages/🦀️rust/Cargo.toml" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [manifest-without-marker] "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/package.json" has no resolvable semio role marker (area "clean" requires one).
+  - [packaging-violation] "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts" is not packaging code under owner "🧰️framework/🔨️modules/🎭️actor" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/AGENTS.md" is not packaging code under owner "🧰️framework/🔨️modules/🧊️3d" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/README.md" is not packaging code under owner "🧰️framework/🔨️modules/🖱️ui" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/Cargo.lock" is not packaging code under owner "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧬️schema-validation.ts" is not packaging code under owner "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🟦️next-env.d.ts" is not packaging code under owner "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts" is not packaging code under owner "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/README.md" is not packaging code under owner "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/README.md" is not packaging code under owner "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🐹️go/AGENTS.md" is not packaging code under owner "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/partial_movie_files" is not packaging code under owner "✏️s/🔌️plugins/🎞️animate" — language-neutral assets belong at the owner root.
+  - [packaging-violation] "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🎨️globals.css" is not packaging code under owner "🌎️hub/🔨️modules/🛡️admin" — language-neutral assets belong at the owner root.
+descriptor gate: 10/59 crates have a 🔣️descriptor.json.
+descriptor gate warnings:
+  - animate: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_animate.wasm — skipping hash check
+  - architect: no ✏️s/🔌️plugins/🏛️architect/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - block: no ✏️s/🔌️plugins/🧱️block/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - cad: no ✏️s/🔌️plugins/📐️cad/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - cad-extension-aec-building: no ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - cad-extension-aec-building-energy: no ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - cad-extension-aec-building-structure: no ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - cad-extension-spatial-shape: no ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - dag: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_dag.wasm — skipping hash check
+  - demonstrator: no ✏️s/🔌️plugins/🎪️demonstrator/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - draw: no ✏️s/🔌️plugins/🖍️draw/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - energy: no ✏️s/🔌️plugins/🔋️energy/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - fem: no ✏️s/🔌️plugins/🏗️fem/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow: no ✏️s/🔌️plugins/🌊️flow/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-bim: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-brep: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-dictionary: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-draw: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-list: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-logic: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-math: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-primitive: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - flow-extension-text: no ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - forms: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_forms.wasm — skipping hash check
+  - gis: no ✏️s/🔌️plugins/🌍️gis/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative: no ✏️s/🔌️plugins/📜️imperative/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative-extension-control: no ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative-extension-effect: no ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative-extension-logic: no ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative-extension-math: no ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - imperative-extension-text: no ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - layout: no ✏️s/🔌️plugins/📏️layout/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - lowpoly: no ✏️s/🔌️plugins/💠️lowpoly/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - mathematical: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_mathematical.wasm — skipping hash check
+  - norm: no ✏️s/🔌️plugins/📕️norm/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - note: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_note.wasm — skipping hash check
+  - playbook: no ✏️s/🔌️plugins/📖️playbook/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - playbook-module-procedural: no ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - procedural: no ✏️s/🔌️plugins/🌀️procedural/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - process: no ✏️s/🔌️plugins/🏭️process/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - process-extension-concrete: no ✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - process-extension-metal: no ✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - process-extension-robotic: no ✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - process-extension-wood: no ✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - puzzle: no ✏️s/🔌️plugins/🧩️puzzle/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - raster: no ✏️s/🔌️plugins/🖨️raster/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - reasoning-mindmap: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_reasoning_mindmap.wasm — skipping hash check
+  - remodel: no ✏️s/🔌️plugins/📸️remodel/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - s: no ✏️s/🔌️plugins/🪐️space/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - sequence: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_sequence.wasm — skipping hash check
+  - shooting: no ✏️s/🔌️plugins/🎥️shooting/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - sourcing: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_sourcing.wasm — skipping hash check
+  - sourcing-module-beams: no ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - sourcing-module-slabs: no ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - sourcing-module-windows: no ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - stdio: no ✏️s/🔌️plugins/🗄️stdio/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - trinity: no ✏️s/🔌️plugins/🔱️trinity/🔣️descriptor.json yet — run `bun ./📜️script.ts describe` in ✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust after building its wasm32-wasip2 component
+  - vcs: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_vcs.wasm — skipping hash check
+  - writer: has hashes.wasmSha256 but no built wasm found under target/wasm32-wasip2/{debug,wasm-release}/semio_s_plugin_writer.wasm — skipping hash check
+plugin registry catalog is fresh (59 plugin crates, 58 playgrounds, 24 framework packages); .vscode/launch.json is fresh.
+
+
+
+ NX   Successfully ran target check for project @semio-tech/plugin-registry
+
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/plugin-registry:check
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+

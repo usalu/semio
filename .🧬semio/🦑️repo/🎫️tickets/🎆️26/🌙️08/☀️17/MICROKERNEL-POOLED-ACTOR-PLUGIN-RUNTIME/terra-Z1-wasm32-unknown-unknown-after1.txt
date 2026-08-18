@@ -1,0 +1,4 @@
+[verify rust-warnings] wasm32-unknown-unknown: 1 crate(s)…
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 1.18s
+[verify rust-warnings] wasm32-unknown-unknown clean.

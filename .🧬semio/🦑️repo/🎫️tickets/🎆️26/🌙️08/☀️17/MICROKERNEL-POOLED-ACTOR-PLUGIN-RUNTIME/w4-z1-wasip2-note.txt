@@ -1,0 +1,216 @@
+[verify rust-warnings] wasm32-wasip2: 1 crate(s)…
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking jsonschema v0.29.1
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+error: this `map_or` can be simplified
+  --> 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/build.rs:12:8
+   |
+12 |     if newest.map_or(true, |current| modified > current) {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_map_or
+   = note: `-D clippy::unnecessary-map-or` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::unnecessary_map_or)]`
+help: use `is_none_or` instead
+   |
+12 -     if newest.map_or(true, |current| modified > current) {
+12 +     if newest.is_none_or(|current| modified > current) {
+   |
+
+error: this `map_or` can be simplified
+  --> 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/build.rs:50:29
+   |
+50 |         Ok(generated_at) => newest_source.map_or(false, |source_at| source_at > generated_at),
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_map_or
+help: use `is_some_and` instead
+   |
+50 -         Ok(generated_at) => newest_source.map_or(false, |source_at| source_at > generated_at),
+50 +         Ok(generated_at) => newest_source.is_some_and(|source_at| source_at > generated_at),
+   |
+
+error: could not compile `semio-framework-graph` (build script) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: using `chunks_exact` with a constant chunk size
+  --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:51:33
+   |
+51 |         for tri in self.indices.chunks_exact(3) {
+   |                                 ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+   = note: `-D clippy::chunks-exact-to-as-chunks` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::chunks_exact_to_as_chunks)]`
+
+error: using `chunks_exact_mut` with a constant chunk size
+  --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:72:35
+   |
+72 |         for chunk in self.normals.chunks_exact_mut(3) {
+   |                                   ^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks_mut::<3>().0`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: using `chunks_exact` with a constant chunk size
+  --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:85:37
+   |
+85 |         for chunk in self.positions.chunks_exact(3) {
+   |                                     ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: the loop variable `tri` is only used to index `face_ids`
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:381:24
+    |
+381 |             for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+    = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator
+    |
+381 -             for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
+381 +             for <item> in face_ids.iter_mut().take((start_tri + count_tri).min(triangle_count)).skip(start_tri) {
+    |
+
+error: using `chunks_exact` with a constant chunk size
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:394:33
+    |
+394 |     for chunk in mesh.positions.chunks_exact(3) {
+    |                                 ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: using `chunks_exact` with a constant chunk size
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:398:35
+    |
+398 |         for chunk in mesh.normals.chunks_exact(3) {
+    |                                   ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: using `chunks_exact` with a constant chunk size
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:402:29
+    |
+402 |     for tri in mesh.indices.chunks_exact(3) {
+    |                             ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: this argument is passed by value, but not consumed in the function body
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:627:57
+    |
+627 | fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                         ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+    = note: `-D clippy::needless-pass-by-value` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_pass_by_value)]`
+help: consider taking a reference instead
+    |
+627 | fn append_glb_primitive(mesh: &mut MeshData, primitive: &gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                         +
+
+error: called `map(<f>).unwrap_or_else(<g>)` on an `Option` value
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:633:36
+    |
+633 | ... = reader.read_indices().map(|indices| indices.into_u32().collect()).unwrap_or_else(|| (0..positions.len() as u32).collect());
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `reader.read_indices().map_or_else(|| (0..positions.len() as u32).collect(), |indices| indices.into_u32().collect())`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+    = note: `-D clippy::map-unwrap-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::map_unwrap_or)]`
+
+error: this argument is passed by value, but not consumed in the function body
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:659:49
+    |
+659 | fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                 ^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+    |
+659 | fn append_glb_mesh(mesh: &mut MeshData, source: &gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                 +
+
+error: this argument is passed by value, but not consumed in the function body
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:666:47
+    |
+666 | fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                               ^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+    |
+666 | fn append_glb_node(mesh: &mut MeshData, node: &gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                               +
+
+error: manual implementation of `.is_multiple_of()`
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:706:11
+    |
+706 |     while data.len() % 4 != 0 {
+    |           ^^^^^^^^^^^^^^^^^^^ help: replace with: `!data.len().is_multiple_of(4)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+    = note: `-D clippy::manual-is-multiple-of` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_is_multiple_of)]`
+
+error: using `chunks_exact` with a constant chunk size
+   --> 🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/📦️glue.rs:738:29
+    |
+738 |     for tri in mesh.indices.chunks_exact(3) {
+    |                             ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+error: could not compile `semio-framework-mesh-engine` (lib) due to 13 previous errors
+error: called `map(<f>).unwrap_or_else(<g>)` on an `Option` value
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:353:34
+    |
+353 |               let embed_lang_key = plans
+    |  __________________________________^
+354 | |                 .iter()
+355 | |                 .find(|p| p.ident.to_string() == *from)
+356 | |                 .map(|p| p.key.clone())
+357 | |                 .unwrap_or_else(|| to_kebab(from));
+    | |__________________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+    = note: `-D clippy::map-unwrap-or` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::map_unwrap_or)]`
+help: try
+    |
+353 ~             let embed_lang_key = plans
+354 +                 .iter()
+355 ~                 .find(|p| p.ident.to_string() == *from).map_or_else(|| to_kebab(from), |p| p.key.clone());
+    |
+
+error: this creates an owned instance just for comparison
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📦️glue.rs:355:27
+    |
+355 |                 .find(|p| p.ident.to_string() == *from)
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ try implementing the comparison without allocating
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#cmp_owned
+    = note: `-D clippy::cmp-owned` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::cmp_owned)]`
+
+error: could not compile `semio-framework-os-kernel-dsl-derive` (lib) due to 2 previous errors
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: cargo clippy -p semio-s-plugin-note --lib --target wasm32-wasip2 -- -D warnings exited with status 101
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at runRustWarnings (/Users/ueli/Documents/semio/📜️script.ts:885:7)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:827:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15425:11
+
+Bun v1.3.14 (macOS arm64)

@@ -1,0 +1,539 @@
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.0
+   Compiling smallvec v1.15.1
+   Compiling serde_core v1.0.228
+   Compiling arrayvec v0.7.6
+   Compiling once_cell v1.21.4
+   Compiling simd-adler32 v0.3.9
+   Compiling zmij v1.0.21
+   Compiling zerofrom v0.1.8
+   Compiling itoa v1.0.18
+   Compiling unicode-ident v1.0.24
+   Compiling stable_deref_trait v1.2.1
+   Compiling log v0.4.29
+   Compiling serde v1.0.228
+   Compiling crc32fast v1.5.0
+   Compiling adler2 v2.0.1
+   Compiling bitflags v2.11.1
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-core v0.3.32
+   Compiling serde_json v1.0.149
+   Compiling wasm-bindgen-shared v0.2.126
+   Compiling yoke v0.8.2
+   Compiling arrayref v0.3.9
+   Compiling futures-sink v0.3.32
+   Compiling slab v0.4.12
+   Compiling miniz_oxide v0.8.9
+   Compiling futures-task v0.3.32
+   Compiling num-traits v0.2.19
+   Compiling wit-bindgen v0.57.1
+   Compiling base64 v0.22.1
+   Compiling wasm-bindgen v0.2.126
+   Compiling zerovec v0.11.6
+   Compiling thiserror v2.0.18
+   Compiling litemap v0.8.2
+   Compiling bumpalo v3.20.2
+   Compiling flate2 v1.1.9
+   Compiling futures-util v0.3.32
+   Compiling equivalent v1.0.2
+   Compiling wasip2 v1.0.3+wasi-0.2.9
+   Compiling writeable v0.6.3
+   Compiling constant_time_eq v0.4.2
+   Compiling tinystr v0.8.3
+   Compiling hashbrown v0.17.1
+   Compiling potential_utf v0.1.5
+   Compiling zopfli v0.8.3
+   Compiling num-integer v0.1.46
+   Compiling js-sys v0.3.103
+   Compiling zerotrie v0.2.4
+   Compiling fastrand v2.4.1
+   Compiling utf8_iter v1.0.4
+   Compiling blake3 v1.8.5
+   Compiling icu_locale_core v2.2.0
+   Compiling indexmap v2.14.0
+   Compiling futures-io v0.3.32
+   Compiling parking v2.2.1
+   Compiling crossbeam-utils v0.8.21
+   Compiling tokio v1.52.3
+   Compiling web-sys v0.3.103
+   Compiling wasm-bindgen-futures v0.4.76
+   Compiling serde-wasm-bindgen v0.6.5
+   Compiling icu_collections v2.2.0
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling console_error_panic_hook v0.1.7
+   Compiling icu_provider v2.2.0
+   Compiling zip v2.4.2
+   Compiling getrandom v0.4.2
+   Compiling futures-lite v2.6.1
+   Compiling libm v0.2.16
+   Compiling lazy_static v1.5.0
+   Compiling icu_properties_data v2.2.0
+   Compiling icu_normalizer_data v2.2.0
+   Compiling num-bigint v0.4.6
+   Compiling scopeguard v1.2.0
+   Compiling ref-cast v1.0.25
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling zerocopy v0.8.48
+error[E0433]: cannot find module or crate `protocol` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:330:9
+    |
+330 | pub use protocol::mutation::*;
+    |         ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `crate::os_pack::format::DeflateCodec`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:25:9
+   |
+25 | pub use crate::os_pack::format::DeflateCodec;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^------------
+   |                                 |
+   |                                 no `DeflateCodec` in `os_pack::format`
+
+error[E0432]: unresolved imports `crate::os_dsl::diagnostic`, `crate::os_dsl::span`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:18:25
+   |
+18 | pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+   |                         ^^^^^^^^^^               ^^^^ could not find `span` in `os_dsl`
+   |                         |
+   |                         could not find `diagnostic` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_pack::write_varint_u64`, `crate::os_pack::ByteReader`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:298:66
+    |
+298 |     use crate::os_pack::{decode_record_body, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
+    |                                                                  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^ no `ByteReader` in `os_pack`
+    |                                                                  |
+    |                                                                  no `write_varint_u64` in `os_pack`
+    |
+help: a similar name exists in the module
+    |
+298 -     use crate::os_pack::{decode_record_body, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};
+298 +     use crate::os_pack::{decode_record_body, encode_record_body, write_varint_i64, ByteReader, DecodeOptions, EncodeOptions};
+    |
+
+error[E0432]: unresolved import `crate::os_spr::ProtocolError`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:299:9
+    |
+299 |     use crate::os_spr::ProtocolError;
+    |         ^^^^^^^^^^^^^^^-------------
+    |                        |
+    |                        no `ProtocolError` in `os_spr`
+
+error[E0432]: unresolved import `protocol`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:30:11
+   |
+30 |   pub use protocol::diagnostic;
+   |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+   |
+   = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:31:11
+   |
+31 |   pub use protocol::span;
+   |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+   |
+   = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:9:26
+  |
+9 | use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+  |                          ^^^^^^  ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+  |                          |       |
+  |                          |       no `TextError` in `os_dsl`
+  |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️component.rs:5:26
+  |
+5 | use crate::os_dsl::{lex, Limits, TextError, TokenKind};
+  |                          ^^^^^^  ^^^^^^^^^ no `TextError` in `os_dsl`
+  |                          |
+  |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:13:26
+   |
+13 | use crate::os_dsl::{lex, Limits, TextError, TokenKind};
+   |                          ^^^^^^  ^^^^^^^^^ no `TextError` in `os_dsl`
+   |                          |
+   |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳️recipe/🦀️component.rs:10:26
+   |
+10 | use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+   |                          ^^^^^^  ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+   |                          |       |
+   |                          |       no `TextError` in `os_dsl`
+   |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️component.rs:5:26
+  |
+5 | use crate::os_dsl::{lex, Limits, TextError, TokenKind};
+  |                          ^^^^^^  ^^^^^^^^^ no `TextError` in `os_dsl`
+  |                          |
+  |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️component.rs:15:26
+   |
+15 | use crate::os_dsl::{lex, Limits, TextError, TextSpan, TokenKind};
+   |                          ^^^^^^  ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+   |                          |       |
+   |                          |       no `TextError` in `os_dsl`
+   |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:16:81
+   |
+16 | ...h, CommentDialect, Limits, StringEscape, StringMode, LexOptions, TextError, TextSpan, TokenKind as CoreKind};
+   |                       ^^^^^^                                        ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+   |                       |                                             |
+   |                       no `Limits` in `os_dsl`                       no `TextError` in `os_dsl`
+
+error[E0432]: unresolved import `crate::os_dsl::TextError`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧠️lsp/🦀️component.rs:4:78
+  |
+4 | use crate::os_dsl::{CompletionItem, GrammarFile, LanguageSpec, ProtocolFile, TextError, TokenClass};
+  |                                                                              ^^^^^^^^^ no `TextError` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:17:26
+   |
+17 | use crate::os_dsl::{lex, Limits, SpannedToken, TextError, TextSpan, TokenKind};
+   |                          ^^^^^^                ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+   |                          |                     |
+   |                          |                     no `TextError` in `os_dsl`
+   |                          no `Limits` in `os_dsl`
+
+error[E0432]: unresolved imports `crate::os_dsl::Limits`, `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:8:49
+  |
+8 | use crate::os_dsl::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
+  |                                                 ^^^^^^                ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+  |                                                 |                     |
+  |                                                 |                     no `TextError` in `os_dsl`
+  |                                                 no `Limits` in `os_dsl`
+
+error[E0433]: cannot find module or crate `protocol` in this scope
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:109:11
+    |
+109 |   pub use protocol::codec::ids;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved imports `crate::os_pack::crc32c`, `crate::os_pack::is_minimal_varint`, `crate::os_pack::read_varint_i64`, `crate::os_pack::read_varint_u64`, `crate::os_pack::write_varint_i64`, `crate::os_pack::write_varint_u64`, `crate::os_pack::ByteRange`, `crate::os_pack::ByteReader`, `crate::os_pack::ByteWriter`, `crate::os_pack::ChunkId`, `crate::os_pack::CodecId`, `crate::os_pack::CompressionCodec`, `crate::os_pack::ContentHash`, `crate::os_pack::NoCompression`, `crate::os_pack::PackError`, `crate::os_pack::PackLimits`, `crate::os_pack::PackSink`, `crate::os_pack::PackSource`, `crate::os_pack::SegmentKind`, `crate::os_pack::KIND_CHUNK`, `crate::os_pack::KIND_CHUNK_TABLE`, `crate::os_pack::KIND_DOCUMENT`, `crate::os_pack::KIND_END`, `crate::os_pack::KIND_FIELD_INDEX`, `crate::os_pack::KIND_MANIFEST`, `crate::os_pack::KIND_PADDING`, `crate::os_pack::KIND_SCHEMA`, `crate::os_pack::KIND_SNAPSHOT`, `crate::os_pack::KIND_SYMBOLS`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🦀️component.rs:18:5
+   |
+18 |     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |     ^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^
+   |     |       |                  |                |                |                 |                 |          |           |           |
+   |     |       |                  |                |                |                 |                 |          |           |           no `ChunkId` in `os_pack`
+   |     |       |                  |                |                |                 |                 |          |           no `ByteWriter` in `os_pack`
+   |     |       |                  |                |                |                 |                 |          no `ByteReader` in `os_pack`
+   |     |       |                  |                |                |                 |                 no `ByteRange` in `os_pack`
+   |     |       |                  |                |                |                 no `write_varint_u64` in `os_pack`
+   |     |       |                  |                |                no `write_varint_i64` in `os_pack`
+   |     |       |                  |                no `read_varint_u64` in `os_pack`
+   |     |       |                  no `read_varint_i64` in `os_pack`
+   |     |       no `is_minimal_varint` in `os_pack`
+   |     no `crc32c` in `os_pack`
+19 |     SegmentKind, KIND_CHUNK, KIND_CHUNK_TABLE, KIND_DOCUMENT, KIND_END, KIND_FIELD_INDEX, KIND_MANIFEST, KIND_PADDING, KIND_SCHEMA, KIND_SNAPSHOT, KIND_SYMBOLS,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+   |
+help: a similar name exists in the module
+   |
+18 -     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+18 +     crc32c, is_minimal_varint, read_varint_u64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |
+help: a similar name exists in the module
+   |
+18 -     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+18 +     crc32c, is_minimal_varint, read_varint_i64, read_varint_i64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |
+help: a similar name exists in the module
+   |
+18 -     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+18 +     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_u64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |
+help: a similar name exists in the module
+   |
+18 -     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+18 +     crc32c, is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_i64, ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash, NoCompression, PackError, PackLimits, PackSink, PackSource,
+   |
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:110:11
+    |
+110 |   pub use protocol::codec;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:111:11
+    |
+111 |   pub use protocol::source;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `crate::os_spr::wire`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:14:24
+   |
+14 | pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+   |                        ^^^^ could not find `wire` in `os_spr`
+
+error[E0432]: unresolved import `crate::os_spr::format`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:15:24
+   |
+15 | pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationL...
+   |                        ^^^^^^ could not find `format` in `os_spr`
+
+error[E0432]: unresolved import `crate::os_spr::causal`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:24:24
+   |
+24 | pub use crate::os_spr::causal::{
+   |                        ^^^^^^ could not find `causal` in `os_spr`
+
+error[E0432]: unresolved imports `crate::os_spr::command::Edit`, `crate::os_spr::command::MutationMeta`, `crate::os_spr::command::ForeignStep`, `crate::os_spr::command::ForeignTarget`, `crate::os_spr::command::MutationOrigin`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:31:16
+     |
+  31 | ...c, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, M...
+     |       ^^^^ no `Edit` in `os_spr::command`                                                                                                                                                                  ^^^^^^^^^^^^ no `MutationMeta` in `os_spr::command`
+...
+  35 | ...n_diff, fold_plan_inverse, plan_foreign_steps, plan_of, CompositeMutationKind, ForeignStep, ForeignTarget, MutationOrigin, PlanError, PlanStep, Planner, MAX_PLAN_DEPTH,
+     |                                                                                   ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^ no `MutationOrigin` in `os_spr::command`
+     |                                                                                   |            |
+     |                                                                                   |            no `ForeignTarget` in `os_spr::command`
+     |                                                                                   no `ForeignStep` in `os_spr::command`
+     |
+note: variant `crate::os_store::component::OpsHeaderLine::Edit` exists but is inaccessible
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:2264:5
+     |
+2264 |     Edit {
+     |     ^^^^ not accessible
+help: a similar name exists in the module
+     |
+  31 -     DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationMeta, MutationMessage, MutationOutcome,
+  31 +     DiffCodec, Edit, Identified, IndexedTripleDiff, ItemPatch, MutationKind, NamedTripleDiff, OpBinary, OpText, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationDiff, MutationMessage, MutationOutcome,
+     |
+
+error[E0432]: unresolved import `crate::os_spr::wire`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:37:24
+   |
+37 | pub use crate::os_spr::wire::{ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, Sc...
+   |                        ^^^^ could not find `wire` in `os_spr`
+
+error[E0432]: unresolved import `crate::os_spr::conflict`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:38:24
+   |
+38 | pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessag...
+   |                        ^^^^^^^^ could not find `conflict` in `os_spr`
+
+error[E0432]: unresolved import `crate::os_spr::wire`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:39:24
+   |
+39 | pub use crate::os_spr::wire::{
+   |                        ^^^^ could not find `wire` in `os_spr`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:148:11
+    |
+148 |   pub use protocol::causal;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:149:11
+    |
+149 |   pub use protocol::conflict;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:150:11
+    |
+150 |   pub use protocol::crypto;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:151:11
+    |
+151 |   pub use protocol::dictionary;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:152:11
+    |
+152 |   pub use protocol::format;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:153:11
+    |
+153 |   pub use protocol::ids;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:154:11
+    |
+154 |   pub use protocol::scalar;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `protocol`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs:155:11
+    |
+155 |   pub use protocol::wire;
+    |           ^^^^^^^^ use of unresolved module or unlinked crate `protocol`
+    |
+    = help: if you wanted to use a crate named `protocol`, use `cargo add protocol` to add it to your `Cargo.toml`
+
+error[E0432]: unresolved import `dsl::Diagnostic`
+ --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:7:5
+  |
+7 | use dsl::Diagnostic;
+  |     ^^^^^----------
+  |          |
+  |          no `Diagnostic` in the root
+  |
+help: a similar name exists in the module
+  |
+7 - use dsl::Diagnostic;
+7 + use dsl::diagnostic;
+  |
+
+error[E0432]: unresolved import `dsl::Diagnostic`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2211:9
+     |
+2211 |     use dsl::Diagnostic;
+     |         ^^^^^----------
+     |              |
+     |              no `Diagnostic` in the root
+     |
+help: a similar name exists in the module
+     |
+2211 -     use dsl::Diagnostic;
+2211 +     use dsl::diagnostic;
+     |
+help: consider importing this unresolved item through its public re-export instead
+     |
+2211 -     use dsl::Diagnostic;
+2211 +     use crate::os_io::Diagnostic;
+     |
+
+error[E0432]: unresolved import `dsl::Diagnostic`
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🧬️schema/🦀️component.rs:23:5
+   |
+23 | use dsl::Diagnostic;
+   |     ^^^^^----------
+   |          |
+   |          no `Diagnostic` in the root
+   |
+help: a similar name exists in the module
+   |
+23 - use dsl::Diagnostic;
+23 + use dsl::diagnostic;
+   |
+
+error[E0432]: unresolved imports `crate::os_dsl::TextError`, `crate::os_dsl::TextSpan`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:1237:25
+     |
+1237 | pub use crate::os_dsl::{TextError, TextSpan};
+     |                         ^^^^^^^^^  ^^^^^^^^ no `TextSpan` in `os_dsl`
+     |                         |
+     |                         no `TextError` in `os_dsl`
+
+error[E0433]: cannot find `fault_from_thiserror` in `crate`
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:242:8
+    |
+242 | crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
+    |        ^^^^^^^^^^^^^^^^^^^^ could not find `fault_from_thiserror` in the crate root
+
+   Compiling icu_properties v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling crossbeam-epoch v0.9.18
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12372:6
+      |
+12372 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+12372 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+12372 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373:42
+      |
+12373 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12373 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+12373 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12375:9
+      |
+12375 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12375 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+12375 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12377:49
+      |
+12377 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12377 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+12377 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12378:21
+      |
+12378 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+12378 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+12378 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `semio-framework-os-kernel` (lib) generated 5 warnings
+error: could not compile `semio-framework-os-kernel` (lib) due to 41 previous errors; 5 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+EXIT:101

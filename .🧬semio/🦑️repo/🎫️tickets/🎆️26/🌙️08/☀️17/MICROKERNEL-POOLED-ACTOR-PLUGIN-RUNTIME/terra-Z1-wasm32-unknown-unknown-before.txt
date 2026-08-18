@@ -1,0 +1,189 @@
+[verify rust-warnings] wasm32-unknown-unknown: 1 crate(s)…
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+error: this argument is passed by value, but not consumed in the function body
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1065:41
+     |
+1065 |     pub fn on_signal(&mut self, signal: FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
+     |                                         ^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+     = note: `-D clippy::needless-pass-by-value` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::needless_pass_by_value)]`
+help: consider taking a reference instead
+     |
+1065 |     pub fn on_signal(&mut self, signal: &FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
+     |                                         +
+
+error: clamp-like pattern without using clamp function
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1329:5
+     |
+1329 |     hardware_concurrency.saturating_sub(1).min(4).max(1)
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `hardware_concurrency.saturating_sub(1).clamp(1, 4)`
+     |
+     = note: clamp will panic if max < min
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_clamp
+     = note: `-D clippy::manual-clamp` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::manual_clamp)]`
+
+error: `exclusive_reserve.min(2).min(shard_count.saturating_sub(1))` is never smaller than `0` and has therefore no effect
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1347:33
+     |
+1347 |         let exclusive_reserve = exclusive_reserve.min(2).min(shard_count.saturating_sub(1)).max(0);
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `exclusive_reserve.min(2).min(shard_count.saturating_sub(1))`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_min_or_max
+     = note: `-D clippy::unnecessary-min-or-max` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::unnecessary_min_or_max)]`
+
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1382:22
+     |
+1382 |         let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map(|(index, _)| index).unwrap_or(0);
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+     = note: `-D clippy::map-unwrap-or` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::map_unwrap_or)]`
+help: use `map_or(<a>, <f>)` instead
+     |
+1382 -         let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map(|(index, _)| index).unwrap_or(0);
+1382 +         let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map_or(0, |(index, _)| index);
+     |
+
+error: usage of `contains_key` followed by `insert` on a `BTreeMap`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1406:13
+     |
+1406 | /             if !self.exclusive_leases.contains_key(&candidate) {
+1407 | |                 self.exclusive_leases.insert(candidate, actor);
+1408 | |                 self.assignment.insert(actor, candidate);
+1409 | |                 return Some(candidate);
+1410 | |             }
+     | |_____________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_entry
+     = note: `-D clippy::map-entry` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::map_entry)]`
+help: try
+     |
+1406 ~             if let std::collections::btree_map::Entry::Vacant(e) = self.exclusive_leases.entry(candidate) {
+1407 +                 e.insert(actor);
+1408 +                 self.assignment.insert(actor, candidate);
+1409 +                 return Some(candidate);
+1410 +             }
+     |
+
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1623:34
+     |
+1623 |                     let weight = self.actors.get(&actor_id).map(Self::actor_weight).unwrap_or(1);
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+help: use `map_or(<a>, <f>)` instead
+     |
+1623 -                     let weight = self.actors.get(&actor_id).map(Self::actor_weight).unwrap_or(1);
+1623 +                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
+     |
+
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1652:26
+     |
+1652 |             let weight = self.actors.get(&id).map(Self::actor_weight).unwrap_or(1);
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+help: use `map_or(<a>, <f>)` instead
+     |
+1652 -             let weight = self.actors.get(&id).map(Self::actor_weight).unwrap_or(1);
+1652 +             let weight = self.actors.get(&id).map_or(1, Self::actor_weight);
+     |
+
+error: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1656:52
+     |
+1656 |         candidates.iter().copied().max_by_key(|id| self.actors.get(id).map(|e| e.deficit).unwrap_or(0))
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+help: use `map_or(<a>, <f>)` instead
+     |
+1656 -         candidates.iter().copied().max_by_key(|id| self.actors.get(id).map(|e| e.deficit).unwrap_or(0))
+1656 +         candidates.iter().copied().max_by_key(|id| self.actors.get(id).map_or(0, |e| e.deficit))
+     |
+
+error: this argument is passed by value, but not consumed in the function body
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2161:40
+     |
+2161 |     pub fn submit(&mut self, envelope: Envelope) -> Backpressure {
+     |                                        ^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+2161 |     pub fn submit(&mut self, envelope: &Envelope) -> Backpressure {
+     |                                        +
+
+error: this argument is passed by value, but not consumed in the function body
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2183:56
+     |
+2183 |     pub fn complete(&mut self, actor: ActorId, result: TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+     |                                                        ^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+2183 |     pub fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+     |                                                        +
+
+error: using `clone` on type `FailureStage` which implements the `Copy` trait
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2207:30
+     |
+2207 |         meta.metrics.stage = meta.failure.stage.clone();
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `meta.failure.stage`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+     = note: `-D clippy::clone-on-copy` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::clone_on_copy)]`
+
+error: using `clone` on type `FailureStage` which implements the `Copy` trait
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2225:38
+     |
+2225 |                 meta.metrics.stage = meta.failure.stage.clone();
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `meta.failure.stage`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+
+error: this argument is passed by value, but not consumed in the function body
+  --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📦️glue.rs:85:25
+   |
+85 |     fn to_js_error(err: pack::PackError) -> JsError {
+   |                         ^^^^^^^^^^^^^^^
+   |
+help: or consider marking this type as `Copy`
+  --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:29:5
+   |
+29 |     pub enum PackError {
+   |     ^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+   |
+85 |     fn to_js_error(err: &pack::PackError) -> JsError {
+   |                         +
+
+error: could not compile `semio-framework-actor` (lib) due to 13 previous errors
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: cargo clippy -p semio-framework-actor --lib --target wasm32-unknown-unknown -- -D warnings exited with status 101
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at runRustWarnings (/Users/ueli/Documents/semio/📜️script.ts:880:7)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:822:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15420:11
+
+Bun v1.3.14 (macOS arm64)

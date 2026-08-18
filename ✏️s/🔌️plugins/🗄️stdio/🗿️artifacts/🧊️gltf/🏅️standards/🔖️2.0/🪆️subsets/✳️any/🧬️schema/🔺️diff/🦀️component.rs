@@ -16,10 +16,15 @@
 
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfDocument, GltfImage,
+    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage,
     GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin,
     GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
+// 🧬️ `GltfDocument` is only reached through `mod tests`' `use super::*;` glob (its non-test uses
+// below are all inside `#[cfg(test)]`), so — like the reactor/puzzle wasm-only imports elsewhere in
+// this ticket — it must be gated to its actual consumer or it warns unused on the plain `lib` build.
+#[cfg(test)]
+use crate::artifacts::gltf::schema::snapshot::GltfDocument;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;

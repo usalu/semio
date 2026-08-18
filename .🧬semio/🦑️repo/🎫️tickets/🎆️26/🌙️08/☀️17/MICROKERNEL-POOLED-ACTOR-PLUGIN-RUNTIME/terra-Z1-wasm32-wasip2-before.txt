@@ -1,0 +1,20 @@
+[verify rust-warnings] wasm32-wasip2: 33 crate(s)…
+error: the package 'semio-s-plugin-animate' does not contain this feature: component-guest
+help: packages with the missing feature: semio-framework-plugin, semio-s-plugin-flow-extension-brep, semio-s-plugin-flow-extension-dictionary, semio-s-plugin-flow-extension-list, semio-s-plugin-flow-extension-logic, semio-s-plugin-flow-extension-math, semio-s-plugin-flow-extension-primitive, semio-s-plugin-flow-extension-text, semio-s-plugin-flow-extension-bim, semio-s-plugin-flow-extension-draw, semio-framework-os-scale-fixture
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: cargo clippy -p semio-s-plugin-animate --lib --features component-guest --target wasm32-wasip2 -- -D warnings exited with status 101
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at runRustWarnings (/Users/ueli/Documents/semio/📜️script.ts:880:7)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:822:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15420:11
+
+Bun v1.3.14 (macOS arm64)
+EXIT=1

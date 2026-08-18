@@ -1,0 +1,32 @@
+[package]
+name = "semio-framework-async"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pure async-runtime interface layer: OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, ThreadPlan/ThreadBudget sizing arithmetic, and the HostAsyncRuntime trait that hides tokio from every other framework crate — zero tokio, zero std::thread, zero I/O, zero clock (callers pass now_ms) in this crate; the tokio-backed implementation lives in a sibling crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
+
+[package.metadata.semio]
+role = "framework"
+id = "async"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_async"
+path = "📦️glue.rs"
+
+[features]
+# 🧬️ Generates the TypeScript mirror for the pure vocabulary types (see `../../🤖️generated/`);
+# never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
+typegen = ["dep:ts-rs"]
+# 🧪️ Turns on the `testkit::ManualRuntime` `HostAsyncRuntime` test double for downstream crates
+# (packets R2/R4) to unit-test against without linking tokio. Always available under `cfg(test)`
+# for this crate's own test suite regardless of this feature.
+testkit = []
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+ts-rs = { version = "10", optional = true }
+
+[dev-dependencies]

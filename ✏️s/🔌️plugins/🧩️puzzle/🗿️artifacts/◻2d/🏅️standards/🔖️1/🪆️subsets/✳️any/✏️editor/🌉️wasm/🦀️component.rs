@@ -7,12 +7,18 @@
 //! (`BoardHost`) already lives in `infinite_board_port_directed_normal` and is re-exported by this
 //! crate's own puzzle-2d engine — this module only owns the wasm session wrapper around it.
 
+// 🧬️ Every item below is individually `#[cfg(target_arch = "wasm32")]`-gated (the wasm session
+// wrapper has no native meaning), so these imports must be too or they warn as unused on native.
+#[cfg(target_arch = "wasm32")]
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::{
     apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
+#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
+#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
 
 // #region 🔖️WasmHost

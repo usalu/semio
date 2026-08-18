@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// combinators. Self-contained (no dependency on `🎒️pack`, which lives in the os-product layer).
 pub mod pack {
     /// 🚨️ The one error type every `pack_decode` returns.
-    #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
+    #[derive(thiserror::Error, Debug, Clone, Copy, PartialEq, Eq)]
     pub enum PackError {
         #[error("pack: truncated at offset {0} reading {1}")]
         Truncated(usize, &'static str),
@@ -498,7 +498,13 @@ impl WindowId {
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Origin {
     Ui { window: WindowId },
-    Actor(ActorId),
+    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
+    /// the newtype `Actor(ActorId)` this used to be — serde's internal tagging (`#[serde(tag =
+    /// "kind")]`) cannot serialize a newtype variant whose payload is not itself a map (`ActorId` is
+    /// a bare `u64` tuple struct). Latent, not live (this crate has no `serde_json` dependency and
+    /// the wire uses `pack_encode`/`pack_decode`), but the generated TS mirror rendered this as an
+    /// impossible `{"kind":"actor"} & bigint` intersection — see `📓️luna-serde-newtype-audit.md`.
+    Actor { id: ActorId },
     Kernel,
     Bus { topic: String },
 }
@@ -510,7 +516,7 @@ impl Origin {
                 pack::write_u8(out, 0);
                 window.pack_encode(out);
             }
-            Origin::Actor(id) => {
+            Origin::Actor { id } => {
                 pack::write_u8(out, 1);
                 id.pack_encode(out);
             }
@@ -525,7 +531,7 @@ impl Origin {
         let tag = pack::read_u8(bytes, pos, "Origin")?;
         match tag {
             0 => Ok(Origin::Ui { window: WindowId::pack_decode(bytes, pos)? }),
-            1 => Ok(Origin::Actor(ActorId::pack_decode(bytes, pos)?)),
+            1 => Ok(Origin::Actor { id: ActorId::pack_decode(bytes, pos)? }),
             2 => Ok(Origin::Kernel),
             3 => Ok(Origin::Bus { topic: pack::read_str(bytes, pos, "Origin::topic")? }),
             other => Err(pack::PackError::InvalidTag { what: "Origin", tag: other, offset: *pos }),
@@ -539,17 +545,26 @@ impl Origin {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Payload {
-    Event(Vec<u8>),
+    /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
+    /// the newtype `Event(Vec<u8>)` this used to be — serde's internal tagging cannot serialize a
+    /// newtype variant whose payload is a sequence (`serde_json` errors "cannot serialize tagged
+    /// newtype variant ... containing a sequence", the exact defect `JobStep::Done`/`Failed` hit
+    /// earlier this ticket). Latent, not live, on THIS crate's own pack wire — see [`Origin::Actor`]'s
+    /// doc for the full context and `📓️luna-serde-newtype-audit.md`.
+    Event { bytes: Vec<u8> },
     Suspend { checkpoint: bool },
     Resume { checkpoint: Option<Vec<u8>> },
-    Cancel(u64),
+    /// 🐛️ Same class of bug as [`Payload::Event`], payload is an integer this time (`serde_json`:
+    /// "cannot serialize tagged newtype variant ... containing an integer") — struct variant, not
+    /// the newtype `Cancel(u64)` this used to be.
+    Cancel { seq: u64 },
     JobStep { job: u64 },
 }
 
 impl Payload {
     pub fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            Payload::Event(bytes) => {
+            Payload::Event { bytes } => {
                 pack::write_u8(out, 0);
                 pack::write_bytes(out, bytes);
             }
@@ -561,7 +576,7 @@ impl Payload {
                 pack::write_u8(out, 2);
                 pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
             }
-            Payload::Cancel(seq) => {
+            Payload::Cancel { seq } => {
                 pack::write_u8(out, 3);
                 pack::write_u64(out, *seq);
             }
@@ -574,10 +589,10 @@ impl Payload {
     pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         let tag = pack::read_u8(bytes, pos, "Payload")?;
         match tag {
-            0 => Ok(Payload::Event(pack::read_bytes(bytes, pos, "Payload::Event")?)),
+            0 => Ok(Payload::Event { bytes: pack::read_bytes(bytes, pos, "Payload::Event")? }),
             1 => Ok(Payload::Suspend { checkpoint: pack::read_bool(bytes, pos, "Payload::Suspend")? }),
             2 => Ok(Payload::Resume { checkpoint: pack::read_opt(bytes, pos, "Payload::Resume", |b, p| pack::read_bytes(b, p, "Payload::Resume::checkpoint"))? }),
-            3 => Ok(Payload::Cancel(pack::read_u64(bytes, pos, "Payload::Cancel")?)),
+            3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel")? }),
             4 => Ok(Payload::JobStep { job: pack::read_u64(bytes, pos, "Payload::JobStep")? }),
             other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
         }
@@ -652,7 +667,9 @@ pub enum TurnStatus {
     Idle,
     MoreWork,
     CheckpointReady,
-    Faulted(Vec<u8>),
+    /// 🐛️ Struct variant, not the newtype `Faulted(Vec<u8>)` this used to be — same sequence-payload
+    /// serde defect as [`Payload::Event`]; see that variant's doc for the full explanation.
+    Faulted { detail: Vec<u8> },
 }
 
 impl TurnStatus {
@@ -661,7 +678,7 @@ impl TurnStatus {
             TurnStatus::Idle => pack::write_u8(out, 0),
             TurnStatus::MoreWork => pack::write_u8(out, 1),
             TurnStatus::CheckpointReady => pack::write_u8(out, 2),
-            TurnStatus::Faulted(detail) => {
+            TurnStatus::Faulted { detail } => {
                 pack::write_u8(out, 3);
                 pack::write_bytes(out, detail);
             }
@@ -673,7 +690,7 @@ impl TurnStatus {
             0 => Ok(TurnStatus::Idle),
             1 => Ok(TurnStatus::MoreWork),
             2 => Ok(TurnStatus::CheckpointReady),
-            3 => Ok(TurnStatus::Faulted(pack::read_bytes(bytes, pos, "TurnStatus::Faulted")?)),
+            3 => Ok(TurnStatus::Faulted { detail: pack::read_bytes(bytes, pos, "TurnStatus::Faulted")? }),
             other => Err(pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
         }
     }
@@ -740,7 +757,12 @@ impl TurnResult {
 pub enum Backpressure {
     Accept,
     Coalesced,
-    Dropped(Lane),
+    /// 🐛️ Struct variant, not the newtype `Dropped(Lane)` this used to be. `Lane` itself serializes
+    /// fine alone (a plain enum, `#[serde(tag = "kind")]` with unit variants), but wrapping it as a
+    /// newtype payload of ANOTHER internally-tagged enum hits the same "cannot serialize tagged
+    /// newtype variant" defect as [`Payload::Event`] — the payload type does not matter, only that
+    /// it is not itself a map.
+    Dropped { lane: Lane },
     Rejected,
 }
 
@@ -749,7 +771,7 @@ impl Backpressure {
         match self {
             Backpressure::Accept => pack::write_u8(out, 0),
             Backpressure::Coalesced => pack::write_u8(out, 1),
-            Backpressure::Dropped(lane) => {
+            Backpressure::Dropped { lane } => {
                 pack::write_u8(out, 2);
                 lane.pack_encode(out);
             }
@@ -761,7 +783,7 @@ impl Backpressure {
         match tag {
             0 => Ok(Backpressure::Accept),
             1 => Ok(Backpressure::Coalesced),
-            2 => Ok(Backpressure::Dropped(Lane::pack_decode(bytes, pos)?)),
+            2 => Ok(Backpressure::Dropped { lane: Lane::pack_decode(bytes, pos)? }),
             3 => Ok(Backpressure::Rejected),
             other => Err(pack::PackError::InvalidTag { what: "Backpressure", tag: other, offset: *pos }),
         }
@@ -824,7 +846,7 @@ impl Mailbox {
                     let dropped_lane = Lane::ALL[rank];
                     self.lanes[incoming_rank].push_back(envelope);
                     self.len += 1;
-                    Backpressure::Dropped(dropped_lane)
+                    Backpressure::Dropped { lane: dropped_lane }
                 }
                 None => Backpressure::Rejected,
             }
@@ -904,7 +926,10 @@ pub enum FailureSignal {
     MemoryLimit,
     MailboxOverflow,
     UiQuota,
-    Trap(String),
+    /// 🐛️ Struct variant, not the newtype `Trap(String)` this used to be — `String` is a sequence
+    /// of chars as far as serde's internal tagging is concerned, so it hits the exact same "cannot
+    /// serialize tagged newtype variant ... containing a sequence" defect as [`Payload::Event`].
+    Trap { detail: String },
     HeartbeatMissed { count: u32 },
     ManualReset,
 }
@@ -912,7 +937,7 @@ pub enum FailureSignal {
 impl FailureSignal {
     /// 🚨️ Whether this signal is severe enough to skip the warn/throttle rungs and trap outright.
     fn is_fatal(&self) -> bool {
-        matches!(self, FailureSignal::Trap(_))
+        matches!(self, FailureSignal::Trap { .. })
     }
 
     pub fn pack_encode(&self, out: &mut Vec<u8>) {
@@ -925,7 +950,7 @@ impl FailureSignal {
             FailureSignal::MemoryLimit => pack::write_u8(out, 2),
             FailureSignal::MailboxOverflow => pack::write_u8(out, 3),
             FailureSignal::UiQuota => pack::write_u8(out, 4),
-            FailureSignal::Trap(detail) => {
+            FailureSignal::Trap { detail } => {
                 pack::write_u8(out, 5);
                 pack::write_str(out, detail);
             }
@@ -944,7 +969,7 @@ impl FailureSignal {
             2 => Ok(FailureSignal::MemoryLimit),
             3 => Ok(FailureSignal::MailboxOverflow),
             4 => Ok(FailureSignal::UiQuota),
-            5 => Ok(FailureSignal::Trap(pack::read_str(bytes, pos, "FailureSignal::Trap")?)),
+            5 => Ok(FailureSignal::Trap { detail: pack::read_str(bytes, pos, "FailureSignal::Trap")? }),
             6 => Ok(FailureSignal::HeartbeatMissed { count: pack::read_u32(bytes, pos, "FailureSignal::count")? }),
             7 => Ok(FailureSignal::ManualReset),
             other => Err(pack::PackError::InvalidTag { what: "FailureSignal", tag: other, offset: *pos }),
@@ -1062,7 +1087,7 @@ impl FailureState {
     }
 
     /// 🚑️ Applies one failure signal, returning what the kernel must do beyond this actor's own bookkeeping.
-    pub fn on_signal(&mut self, signal: FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
+    pub fn on_signal(&mut self, signal: &FailureSignal, lane: Lane, now_ms: u64) -> FailureEscalation {
         self.clean_turns = 0;
         self.last_signal_ms = now_ms;
         if let FailureSignal::ManualReset = signal {
@@ -1078,7 +1103,7 @@ impl FailureState {
             }
             return FailureEscalation::Restart;
         }
-        if let FailureSignal::HeartbeatMissed { count } = &signal {
+        if let FailureSignal::HeartbeatMissed { count } = signal {
             if *count >= FAILURE_HEARTBEAT_TRAP_THRESHOLD {
                 self.restart_count += 1;
                 self.stage = FailureStage::Trapped { restarts: self.restart_count };
@@ -1326,7 +1351,7 @@ pub fn clamp_native_shard_count(available_parallelism: u16) -> u16 {
 
 /// 🧮️ Host-side sizing policy: web `min(hardwareConcurrency-1, 4)`.
 pub fn clamp_web_shard_count(hardware_concurrency: u16) -> u16 {
-    hardware_concurrency.saturating_sub(1).min(4).max(1)
+    hardware_concurrency.saturating_sub(1).clamp(1, 4)
 }
 
 /// 🧩️ Fixed shard pool. An actor is pinned to a shard; migration only happens at a quiescent point
@@ -1344,7 +1369,7 @@ pub struct ShardTable {
 
 impl ShardTable {
     pub fn new(kind: ShardKind, shard_count: u16, exclusive_reserve: u16) -> Self {
-        let exclusive_reserve = exclusive_reserve.min(2).min(shard_count.saturating_sub(1)).max(0);
+        let exclusive_reserve = exclusive_reserve.min(2).min(shard_count.saturating_sub(1));
         Self { kind, shard_count: shard_count.max(1), exclusive_reserve, assignment: BTreeMap::new(), exclusive_leases: BTreeMap::new() }
     }
 
@@ -1379,7 +1404,7 @@ impl ShardTable {
                 load[shard.0 as usize] += 1;
             }
         }
-        let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map(|(index, _)| index).unwrap_or(0);
+        let chosen = load.iter().enumerate().min_by_key(|(index, count)| (**count, *index)).map_or(0, |(index, _)| index);
         let shard = ShardId(chosen as u16);
         self.assignment.insert(actor, shard);
         shard
@@ -1403,8 +1428,8 @@ impl ShardTable {
         let base = self.shard_count - self.exclusive_reserve;
         for offset in 0..self.exclusive_reserve {
             let candidate = ShardId(base + offset);
-            if !self.exclusive_leases.contains_key(&candidate) {
-                self.exclusive_leases.insert(candidate, actor);
+            if let std::collections::btree_map::Entry::Vacant(entry) = self.exclusive_leases.entry(candidate) {
+                entry.insert(actor);
                 self.assignment.insert(actor, candidate);
                 return Some(candidate);
             }
@@ -1620,7 +1645,7 @@ impl Scheduler {
                     let mut candidates: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
                     candidates.sort();
                     let Some(actor_id) = self.pick_level2(&candidates) else { break };
-                    let weight = self.actors.get(&actor_id).map(Self::actor_weight).unwrap_or(1);
+                    let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
                     if let Some(grant) = self.drain_turn(actor_id) {
                         run.push(grant);
                         granted_this_tick.insert(actor_id);
@@ -1649,11 +1674,11 @@ impl Scheduler {
             return None;
         }
         for &id in candidates {
-            let weight = self.actors.get(&id).map(Self::actor_weight).unwrap_or(1);
+            let weight = self.actors.get(&id).map_or(1, Self::actor_weight);
             let entry = self.actors.get_mut(&id).unwrap();
             entry.deficit += weight;
         }
-        candidates.iter().copied().max_by_key(|id| self.actors.get(id).map(|e| e.deficit).unwrap_or(0))
+        candidates.iter().copied().max_by_key(|id| self.actors.get(id).map_or(0, |e| e.deficit))
     }
 
     fn drain_turn(&mut self, actor_id: ActorId) -> Option<TurnGrant> {
@@ -2061,6 +2086,21 @@ mod thread_transport {
         pub fn beat(&self, now_ms: u64) {
             self.heartbeat_ms.store(now_ms, Ordering::SeqCst);
         }
+
+        /// ⏳️ Blocking receive with a timeout — `ShardExecutor` (terra-shard-grants,
+        /// `🖥️host/🧵️shard/🏃️executor.rs`) parks here between pumps instead of a caller-driven
+        /// busy-poll loop. `mpsc::Receiver::recv_timeout` blocks only the CALLING thread; it spawns
+        /// no thread of its own, so the purity grep this crate's core is verified against (no
+        /// `std::thread` in `🦀️component.rs`) still holds. Not part of the [`ShardTransport`]
+        /// trait — `WorkerTransport`/`ProcessTransport` have their own, different ways of parking
+        /// (a JS event loop, a blocking `read`), so this stays a `ThreadTransport`-only inherent
+        /// method, the same shape `Self::beat` already uses for its own extra, non-trait surface.
+        pub fn recv_deadline(&self, timeout: std::time::Duration) -> Option<Vec<u8>> {
+            if self.killed.load(Ordering::SeqCst) {
+                return None;
+            }
+            self.inbound.lock().ok().and_then(|rx| rx.recv_timeout(timeout).ok())
+        }
     }
 
     impl ShardTransport for ThreadTransport {
@@ -2158,12 +2198,12 @@ impl Kernel {
         id
     }
 
-    pub fn submit(&mut self, envelope: Envelope) -> Backpressure {
+    pub fn submit(&mut self, envelope: &Envelope) -> Backpressure {
         let backpressure = self.scheduler.submit(envelope.clone());
         if let Some(meta) = self.actors.get_mut(&envelope.to) {
             match backpressure {
                 Backpressure::Coalesced => meta.metrics.coalesced += 1,
-                Backpressure::Dropped(_) => meta.metrics.dropped += 1,
+                Backpressure::Dropped { .. } => meta.metrics.dropped += 1,
                 _ => {}
             }
             if let Some(pressure) = self.scheduler.mailbox_pressure(envelope.to) {
@@ -2180,13 +2220,13 @@ impl Kernel {
     /// ✅️ Records a turn's result against its actor: usage metrics, failure-ladder update (clean
     /// turn vs. `Faulted`), and status transition. Returns the escalation the caller (host) must
     /// act on for `Trapped`/`Quarantined` outcomes.
-    pub fn complete(&mut self, actor: ActorId, result: TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+    pub fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
         meta.metrics.record_turn(&result.usage);
         let escalation = match &result.status {
-            TurnStatus::Faulted(detail) => {
+            TurnStatus::Faulted { detail } => {
                 let detail_string = String::from_utf8_lossy(detail).into_owned();
-                meta.failure.on_signal(FailureSignal::Trap(detail_string), Lane::Interactive, now_ms)
+                meta.failure.on_signal(&FailureSignal::Trap { detail: detail_string }, Lane::Interactive, now_ms)
             }
             _ => {
                 meta.failure.on_clean_turn(now_ms);
@@ -2204,7 +2244,7 @@ impl Kernel {
             FailureStage::Cancelled => ActorStatus::Draining,
             _ => ActorStatus::Active,
         };
-        meta.metrics.stage = meta.failure.stage.clone();
+        meta.metrics.stage = meta.failure.stage;
         let throttle = meta.failure.throttle_factor();
         let package = meta.package.clone();
         self.scheduler.set_throttle(actor, throttle);
@@ -2222,7 +2262,7 @@ impl Kernel {
             if let Some(meta) = self.actors.get_mut(&actor) {
                 meta.failure.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(meta.failure.restart_count.max(1)) };
                 meta.status = ActorStatus::Quarantined;
-                meta.metrics.stage = meta.failure.stage.clone();
+                meta.metrics.stage = meta.failure.stage;
             }
             self.scheduler.set_active(actor, false);
         }
@@ -2346,7 +2386,7 @@ mod tests {
 
         //#region 🔖️Helpers
         fn env(to: ActorId, lane: Lane, seq: u64) -> Envelope {
-            Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![1, 2, 3]) }
+            Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![1, 2, 3] } }
         }
 
         fn ok_turn() -> TurnResult {
@@ -2381,10 +2421,10 @@ mod tests {
         round_trip!(pack_round_trip_payload, Payload, Payload::Resume { checkpoint: Some(vec![9, 9, 9]) });
         round_trip!(pack_round_trip_coalesce_key, CoalesceKey, CoalesceKey("pointer-move".into()));
         round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0), Lane::Interactive, 7));
-        round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted(vec![1, 2]));
+        round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted { detail: vec![1, 2] });
         round_trip!(pack_round_trip_usage, Usage, Usage { fuel: 1, wall_us: 2, memory_bytes: 3 });
         round_trip!(pack_round_trip_turn_result, TurnResult, ok_turn());
-        round_trip!(pack_round_trip_backpressure, Backpressure, Backpressure::Dropped(Lane::Background));
+        round_trip!(pack_round_trip_backpressure, Backpressure, Backpressure::Dropped { lane: Lane::Background });
         round_trip!(pack_round_trip_capability_grant, CapabilityGrant, CapabilityGrant { capability: "fs.read".into(), scope: Some(vec![1]) });
         round_trip!(pack_round_trip_failure_signal, FailureSignal, FailureSignal::HeartbeatMissed { count: 2 });
         round_trip!(pack_round_trip_failure_stage, FailureStage, FailureStage::Throttled { factor: 0.25 });
@@ -2507,6 +2547,35 @@ mod tests {
         }
         //#endregion 🔖️PackRoundTrips
 
+        //#region 🔖️SerdeRoundTrips
+        /// 🎯️ terra-shard-grants, Part A. `📌️important.md` rule 12: "after fixing one variant of a
+        /// serde-shape defect, sweep every sibling" — the `JobStep::Done`/`Failed` fix recorded this
+        /// instruction and nobody executed it for the six siblings sitting in this crate. Each of
+        /// these SERIALIZES TO BYTES AND BACK (`serde_json`, not an in-process `assert_eq!` on the
+        /// original value) — that distinction is the entire point: a plain equality check on the
+        /// original Rust value would pass even if `serde_json::to_vec` panics or errors partway,
+        /// exactly how the `JobStep` bug hid for a full wave (its tests only ever asserted on
+        /// in-process values, never on bytes that had crossed a serde boundary).
+        macro_rules! serde_round_trip {
+            ($name:ident, $ty:ty, $value:expr) => {
+                #[test]
+                fn $name() {
+                    let value: $ty = $value;
+                    let bytes = serde_json::to_vec(&value).expect("serde_json::to_vec must not error — this is the exact defect this test exists to catch");
+                    let decoded: $ty = serde_json::from_slice(&bytes).expect("serde_json::from_slice must round-trip what to_vec produced");
+                    assert_eq!(decoded, value);
+                }
+            };
+        }
+
+        serde_round_trip!(serde_round_trip_payload_event, Payload, Payload::Event { bytes: vec![1, 2, 3] });
+        serde_round_trip!(serde_round_trip_payload_cancel, Payload, Payload::Cancel { seq: 42 });
+        serde_round_trip!(serde_round_trip_origin_actor, Origin, Origin::Actor { id: ActorId::new(1, 0, 2, 0) });
+        serde_round_trip!(serde_round_trip_turn_status_faulted, TurnStatus, TurnStatus::Faulted { detail: b"boom".to_vec() });
+        serde_round_trip!(serde_round_trip_failure_signal_trap, FailureSignal, FailureSignal::Trap { detail: "trapped".to_string() });
+        serde_round_trip!(serde_round_trip_backpressure_dropped, Backpressure, Backpressure::Dropped { lane: Lane::Background });
+        //#endregion 🔖️SerdeRoundTrips
+
         //#region 🔖️ActorIdBitPacking
         #[test]
         fn actor_id_bit_packing_round_trips_all_fields() {
@@ -2536,13 +2605,13 @@ mod tests {
             for i in 0..200u64 {
                 let mut e = env(actor, Lane::Interactive, i);
                 e.coalesce = Some(CoalesceKey("pointer-move".into()));
-                e.payload = Payload::Event(vec![i as u8]);
+                e.payload = Payload::Event { bytes: vec![i as u8] };
                 let bp = mailbox.enqueue(e);
                 assert!(matches!(bp, Backpressure::Accept | Backpressure::Coalesced));
             }
             assert_eq!(mailbox.len(), 1, "200 coalesced moves must never queue more than the latest");
             let popped = mailbox.pop_next().unwrap();
-            assert_eq!(popped.payload, Payload::Event(vec![199]));
+            assert_eq!(popped.payload, Payload::Event { bytes: vec![199] });
         }
 
         #[test]
@@ -2562,7 +2631,7 @@ mod tests {
             assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1)), Backpressure::Accept);
             assert_eq!(mailbox.enqueue(env(actor, Lane::Background, 2)), Backpressure::Accept);
             let bp = mailbox.enqueue(env(actor, Lane::Interactive, 3));
-            assert_eq!(bp, Backpressure::Dropped(Lane::Maintenance));
+            assert_eq!(bp, Backpressure::Dropped { lane: Lane::Maintenance });
             assert_eq!(mailbox.len(), 2);
         }
 
@@ -2597,15 +2666,15 @@ mod tests {
                 busy_actors.push(id);
             }
             let quiet_actor = ActorId::new(2, 0, 0, 0);
-            scheduler.register_actor(quiet_actor, quiet_package.clone(), Lane::Background, budget, ShardId(1));
+            scheduler.register_actor(quiet_actor, quiet_package, Lane::Background, budget, ShardId(1));
 
             for &id in &busy_actors {
                 for seq in 0..30u64 {
-                    scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+                    scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
                 }
             }
             for seq in 0..500u64 {
-                scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+                scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
             }
 
             let mut busy_grants = 0u32;
@@ -2634,9 +2703,9 @@ mod tests {
             let bg_actor = ActorId::new(1, 0, 0, 0);
             let interactive_actor = ActorId::new(1, 0, 1, 0);
             scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0));
-            scheduler.register_actor(interactive_actor, package.clone(), Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0));
-            scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
-            scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event(vec![]) });
+            scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0));
+            scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
+            scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
             let decision = scheduler.tick(10);
             assert_eq!(decision.run.len(), 1);
             assert_eq!(decision.run[0].actor, interactive_actor, "an overdue interactive deadline must preempt DRR ordering");
@@ -2649,15 +2718,15 @@ mod tests {
             let mut state = FailureState::new();
             assert_eq!(state.stage, FailureStage::Healthy);
 
-            let esc = state.on_signal(FailureSignal::DeadlineOverrun { ratio: 1.2 }, Lane::Interactive, 0);
+            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.2 }, Lane::Interactive, 0);
             assert_eq!(esc, FailureEscalation::None);
             assert_eq!(state.stage, FailureStage::Warned);
 
-            let esc = state.on_signal(FailureSignal::DeadlineOverrun { ratio: 1.4 }, Lane::Interactive, 10);
+            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.4 }, Lane::Interactive, 10);
             assert_eq!(esc, FailureEscalation::None);
             assert!(matches!(state.stage, FailureStage::Throttled { .. }), "second interactive warn must throttle (threshold=2)");
 
-            let esc = state.on_signal(FailureSignal::MailboxOverflow, Lane::Interactive, 20);
+            let esc = state.on_signal(&FailureSignal::MailboxOverflow, Lane::Interactive, 20);
             assert_eq!(esc, FailureEscalation::None);
             assert!(matches!(state.stage, FailureStage::Suspended { .. }), "third interactive warn must suspend (threshold=2 -> suspend_at)");
 
@@ -2672,11 +2741,11 @@ mod tests {
             let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
             let package = PackageId("s.flaky".into());
             let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual);
-            let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
+            let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
 
             for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted(b"boom".to_vec()), usage: Usage::default() };
-                kernel.complete(a, faulted, (i as u64) * 100).unwrap();
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                kernel.complete(a, &faulted, (i as u64) * 100).unwrap();
             }
             assert_eq!(kernel.actor_status(a), Some(&ActorStatus::Quarantined));
             assert_eq!(kernel.actor_status(b), Some(&ActorStatus::Quarantined), "quarantine must be package-wide, not just the trapping actor");
@@ -2685,9 +2754,9 @@ mod tests {
         #[test]
         fn failure_ladder_manual_reset_returns_to_healthy_immediately() {
             let mut state = FailureState::new();
-            state.on_signal(FailureSignal::FuelExhausted, Lane::Background, 0);
+            state.on_signal(&FailureSignal::FuelExhausted, Lane::Background, 0);
             assert_ne!(state.stage, FailureStage::Healthy);
-            state.on_signal(FailureSignal::ManualReset, Lane::Background, 1);
+            state.on_signal(&FailureSignal::ManualReset, Lane::Background, 1);
             assert_eq!(state.stage, FailureStage::Healthy);
             assert_eq!(state.warn_count, 0);
         }
@@ -2756,6 +2825,45 @@ mod tests {
             kernel_side.kill();
             assert_eq!(shard_side.recv(), None, "a killed transport must never yield a stale message");
         }
+
+        /// 🎯️ terra-shard-grants requirement: `recv_deadline` must return `None` on a genuine
+        /// timeout (nothing ever sent) rather than blocking forever — proven with a short, bounded
+        /// deadline so the test itself cannot hang. "Spawns no thread" is a property of the
+        /// IMPLEMENTATION (`mpsc::Receiver::recv_timeout`, which blocks only the calling thread —
+        /// see [`ThreadTransport::recv_deadline`]'s own doc), verified by code review plus the
+        /// crate-wide purity grep this ticket already runs (`std::thread` must match only the
+        /// header doc comment across the whole file) — deliberately NOT re-proven here via
+        /// `std::thread::current()`, which would itself add a real (non-doc-comment) `std::thread`
+        /// use to this file and defeat the very grep this test is meant to keep passing.
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn recv_deadline_returns_none_on_timeout() {
+            let (_kernel_side, shard_side) = ThreadTransport::new_pair();
+            let result = shard_side.recv_deadline(std::time::Duration::from_millis(20));
+            assert_eq!(result, None, "nothing was ever sent — a timeout must yield None, not block forever");
+        }
+
+        /// 🎯️ The complementary case: a message sent before the deadline must still be delivered —
+        /// `recv_deadline` is a bounded wait, not merely a disguised `recv()` that always returns
+        /// `None` until timeout.
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn recv_deadline_returns_the_message_when_one_arrives_before_the_timeout() {
+            let (kernel_side, shard_side) = ThreadTransport::new_pair();
+            kernel_side.send(b"before-deadline");
+            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(200)), Some(b"before-deadline".to_vec()));
+        }
+
+        /// 🛑️ Mirrors `thread_transport_kill_stops_recv` for the blocking variant — a killed
+        /// transport must return `None` immediately, never wait out the full deadline.
+        #[test]
+        #[cfg(not(target_arch = "wasm32"))]
+        fn recv_deadline_returns_none_immediately_on_a_killed_transport() {
+            let (kernel_side, shard_side) = ThreadTransport::new_pair();
+            kernel_side.send(b"queued-before-kill");
+            kernel_side.kill();
+            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(20)), None, "a killed transport must never yield a stale message");
+        }
         //#endregion 🔖️ThreadTransport
 
         //#region 🔖️KernelFacade
@@ -2764,12 +2872,12 @@ mod tests {
             let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
             let window = WindowId(1);
             let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window });
-            let bp = kernel.submit(env(actor, Lane::Interactive, 1));
+            let bp = kernel.submit(&env(actor, Lane::Interactive, 1));
             assert_eq!(bp, Backpressure::Accept);
             let decision = kernel.tick(0);
             assert_eq!(decision.run.len(), 1);
             assert_eq!(decision.run[0].actor, actor);
-            let escalation = kernel.complete(actor, ok_turn(), 1).unwrap();
+            let escalation = kernel.complete(actor, &ok_turn(), 1).unwrap();
             assert_eq!(escalation, FailureEscalation::None);
             assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Active));
         }
@@ -2815,10 +2923,10 @@ mod tests {
             let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
             let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
 
-            kernel.submit(env(cad, Lane::Interactive, 1));
+            kernel.submit(&env(cad, Lane::Interactive, 1));
             let decision = kernel.tick(0);
             assert_eq!(decision.run.len(), 1, "only `cad` has a pending envelope this tick");
-            kernel.complete(cad, ok_turn(), 5).unwrap();
+            kernel.complete(cad, &ok_turn(), 5).unwrap();
 
             let snapshot = kernel.runtime_metrics_snapshot(5);
             assert_eq!(snapshot.sampled_at_ms, 5);

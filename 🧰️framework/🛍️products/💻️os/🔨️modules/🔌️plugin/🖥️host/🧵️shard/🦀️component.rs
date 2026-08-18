@@ -1,6 +1,6 @@
 //! 🧵️ `ShardLoop` — `design-runtime.md` §2/§"ShardTransport": the loop a thread shard runs
-//! in-process. Owns a set of live [`super::GuestInstance`]s, pulls [`semio_framework_actor::Envelope`]s
-//! off a [`semio_framework_actor::ShardTransport`], groups them per actor, drives
+//! in-process. Owns a set of live [`super::GuestInstance`]s, pulls [`ShardFrame`]s off a
+//! [`semio_framework_actor::ShardTransport`], groups their envelopes per actor, drives
 //! [`super::GuestRuntime::execute_turn`]/[`super::GuestRuntime::step_job`], and sends the resulting
 //! [`semio_framework::kernel::TurnResult`]/[`super::JobStep`] back over the SAME transport as bytes.
 //!
@@ -9,6 +9,10 @@
 //! which [`ShardTransport`] impl `ShardLoop::new` receives; this file never branches on which one it
 //! got. `ProcessTransport` itself is out of this packet's scope (`📌️important.md`'s sequencing:
 //! "`semio-shard` `[[bin]]` runs over stdio" is P1, not B1b) — this is the seam, not the process.
+//!
+//! terra-shard-grants: the wire carries [`ShardFrame`], not raw [`Envelope`] bytes — the kernel's
+//! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
+//! ([`ShardFrame::Grant`]) instead of `pump` re-deriving one from local constants.
 
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
@@ -18,12 +22,137 @@ use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
 use std::collections::{BTreeSet, HashMap};
 use std::sync::Arc;
 
-/// ⛽️ `jobs.wit`'s `job-budget` for every job step `ShardLoop::pump` self-drives from an
-/// `Effect::SpawnJob` admission — mirrors `🖥️host/🦀️component.rs`'s `PostTurnRelay::
-/// RELAY_JOB_BUDGET` constant (same value, different call site: that one backs the three
-/// hardcoded-kind synchronous relay, this one backs the generic, resumable, one-step-per-`pump`
-/// path `Effect::SpawnJob` itself was always missing — `📓️terra-M5-report.md` §4(a)).
-const JOB_STEP_BUDGET: JobBudget = JobBudget { fuel: 50_000_000, deadline_ms: 200 };
+//#region 📨️ShardFrame
+/// 📨️ terra-shard-grants: what actually crosses a [`ShardTransport`] INBOUND (host → shard) —
+/// replacing raw [`Envelope`] pack bytes so the kernel's DRR-computed, throttle-scaled per-turn
+/// [`semio_framework_actor::Budget`] can travel WITH the envelopes it grants, instead of
+/// `ShardLoop::pump` re-deriving one from its own local constants (the deleted `budget_for`
+/// closure / `TURN_BUDGET` / `JOB_STEP_BUDGET`). Same pack encoding on the thread transport and
+/// [`super::process_transport::ProcessTransport`]/`StdioTransport` — `design-runtime.md` §2's
+/// "thread-or-process, same wire" promise.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ShardFrame {
+    /// 📌️ Announces that `actor` is now live on this shard. A `GuestInstance` cannot cross a
+    /// transport (`wasmtime::Store` is not serializable), so an INCOMING `Register` has no
+    /// instantiation side effect in `ShardLoop::pump` — the real instantiate/[`ShardLoop::register`]
+    /// call always happens locally. This frame exists for a coordinator on the OTHER end (a router
+    /// in front of several `ShardExecutor`s, not built by this packet) to keep its own
+    /// actor→shard routing table in sync with what actually landed here, over the SAME wire
+    /// `Grant`/`Envelope` already use.
+    Register { actor: ActorId },
+    /// ✂️ Mirrors `Register` for teardown — UNLIKE `Register`, an incoming `Unregister` DOES have
+    /// real behavior in `ShardLoop::pump`: it calls [`ShardLoop::unregister`] directly, since the
+    /// state to do so (`self.instances`) is already local.
+    Unregister { actor: ActorId },
+    /// ⚖️ The DRR-computed, throttle-scaled budget for `actor`'s next turn(s), plus the envelopes
+    /// it must be spent on — mirrors `semio_framework_actor::TurnGrant` field-for-field (that type
+    /// additionally carries `shard`, which the shard receiving this frame already knows is itself).
+    /// `ShardLoop::pump` remembers `budget` as `actor`'s "last granted budget" (`Self::
+    /// granted_budget`) — used for THIS grant's own envelopes, any later standalone `Envelope`
+    /// frame for the same actor, and that actor's job steps.
+    Grant { actor: ActorId, budget: semio_framework_actor::Budget, envelopes: Vec<Envelope> },
+    /// 🔌️ Passthrough for one raw envelope, budget-less — kept so the web `ShardClient`/
+    /// `WorkerTransport` (and any other not-yet-migrated caller) can adopt this wire incrementally
+    /// in a later packet without both ends changing atomically; this is NOT redundant with `Grant`,
+    /// do not remove it. Runs under the actor's LAST granted budget, falling back to the
+    /// Maintenance lane's default for an actor that was never granted one.
+    Envelope(Envelope),
+}
+
+impl ShardFrame {
+    fn tag(&self) -> u8 {
+        match self {
+            ShardFrame::Register { .. } => 0,
+            ShardFrame::Unregister { .. } => 1,
+            ShardFrame::Grant { .. } => 2,
+            ShardFrame::Envelope(_) => 3,
+        }
+    }
+
+    pub fn pack_encode(&self, out: &mut Vec<u8>) {
+        semio_framework_actor::pack::write_u8(out, self.tag());
+        match self {
+            ShardFrame::Register { actor } => actor.pack_encode(out),
+            ShardFrame::Unregister { actor } => actor.pack_encode(out),
+            ShardFrame::Grant { actor, budget, envelopes } => {
+                actor.pack_encode(out);
+                budget.pack_encode(out);
+                semio_framework_actor::pack::write_vec(out, envelopes, |o, e| e.pack_encode(o));
+            }
+            ShardFrame::Envelope(envelope) => envelope.pack_encode(out),
+        }
+    }
+
+    pub fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor::pack::PackError> {
+        let tag = semio_framework_actor::pack::read_u8(bytes, pos, "ShardFrame")?;
+        match tag {
+            0 => Ok(ShardFrame::Register { actor: ActorId::pack_decode(bytes, pos)? }),
+            1 => Ok(ShardFrame::Unregister { actor: ActorId::pack_decode(bytes, pos)? }),
+            2 => Ok(ShardFrame::Grant {
+                actor: ActorId::pack_decode(bytes, pos)?,
+                budget: semio_framework_actor::Budget::pack_decode(bytes, pos)?,
+                envelopes: semio_framework_actor::pack::read_vec(bytes, pos, "ShardFrame::Grant::envelopes", Envelope::pack_decode)?,
+            }),
+            3 => Ok(ShardFrame::Envelope(Envelope::pack_decode(bytes, pos)?)),
+            other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardFrame", tag: other, offset: *pos }),
+        }
+    }
+}
+//#endregion 📨️ShardFrame
+
+//#region 🔀️BudgetBridge
+/// ⛽️ `semio_framework_actor::Budget` (what a `Grant` carries) has no UI-frame-pacing field — that
+/// concept only ever existed in the kernel crate's `Budget`/`reactor.wit`'s `budget` record, added
+/// for wgpu-native's own turn pacing before the DRR scheduler existed. Documented gap, not a
+/// fabricated value: a fixed, conservative default until whichever packet unifies the two
+/// `Budget` vocabularies gives this a real per-turn source.
+const GRANT_BUDGET_DEFAULT_MAX_FRAMES: u32 = 8;
+
+/// 🔀️ A `Grant`'s DRR-computed [`semio_framework_actor::Budget`] → the
+/// [`semio_framework::kernel::Budget`] `GuestRuntime::execute_turn` actually takes.
+/// `wall_ms`→`deadline_ms` (both are "how long this turn may run", named differently per crate);
+/// `max_frames` has no source field yet (see [`GRANT_BUDGET_DEFAULT_MAX_FRAMES`]).
+fn turn_budget_from_grant(budget: semio_framework_actor::Budget) -> Budget {
+    Budget { fuel: budget.fuel, deadline_ms: budget.wall_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: GRANT_BUDGET_DEFAULT_MAX_FRAMES }
+}
+
+/// 🔀️ Same `Grant` budget, `GuestRuntime::step_job`'s shape — `JobBudget` only ever carried
+/// `fuel`/`deadline_ms`, so this is a straight field mapping, no invented default needed.
+fn job_budget_from_grant(budget: semio_framework_actor::Budget) -> JobBudget {
+    JobBudget { fuel: budget.fuel, deadline_ms: budget.wall_ms }
+}
+
+/// 🌉️ `semio_framework::kernel::TurnResult` (what `GuestRuntime::execute_turn` returns) →
+/// `semio_framework_actor::TurnResult` (what the actor crate's `Kernel::complete` scheduler
+/// bookkeeping wants) — the exact bridge the wgpu-native host's `KernelThreadState::
+/// apply_turn_result` flagged as unreached ("bridging the two needs a real pack-encode step this
+/// packet didn't reach"). Lives HERE, not in `🖥️host/🦀️component.rs` — `📌️important.md` rule 17:
+/// a concurrent packet series owns that file, and this ticket already absorbed several
+/// half-landed collisions of exactly this shape ("the artifact moved, its registration did not").
+///
+/// `ui_patches`/`effects` stay OPAQUE bytes on the actor-crate side by design (that crate's own
+/// "opaque seam" doc, module header) — re-encoded here as JSON, the same convention this file's
+/// own `Payload::Event` handling already uses for every other kernel-type-crossing-the-actor-crate
+/// -seam boundary (a real `pack_encode` for `Effect`/`UiPatch` is `🎠️kernel`'s own future work,
+/// out of this packet's `path_scope`). `status` maps 1:1. `usage.fuel` comes from
+/// `result.fuel_used`; `wall_us`/`memory_bytes` are host-measured and passed in — this crate has
+/// no clock of its own (the actor crate's purity rule pushed clocks out to callers).
+pub fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_bytes: u64) -> semio_framework_actor::TurnResult {
+    let status = match &result.status {
+        semio_framework::kernel::TurnStatus::Idle => semio_framework_actor::TurnStatus::Idle,
+        semio_framework::kernel::TurnStatus::MoreWork => semio_framework_actor::TurnStatus::MoreWork,
+        semio_framework::kernel::TurnStatus::CheckpointReady => semio_framework_actor::TurnStatus::CheckpointReady,
+        semio_framework::kernel::TurnStatus::Faulted(detail) => semio_framework_actor::TurnStatus::Faulted { detail: detail.clone() },
+    };
+    semio_framework_actor::TurnResult {
+        ui_patches: serde_json::to_vec(&result.ui_patches).unwrap_or_default(),
+        effects: serde_json::to_vec(&result.effects).unwrap_or_default(),
+        next_wake: result.next_wake,
+        status,
+        usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes },
+    }
+}
+//#endregion 🔀️BudgetBridge
 
 /// 📤️ One outcome `ShardLoop` sends back over the transport — tagged so a caller on the OTHER end
 /// (a `ShardClient`, per `design-runtime.md` §"Web shard"/`ShardTable`) can tell a full turn result
@@ -80,11 +209,27 @@ pub struct ShardLoop {
     /// 🦀️component.rs`'s `Host::spawn_job` / `⚛️reactor/🦀️component.rs`'s `Event::JobCompleted`
     /// routing step).
     pending_completions: HashMap<u64, Vec<Event>>,
+    /// ⚖️ terra-shard-grants: the budget from the LAST [`ShardFrame::Grant`] seen for each actor —
+    /// replaces the deleted `budget_for` closure / `TURN_BUDGET` / `JOB_STEP_BUDGET` constants.
+    /// Read by [`Self::granted_budget`]; an actor with no entry (never granted) falls back to the
+    /// Maintenance lane's default, per that method's own doc.
+    granted_budgets: HashMap<u64, semio_framework_actor::Budget>,
 }
 
 impl ShardLoop {
     pub fn new(runtime: Arc<dyn GuestRuntime>, transport: Box<dyn ShardTransport>) -> Self {
-        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new() }
+        Self { runtime, transport, instances: HashMap::new(), running_jobs: BTreeSet::new(), job_placement: HashMap::new(), pending_completions: HashMap::new(), granted_budgets: HashMap::new() }
+    }
+
+    /// ⚖️ `actor`'s last [`ShardFrame::Grant`]ed budget — used for both turn execution and job
+    /// stepping (point 2 of the packet brief: "job steps take the owning actor's last granted
+    /// budget on the Maintenance lane"). Falls back to `lane_defaults::budget_for(Lane::
+    /// Maintenance)` — a real, already-designed floor from the actor crate's own vocabulary, not
+    /// an invented magic constant — for an actor that has never been granted a budget at all (e.g.
+    /// a standalone `ShardFrame::Envelope` arriving before any `Grant`, or a caller like the
+    /// `semio-shard` `[[bin]]` that does not yet send `Grant` frames at all).
+    fn granted_budget(&self, actor: u64) -> semio_framework_actor::Budget {
+        self.granted_budgets.get(&actor).copied().unwrap_or_else(|| semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance))
     }
 
     /// 📌️ Adds an already-instantiated actor to this shard's live set — called once per
@@ -114,19 +259,23 @@ impl ShardLoop {
         self.instances.len()
     }
 
-    /// 🌀️ Drains every envelope CURRENTLY buffered on the transport (never blocks past that — a
-    /// shard must keep polling other actors, not stall on one slow producer), groups them by
-    /// destination actor preserving arrival order (`execute_turn` takes `events: &[Event]`, i.e. one
-    /// call per actor per pump, not per envelope), and runs exactly one `execute_turn`/`step_job` per
-    /// actor that had at least one envelope. Returns the number of actors driven this pump.
-    ///
-    /// `Payload::Event`'s bytes are this file's own JSON encoding of `semio_framework::kernel::Event`
-    /// — `semio_framework_actor::Payload`'s own doc comment calls this "pack-encoded", the eventual
-    /// intended format once `🎠️kernel` grows a `pack_encode`/`pack_decode` for `Event`/`TurnResult`
-    /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
-    /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
-    /// documented, consistent placeholder, not an invented one-off.
-    pub fn pump(&mut self, budget_for: impl Fn(ActorId) -> Budget) -> Result<usize, PluginHostError> {
+    /// 🌀️ Drains every [`ShardFrame`] CURRENTLY buffered on the transport (never blocks past that
+    /// — a shard must keep polling other actors, not stall on one slow producer), groups their
+    /// envelopes by destination actor preserving arrival order (`execute_turn` takes `events:
+    /// &[Event]`, i.e. one call per actor per pump, not per envelope), and runs exactly one
+    /// `execute_turn`/`step_job` per actor that had at least one envelope or running job. Returns
+    /// the number of actors driven this pump. Equivalent to `self.pump_primed(None)`.
+    pub fn pump(&mut self) -> Result<usize, PluginHostError> {
+        self.pump_primed(None)
+    }
+
+    /// 🅿️ Same as [`Self::pump`], but takes one frame's bytes that were ALREADY read off the
+    /// transport (e.g. by `ShardExecutor`'s blocking park on `ThreadTransport::recv_deadline`)
+    /// before the normal non-blocking drain loop continues — lets a blocking wait and this
+    /// non-blocking drain share the exact same transport without losing whatever woke the wait.
+    /// `primed: None` (what [`Self::pump`] passes) behaves identically to the pre-`ShardFrame`
+    /// `pump()`.
+    pub fn pump_primed(&mut self, primed: Option<Vec<u8>>) -> Result<usize, PluginHostError> {
         // 💼️ Completions queued by the PREVIOUS `pump()` call (bottom of this function) are
         // delivered as ordinary events on THIS call — the same channel envelope-sourced events
         // arrive on, so the originating actor's `execute_turn` sees `Event::JobCompleted` exactly
@@ -134,87 +283,20 @@ impl ShardLoop {
         let mut events_by_actor: HashMap<u64, Vec<Event>> = std::mem::take(&mut self.pending_completions);
         let mut jobs_by_actor: Vec<(u64, u64)> = Vec::new();
 
+        if let Some(bytes) = primed {
+            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor)?;
+        }
         while let Some(bytes) = self.transport.recv() {
-            let mut pos = 0usize;
-            let envelope = Envelope::pack_decode(&bytes, &mut pos).map_err(|error| PluginHostError::Plugin(format!("ShardLoop::pump: malformed envelope: {error:?}")))?;
-            match envelope.payload {
-                Payload::Event(event_bytes) => {
-                    let event: Event = serde_json::from_slice(&event_bytes)?;
-                    events_by_actor.entry(envelope.to.0).or_default().push(event);
-                }
-                Payload::JobStep { job } => jobs_by_actor.push((envelope.to.0, job)),
-                // 📸️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `checkpoint:bool` gates whether a
-                // snapshot is actually taken — `false` is a plain "stop scheduling me" suspend with
-                // nothing to persist, so `state` comes back empty rather than calling `checkpoint`
-                // for bytes nobody asked for. `ActorStatus::Suspended`/`Kernel::suspend` themselves
-                // live in `🎭️actor` and are out of this file's path_scope — a caller on the OTHER
-                // end of the transport is the one that turns `ShardOutcome::Checkpoint` into a
-                // `Kernel::suspend(actor, Some(state))` call.
-                Payload::Suspend { checkpoint } => {
-                    let actor_id = envelope.to.0;
-                    let outcome = match self.instances.get_mut(&actor_id) {
-                        None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
-                        Some(instance) if checkpoint => match self.runtime.checkpoint(instance) {
-                            Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
-                            Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
-                        },
-                        Some(_) => ShardOutcome::Checkpoint { actor: actor_id, state: Vec::new() },
-                    };
-                    self.send_outcome(&outcome)?;
-                }
-                // ▶️ Mirrors `Suspend`: `checkpoint: None` means "resume as-is, nothing to restore"
-                // (the actor was never asked for a snapshot, or the caller intentionally cold-starts
-                // it) — `restore` is only called when bytes actually arrived.
-                Payload::Resume { checkpoint } => {
-                    let actor_id = envelope.to.0;
-                    let outcome = match self.instances.get_mut(&actor_id) {
-                        None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
-                        Some(instance) => match checkpoint {
-                            Some(state) => match self.runtime.restore(instance, &state) {
-                                Ok(()) => ShardOutcome::Resumed { actor: actor_id },
-                                Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
-                            },
-                            None => ShardOutcome::Resumed { actor: actor_id },
-                        },
-                    };
-                    self.send_outcome(&outcome)?;
-                }
-                // 🛑️ `Payload::Cancel(u64)` carries no doc comment of its own beyond the enum-level
-                // one (`✉️Envelope` region, `🎭️actor/🦀️component.rs`) and there is no OTHER caller
-                // anywhere in the tree to infer intent from — read and confirmed empty before writing
-                // this. Grouped with `Suspend`/`Resume` (actor lifecycle), not `JobStep` (single-job
-                // control, which already has its own guest-side path via `Effect::CancelJob`), so
-                // this is read as actor-level teardown: cancel EVERY job this actor has running via
-                // `GuestRuntime::cancel_job`, then unregister (drop) its instance outright — the bare
-                // `u64` is not consumed (no documented meaning to key behavior off), only surfaced as
-                // the actor id already is. If a future packet's doc comment reveals a narrower
-                // per-job meaning for the `u64`, this arm is the one to revisit.
-                Payload::Cancel(_) => {
-                    let actor_id = envelope.to.0;
-                    if self.instances.contains_key(&actor_id) {
-                        let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
-                        if let Some(instance) = self.instances.get_mut(&actor_id) {
-                            for job in jobs {
-                                let _ = self.runtime.cancel_job(instance, job);
-                            }
-                        }
-                        self.unregister(ActorId(actor_id));
-                        self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id })?;
-                    } else {
-                        self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") })?;
-                    }
-                }
-            }
+            self.consume_frame(&bytes, &mut events_by_actor, &mut jobs_by_actor)?;
         }
 
         let mut driven = 0usize;
         for (actor_id, events) in events_by_actor {
-            let actor = ActorId(actor_id);
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.execute_turn(instance, &events, budget_for(actor)) {
+            let outcome = match self.runtime.execute_turn(instance, &events, turn_budget_from_grant(self.granted_budget(actor_id))) {
                 Ok(result) => {
                     // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1):
                     // the generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet
@@ -283,7 +365,7 @@ impl ShardLoop {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") })?;
                 continue;
             };
-            let outcome = match self.runtime.step_job(instance, job, JOB_STEP_BUDGET) {
+            let outcome = match self.runtime.step_job(instance, job, job_budget_from_grant(self.granted_budget(actor_id))) {
                 Ok(step) => {
                     match &step {
                         JobStep::Running { .. } => {}
@@ -312,6 +394,111 @@ impl ShardLoop {
         }
 
         Ok(driven)
+    }
+
+    /// 📨️ Decodes one [`ShardFrame`] and dispatches it — the drain loop's per-frame body, factored
+    /// out so both [`Self::pump_primed`]'s "one primed frame, then the non-blocking drain" shape
+    /// and `ShardFrame::Grant`'s own per-envelope loop (below) can share it.
+    fn consume_frame(&mut self, bytes: &[u8], events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+        let mut pos = 0usize;
+        let frame = ShardFrame::pack_decode(bytes, &mut pos).map_err(|error| PluginHostError::Plugin(format!("ShardLoop::pump: malformed frame: {error:?}")))?;
+        match frame {
+            // 📌️ Wire-symmetry only — see `ShardFrame::Register`'s own doc for why an INCOMING
+            // `Register` has no local state to mutate (a `GuestInstance` cannot cross a transport).
+            ShardFrame::Register { actor: _ } => {}
+            ShardFrame::Unregister { actor } => self.unregister(actor),
+            ShardFrame::Grant { actor, budget, envelopes } => {
+                self.granted_budgets.insert(actor.0, budget);
+                for envelope in envelopes {
+                    self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor)?;
+                }
+            }
+            ShardFrame::Envelope(envelope) => self.dispatch_envelope(envelope, events_by_actor, jobs_by_actor)?,
+        }
+        Ok(())
+    }
+
+    /// ✉️ One [`Envelope`]'s payload, dispatched — the exact per-envelope body `pump()` used to run
+    /// directly off `Envelope::pack_decode`'s output before `ShardFrame` wrapped it; unchanged
+    /// behavior, just reachable from BOTH `ShardFrame::Envelope` and each of `ShardFrame::Grant`'s
+    /// bundled envelopes now.
+    ///
+    /// `Payload::Event`'s bytes are this file's own JSON encoding of `semio_framework::kernel::Event`
+    /// — `semio_framework_actor::Payload`'s own doc comment calls this "pack-encoded", the eventual
+    /// intended format once `🎠️kernel` grows a `pack_encode`/`pack_decode` for `Event`/`TurnResult`
+    /// (not yet built, `🎠️kernel` is out of this packet's `path_scope`); JSON is what every OTHER
+    /// wire boundary in this crate already uses (`IoRouter`/`EffectEventMarshal`), so this is a
+    /// documented, consistent placeholder, not an invented one-off.
+    fn dispatch_envelope(&mut self, envelope: Envelope, events_by_actor: &mut HashMap<u64, Vec<Event>>, jobs_by_actor: &mut Vec<(u64, u64)>) -> Result<(), PluginHostError> {
+        match envelope.payload {
+            Payload::Event { bytes: event_bytes } => {
+                let event: Event = serde_json::from_slice(&event_bytes)?;
+                events_by_actor.entry(envelope.to.0).or_default().push(event);
+            }
+            Payload::JobStep { job } => jobs_by_actor.push((envelope.to.0, job)),
+            // 📸️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `checkpoint:bool` gates whether a
+            // snapshot is actually taken — `false` is a plain "stop scheduling me" suspend with
+            // nothing to persist, so `state` comes back empty rather than calling `checkpoint`
+            // for bytes nobody asked for. `ActorStatus::Suspended`/`Kernel::suspend` themselves
+            // live in `🎭️actor` and are out of this file's path_scope — a caller on the OTHER
+            // end of the transport is the one that turns `ShardOutcome::Checkpoint` into a
+            // `Kernel::suspend(actor, Some(state))` call.
+            Payload::Suspend { checkpoint } => {
+                let actor_id = envelope.to.0;
+                let outcome = match self.instances.get_mut(&actor_id) {
+                    None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend for actor {actor_id} which is not registered on this shard") },
+                    Some(instance) if checkpoint => match self.runtime.checkpoint(instance) {
+                        Ok(state) => ShardOutcome::Checkpoint { actor: actor_id, state },
+                        Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Suspend checkpoint failed for actor {actor_id}: {error}") },
+                    },
+                    Some(_) => ShardOutcome::Checkpoint { actor: actor_id, state: Vec::new() },
+                };
+                self.send_outcome(&outcome)?;
+            }
+            // ▶️ Mirrors `Suspend`: `checkpoint: None` means "resume as-is, nothing to restore"
+            // (the actor was never asked for a snapshot, or the caller intentionally cold-starts
+            // it) — `restore` is only called when bytes actually arrived.
+            Payload::Resume { checkpoint } => {
+                let actor_id = envelope.to.0;
+                let outcome = match self.instances.get_mut(&actor_id) {
+                    None => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume for actor {actor_id} which is not registered on this shard") },
+                    Some(instance) => match checkpoint {
+                        Some(state) => match self.runtime.restore(instance, &state) {
+                            Ok(()) => ShardOutcome::Resumed { actor: actor_id },
+                            Err(error) => ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Resume restore failed for actor {actor_id}: {error}") },
+                        },
+                        None => ShardOutcome::Resumed { actor: actor_id },
+                    },
+                };
+                self.send_outcome(&outcome)?;
+            }
+            // 🛑️ `Payload::Cancel { seq }` carries no doc comment of its own beyond the enum-level
+            // one (`✉️Envelope` region, `🎭️actor/🦀️component.rs`) and there is no OTHER caller
+            // anywhere in the tree to infer intent from — read and confirmed empty before writing
+            // this. Grouped with `Suspend`/`Resume` (actor lifecycle), not `JobStep` (single-job
+            // control, which already has its own guest-side path via `Effect::CancelJob`), so
+            // this is read as actor-level teardown: cancel EVERY job this actor has running via
+            // `GuestRuntime::cancel_job`, then unregister (drop) its instance outright — `seq` is
+            // not consumed (no documented meaning to key behavior off), only surfaced as
+            // the actor id already is. If a future packet's doc comment reveals a narrower
+            // per-job meaning for `seq`, this arm is the one to revisit.
+            Payload::Cancel { seq: _ } => {
+                let actor_id = envelope.to.0;
+                if self.instances.contains_key(&actor_id) {
+                    let jobs: Vec<u64> = self.running_jobs.iter().filter(|&&(job_actor, _)| job_actor == actor_id).map(|&(_, job)| job).collect();
+                    if let Some(instance) = self.instances.get_mut(&actor_id) {
+                        for job in jobs {
+                            let _ = self.runtime.cancel_job(instance, job);
+                        }
+                    }
+                    self.unregister(ActorId(actor_id));
+                    self.send_outcome(&ShardOutcome::Cancelled { actor: actor_id })?;
+                } else {
+                    self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: Cancel for actor {actor_id} which is not registered on this shard") })?;
+                }
+            }
+        }
+        Ok(())
     }
 
     fn send_outcome(&self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
@@ -394,16 +581,17 @@ mod tests {
     }
 
     fn encode_event_envelope(to: ActorId, seq: u64, event: &Event) -> Vec<u8> {
-        encode_payload_envelope(to, seq, Payload::Event(serde_json::to_vec(event).expect("encode event")))
+        encode_payload_envelope(to, seq, Payload::Event { bytes: serde_json::to_vec(event).expect("encode event") })
     }
 
     /// ✉️ Generic envelope builder for `Suspend`/`Resume`/`Cancel` payload tests —
     /// `encode_event_envelope` above stays as a thin wrapper over this so existing tests are
-    /// untouched.
+    /// untouched. terra-shard-grants: wraps in `ShardFrame::Envelope` — the transport now carries
+    /// `ShardFrame`, not raw `Envelope` bytes, so every test-side encoder must wrap here too.
     fn encode_payload_envelope(to: ActorId, seq: u64, payload: Payload) -> Vec<u8> {
         let envelope = Envelope { to, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
         let mut bytes = Vec::new();
-        envelope.pack_encode(&mut bytes);
+        ShardFrame::Envelope(envelope).pack_encode(&mut bytes);
         bytes
     }
 
@@ -425,7 +613,7 @@ mod tests {
         shard.register(actor, instance);
         assert!(shard.is_registered(actor));
 
-        let driven = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump succeeds");
+        let driven = shard.pump().expect("pump succeeds");
         assert_eq!(driven, 1, "exactly one actor had a buffered envelope");
 
         let outbound = probe.take_outbound();
@@ -448,7 +636,7 @@ mod tests {
         probe.push_inbound(encode_event_envelope(stranger, 1, &Event::InstanceClose));
 
         let mut shard = ShardLoop::new(mock, Box::new(transport));
-        let driven = shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump succeeds even with an unknown actor");
+        let driven = shard.pump().expect("pump succeeds even with an unknown actor");
         assert_eq!(driven, 0, "an envelope for an unregistered actor drives nothing");
 
         let outbound = probe.take_outbound();
@@ -513,19 +701,19 @@ mod tests {
         // Pump 1: runs the spawning turn, admits `Effect::SpawnJob` (`start_job`), and — because
         // the job lands in `running_jobs` before the step phase runs — takes its FIRST step in
         // this SAME pump (`Running`).
-        let driven1 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 1");
+        let driven1 = shard.pump().expect("pump 1");
         assert_eq!(driven1, 2, "one turn (the spawn) plus one job step (the first Running) this pump");
 
         // Pump 2 and 3: no new envelopes at all — the job is driven PURELY from `running_jobs`,
         // proving `pump()` self-drives an admitted job without needing external re-arming.
-        let driven2 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 2");
+        let driven2 = shard.pump().expect("pump 2");
         assert_eq!(driven2, 1, "only the second Running step — no envelope, so no turn this pump");
-        let driven3 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 3");
+        let driven3 = shard.pump().expect("pump 3");
         assert_eq!(driven3, 1, "the terminal Done step");
 
         // Pump 4: still no new envelope — but the Done step queued an `Event::JobCompleted` for
         // delivery, so the actor is driven ONE more time purely to receive it.
-        let driven4 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 4");
+        let driven4 = shard.pump().expect("pump 4");
         assert_eq!(driven4, 1, "the queued completion drives one more turn, with no job left to step");
 
         let outbound = probe.take_outbound();
@@ -577,7 +765,7 @@ mod tests {
         let mut shard = ShardLoop::new(mock, Box::new(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump");
+        let driven = shard.pump().expect("pump");
         assert_eq!(driven, 1, "only the turn itself — the job was cancelled before the step phase, so no step_job call happened");
 
         let outbound = probe.take_outbound();
@@ -603,7 +791,7 @@ mod tests {
         let mut shard = ShardLoop::new(mock, Box::new(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump");
+        let driven = shard.pump().expect("pump");
         assert_eq!(driven, 0, "Suspend is handled entirely in the drain loop, not the turn/step phases");
 
         let outbound = probe.take_outbound();
@@ -637,7 +825,7 @@ mod tests {
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { checkpoint: true }));
         let mut shard = ShardLoop::new(mock, Box::new(transport));
         shard.register(actor, instance);
-        shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump suspend");
+        shard.pump().expect("pump suspend");
 
         let suspend_outbound = probe.take_outbound();
         let checkpoint_bytes = match serde_json::from_slice(&suspend_outbound[0]).expect("decode suspend outcome") {
@@ -646,7 +834,7 @@ mod tests {
         };
 
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Resume { checkpoint: Some(checkpoint_bytes.clone()) }));
-        shard.pump(|_| Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("pump resume");
+        shard.pump().expect("pump resume");
 
         let resume_outbound = probe.take_outbound();
         let resume_outcome: ShardOutcome = serde_json::from_slice(&resume_outbound[0]).expect("decode resume outcome");
@@ -680,12 +868,12 @@ mod tests {
         let mut shard = ShardLoop::new(mock, Box::new(transport));
         shard.register(actor, instance);
 
-        let driven1 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 1");
+        let driven1 = shard.pump().expect("pump 1");
         assert_eq!(driven1, 2, "the spawning turn plus the job's first (only scripted) step");
         probe.take_outbound();
 
-        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Cancel(0)));
-        let driven2 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 2 (cancel)");
+        probe.push_inbound(encode_payload_envelope(actor, 2, Payload::Cancel { seq: 0 }));
+        let driven2 = shard.pump().expect("pump 2 (cancel)");
         assert_eq!(driven2, 0, "Cancel is handled in the drain loop; the actor is unregistered before the turn/step phases run");
         assert!(!shard.is_registered(actor), "Cancel must unregister the actor's instance");
         assert_eq!(shard.actor_count(), 0);
@@ -698,7 +886,7 @@ mod tests {
         // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
         // would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
         // Exhausted`) rather than silently succeeding — no such outcome appears.
-        let driven3 = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump 3");
+        let driven3 = shard.pump().expect("pump 3");
         assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
         assert!(probe.take_outbound().is_empty(), "no further outcome of any kind for the cancelled job");
     }
@@ -738,7 +926,7 @@ mod tests {
         let mut shard = ShardLoop::new(mock, Box::new(transport));
         shard.register(actor, instance);
 
-        let driven = shard.pump(|_| Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("pump");
+        let driven = shard.pump().expect("pump");
         assert_eq!(driven, 3, "one turn plus two job steps this pump");
 
         let outbound = probe.take_outbound();

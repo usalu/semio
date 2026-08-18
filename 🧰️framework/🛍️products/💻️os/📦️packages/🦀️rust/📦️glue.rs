@@ -5,10 +5,10 @@
 #![allow(unused_extern_crates, ambiguous_glob_reexports, unused_imports)]
 
 extern crate self as dsl;
+extern crate self as semio_framework_os_kernel;
 extern crate self as dsl_grammar;
 extern crate self as dsl_notation;
 extern crate self as store;
-extern crate self as protocol;
 extern crate self as pack;
 extern crate self as spr;
 extern crate self as vcs;
@@ -25,11 +25,11 @@ pub mod os_dsl {
   mod component;
   pub use component::*;
 
-  #[path = "../../🔨️modules/🗣️dsl/📍️span/🦀️component.rs"]
-  pub mod span;
-
-  #[path = "../../🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs"]
-  pub mod diagnostic;
+  // 📡️ `span`/`diagnostic` are owned by `🧰️framework/🔨️modules/⚠️diagnostic` and reach the tree
+  // through the replication crate, which mounts them once — every `crate::os_dsl::Severity` /
+  // `TextSpan` / `Fault` path below resolves through these re-exports unchanged.
+  pub use protocol::diagnostic;
+  pub use protocol::span;
 
   #[path = "../../🔨️modules/🗣️dsl/🔤️token/🦀️component.rs"]
   pub mod token;
@@ -105,20 +105,17 @@ pub mod os_pack {
   #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs"]
   pub mod cli;
 
-  #[path = "../../🔨️modules/🎒️pack/🆔️ids/🦀️component.rs"]
-  pub mod ids;
-
-  #[path = "../../🔨️modules/🎒️pack/🧾️codec/🦀️component.rs"]
-  pub mod codec;
-
-  #[path = "../../🔨️modules/🎒️pack/🚰️source/🦀️component.rs"]
-  pub mod source;
+  // 📡️ Container identity, codec primitives and pack sources are owned by the replication crate
+  // (`protocol::codec`) — the `.spr` record format and the pack container share one codec.
+  pub use protocol::codec::ids;
+  pub use protocol::codec;
+  pub use protocol::source;
 
   pub use self::ids::*;
   pub use self::source::*;
   // 🎾️ Re-export codec primitives without PackSource/PackSink (those live in `source`).
   pub use self::codec::{
-    ByteReader, ByteWriter, CompressionCodec, NoCompression, PackError, PackLimits, crc32c,
+    ByteReader, ByteWriter, CompressionCodec, DeflateCodec, NoCompression, PackError, PackLimits, crc32c,
     is_minimal_varint, read_varint_i64, read_varint_u64, write_varint_i64, write_varint_u64,
   };
 
@@ -146,8 +143,17 @@ pub mod os_spr {
   mod component;
   pub use component::*;
 
-  #[path = "../../🔨️modules/📡️spr/🔗️causal/🦀️component.rs"]
-  pub mod causal;
+  // 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary,
+  // `.spr` format) lives in `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no
+  // longer owns it. This facade keeps every historical `protocol::`/`os_spr::` path working.
+  pub use protocol::causal;
+  pub use protocol::conflict;
+  pub use protocol::crypto;
+  pub use protocol::dictionary;
+  pub use protocol::format;
+  pub use protocol::ids;
+  pub use protocol::scalar;
+  pub use protocol::wire;
 
   #[path = "../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs"]
   pub mod channel;
@@ -156,47 +162,16 @@ pub mod os_spr {
   #[path = "../../🔨️modules/📡️spr/⌨️cli/🦀️component.rs"]
   pub mod cli;
 
+  // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor
+  // registry, composite planner). It re-exports `protocol::mutation`'s contract from its own file,
+  // so `os_spr::command::Mutation` and friends still resolve here.
   #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️component.rs"]
   pub mod command;
-
-  #[path = "../../🔨️modules/📡️spr/🆔️ids/🦀️component.rs"]
-  pub mod ids;
-
-  #[path = "../../🔨️modules/📡️spr/🔢️scalar/🦀️component.rs"]
-  pub mod scalar;
-
-  #[path = "../../🔨️modules/📡️spr/📖️dictionary/🦀️component.rs"]
-  pub mod dictionary;
-
-  #[path = "../../🔨️modules/📡️spr/🔐️crypto/🦀️component.rs"]
-  pub mod crypto;
-
-  #[path = "."]
-  pub mod wire {
-    #[path = "../../🔨️modules/📡️spr/🧾️wire/🦀️component.rs"]
-    mod codec;
-    pub use codec::*;
-
-    #[path = "../../🔨️modules/📡️spr/📡️wire/🦀️component.rs"]
-    mod hub;
-    pub use hub::*;
-
-    // 🧬️ Historical protocol facade re-exported ids/crypto/dictionary through `wire::`.
-    pub use super::ids::*;
-    pub use super::crypto::*;
-    pub use super::dictionary::*;
-  }
 
   pub use self::ids::*;
   pub use self::dictionary::*;
   pub use self::crypto::*;
   pub use self::wire::*;
-
-  #[path = "../../🔨️modules/📡️spr/⚔️conflict/🦀️component.rs"]
-  pub mod conflict;
-
-  #[path = "../../🔨️modules/📡️spr/📐️format/🦀️component.rs"]
-  pub mod format;
 
   #[path = "../../🔨️modules/📡️spr/📜️history/🦀️component.rs"]
   pub mod history;

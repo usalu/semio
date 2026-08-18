@@ -1,0 +1,38 @@
+[verify rust-warnings] wasm32-unknown-unknown: 1 crate(s)…
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+error: this argument is passed by value, but not consumed in the function body
+  --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📦️glue.rs:85:25
+   |
+85 |     fn to_js_error(err: pack::PackError) -> JsError {
+   |                         ^^^^^^^^^^^^^^^
+   |
+help: or consider marking this type as `Copy`
+  --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:29:5
+   |
+29 |     pub enum PackError {
+   |     ^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+   = note: `-D clippy::needless-pass-by-value` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::needless_pass_by_value)]`
+help: consider taking a reference instead
+   |
+85 |     fn to_js_error(err: &pack::PackError) -> JsError {
+   |                         +
+
+error: could not compile `semio-framework-actor` (lib) due to 1 previous error
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: cargo clippy -p semio-framework-actor --lib --target wasm32-unknown-unknown -- -D warnings exited with status 101
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at runRustWarnings (/Users/ueli/Documents/semio/📜️script.ts:880:7)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:822:12)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15420:11
+
+Bun v1.3.14 (macOS arm64)

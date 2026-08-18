@@ -13,7 +13,8 @@ import type {
   NamedLayout,
 } from "../🛂️manifest/🟦️component.ts";
 import type { StoragePort } from "../🖥️platform/🟦️component.ts";
-import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
 
 //#region EphemeralLane
 /** 🫧 Process-local box for module ephemeral values. */
@@ -1535,6 +1536,75 @@ function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly Shard
     .then((buffer): readonly ShardAsset[] => [["guestslim-typst-fonts", buffer]]);
 }
 
+//#region 🧮️MemoryPressureCap
+/** 🧮️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): what {@link residentActorCapFromMemory}
+ * reads — `navigator.deviceMemory` (Chromium-only, coarse GiB bucket) and/or
+ * `performance.memory.jsHeapSizeLimit` (Chromium-only heap ceiling). Safari/Firefox report neither, in
+ * which case `ActivationRegistryOptions.maxResidentActors`'s hardcoded fallback still applies. A plain
+ * data record, not a live binding — {@link MemoryProbe} is what makes it injectable. */
+export interface MemoryProbeReading {
+  readonly deviceMemoryGiB?: number;
+  readonly jsHeapSizeLimitBytes?: number;
+}
+
+/** 🧮️ Injectable seam — CLAUDE.md forbids this class depending on the ambient `navigator`/
+ * `performance` globals directly (an external implementation detail); tests inject a fake reading
+ * instead of touching a real browser. {@link defaultMemoryProbe} is the only production caller of
+ * those globals. */
+export type MemoryProbe = () => MemoryProbeReading;
+
+/** 🧮️ The pre-existing hardcoded LRU cap (design-runtime.md §1 `FailurePolicy`) — now the FALLBACK for
+ * when neither memory signal is available, not the only source. */
+export const DEFAULT_MAX_RESIDENT_ACTORS = 24;
+
+const MIN_MAX_RESIDENT_ACTORS = 4;
+const MAX_MAX_RESIDENT_ACTORS = 96;
+/** 🧮️ Heuristic: one resident actor's worker-side wasm instance + checkpoint costs roughly this many
+ * bytes of device-memory headroom — tuned so a ~4 GiB `deviceMemory` bucket (a typical mid-range
+ * laptop) lands near {@link DEFAULT_MAX_RESIDENT_ACTORS}. */
+const RESIDENT_ACTORS_PER_DEVICE_MEMORY_GIB = 6;
+const BYTES_PER_RESIDENT_ACTOR = 64 * 1024 * 1024;
+
+function clampResidentActors(value: number): number {
+  return Math.min(MAX_MAX_RESIDENT_ACTORS, Math.max(MIN_MAX_RESIDENT_ACTORS, Math.round(value)));
+}
+
+/** 🧮️ `navigator.deviceMemory` first (coarser but a direct GiB figure), else
+ * `performance.memory.jsHeapSizeLimit`, else {@link DEFAULT_MAX_RESIDENT_ACTORS} unchanged. Both casts
+ * are needed because neither field is in the standard DOM lib — `deviceMemory` is the Chromium-only
+ * Device Memory API, `performance.memory` a Chromium-only non-standard extension. */
+export function defaultMemoryProbe(): MemoryProbeReading {
+  const nav = globalThis.navigator as (Navigator & { readonly deviceMemory?: number }) | undefined;
+  const perf = globalThis.performance as (Performance & { readonly memory?: { readonly jsHeapSizeLimit?: number } }) | undefined;
+  return { deviceMemoryGiB: nav?.deviceMemory, jsHeapSizeLimitBytes: perf?.memory?.jsHeapSizeLimit };
+}
+
+/** 🧮️ Pure — same reasoning as `runtimeMetricsDue` below for being its own exported function rather
+ * than inlined into the constructor: testable without touching a real `navigator`/`performance`. */
+export function residentActorCapFromMemory(reading: MemoryProbeReading, fallback: number = DEFAULT_MAX_RESIDENT_ACTORS): number {
+  if (typeof reading.deviceMemoryGiB === "number" && reading.deviceMemoryGiB > 0) return clampResidentActors(reading.deviceMemoryGiB * RESIDENT_ACTORS_PER_DEVICE_MEMORY_GIB);
+  if (typeof reading.jsHeapSizeLimitBytes === "number" && reading.jsHeapSizeLimitBytes > 0) return clampResidentActors(reading.jsHeapSizeLimitBytes / BYTES_PER_RESIDENT_ACTOR);
+  return fallback;
+}
+//#endregion 🧮️MemoryPressureCap
+
+//#region 🧵️QueuedTurn
+const DEFAULT_TURN_MAILBOX_CAPACITY = 32;
+
+/** 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): what {@link ActivationRegistry.enqueueTurn}
+ * hands the {@link TurnScheduler}. `generation` is this registry's own mirror of the native
+ * `RuntimeActorId`'s bit-packed `generation` field (design-runtime.md §1: "generation makes
+ * restart-after-trap addressable without id reuse") — this registry's `actorId` stays the caller-
+ * minted string key it always was (see this region's own header doc), so generation lives OUT OF BAND
+ * in `ActivationRegistry`'s own `actorGeneration` map instead of inside the id, and is checked at
+ * dispatch time in `runQueuedTurn` so a turn queued before a restore can never run against the actor's
+ * post-restore instance, even one that slips past the synchronous `cancelQueued` in `restoreActor`. */
+interface QueuedTurnPayload {
+  readonly events: readonly ShardEventEnvelope[];
+  readonly generation: number;
+}
+//#endregion 🧵️QueuedTurn
+
 interface ActivationResidentEntry {
   readonly actorId: string;
   readonly pluginId: string;
@@ -1544,13 +1614,38 @@ export interface ActivationRegistryOptions {
   readonly shardClient: ShardClient;
   readonly defaultBudget: ShardBudget;
   /** LRU cap driving memory-pressure suspension (design-runtime.md §1 `FailurePolicy`) — activating
-   * beyond this count checkpoints + suspends the least-recently-touched resident actor first. */
+   * beyond this count checkpoints + suspends the least-recently-touched resident actor first. Explicit
+   * override; omit to derive the cap from {@link memoryProbe} instead (see that option's own doc). */
   readonly maxResidentActors?: number;
+  /** 🧮️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): injectable memory signal
+   * {@link residentActorCapFromMemory} derives `maxResidentActors` from when that option itself is
+   * omitted — defaults to {@link defaultMemoryProbe} (real `navigator.deviceMemory`/
+   * `performance.memory`). Tests inject a fake reading; this is what keeps the derivation testable
+   * without a real browser (CLAUDE.md: no direct dependency on an external implementation detail). */
+  readonly memoryProbe?: MemoryProbe;
   readonly fetchAssets?: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
   /** ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): clock for `runtimeMetricsSnapshot`'s
    * `sampledAtMs`/`startRuntimeMetricsPublisher`'s cadence gate — injectable so both are testable
    * without real timers, same pattern `ShardClient`'s own `options.now` already uses. */
   readonly now?: () => number;
+  /** 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): per-actor `TurnScheduler` mailbox
+   * capacity — see `📬️mailbox.ts`'s own doc for the accept/coalesced/dropped/rejected contract
+   * {@link ActivationRegistry.enqueueTurn} surfaces verbatim. */
+  readonly turnMailboxCapacity?: number;
+  /** 🧵️ A turn's `ShardClient.turn` result — no effect/`UiPatch` routing exists on this side of the
+   * boundary yet (that belongs to the renderer's `ProgramBridge`), so the default is a documented
+   * no-op rather than a silent drop of something anyone actually reads. */
+  readonly onTurnResult?: (actorId: string, result: unknown) => void;
+  /** 🧵️ A rejected queued turn — default logs via `console.error`, same "never let one actor's
+   * failure wedge the dispatch loop" contract `TurnScheduler.onTurnError` documents on its own. */
+  readonly onTurnError?: (actorId: string, error: unknown) => void;
+  /** 📈️ Set `true` to auto-start `startRuntimeMetricsPublisher` in the constructor, wired to this
+   * registry's own {@link ActivationRegistry.metricsBus}. Defaults to `false` — opt-in, not opt-out —
+   * so every OTHER existing/future construction site across the tree (this file's own tests, the
+   * `TaskManager` component's, …) keeps building a plain object with no live `setInterval`, exactly
+   * as before this option existed; a real caller (ShellHost, once it mounts the task-manager window)
+   * turns this on explicitly. */
+  readonly autoStartMetricsPublisher?: boolean;
 }
 
 export class ActivationRegistry {
@@ -1559,6 +1654,10 @@ export class ActivationRegistry {
   private readonly residencyOrder: string[] = [];
   private readonly checkpoints = new Map<string, Uint8Array>();
   private readonly actorPlugin = new Map<string, string>();
+  /** 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): see `QueuedTurnPayload`'s own doc —
+   * this registry's mirror of the native `RuntimeActorId.generation` field, out of band since this
+   * class's `actorId` is a plain caller-minted string. */
+  private readonly actorGeneration = new Map<string, number>();
   private readonly shardClient: ShardClient;
   private readonly defaultBudget: ShardBudget;
   private readonly maxResidentActors: number;
@@ -1566,13 +1665,37 @@ export class ActivationRegistry {
   private assetsPromise: Promise<readonly ShardAsset[]> | null = null;
   private readonly now: () => number;
   private lastRuntimeMetricsPublishMs: number | null = null;
+  private readonly turnScheduler: TurnScheduler<QueuedTurnPayload, ShardBudget>;
+  private readonly onTurnResult: (actorId: string, result: unknown) => void;
+  private readonly stopMetricsPublisher: () => void;
+  /** 📡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the platform's own pub-sub
+   * primitive, not a bespoke one — no topic-subscriber bus exists anywhere in this codebase yet
+   * (native or web; see `TaskManager/🟦️component.tsx`'s own header doc on why a real window mount is
+   * still registrar-only work), so `startRuntimeMetricsPublisher`'s sink dispatches a
+   * `CustomEvent(topic, { detail: snapshot })` here rather than inventing a second bus. Populated
+   * (via `startRuntimeMetricsPublisher`) only when `autoStartMetricsPublisher: true` is passed; a real
+   * consumer (once `ShellHost` mounts the task-manager window) subscribes with a plain
+   * `registry.metricsBus.addEventListener("os.runtime.metrics", ...)`. */
+  readonly metricsBus: EventTarget = new EventTarget();
 
   constructor(options: ActivationRegistryOptions) {
     this.shardClient = options.shardClient;
     this.defaultBudget = options.defaultBudget;
-    this.maxResidentActors = options.maxResidentActors ?? 24;
+    this.maxResidentActors = options.maxResidentActors ?? residentActorCapFromMemory((options.memoryProbe ?? defaultMemoryProbe)());
     this.fetchAssets = options.fetchAssets ?? defaultGuestSlimAssetFetcher;
     this.now = options.now ?? (() => Date.now());
+    this.onTurnResult = options.onTurnResult ?? (() => {});
+    const onTurnError = options.onTurnError ?? ((actorId: string, error: unknown) => console.error(`[DEBUG] ActivationRegistry: turn failed for ${actorId}`, error));
+    this.turnScheduler = new TurnScheduler<QueuedTurnPayload, ShardBudget>({
+      mailboxCapacity: options.turnMailboxCapacity ?? DEFAULT_TURN_MAILBOX_CAPACITY,
+      budgetFor: () => this.defaultBudget,
+      runTurn: (actorId, payload, budget) => this.runQueuedTurn(actorId, payload, budget),
+      onTurnError,
+    });
+    this.stopMetricsPublisher =
+      options.autoStartMetricsPublisher === true
+        ? this.startRuntimeMetricsPublisher((topic, snapshot) => this.metricsBus.dispatchEvent(new CustomEvent(topic, { detail: snapshot })))
+        : () => {};
   }
 
   //#region 📖️Manifest
@@ -1627,6 +1750,33 @@ export class ActivationRegistry {
   }
   //#endregion ▶️Activate
 
+  //#region 🧵️TurnDispatch
+  /** 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): routes one turn through the
+   * `TurnScheduler` instead of a caller reaching `ShardClient.turn` directly — lane priority,
+   * latest-wins coalescing, and cancellation-on-suspend/teardown/restore all come from the scheduler,
+   * not from this method. Returns the same {@link Backpressure} the scheduler itself returns; `rejected`
+   * must surface to the UI as busy, same contract `TurnScheduler.enqueue` documents on its own. */
+  enqueueTurn(actorId: string, lane: Lane, events: readonly ShardEventEnvelope[], options?: { readonly coalesce?: CoalesceKey }): Backpressure {
+    const generation = this.actorGeneration.get(actorId) ?? 0;
+    return this.turnScheduler.enqueue(actorId, { lane, coalesce: options?.coalesce, payload: { events, generation } });
+  }
+
+  /** 🧵️ The `TurnScheduler`'s `runTurn` seam. Drops (rather than dispatches) a turn whose snapshotted
+   * generation no longer matches this actor's current one — it was queued against an instance that has
+   * since been restored (see `QueuedTurnPayload`'s own doc and `restoreActor`), so running it now would
+   * be exactly the "receives pre-restart queued work" bug this packet exists to prevent. */
+  private async runQueuedTurn(actorId: string, payload: QueuedTurnPayload, budget: ShardBudget): Promise<void> {
+    const currentGeneration = this.actorGeneration.get(actorId) ?? 0;
+    if (payload.generation !== currentGeneration) {
+      console.warn(`[DEBUG] ActivationRegistry: dropping turn for ${actorId} queued against generation ${payload.generation}, now at ${currentGeneration} (restored in between)`);
+      return;
+    }
+    this.touch(actorId);
+    const result = await this.shardClient.turn(actorId, payload.events, budget);
+    this.onTurnResult(actorId, result);
+  }
+  //#endregion 🧵️TurnDispatch
+
   //#region 🚑️SuspendResume
   private async evictForMemoryPressure(): Promise<void> {
     while (this.residencyOrder.length >= this.maxResidentActors) {
@@ -1635,9 +1785,16 @@ export class ActivationRegistry {
   }
 
   /** 🚑️ Checkpoints and drops `actorId`'s worker-side residency — LRU eviction and an explicit call
-   * both go through here. A no-op for an already-suspended (or never-activated) actorId. */
+   * both go through here. A no-op for an already-suspended (or never-activated) actorId.
+   *
+   * 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): cancels every turn still queued (not
+   * yet dispatched) for `actorId` FIRST, synchronously, before the `checkpoint`/`dispose` round trip
+   * even starts — a suspended actor's worker-side instance is about to go away, so anything still
+   * queued must be cancelled rather than risk `TurnScheduler`'s pump dispatching it against a
+   * dead/disposed instance mid-suspend. */
   async suspend(actorId: string): Promise<void> {
     if (!this.resident.has(actorId)) return;
+    this.turnScheduler.cancelQueued(actorId);
     const checkpoint = await this.shardClient.checkpoint(actorId);
     this.checkpoints.set(actorId, checkpoint);
     this.shardClient.dispose(actorId);
@@ -1661,6 +1818,45 @@ export class ActivationRegistry {
     this.markResident(actorId, pluginId);
   }
 
+  /** 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): the web mirror of native's
+   * "Trapped → drop + re-instantiate (generation++) + restore last checkpoint" (design-runtime.md §1
+   * `FailurePolicy`) — called from a `ShardClient`'s own `onShardLost` for every actorId that WAS
+   * pinned to the shard that just died (see {@link handleShardLost}). Bumps this actor's generation
+   * BEFORE cancelling its queue: the bump is what protects a turn that gets enqueued during the
+   * `resume()` await below (since `enqueueTurn` always reads the CURRENT generation at call time), and
+   * the immediately-following `cancelQueued` is belt-and-suspenders for anything already queued at the
+   * moment loss is detected. A no-op for an actorId this registry never activated or has already fully
+   * `cancel()`ed — the shard's own bookkeeping and this registry's can disagree briefly across a
+   * teardown race, and only actors this registry still recognizes are ours to restore. */
+  private async restoreActor(actorId: string): Promise<void> {
+    const pluginId = this.actorPlugin.get(actorId);
+    if (!pluginId) return;
+    this.actorGeneration.set(actorId, (this.actorGeneration.get(actorId) ?? 0) + 1);
+    this.turnScheduler.cancelQueued(actorId);
+    this.resident.delete(actorId);
+    const index = this.residencyOrder.indexOf(actorId);
+    if (index !== -1) this.residencyOrder.splice(index, 1);
+    await this.resume(actorId);
+  }
+
+  /** 🚑️ Restores every actorId the caller reports as lost together — see {@link restoreActor}. Runs
+   * every restoration concurrently (independent actors, no ordering dependency between them) and never
+   * lets one actor's restore failure block another's, same "one actor's failure never wedges the rest"
+   * reasoning `TurnScheduler.onTurnError`'s own doc gives. */
+  async restoreActors(actorIds: readonly string[]): Promise<void> {
+    await Promise.all(actorIds.map((actorId) => this.restoreActor(actorId).catch((error: unknown) => console.error(`[DEBUG] ActivationRegistry.restoreActors: failed to restore ${actorId}`, error))));
+  }
+
+  /** 🚑️ Bound convenience handler for `ShardClientOptions.onShardLost` — pass this directly, e.g.
+   * `new ShardClient({ …, onShardLost: registry.handleShardLost })`. `ShardClient`'s own callback
+   * contract is synchronous `void` (the shard transport only reports loss; restoration is the
+   * kernel-side registry's job, per that option's own doc comment), so the restore promise is
+   * deliberately fire-and-forget here — failures are still visible via `restoreActors`' own
+   * `console.error`, nothing new swallows them. */
+  readonly handleShardLost = (_shardIndex: number, actorIds: readonly string[]): void => {
+    void this.restoreActors(actorIds);
+  };
+
   /** 🛑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1, wiring the task manager's "cancel" action to a
    * REAL dispatch path): the web mirror of `Payload::Cancel`'s now-landed native semantics
    * (`🧵️shard/🦀️component.rs`'s `ShardLoop::pump`, K1 — "cancels the actor's running jobs +
@@ -1677,6 +1873,8 @@ export class ActivationRegistry {
    * cancel message. See `📓️terra-T1-report.md` `## honest gaps`. */
   cancel(actorId: string): void {
     if (!this.actorPlugin.has(actorId)) return;
+    this.turnScheduler.teardownActor(actorId);
+    this.actorGeneration.delete(actorId);
     this.shardClient.dispose(actorId);
     this.resident.delete(actorId);
     this.checkpoints.delete(actorId);
@@ -1687,6 +1885,14 @@ export class ActivationRegistry {
 
   isResident(actorId: string): boolean {
     return this.resident.has(actorId);
+  }
+
+  /** ⏏️ Stops the constructor's own auto-started metrics-publish loop (a no-op if
+   * `autoStartMetricsPublisher: false` was passed) — call once on full teardown, mirroring
+   * `ShardClient.disposeAll`'s own real-`setInterval` cleanup. Does not touch `shardClient` itself
+   * (this registry doesn't own its lifecycle — it was handed one already built). */
+  dispose(): void {
+    this.stopMetricsPublisher();
   }
   //#endregion 🚑️SuspendResume
 
@@ -1716,9 +1922,14 @@ export class ActivationRegistry {
    * not something the pure-crate clock-injection discipline applies to — only `🎭️actor` itself must
    * never read a clock); `runtimeMetricsDue` below is what stays unit-testable without real timers.
    *
-   * 🚧️ GAP (see `📓️terra-T1-report.md` `## honest gaps`): `sink` is the caller's own delivery — no
-   * topic-subscriber fanout exists anywhere in this codebase yet (native or web) for `sink` to plug
-   * into by default; a real bus emit is `ShellHost`'s call to wire (registrar-only, lease-requested). */
+   * ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-activation): this now HAS a real caller and sink —
+   * pass `autoStartMetricsPublisher: true` and the constructor starts this itself, with a sink that
+   * dispatches on `this.metricsBus`; see that field's own doc. Calling this method directly (with a
+   * different sink) is still supported for a caller that wants its own delivery instead of the bus.
+   *
+   * 🚧️ Honest remaining gap: no real CONSUMER subscribes to `metricsBus` yet anywhere in this codebase
+   * (native or web) — mounting the task-manager window that would (`TaskManager/🟦️component.tsx`'s own
+   * header doc) is registrar-only, lease-requested work outside this packet's `path_scope`. */
   startRuntimeMetricsPublisher(sink: (topic: string, snapshot: RuntimeMetricsSnapshot) => void): () => void {
     const interval = setInterval(() => {
       const nowMs = this.now();
@@ -1775,23 +1986,31 @@ if (import.meta.vitest) {
   /** 🧪️ A `ShardWorkerLike` that immediately auto-replies success to every request-bearing message —
    * enough for `ActivationRegistry.activate`/`suspend` to resolve without hand-delivering replies
    * (unlike `shard-client.ts`'s own `FakeShardWorker`, which is deliberately manual for THAT file's
-   * out-of-order-reply tests; this region only needs "the round trip completes"). */
-  function fakeShardClient(shardCount = 1): ShardClient {
-    return new ShardClient({
-      shardCount,
-      createWorker: () => {
-        const worker: { postMessage: (message: unknown) => void; terminate: () => void; onmessage: ((event: { readonly data: unknown }) => void) | null; onerror: ((event: unknown) => void) | null } = {
-          postMessage: (message) => {
-            const requestId = (message as { readonly requestId?: string }).requestId;
-            if (requestId) queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId, ok: true, value: undefined } }));
-          },
-          terminate: () => {},
-          onmessage: null,
-          onerror: null,
-        };
-        return worker;
+   * out-of-order-reply tests; this region only needs "the round trip completes"). Factored out (web-
+   * activation) so tests that need their own `ShardClient` construction (custom `onShardLost`/
+   * `exclusiveShardCount`, not just the one-liner {@link fakeShardClient} covers) can reuse it too. */
+  function createAutoReplyWorker(): { postMessage: (message: unknown) => void; terminate: () => void; onmessage: ((event: { readonly data: unknown }) => void) | null; onerror: ((event: unknown) => void) | null } {
+    const worker: { postMessage: (message: unknown) => void; terminate: () => void; onmessage: ((event: { readonly data: unknown }) => void) | null; onerror: ((event: unknown) => void) | null } = {
+      postMessage: (message) => {
+        const requestId = (message as { readonly requestId?: string }).requestId;
+        if (requestId) queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId, ok: true, value: undefined } }));
       },
-    });
+      terminate: () => {},
+      onmessage: null,
+      onerror: null,
+    };
+    return worker;
+  }
+
+  function fakeShardClient(shardCount = 1): ShardClient {
+    return new ShardClient({ shardCount, createWorker: () => createAutoReplyWorker() });
+  }
+
+  /** 🧪️ Advances `n` real microtask ticks with no real timer/sleep involved — enough hops for a
+   * `TurnScheduler` pump + a fake-worker's `queueMicrotask` reply + this registry's own
+   * `runQueuedTurn` await chain to settle deterministically. */
+  async function flushMicrotasks(n = 10): Promise<void> {
+    for (let i = 0; i < n; i += 1) await Promise.resolve();
   }
 
   describe("ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot", () => {
@@ -1889,6 +2108,200 @@ if (import.meta.vitest) {
       expect(registry.runtimeMetricsActorRows()).toEqual([]);
     });
   });
+
+  //#region 🧪️TurnDispatchTests
+  describe("ActivationRegistry.enqueueTurn lane priority", () => {
+    it("dispatches turns by lane priority end-to-end through the registry, not enqueue order", async () => {
+      const shardClient = fakeShardClient();
+      const order: string[] = [];
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], onTurnResult: (actorId) => order.push(actorId) });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "low", "manual");
+      await registry.activate("p1", "high", "manual");
+      await registry.activate("p1", "mid", "manual");
+
+      registry.enqueueTurn("low", "Background", []);
+      registry.enqueueTurn("high", "Interactive", []);
+      registry.enqueueTurn("mid", "UserVisible", []);
+
+      await flushMicrotasks();
+      expect(order).toEqual(["high", "mid", "low"]);
+    });
+  });
+
+  describe("ActivationRegistry.suspend cancels queued turns", () => {
+    it("a suspended actor's queued turns are cancelled, never delivered", async () => {
+      const shardClient = fakeShardClient();
+      const delivered: string[] = [];
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], onTurnResult: () => delivered.push("delivered") });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+
+      registry.enqueueTurn("actor-1", "Interactive", []); // queued but not yet dispatched
+      await registry.suspend("actor-1"); // cancels it synchronously, before checkpoint/dispose even starts
+
+      await flushMicrotasks();
+      expect(delivered).toEqual([]);
+
+      await registry.resume("actor-1");
+      await flushMicrotasks();
+      expect(delivered).toEqual([]); // still nothing — the cancelled turn never resurfaces after resume
+    });
+  });
+  //#endregion 🧪️TurnDispatchTests
+
+  //#region 🧪️ShardLossRestoreTests
+  describe("ActivationRegistry.handleShardLost / restoreActors", () => {
+    it("is a valid ShardClientOptions.onShardLost value", () => {
+      let registry!: ActivationRegistry;
+      const shardClient = new ShardClient({
+        shardCount: 1,
+        createWorker: () => createAutoReplyWorker(),
+        onShardLost: (shardIndex, actorIds) => registry.handleShardLost(shardIndex, actorIds),
+      });
+      registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      expect(typeof registry.handleShardLost).toBe("function");
+    });
+
+    it("restores exactly the actors that were on the lost shard, leaving an actor on a different shard untouched", async () => {
+      const shardClient = new ShardClient({ shardCount: 2, exclusiveShardCount: 0, createWorker: () => createAutoReplyWorker() });
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+
+      await registry.activate("p1", "on-shard-0", "manual");
+      await registry.activate("p1", "on-shard-1", "manual");
+      expect(shardClient.shardIndexFor("on-shard-0")).toBe(0);
+      expect(shardClient.shardIndexFor("on-shard-1")).toBe(1);
+
+      // simulate what checkHeartbeats' own 3-strike ladder does — terminate + rebuild shard 0 only,
+      // then hand its actorIds to the registry exactly as ShardClient's own onShardLost callback would.
+      const lostActorIds = shardClient.terminate(0);
+      shardClient.rebuild(0);
+      expect(lostActorIds).toEqual(["on-shard-0"]);
+
+      await registry.restoreActors(lostActorIds);
+
+      expect(registry.isResident("on-shard-0")).toBe(true); // restored
+      expect(registry.isResident("on-shard-1")).toBe(true); // never touched — different shard
+      expect(shardClient.shardIndexFor("on-shard-0")).toBe(0); // re-activated on the rebuilt shard
+    });
+  });
+
+  describe("ActivationRegistry restore ordering", () => {
+    it("a restored actor does not receive turns that were queued before the restore, but does receive turns queued after", async () => {
+      const shardClient = new ShardClient({ shardCount: 1, createWorker: () => createAutoReplyWorker() });
+      const delivered: string[] = [];
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], onTurnResult: () => delivered.push("delivered") });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      await registry.activate("p1", "actor-1", "manual");
+
+      // Enqueue, then lose the shard, all synchronously — nothing yields to the scheduler's own
+      // microtask pump until after `restoreActors` has already cancelled the queue below.
+      registry.enqueueTurn("actor-1", "Interactive", []);
+      const lostActorIds = shardClient.terminate(0);
+      shardClient.rebuild(0);
+
+      await registry.restoreActors(lostActorIds);
+      await flushMicrotasks();
+      expect(delivered).toEqual([]); // the pre-restart turn never ran
+
+      registry.enqueueTurn("actor-1", "Interactive", []); // enqueued AFTER the restore completed
+      await flushMicrotasks();
+      expect(delivered).toEqual(["delivered"]); // proves the actor is alive again, not permanently dropped
+    });
+  });
+  //#endregion 🧪️ShardLossRestoreTests
+
+  //#region 🧪️MemoryPressureCapTests
+  describe("residentActorCapFromMemory", () => {
+    it("derives the cap from deviceMemoryGiB when present, clamped to [4, 96]", () => {
+      expect(residentActorCapFromMemory({ deviceMemoryGiB: 1 })).toBe(6);
+      expect(residentActorCapFromMemory({ deviceMemoryGiB: 16 })).toBe(96);
+    });
+
+    it("falls back to jsHeapSizeLimitBytes when deviceMemoryGiB is absent", () => {
+      expect(residentActorCapFromMemory({ jsHeapSizeLimitBytes: 256 * 1024 * 1024 })).toBe(4);
+    });
+
+    it("falls back to the hardcoded constant when neither signal is present", () => {
+      expect(residentActorCapFromMemory({})).toBe(DEFAULT_MAX_RESIDENT_ACTORS);
+    });
+  });
+
+  describe("ActivationRegistry.maxResidentActors derived from an injected memory probe", () => {
+    async function activateAndCountResident(memoryProbe: MemoryProbe, activationCount: number): Promise<number> {
+      const shardClient = fakeShardClient();
+      const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], memoryProbe });
+      registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
+      for (let i = 0; i < activationCount; i += 1) await registry.activate("p1", `actor-${i}`, "manual");
+      let resident = 0;
+      for (let i = 0; i < activationCount; i += 1) if (registry.isResident(`actor-${i}`)) resident += 1;
+      return resident;
+    }
+
+    it("a small deviceMemoryGiB reading evicts down to its (small) derived cap", async () => {
+      const resident = await activateAndCountResident(() => ({ deviceMemoryGiB: 1 }), 10);
+      expect(resident).toBe(residentActorCapFromMemory({ deviceMemoryGiB: 1 })); // 6
+      expect(resident).toBeLessThan(10);
+    });
+
+    it("a large deviceMemoryGiB reading keeps every one of the same 10 activations resident", async () => {
+      const resident = await activateAndCountResident(() => ({ deviceMemoryGiB: 16 }), 10);
+      expect(resident).toBe(10); // well under the derived 96 cap — nothing evicted
+    });
+  });
+  //#endregion 🧪️MemoryPressureCapTests
+
+  //#region 🧪️MetricsBusTests
+  describe("ActivationRegistry.metricsBus (autoStartMetricsPublisher)", () => {
+    it("publishes os.runtime.metrics as a CustomEvent on metricsBus at the 2Hz interval, driven by the injected clock, and dispose() stops it", () => {
+      vi.useFakeTimers();
+      try {
+        const shardClient = fakeShardClient();
+        let simulatedNowMs = 0;
+        const registry = new ActivationRegistry({
+          shardClient,
+          defaultBudget: BUDGET_FIXTURE,
+          fetchAssets: async () => [],
+          now: () => simulatedNowMs,
+          autoStartMetricsPublisher: true,
+        });
+        const received: RuntimeMetricsSnapshot[] = [];
+        registry.metricsBus.addEventListener("os.runtime.metrics", (event) => received.push((event as CustomEvent<RuntimeMetricsSnapshot>).detail));
+
+        simulatedNowMs = RUNTIME_METRICS_PUBLISH_INTERVAL_MS;
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+        expect(received).toHaveLength(1);
+        expect(received[0]!.sampledAtMs).toBe(RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+
+        simulatedNowMs = RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 2;
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS);
+        expect(received).toHaveLength(2);
+
+        registry.dispose();
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 5);
+        expect(received).toHaveLength(2); // dispose() stopped the loop
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("stays empty (no live interval, no bus traffic) when autoStartMetricsPublisher is left at its default", () => {
+      vi.useFakeTimers();
+      try {
+        const shardClient = fakeShardClient();
+        const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
+        const received: RuntimeMetricsSnapshot[] = [];
+        registry.metricsBus.addEventListener("os.runtime.metrics", (event) => received.push((event as CustomEvent<RuntimeMetricsSnapshot>).detail));
+        vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 10);
+        expect(received).toEqual([]);
+        registry.dispose(); // no-op, nothing was started — must not throw
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+  //#endregion 🧪️MetricsBusTests
 }
 //#endregion 🧪️RuntimeMetricsTests
 //#endregion 🐚️ActivationRegistry

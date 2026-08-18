@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
-use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 // 🗑️ `PLUGIN_FUEL_BUDGET` is gone — `design-runtime.md` §1's `Budget.fuel`/`⚖️LaneDefaults` (per-lane,
 // per-turn, threaded through every `GuestRuntime::execute_turn`/`step_job` call) replaces the single
@@ -221,8 +221,8 @@ impl ResourceLimiter for BudgetLimiter {
         Ok(desired <= self.max_memory_bytes)
     }
 
-    fn table_growing(&mut self, _current: u32, desired: u32, _maximum: Option<u32>) -> wasmtime::Result<bool> {
-        Ok(desired <= self.max_table_elements)
+    fn table_growing(&mut self, _current: usize, desired: usize, _maximum: Option<usize>) -> wasmtime::Result<bool> {
+        Ok(desired <= self.max_table_elements as usize)
     }
 
     fn instances(&self) -> usize {
@@ -249,7 +249,7 @@ pub fn default_compiled_cache_root() -> PathBuf {
 
 pub fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
     let descriptor = format!(
-        "wasmtime=22.0.1;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}",
+        "wasmtime=47.0.3;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}",
         pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes
     );
     *blake3::hash(descriptor.as_bytes()).as_bytes()
@@ -772,7 +772,6 @@ mod actor_bindings {
     wasmtime::component::bindgen!({
         world: "actor",
         path: "../../../🧬️schema",
-        async: false,
         additional_derives: [Clone],
     });
 }
@@ -810,12 +809,8 @@ struct ActorHostState {
 /// crate's capability-gated stance; widen per [`BrokerCapabilityGrant`] only when a capability
 /// actually needs real WASI access.
 impl WasiView for ActorHostState {
-    fn ctx(&mut self) -> &mut WasiCtx {
-        &mut self.wasi_ctx
-    }
-
-    fn table(&mut self) -> &mut ResourceTable {
-        &mut self.resource_table
+    fn ctx(&mut self) -> WasiCtxView<'_> {
+        WasiCtxView { ctx: &mut self.wasi_ctx, table: &mut self.resource_table }
     }
 }
 
@@ -863,8 +858,8 @@ impl WasmtimeRuntime {
         let (engine, pooling_active) = build_shared_engine(cfg)?;
         let epoch_ticker = EpochTicker::start(&engine);
         let mut linker = Linker::new(&engine);
-        actor_bindings::semio::framework::pure::add_to_linker(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        actor_bindings::semio::framework::pure::add_to_linker::<ActorHostState, wasmtime::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        wasmtime_wasi::p2::add_to_linker_sync(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active);
         Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root(), engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
     }
@@ -889,12 +884,13 @@ impl GuestRuntime for WasmtimeRuntime {
         store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
         store.set_fuel(budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         store.set_epoch_deadline(budget.deadline_ms as u64);
-        // 🐛️ `wasmtime::component::bindgen!`-generated `Actor::instantiate` returns `(Actor,
-        // wasmtime::component::Instance)` in wasmtime 22.0.1, not bare `Actor` — the raw `Instance`
-        // handle is never needed again here (every subsequent call goes through `bindings`' own
-        // typed accessors), same discard convention the deleted `WasmPluginRuntime::create_app`
-        // already used for `PluginWorld::instantiate`.
-        let (bindings, _instance) = actor_bindings::Actor::instantiate(&mut store, component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-wasmtime-upgrade): wasmtime 22.0.1's
+        // `bindgen!`-generated `Actor::instantiate` returned `(Actor, wasmtime::component::Instance)`;
+        // wasmtime 47.0.3 dropped the raw `Instance` from the convenience wrapper (it was never used
+        // here anyway — every subsequent call goes through `bindings`' own typed accessors) and
+        // returns bare `Actor` instead. See `path2.rs`'s expanded bindgen output in
+        // `wasmtime-internal-component-macro-47.0.3/tests/expanded/` for the confirmed new shape.
+        let bindings = actor_bindings::Actor::instantiate(&mut store, component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
     }
 
@@ -1085,30 +1081,30 @@ fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHos
     Ok(match effect {
         E::SendMessage(inner) => Effect::SendMessage { target: kernel_message_endpoint_to_wit_reverse(inner.target), payload: inner.payload },
         E::PublishEvent(inner) => Effect::PublishEvent { topic: inner.topic, payload: inner.payload },
-        E::BlobLoad(inner) => Effect::BlobLoad { req: RequestId(inner.req), hash: inner.hash },
+        E::BlobLoad(inner) => Effect::BlobLoad { req: RequestId(inner.req), hash: inner.params.hash },
         E::BlobWrite(inner) => Effect::BlobWrite {
             req: RequestId(inner.req),
-            media_type: decode_json(&inner.media_type).unwrap_or(semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }),
-            bytes: inner.bytes,
+            media_type: decode_json(&inner.params.media_type).unwrap_or(semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }),
+            bytes: inner.params.bytes,
         },
-        E::HttpRequest(inner) => Effect::HttpRequest { req: RequestId(inner.req), method: inner.method, url: inner.url, headers: inner.headers, body: inner.body, stream: inner.streaming },
-        E::DocumentRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.doc as u128), lane: inner.lane },
-        E::DocumentWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.doc as u128), lane: inner.lane, ops: inner.ops },
+        E::HttpRequest(inner) => Effect::HttpRequest { req: RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
+        E::DocumentRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
+        E::DocumentWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
         E::LinkResolve(inner) => Effect::LinkResolve { req: RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
-        E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.kind, filter: decode_dsl(&inner.filter) },
+        E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter) },
         E::IoCompose(inner) => Effect::IoCompose {
             req: RequestId(inner.req),
-            key: String::from_utf8_lossy(&inner.key).into_owned(),
-            sources: decode_json(&inner.sources).unwrap_or_default(),
+            key: String::from_utf8_lossy(&inner.params.key).into_owned(),
+            sources: decode_json(&inner.params.sources).unwrap_or_default(),
         },
         // 🚧️ blocked-on-A3: no `Effect::IoRun` variant exists yet (`## blocked-on` in the report).
         E::IoRun(_inner) => return Err(PluginHostError::Plugin("effect io-run has no semio_framework::kernel::Effect variant yet (needs A3 to add Effect::IoRun) — see 📓️terra-B1-host-native-report.md".to_string())),
-        E::CacheDerive(inner) => Effect::CacheDerive { req: RequestId(inner.req), engine_id: inner.engine_id, input: inner.input },
-        E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.engine_id, key: String::from_utf8_lossy(&inner.key).into_owned() },
-        E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.kind), params: decode_dsl(&inner.params).unwrap_or(DslValue::Null) },
+        E::CacheDerive(inner) => Effect::CacheDerive { req: RequestId(inner.req), engine_id: inner.params.engine_id, input: inner.params.input },
+        E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.params.engine_id, key: String::from_utf8_lossy(&inner.params.key).into_owned() },
+        E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).unwrap_or(DslValue::Null) },
         E::CloseWindow(inner) => Effect::CloseWindow { window: WindowHandle(inner.window as u128) },
-        E::DispatchAction(inner) => Effect::DispatchAction { req: RequestId(inner.req), action: inner.action, args: inner.args.and_then(|bytes| decode_dsl(&bytes)), delay_ms: inner.delay_ms },
-        E::InvokeExtension(inner) => Effect::InvokeExtension { req: RequestId(inner.req), extension_id: inner.extension_id, capability: inner.capability, request_json: String::from_utf8_lossy(&inner.payload).into_owned() },
+        E::DispatchAction(inner) => Effect::DispatchAction { req: RequestId(inner.req), action: inner.params.action, args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)), delay_ms: inner.params.delay_ms },
+        E::InvokeExtension(inner) => Effect::InvokeExtension { req: RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() },
         E::Notify(inner) => Effect::Notify { message: inner.message },
         E::ClipboardWrite(inner) => Effect::ClipboardWrite {
             fragment: decode_json(&inner.fragment).ok_or_else(|| PluginHostError::Plugin("clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string()))?,
@@ -1125,27 +1121,27 @@ fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHos
             document_highlighted_ids: inner.document_highlighted_ids,
         },
         E::ReplayShellCommand(inner) => Effect::ReplayShellCommand { action_id: inner.action_id, args: inner.args.and_then(|bytes| decode_dsl(&bytes)) },
-        E::SpawnPluginInstance(inner) => Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id, label: inner.label, document_json: inner.document_json },
+        E::SpawnPluginInstance(inner) => Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.document_json },
         E::OpenPluginInstance(inner) => Effect::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
-        E::OpenDialog(inner) => Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.dialog_id, args: inner.args.and_then(|bytes| decode_dsl(&bytes)) },
+        E::OpenDialog(inner) => Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.params.dialog_id, args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)) },
         E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).unwrap_or_default() },
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
-        E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.accept, read_as: inner.read_as, import_action: String::new(), multiple: inner.multiple },
+        E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
         E::RequestMediaFrames(inner) => Effect::RequestMediaFrames {
             req: RequestId(inner.req),
-            accept: inner.accept,
+            accept: inner.params.accept,
             frame_action: String::new(),
             done_action: String::new(),
             fallback_action: String::new(),
-            sample_stride: inner.sample_stride,
-            max_frames: inner.max_frames,
-            max_long_edge_px: inner.max_long_edge_px,
-            fps_hint: inner.fps_hint,
+            sample_stride: inner.params.sample_stride,
+            max_frames: inner.params.max_frames,
+            max_long_edge_px: inner.params.max_long_edge_px,
+            fps_hint: inner.params.fps_hint,
             // 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
             // `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
             // decode needed.
-            payload: inner.payload,
-            args: inner.args.and_then(|bytes| decode_dsl(&bytes)),
+            payload: inner.params.payload,
+            args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)),
         },
         E::LoadDocument(inner) => Effect::LoadDocument { pack: inner.doc_pack, spr: inner.spr },
         E::RequestSync => Effect::RequestSync,
@@ -1156,10 +1152,10 @@ fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHos
             req: RequestId(inner.req),
             result: match inner.outcome { wit_effects::RespondResult::Ok(bytes) => RequestOutcome::Ok(bytes), wit_effects::RespondResult::Fault(bytes) => RequestOutcome::Err(bytes) },
         },
-        E::StorageRead(inner) => Effect::StorageRead { req: RequestId(inner.req), key: inner.key },
-        E::StorageWrite(inner) => Effect::StorageWrite { req: RequestId(inner.req), key: inner.key, bytes: inner.value },
-        E::StorageDelete(inner) => Effect::StorageDelete { req: RequestId(inner.req), key: inner.key },
-        E::RequestCapability(inner) => Effect::RequestCapability { req: RequestId(inner.req), capability: CapabilityRequest { id: CapabilityId(inner.id), scope: inner.scope, reason: inner.reason, optional: inner.optional } },
+        E::StorageRead(inner) => Effect::StorageRead { req: RequestId(inner.req), key: inner.params.key },
+        E::StorageWrite(inner) => Effect::StorageWrite { req: RequestId(inner.req), key: inner.params.key, bytes: inner.params.value },
+        E::StorageDelete(inner) => Effect::StorageDelete { req: RequestId(inner.req), key: inner.params.key },
+        E::RequestCapability(inner) => Effect::RequestCapability { req: RequestId(inner.req), capability: CapabilityRequest { id: CapabilityId(inner.params.id), scope: inner.params.scope, reason: inner.params.reason, optional: inner.params.optional } },
         E::ReleaseCapability(inner) => Effect::ReleaseCapability { id: CapabilityId(inner.id) },
         E::Subscribe(inner) => Effect::Subscribe { topic: inner.topic },
         E::Unsubscribe(inner) => Effect::Unsubscribe { topic: inner.topic },
@@ -1208,7 +1204,7 @@ fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
         Event::PatchAck { surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision }),
         Event::PatchRejected { surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision, reason: reason.clone() }),
         Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result) }),
-        Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, bytes: bytes.clone(), done: *done }),
+        Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, params: wit_events::HttpChunkParams { bytes: bytes.clone(), done: *done } }),
         Event::JobProgress { job, progress } => wit_events::Event::JobProgress(wit_events::JobProgressEvent { job: *job, progress: progress.clone().unwrap_or_default() }),
         Event::JobCompleted { job, result } => wit_events::Event::JobCompleted(wit_events::JobCompletedEvent { job: *job, outcome: kernel_request_outcome_to_wit(result) }),
         Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source), payload: payload.clone() }),
@@ -1217,7 +1213,7 @@ fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
         // 🐛️ WIT `request-event.from` was renamed `origin` — `from` is WIT-reserved (the SAME
         // reserved-keyword class B1's report already fixed for `stream`/`result`; this one was
         // fixed by A2 between B1's last pass and now, per the packet brief's "guest side is green").
-        Event::Request { req, from, capability, payload } => wit_events::Event::Request(wit_events::RequestEvent { req: req.0, origin: kernel_message_endpoint_to_wit(from), capability: capability.clone(), payload: payload.clone() }),
+        Event::Request { req, from, capability, payload } => wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from), capability: capability.clone(), payload: payload.clone() } }),
     }
 }
 
@@ -1303,7 +1299,7 @@ mod wasmtime_runtime_tests {
 
     #[test]
     fn io_run_effect_is_a_reported_error_not_a_silent_mismap() {
-        let effect = wit_effects::Effect::IoRun(wit_effects::IoRunEffect { req: 1, source: "a".to_string(), target: "b".to_string(), payload: vec![] });
+        let effect = wit_effects::Effect::IoRun(wit_effects::IoRunEffect { req: 1, params: wit_effects::IoRunParams { source: "a".to_string(), target: "b".to_string(), payload: vec![] } });
         let result = wit_effect_to_kernel(effect);
         assert!(result.is_err(), "io-run must surface as an error until Effect::IoRun exists");
     }
@@ -1467,7 +1463,7 @@ mod runtime_metrics_publisher_tests {
     use std::collections::HashMap;
 
     fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelope {
-        Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event(vec![1]) }
+        Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![1] } }
     }
 
     fn ok_turn() -> TurnResult {
@@ -1481,9 +1477,9 @@ mod runtime_metrics_publisher_tests {
     fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
         let mut kernel = Kernel::new(ShardKind::Thread, 1, 0, 4);
         let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
-        kernel.submit(env(actor, Lane::Interactive, 1));
+        kernel.submit(&env(actor, Lane::Interactive, 1));
         kernel.tick(0);
-        kernel.complete(actor, ok_turn(), 0).unwrap();
+        kernel.complete(actor, &ok_turn(), 0).unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
         let heartbeats: HashMap<ShardId, u64> = [(ShardId(0), 400u64)].into_iter().collect();
@@ -1586,15 +1582,15 @@ mod runtime_metrics_publisher_tests {
         // first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
         let first_record = &registry.records[0];
         let first_actor = actor_ids[&first_record.id];
-        kernel.submit(env(first_actor, lane_for_profile(&first_record.scale_fixture.profile), 1));
+        kernel.submit(&env(first_actor, lane_for_profile(&first_record.scale_fixture.profile), 1));
         kernel.tick(0);
-        kernel.complete(first_actor, ok_turn(), 1).unwrap();
+        kernel.complete(first_actor, &ok_turn(), 1).unwrap();
 
         let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
-        kernel.submit(env(crash_actor, Lane::UserVisible, 1));
+        kernel.submit(&env(crash_actor, Lane::UserVisible, 1));
         kernel.tick(1);
-        let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted(b"scale-fixture crash profile".to_vec()), usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
-        kernel.complete(crash_actor, faulted, 2).unwrap();
+        let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+        kernel.complete(crash_actor, &faulted, 2).unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
         let payload = publisher.maybe_sample(&kernel, 10_000, &HashMap::new()).expect("first sample is always due");

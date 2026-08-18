@@ -30,7 +30,7 @@ use crate::db_state::{TouchKind, TouchedRegion, TouchedSet};
 //#region 🔖️CommandTouch
 /// @emoji 🏷️ A command's declared kind — the tag `CommandKindMatrix` keys structural
 /// commutativity knowledge by. Deliberately a bare string newtype (not tied to
-/// `protocol_core::SchemaId`) so this crate stays usable for kinds that aren't yet registered
+/// `protocol::wire::SchemaId`) so this crate stays usable for kinds that aren't yet registered
 /// `MutationDescriptor`s.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct CommandKind(pub String);

@@ -50,7 +50,7 @@ mod kernel_host {
         pub fn submit(&mut self, envelope_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
             let mut pos = 0usize;
             let envelope = Envelope::pack_decode(envelope_bytes, &mut pos).map_err(to_js_error)?;
-            let backpressure = self.inner.submit(envelope);
+            let backpressure = self.inner.submit(&envelope);
             let mut out = Vec::new();
             backpressure.pack_encode(&mut out);
             Ok(out)
@@ -70,7 +70,7 @@ mod kernel_host {
             let actor = ActorId::pack_decode(actor_bytes, &mut actor_pos).map_err(to_js_error)?;
             let mut result_pos = 0usize;
             let result = TurnResult::pack_decode(turn_result_bytes, &mut result_pos).map_err(to_js_error)?;
-            self.inner.complete(actor, result, now_ms).map_err(to_js_error_kernel)?;
+            self.inner.complete(actor, &result, now_ms).map_err(to_js_error_kernel)?;
             Ok(())
         }
 

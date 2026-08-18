@@ -94,6 +94,8 @@ members = [
     "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
     "🌎️hub/📦️packages/🦀️rust",
@@ -107,6 +109,7 @@ members = [
     "✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
 ]
 
 resolver = "2"
@@ -127,6 +130,9 @@ semio-framework-number = { path = "🧰️framework/🔨️modules/🔢️number
 semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
 semio-framework-os-scale-fixture = { path = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust" }
 semio-framework-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest

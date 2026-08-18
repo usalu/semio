@@ -41,8 +41,15 @@ pub struct TriangleMesh {
     pub indices: Vec<u32>,
 }
 
-/// 📦 STL binary vs ASCII flavor.
+/// 📦 STL binary vs ASCII flavor. 🕳️ `Ascii` is only ever constructed by this file's own tests
+/// (`export_stl(&mesh, StlFormat::Ascii)`) — `export_solid_stl`'s real callers all pass `Binary`;
+/// no production command surface lets a user request ASCII STL export yet. `write_ascii_stl` (the
+/// arm this variant selects) IS real, tested code, so this is a genuine gap, not dead code — found
+/// while chasing a Z1 zero-warnings `dead_code` warning, flagged for follow-up rather than wired
+/// here since it needs a real export-format choice threaded from whatever command triggers STL
+/// export, not a guess.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code, reason = "no production caller requests Ascii yet — see comment above, follow-up needed")]
 pub enum StlFormat {
     Binary,
     Ascii,

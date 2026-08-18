@@ -35,7 +35,7 @@ pub use plugin::plugin;
 // root. Mirrors `✏️s/🔌️plugins/🗒️note`'s own `semio_framework_plugin::plugin_exports!(plugin::plugin)`
 // call verbatim — stdio never had this wired up before this packet.
 #[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin);
 //#endregion Plugin
 
 //#region Registry

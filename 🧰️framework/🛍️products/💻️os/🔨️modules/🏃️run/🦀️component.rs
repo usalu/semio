@@ -2159,30 +2159,33 @@ mod tests {
         }
     }
 
-    /// 🧪️ R1-native-manifest runtime evidence: `🗒️note` is the one plugin with BOTH a committed
-    /// `🛂️descriptor.semio` (`design-abi.md` §3's `descriptor_is_fresh` gate keeps it byte-identical
-    /// to a real native `describe()` build) and a compiled native wasm anywhere in this tree today —
-    /// every other one of the 33 plugin ids has neither yet (`📓️status.md`'s W3 report: descriptor
-    /// emission is fleet-wide blocked on a pre-existing capability-claim rule, packet D0). The wasm
-    /// this test loads lives under SIBLING packet D0's own ticket-scoped target dir (D0 already
-    /// verified this exact file's `describe()` output is sha256-identical to the descriptor this
-    /// test reads — `📓️terra-D0-note-describe1.txt`); the canonical `target/wasm32-wasip2/`
-    /// `resolve_plugin_paths` (`📦️bin.rs`) expects at real CLI runtime is not populated in this tree
-    /// — a separate, unrelated build-step concern from this crate's own loading logic. If that
-    /// scratch wasm is absent (a fresh checkout, or D0's scratch dir cleaned since), this test
-    /// SKIPS rather than fails — it exists to demonstrate the wired path against real bytes when
-    /// they are present, not to assert the sibling packet's own scratch artifact's existence.
+    /// 🧪️ R1-native-manifest runtime evidence: `🗒️note` is the one plugin with a committed
+    /// `🛂️descriptor.semio` verified sha256-identical to a real native `describe()` build
+    /// (`design-abi.md` §3's `descriptor_is_fresh` gate; `📓️terra-D0-note-describe1.txt`) — every
+    /// other one of the 33 plugin ids has none yet (`📓️status.md`'s W3 report: descriptor emission
+    /// is fleet-wide blocked on a pre-existing capability-claim rule, packet D0). Tries every
+    /// location a compiled `note` wasm could plausibly be: the canonical `target/wasm32-wasip2/`
+    /// dirs `resolve_plugin_paths` (`📦️bin.rs`) uses at real CLI runtime, THEN this ticket's own
+    /// scratch build (`CARGO_TARGET_DIR=<ticket>/🎯️target-r1 cargo build -p semio-s-plugin-note
+    /// --target wasm32-wasip2`, run once to produce this evidence — see `📓️terra-R1-report.md`).
+    /// SKIPS rather than fails if none exist (a fresh checkout with neither built yet) — it exists
+    /// to demonstrate the wired path against real bytes when they are present, not to assert any
+    /// particular build artifact's existence.
     #[test]
     fn note_plugin_manifest_loads_from_its_committed_descriptor() {
         let repo_root = test_repo_root();
         let descriptor_path = repo_root.join("✏️s/🔌️plugins/🗒️note/🛂️descriptor.semio");
         assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
 
-        let wasm_path = repo_root.join(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-d0/wasm32-wasip2/debug/semio_s_plugin_note.wasm");
-        if !wasm_path.is_file() {
-            eprintln!("[DEBUG] note_plugin_manifest_loads_from_its_committed_descriptor: SKIPPED — no compiled note wasm at {}", wasm_path.display());
+        let candidate_wasm_paths = [
+            repo_root.join("target/wasm32-wasip2/debug/semio_s_plugin_note.wasm"),
+            repo_root.join("target/wasm32-wasip2/wasm-release/semio_s_plugin_note.wasm"),
+            repo_root.join(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-r1/wasm32-wasip2/debug/semio_s_plugin_note.wasm"),
+        ];
+        let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
+            eprintln!("[DEBUG] note_plugin_manifest_loads_from_its_committed_descriptor: SKIPPED — no compiled note wasm in any candidate location");
             return;
-        }
+        };
 
         let mut plugin_paths = HashMap::new();
         plugin_paths.insert("note".to_string(), wasm_path);

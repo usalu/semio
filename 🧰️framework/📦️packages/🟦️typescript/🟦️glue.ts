@@ -205,9 +205,204 @@ export function createLeasePool<T>(load: (key: string) => Promise<T>, dispose: (
 }
 //#endregion 🪶️LeasePool
 
+//#region 🔁️RetryWithJitteredBackoff
+/** @emoji 🔁️ Options for {@link retryWithJitteredBackoff}. */
+export interface JitteredBackoffOptions {
+  readonly minMs: number;
+  readonly maxMs: number;
+  readonly signal?: AbortSignal;
+}
+
+function abortReason(signal: AbortSignal): unknown {
+  return signal.reason ?? new Error("retryWithJitteredBackoff: aborted");
+}
+
+function abortableDelay(ms: number, signal: AbortSignal | undefined): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(abortReason(signal));
+      return;
+    }
+    const timer = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, ms);
+    function cleanup(): void {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    }
+    function onAbort(): void {
+      cleanup();
+      reject(abortReason(signal!));
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+/**
+ * @emoji 🔁️ Retries `fn` with full-jitter exponential backoff (delay is a random value drawn from
+ * `[minMs, min(maxMs, minMs * 2^attempt)]`, not a fixed exponential curve — this is what stops many
+ * reconnecting clients from ever synchronizing into a hammering herd) until it resolves, `signal`
+ * aborts, or `signal` is already aborted. Never returns while looping silently: an abort always
+ * settles the returned promise, surfacing the abort's reason rather than hanging forever. For short
+ * connection shortages only — the app must not freeze while this retries, and must not hammer the
+ * remote end.
+ * Wiederholt `fn` mit „full jitter“-Backoff, bis es erfüllt wird oder `signal` abbricht; ein Abbruch
+ * löst die zurückgegebene Promise immer auf, statt endlos zu warten.
+ */
+export async function retryWithJitteredBackoff<T>(fn: () => Promise<T>, options: JitteredBackoffOptions): Promise<T> {
+  const { minMs, maxMs, signal } = options;
+  let attempt = 0;
+  for (;;) {
+    if (signal?.aborted) throw abortReason(signal);
+    try {
+      return await fn();
+    } catch (error) {
+      if (signal?.aborted) throw abortReason(signal);
+      attempt += 1;
+      const cap = Math.min(maxMs, minMs * 2 ** attempt);
+      const waitMs = cap <= minMs ? minMs : minMs + Math.random() * (cap - minMs);
+      try {
+        await abortableDelay(waitMs, signal);
+      } catch {
+        throw signal?.aborted ? abortReason(signal) : error;
+      }
+    }
+  }
+}
+//#endregion 🔁️RetryWithJitteredBackoff
+
+//#region 🥇️LatestWins
+/**
+ * @emoji 🥇️ Single-flight with a trailing coalescer: the first call launches `run()` and hands the
+ * caller that exact run's promise. Every subsequent call that arrives while a run is still in
+ * flight collapses into at most one queued follow-up run — they all share that one follow-up's
+ * promise, so N concurrent callers never produce more than one extra `run()` call, and every one of
+ * them observes the latest result. Used for folder revalidation, presence, and refresh, where firing
+ * a fresh request per caller would be wasteful and stale-by-the-time-it-lands anyway.
+ * Einzelflug mit nachlaufender Zusammenführung: gleichzeitige Aufrufe während eines laufenden `run()`
+ * teilen sich höchstens einen einzigen Folgeauf-ruf und dessen Ergebnis.
+ */
+export function latestWins<T>(run: () => Promise<T>): () => Promise<T> {
+  let current: Promise<T> | null = null;
+  let queued: Promise<T> | null = null;
+
+  function launch(): Promise<T> {
+    let promise: Promise<T>;
+    try {
+      promise = Promise.resolve(run());
+    } catch (error) {
+      promise = Promise.reject(error);
+    }
+    current = promise;
+    const advance = (): void => {
+      if (current === promise) current = null;
+      if (queued !== null) queued = null;
+    };
+    promise.then(advance, advance);
+    return promise;
+  }
+
+  return function trigger(): Promise<T> {
+    if (current === null) return launch();
+    if (queued === null) queued = current.then(launch, launch);
+    return queued;
+  };
+}
+//#endregion 🥇️LatestWins
+
+//#region ⏱️FetchWithTimeout
+/** @emoji 📨️ Structural view of a fetch response — declared locally so this module's public API
+ * never requires the ambient `Response` type from outside this codebase. */
+export interface FetchTimeoutResponse {
+  readonly ok: boolean;
+  readonly status: number;
+  readonly statusText: string;
+  readonly headers: { get(name: string): string | null };
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+
+/** @emoji ⏱️ Options for {@link fetchWithTimeout}. */
+export interface FetchTimeoutOptions {
+  readonly timeoutMs: number;
+  readonly signal?: AbortSignal;
+}
+
+/**
+ * @emoji ⏱️ `fetch` composed with a timeout: the request aborts if it hasn't settled within
+ * `timeoutMs`, and separately aborts if the caller-supplied `signal` aborts — either can cancel it,
+ * neither leaks its timer/listener past this call (both are cleaned up on every exit path: success,
+ * timeout, external abort, and thrown `fetch` error alike).
+ * `fetch` mit Timeout: sowohl das Zeitlimit als auch das übergebene `signal` können den Aufruf
+ * abbrechen; Timer und Listener werden in jedem Fall aufgeräumt.
+ */
+export async function fetchWithTimeout(url: string, init: RequestInit | undefined, options: FetchTimeoutOptions): Promise<FetchTimeoutResponse> {
+  const { timeoutMs, signal: externalSignal } = options;
+  if (externalSignal?.aborted) throw externalSignal.reason ?? new Error("fetchWithTimeout: aborted");
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error(`fetchWithTimeout: timed out after ${timeoutMs}ms`)), timeoutMs);
+  function onExternalAbort(): void {
+    controller.abort(externalSignal!.reason);
+  }
+  externalSignal?.addEventListener("abort", onExternalAbort, { once: true });
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", onExternalAbort);
+  }
+}
+//#endregion ⏱️FetchWithTimeout
+
+//#region 🔔️WaitForEvent
+/** @emoji 🔔️ Subscribes `handler` to fire on the next occurrence and returns an unsubscribe. */
+export type EventSubscribe<T> = (handler: (value: T) => void) => () => void;
+
+/** @emoji 🔔️ Options for {@link waitForEvent}. */
+export interface WaitForEventOptions {
+  readonly signal?: AbortSignal;
+}
+
+/**
+ * @emoji 🔔️ One-shot event-driven gate: resolves with the first value `subscribe` delivers, or
+ * rejects if `signal` aborts first (including if it is already aborted). The subscription is torn
+ * down on both exit paths — no listener survives past this call, unlike a fixed `setTimeout` wait
+ * that either fires early/late or leaks if nothing ever arrives.
+ * Einmaliges ereignisgesteuertes Warten: löst beim ersten Ereignis auf oder lehnt bei Abbruch ab; das
+ * Abonnement wird in beiden Fällen entfernt.
+ */
+export function waitForEvent<T>(subscribe: EventSubscribe<T>, options?: WaitForEventOptions): Promise<T> {
+  const signal = options?.signal;
+  return new Promise<T>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new Error("waitForEvent: aborted"));
+      return;
+    }
+    let unsubscribe: (() => void) | null = null;
+    function cleanup(): void {
+      unsubscribe?.();
+      unsubscribe = null;
+      signal?.removeEventListener("abort", onAbort);
+    }
+    function onAbort(): void {
+      cleanup();
+      reject(signal!.reason ?? new Error("waitForEvent: aborted"));
+    }
+    unsubscribe = subscribe((value) => {
+      cleanup();
+      resolve(value);
+    });
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+//#endregion 🔔️WaitForEvent
+
 //#region 🧪️Tests
 if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
 
   describe("DockLayoutStore", () => {
     const emptySkeleton = (): DockSkeleton => ({
@@ -1316,5 +1511,215 @@ if (import.meta.vitest) {
     });
     //#endregion 🔖️StepTests
   });
+
+  //#region 🔖️RetryWithJitteredBackoffTests
+  describe("retryWithJitteredBackoff", () => {
+    it("keeps every backoff delay within [minMs, maxMs] and varies it across attempts", async () => {
+      vi.useFakeTimers();
+      try {
+        const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+        let calls = 0;
+        const fn = vi.fn(async () => {
+          calls += 1;
+          if (calls < 6) throw new Error("retry me");
+          return "ok";
+        });
+        const resultPromise = retryWithJitteredBackoff(fn, { minMs: 10, maxMs: 100 });
+        for (let i = 0; i < 5; i++) {
+          await vi.advanceTimersByTimeAsync(100);
+        }
+        await expect(resultPromise).resolves.toBe("ok");
+        expect(calls).toBe(6);
+        const delays = setTimeoutSpy.mock.calls.map(([, ms]) => Number(ms));
+        expect(delays.length).toBe(5);
+        for (const delay of delays) {
+          expect(delay).toBeGreaterThanOrEqual(10);
+          expect(delay).toBeLessThanOrEqual(100);
+        }
+        expect(new Set(delays).size).toBeGreaterThan(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("rejects promptly on abort mid-wait and makes no further attempt", async () => {
+      vi.useFakeTimers();
+      try {
+        const controller = new AbortController();
+        let calls = 0;
+        const fn = vi.fn(async () => {
+          calls += 1;
+          throw new Error("always fails");
+        });
+        const promise = retryWithJitteredBackoff(fn, { minMs: 50, maxMs: 50, signal: controller.signal });
+        await vi.advanceTimersByTimeAsync(0);
+        expect(calls).toBe(1);
+        controller.abort(new Error("stop"));
+        await expect(promise).rejects.toThrow("stop");
+        expect(calls).toBe(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("throws immediately for an already-aborted signal without calling fn", async () => {
+      const controller = new AbortController();
+      controller.abort(new Error("pre-aborted"));
+      const fn = vi.fn(async () => "unreachable");
+      await expect(retryWithJitteredBackoff(fn, { minMs: 10, maxMs: 10, signal: controller.signal })).rejects.toThrow("pre-aborted");
+      expect(fn).not.toHaveBeenCalled();
+    });
+  });
+  //#endregion 🔖️RetryWithJitteredBackoffTests
+
+  //#region 🔖️LatestWinsTests
+  describe("latestWins", () => {
+    it("collapses N concurrent calls during an in-flight run into exactly one trailing run, and every caller sees the latest result", async () => {
+      let calls = 0;
+      const resolvers: Array<(value: number) => void> = [];
+      const run = vi.fn(() => {
+        calls += 1;
+        const callIndex = calls;
+        return new Promise<number>((resolve) => resolvers.push(() => resolve(callIndex)));
+      });
+      const trigger = latestWins(run);
+
+      const first = trigger();
+      expect(calls).toBe(1);
+      const concurrentA = trigger();
+      const concurrentB = trigger();
+      const concurrentC = trigger();
+      expect(calls).toBe(1);
+
+      resolvers[0]!(0);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(calls).toBe(2);
+
+      resolvers[1]!(0);
+      await expect(first).resolves.toBe(1);
+      await expect(concurrentA).resolves.toBe(2);
+      await expect(concurrentB).resolves.toBe(2);
+      await expect(concurrentC).resolves.toBe(2);
+    });
+
+    it("starts a fresh run when called again after everything has settled", async () => {
+      let n = 0;
+      const trigger = latestWins(async () => {
+        n += 1;
+        return n;
+      });
+      await expect(trigger()).resolves.toBe(1);
+      await expect(trigger()).resolves.toBe(2);
+    });
+  });
+  //#endregion 🔖️LatestWinsTests
+
+  //#region 🔖️FetchWithTimeoutTests
+  describe("fetchWithTimeout", () => {
+    it("aborts the underlying fetch when the timeout elapses first", async () => {
+      vi.useFakeTimers();
+      try {
+        const fetchMock = vi.fn(
+          (_url: string, init?: RequestInit) =>
+            new Promise((_resolve, reject) => {
+              init?.signal?.addEventListener("abort", () => reject(new Error("aborted-by-fetch")));
+            }),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        const promise = fetchWithTimeout("https://example.test", undefined, { timeoutMs: 50 });
+        const assertion = expect(promise).rejects.toThrow();
+        await vi.advanceTimersByTimeAsync(50);
+        await assertion;
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
+    });
+
+    it("aborts the underlying fetch when the external signal aborts", async () => {
+      const controller = new AbortController();
+      const fetchMock = vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new Error("aborted-by-fetch")));
+          }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      try {
+        const promise = fetchWithTimeout("https://example.test", undefined, { timeoutMs: 10_000, signal: controller.signal });
+        controller.abort(new Error("caller cancelled"));
+        await expect(promise).rejects.toThrow();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it("clears the timer and removes the abort listener on the success path", async () => {
+      vi.useFakeTimers();
+      try {
+        const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+        const controller = new AbortController();
+        const removeEventListenerSpy = vi.spyOn(controller.signal, "removeEventListener");
+        const response: FetchTimeoutResponse = { ok: true, status: 200, statusText: "OK", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(async () => response),
+        );
+        const result = await fetchWithTimeout("https://example.test", undefined, { timeoutMs: 1000, signal: controller.signal });
+        expect(result).toBe(response);
+        expect(clearTimeoutSpy).toHaveBeenCalled();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
+        await vi.advanceTimersByTimeAsync(5000);
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
+    });
+  });
+  //#endregion 🔖️FetchWithTimeoutTests
+
+  //#region 🔖️WaitForEventTests
+  describe("waitForEvent", () => {
+    it("resolves with the first delivered value and unsubscribes", async () => {
+      let handler: ((value: number) => void) | undefined;
+      let unsubscribed = false;
+      const subscribe: EventSubscribe<number> = (h) => {
+        handler = h;
+        return () => {
+          unsubscribed = true;
+        };
+      };
+      const promise = waitForEvent(subscribe);
+      expect(unsubscribed).toBe(false);
+      handler!(42);
+      await expect(promise).resolves.toBe(42);
+      expect(unsubscribed).toBe(true);
+    });
+
+    it("rejects on abort and unsubscribes without ever having received a value", async () => {
+      let unsubscribed = false;
+      const subscribe: EventSubscribe<number> = () => () => {
+        unsubscribed = true;
+      };
+      const controller = new AbortController();
+      const promise = waitForEvent(subscribe, { signal: controller.signal });
+      controller.abort(new Error("cancelled"));
+      await expect(promise).rejects.toThrow("cancelled");
+      expect(unsubscribed).toBe(true);
+    });
+
+    it("rejects immediately for an already-aborted signal, never subscribing", async () => {
+      const controller = new AbortController();
+      controller.abort(new Error("pre-aborted"));
+      let subscribed = false;
+      const subscribe: EventSubscribe<number> = () => {
+        subscribed = true;
+        return () => {};
+      };
+      await expect(waitForEvent(subscribe, { signal: controller.signal })).rejects.toThrow("pre-aborted");
+      expect(subscribed).toBe(false);
+    });
+  });
+  //#endregion 🔖️WaitForEventTests
 }
 //#endregion 🧪️Tests

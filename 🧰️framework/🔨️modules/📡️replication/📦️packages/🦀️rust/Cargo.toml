@@ -1,0 +1,33 @@
+[package]
+name = "semio-framework-replication"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Product-neutral replication contract: lane-tagged client/server frames, causal mutation envelopes, the mutation trait family, conflict vocabulary, the .spr record format and the pack codec primitives beneath them. Spoken identically by the optimistic local replica and the authoritative server; depends on neither."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication"
+
+[lints]
+workspace = true
+
+[lib]
+name = "protocol"
+path = "📦️glue.rs"
+
+[features]
+default = []
+# 🗜️ Deflate segment compression (`CodecId(1)`); off by default so the pure contract stays dependency-light.
+deflate = ["dep:miniz_oxide"]
+
+[dependencies]
+base64 = "0.22.1"
+blake3 = "1"
+miniz_oxide = { version = "0.8", optional = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"

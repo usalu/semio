@@ -36,3 +36,9 @@ ts-rs = { version = "10", optional = true }
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+# 🧪️ terra-shard-grants: proves the Part A serde-shape fix by actually serializing to bytes and
+# back (`serde_json`, not an in-process equality check — that is exactly what hid the `JobStep`
+# newtype-variant defect this fix generalizes). Dev-only: the crate core has zero `serde_json`
+# dependency on its real wire, which stays `pack_encode`/`pack_decode` (see the module doc's
+# "opaque seam" note) — this never reaches a non-test build.
+serde_json = { workspace = true }

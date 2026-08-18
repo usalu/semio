@@ -135,10 +135,18 @@ pub mod derived_analysis {
     pub const CODE_DATA_DESCRIPTOR: &str = "stdio.zip.iso21320.data-descriptor-present";
     pub const CODE_VERSION_NEEDED: &str = "stdio.zip.iso21320.version-needed-high";
 
+    // 🕳️ `hard`/`soft` are unused: `check_iso21320_conformance` below is a stub (`Vec::new()`) that
+    // never actually calls them against the `CODE_*`/`FLAG_*`/`VERSION_NEEDED_SOFT_CEILING`
+    // constants above — the real per-entry checks (encrypted, strong-encryption-or-masked-headers,
+    // data-descriptor-present, version-needed-high) were never implemented. Found while chasing a
+    // Z1 zero-warnings `dead_code` warning; flagged for follow-up rather than implemented here,
+    // since finishing the conformance logic is real feature work, not a warnings fix.
+    #[allow(dead_code, reason = "conformance checker is a stub — see comment above, follow-up needed")]
     fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
 
+    #[allow(dead_code, reason = "conformance checker is a stub — see comment above, follow-up needed")]
     fn soft(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }

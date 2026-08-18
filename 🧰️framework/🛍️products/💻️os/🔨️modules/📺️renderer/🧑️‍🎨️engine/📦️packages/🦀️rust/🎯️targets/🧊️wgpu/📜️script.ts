@@ -102,7 +102,7 @@ function ensureAssetServer(variant: string): void {
   const specs = variantAssetSpecs(variant);
   if (specs.length === 0) return;
   startAssetServer(repoRoot, SEMIO_ASSET_SERVER_PORT, specs);
-  console.log(`[DEBUG] asset server serving at ${assetServerBaseUrl()} (${specs.map((s) => `${s.kind}:${s.route}`).join(", ")})`);
+  console.log(`asset server serving at ${assetServerBaseUrl()} (${specs.map((s) => `${s.kind}:${s.route}`).join(", ")})`);
 }
 
 /** 🎯️Resolves the `--app <appId>` args for `semio-wgpu-native` from the catalog row matching `filterPlugin`, or `[]` when the row has no `app`. */
@@ -128,7 +128,7 @@ class TrunkBuildScript extends BundleScript {
     if (release) args.push("--release");
     if (runCmdStatus("trunk", args, { cwd: this.root, env: trunkEnv(), budgetMs: buildBudgetMs() }) !== 0) throw new Error("trunk build failed for wgpu renderer");
     syncStableRendererArtifacts();
-    console.log(`[DEBUG] trunk built wgpu renderer -> ${outDir}`);
+    console.log(`trunk built wgpu renderer -> ${outDir}`);
   }
 }
 
@@ -178,7 +178,7 @@ class NativeBuildScript extends BundleScript {
       throw new Error("native wgpu renderer build failed");
     }
     if (segments.includes("--scale")) {
-      console.log("[DEBUG] built native wgpu renderer (scale-bench mode — no plugin catalog build)");
+      console.log("built native wgpu renderer (scale-bench mode — no plugin catalog build)");
       return;
     }
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
@@ -190,7 +190,7 @@ class NativeBuildScript extends BundleScript {
       ...orchestratorBudgetOpts(),
     });
     if (program !== 0) throw new Error(`wasm program build failed: ${filterPlugin}`);
-    console.log(`[DEBUG] built native wgpu renderer and wasm programs for ${filterPlugin}`);
+    console.log(`built native wgpu renderer and wasm programs for ${filterPlugin}`);
   }
 }
 

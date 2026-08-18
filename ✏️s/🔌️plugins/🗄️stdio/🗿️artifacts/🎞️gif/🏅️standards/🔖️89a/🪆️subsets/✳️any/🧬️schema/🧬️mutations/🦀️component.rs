@@ -478,7 +478,6 @@ mod tests {
     /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws over the full ~20-variant vocabulary
     /// (handcrafted impls over the `dsl::DslOps`-derived `DslVariants`).
     #[test]
-    #[test]
     fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for mutation in [

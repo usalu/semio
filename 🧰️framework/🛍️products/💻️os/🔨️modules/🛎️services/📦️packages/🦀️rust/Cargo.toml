@@ -1,0 +1,35 @@
+[package]
+name = "semio-framework-os-services"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Where tokio lives, and nowhere else. Host-side async services built ON TOP of semio-framework-async's HostAsyncRuntime: the tokio-backed runtime impl (TokioHostRuntime), scope table, a single host timer wheel, a bounded blocking-compute pool, an HTTP connection pool, a storage scheduler and an indexed event router. tokio is confined to this crate — its public API names only semio-framework-async types and this crate's own types, never a tokio type, exactly as wasmtime is confined behind GuestRuntime in the plugin-host crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
+
+[package.metadata.semio]
+role = "product"
+id = "os-services"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_services"
+path = "📦️glue.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+# 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (coordinator correction on packet R2): `PackageId`
+# (per-plugin quota identity) and `ActorId` (per-actor identity) are consumed from here rather than
+# reinvented locally — this crate is `os-services`, not domain-neutral, so unlike
+# `semio-framework-async` it should NOT keep its own parallel newtypes for the same concepts the
+# actor crate already owns. Pure crate (no tokio, no threads, builds for wasm32-unknown-unknown), so
+# this costs no platform coupling; `🔌️plugin/🖥️host` already depends on it the same way.
+semio-framework-actor = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time"] }
+
+[dev-dependencies]
+# 🧪️ `testkit` (unions with the plain dependency above for test builds only) brings in
+# `semio-framework-async::testkit::ManualRuntime`, this crate's own `#[cfg(test)]` double for
+# exercising `StorageScheduler`/`EventRouter`/`TimerWheel` against the trait without real tokio.
+semio-framework-async = { workspace = true, features = ["testkit"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "test-util", "macros"] }

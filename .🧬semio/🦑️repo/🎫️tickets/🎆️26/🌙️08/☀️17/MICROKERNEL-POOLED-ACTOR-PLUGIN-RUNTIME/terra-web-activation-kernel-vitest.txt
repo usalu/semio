@@ -1,0 +1,39 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio
+
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot > rows cover both resident and suspended actors, never activated-and-forgotten ones 2ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.runtimeMetricsActorRows / runtimeMetricsSnapshot > snapshot combines actor rows with ShardClient.shardMetricsSamples at the given clock reading 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > runtimeMetricsDue > gates at the 500ms / 2Hz interval, always due on the first call 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.startRuntimeMetricsPublisher > calls the sink with the os.runtime.metrics topic at the 2Hz interval, and stop() cancels it 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > disposes the worker-side instance and forgets the actor entirely — resume() afterward throws unknown actor 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > is a no-op for an actor this registry never activated 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.cancel > cancelling a suspended (non-resident but still tracked) actor still forgets it 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.enqueueTurn lane priority > dispatches turns by lane priority end-to-end through the registry, not enqueue order 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.suspend cancels queued turns > a suspended actor's queued turns are cancelled, never delivered 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.handleShardLost / restoreActors > is a valid ShardClientOptions.onShardLost value 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.handleShardLost / restoreActors > restores exactly the actors that were on the lost shard, leaving an actor on a different shard untouched 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry restore ordering > a restored actor does not receive turns that were queued before the restore, but does receive turns queued after 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > residentActorCapFromMemory > derives the cap from deviceMemoryGiB when present, clamped to [4, 96] 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > residentActorCapFromMemory > falls back to jsHeapSizeLimitBytes when deviceMemoryGiB is absent 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > residentActorCapFromMemory > falls back to the hardcoded constant when neither signal is present 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.maxResidentActors derived from an injected memory probe > a small deviceMemoryGiB reading evicts down to its (small) derived cap 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.maxResidentActors derived from an injected memory probe > a large deviceMemoryGiB reading keeps every one of the same 10 activations resident 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.metricsBus (autoStartMetricsPublisher) > publishes os.runtime.metrics as a CustomEvent on metricsBus at the 2Hz interval, driven by the injected clock, and dispose() stops it 1ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > ActivationRegistry.metricsBus (autoStartMetricsPublisher) > stays empty (no live interval, no bus traffic) when autoStartMetricsPublisher is left at its default 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > expandPluginRegistry > includes transitive dependsOn of primary and consume-matched contributors 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > resolves the highest-minimum-fidelity route regardless of registration order 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > respects maxHops, picking the direct (weaker) shortcut when bounded to 1 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > rejects a different plugin claiming an already-owned (from,into) key 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ownerOf reports the registering plugin 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > carrierEntries returns only the sniff-declaring hops whose from is the given carrier 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioRun executes the whole route hop by hop, feeding each hop's output to the next 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioRun refuses the WHOLE route (no partial execution) when the calling plugin owns any hop 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioIdentify fans sniffHop out across carrier entries, skipping the calling plugin's own, sorted by confidence then coordinate 0ms
+ ✓ 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts > IoEntryGraph > ioIdentify skips the calling plugin's own carrier entries 0ms
+
+ Test Files  1 passed (1)
+      Tests  29 passed (29)
+   Start at  19:45:30
+   Duration  652ms (transform 96ms, setup 0ms, import 112ms, tests 11ms, environment 383ms)
+
+EXIT:0

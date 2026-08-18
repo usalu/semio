@@ -172,7 +172,6 @@ impl OpBinary for Mp4Mutation {
 mod tests {
     use super::*;
     use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
-    use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
     fn base_snapshot() -> Mp4Snapshot {

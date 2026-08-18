@@ -1,6 +1,6 @@
 //! 🗄️ `db_wal` — the `db` crate family's write-ahead log: a per-document, per-segment `.spr`
 //! container (reusing `protocol::{SprWriter, FrameCursor, ReverseFrameCursor}` and
-//! `protocol_format::recover` directly — no new framing invented) built on top of
+//! `protocol::format::recover` directly — no new framing invented) built on top of
 //! `db_storage::WalStorage`'s opaque byte segments. Owns the WAL's own record kinds (SPR
 //! extension range `0x40..=0x4F`), real group-commit batching (bounded by delay/bytes/count),
 //! segment rotation with a cross-segment hash chain, and crash recovery (torn-tail truncation,
@@ -10,8 +10,8 @@
 //!
 //! 🎯️ Design choice (dependency): the `protocol` facade re-exports `SprWriter`/`FrameCursor`/
 //! `ReverseFrameCursor`/`RecoveryMode`/`RecoveryReport`/`ProtocolError`/`ProtocolLimits`, but not
-//! the free functions `protocol_format::recover`/`parse_commit_payload`, the constants
-//! `COMMIT_FRAME_LEN`/`HEADER_SIZE`, or `protocol_core::REC_COMMIT`/`REQUIRED_HASH_CHAIN` — this
+//! the free functions `protocol::format::recover`/`parse_commit_payload`, the constants
+//! `COMMIT_FRAME_LEN`/`HEADER_SIZE`, or `protocol::wire::REC_COMMIT`/`REQUIRED_HASH_CHAIN` — this
 //! crate needs all of those (recovery; reading back a just-sealed segment's tip `chain_hash` to
 //! seed the next segment's cross-segment chain; recognizing a `REC_COMMIT` frame explicitly while
 //! decoding rather than assuming "not one of ours" means "must be a commit"; opening every segment
@@ -420,12 +420,12 @@ impl pack::PackSink for SharedBuf {
     }
 }
 
-/// @emoji ⛓️ Every `db_wal` segment is opened requiring `protocol_core::REQUIRED_HASH_CHAIN` —
+/// @emoji ⛓️ Every `db_wal` segment is opened requiring `protocol::wire::REQUIRED_HASH_CHAIN` —
 /// `SprWriter` always computes the commit chain regardless of this flag, but stamping it into the
 /// header makes the requirement an explicit, reader-enforced part of the file's contract rather
 /// than an implicit convention only this crate happens to uphold.
-fn segment_write_options() -> protocol_format::WriteOptions {
-    protocol_format::WriteOptions { required_flags: protocol_core::REQUIRED_HASH_CHAIN, optional_flags: 0 }
+fn segment_write_options() -> protocol::format::WriteOptions {
+    protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 }
 }
 //#endregion 🔖️Sink
 
@@ -447,12 +447,12 @@ fn protocol_err(err: protocol::ProtocolError) -> DbError {
 /// skipped via `is_wal_record_kind`, matching `protocol_format`'s "cursors are kind-agnostic,
 /// interpretation is a caller policy" design note.
 fn decode_records(trusted: &[u8]) -> Result<Vec<WalRecord>, DbError> {
-    let mut cursor = protocol::FrameCursor::new(trusted, protocol_format::HEADER_SIZE as u64);
+    let mut cursor = protocol::FrameCursor::new(trusted, protocol::format::HEADER_SIZE as u64);
     let mut records = Vec::new();
     while let Some(frame) = cursor.next_frame().map_err(protocol_err)? {
         if is_wal_record_kind(frame.kind) {
             records.push(WalRecord::decode(frame.kind, frame.payload())?);
-        } else if frame.kind != protocol_core::REC_COMMIT {
+        } else if frame.kind != protocol::wire::REC_COMMIT {
             return Err(DbError::Corrupt(format!("unexpected non-wal, non-commit frame kind {:#x} in a db_wal segment", frame.kind)));
         }
     }
@@ -474,7 +474,7 @@ pub struct WalRecoveryReport {
 /// primitive `db_artifact`'s materialize-from-WAL-suffix step builds on. Every sealed segment is
 /// expected fully trusted (a torn sealed segment is `DbError::Corrupt`, since `truncate_tail` only
 /// targets an unsealed segment); the last (possibly active, possibly unsealed) segment is
-/// recovered via `protocol_format::recover` first.
+/// recovered via `protocol::format::recover` first.
 pub fn replay_document(storage: &dyn db_storage::WalStorage, document: &ArtifactId) -> Result<Vec<WalRecord>, DbError> {
     let mut indices = storage.list_segments(document)?;
     indices.sort_unstable();
@@ -482,7 +482,7 @@ pub fn replay_document(storage: &dyn db_storage::WalStorage, document: &Artifact
     for index in indices {
         let len = storage.segment_len(document, index)?;
         let bytes = storage.read(document, index, pack::ByteRange { offset: 0, len })?;
-        let report = protocol_format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
         if report.bytes_recovered != bytes.len() as u64 {
             return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted)", report.bytes_recovered, bytes.len())));
         }
@@ -568,18 +568,18 @@ impl SegmentWriter {
     /// `WAL_SEGMENT_HEADER.prev_chain_hash`.
     fn tip_chain_hash(&self) -> Result<[u8; 32], DbError> {
         let snapshot = self.buf.snapshot();
-        let report = protocol_format::recover(&snapshot, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&snapshot, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
         if report.last_commit_seq == 0 {
-            return Ok(*blake3::hash(&snapshot[..protocol_format::HEADER_SIZE]).as_bytes());
+            return Ok(*blake3::hash(&snapshot[..protocol::format::HEADER_SIZE]).as_bytes());
         }
-        let frame_end = (report.last_commit_offset + protocol_format::COMMIT_FRAME_LEN) as usize;
+        let frame_end = (report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
         let frame_bytes = &snapshot[report.last_commit_offset as usize..frame_end];
         let mut cursor = protocol::FrameCursor::new(frame_bytes, 0);
         let frame = cursor.next_frame().map_err(protocol_err)?.ok_or_else(|| DbError::Corrupt("expected a commit frame while sealing wal segment".to_string()))?;
-        if frame.kind != protocol_core::REC_COMMIT {
+        if frame.kind != protocol::wire::REC_COMMIT {
             return Err(DbError::Corrupt(format!("expected REC_COMMIT at the recovered commit offset, found kind {:#x}", frame.kind)));
         }
-        Ok(protocol_format::parse_commit_payload(frame.payload()).map_err(protocol_err)?.chain_hash)
+        Ok(protocol::format::parse_commit_payload(frame.payload()).map_err(protocol_err)?.chain_hash)
     }
 }
 //#endregion 🔖️Segment
@@ -624,7 +624,7 @@ impl ArtifactWal {
     /// @emoji 🚑️ Opens `document`'s existing WAL, recovering it: every sealed segment (all but the
     /// highest index) must be fully trusted end-to-end (`DbError::Corrupt` otherwise — a torn
     /// sealed segment is unrecoverable damage, not a normal crash artifact); the highest-indexed
-    /// segment is treated as possibly-active and recovered via `protocol_format::recover`,
+    /// segment is treated as possibly-active and recovered via `protocol::format::recover`,
     /// discarding any torn tail. Creates a fresh WAL (equivalent to `create`) if `document` has no
     /// segments yet.
     pub fn open(storage: &dyn db_storage::WalStorage, document: ArtifactId, policy: GroupCommitPolicy, now_ms: u64) -> Result<(Self, WalRecoveryReport), DbError> {
@@ -638,7 +638,7 @@ impl ArtifactWal {
         for &index in &indices[..indices.len() - 1] {
             let len = storage.segment_len(&document, index)?;
             let bytes = storage.read(&document, index, pack::ByteRange { offset: 0, len })?;
-            let report = protocol_format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+            let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
             if report.bytes_recovered != bytes.len() as u64 {
                 return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted) but is not the active segment", report.bytes_recovered, bytes.len())));
             }
@@ -646,7 +646,7 @@ impl ArtifactWal {
 
         let len = storage.segment_len(&document, last_index)?;
         let bytes = storage.read(&document, last_index, pack::ByteRange { offset: 0, len })?;
-        let report = protocol_format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
         let torn_tail_bytes = bytes.len() as u64 - report.bytes_recovered;
         let records = decode_records(&bytes[..report.bytes_recovered as usize])?;
 
@@ -763,7 +763,7 @@ mod tests {
         for kind in kinds {
             assert!(is_wal_record_kind(kind));
         }
-        // 🧪️ `0x0C` (protocol_core::REC_COMMIT) hard-coded rather than depending on protocol_core
+        // 🧪️ `0x0C` (protocol::wire::REC_COMMIT) hard-coded rather than depending on protocol_core
         // directly just for this one assertion — this crate's extension range never overlaps it.
         assert!(!is_wal_record_kind(0x0C));
     }
@@ -876,7 +876,7 @@ mod tests {
 
         let len = storage.segment_len(&document, 0).unwrap();
         let bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len }).unwrap();
-        let report = protocol_format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
         assert_eq!(report.bytes_recovered, bytes.len() as u64);
         assert_eq!(report.torn_tail_bytes, 0);
 
@@ -940,7 +940,7 @@ mod tests {
 
         let len = storage.segment_len(&document, 0).unwrap();
         let bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len }).unwrap();
-        let post_recovery = protocol_format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let post_recovery = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
         assert_eq!(post_recovery.bytes_recovered, bytes.len() as u64, "the rebuilt segment must itself be torn-tail-free");
     }
 
@@ -981,17 +981,17 @@ mod tests {
         // independently-recomputed tip chain_hash.
         let seg0_len = storage.segment_len(&document, 0).unwrap();
         let seg0_bytes = storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len }).unwrap();
-        let seg0_report = protocol_format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
-        let commit_frame_end = (seg0_report.last_commit_offset + protocol_format::COMMIT_FRAME_LEN) as usize;
+        let seg0_report = protocol::format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let commit_frame_end = (seg0_report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
         let mut cursor = protocol::FrameCursor::new(&seg0_bytes[seg0_report.last_commit_offset as usize..commit_frame_end], 0);
         let commit_frame = cursor.next_frame().unwrap().unwrap();
-        let expected_chain_hash = protocol_format::parse_commit_payload(commit_frame.payload()).unwrap().chain_hash;
+        let expected_chain_hash = protocol::format::parse_commit_payload(commit_frame.payload()).unwrap().chain_hash;
 
         let seg0_records = decode_records(&seg0_bytes[..seg0_report.bytes_recovered as usize]).unwrap();
         let seg1_records = {
             let seg1_len = storage.segment_len(&document, 1).unwrap();
             let seg1_bytes = storage.read(&document, 1, pack::ByteRange { offset: 0, len: seg1_len }).unwrap();
-            let seg1_report = protocol_format::recover(&seg1_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+            let seg1_report = protocol::format::recover(&seg1_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
             decode_records(&seg1_bytes[..seg1_report.bytes_recovered as usize]).unwrap()
         };
         match &seg1_records[0] {

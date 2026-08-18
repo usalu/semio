@@ -170,6 +170,10 @@ export interface ShardClientOptions {
    * `heartbeat` message is ALWAYS honored regardless, so correctness never depends on this. */
   readonly heartbeatSab?: SharedArrayBuffer;
   readonly heartbeatTimeoutMs?: number;
+  /** Cadence for {@link ShardClient.startWatchdog}'s self-tick when called with no explicit override.
+   * Defaults to `heartbeatTimeoutMs` — the same cadence the pre-existing manual `checkHeartbeats()`
+   * call pattern already assumed (see that method's own doc: "three consecutive timeout windows"). */
+  readonly watchdogIntervalMs?: number;
   readonly now?: () => number;
   /** Fired when a shard is torn down (3 missed heartbeats, or an explicit `terminate()`) — the caller
    * (kernel-side scheduler) is responsible for restoring every listed actor from its last checkpoint
@@ -189,18 +193,21 @@ export class ShardClient {
   private readonly exclusiveIndices: ReadonlySet<number>;
   private readonly heartbeatSabView: Int32Array | null;
   private readonly heartbeatTimeoutMs: number;
+  private readonly watchdogIntervalMs: number;
   private readonly now: () => number;
   private readonly createWorker: CreateShardWorker;
   private readonly onShardLost?: ShardClientOptions["onShardLost"];
   private readonly onActorTrap?: ShardClientOptions["onActorTrap"];
   private nextRoundRobin = 0;
   private requestSeq = 0;
+  private watchdogHandle: ReturnType<typeof setInterval> | null = null;
 
   constructor(options: ShardClientOptions) {
     if (options.shardCount < 1) throw new Error("[DEBUG] ShardClient requires shardCount >= 1");
     this.createWorker = options.createWorker;
     this.now = options.now ?? (() => Date.now());
     this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? DEFAULT_HEARTBEAT_TIMEOUT_MS;
+    this.watchdogIntervalMs = options.watchdogIntervalMs ?? this.heartbeatTimeoutMs;
     this.heartbeatSabView = options.heartbeatSab ? new Int32Array(options.heartbeatSab) : null;
     this.onShardLost = options.onShardLost;
     this.onActorTrap = options.onActorTrap;
@@ -252,6 +259,15 @@ export class ShardClient {
     slot.heartbeat.oldestPendingStartedAtMs = oldest;
   }
 
+  /** 🩹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P4 fix): before this, `failShard` rejected every
+   * in-flight request but left `this.actorShard`/`slot.actorIds` untouched — verified by reading the
+   * pre-fix source: only `pendingRequestIds` and `heartbeat.oldestPendingStartedAtMs` were cleared.
+   * That meant a shard whose worker died via `onerror` (which calls `failShard` directly, WITHOUT
+   * `terminate()`+`rebuild()` — see `spawnShard`'s `worker.onerror` below) kept every one of its
+   * actors routed to it: a later `activate()`/`turn()` for the same `actorId` would `postMessage` into
+   * the same dead worker and hang forever, undetectable until the heartbeat watchdog's own 3-strike
+   * ladder eventually caught it. Clearing the routing here means a dead shard stops receiving newly
+   * routed work immediately, not only after `rebuild()` runs. */
   private failShard(slot: ShardSlot, error: Error): void {
     for (const requestId of slot.pendingRequestIds) {
       const entry = this.pending.get(requestId);
@@ -261,6 +277,8 @@ export class ShardClient {
     }
     slot.pendingRequestIds.clear();
     slot.heartbeat.oldestPendingStartedAtMs = null;
+    for (const actorId of slot.actorIds) this.actorShard.delete(actorId);
+    slot.actorIds.clear();
   }
   //#endregion 🌱️Lifecycle
 
@@ -441,6 +459,32 @@ export class ShardClient {
       }
     }
   }
+
+  /** ▶️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P4): self-ticks {@link pollHeartbeatSab} +
+   * {@link checkHeartbeats} on a real interval. Before this method existed, NEITHER was ever called
+   * outside this file's own tests (verified with `grep -rn "checkHeartbeats(\|pollHeartbeatSab("` across
+   * the repo) — the watchdog's whole failure ladder was wired but nothing in production ever turned
+   * the crank, so a wedged shard went undetected forever in the real app. Idempotent: calling this
+   * again while already running is a no-op (use {@link stopWatchdog} first to change the interval).
+   * Uses the real `setInterval`/`clearInterval` — same convention as this repo's own
+   * `ActivationRegistry.startRuntimeMetricsPublisher` (kernel `🟦️component.ts`), which tests with
+   * `vi.useFakeTimers()`/`vi.advanceTimersByTime` rather than an injected interval function; this
+   * class's `now` option already covers the OTHER half of the clock (what "too long ago" means), so
+   * no separate injectable timer is needed for correctness, only fake timers for tests. */
+  startWatchdog(intervalMs: number = this.watchdogIntervalMs): void {
+    if (this.watchdogHandle !== null) return;
+    this.watchdogHandle = setInterval(() => {
+      this.pollHeartbeatSab();
+      this.checkHeartbeats();
+    }, intervalMs);
+  }
+
+  /** ⏹️ Cancels a running {@link startWatchdog} loop. Idempotent; also called from {@link disposeAll}. */
+  stopWatchdog(): void {
+    if (this.watchdogHandle === null) return;
+    clearInterval(this.watchdogHandle);
+    this.watchdogHandle = null;
+  }
   //#endregion ⏱️HeartbeatWatchdog
 
   //#region 📈️RuntimeMetrics
@@ -491,6 +535,7 @@ export class ShardClient {
 
   /** ⏏️ Tears down every shard's worker — call on full app shutdown, never per-actor (use {@link dispose}). */
   disposeAll(): void {
+    this.stopWatchdog();
     for (const slot of this.shards) {
       this.failShard(slot, new Error("ShardClient disposed"));
       slot.worker.terminate();
@@ -691,6 +736,81 @@ if (import.meta.vitest) {
       const first = client.leaseExclusive("a");
       const second = client.leaseExclusive("a");
       expect(first).toBe(second);
+    });
+  });
+
+  describe("ShardClient.startWatchdog / stopWatchdog", () => {
+    it("self-ticks checkHeartbeats + pollHeartbeatSab with no external caller, detects a missed heartbeat, and rebuilds", async () => {
+      vi.useFakeTimers();
+      try {
+        const lost: Array<{ index: number; actorIds: readonly string[] }> = [];
+        const workers: FakeShardWorker[] = [];
+        const client = new ShardClient({
+          shardCount: 1,
+          createWorker: (index) => {
+            const worker = new FakeShardWorker(index);
+            workers.push(worker);
+            return worker;
+          },
+          heartbeatTimeoutMs: 1000,
+          onShardLost: (index, actorIds) => lost.push({ index, actorIds }),
+        });
+
+        const activatePromise = client.activate("stuck", "https://x/stuck.js", [], BUDGET);
+        const activateMsg = workers[0]!.sent[0] as { readonly requestId: string };
+        workers[0]!.deliver({ kind: "result", requestId: activateMsg.requestId, ok: true, value: undefined });
+        await activatePromise;
+
+        client.turn("stuck", [], BUDGET).catch(() => {}); // never replies — nothing external ticks the watchdog for it
+        client.startWatchdog(1001); // same cadence the pre-existing manual test used, driven this time by the self-tick
+
+        vi.advanceTimersByTime(1001); // window 1
+        expect(lost).toEqual([]);
+        vi.advanceTimersByTime(1001); // window 2
+        expect(lost).toEqual([]);
+        vi.advanceTimersByTime(1001); // window 3 — self-ticked, no manual checkHeartbeats() call anywhere in this test
+        expect(workers[0]!.terminated).toBe(true);
+        expect(lost).toEqual([{ index: 0, actorIds: ["stuck"] }]);
+        expect(client.shardIndexFor("stuck")).toBeUndefined();
+
+        client.stopWatchdog();
+        const lostCountAfterStop = lost.length;
+        vi.advanceTimersByTime(10_000);
+        expect(lost.length).toBe(lostCountAfterStop); // stopped — no further ticks fire
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("is idempotent to call twice, and stopWatchdog before ever starting is a no-op", () => {
+      vi.useFakeTimers();
+      try {
+        const { client } = harness(1);
+        client.startWatchdog(500);
+        client.startWatchdog(500); // second call while running: no-op, does not leak a second interval
+        client.stopWatchdog();
+        client.stopWatchdog(); // already stopped: no-op, does not throw
+        expect(true).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe("ShardClient failShard clears routing", () => {
+    it("clears actorShard + slot.actorIds immediately on a worker crash (onerror), before any terminate()/rebuild()", async () => {
+      const { client, workers } = harness(1);
+      const activatePromise = client.activate("x", "https://x/x.js", [], BUDGET);
+      workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[0] as { requestId: string }).requestId, ok: true, value: undefined });
+      await activatePromise;
+      expect(client.shardIndexFor("x")).toBe(0);
+
+      workers[0]!.onerror?.(new Error("boom")); // failShard runs; onerror does NOT call terminate()/rebuild()
+
+      // routing cleared right away — a dead shard must stop receiving newly routed work immediately,
+      // not only once a later rebuild() happens to run.
+      expect(client.shardIndexFor("x")).toBeUndefined();
+      await expect(client.turn("x", [], BUDGET)).rejects.toThrow(/not activated/);
     });
   });
 

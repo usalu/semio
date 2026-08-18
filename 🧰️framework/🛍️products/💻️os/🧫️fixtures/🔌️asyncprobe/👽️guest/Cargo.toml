@@ -1,0 +1,19 @@
+[package]
+name = "semio-asyncprobe-guest"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# 🧪️ terra-S1 spike: deliberately its own workspace root so cargo never treats this as a member of
+# the repo's root workspace (which does not know this crate exists — registrar-owned file).
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+path = "🦀️component.rs"
+
+[dependencies]
+wit-bindgen = { version = "0.57.1", features = ["macros"] }
+
+[profile.release]
+opt-level = "s"

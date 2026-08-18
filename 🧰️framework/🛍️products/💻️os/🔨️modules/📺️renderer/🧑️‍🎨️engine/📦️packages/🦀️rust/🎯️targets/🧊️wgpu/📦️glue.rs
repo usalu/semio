@@ -252,6 +252,12 @@ pub(crate) mod kernel_runtime {
     //#region 🔖️KernelThreadState
     struct RetainedSurface {
         revision: u64,
+        // 🕳️ Write-only: `apply_ui_patch`'s desync branch says "Previous snapshot is reused (item 4)"
+        // but never actually reads this back into `out` — the desync path only records a pending
+        // rejection, so whether the surface visually freezes-on-stale (fine) or drops (a bug) depends
+        // on what the caller does with a surface key missing from `out`. Found while chasing a Z1
+        // zero-warnings `dead_code` warning; flagged for follow-up rather than guessed at here.
+        #[allow(dead_code, reason = "write-only pending a real reuse-on-desync path — see comment above, follow-up needed")]
         node: UiNode,
     }
 
@@ -277,10 +283,6 @@ pub(crate) mod kernel_runtime {
         /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected` asking the guest to
         /// resend a full body — queued here instead of round-tripping an extra turn synchronously.
         pending_rejections: HashMap<(u32, String), u64>,
-    }
-
-    fn now_ms() -> u64 {
-        crate::app_now_ms() as u64
     }
 
     impl KernelThreadState {
@@ -515,6 +517,11 @@ pub mod scale_bench {
     #[derive(Deserialize, Clone, Copy)]
     #[serde(rename_all = "camelCase")]
     struct RegistryQuotas {
+        // 🕳️ Deserialized from the scale-bench registry fixture but never applied by the bench
+        // harness (deadline_ms/max_effects/max_patch_bytes/max_frames all ARE enforced elsewhere in
+        // this file; fuel is not). Found while chasing a Z1 zero-warnings `dead_code` warning;
+        // flagged for follow-up rather than wired here.
+        #[allow(dead_code, reason = "parsed quota not yet enforced by the bench harness — see comment above, follow-up needed")]
         fuel: u64,
         deadline_ms: u32,
         max_effects: u32,
@@ -1084,28 +1091,28 @@ pub mod scale_bench {
         let registry_bytes = match std::fs::read(&registry_path) {
             Ok(bytes) => bytes,
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: failed to read {}: {error}", registry_path.display());
+                eprintln!("scale-bench: failed to read {}: {error}", registry_path.display());
                 return 1;
             }
         };
         let registry: RegistryFile = match serde_json::from_slice(&registry_bytes) {
             Ok(value) => value,
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: failed to parse {}: {error}", registry_path.display());
+                eprintln!("scale-bench: failed to parse {}: {error}", registry_path.display());
                 return 1;
             }
         };
         let wasm_bytes = match std::fs::read(&wasm_path) {
             Ok(bytes) => bytes,
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: failed to read {}: {error}", wasm_path.display());
+                eprintln!("scale-bench: failed to read {}: {error}", wasm_path.display());
                 return 1;
             }
         };
         let runtime: Arc<dyn GuestRuntime> = match WasmtimeRuntime::new(SharedEngineConfig::default()) {
             Ok(rt) => Arc::new(rt),
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: engine build failed: {error}");
+                eprintln!("scale-bench: engine build failed: {error}");
                 return 1;
             }
         };
@@ -1113,7 +1120,7 @@ pub mod scale_bench {
         let compiled = match runtime.compile(&package_ref, &wasm_bytes) {
             Ok(handle) => handle,
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: compile failed: {error}");
+                eprintln!("scale-bench: compile failed: {error}");
                 return 1;
             }
         };
@@ -1138,16 +1145,16 @@ pub mod scale_bench {
         match serde_json::to_string_pretty(&report) {
             Ok(text) => {
                 if let Err(error) = std::fs::write(&report_path, text) {
-                    eprintln!("[DEBUG] scale-bench: failed to write {}: {error}", report_path.display());
+                    eprintln!("scale-bench: failed to write {}: {error}", report_path.display());
                     return 1;
                 }
             }
             Err(error) => {
-                eprintln!("[DEBUG] scale-bench: report encode failed: {error}");
+                eprintln!("scale-bench: report encode failed: {error}");
                 return 1;
             }
         }
-        println!("[DEBUG] scale-bench: wrote {}", report_path.display());
+        println!("scale-bench: wrote {}", report_path.display());
         0
     }
 }
@@ -1377,15 +1384,15 @@ impl AppRuntime {
         let entries = match load_wasm_plugins(&plugin_filter, &modules_root) {
             Ok(entries) => filter_plugins(entries, &plugin_filter),
             Err(error) => {
-                log_debug(&format!("[DEBUG] wasm program reload failed: {error}"));
+                log_debug(&format!("wasm program reload failed: {error}"));
                 return;
             }
         };
         self.shell.prepare_hot_reload(entries);
         if let Err(error) = pollster::block_on(self.shell.boot()) {
-            log_debug(&format!("[DEBUG] wasm program hot reload failed: {error}"));
+            log_debug(&format!("wasm program hot reload failed: {error}"));
         } else {
-            log_debug("[DEBUG] wasm program hot reload complete");
+            log_debug("wasm program hot reload complete");
         }
     }
 
@@ -1578,7 +1585,7 @@ impl AppRuntime {
         }
         let time_seconds = (app_now_ms() / 1000.0) as f32;
         if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay), time_seconds) {
-            log_debug(&format!("[DEBUG] render frame: {err}"));
+            log_debug(&format!("render frame: {err}"));
         }
         let hit = self.input.hit_at(self.last_pointer_x, self.last_pointer_y);
         let base_cursor = resolve_semio_cursor(
@@ -1705,7 +1712,7 @@ impl AppRuntime {
                         if let Ok(mut app) = runtime.try_borrow_mut() {
                             let app = &mut *app;
                             if let Err(err) = app.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut app.input).await {
-                                log_debug(&format!("[DEBUG] keyboard failed: {err}"));
+                                log_debug(&format!("keyboard failed: {err}"));
                             }
                         }
                     }
@@ -1733,7 +1740,7 @@ impl AppRuntime {
                 if let Ok(mut app) = runtime.try_borrow_mut() {
                     let app = &mut *app;
                     if let Err(err) = app.shell.handle_keyboard_async(action, &modifiers, &mut app.input).await {
-                        log_debug(&format!("[DEBUG] keyboard failed: {err}"));
+                        log_debug(&format!("keyboard failed: {err}"));
                     }
                 }
             }
@@ -1748,7 +1755,7 @@ impl AppRuntime {
                 }
             }
             if let Err(err) = self.shell.dispatch_action(action).await {
-                log_debug(&format!("[DEBUG] action failed: {err}"));
+                log_debug(&format!("action failed: {err}"));
             }
         }
     }
@@ -1788,7 +1795,7 @@ impl AppRuntime {
                 return;
             }
             if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
-                log_debug(&format!("[DEBUG] pointer failed: {err}"));
+                log_debug(&format!("pointer failed: {err}"));
             }
             let mut world_actions = Vec::new();
             for state in self.shell.world3d_states.values_mut() {
@@ -1900,7 +1907,7 @@ impl AppRuntime {
             return;
         }
         if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
-            log_debug(&format!("[DEBUG] pointer failed: {err}"));
+            log_debug(&format!("pointer failed: {err}"));
         }
     }
 
@@ -1914,7 +1921,7 @@ impl AppRuntime {
         self.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
         if let Err(err) = self.shell.flush_deferred_actions().await {
-            log_debug(&format!("[DEBUG] deferred actions: {err}"));
+            log_debug(&format!("deferred actions: {err}"));
         }
         if down && (button == 0 || button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
@@ -2078,7 +2085,7 @@ impl ApplicationHandler<HostUserEvent> for SemioApp {
                 Ok((runtime, callbacks)) => {
                     let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, callbacks });
                 }
-                Err(error) => log_debug(&format!("[DEBUG] boot_runtime failed: {error}")),
+                Err(error) => log_debug(&format!("boot_runtime failed: {error}")),
             }
         });
     }
@@ -2168,9 +2175,9 @@ async fn boot_runtime(
         Ok(bytes) if bytes.len() > 256 => bytes,
         _ => ANTA_LATIN.to_vec(),
     };
-    let atlas = FontAtlas::from_bytes(&font_bytes).map_err(|err| format!("[DEBUG] atlas failed: {err}"))?;
+    let atlas = FontAtlas::from_bytes(&font_bytes).map_err(|err| format!("atlas failed: {err}"))?;
     let icons = icon_atlas::build_icon_atlas();
-    let mut gpu = GpuContext::from_window(window.clone()).await.map_err(|err| format!("[DEBUG] gpu init failed: {err}"))?;
+    let mut gpu = GpuContext::from_window(window.clone()).await.map_err(|err| format!("gpu init failed: {err}"))?;
     gpu.resize(css_width, css_height, dpr);
     gpu.upload_font_atlas(&atlas);
     gpu.upload_icon_atlas(&icons);
@@ -2178,7 +2185,7 @@ async fn boot_runtime(
     #[cfg(target_arch = "wasm32")]
     let entries = {
         let plugins = plugins.ok_or("missing wasm programs")?;
-        filter_plugins(parse_plugin_entries(plugins).map_err(|err| format!("[DEBUG] program parse failed: {err}"))?, &plugin_filter)
+        filter_plugins(parse_plugin_entries(plugins).map_err(|err| format!("program parse failed: {err}"))?, &plugin_filter)
     };
     #[cfg(not(target_arch = "wasm32"))]
     let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root)?, &plugin_filter);
@@ -2186,7 +2193,7 @@ async fn boot_runtime(
     let mut shell = ShellState::new(entries, plugin_filter.clone());
     shell.screen_w = css_width * dpr;
     shell.screen_h = css_height * dpr;
-    shell.boot().await.map_err(|err| format!("[DEBUG] shell boot failed: {err}"))?;
+    shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
     let runtime = Rc::new(RefCell::new(AppRuntime {
         gpu,
@@ -2264,7 +2271,7 @@ async fn boot_runtime(
         }),
     };
 
-    log_debug("[DEBUG] wgpu renderer booted");
+    log_debug("wgpu renderer booted");
     Ok((runtime, callbacks))
 }
 
@@ -2291,14 +2298,14 @@ pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -
         let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root) {
             Ok(entries) => entries,
             Err(error) => {
-                eprintln!("[DEBUG] smoke: load_wasm_plugins failed: {error}");
+                eprintln!("smoke: load_wasm_plugins failed: {error}");
                 return 1;
             }
         };
         let entries = filter_plugins(loaded, plugin_filter);
         let mut shell = ShellState::new(entries, plugin_filter.to_string());
         if let Err(error) = shell.boot().await {
-            eprintln!("[DEBUG] smoke: shell.boot() failed: {error}");
+            eprintln!("smoke: shell.boot() failed: {error}");
             return 1;
         }
         // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
@@ -2329,7 +2336,7 @@ pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -
                 0
             }
             Err(error) => {
-                eprintln!("[DEBUG] smoke: report encode failed: {error}");
+                eprintln!("smoke: report encode failed: {error}");
                 1
             }
         }
@@ -2360,7 +2367,7 @@ pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuMount)]
 pub fn semio_wgpu_mount(canvas: web_sys::HtmlCanvasElement, plugins: JsValue, plugin_filter: String) -> Result<(), JsValue> {
-    let event_loop = EventLoop::<HostUserEvent>::with_user_event().build().map_err(|err| JsValue::from_str(&format!("[DEBUG] event loop: {err:?}")))?;
+    let event_loop = EventLoop::<HostUserEvent>::with_user_event().build().map_err(|err| JsValue::from_str(&format!("event loop: {err:?}")))?;
     let proxy = event_loop.create_proxy();
     let app = SemioApp::new(proxy, plugin_filter, Some(plugins), Some(canvas));
     use winit::platform::web::EventLoopExtWebSys;
@@ -2371,7 +2378,7 @@ pub fn semio_wgpu_mount(canvas: web_sys::HtmlCanvasElement, plugins: JsValue, pl
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = uploadIconAtlas)]
 pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &str) -> Result<(), JsValue> {
-    let entries_map: std::collections::HashMap<String, [f32; 4]> = serde_json::from_str(entries_json).map_err(|err| JsValue::from_str(&format!("[DEBUG] icon entries parse: {err}")))?;
+    let entries_map: std::collections::HashMap<String, [f32; 4]> = serde_json::from_str(entries_json).map_err(|err| JsValue::from_str(&format!("icon entries parse: {err}")))?;
     let entries: Vec<(String, [f32; 4])> = entries_map.into_iter().collect();
     ICON_ATLAS_RUNTIME.with(|cell| {
         cell.borrow_mut().replace(IconAtlas::from_packed(width, height, pixels.to_vec(), entries));

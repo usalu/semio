@@ -1,0 +1,15 @@
+     Locking 2 packages to latest compatible versions
+      Adding futures-executor v0.3.34
+      Adding futures-macro v0.3.34
+ Downloading crates ...
+  Downloaded futures-executor v0.3.34
+   Compiling futures-macro v0.3.34
+    Checking futures-util v0.3.34
+    Checking futures-executor v0.3.34
+    Checking futures v0.3.34
+    Checking wasmtime v47.0.3
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking wasmtime-wasi v47.0.3
+    Checking semio-asyncprobe-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 18.02s

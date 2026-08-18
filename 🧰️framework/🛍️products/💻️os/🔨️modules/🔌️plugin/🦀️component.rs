@@ -2604,7 +2604,9 @@ pub mod app {
         // runtime reads `ArtifactCompositionFields` straight off the snapshot type on demand); they
         // are captured here so the declaration is a complete, single-source manifest of the
         // artifact's shape, not because `register_all` calls anything with them today.
+        #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
         child_slots: &'static [::semio_framework_schema::ChildSlotSpec],
+        #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
         link_slots: &'static [::semio_framework_schema::LinkSlotSpec],
         capabilities: Vec<CapabilityRequirement>,
         definition: ArtifactDefinition,
@@ -3614,10 +3616,23 @@ pub mod app {
     /// 🧬️ Authoritative per-plugin runtime declarations. It is complete before global IO/store rows mutate.
     pub(crate) struct PluginRuntimeRegistry {
         definitions: ArtifactDefinitionRegistry,
+        // 🕳️ Unlike every other field here, these four have no reader anywhere in this crate —
+        // `inference_services`/`host_media_handlers`/`flow_extensions`/the two mutation maps all
+        // flow out through a `self.runtime.*` accessor (see the `impl` below); these were collected
+        // at `into_runtime` time and then never consumed. Z1 (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME)
+        // found this while chasing a `dead_code` warning: a real gap (some global artifact
+        // schema/inference/language catalog this crate should be publishing into, analogous to how
+        // `definitions()` already exposes `ArtifactDefinitionRegistry`), not dead data — flagged for
+        // follow-up wiring rather than fixed here, since inventing the consumer without knowing the
+        // intended catalog risks wiring it to the wrong place.
+        #[allow(dead_code, reason = "captured but unwired — see comment above, follow-up needed")]
         schemas: Vec<::semio_framework_schema::ArtifactSchemaDescriptor>,
+        #[allow(dead_code, reason = "captured but unwired — see comment above, follow-up needed")]
         inferences: Vec<::semio_framework_schema::ArtifactInferenceDescriptor>,
         inference_services: ArtifactInferenceServiceRegistry,
+        #[allow(dead_code, reason = "captured but unwired — see comment above, follow-up needed")]
         languages: Vec<dsl::LanguageSpec>,
+        #[allow(dead_code, reason = "captured but unwired — see comment above, follow-up needed")]
         app_schemas: Vec<::semio_framework_schema::AppSchemaDescriptor>,
         host_media_handlers: HostMediaHandlerRegistry,
         flow_extensions: FlowExtensionRegistry,
@@ -14739,7 +14754,10 @@ pub mod plugin_runtime {
     /// 🪪️ Records `actor` as the local actor id for `instance_id` — channel v12 (A4) retired the
     /// `AppCommand::Hello` handshake that used to call this; the reactor's `wit_bridge::poll` now
     /// calls it directly off `Event::InstanceOpen.actor` instead (design-abi.md §4: lifecycle moved
-    /// to `instance-open`/`instance-close` at the reactor level).
+    /// to `instance-open`/`instance-close` at the reactor level). That sole caller lives in
+    /// `wit_bridge`, so this is gated identically (native never reaches it; `instance_actor`'s
+    /// `"local"` fallback below is what native sees).
+    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
     pub(crate) fn set_instance_actor(instance_id: u32, actor: String) {
         INSTANCE_ACTORS.with(|slot| {
             slot.borrow_mut().insert(instance_id, actor);
@@ -16263,7 +16281,7 @@ pub mod plugin_runtime {
                 let plugin_id = $crate::plugin_runtime::plugin_manifest().plugin_id;
                 let assembled = $crate::describe::describe_plugin();
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️descriptor.semio");
-                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note"];
+                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning-mindmap", "animate"];
                 match std::fs::read(expected_path) {
                     Ok(expected) => {
                         if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
@@ -17130,7 +17148,7 @@ pub mod plugin_runtime {
                 command: &TestCommand,
                 doc: &ArtifactView<'_, TestSnapshot>,
                 _cfg: &ConfigView<'_, TestConfig>,
-                _interaction: &crate::app::InteractionView<'_>,
+                _interaction: &InteractionView<'_>,
                 _draft: &DraftView<'_, NoDraft>,
                 _engines: &EngineHandles,
             ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
@@ -17166,7 +17184,7 @@ pub mod plugin_runtime {
                 Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
             }
 
-            fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
+            fn copy_fragment(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
                 if doc.snapshot.label.is_empty() {
                     return Err(ClipboardError::EmptySelection);
                 }
@@ -17180,7 +17198,7 @@ pub mod plugin_runtime {
                 })
             }
 
-            fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &crate::app::InteractionView<'_>) -> Vec<TestMutation> {
+            fn cut_operations(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>) -> Vec<TestMutation> {
                 if doc.snapshot.label.is_empty() {
                     Vec::new()
                 } else {
@@ -17219,7 +17237,7 @@ pub mod plugin_runtime {
             /// exactly when `doc.snapshot.label` is non-empty — lets a test simulate "delete the selected
             /// node" by setting the label back to empty and observing `validate_state` prune it.
             fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
-                let mut domains = std::collections::BTreeMap::new();
+                let mut domains = BTreeMap::new();
                 let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![protocol::TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
                 domains.insert("items".to_string(), protocol::DomainTopology { ordered });
                 protocol::InteractionTopology { domains }
@@ -19751,7 +19769,13 @@ macro_rules! derive_artifact_facets {
             type Children = $crate::derive_artifact_facets!(@children_ty <$construction as $crate::ArtifactBuilder>::Snapshot $(, $children)?);
         }
 
+        // 🕳️ `#[allow(dead_code)]` on this struct and the `$analyzer`/`$composer` inherent impls
+        // below: every real (non-test) invocation of this macro exercises them through their trait
+        // impls one paragraph up, but a grammar-only smoke test (proving a macro arm parses, not
+        // that the generated code runs) never constructs or calls the inherent convenience surface
+        // — a per-expansion false positive, not per-macro dead code.
         #[derive(Clone, Debug, Default)]
+        #[allow(dead_code, reason = "grammar-smoke-test invocations never construct this — see comment above")]
         $visibility struct $builder($crate::DerivedArtifactBuilder<$spec>);
 
         impl $crate::ArtifactBuilder for $builder {
@@ -19768,6 +19792,7 @@ macro_rules! derive_artifact_facets {
             fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0) }
         }
 
+        #[allow(dead_code, reason = "grammar-smoke-test invocations never construct this — see comment above $builder")]
         $visibility struct $analyzer;
 
         impl $crate::ArtifactAnalyzer for $analyzer {
@@ -19777,6 +19802,7 @@ macro_rules! derive_artifact_facets {
             fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
         }
 
+        #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicates — see comment above $builder")]
         impl $analyzer {
             pub fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
             pub fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
@@ -19796,6 +19822,7 @@ macro_rules! derive_artifact_facets {
             fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources) }
         }
 
+        #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicate — see comment above $builder")]
         impl $composer {
             pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
         }
@@ -19967,9 +19994,10 @@ mod derived_artifact_children_tests {
         assert_eq!(composed.snapshot, ChildrenTestSnapshot);
     }
 
-    /// 🧬️ Smoke-tests the macro's own `children: $ty` grammar (not just the underlying
-    /// `DerivedArtifactComposer` mechanism above) — proves `derive_artifact_facets!` actually parses
-    /// and wires the optional field end to end.
+    // 🧬️ Smoke-tests the macro's own `children: $ty` grammar (not just the underlying
+    // `DerivedArtifactComposer` mechanism above) — proves `derive_artifact_facets!` actually parses
+    // and wires the optional field end to end. Plain `//`, not `///`: rustdoc cannot attach a doc
+    // comment to a macro invocation (only to the items it expands to).
     derive_artifact_facets! {
         spec ChildrenMacroSpec {
             construction: ChildrenTestConstruction,
@@ -20048,8 +20076,8 @@ macro_rules! subset {
                 REGISTERED.call_once(|| {
                     let mut entries = vec![$crate::composer_entry_of::<$composer>()];
                     $(entries.extend([$($io_entry),+]);)?
-                    $crate::register_composer_entries(&entries);
-                    $($crate::register_subset_validator(validator_entry());)?
+                    $crate::register_composer_entries(&entries).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
+                    $($crate::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");)?
                 });
             }
 
@@ -20097,8 +20125,8 @@ macro_rules! subset {
 
             pub fn register() {
                 REGISTERED.call_once(|| {
-                    $crate::register_subset_validator(validator_entry());
-                    $( $crate::register_composer_entries(&[$($io_entry),+]); )?
+                    $crate::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
+                    $( $crate::register_composer_entries(&[$($io_entry),+]).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error"); )?
                 });
             }
 

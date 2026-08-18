@@ -1,0 +1,270 @@
+    Updating crates.io index
+     Locking 66 packages to latest compatible versions
+    Updating addr2line v0.24.2 -> v0.26.1
+    Updating cap-fs-ext v3.4.5 -> v4.0.2
+    Updating cap-primitives v3.4.5 -> v4.0.2
+    Updating cap-std v3.4.5 -> v4.0.2
+      Adding chacha20 v0.10.1
+    Updating cpp_demangle v0.4.5 -> v0.5.1
+      Adding cpufeatures v0.3.0
+    Updating cranelift-assembler-x64 v0.121.2 -> v0.134.3
+    Updating cranelift-assembler-x64-meta v0.121.2 -> v0.134.3
+    Updating cranelift-bforest v0.121.2 -> v0.134.3
+    Updating cranelift-bitset v0.121.2 -> v0.134.3
+    Updating cranelift-codegen v0.121.2 -> v0.134.3
+    Updating cranelift-codegen-meta v0.121.2 -> v0.134.3
+    Updating cranelift-codegen-shared v0.121.2 -> v0.134.3
+    Updating cranelift-control v0.121.2 -> v0.134.3
+    Updating cranelift-entity v0.121.2 -> v0.134.3
+    Updating cranelift-frontend v0.121.2 -> v0.134.3
+    Updating cranelift-isle v0.121.2 -> v0.134.3
+    Updating cranelift-native v0.121.2 -> v0.134.3
+    Updating cranelift-srcgen v0.121.2 -> v0.134.3
+      Adding fastrand v2.5.0
+      Adding fixedbitset v0.4.2
+      Adding fnv v1.0.7
+    Updating foldhash v0.1.5 -> v0.2.0
+    Updating fxprof-processed-profile v0.6.0 -> v0.8.1
+    Updating gimli v0.31.1 -> v0.33.0
+    Updating hashbrown v0.15.5 -> v0.16.1
+    Updating io-extras v0.18.4 -> v0.19.0
+      Adding io-lifetimes v3.0.1
+    Updating mach2 v0.4.3 -> v0.6.0
+      Adding petgraph v0.6.5
+    Updating pulley-interpreter v34.0.2 -> v47.0.3
+    Updating pulley-macros v34.0.2 -> v47.0.3
+    Updating rand v0.8.7 -> v0.10.2
+    Updating rand_core v0.6.4 -> v0.10.1
+    Updating regalloc2 v0.12.2 -> v0.15.2
+    Updating serde_spanned v0.6.9 -> v1.1.1
+      Adding tempfile v3.27.0
+    Updating toml v0.8.23 -> v0.9.12+spec-1.1.0
+    Updating toml_datetime v0.6.11 -> v0.7.5+spec-1.1.0
+      Adding toml_parser v1.1.3+spec-1.1.0
+      Adding toml_writer v1.1.2+spec-1.1.0
+      Adding wasm-compose v0.252.0
+    Updating wasm-encoder v0.233.0 -> v0.252.0
+    Updating wasmparser v0.233.0 -> v0.252.0
+    Updating wasmprinter v0.233.0 -> v0.252.0
+    Updating wasmtime v34.0.2 -> v47.0.3
+    Updating wasmtime-environ v34.0.2 -> v47.0.3
+      Adding wasmtime-internal-cache v47.0.3
+      Adding wasmtime-internal-component-macro v47.0.3
+      Adding wasmtime-internal-component-util v47.0.3
+      Adding wasmtime-internal-core v47.0.3
+      Adding wasmtime-internal-cranelift v47.0.3
+      Adding wasmtime-internal-fiber v47.0.3
+      Adding wasmtime-internal-jit-debug v47.0.3
+      Adding wasmtime-internal-jit-icache-coherence v47.0.3
+      Adding wasmtime-internal-unwinder v47.0.3
+      Adding wasmtime-internal-versioned-export-macros v47.0.3
+      Adding wasmtime-internal-wit-bindgen v47.0.3
+    Updating wasmtime-wasi v34.0.2 -> v47.0.3
+    Updating wasmtime-wasi-io v34.0.2 -> v47.0.3
+    Updating wiggle v34.0.2 -> v47.0.3
+    Updating wiggle-generate v34.0.2 -> v47.0.3
+    Updating wiggle-macro v34.0.2 -> v47.0.3
+      Adding winnow v1.0.4
+    Updating wit-parser v0.233.0 -> v0.252.0
+ Downloading crates ...
+  Downloaded addr2line v0.26.1
+  Downloaded cap-std v4.0.2
+  Downloaded cranelift-bitset v0.134.3
+  Downloaded cranelift-codegen-shared v0.134.3
+  Downloaded cranelift-control v0.134.3
+  Downloaded cranelift-native v0.134.3
+  Downloaded wasmtime-internal-versioned-export-macros v47.0.3
+  Downloaded wasmtime-internal-jit-icache-coherence v47.0.3
+  Downloaded wasmtime-internal-component-util v47.0.3
+  Downloaded wasmtime-internal-jit-debug v47.0.3
+  Downloaded wiggle-macro v47.0.3
+  Downloaded pulley-macros v47.0.3
+  Downloaded cranelift-srcgen v0.134.3
+  Downloaded cap-fs-ext v4.0.2
+  Downloaded cranelift-assembler-x64 v0.134.3
+  Downloaded cranelift-entity v0.134.3
+  Downloaded toml_writer v1.1.2+spec-1.1.0
+  Downloaded wasmtime-internal-unwinder v47.0.3
+  Downloaded wasmtime-wasi-io v47.0.3
+  Downloaded wiggle-generate v47.0.3
+  Downloaded cranelift-assembler-x64-meta v0.134.3
+  Downloaded cranelift-bforest v0.134.3
+  Downloaded io-lifetimes v3.0.1
+  Downloaded io-extras v0.19.0
+  Downloaded wasmtime-internal-cache v47.0.3
+  Downloaded mach2 v0.6.0
+  Downloaded fxprof-processed-profile v0.8.1
+  Downloaded toml_parser v1.1.3+spec-1.1.0
+  Downloaded wasmtime-internal-wit-bindgen v47.0.3
+  Downloaded wasmtime-internal-fiber v47.0.3
+  Downloaded wiggle v47.0.3
+  Downloaded wasmtime-internal-core v47.0.3
+  Downloaded wasmprinter v0.252.0
+  Downloaded wasm-compose v0.252.0
+  Downloaded cranelift-frontend v0.134.3
+  Downloaded cap-primitives v4.0.2
+  Downloaded pulley-interpreter v47.0.3
+  Downloaded cranelift-codegen-meta v0.134.3
+  Downloaded cranelift-isle v0.134.3
+  Downloaded regalloc2 v0.15.2
+  Downloaded wit-parser v0.252.0
+  Downloaded wasmtime-internal-cranelift v47.0.3
+  Downloaded wasmtime-wasi v47.0.3
+  Downloaded wasmtime-internal-component-macro v47.0.3
+  Downloaded gimli v0.33.0
+  Downloaded wasmtime-environ v47.0.3
+  Downloaded wasmtime v47.0.3
+  Downloaded cranelift-codegen v0.134.3
+    Checking foldhash v0.2.0
+   Compiling serde v1.0.229
+   Compiling libc v0.2.189
+   Compiling wasmtime-internal-core v47.0.3
+   Compiling libm v0.2.16
+   Compiling cranelift-srcgen v0.134.3
+    Checking crypto-common v0.1.7
+   Compiling pulley-macros v47.0.3
+    Checking fnv v1.0.7
+    Checking hashbrown v0.16.1
+    Checking hashbrown v0.17.1
+    Checking digest v0.10.7
+   Compiling cranelift-assembler-x64-meta v0.134.3
+    Checking wasmparser v0.252.0
+   Compiling wasmtime-internal-versioned-export-macros v47.0.3
+   Compiling rustix v1.1.4
+   Compiling cranelift-isle v0.134.3
+    Checking cpufeatures v0.2.17
+    Checking errno v0.3.14
+   Compiling jobserver v0.1.35
+   Compiling object v0.39.1
+   Compiling cranelift-codegen-shared v0.134.3
+    Checking indexmap v2.14.0
+    Checking sha2 v0.10.9
+   Compiling cranelift-assembler-x64 v0.134.3
+   Compiling cpp_demangle v0.5.1
+   Compiling cc v1.4.3
+    Checking wasm-encoder v0.252.0
+    Checking cranelift-bitset v0.134.3
+    Checking gimli v0.33.0
+   Compiling typenum v1.20.1
+    Checking cranelift-control v0.134.3
+    Checking wasmprinter v0.252.0
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+   Compiling pulley-interpreter v47.0.3
+    Checking cranelift-entity v0.134.3
+   Compiling generic-array v0.14.7
+    Checking regalloc2 v0.15.2
+    Checking rustc-demangle v0.1.28
+   Compiling thiserror v2.0.20
+    Checking wasmtime-internal-component-util v47.0.3
+    Checking cranelift-bforest v0.134.3
+   Compiling cranelift-codegen-meta v0.134.3
+   Compiling getrandom v0.4.3
+    Checking rand_core v0.10.1
+   Compiling zstd-safe v7.2.4
+   Compiling block-buffer v0.10.4
+   Compiling io-lifetimes v2.0.4
+    Checking winnow v1.0.4
+   Compiling id-arena v2.3.0
+    Checking wasmtime-environ v47.0.3
+    Checking futures-core v0.3.34
+   Compiling wasmtime-internal-unwinder v47.0.3
+   Compiling io-lifetimes v3.0.1
+    Checking futures-sink v0.3.34
+   Compiling wit-parser v0.252.0
+   Compiling cranelift-codegen v0.134.3
+    Checking toml_parser v1.1.3+spec-1.1.0
+   Compiling cobs v0.3.0
+    Checking futures-channel v0.3.34
+   Compiling wasmtime-internal-jit-debug v47.0.3
+   Compiling wasmtime-internal-fiber v47.0.3
+    Checking dirs-sys-next v0.1.2
+    Checking toml_datetime v0.7.5+spec-1.1.0
+    Checking serde_spanned v1.1.1
+   Compiling wasmtime-internal-component-macro v47.0.3
+   Compiling wasmtime-internal-cranelift v47.0.3
+   Compiling cfg-if v1.0.4
+   Compiling wasmtime-internal-cache v47.0.3
+   Compiling io-extras v0.19.0
+    Checking fixedbitset v0.4.2
+    Checking toml_writer v1.1.2+spec-1.1.0
+    Checking winnow v0.7.15
+    Checking futures-task v0.3.34
+    Checking slab v0.4.12
+    Checking futures-io v0.3.34
+    Checking directories-next v2.0.0
+    Checking petgraph v0.6.5
+   Compiling wasmtime-internal-wit-bindgen v47.0.3
+    Checking toml v0.9.12+spec-1.1.0
+    Checking futures-util v0.3.34
+   Compiling postcard v1.1.3
+    Checking zstd v0.13.3
+   Compiling wasmtime v47.0.3
+   Compiling smallvec v1.15.2
+   Compiling target-lexicon v0.13.5
+   Compiling cap-primitives v4.0.2
+    Checking heck v0.5.0
+    Checking unicode-ident v1.0.24
+    Checking fastrand v2.5.0
+    Checking futures v0.3.34
+    Checking cranelift-native v0.134.3
+    Checking cranelift-frontend v0.134.3
+    Checking tempfile v3.27.0
+    Checking wasm-compose v0.252.0
+    Checking fs-set-times v0.20.3
+    Checking fxprof-processed-profile v0.8.1
+    Checking addr2line v0.26.1
+    Checking wasmtime-internal-jit-icache-coherence v47.0.3
+   Compiling cap-std v4.0.2
+    Checking mach2 v0.6.0
+   Compiling wiggle-macro v47.0.3
+    Checking tracing v0.1.44
+   Compiling cap-fs-ext v4.0.2
+    Checking chacha20 v0.10.1
+    Checking socket2 v0.6.5
+    Checking mio v1.2.2
+    Checking rand v0.10.2
+    Checking tokio v1.53.1
+   Compiling wiggle-generate v47.0.3
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking wasmtime-wasi v47.0.3
+    Checking semio-asyncprobe-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host)
+error: expected one of: `debug`, `path`, `inline`, `world`, `ownership`, `trappable_error_type`, `interfaces`, `with`, `named_imports`, `additional_derives`, `stringify`, `skip_mut_forwarding_impls`, `require_store_data_send`, `wasmtime_crate`, `anyhow`, `include_generated_code_from_file`, `imports`, `exports`
+  --> 🦀️main.rs:13:5
+   |
+13 |     async: true,
+   |     ^^^^^
+
+error[E0432]: unresolved imports `wasmtime_wasi::p2::WasiCtx`, `wasmtime_wasi::p2::WasiCtxBuilder`
+ --> 🦀️main.rs:8:25
+  |
+8 | use wasmtime_wasi::p2::{WasiCtx, WasiCtxBuilder, WasiView};
+  |                         ^^^^^^^  ^^^^^^^^^^^^^^ no `WasiCtxBuilder` in `p2`
+  |                         |
+  |                         no `WasiCtx` in `p2`
+  |
+  = help: consider importing this struct instead:
+          wasmtime_wasi::WasiCtx
+  = help: consider importing this struct instead:
+          wasmtime_wasi::WasiCtxBuilder
+help: a similar name exists in the module
+  |
+8 - use wasmtime_wasi::p2::{WasiCtx, WasiCtxBuilder, WasiView};
+8 + use wasmtime_wasi::p2::{WasiCli, WasiCtxBuilder, WasiView};
+  |
+
+error[E0603]: trait `WasiView` is private
+   --> 🦀️main.rs:8:50
+    |
+  8 | use wasmtime_wasi::p2::{WasiCtx, WasiCtxBuilder, WasiView};
+    |                                                  ^^^^^^^^ private trait
+    |
+note: the trait `WasiView` is defined here
+   --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wasmtime-wasi-47.0.3/src/p2/mod.rs:228:5
+    |
+228 | use crate::WasiView;
+    |     ^^^^^^^^^^^^^^^
+
+Some errors have detailed explanations: E0432, E0603.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `semio-asyncprobe-host` (bin "semio-asyncprobe-host") due to 3 previous errors

@@ -239,7 +239,7 @@ pub enum VcsError {
     UnknownConflict(String),
 }
 
-crate::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
+protocol::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
 
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff

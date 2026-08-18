@@ -1,0 +1,46 @@
+{
+  "name": "@semio-tech/framework-async-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+  "namedInputs": {
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs", "{projectRoot}/**/*"]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "typegen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts typegen"
+      },
+      "outputs": ["{projectRoot}/../../🤖️generated"]
+    }
+  }
+}

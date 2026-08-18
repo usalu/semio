@@ -11,6 +11,11 @@ import { DirectoryClient, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBack
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
 import type { OpeningPreferences } from "@semio-tech/framework";
+/** 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone): the shared event-driven primitives
+ * from packet `web-glue` — full-jitter reconnect backoff, single-flight revalidation, and a fetch
+ * with a composed timeout. Reused rather than reimplemented (see this file's `🔖️Folder`/`🔖️Hub`
+ * regions for how each is wired in). */
+import { fetchWithTimeout, latestWins, retryWithJitteredBackoff, type FetchTimeoutResponse } from "@semio-tech/framework";
 /** 🪪️ Identity config facet (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — self-contained TS twin (see that module's header doc for why); never redefined here. */
 import type { Identity } from "./🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component";
@@ -81,19 +86,100 @@ void rustHostPromise.then((host) => {
 //#region 🔖️Constants
 /** 🛰️ Must match `framework/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */
 const FOLDER_ENDPOINT_PATH = "/semio-backbone";
-const FOLDER_POLL_INTERVAL_MS = 1_500;
+/** 🛟️ Sanity-fallback poll cadence (finding 1): SSE is the primary wake signal now, so this only
+ * ever fires while {@link ArtifactState.sseHealthy} is `false` — a slow, jittered self-heal for
+ * "the SSE stream looks fine but nothing has arrived in a while", not the primary path. Jittered
+ * per tick (not a fixed `setInterval`) so many documents reconnecting/self-healing together never
+ * synchronize into a request burst. */
+const SANITY_POLL_MIN_MS = 24_000;
+const SANITY_POLL_MAX_MS = 36_000;
+/** 🔁️ SSE reconnect backoff (finding 2) — deliberately faster/tighter than the hub's
+ * {@link HUB_RECONNECT_MIN_MS}/{@link HUB_RECONNECT_MAX_MS}: losing the folder watch stream is
+ * cheap to retry (a GET, no handshake state) and {@link SANITY_POLL_MIN_MS}'s fallback is the
+ * user-visible safety net either way. */
+const SSE_RECONNECT_MIN_MS = 1_000;
+const SSE_RECONNECT_MAX_MS = 30_000;
+/** ⏱️ Caps how long any single folder/blob fetch can hang (finding 3) — composed with
+ * {@link fetchWithTimeout} so a stalled dev-middleware response can never pin a document forever. */
+const FOLDER_FETCH_TIMEOUT_MS = 15_000;
+const BLOB_FETCH_TIMEOUT_MS = 15_000;
+/** 🗃️ Bounded local outbound-mutation queue (finding 5) — see {@link rejectMutationQueueOverflow}
+ * for the overflow contract: reject and report, never silently drop. */
+const PENDING_MUTATIONS_QUEUE_LIMIT = 2_000;
 // 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️component.ts`'s `🔖️HubBinding` region (imported above)
 // — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
+/** ♻️ Coordinator follow-up (finding 4b): how long a hub OR SSE connection must stay open before a
+ * SUBSEQUENT drop is allowed to reset that transport's backoff back near its floor, instead of
+ * continuing to grow from whatever `retryWithJitteredBackoff` attempt count it was already on.
+ * Deliberately NOT "the socket opened" — a server that accepts a connection and immediately drops
+ * it in a fast loop must still see the backoff climb (that IS the failure mode the backoff exists
+ * for), so the threshold has to be comfortably longer than any such instant-drop cycle. Half of
+ * {@link HUB_RECONNECT_MAX_MS}/{@link SSE_RECONNECT_MAX_MS} (both 30s): long enough that no
+ * single accept-then-drop attempt could plausibly cross it, short enough that a connection which
+ * has been genuinely healthy for a modest stretch still gets credit before its next blip. */
+const SUSTAINED_HEALTHY_MS = 15_000;
 //#endregion 🔖️Constants
+
+//#region 🔖️Reconnect
+/**
+ * ♻️ Coordinator follow-up (finding 4b): drives `attempt` (one physical connection's full
+ * lifecycle — connect, stay open, eventually close) through {@link retryWithJitteredBackoff}
+ * forever, but as a LOOP of fresh calls rather than one long-lived call. `attempt` resolving is
+ * this loop's signal that the connection stayed open long enough to count as sustainedly healthy
+ * before it (ordinarily) closed — see {@link connectHubOnce}/{@link connectSseOnce} — so the NEXT
+ * cycle starts a brand-new {@link retryWithJitteredBackoff} call with its own zeroed internal
+ * attempt/backoff state, rather than inheriting a large accumulated delay from earlier, already-
+ * resolved blips. `attempt` rejecting (a close before sustained health) is absorbed entirely
+ * inside the SAME `retryWithJitteredBackoff` call, so its backoff keeps growing across those —
+ * exactly the "rapid accept-then-drop cycling still backs off" case the sustained-health gate
+ * exists to protect.
+ *
+ * `retryWithJitteredBackoff`'s own signature has no notion of "reset now" — it only stops
+ * retrying on success or abort — so this reset cannot be expressed by calling it once; looping
+ * fresh calls from here is the only way to get a real reset without editing
+ * `🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts` (outside this packet's owned path).
+ */
+async function reconnectForever(signal: AbortSignal, attempt: () => Promise<void>, minMs: number, maxMs: number): Promise<void> {
+  while (!signal.aborted) {
+    try {
+      await retryWithJitteredBackoff(attempt, { minMs, maxMs, signal });
+    } catch {
+      return; // 🛑 only reachable via abort — `attempt` never lets a real failure escape the retry loop above.
+    }
+  }
+}
+//#endregion 🔖️Reconnect
 
 //#region 🔖️DocumentState
 type ArtifactState = {
   config: ArtifactActorConfig;
   channel: BroadcastChannel;
   socket: WebSocket | null;
-  pollTimer: ReturnType<typeof setInterval> | null;
-  reconnectTimer: ReturnType<typeof setTimeout> | null;
+  /** 🛑️ Aborted once, in {@link closeArtifact} — cancels every in-flight folder/blob fetch this
+   * document owns and unblocks any pending {@link retryWithJitteredBackoff} delay for its hub/SSE
+   * reconnect loops immediately (finding 3). Never re-created; a closed document stays closed. */
+  docAbort: AbortController;
+  /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
+   * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
+   * delay with fresh jitter rather than ticking on a fixed period. */
+  sanityPollTimer: ReturnType<typeof setTimeout> | null;
+  /** 📡️ Explicit "is the folder SSE stream currently up" flag (finding 2) — {@link startSanityPolling}
+   * reads this to decide whether a given tick actually revalidates or is a no-op, and it is this
+   * file's only source of truth for that question (never inferred from `EventSource.readyState`,
+   * which a fake `EventSource` test double need not implement). */
+  sseHealthy: boolean;
+  /** 🥇️ Single-flight folder revalidation (finding 1) — built once per document with
+   * {@link latestWins} over {@link pollFolderOnce}, so the SSE `onmessage` wake, the sanity-poll
+   * tick, and an `externalChanged` local message all share the SAME in-flight guard and can never
+   * stack overlapping reads. A no-op placeholder until {@link openArtifact} sees a folder binding. */
+  revalidateFolder: () => Promise<void>;
   reconnectDelayMs: number;
+  /** 🗃️ Outbound mutations not yet handed to a LIVE hub socket (finding 5) — distinct from
+   * `pendingBatches`, which holds envelopes already sent and awaiting an `Ack`. Populated by
+   * {@link relayMutationsToHub} when the socket isn't open and by a dead socket's `onclose` (any
+   * batch that socket never acked moves back here), drained by {@link handleHubFrame}'s `Welcome`
+   * branch on every successful (re)connect — this is the "flushed on reconnect" half of finding 5. */
+  outbox: MutationEnvelope[];
   pendingMutations: MutationEnvelope[];
   status: ArtifactSyncStatus;
   /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
@@ -323,13 +409,27 @@ function rollbackEnvelope(envelope: MutationEnvelope): MutationEnvelope {
 //#endregion 🔖️WireBridge
 
 //#region 🔖️Folder
+/** 🌉️ `fetchWithTimeout` only declares the structural subset every OTHER call site in this file
+ * needs (`ok`/`status`/`headers.get`/`json`/`text`) so its own module never requires the ambient
+ * `Response` type — the folder/blob reads here are the only callers that also need raw bytes, so
+ * that one extra method is added locally instead of widening the shared interface for everyone. */
+type BinaryFetchTimeoutResponse = FetchTimeoutResponse & { arrayBuffer(): Promise<ArrayBuffer> };
+
 function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder" }>, documentId: string): string {
   return `${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${binding.path}`)}&documentId=${encodeURIComponent(documentId)}`;
 }
 
+/** 📥️ One folder read — always routed through {@link ArtifactState.revalidateFolder}'s
+ * `latestWins` wrapper by every caller (SSE wake, sanity-poll tick, `externalChanged`), never
+ * called directly, so it can never overlap itself (finding 1). Aborts with the document
+ * ({@link ArtifactState.docAbort}, finding 3); an abort is a clean shutdown, not a failure, so it
+ * is swallowed without logging. */
 async function pollFolderOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): Promise<void> {
   try {
-    const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId));
+    const response = (await fetchWithTimeout(folderEnvelopeUrl(binding, state.config.documentId), undefined, {
+      timeoutMs: FOLDER_FETCH_TIMEOUT_MS,
+      signal: state.docAbort.signal,
+    })) as BinaryFetchTimeoutResponse;
     if (response.status === 404) return;
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const bundle = new Uint8Array(await response.arrayBuffer());
@@ -337,115 +437,241 @@ async function pollFolderOnce(state: ArtifactState, binding: Extract<Persistence
     emitEvent(state.config.documentId, { kind: "snapshotReplaced", pack: Array.from(pack), spr: Array.from(spr) });
     setStatus(state, { persisted: true });
   } catch (error) {
+    if (state.docAbort.signal.aborted) return; // 🛑 closed mid-flight — not a real failure.
     console.error("[backbone-worker] folder poll failed", state.config.documentId, error);
   }
 }
 
-/** 👁️ Best-effort external-change watch: tries the dev middleware's SSE endpoint first (see header
- * doc), and only falls back to interval polling if that connection never opens — so once the
- * middleware side (`framework/os/dev/script.ts`) lands, this upgrades itself automatically. */
-function watchFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
-  let sseOpened = false;
-  try {
-    const source = new EventSource(`${FOLDER_ENDPOINT_PATH}/watch?uri=${encodeURIComponent(`folder://${binding.path}`)}`);
-    source.onopen = () => {
-      sseOpened = true;
-    };
-    source.onmessage = () => {
-      void pollFolderOnce(state, binding);
-    };
-    source.onerror = () => {
-      if (!sseOpened) {
-        source.close();
-        startFolderPolling(state, binding);
-      }
-    };
-  } catch {
-    startFolderPolling(state, binding);
-  }
-  // 🛟️ Always poll at a slow cadence too, even when SSE is live, as a self-healing fallback.
-  startFolderPolling(state, binding);
+/** 🛟️ Slow, jittered sanity fallback (finding 1): reschedules itself with fresh jitter every tick
+ * (a recursive `setTimeout`, not `setInterval`, since the delay must vary tick to tick) and only
+ * actually revalidates when {@link ArtifactState.sseHealthy} is `false` — SSE is the primary wake,
+ * this is the self-heal for "SSE looks fine but nothing has arrived in a while" or "SSE never
+ * managed to open at all". Every revalidation goes through the same `latestWins`-wrapped
+ * {@link ArtifactState.revalidateFolder} the SSE wake uses, so a tick can never overlap a
+ * still-in-flight read from either source. */
+function startSanityPolling(state: ArtifactState): void {
+  const scheduleNext = (): void => {
+    if (state.closed) return;
+    const jitterMs = SANITY_POLL_MIN_MS + Math.random() * (SANITY_POLL_MAX_MS - SANITY_POLL_MIN_MS);
+    state.sanityPollTimer = setTimeout(tick, jitterMs);
+  };
+  const tick = (): void => {
+    if (state.closed) return;
+    if (!state.sseHealthy) void state.revalidateFolder();
+    scheduleNext();
+  };
+  scheduleNext();
 }
 
-function startFolderPolling(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
-  if (state.pollTimer != null) return;
-  state.pollTimer = setInterval(() => void pollFolderOnce(state, binding), FOLDER_POLL_INTERVAL_MS);
-  void pollFolderOnce(state, binding);
+/** 🔌️ One SSE connection attempt (finding 2) — resolves either once {@link ArtifactState.docAbort}
+ * fires (a clean shutdown) OR once an ordinary close follows at least {@link SUSTAINED_HEALTHY_MS}
+ * of unbroken uptime (coordinator follow-up, finding 4b: tells {@link reconnectForever} this cycle
+ * counts as healthy, so the NEXT reconnect starts with a fresh, reset backoff); rejects on every
+ * OTHER close/error (closed before reaching sustained health) so the caller's
+ * {@link retryWithJitteredBackoff} loop keeps backing off within the SAME call, never resetting,
+ * for a server that accepts and immediately drops connections in a loop.
+ * {@link ArtifactState.sseHealthy} is the ONLY place "is SSE up" is recorded — set `true` on open,
+ * `false` on every close, so {@link startSanityPolling}'s fallback always has an accurate read. */
+function connectSseOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (state.docAbort.signal.aborted) {
+      reject(state.docAbort.signal.reason ?? new Error("backbone-worker: document closed"));
+      return;
+    }
+    let source: EventSource;
+    try {
+      source = new EventSource(`${FOLDER_ENDPOINT_PATH}/watch?uri=${encodeURIComponent(`folder://${binding.path}`)}`);
+    } catch (error) {
+      reject(error);
+      return;
+    }
+    let sustainedHealthTimer: ReturnType<typeof setTimeout> | null = null;
+    let sustainedHealthReached = false;
+    const onAbort = (): void => source.close();
+    state.docAbort.signal.addEventListener("abort", onAbort, { once: true });
+    source.onopen = () => {
+      state.sseHealthy = true;
+      sustainedHealthTimer = setTimeout(() => {
+        sustainedHealthReached = true;
+      }, SUSTAINED_HEALTHY_MS);
+    };
+    source.onmessage = () => {
+      void state.revalidateFolder();
+    };
+    source.onerror = () => {
+      state.docAbort.signal.removeEventListener("abort", onAbort);
+      if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
+      state.sseHealthy = false;
+      source.close();
+      if (state.docAbort.signal.aborted || sustainedHealthReached) {
+        resolve();
+        return;
+      }
+      reject(new Error("backbone-worker: folder sse dropped"));
+    };
+  });
+}
+
+/** 👁️ External-change watch (findings 1 + 2 + 4b): an immediate bootstrap read, a persistent SSE
+ * connection with jittered, reset-after-sustained-health reconnect ({@link connectSseOnce} via
+ * {@link reconnectForever}), and the slow sanity-poll fallback ({@link startSanityPolling}) that
+ * only does real work while SSE is down. SSE is now the primary wake signal — the old
+ * unconditional 1.5s poll is gone. */
+function watchFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>): void {
+  void state.revalidateFolder(); // 🚀 bootstrap read; doesn't wait on SSE handshake or poll cadence.
+  startSanityPolling(state);
+  void reconnectForever(state.docAbort.signal, () => connectSseOnce(state, binding), SSE_RECONNECT_MIN_MS, SSE_RECONNECT_MAX_MS);
 }
 
 async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder" }>, pack: readonly number[], spr: readonly number[]): Promise<void> {
   const bundle = encodeDocumentPackBytes(new Uint8Array(pack), new Uint8Array(spr));
-  const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId), {
-    method: "PUT",
-    headers: { "content-type": "application/octet-stream" },
-    body: bundle,
-  });
+  const response = await fetchWithTimeout(
+    folderEnvelopeUrl(binding, state.config.documentId),
+    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bundle },
+    { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
+  );
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
   setStatus(state, { persisted: true });
 }
 //#endregion 🔖️Folder
 
 //#region 🔖️Hub
+/** 🔌️ One hub WebSocket connection attempt (finding 4) — resolves either once
+ * {@link ArtifactState.docAbort} fires (a clean shutdown) OR once an ordinary close follows at
+ * least {@link SUSTAINED_HEALTHY_MS} of unbroken uptime (coordinator follow-up, finding 4b: tells
+ * {@link reconnectForever} this cycle counts as healthy, so the NEXT reconnect starts with a
+ * fresh, reset backoff instead of inheriting this session's earlier accumulated delay); rejects
+ * on every OTHER close (closed before reaching sustained health) so the caller's
+ * {@link retryWithJitteredBackoff} loop keeps backing off within the SAME call, never resetting,
+ * against a server that accepts and immediately drops connections in a loop — resetting on
+ * "socket opened" alone would defeat the backoff entirely against exactly that failure mode. Any
+ * batch the dying socket never acked is moved back into {@link ArtifactState.outbox} before the
+ * retry either way, rather than left stranded in `pendingBatches` forever (finding 5 — a dead
+ * socket will never deliver that `Ack`). */
+function connectHubOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (state.docAbort.signal.aborted) {
+      reject(state.docAbort.signal.reason ?? new Error("backbone-worker: document closed"));
+      return;
+    }
+    setRemote(state, { kind: "connecting" });
+    const wsBase = binding.baseUrl.replace(/^http/, "ws");
+    // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
+    // change (its flag byte is full and the file is peer-leased).
+    const surfaceQuery = binding.surface ? `?surface=${encodeURIComponent(binding.surface)}` : "";
+    const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws${surfaceQuery}`);
+    // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
+    socket.binaryType = "arraybuffer";
+    state.socket = socket;
+    let sustainedHealthTimer: ReturnType<typeof setTimeout> | null = null;
+    let sustainedHealthReached = false;
+    const onAbort = (): void => socket.close();
+    state.docAbort.signal.addEventListener("abort", onAbort, { once: true });
+    socket.onopen = () => {
+      state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
+      sustainedHealthTimer = setTimeout(() => {
+        sustainedHealthReached = true;
+      }, SUSTAINED_HEALTHY_MS);
+      sendWireFrame(state, {
+        Hello: {
+          wire_version: 1,
+          protocol_version: 1,
+          schema: state.config.schema,
+          // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
+          // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
+          // hub treats as "schema-agnostic client" and never validates.
+          pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
+          actor: state.config.actor,
+          token: binding.token ?? null,
+          resume_token: state.resumeToken,
+          frontier: state.frontier,
+        },
+      }, "command");
+    };
+    socket.onmessage = (messageEvent) => {
+      try {
+        const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
+        handleHubFrame(state, decodeServerFrame(bytes).frame);
+      } catch (error) {
+        console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
+      }
+    };
+    socket.onclose = () => {
+      state.docAbort.signal.removeEventListener("abort", onAbort);
+      if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
+      if (state.socket === socket) state.socket = null;
+      for (const envelopes of state.pendingBatches.values()) state.outbox.push(...envelopes);
+      state.pendingBatches.clear();
+      if (state.docAbort.signal.aborted) {
+        resolve();
+        return;
+      }
+      if (sustainedHealthReached) {
+        // ♻️ Resets the DISPLAY estimate to match the real reset: `reconnectForever` is about to
+        // start a brand-new `retryWithJitteredBackoff` call for the next cycle.
+        state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
+        setRemote(state, { kind: "backoff", retryInMs: 0 });
+        resolve();
+        return;
+      }
+      setRemote(state, { kind: "backoff", retryInMs: state.reconnectDelayMs });
+      state.reconnectDelayMs = Math.min(state.reconnectDelayMs * 2, HUB_RECONNECT_MAX_MS);
+      reject(new Error("backbone-worker: hub socket closed"));
+    };
+    socket.onerror = () => socket.close();
+  });
+}
+
+/** 🔁️ Reconnect loop entry point — one call per document lifetime (from {@link openArtifact}),
+ * looping via {@link reconnectForever} until {@link ArtifactState.docAbort} fires. Full jitter
+ * (finding 4) avoids a thundering herd when several documents' hub connections drop together
+ * (e.g. a hub restart); the sustained-health reset (finding 4b, {@link connectHubOnce}) keeps a
+ * long-healthy session from inheriting a large accumulated backoff on its next ordinary blip. */
 function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>): void {
   if (state.closed) return;
-  setRemote(state, { kind: "connecting" });
-  const wsBase = binding.baseUrl.replace(/^http/, "ws");
-  // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
-  // change (its flag byte is full and the file is peer-leased).
-  const surfaceQuery = binding.surface ? `?surface=${encodeURIComponent(binding.surface)}` : "";
-  const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws${surfaceQuery}`);
-  // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
-  socket.binaryType = "arraybuffer";
-  state.socket = socket;
-  socket.onopen = () => {
-    state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
-    sendWireFrame(state, {
-      Hello: {
-        wire_version: 1,
-        protocol_version: 1,
-        schema: state.config.schema,
-        // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
-        // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
-        // hub treats as "schema-agnostic client" and never validates.
-        pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
-        actor: state.config.actor,
-        token: binding.token ?? null,
-        resume_token: state.resumeToken,
-        frontier: state.frontier,
-      },
-    }, "command");
-  };
-  socket.onmessage = (messageEvent) => {
-    try {
-      const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
-      handleHubFrame(state, decodeServerFrame(bytes).frame);
-    } catch (error) {
-      console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
-    }
-  };
-  socket.onclose = () => {
-    if (state.socket === socket) state.socket = null;
-    if (state.closed) return;
-    setRemote(state, { kind: "backoff", retryInMs: state.reconnectDelayMs });
-    state.reconnectTimer = setTimeout(() => connectHub(state, binding), state.reconnectDelayMs);
-    state.reconnectDelayMs = Math.min(state.reconnectDelayMs * 2, HUB_RECONNECT_MAX_MS);
-  };
-  socket.onerror = () => socket.close();
+  void reconnectForever(state.docAbort.signal, () => connectHubOnce(state, binding), HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS);
 }
 
 function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane): void {
   if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientFrame(frame, lane));
 }
 
-/** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for
- * {@link handleAck}. Mirrors the Rust actor's `relay_operations_to_hub`. */
+/** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for {@link handleAck}.
+ * Mirrors the Rust actor's `relay_operations_to_hub`. Finding 5: a closed socket no longer no-ops
+ * silently — the envelopes move into {@link ArtifactState.outbox} instead, and
+ * {@link handleHubFrame}'s `Welcome` branch flushes that outbox (calling this function again) the
+ * moment the hub is reachable again, so nothing queued offline is lost or left unsent. */
 function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
-  if (state.socket?.readyState !== WebSocket.OPEN || envelopes.length === 0) return;
+  if (envelopes.length === 0) return;
+  if (state.socket?.readyState !== WebSocket.OPEN) {
+    state.outbox.push(...envelopes);
+    return;
+  }
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
   const wireEnvelopes = envelopes.map((envelope) => toWireEnvelope(envelope, nextWireTimestamp(state)));
   state.pendingBatches.set(batchId, [...envelopes]);
   sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
+}
+
+/** 🚨️ Local pending-mutation queue overflow (finding 5) — a mutation is NEVER silently dropped: a
+ * batch that would push {@link ArtifactState.pendingMutations} past
+ * {@link PENDING_MUTATIONS_QUEUE_LIMIT} is rejected wholesale and reported through the exact same
+ * {@link CommandAckOutcome} vocabulary a real hub rejection uses (`kind: "rejected"`), so the
+ * caller needs no separate "local overflow" code path to show the pressure — it is a
+ * `commandOutcome` event either way. `batchId` counts down from -1, a range the hub-assigned ids
+ * in {@link relayMutationsToHub} (which start at 0 and only increase) can never reach, so the two
+ * id spaces never collide. */
+let nextLocalOverflowBatchId = -1;
+function rejectMutationQueueOverflow(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  const batchId = nextLocalOverflowBatchId;
+  nextLocalOverflowBatchId -= 1;
+  console.error("[backbone-worker] pending mutation queue full, rejecting batch", state.config.documentId, envelopes.length);
+  emitEvent(state.config.documentId, {
+    kind: "commandOutcome",
+    batchId,
+    outcome: { kind: "rejected", reason: "pending mutation queue full", messages: [envelopes.length, PENDING_MUTATIONS_QUEUE_LIMIT] },
+  });
 }
 
 /** 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
@@ -491,6 +717,10 @@ function handleHubFrame(state: ArtifactState, frame: ServerFrame): void {
     // 📦️ Pack-based snapshot bootstrap (`Welcome.bootstrap.Snapshot`): no client-side pack decoder
     // wired this wave (db/pack integration is a CW6+ hub-rebuild concern, mirrors the Rust actor's
     // identical deferral) — accepted and ignored; catch-up relies on the hub's follow-up `Commands`.
+    // ♻️ Finding 5's "flushed on reconnect" half: anything queued while the hub was unreachable
+    // (offline edits, or a prior batch whose dead socket never delivered its `Ack`) is relayed now
+    // that the handshake succeeded — never left stranded waiting for another local edit to trigger it.
+    if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
     return;
   }
   if ("SnapshotChunk" in frame || "SnapshotDone" in frame) {
@@ -764,7 +994,10 @@ async function getCachedBlob(hash: string): Promise<{ bytes: Uint8Array; mediaTy
     void writeCachedBlob({ ...cached, lastAccessedAt: Date.now() });
     return { bytes: new Uint8Array(cached.bytes), mediaType: cached.mediaType };
   }
-  const response = await fetch(`${BLOB_ENDPOINT_PATH}/${encodeURIComponent(hash)}`);
+  // ⏱️ Finding 3: no per-document abort context exists here (the blob cache is global, not tied to
+  // one document), so a fixed timeout is the whole story — still enough that a stalled dev-server
+  // response can't hang this call forever.
+  const response = (await fetchWithTimeout(`${BLOB_ENDPOINT_PATH}/${encodeURIComponent(hash)}`, undefined, { timeoutMs: BLOB_FETCH_TIMEOUT_MS })) as BinaryFetchTimeoutResponse;
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`blob fetch failed (${response.status})`);
   const mediaType = response.headers.get("content-type") ?? "application/octet-stream";
@@ -776,11 +1009,11 @@ async function getCachedBlob(hash: string): Promise<{ bytes: Uint8Array; mediaTy
 /** 📤️ Writes a blob to the dev server's content-addressed store, caching it locally under the hash the
  * server returns (content-addressing means the caller can't pick the cache key up front). */
 async function putCachedBlob(bytes: Uint8Array, mediaType: string): Promise<string> {
-  const response = await fetch(`${BLOB_ENDPOINT_PATH}?mediaType=${encodeURIComponent(mediaType)}`, {
-    method: "PUT",
-    headers: { "content-type": "application/octet-stream" },
-    body: bytes,
-  });
+  const response = await fetchWithTimeout(
+    `${BLOB_ENDPOINT_PATH}?mediaType=${encodeURIComponent(mediaType)}`,
+    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bytes },
+    { timeoutMs: BLOB_FETCH_TIMEOUT_MS },
+  );
   if (!response.ok) throw new Error(`blob put failed (${response.status})`);
   const { hash } = (await response.json()) as { hash: string };
   await writeCachedBlob({ hash, mediaType, size: bytes.byteLength, bytes: bytes.slice().buffer, lastAccessedAt: Date.now() });
@@ -801,9 +1034,12 @@ function openArtifact(config: ArtifactActorConfig): void {
     config,
     channel,
     socket: null,
-    pollTimer: null,
-    reconnectTimer: null,
+    docAbort: new AbortController(),
+    sanityPollTimer: null,
+    sseHealthy: false,
+    revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
+    outbox: [],
     pendingMutations: [],
     status: { persisted: false, pendingMutations: 0, remote: { kind: "detached" } },
     frontier: null,
@@ -821,8 +1057,10 @@ function openArtifact(config: ArtifactActorConfig): void {
   };
   const folder = folderBinding(config);
   if (folder) {
+    // 🥇️ One single-flight guard per document (finding 1), shared by every trigger source.
+    state.revalidateFolder = latestWins(() => pollFolderOnce(state, folder));
     if (config.watchExternal !== false) watchFolder(state, folder);
-    else void pollFolderOnce(state, folder);
+    else void state.revalidateFolder();
   }
   const hub = hubBinding(config);
   if (hub) connectHub(state, hub);
@@ -833,9 +1071,12 @@ function closeArtifact(documentId: string): void {
   const state = artifacts.get(documentId);
   if (!state) return;
   state.closed = true;
+  // 🛑️ Finding 3: cancels every in-flight folder/blob fetch this document owns and unblocks any
+  // pending reconnect backoff delay immediately — no fetch or reconnect loop can pin this document
+  // after this line.
+  state.docAbort.abort();
   state.socket?.close();
-  if (state.pollTimer != null) clearInterval(state.pollTimer);
-  if (state.reconnectTimer != null) clearTimeout(state.reconnectTimer);
+  if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
   state.channel.close();
   artifacts.delete(documentId);
 }
@@ -844,6 +1085,12 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
   switch (message.kind) {
     case "localMutations": {
       if (message.envelopes.length === 0) break; // pure wake
+      // 🚨️ Finding 5: bounded queue, rejected+reported wholesale rather than silently dropped or
+      // partially accepted — see {@link rejectMutationQueueOverflow}.
+      if (state.pendingMutations.length + message.envelopes.length > PENDING_MUTATIONS_QUEUE_LIMIT) {
+        rejectMutationQueueOverflow(state, message.envelopes);
+        break;
+      }
       state.pendingMutations.push(...message.envelopes);
       setStatus(state, { pendingMutations: state.pendingMutations.length });
       state.channel.postMessage(message.envelopes);
@@ -879,8 +1126,8 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
       sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
       break;
     case "externalChanged": {
-      const folder = folderBinding(state.config);
-      if (folder) void pollFolderOnce(state, folder);
+      // 🥇️ Routed through the same single-flight guard as the SSE wake / sanity poll (finding 1).
+      if (folderBinding(state.config)) void state.revalidateFolder();
       break;
     }
     case "detach":
@@ -1250,6 +1497,7 @@ if (import.meta.vitest) {
 
     it("queues a directory command while the hub is unreachable, then flushes it in order on the next live signal", async () => {
       FakeDirectoryWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
       let fetchCalls = 0;
       const originalFetch = globalThis.fetch;
@@ -1274,10 +1522,508 @@ if (import.meta.vitest) {
         expect(directoryCommandQueue).toHaveLength(0);
       } finally {
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        // 🧹️ Restores the real global — an un-restored `FakeDirectoryWebSocket` (no `OPEN` static)
+        // previously leaked into every later test's `WebSocket.OPEN` comparisons, silently making
+        // `relayMutationsToHub`/`sendWireFrame`'s "is the socket actually open" checks pass when
+        // `state.socket` was `null`.
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         closeDirectory();
       }
     });
   });
   //#endregion 🔖️DirectoryLaneTests
+
+  //#region 🔖️OfflineResilienceTests
+  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone) findings 1/2/3/5: SSE-primary folder
+  // watch with a suppressed sanity-poll fallback, reconnect after a post-open drop, abort-on-close,
+  // and the bounded lossless mutation outbox. No real sleeps — `vi.useFakeTimers()` drives every
+  // timer-dependent assertion, and every fetch/socket/stream is a controllable local fake.
+  describe("backbone-worker offline resilience", () => {
+    class FakeEventSource {
+      static instances: FakeEventSource[] = [];
+      readonly url: string;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: unknown) => void) | null = null;
+      onerror: (() => void) | null = null;
+      closed = false;
+      constructor(url: string) {
+        this.url = url;
+        FakeEventSource.instances.push(this);
+      }
+      close(): void {
+        this.closed = true;
+      }
+    }
+
+    class FakeHubWebSocket {
+      static readonly CONNECTING = 0;
+      static readonly OPEN = 1;
+      static readonly CLOSING = 2;
+      static readonly CLOSED = 3;
+      static instances: FakeHubWebSocket[] = [];
+      readonly url: string;
+      readyState = FakeHubWebSocket.CONNECTING;
+      binaryType = "blob";
+      readonly sent: Uint8Array[] = [];
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+      onclose: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(url: string) {
+        this.url = url;
+        FakeHubWebSocket.instances.push(this);
+      }
+      send(data: Uint8Array): void {
+        this.sent.push(data);
+      }
+      open(): void {
+        this.readyState = FakeHubWebSocket.OPEN;
+        this.onopen?.();
+      }
+      close(): void {
+        this.readyState = FakeHubWebSocket.CLOSED;
+        this.onclose?.();
+      }
+    }
+
+    function folderOnlyConfig(documentId: string): ArtifactActorConfig {
+      return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", path: `/tmp/${documentId}` }], actor: "actor-1" };
+    }
+
+    function notFoundResponse() {
+      return { ok: false, status: 404, statusText: "not found", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
+    }
+
+    async function flushMicrotasks(): Promise<void> {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    it("poll never overlaps itself: concurrent revalidateFolder() calls collapse into one coalesced follow-up", async () => {
+      FakeEventSource.instances = [];
+      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+      let fetchCalls = 0;
+      // 🚪️ Gated rather than immediately resolved — the whole point of this test is to fire more
+      // calls WHILE one is still in flight, so the fetch must stay pending until we say so.
+      const gates: Array<() => void> = [];
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+        fetchCalls += 1;
+        await new Promise<void>((resolve) => gates.push(resolve));
+        return notFoundResponse();
+      };
+
+      try {
+        openArtifact(folderOnlyConfig("doc-overlap"));
+        const state = artifacts.get("doc-overlap")!;
+        await flushMicrotasks(); // let watchFolder's bootstrap read actually START (not settle — it's gated).
+        expect(fetchCalls).toBe(1);
+
+        // 🥇️ Three callers race a revalidate while the bootstrap read is still stuck at its gate —
+        // `latestWins` must coalesce all three into exactly ONE queued follow-up, never three reruns.
+        const call2 = state.revalidateFolder();
+        const call3 = state.revalidateFolder();
+        const call4 = state.revalidateFolder();
+        await flushMicrotasks();
+        expect(fetchCalls).toBe(1); // nothing new launched synchronously — still just the bootstrap.
+
+        gates.shift()!(); // let the bootstrap call resolve, which launches the coalesced follow-up.
+        await flushMicrotasks();
+        expect(fetchCalls).toBe(2); // exactly one follow-up — never a separate rerun per caller.
+
+        gates.shift()!(); // let the follow-up resolve so call2/call3/call4 all settle.
+        await Promise.all([call2, call3, call4]);
+        expect(fetchCalls).toBe(2);
+      } finally {
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        closeArtifact("doc-overlap");
+      }
+    });
+
+    it("poll is suppressed while SSE is healthy and resumes once it drops", async () => {
+      FakeEventSource.instances = [];
+      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+      let fetchCalls = 0;
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+        fetchCalls += 1;
+        return notFoundResponse();
+      };
+      vi.useFakeTimers();
+      // 🎯 Deterministic jitter (every delay collapses to its minimum): this test advances fake time
+      // across THREE phases in sequence, and leftover jitter slack from an earlier phase could
+      // otherwise let two sanity ticks land inside one later advance window — pinning `Math.random`
+      // removes that risk instead of just hoping the window is wide enough.
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+      try {
+        openArtifact(folderOnlyConfig("doc-sanity"));
+        const state = artifacts.get("doc-sanity")!;
+        await vi.advanceTimersByTimeAsync(0); // bootstrap read.
+        expect(fetchCalls).toBe(1);
+
+        // 🛟️ SSE never opened yet (`sseHealthy` still false) — the sanity fallback must still fire.
+        await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
+        expect(fetchCalls).toBe(2);
+
+        // 📡️ SSE opens — the very next sanity tick must be a no-op while it stays healthy.
+        const source = FakeEventSource.instances.at(-1)!;
+        source.onopen?.();
+        expect(state.sseHealthy).toBe(true);
+        await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
+        expect(fetchCalls).toBe(2); // suppressed — no new fetch while SSE is healthy.
+
+        // 📴️ SSE drops — the fallback must resume on the next tick.
+        source.onerror?.();
+        expect(state.sseHealthy).toBe(false);
+        await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
+        expect(fetchCalls).toBe(3);
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        closeArtifact("doc-sanity");
+      }
+    });
+
+    it("a post-open SSE drop reconnects with jittered backoff", async () => {
+      FakeEventSource.instances = [];
+      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => notFoundResponse();
+      vi.useFakeTimers();
+
+      try {
+        openArtifact(folderOnlyConfig("doc-sse-reconnect"));
+        await vi.advanceTimersByTimeAsync(0);
+        expect(FakeEventSource.instances).toHaveLength(1);
+
+        const first = FakeEventSource.instances[0]!;
+        first.onopen?.();
+        first.onerror?.(); // drops AFTER a successful open — the bug finding 2 is about.
+        expect(first.closed).toBe(true);
+
+        // 🔁️ Reconnect is jittered within [SSE_RECONNECT_MIN_MS, SSE_RECONNECT_MAX_MS] — advancing
+        // past the max guarantees the next attempt has fired regardless of the random draw.
+        await vi.advanceTimersByTimeAsync(SSE_RECONNECT_MAX_MS + 1);
+        expect(FakeEventSource.instances.length).toBeGreaterThan(1);
+      } finally {
+        vi.useRealTimers();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        closeArtifact("doc-sse-reconnect");
+      }
+    });
+
+    it("abort on close cancels an in-flight folder fetch", async () => {
+      let capturedSignal: AbortSignal | undefined;
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = (_url: string, init?: RequestInit) => {
+        capturedSignal = init?.signal ?? undefined;
+        return new Promise(() => {}); // never settles — only `closeArtifact` can end this.
+      };
+      const originalEventSource = (globalThis as unknown as { EventSource: unknown }).EventSource;
+      (globalThis as unknown as { EventSource: unknown }).EventSource = class {
+        constructor() {
+          throw new Error("no SSE in this test");
+        }
+      };
+
+      try {
+        openArtifact(folderOnlyConfig("doc-abort"));
+        await Promise.resolve();
+        expect(capturedSignal).toBeDefined();
+        expect(capturedSignal?.aborted).toBe(false);
+
+        closeArtifact("doc-abort");
+        expect(capturedSignal?.aborted).toBe(true);
+      } finally {
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        (globalThis as unknown as { EventSource: unknown }).EventSource = originalEventSource;
+      }
+    });
+
+    it("queue overflow rejects and reports rather than dropping silently", () => {
+      const config: ArtifactActorConfig = { documentId: "doc-overflow", schema: "demo/v1", bindings: [], actor: "actor-1" };
+      openArtifact(config);
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      try {
+        const state = artifacts.get("doc-overflow")!;
+        const makeEnvelope = (index: number): MutationEnvelope => ({
+          id: `edit-${index}`,
+          actor: "actor-1",
+          document: "doc-overflow",
+          schemaVersion: "demo/v1",
+          deps: [],
+          payloadHash: "unused",
+          diff: { schemaId: "demo/v1", payload: { n: index } },
+          inverse: { targetOperation: `edit-${index}`, inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+        });
+        const overSized = Array.from({ length: PENDING_MUTATIONS_QUEUE_LIMIT + 1 }, (_unused, index) => makeEnvelope(index));
+
+        handleTsRequest({ kind: "send", documentId: "doc-overflow", message: { kind: "localMutations", envelopes: overSized } });
+
+        // 🚨️ Rejected wholesale, never partially accepted or silently dropped — the queue is
+        // untouched, and the rejection is explicitly logged (the shell-facing signal is the same
+        // `commandOutcome`/`rejected` vocabulary a real hub rejection uses — see
+        // `rejectMutationQueueOverflow`'s doc comment).
+        expect(state.pendingMutations).toHaveLength(0);
+        expect(errorSpy).toHaveBeenCalledWith("[backbone-worker] pending mutation queue full, rejecting batch", "doc-overflow", overSized.length);
+
+        // ✅ A batch that fits is still accepted normally — overflow doesn't wedge the queue shut.
+        handleTsRequest({ kind: "send", documentId: "doc-overflow", message: { kind: "localMutations", envelopes: [makeEnvelope(0)] } });
+        expect(state.pendingMutations).toHaveLength(1);
+      } finally {
+        errorSpy.mockRestore();
+        closeArtifact("doc-overflow");
+      }
+    });
+
+    it("a mutation made while offline is queued, then flushed once the hub reconnects (Welcome flushes the outbox)", () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+
+      try {
+        const config: ArtifactActorConfig = { documentId: "doc-hub-flush", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        openArtifact(config);
+        const state = artifacts.get("doc-hub-flush")!;
+        const socket = FakeHubWebSocket.instances.at(-1)!;
+        expect(socket.readyState).toBe(FakeHubWebSocket.CONNECTING);
+
+        const envelope: MutationEnvelope = {
+          id: "edit-offline-1",
+          actor: "actor-1",
+          document: "doc-hub-flush",
+          schemaVersion: "demo/v1",
+          deps: [],
+          payloadHash: "unused",
+          diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
+          inverse: { targetOperation: "edit-offline-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+        };
+        handleTsRequest({ kind: "send", documentId: "doc-hub-flush", message: { kind: "localMutations", envelopes: [envelope] } });
+
+        // 📴️ Socket isn't open yet — the mutation is queued in the outbox, never silently dropped.
+        expect(state.outbox).toHaveLength(1);
+        expect(socket.sent).toHaveLength(0);
+        expect(state.pendingMutations).toHaveLength(1);
+
+        // 🔌️ Hub (re)connects: `Hello` goes out on open, then the hub answers with `Welcome`.
+        socket.open();
+        expect(socket.sent).toHaveLength(1); // Hello
+
+        const welcome: ServerFrame = {
+          Welcome: {
+            session_id: "s1",
+            resume_token: "resume-1",
+            server_frontier: { document_id: "doc-hub-flush", head_edit_ordinal: 0, head_edit_id: "e0", last_commit_seq: 0, chain_hash: new Array(32).fill(0) },
+            bootstrap: "None",
+          },
+        };
+        socket.onmessage?.({ data: encodeServerFrame(welcome, "command").buffer as ArrayBuffer });
+
+        // ♻️ The `Welcome` handshake flushes the outbox — the offline mutation is relayed now,
+        // never left stranded waiting for the next local edit to trigger a resend.
+        expect(state.outbox).toHaveLength(0);
+        expect(socket.sent).toHaveLength(2); // Hello + the flushed Commands batch.
+        const commandsFrame = decodeClientFrame(socket.sent[1]!).frame;
+        if (typeof commandsFrame === "string" || !("Commands" in commandsFrame)) throw new Error("expected a Commands frame");
+        expect(commandsFrame.Commands.envelopes).toHaveLength(1);
+        expect(commandsFrame.Commands.envelopes[0]!.mutation_id).toBe("edit-offline-1");
+        expect(state.pendingBatches.size).toBe(1); // now awaiting `Ack` — no longer in the outbox.
+      } finally {
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        closeArtifact("doc-hub-flush");
+      }
+    });
+
+    it("a batch whose socket dies before Ack moves back into the outbox instead of being stranded", () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+
+      try {
+        const config: ArtifactActorConfig = { documentId: "doc-hub-stranded", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        openArtifact(config);
+        const state = artifacts.get("doc-hub-stranded")!;
+        const socket = FakeHubWebSocket.instances.at(-1)!;
+        socket.open();
+
+        const envelope: MutationEnvelope = {
+          id: "edit-inflight-1",
+          actor: "actor-1",
+          document: "doc-hub-stranded",
+          schemaVersion: "demo/v1",
+          deps: [],
+          payloadHash: "unused",
+          diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
+          inverse: { targetOperation: "edit-inflight-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+        };
+        handleTsRequest({ kind: "send", documentId: "doc-hub-stranded", message: { kind: "localMutations", envelopes: [envelope] } });
+        expect(state.pendingBatches.size).toBe(1); // socket was open — sent immediately, awaiting Ack.
+        expect(state.outbox).toHaveLength(0);
+
+        // 💥️ The socket dies before the hub ever acks — the batch must not be lost.
+        socket.close();
+        expect(state.pendingBatches.size).toBe(0);
+        expect(state.outbox).toHaveLength(1);
+        expect(state.outbox[0]!.id).toBe("edit-inflight-1");
+        expect(state.pendingMutations).toHaveLength(1); // status-visible pending count is unaffected.
+      } finally {
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        closeArtifact("doc-hub-stranded");
+      }
+    });
+
+    // 🧬️ Coordinator follow-up (finding 4b): `retryWithJitteredBackoff`'s attempt counter grows for
+    // the life of one call and never resets after success — `connectHub`/`connectSseOnce` now loop
+    // fresh calls via `reconnectForever`, resetting only after SUSTAINED health, never on "socket
+    // opened" alone. `Math.random` is pinned throughout (not to 0 — that would collapse every
+    // jittered delay to its floor and hide growth entirely) so the exact backoff value at every
+    // attempt is a known, computable number, making "did it actually reset" a precise assertion
+    // rather than a coincidence of timing windows.
+    it("a hub drop after sustained health resets the backoff, unlike continued accumulation", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+      try {
+        const config: ArtifactActorConfig = { documentId: "doc-hub-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        openArtifact(config);
+
+        // 💥️ Two quick failures BEFORE any sustained health — attempt 1 → 750ms, attempt 2 → 1250ms
+        // (both exact with `Math.random` pinned at 0.5: `minMs + 0.5*(min(maxMs,minMs*2**attempt)-minMs)`).
+        FakeHubWebSocket.instances[0]!.close();
+        await vi.advanceTimersByTimeAsync(751);
+        expect(FakeHubWebSocket.instances).toHaveLength(2);
+        FakeHubWebSocket.instances[1]!.close();
+        await vi.advanceTimersByTimeAsync(1251);
+        expect(FakeHubWebSocket.instances).toHaveLength(3);
+
+        // ✅️ Third attempt opens and stays up long enough to count as sustainedly healthy.
+        const healthy = FakeHubWebSocket.instances[2]!;
+        healthy.open();
+        await vi.advanceTimersByTimeAsync(SUSTAINED_HEALTHY_MS + 1);
+
+        // 📴️ NOW it drops. If the attempt counter had kept accumulating, the next attempt (attempt 3)
+        // would wait 2250ms. A reset instead starts a brand-new call — its first failure is attempt 1,
+        // waiting only 750ms.
+        healthy.close();
+        await vi.advanceTimersByTimeAsync(0); // let the resolved promise's fresh retryWithJitteredBackoff call fire its immediate first attempt.
+        expect(FakeHubWebSocket.instances).toHaveLength(4); // the fresh call's immediate (0-delay) first attempt.
+        FakeHubWebSocket.instances[3]!.close(); // that immediate attempt also fails fast.
+
+        // 🎯 The decisive check: 800ms is enough for the RESET value (750ms) but not enough for what
+        // continued accumulation would have required (2250ms).
+        await vi.advanceTimersByTimeAsync(800);
+        expect(FakeHubWebSocket.instances).toHaveLength(5);
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        closeArtifact("doc-hub-reset");
+      }
+    });
+
+    it("rapid accept-then-drop cycling does NOT reset the hub backoff — it keeps climbing", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+      try {
+        const config: ArtifactActorConfig = { documentId: "doc-hub-no-reset", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        openArtifact(config);
+
+        // 🔁️ Each cycle opens (well under `SUSTAINED_HEALTHY_MS`) then drops immediately — never
+        // healthy long enough to reset. Attempt 1 → 750ms, attempt 2 → 1250ms, attempt 3 → 2250ms.
+        FakeHubWebSocket.instances[0]!.open();
+        FakeHubWebSocket.instances[0]!.close();
+        // ⏱️ 800ms is past attempt 1's 750ms floor but nowhere near attempt-2-sized delays — confirms
+        // the wait is climbing on schedule, not staying flat at the floor.
+        await vi.advanceTimersByTimeAsync(800);
+        expect(FakeHubWebSocket.instances).toHaveLength(2);
+
+        FakeHubWebSocket.instances[1]!.open();
+        FakeHubWebSocket.instances[1]!.close();
+        // 🎯 The decisive check: 800ms was enough after attempt 1 (750ms) but must NOT be enough here —
+        // if this fired, the counter would have wrongly reset back down near the floor.
+        await vi.advanceTimersByTimeAsync(800);
+        expect(FakeHubWebSocket.instances).toHaveLength(2); // still 2 — attempt 2's 1250ms hasn't elapsed.
+        await vi.advanceTimersByTimeAsync(451); // 800 + 451 = 1251 total, past attempt 2's 1250ms.
+        expect(FakeHubWebSocket.instances).toHaveLength(3);
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        closeArtifact("doc-hub-no-reset");
+      }
+    });
+
+    it("abort cancels the hub reconnect loop promptly, with no leaked timer", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      vi.useFakeTimers();
+
+      try {
+        const config: ArtifactActorConfig = { documentId: "doc-hub-abort", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1" }], actor: "actor-1" };
+        openArtifact(config);
+        FakeHubWebSocket.instances[0]!.open(); // sustained-health timer now pending too.
+
+        closeArtifact("doc-hub-abort");
+        await vi.advanceTimersByTimeAsync(0);
+
+        // 🧹️ Nothing left pending — not the sustained-health timer, not a reconnect backoff delay.
+        expect(vi.getTimerCount()).toBe(0);
+
+        // 🚫️ …and no further reconnect attempt ever happens, however long we wait.
+        await vi.advanceTimersByTimeAsync(60_000);
+        expect(FakeHubWebSocket.instances).toHaveLength(1);
+      } finally {
+        vi.useRealTimers();
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+      }
+    });
+
+    it("an SSE drop after sustained health resets ITS backoff too (the same fix applied to connectSseOnce)", async () => {
+      FakeEventSource.instances = [];
+      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => notFoundResponse();
+      vi.useFakeTimers();
+      // 🎯 SSE's own formula: `minMs=1000, maxMs=30000` → attempt 1 = 1000+0.5*(2000-1000)=1500ms.
+      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+      try {
+        openArtifact(folderOnlyConfig("doc-sse-reset"));
+        await vi.advanceTimersByTimeAsync(0); // bootstrap read + first SSE connect attempt.
+        expect(FakeEventSource.instances).toHaveLength(1);
+
+        const healthy = FakeEventSource.instances[0]!;
+        healthy.onopen?.();
+        await vi.advanceTimersByTimeAsync(SUSTAINED_HEALTHY_MS + 1);
+        healthy.onerror?.(); // drops AFTER sustained health.
+        await vi.advanceTimersByTimeAsync(0); // fresh reconnectForever cycle's immediate first attempt.
+        expect(FakeEventSource.instances).toHaveLength(2);
+
+        // 🎯 That fresh attempt also fails fast — the wait before the NEXT one must be the reset
+        // (attempt 1 ≈ 1500ms), not a continuation of any prior accumulation (there was none yet in
+        // this call, so this mirrors the hub test's decisive-window shape at SSE's own numbers).
+        FakeEventSource.instances[1]!.onerror?.();
+        await vi.advanceTimersByTimeAsync(1600);
+        expect(FakeEventSource.instances).toHaveLength(3);
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+        closeArtifact("doc-sse-reset");
+      }
+    });
+  });
+  //#endregion 🔖️OfflineResilienceTests
 }
 //#endregion 🧪️Tests

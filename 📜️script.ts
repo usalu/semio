@@ -801,7 +801,12 @@ function pluginCrateNames(root: string): string[] {
  * `wasm32-unknown-unknown` the pure actor kernel — the crate whose purity keeps mobile open.
  */
 function rustWarningTargetScope(root: string, target: string | undefined): { packages: string[]; scopeArgs: string[]; targetArgs: string[] } {
-  if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib", "--features", "component-guest"], targetArgs: ["--target", target] };
+  // 🐛️ No `--features component-guest` here: plugin crates declare NO `[features]` section of their
+  // own — `component-guest` is a DEPENDENCY feature they each enable unconditionally on
+  // `semio-framework-plugin` (`features = ["component-guest"]` on that dep line). Passing it to
+  // `cargo -p <plugin>` fails with "does not contain this feature", which blocked this target 100%
+  // of the time. Reported independently by D0 and Z1 before it was believed.
+  if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target] };
   if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor"], scopeArgs: ["--lib"], targetArgs: ["--target", target] };
   if (target && target !== "native") throw new Error(`[verify rust-warnings] unknown target ${target} (expected native | wasm32-wasip2 | wasm32-unknown-unknown).`);
   return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [] };

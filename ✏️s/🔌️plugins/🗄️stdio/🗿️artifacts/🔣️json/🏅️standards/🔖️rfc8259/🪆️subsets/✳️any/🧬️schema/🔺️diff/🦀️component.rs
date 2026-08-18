@@ -1230,9 +1230,6 @@ mod tests {
     fn array_diff(d: JsonArrayDiff) -> JsonDiff {
         JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
     }
-    fn object_diff(d: JsonObjectDiff) -> JsonDiff {
-        JsonDiff { value: Some(JsonValueDiff::Object { diff: d }) }
-    }
 
     #[test]
     fn absorb_array_insert_then_remove_before() {

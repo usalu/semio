@@ -1,0 +1,42 @@
+$ bun ./📜️script.ts nx run @semio-tech/plugin-registry:check
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./📜️script.ts check
+
+[0m[31mplugin registry catalog is stale: generated/🔣️plugins.json, generated/🟦️plugins.ts[0m
+[0m[31mrun `bun nx run @semio-tech/plugin-registry:generate` to refresh.[0m
+Warning: command "bun ./📜️script.ts check" exited with non-zero status code
+
+
+ NX   Running target check for project @semio-tech/plugin-registry failed
+
+Failed tasks:
+
+- @semio-tech/plugin-registry:check
+
+Hint: run the command with --verbose for more details.
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/plugin-registry:check
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/plugin-registry:check exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:635:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:878:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:913:16)
+      at /Users/ueli/Documents/semio/📜️script.ts:15420:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

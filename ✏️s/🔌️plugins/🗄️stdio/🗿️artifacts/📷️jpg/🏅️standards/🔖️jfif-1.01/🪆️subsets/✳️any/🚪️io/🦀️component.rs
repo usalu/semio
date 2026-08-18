@@ -1362,7 +1362,7 @@ mod tests {
         /// `print_dsl`/`encode_pack` output of `demo_jpg_snapshot()` — `parse_dsl(fixture) ==
         /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin — so the
         /// fixtures can never silently drift back to a fake again.
-        #[test]
+        ///
         /// 🧪️ P2-FG2 deviation from png's own verbatim `fixture_honesty_law` shape (documented,
         /// not a mistake): jpg is a LOSSY lifecycle format whose `parse_dsl`/`decode_pack` genuinely
         /// `decode_jpg`-round-trip through real DCT/quantization/Huffman compression, then

@@ -1,0 +1,12 @@
+package semio:asyncprobe@0.1.0;
+
+/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-S1 spike, go/no-go for the async ABI slice).
+/// Standalone WIT world, NOT the production `semio:framework` package — exists only to exercise the
+/// three component-model-async / WASI 0.3 shapes the real design needs: an async export taking a
+/// plain scalar, an async import the guest awaits mid-call, and an async export that reads a
+/// host-written `stream<u32>`.
+world asyncprobe {
+  import echo: async func(s: string) -> string;
+  export ping: async func(n: u32) -> u32;
+  export run: async func(events: stream<u32>) -> u32;
+}

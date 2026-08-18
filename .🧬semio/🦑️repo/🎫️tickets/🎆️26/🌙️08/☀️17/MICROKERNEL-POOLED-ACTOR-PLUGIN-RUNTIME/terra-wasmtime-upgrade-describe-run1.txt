@@ -1,0 +1,22 @@
+   Compiling crypto-common v0.1.7
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling digest v0.10.7
+   Compiling sha2 v0.10.9
+   Compiling wasmtime-environ v47.0.3
+   Compiling cranelift-codegen v0.134.3
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling cranelift-native v0.134.3
+   Compiling cranelift-frontend v0.134.3
+   Compiling wasmtime-internal-unwinder v47.0.3
+   Compiling wasmtime-internal-fiber v47.0.3
+   Compiling wasmtime-internal-cache v47.0.3
+   Compiling wasmtime-internal-cranelift v47.0.3
+   Compiling wasmtime v47.0.3
+   Compiling wiggle v47.0.3
+   Compiling wasmtime-wasi-io v47.0.3
+   Compiling wasmtime-wasi v47.0.3
+   Compiling semio-framework-plugin-describe v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 56.70s
+     Running `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1/debug/semio-framework-plugin-describe describe '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1/wasm32-wasip2/debug/semio_s_plugin_note.wasm' --out '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/u1-note-descriptor'`
+described .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1/wasm32-wasip2/debug/semio_s_plugin_note.wasm ("note", role=Plugin) -> .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/u1-note-descriptor/🛂️descriptor.semio + 🔣️descriptor.json (wasm_sha256=97fa15d50577419e09098b95cf48195bf064e0dcc18a53c618299e19e03df4c8)
+EXIT=0

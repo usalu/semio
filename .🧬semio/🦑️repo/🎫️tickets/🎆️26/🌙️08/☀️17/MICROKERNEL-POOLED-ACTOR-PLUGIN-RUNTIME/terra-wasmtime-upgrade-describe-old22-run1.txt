@@ -1,0 +1,105 @@
+   Compiling itertools v0.12.1
+   Compiling cranelift-frontend v0.109.1
+   Compiling wasmprinter v0.209.1
+   Compiling thiserror v1.0.69
+   Compiling dirs-sys-next v0.1.2
+   Compiling cpufeatures v0.2.17
+   Compiling socket2 v0.6.4
+   Compiling mio v1.2.1
+   Compiling getrandom v0.2.17
+   Compiling zip v2.4.2
+   Compiling constant_time_eq v0.4.2
+   Compiling wasmtime-component-macro v22.0.1
+   Compiling libm v0.2.16
+   Compiling rustc-demangle v0.1.28
+   Compiling unicode-width v0.2.2
+   Compiling uuid v1.23.4
+   Compiling arrayvec v0.7.6
+   Compiling bytes v1.12.1
+   Compiling arrayref v0.3.9
+   Compiling inflections v1.1.1
+   Compiling wasmtime-cache v22.0.1
+   Compiling paste v1.0.15
+   Compiling wasmtime-component-util v22.0.1
+   Compiling rand_core v0.6.4
+   Compiling wast v253.0.0
+   Compiling sha2 v0.10.9
+   Compiling debugid v0.8.0
+   Compiling directories-next v2.0.0
+   Compiling tokio v1.52.3
+   Compiling blake3 v1.8.5
+   Compiling gltf-derive v1.4.1
+   Compiling cranelift-wasm v0.109.1
+   Compiling wasmtime-environ v22.0.1
+   Compiling wasmtime-fiber v22.0.1
+   Compiling icu_properties v2.2.0
+   Compiling rayon-core v1.13.0
+   Compiling witx v0.9.1
+   Compiling icu_normalizer v2.2.0
+   Compiling zstd v0.13.3
+   Compiling memoffset v0.9.1
+   Compiling wasmtime-wit-bindgen v22.0.1
+   Compiling toml v0.8.23
+   Compiling cap-std v3.4.5
+   Compiling flate2 v1.1.9
+   Compiling shellexpand v2.1.2
+   Compiling zopfli v0.8.3
+   Compiling cranelift-native v0.109.1
+   Compiling fxhash v0.2.1
+   Compiling wasmtime v22.0.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling wasmtime-asm-macros v22.0.1
+   Compiling wiggle-macro v22.0.1
+   Compiling parking v2.2.1
+   Compiling base64 v0.21.7
+   Compiling fastrand v2.4.1
+   Compiling wiggle-generate v22.0.1
+   Compiling wasmtime-cranelift v22.0.1
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling rand_chacha v0.3.1
+   Compiling futures-lite v2.6.1
+   Compiling idna_adapter v1.2.2
+   Compiling rayon v1.12.0
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling wat v1.253.0
+   Compiling gltf-json v1.4.1
+   Compiling wasmtime-jit-debug v22.0.1
+   Compiling wasmtime-jit-icache-coherence v22.0.1
+   Compiling addr2line v0.21.0
+   Compiling tracing-attributes v0.1.31
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling tracing-core v0.1.36
+   Compiling mach2 v0.4.3
+   Compiling encoding_rs v0.8.35
+   Compiling wasmtime-slab v22.0.1
+   Compiling cap-fs-ext v3.4.5
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling base64 v0.22.1
+   Compiling lazy_static v1.5.0
+   Compiling core-foundation-sys v0.8.7
+   Compiling system-interface v0.27.3
+   Compiling percent-encoding v2.3.2
+   Compiling sptr v0.3.2
+   Compiling tracing v0.1.44
+   Compiling idna v1.1.0
+   Compiling rand v0.8.6
+   Compiling futures-channel v0.3.32
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling gltf v1.4.1
+   Compiling iana-time-zone v0.1.65
+   Compiling form_urlencoded v1.2.2
+   Compiling cap-net-ext v3.4.5
+   Compiling cap-rand v3.4.5
+   Compiling futures v0.3.32
+   Compiling semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+   Compiling cap-time-ext v3.4.5
+   Compiling url v2.5.8
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling wiggle v22.0.1
+   Compiling wasmtime-wasi v22.0.1
+   Compiling semio-framework-plugin-describe v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 2m 48s
+     Running `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1-old22/debug/semio-framework-plugin-describe describe '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1/wasm32-wasip2/debug/semio_s_plugin_note.wasm' --out '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/old22-note-descriptor'`
+described .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/🎯️target-u1/wasm32-wasip2/debug/semio_s_plugin_note.wasm ("note", role=Plugin) -> .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/old22-note-descriptor/🛂️descriptor.semio + 🔣️descriptor.json (wasm_sha256=97fa15d50577419e09098b95cf48195bf064e0dcc18a53c618299e19e03df4c8)
+EXIT=0

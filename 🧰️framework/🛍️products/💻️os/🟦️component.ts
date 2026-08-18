@@ -12,8 +12,8 @@
  */
 // #endregion Header
 
-import type { Conflict, ConflictResolution, DispatchReport, Fault, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
-import { conflictResolutionAsU8, mergePolicyAsU8 } from "@semio-tech/framework";
+import type { Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework";
+import { conflictResolutionAsU8, fetchWithTimeout, mergePolicyAsU8, retryWithJitteredBackoff } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
@@ -104,42 +104,213 @@ export function decodeDocumentPackSnapshot(bundle: Uint8Array): unknown {
 
 const BACKBONE_OCTET_STREAM = "application/octet-stream";
 
-export async function readBackboneEnvelope(uri: string): Promise<Uint8Array | null> {
+//#region 🌐️BackboneEnvelopeIo
+// 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet `web-directory`, finding 3 —
+// bounded timeout + jittered retry so a hung/unreachable backbone degrades instead of hanging the
+// caller forever; see the read/write docstrings below for which of the two is actually safe to retry
+// and why.
+const BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS = 10_000;
+const BACKBONE_ENVELOPE_RETRY_MIN_MS = 500;
+const BACKBONE_ENVELOPE_RETRY_MAX_MS = 5_000;
+/** 🪟️ Overall ceiling on {@link readBackboneEnvelope}'s retry loop — `retryWithJitteredBackoff` on
+ * its own retries forever until its `signal` aborts, which is wrong for something a caller is
+ * awaiting: a permanently unreachable backbone must eventually surface as a rejection (local-first —
+ * the backbone is an enhancement, not a blocking prerequisite) rather than hang the caller alongside
+ * whatever real outage is happening. */
+const BACKBONE_ENVELOPE_RETRY_WINDOW_MS = 15_000;
+
+/** 📨️ {@link FetchTimeoutResponse} plus the one extra accessor this module needs (binary bodies) —
+ * declared locally rather than widening the shared glue type, per this module's own body accessing
+ * only what it uses. `fetchWithTimeout`'s actual runtime value is a real `fetch` `Response`, so the
+ * cast is safe. */
+interface BackboneFetchResponse extends FetchTimeoutResponse {
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+
+/** 🚨️ Marks a backbone envelope failure as "the server answered, definitively" (any status code) —
+ * as opposed to a transport-level failure (thrown by `fetch`/{@link fetchWithTimeout} itself: DNS,
+ * connection refused, or {@link BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS} timing out) where the request
+ * never definitively reached or was answered by the server. Only the latter is safe to retry blindly
+ * — a real response, even an error one, is a final answer and retrying it would just repeat the same
+ * definitive outcome while burning the retry window. */
+class BackboneEnvelopeResponseError extends Error {}
+
+async function readBackboneEnvelopeOnce(uri: string, signal: AbortSignal): Promise<Uint8Array | null> {
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) return null;
-    const response = await fetch(remoteEnvelopeUrl(remote));
+    const response = (await fetchWithTimeout(remoteEnvelopeUrl(remote), undefined, { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal })) as BackboneFetchResponse;
     if (response.status === 404) return null;
-    if (!response.ok) throw new Error(`remote backbone read failed (${response.status})`);
+    if (!response.ok) throw new BackboneEnvelopeResponseError(`remote backbone read failed (${response.status})`);
     return new Uint8Array(await response.arrayBuffer());
   }
-  const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`);
+  const response = (await fetchWithTimeout(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`, undefined, { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal })) as BackboneFetchResponse;
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error(`backbone read failed (${response.status})`);
+  if (!response.ok) throw new BackboneEnvelopeResponseError(`backbone read failed (${response.status})`);
   return new Uint8Array(await response.arrayBuffer());
 }
 
-export async function writeBackboneEnvelope(uri: string, bundle: Uint8Array): Promise<void> {
+/** 🌐️ Reads the raw bundle bytes at `uri`, or `null` for a 404 (a real, final "nothing written here
+ * yet" answer — never retried). Optional `signal` cancels the whole read, including any retry in
+ * progress. RETRY-SAFE, and retried: a read has no side effect, so re-issuing it on a transport-level
+ * failure (see {@link BackboneEnvelopeResponseError}) can never duplicate an effect — only a
+ * definitive server response (any status) or the caller's `signal` skips further retries. Retries are
+ * jittered ({@link retryWithJitteredBackoff}) and bounded by {@link BACKBONE_ENVELOPE_RETRY_WINDOW_MS}
+ * overall, so a permanently unreachable backbone rejects instead of hanging the caller forever.
+ * Liest die rohen Bundle-Bytes für `uri`, oder `null` bei 404. Ein Lesevorgang hat keinen Seiteneffekt
+ * und wird deshalb bei einem Transportfehler sicher wiederholt (mit Jitter, zeitlich begrenzt). */
+export async function readBackboneEnvelope(uri: string, signal?: AbortSignal): Promise<Uint8Array | null> {
+  const retryAbort = new AbortController();
+  if (signal?.aborted) retryAbort.abort(signal.reason);
+  const onCallerAbort = (): void => retryAbort.abort(signal!.reason);
+  signal?.addEventListener("abort", onCallerAbort, { once: true });
+  const windowTimer = setTimeout(() => retryAbort.abort(new Error(`backbone read: retry window exceeded after ${BACKBONE_ENVELOPE_RETRY_WINDOW_MS}ms`)), BACKBONE_ENVELOPE_RETRY_WINDOW_MS);
+  try {
+    return await retryWithJitteredBackoff(
+      async () => {
+        try {
+          return await readBackboneEnvelopeOnce(uri, retryAbort.signal);
+        } catch (error) {
+          // 🛟️ a definitive server response ends the retry loop immediately (via the abort reason)
+          // instead of being retried like a transport failure — see `BackboneEnvelopeResponseError`'s
+          // docstring.
+          if (error instanceof BackboneEnvelopeResponseError && !retryAbort.signal.aborted) retryAbort.abort(error);
+          throw error;
+        }
+      },
+      { minMs: BACKBONE_ENVELOPE_RETRY_MIN_MS, maxMs: BACKBONE_ENVELOPE_RETRY_MAX_MS, signal: retryAbort.signal },
+    );
+  } finally {
+    clearTimeout(windowTimer);
+    signal?.removeEventListener("abort", onCallerAbort);
+  }
+}
+
+/** 🌐️ Writes the full bundle bytes for `uri`, replacing whatever was there. Optional `signal` bounds
+ * the request via {@link fetchWithTimeout} ({@link BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS}) so a hung
+ * backbone cannot freeze a caller — but, deliberately, this call is NOT retried on failure. A `PUT`
+ * here always carries the caller's complete current bundle, which makes a same-bytes retry look
+ * idempotent at first glance, but this function has no visibility into the server's actual write
+ * semantics (a pure last-write-wins slot vs. one that appends a history/audit entry per accepted
+ * write), and "the request timed out" gives no way to distinguish "never arrived" from "arrived and
+ * applied, only the response never came back". Retrying blindly risks silently double-applying a
+ * write whose effect this client cannot observe well enough to rule that out — worse than surfacing
+ * the failure and letting the caller (which already treats a rejected write as "still local-only, try
+ * the whole save again later") decide. If the server's replace semantics are ever made provably
+ * idempotent end-to-end, add {@link retryWithJitteredBackoff} here to match {@link
+ * readBackboneEnvelope} — not before.
+ * Schreibt die vollständigen Bundle-Bytes für `uri`; wird bei einem Fehler bewusst NICHT wiederholt,
+ * da ein doppelt angewandter Schreibvorgang nicht sicher ausgeschlossen werden kann. */
+export async function writeBackboneEnvelope(uri: string, bundle: Uint8Array, signal?: AbortSignal): Promise<void> {
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
-    const response = await fetch(remoteEnvelopeUrl(remote), {
-      method: "PUT",
-      headers: { "content-type": BACKBONE_OCTET_STREAM },
-      body: bundle,
-    });
+    const response = await fetchWithTimeout(
+      remoteEnvelopeUrl(remote),
+      { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body: bundle },
+      { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal },
+    );
     if (!response.ok) throw new Error(`remote backbone write failed (${response.status})`);
     console.log("[DEBUG] remote backbone synced", uri);
     return;
   }
-  const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`, {
-    method: "PUT",
-    headers: { "content-type": BACKBONE_OCTET_STREAM },
-    body: bundle,
-  });
+  const response = await fetchWithTimeout(
+    `${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`,
+    { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body: bundle },
+    { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal },
+  );
   if (!response.ok) throw new Error(`backbone write failed (${response.status})`);
   console.log("[DEBUG] backbone synced", uri);
 }
+
+if (import.meta.vitest) {
+  const { afterEach, describe, expect, it, vi } = import.meta.vitest;
+
+  describe("backbone envelope io", () => {
+    const originalFetch = globalThis.fetch;
+    afterEach(() => {
+      globalThis.fetch = originalFetch;
+      vi.useRealTimers();
+    });
+
+    it("readBackboneEnvelope retries a transient transport failure and then succeeds, with no real sleep", async () => {
+      vi.useFakeTimers();
+      let calls = 0;
+      globalThis.fetch = vi.fn(async () => {
+        calls += 1;
+        if (calls < 3) throw new Error("connection refused");
+        return { ok: true, status: 200, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer } as unknown as Response;
+      }) as unknown as typeof fetch;
+      const promise = readBackboneEnvelope("folder:///doc");
+      await vi.runAllTimersAsync();
+      const result = await promise;
+      expect(calls).toBe(3);
+      expect(Array.from(result ?? [])).toEqual([1, 2, 3]);
+    });
+
+    it("readBackboneEnvelope does NOT retry a definitive non-404 server response", async () => {
+      let calls = 0;
+      globalThis.fetch = vi.fn(async () => {
+        calls += 1;
+        return { ok: false, status: 500, arrayBuffer: async () => new ArrayBuffer(0) } as unknown as Response;
+      }) as unknown as typeof fetch;
+      // 🪧️ no intervening `await` between creating the promise and `.rejects` consuming it — a
+      // definitive failure settles in one microtask hop, with no timer involved at all.
+      await expect(readBackboneEnvelope("folder:///doc")).rejects.toThrow("backbone read failed (500)");
+      expect(calls).toBe(1);
+    });
+
+    it("readBackboneEnvelope gives up after its retry window instead of hanging forever", async () => {
+      vi.useFakeTimers();
+      globalThis.fetch = vi.fn(async () => {
+        throw new Error("connection refused");
+      }) as unknown as typeof fetch;
+      const promise = readBackboneEnvelope("folder:///doc");
+      let settled = false;
+      promise.then(
+        () => (settled = true),
+        () => (settled = true),
+      );
+      await vi.advanceTimersByTimeAsync(BACKBONE_ENVELOPE_RETRY_WINDOW_MS + 1_000);
+      expect(settled).toBe(true);
+      await expect(promise).rejects.toThrow();
+    });
+
+    it("readBackboneEnvelope returns null on 404 without retrying", async () => {
+      let calls = 0;
+      globalThis.fetch = vi.fn(async () => {
+        calls += 1;
+        return { ok: false, status: 404, arrayBuffer: async () => new ArrayBuffer(0) } as unknown as Response;
+      }) as unknown as typeof fetch;
+      const result = await readBackboneEnvelope("folder:///doc");
+      expect(result).toBeNull();
+      expect(calls).toBe(1);
+    });
+
+    it("writeBackboneEnvelope does NOT retry on transport failure (duplicate-write safety)", async () => {
+      let calls = 0;
+      globalThis.fetch = vi.fn(async () => {
+        calls += 1;
+        throw new Error("connection refused");
+      }) as unknown as typeof fetch;
+      await expect(writeBackboneEnvelope("folder:///doc", new Uint8Array([1]))).rejects.toThrow("connection refused");
+      expect(calls).toBe(1);
+    });
+
+    it("writeBackboneEnvelope propagates an external abort promptly with no leaked timer", async () => {
+      const controller = new AbortController();
+      globalThis.fetch = vi.fn((_url: string, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(init.signal!.reason ?? new Error("aborted")));
+        });
+      }) as unknown as typeof fetch;
+      const promise = writeBackboneEnvelope("folder:///doc", new Uint8Array([1]), controller.signal);
+      controller.abort(new Error("caller cancelled"));
+      await expect(promise).rejects.toThrow("caller cancelled");
+    });
+  });
+}
+//#endregion 🌐️BackboneEnvelopeIo
 
 /** @deprecated Use {@link decodeDocumentPackSnapshot}. */
 export function documentFromEnvelopeJson(_envelopeJson: string): unknown {
@@ -3909,6 +4080,21 @@ import type { DocumentView, InviteView, MemberView, SpaceView } from "./🔨️m
 export const HUB_RECONNECT_MIN_MS = 500;
 export const HUB_RECONNECT_MAX_MS = 30_000;
 
+// 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet `web-directory`, coordinator
+// follow-up on finding 2 — CLAUDE.md "support short connection-shortages [...] not freeze the app"
+// means a session that has been healthy for a while must not inherit an escalated backoff from
+// earlier, unrelated blips; see {@link DirectoryClient.stream}'s docstring for the mechanism.
+/** 🩺️ How long {@link DirectoryClient.stream}'s socket must stay open before a drop is treated as
+ * "this connection was genuinely healthy" and resets the reconnect backoff toward
+ * {@link HUB_RECONNECT_MIN_MS}. Deliberately set equal to {@link HUB_RECONNECT_MAX_MS}: surviving
+ * open for at least one full worst-case backoff cycle is comfortably longer than any legitimate
+ * reconnect delay this client would ever impose, so a genuinely flapping server — one that accepts
+ * and then immediately drops, on a cycle time far shorter than this — can never cross the threshold
+ * by accident. The reset is therefore only ever reachable by a connection that was actually stable,
+ * never as a side effect of the accept-then-immediately-drop failure mode the backoff exists to
+ * guard against. */
+export const HUB_HEALTHY_RESET_MS = HUB_RECONNECT_MAX_MS;
+
 /** 🔌️ A live {@link DirectoryClient.stream} subscription handle. */
 export type DirectoryStream = { readonly close: () => void };
 
@@ -3930,6 +4116,21 @@ export class DirectoryHttpError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+// 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet `web-directory`, finding 1 —
+// every REST call is bounded by a timeout and cancellable by a caller `signal`, so a hung directory
+// server degrades ("hub unreachable, staying offline" — the ShellHost boot effect's existing catch)
+// instead of hanging the identity/boot path forever awaiting a response that never arrives.
+/** ⏱️ Per-request timeout for every {@link DirectoryClient} REST call — generous for a real request,
+ * short enough that a hung server still lets the boot path's existing offline fallback run instead of
+ * hanging indefinitely. */
+export const DIRECTORY_HTTP_TIMEOUT_MS = 10_000;
+
+/** 🎛️ Per-call options every {@link DirectoryClient} method accepts — just a caller-cancellable
+ * `signal`; the timeout itself is fixed ({@link DIRECTORY_HTTP_TIMEOUT_MS}) and not caller-tunable. */
+export interface DirectoryRequestOptions {
+  readonly signal?: AbortSignal;
 }
 
 /**
@@ -3954,67 +4155,96 @@ export class DirectoryClient {
     return headers;
   }
 
-  private async getJson<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, { headers: this.headers(false) });
+  /** 📨️ {@link FetchTimeoutResponse} plus the one extra accessor this class needs — declared locally
+   * per this module's own body accessing only `json()` beyond the base shape. */
+  private async getJson<T>(path: string, options?: DirectoryRequestOptions): Promise<T> {
+    const response = await fetchWithTimeout(`${this.baseUrl}${path}`, { headers: this.headers(false) }, { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal });
     if (!response.ok) throw new DirectoryHttpError(response.status, `directory: GET ${path} failed (${response.status})`);
     return (await response.json()) as T;
   }
 
-  private async postJson<T>(path: string, body: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, { method: "POST", headers: this.headers(true), body: JSON.stringify(body) });
+  private async postJson<T>(path: string, body: unknown, options?: DirectoryRequestOptions): Promise<T> {
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}${path}`,
+      { method: "POST", headers: this.headers(true), body: JSON.stringify(body) },
+      { timeoutMs: DIRECTORY_HTTP_TIMEOUT_MS, signal: options?.signal },
+    );
     if (!response.ok) throw new DirectoryHttpError(response.status, `directory: POST ${path} failed (${response.status})`);
     return (await response.json()) as T;
   }
 
   /** 🪪️ `POST /auth/sessions` — dev email mint (contract §C2 "unchanged"). Wire response is
    * `{ token, user_id }` (the hub's `CreateAuthSessionResponse`, never renamed camelCase); this
-   * client normalizes it and remembers the token for subsequent calls. */
-  async mintSession(email: string): Promise<DirectoryMintedSession> {
-    const body = await this.postJson<{ token: string; user_id: string }>("/auth/sessions", { email });
+   * client normalizes it and remembers the token for subsequent calls. A timeout/abort throws a plain
+   * (non-{@link DirectoryHttpError}) error — the identity boot effect's existing catch-all already
+   * treats that as "hub unreachable, stay offline" rather than blocking startup. */
+  async mintSession(email: string, options?: DirectoryRequestOptions): Promise<DirectoryMintedSession> {
+    const body = await this.postJson<{ token: string; user_id: string }>("/auth/sessions", { email }, options);
     this.token = body.token;
     return { token: body.token, userId: body.user_id };
   }
 
   /** 🪪️ `GET /auth/sessions/me` — `null` on 401 (no/expired session, the normal "not signed in"
-   * outcome the boot flow branches on), throws {@link DirectoryHttpError} on any other failure. */
-  async me(): Promise<DirectorySessionSummary | null> {
+   * outcome the boot flow branches on), throws {@link DirectoryHttpError} on any other failure. A
+   * timeout/abort surfaces as a plain `Error` (no `.status`) — same "hub unreachable" shape the
+   * caller's `directoryRejectionStatus`/identity-bootstrap catch already treats as offline, not a
+   * boot-blocking failure (finding 1: this is what stops a hung server from hanging the boot path). */
+  async me(options?: DirectoryRequestOptions): Promise<DirectorySessionSummary | null> {
     try {
-      return await this.getJson<DirectorySessionSummary>("/auth/sessions/me");
+      return await this.getJson<DirectorySessionSummary>("/auth/sessions/me", options);
     } catch (error) {
       if (error instanceof DirectoryHttpError && error.status === 401) return null;
       throw error;
     }
   }
 
-  async spaces(): Promise<readonly SpaceView[]> {
-    return this.getJson<SpaceView[]>("/directory/spaces");
+  async spaces(options?: DirectoryRequestOptions): Promise<readonly SpaceView[]> {
+    return this.getJson<SpaceView[]>("/directory/spaces", options);
   }
 
-  async space(id: string): Promise<DirectorySpaceDetail> {
-    return this.getJson<DirectorySpaceDetail>(`/directory/spaces/${encodeURIComponent(id)}`);
+  async space(id: string, options?: DirectoryRequestOptions): Promise<DirectorySpaceDetail> {
+    return this.getJson<DirectorySpaceDetail>(`/directory/spaces/${encodeURIComponent(id)}`, options);
   }
 
-  async command(command: DirectoryCommand): Promise<DirectoryCommandResult> {
-    return this.postJson<DirectoryCommandResult>("/directory/commands", command);
+  async command(command: DirectoryCommand, options?: DirectoryRequestOptions): Promise<DirectoryCommandResult> {
+    return this.postJson<DirectoryCommandResult>("/directory/commands", command, options);
   }
 
-  async events(since: number): Promise<readonly DirectoryEvent[]> {
-    return this.getJson<DirectoryEvent[]>(`/directory/events?since=${encodeURIComponent(String(since))}`);
+  async events(since: number, options?: DirectoryRequestOptions): Promise<readonly DirectoryEvent[]> {
+    return this.getJson<DirectoryEvent[]>(`/directory/events?since=${encodeURIComponent(String(since))}`, options);
   }
 
   /** 🔌️ `GET /directory/ws?token=&since=` — subscribes from `since`, replays gap-free, then goes
    * live; text (JSON) frames, one {@link DirectoryStreamMessage} each (contract §C2, unlike the
-   * binary `protocol_wire` the artifact sync hub channel speaks). Auto-reconnects with
-   * {@link HUB_RECONNECT_MIN_MS}/{@link HUB_RECONNECT_MAX_MS} exponential backoff, resuming from the
-   * highest `seq`/`headSeq` this subscription has actually observed — never the caller's original
-   * `since` — so a reconnect never replays a gap or a duplicate. Never throws into the caller: a
-   * malformed frame is dropped, a socket error/close only schedules the next attempt. */
+   * binary `protocol_wire` the artifact sync hub channel speaks). Auto-reconnects via
+   * {@link retryWithJitteredBackoff} (finding 2 — full jitter avoids a thundering herd when many
+   * shells' directory sockets drop together, e.g. a hub restart), resuming from the highest
+   * `seq`/`headSeq` this subscription has actually observed — never the caller's original `since` —
+   * so a reconnect never replays a gap or a duplicate; this resume-from-`lastSeq` behaviour is
+   * unchanged from before. Never throws into the caller: a malformed frame is dropped, a socket
+   * error/close only feeds the reconnect loop.
+   *
+   * 🩺️ Coordinator follow-up: reconnecting after a connection that proved itself open for at least
+   * {@link HUB_HEALTHY_RESET_MS} (see its docstring for why that threshold specifically can't be
+   * crossed by a flapping server) resets the backoff — the next redial lands near
+   * {@link HUB_RECONNECT_MIN_MS} instead of wherever the delay had climbed to from earlier, unrelated
+   * blips (CLAUDE.md "support short connection-shortages"). Mechanism: `retryWithJitteredBackoff`'s
+   * attempt counter lives inside ONE call and cannot be reset from outside it, so instead of one
+   * call for the stream's whole life, {@link runCycles} below starts a FRESH call (fresh counter)
+   * each time a cycle ends because its connection proved healthy before dropping — `connectOnce`
+   * resolves (instead of rejecting) in exactly that case to end the current call as a "success". The
+   * very first `fn()` of the next cycle is a synthetic, immediate rejection (never opens a socket) so
+   * `retryWithJitteredBackoff`'s own jitter still inserts a `[MIN, 2·MIN]` pause before the real
+   * redial — reusing its jitter math for that pause rather than reinventing it, and avoiding an
+   * instant reconnect that would defeat jitter's whole point of not synchronizing many clients onto
+   * the same instant. Mirrors `🟦️backbone-worker.ts`'s `connectHubOnce`/`connectHub` idiom for the
+   * base reconnect loop; the health-reset addition here has no counterpart there (routed to that
+   * file's own owning packet). */
   stream(since: number, onMessage: (message: DirectoryStreamMessage) => void): DirectoryStream {
-    let closed = false;
+    const abort = new AbortController();
     let socket: WebSocket | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let reconnectDelayMs = HUB_RECONNECT_MIN_MS;
     let lastSeq = since;
+    let healthy = false; // 🩺️ set once THIS cycle's socket has been open for HUB_HEALTHY_RESET_MS.
 
     const wsUrl = (): string => {
       const wsBase = this.baseUrl.replace(/^http/, "ws");
@@ -4024,55 +4254,99 @@ export class DirectoryClient {
       return `${wsBase}/directory/ws?${query.toString()}`;
     };
 
-    const scheduleReconnect = (): void => {
-      if (closed) return;
-      reconnectTimer = setTimeout(connect, reconnectDelayMs);
-      reconnectDelayMs = Math.min(reconnectDelayMs * 2, HUB_RECONNECT_MAX_MS);
-    };
+    /** 🔌️ One WS connection attempt. Resolves once {@link close} aborts (a clean shutdown) OR once
+     * the socket closes after having been open for {@link HUB_HEALTHY_RESET_MS} (a proven-healthy
+     * drop — ends this cycle as a "success" so {@link runCycles} starts a fresh, reset one); rejects
+     * on every other close/error/construct-throw, feeding the current cycle's growing jitter exactly
+     * like before. The health timer is armed on open and always cleared on close, whichever reason —
+     * never left pending past this promise settling. */
+    const connectOnce = (): Promise<void> =>
+      new Promise<void>((resolve, reject) => {
+        if (abort.signal.aborted) {
+          reject(abort.signal.reason ?? new Error("directory stream: closed"));
+          return;
+        }
+        let ws: WebSocket;
+        try {
+          ws = new WebSocket(wsUrl());
+        } catch (error) {
+          reject(error);
+          return;
+        }
+        socket = ws;
+        const onAbort = (): void => ws.close();
+        abort.signal.addEventListener("abort", onAbort, { once: true });
+        let healthyTimer: ReturnType<typeof setTimeout> | null = null;
+        ws.onopen = () => {
+          healthyTimer = setTimeout(() => {
+            healthy = true;
+          }, HUB_HEALTHY_RESET_MS);
+        };
+        ws.onmessage = (event: unknown) => {
+          try {
+            const data = (event as { data: unknown }).data;
+            const message = JSON.parse(String(data)) as DirectoryStreamMessage;
+            if (message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
+            if (message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
+            onMessage(message);
+          } catch {
+            // 🛟️ malformed frame — dropped, never thrown into the caller.
+          }
+        };
+        ws.onclose = () => {
+          abort.signal.removeEventListener("abort", onAbort);
+          if (healthyTimer != null) clearTimeout(healthyTimer);
+          if (socket === ws) socket = null;
+          if (abort.signal.aborted || healthy) {
+            resolve();
+            return;
+          }
+          reject(new Error("directory stream: socket closed"));
+        };
+        ws.onerror = () => {
+          try {
+            ws.close();
+          } catch {
+            // 🛟️ already closing.
+          }
+        };
+      });
 
-    const connect = (): void => {
-      if (closed) return;
-      let ws: WebSocket;
-      try {
-        ws = new WebSocket(wsUrl());
-      } catch {
-        scheduleReconnect();
-        return;
+    /** 🔁️ Runs {@link connectOnce} through {@link retryWithJitteredBackoff} for one cycle at a time,
+     * forever, until `close()` aborts. A cycle ends in success only when `connectOnce` resolves —
+     * either the manual-close case, or the health-reset case — never by exhausting retries (the
+     * underlying primitive retries forever on failure by design). On a health-reset success, the NEXT
+     * cycle is built "primed": its `fn` synthetically rejects once, immediately, before ever touching
+     * the network, purely so the retry primitive's own jitter inserts a `[MIN, 2·MIN]` pause ahead of
+     * the real redial — see this method's docstring for why that beats both an instant reconnect and
+     * hand-rolling a second jitter formula. */
+    async function runCycles(): Promise<void> {
+      let primeNextCycle = false;
+      for (;;) {
+        healthy = false;
+        let primed = !primeNextCycle;
+        const fn = (): Promise<void> => {
+          if (!primed) {
+            primed = true;
+            return Promise.reject(new Error("directory stream: healthy-reset pause"));
+          }
+          return connectOnce();
+        };
+        try {
+          await retryWithJitteredBackoff(fn, { minMs: HUB_RECONNECT_MIN_MS, maxMs: HUB_RECONNECT_MAX_MS, signal: abort.signal });
+        } catch {
+          return; // 🛑 only reachable via an aborted signal — `close()` was called.
+        }
+        if (abort.signal.aborted) return; // 🛑 resolved via the manual-close path above.
+        primeNextCycle = healthy; // 🩺️ resolved via the health-reset path — start the next cycle primed.
       }
-      socket = ws;
-      ws.onopen = () => {
-        reconnectDelayMs = HUB_RECONNECT_MIN_MS;
-      };
-      ws.onmessage = (event: unknown) => {
-        try {
-          const data = (event as { data: unknown }).data;
-          const message = JSON.parse(String(data)) as DirectoryStreamMessage;
-          if (message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
-          if (message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
-          onMessage(message);
-        } catch {
-          // 🛟️ malformed frame — dropped, never thrown into the caller.
-        }
-      };
-      ws.onclose = () => {
-        if (socket === ws) socket = null;
-        scheduleReconnect();
-      };
-      ws.onerror = () => {
-        try {
-          ws.close();
-        } catch {
-          // 🛟️ already closing.
-        }
-      };
-    };
+    }
 
-    connect();
+    void runCycles();
 
     return {
       close: () => {
-        closed = true;
-        if (reconnectTimer != null) clearTimeout(reconnectTimer);
+        abort.abort();
         socket?.close();
       },
     };
@@ -4140,31 +4414,44 @@ if (import.meta.vitest) {
       handle.close();
     });
 
-    it("reconnects resuming from the last seen seq, with exponential backoff", () => {
+    it("reconnects resuming from the last seen seq, with jittered backoff within bounds", async () => {
       vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random");
       try {
         FakeDirectoryWebSocket.instances = [];
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        randomSpy.mockReturnValue(0); // 🎯️ pins the jitter draw to the lower bound of its range.
         const client = new DirectoryClient("http://hub.test", "tok-1");
         const handle = client.stream(0, () => {});
         const first = FakeDirectoryWebSocket.instances[0]!;
-        first.triggerOpen();
         first.triggerMessage({ kind: "event", event: sampleDirectoryEvent(7) });
         first.triggerClose();
+        await Promise.resolve(); // 🪧️ let the rejection's microtask reach retryWithJitteredBackoff's catch (which schedules the backoff timer) before advancing fake time — advanceTimersByTime does not itself drain microtasks.
 
-        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS);
+        // attempt 1: cap = min(MAX, MIN·2¹) = 2·MIN; random()=0 ⇒ delay lands exactly on the lower
+        // bound (MIN) — no reconnect fires a tick earlier, and one fires the instant it's due.
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS - 1);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+        await vi.advanceTimersByTimeAsync(1);
         expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
         const second = FakeDirectoryWebSocket.instances[1]!;
-        expect(second.url).toBe("ws://hub.test/directory/ws?token=tok-1&since=7");
+        expect(second.url).toBe("ws://hub.test/directory/ws?token=tok-1&since=7"); // resumes from lastSeq, never the original `since`.
 
+        randomSpy.mockReturnValue(1); // 🎯️ pins the jitter draw to the upper bound of its range.
         second.triggerClose();
-        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS); // first backoff alone must not fire the doubled delay yet
+        await Promise.resolve();
+
+        // attempt 2: cap = min(MAX, MIN·2²) = 4·MIN; random()=1 ⇒ delay lands exactly on that upper
+        // bound — proving the delay grows and stays within [MIN, cap], not a fixed exponential value.
+        const attempt2Cap = Math.min(HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS * 2 ** 2);
+        await vi.advanceTimersByTimeAsync(attempt2Cap - 1);
         expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
-        vi.advanceTimersByTime(HUB_RECONNECT_MIN_MS);
+        await vi.advanceTimersByTimeAsync(1);
         expect(FakeDirectoryWebSocket.instances).toHaveLength(3);
 
         handle.close();
       } finally {
+        randomSpy.mockRestore();
         vi.useRealTimers();
       }
     });
@@ -4180,6 +4467,166 @@ if (import.meta.vitest) {
       socket.triggerMessage({ kind: "heartbeat", headSeq: 0 });
       expect(received).toHaveLength(1);
       handle.close();
+    });
+
+    it("close() stops the reconnect loop — no further socket is ever opened", () => {
+      vi.useFakeTimers();
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        const client = new DirectoryClient("http://hub.test");
+        const handle = client.stream(0, () => {});
+        const first = FakeDirectoryWebSocket.instances[0]!;
+        handle.close();
+        first.triggerClose();
+        vi.advanceTimersByTime(HUB_RECONNECT_MAX_MS * 2);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("(a) a drop after sustained health resets the backoff — reconnects near HUB_RECONNECT_MIN_MS, not at an escalated delay", async () => {
+      vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random");
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        randomSpy.mockReturnValue(0); // 🎯️ pins every jittered delay to its lower bound.
+        const client = new DirectoryClient("http://hub.test");
+        const handle = client.stream(0, () => {});
+        const first = FakeDirectoryWebSocket.instances[0]!;
+        first.triggerOpen();
+
+        // 🩺️ let it prove itself healthy, then drop it.
+        await vi.advanceTimersByTimeAsync(HUB_HEALTHY_RESET_MS);
+        first.triggerClose();
+        await Promise.resolve(); // let the resolved connectOnce reach runCycles' next-cycle setup.
+
+        // The next cycle is primed: its first (synthetic) failure is attempt 1 of a FRESH counter —
+        // cap = min(MAX, MIN·2¹) = 2·MIN; random()=0 ⇒ delay lands exactly on the lower bound, MIN —
+        // never the far larger delay an un-reset counter would have reached by this point.
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS - 1);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+        await vi.advanceTimersByTimeAsync(1);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
+
+        handle.close();
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+      }
+    });
+
+    it("(b) rapid accept-then-drop cycling never crosses the health threshold — backoff keeps escalating, never resets", async () => {
+      vi.useFakeTimers();
+      const randomSpy = vi.spyOn(Math, "random");
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        randomSpy.mockReturnValue(1); // 🎯️ pins every jittered delay to its upper bound (== cap), so a reset shows up unmistakably as a delay dropping back down.
+        const client = new DirectoryClient("http://hub.test");
+        const handle = client.stream(0, () => {});
+
+        let instanceCount = 1;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          const socket = FakeDirectoryWebSocket.instances[instanceCount - 1]!;
+          socket.triggerOpen();
+          socket.triggerClose(); // drops instantly — nowhere near HUB_HEALTHY_RESET_MS, so `healthy` stays false.
+          await Promise.resolve();
+          const cap = Math.min(HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS * 2 ** attempt);
+          await vi.advanceTimersByTimeAsync(cap - 1);
+          expect(FakeDirectoryWebSocket.instances).toHaveLength(instanceCount); // still escalated — a reset would have reconnected far sooner than this growing cap.
+          await vi.advanceTimersByTimeAsync(1);
+          instanceCount += 1;
+          expect(FakeDirectoryWebSocket.instances).toHaveLength(instanceCount);
+        }
+
+        handle.close();
+      } finally {
+        randomSpy.mockRestore();
+        vi.useRealTimers();
+      }
+    });
+
+    it("(c) close() during a healthy-but-not-yet-reset connection cancels promptly, clears the health timer, and never reconnects", async () => {
+      vi.useFakeTimers();
+      try {
+        FakeDirectoryWebSocket.instances = [];
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
+        const client = new DirectoryClient("http://hub.test");
+        const handle = client.stream(0, () => {});
+        const first = FakeDirectoryWebSocket.instances[0]!;
+        first.triggerOpen();
+        await vi.advanceTimersByTimeAsync(HUB_HEALTHY_RESET_MS / 2); // health timer armed, not yet fired.
+        handle.close();
+        first.triggerClose();
+        await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(1); // no reconnect was ever attempted.
+        expect(vi.getTimerCount()).toBe(0); // 🛟️ neither the health timer nor any backoff timer is left pending.
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe("DirectoryClient http (getJson/postJson timeout + abort)", () => {
+    const originalFetch = globalThis.fetch;
+
+    it("a hung server rejects at the timeout instead of hanging the caller forever", async () => {
+      vi.useFakeTimers();
+      try {
+        globalThis.fetch = vi.fn((_url: string, init?: RequestInit) => {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(init.signal!.reason ?? new Error("aborted")));
+          });
+        }) as unknown as typeof fetch;
+        const client = new DirectoryClient("http://hub.test");
+        const promise = client.me(); // 🪪️ the identity/boot-path call finding 1 is about.
+        let settled = false;
+        promise.then(
+          () => (settled = true),
+          () => (settled = true),
+        );
+        await vi.advanceTimersByTimeAsync(DIRECTORY_HTTP_TIMEOUT_MS + 1_000);
+        expect(settled).toBe(true); // never hangs — this is what lets the boot path's own
+        // catch-all ("hub unreachable, staying offline") actually run instead of awaiting forever.
+        await expect(promise).rejects.toThrow();
+      } finally {
+        globalThis.fetch = originalFetch;
+        vi.useRealTimers();
+      }
+    });
+
+    it("an external abort cancels promptly, without ever waiting out the timeout", async () => {
+      vi.useFakeTimers();
+      try {
+        globalThis.fetch = vi.fn((_url: string, init?: RequestInit) => {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(init.signal!.reason ?? new Error("aborted")));
+          });
+        }) as unknown as typeof fetch;
+        const client = new DirectoryClient("http://hub.test");
+        const controller = new AbortController();
+        const promise = client.spaces({ signal: controller.signal });
+        controller.abort(new Error("caller cancelled"));
+        // no `vi.advanceTimersByTime*` call at all: if this depended on the timeout timer firing,
+        // fake timers would leave it pending forever and this await would hang the test.
+        await expect(promise).rejects.toThrow("caller cancelled");
+      } finally {
+        globalThis.fetch = originalFetch;
+        vi.useRealTimers();
+      }
+    });
+
+    it("still resolves normally when the server answers promptly", async () => {
+      globalThis.fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => [] })) as unknown as typeof fetch;
+      try {
+        const client = new DirectoryClient("http://hub.test");
+        await expect(client.spaces()).resolves.toEqual([]);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 }

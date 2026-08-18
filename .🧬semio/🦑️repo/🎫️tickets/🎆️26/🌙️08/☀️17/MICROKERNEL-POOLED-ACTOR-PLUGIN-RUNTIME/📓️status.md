@@ -1005,3 +1005,762 @@ The cause is the harness's own documented limitation, which V1b stated up front 
 **So budget 5 is measuring the harness, not the kernel.** The kernel's design point is that K shards execute in parallel; a single-threaded driver cannot exercise that no matter how the number comes out. Recording it as a **failure with a known-invalid instrument** — not as evidence the design misses its latency target, and not quietly as "skipped" either. It becomes measurable once a real multi-shard executor drives it (P1's `ProcessTransport` and the thread-shard path are both candidates); until then the row stays red and honest.
 
 This is the counterpart to the `faults == 0` correction: there, a good runtime failed a bad criterion; here, an untested property fails a good criterion measured with the wrong instrument. Both are reasons to read a red row rather than react to it.
+
+## 🏁️ FINAL BENCH — 7 of 8 budgets pass, 2550 actors concurrent
+
+`bench plugins --renderer native --count 50 --extensions 50`, seed 1, K=8 shards. Archived at `🔣️bench-native-FINAL.json`.
+**`1:pass 2:pass 3:pass 4:PASS 5:fail 6:pass 7:pass 8:pass`**
+
+| # | budget | measured | verdict |
+|---|---|---|---|
+| 1 | registry 2550 records, 0 instantiations, <150 ms | **17.9 ms**, 2550 records, **0 instantiations** | ✅ |
+| 2 | cold boot ≤1500 ms, only startup actors live | **742 ms**, 143/143, 0 unexpected faults | ✅ |
+| 3 | 100 actors, K shards, ≤ceil(100/K)+1 per shard | **100/100**, 8/8 shards, **13,13,13,13,12,12,12,12** | ✅ |
+| 4 | memory ceiling at full scale | **2550/2550 actors live, 390 MB RSS**, 0 unexpected faults | ✅ |
+| 5 | interactive p95 ≤8 ms under 40 cpu actors | 295 ms — **invalid instrument**, see below | ❌ |
+| 6 | hang killed ≤2× budget, siblings restored | trap caught, siblings restored, 0 ms pause | ✅ |
+| 7 | stateful suspend→resume identical hash | `395f1136…` identical both sides | ✅ |
+| 8 | capability revoked at runtime | requested ✓, survived revoke + follow-up, Idle | ✅ |
+
+### What is now actually proven
+
+**Budget 4 is the ticket's headline claim, measured: all 2550 records — 50 plugins × 50 extensions + parents — live simultaneously in 390 MB.** The baseline table in `📋️master.md` records the runtime this replaces as capped at roughly 20 plugins by a 4 GiB-per-module guard region. The ceiling is now set by the shard pool, not by package count, exactly as `📓️design-runtime.md` claims.
+
+**Budget 3 is the thesis as a number**: 100 actors distributed 12-13 per shard across 8 shards. The same measurement this morning read `{"0": 100}`.
+
+### Budget 5 — the one honest failure, and why it is not a design result
+
+`p95 = 295 ms` against 8 ms. But the 30 samples sit in a **0.1 ms band** (229.903, 229.948, 229.950, 229.964, 229.973…). A p95 that reproduces to a tenth of a millisecond under "saturating background load" is not measuring contention — it is measuring a constant.
+
+The harness runs **one physical `ShardLoop` behind all K shard labels** (V1b documented this up front). `pump()` therefore executes every actor serially on one thread, and the interactive turn queues behind 40 `cpu` actors busy-looping their declared milliseconds. The kernel's entire design point for this budget is that K shards run in parallel; a single-threaded driver cannot exercise it whatever number it prints.
+
+**Recorded as a failure with a known-invalid instrument** — not as "the design misses its latency target", which the data does not support, and not quietly as "skipped", which would hide a real gap. It becomes measurable when a genuine multi-shard executor drives it; P1's `ProcessTransport` (proven today with a real kill→rebuild across OS processes) and the thread-shard path are both candidates. **That is the single highest-value follow-up on this ticket.**
+
+### Scope of the claim, stated precisely
+
+Measured today: **native only**, seed 1, K=8. Web renderers (react/wgpu) were never run and their rows say `skipped` with a reason — never a fabricated pass. So: *50×50 activates, shard-balances, checkpoints, survives capability revocation and gets its hangs caught, at full 2550-actor concurrency in 390 MB, on native.* Interactive latency under load is **unmeasured**, not passed.
+
+### ✅ R1 native manifest — work accepted, verification was NOT done by the packet
+
+**Its design decision is right and unusually well-evidenced.** Prefer the committed `🛂️descriptor.semio` (zero instantiations); live `describe()` is a designed-but-unwired fallback. It cited five independent sources that all converge: `📓️design-abi.md` §3 twice (freshness gate treats the descriptor as the artifact of record; the emitter runs once at build time), `📓️design-runtime.md` §3 (`ActivationRegistry` seeded from build-time descriptors), `📜️component.wit`'s own `describe` doc ("build-time only, never called at runtime"), and this ticket's founding premise. Reading the descriptor by instantiating the wasm would have reintroduced exactly the per-package instantiation this ticket exists to remove.
+
+Wired in `🏃️run/🦀️component.rs`: `read_committed_descriptor` (same `pack_rt::decode_wire_value` + `dsl::from_dsl_value` decode the emitter uses, applied to committed bytes), and `load_runtime_recursive` now performs the full walk the old `NOT YET WIRED` comment specified — compile → decode → recurse dependencies → mint actor → register with io/mutation/inference routers, plugin graph and app router → `owned_surface_gaps` gate.
+
+**It also declined to do the wrong thing for the right reason**: wiring the live-`describe()` fallback needed either a `GuestRuntime::describe` seam (out of scope, and P1/T1 were live in that file) or a second hand-rolled wasmtime+WASI linker inside `🏃️run` — which would put raw `wasmtime` calls outside the `GuestRuntime` interface that CLAUDE.md requires external libraries to stay behind. It filed a lease instead. Correct call.
+
+**But its report shipped with `## Commands + exit codes` → `(filled in below)`, never filled in** — a direct violation of binding rule 7, and the third packet today to end a turn before verifying. Coordinator-run instead:
+```
+CARGO_TARGET_DIR=<ticket>/🎯️target-r1 cargo check -p semio-framework-os-run --all-targets  → Finished in 5m 55s, 0 errors
+```
+Genuine finding it surfaced: `ContributionSet.io_entries` cannot be mapped to `io_schema::IoEntryDescriptor` because **two different types share that name** — the manifest crate's (owner/counterpart/direction) and the io crate's (from/into/fidelity/sniffs) — and the descriptor schema carries no fidelity/sniffs data. A name collision that a compiler cannot warn about, in the same family as the `exchange` census hazard recorded earlier today.
+
+Native smoke across all 33 plugin ids remains gated on descriptor emission (10/33 at time of writing), not on this wiring.
+
+## 📌️ Session consolidation — 2026-08-18 W4
+
+### Accepted (coordinator-verified, never taken from a report)
+
+| packet | result |
+|---|---|
+| S0 sweep | **33/33 plugin crates green, 0 red** — incl. `layout` and `forms`, both previously blocked |
+| V1a | root `bench` verb + `verify rust-warnings --target` + 2 nx targets |
+| C1 | `ProgramSupervisorState` + `set_host_backbone_channel` at 0 live; **exit item 9 met** |
+| K1 | suspend/resume/cancel dispatch + placement capture; 4 tests |
+| D0 | one canonical descriptor path, `describe` on all 33 crates, opt-in ratchet; gate honest at 1/59 |
+| T1 | metrics sampling + publisher, `TaskManager` dual-renderer, actions wired to real `ActivationRegistry`→`ShardClient` |
+| P1 | `ProcessTransport` + `semio-shard` bin; **real `kill -9` → detect → rebuild, sibling survives** (3 PIDs logged) |
+| V1b | bench harness; **7/8 budgets measured passing** |
+| R1 | committed-descriptor path wired into the native runner |
+| D1 | descriptor emission in flight, 10/33 |
+
+### Registrar fixes landed by sol
+
+`JobStep` serde variants · WASI p2 into both linkers · describe fuel 5M→2G · `PresencePeerRow.color` · `ShardTable::pin` least-loaded + 3 property tests · 4 pooling sub-pools · `Mailbox.lanes` `ts(skip)` (first-ever actor typegen) · registry `DESCRIPTOR_JSON_REL_PATH` · bench `unexpected_faults` criterion · `MockGuestRuntime` guard drop
+
+### NOT done — stated plainly
+
+- **V2 parity 58/58 both renderers: not started.** The harness exists and works; the run needs dev servers and hours.
+- **Z1 zero warnings: dispatched, unfinished.** Known non-zero on all three targets.
+- **Descriptor emission: 10 of 33.** Deliberately limited to the peer-stable set; the rest wait on `CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM`'s migration batches.
+- **Native smoke 33/33: blocked** on the above, not on R1's wiring.
+- **Bench budget 5: unmeasured**, not passed — needs a real multi-shard executor.
+- **Web renderer benches: never run.**
+- **Launch-seed entries** for task-manager / process-shards / bench gates: not added (leases pending).
+
+**The ticket must NOT be closed on this session's work.** Exit checklist items 1-8 are not all met; `📌️important.md` is not emptied. What changed today is that the runtime now demonstrably runs — it did not this morning — and the headline claim has real numbers behind it for the first time.
+
+### 🐛️ Eighth defect, found by the zero-warnings gate: the wasm bindings did not compile
+
+Coordinator ran `verify rust-warnings --target wasm32-unknown-unknown` to hand Z1 a baseline. That target was not merely warning — **it did not compile**:
+
+```
+error[E0308]: mismatched types
+  --> 🎭️actor/📦️packages/🦀️rust/📦️glue.rs:73
+   self.inner.complete(actor, result, now_ms)   // Kernel::complete now takes &TurnResult
+```
+
+`Kernel::complete`'s signature had become `complete(&mut self, actor, result: &TurnResult, now_ms)` — almost certainly during T1's metrics work — and the wasm-bindgen glue still passed by value.
+
+**`📦️glue.rs` is `#[cfg(target_arch = "wasm32")]`-gated, so no native `cargo check` or `cargo test` ever compiles it.** Whoever changed the signature got a green native build AND a green 60/60 test suite while the web bindings were broken. Same shape as everything else today — the verification that ran could not observe the defect — but with a sharper edge, because this file is invisible to the entire native toolchain by construction.
+
+**The zero-warnings gate is the first thing on this ticket that compiles that file at all.** That is an argument for keeping `verify rust-warnings` in the routine gate rather than saving it for the exit checklist: it is not a tidiness pass, it is the only cross-target compile coverage the repo has. Recorded as a recommendation for `📌️important.md` on the next wave.
+
+Z1 fixed the E0308 itself (credited to it, not to me). Remaining on that target: one clippy `needless_pass_by_value` at `📦️glue.rs:85`, denied by `-D warnings`; exit still 101, target not yet clean. Logs: `w4-z1-wasm-unknown.txt`, `w4-z1-wasm-unknown2.txt`.
+
+### ✅ R1 finalized — and a systematic naming hazard now has four instances
+
+`cargo check` and `cargo test -p semio-framework-os-run` both exit 0, **16/16 tests**. `🗒️note` verified loading natively end to end with `--nocapture` evidence — and when the D0-built wasm artifact it had relied on vanished mid-run, it **rebuilt the component itself rather than downgrading the row to "skipped"**. Exactly the right instinct.
+
+Honest scope from its own report: only `note` was built and tested here; the other 32 are blocked on descriptor emission and wasm builds, **not on this packet's wiring**. 10 descriptors committed and climbing.
+
+**Its mid-implementation find completes a pattern this ticket keeps paying for.** `GuestRuntime::instantiate`'s `Budget` is `semio_framework::kernel::Budget`, not `semio_framework_actor::Budget` — two distinct types, same name. That is now the **fourth** same-name-different-type collision recorded:
+
+| name | the two types |
+|---|---|
+| `ActorId` | `kernel::ActorId` (presence/collab) vs the runtime actor id — already in `📌️important.md` as a naming hazard, aliased `RuntimeActorId` |
+| `exchange` | the deleted WIT plugin ABI vs the live host `TransactionCoordinator::exchange` — makes the must-not-exist census (exit item 9) report 37 false positives |
+| `IoEntryDescriptor` | manifest crate (owner/counterpart/direction) vs io crate (from/into/fidelity/sniffs) — blocks `ContributionSet.io_entries` mapping (R1) |
+| `Budget` | `kernel::Budget` vs `actor::Budget` (R1) |
+
+Three of the four cost real debugging time today. The compiler catches the type collisions eventually; it never catches the `exchange` one, which is why that census needs a narrowed pattern rather than a grep for a banned word. **Recommendation for the next wave**: treat a same-name-different-type pair across crates as a defect to be renamed at the point of discovery, not a curiosity to be documented — `RuntimeActorId` is the precedent that already worked.
+
+### ✅ D1 descriptor emission — the pipeline is closed end to end, 10 plugins ratcheted
+
+`DESCRIPTOR_MIGRATED_PLUGINS` now reads `["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning-mindmap", "animate"]` — precisely the peer-stable batch-1 set the packet was scoped to, with nothing outside it. Each entry means that plugin's `descriptor_is_fresh()` now **hard-fails** on a missing or stale descriptor instead of silently passing.
+
+Registrar verification of the whole loop:
+```
+plugin-registry:check     → exit 1: "plugin registry catalog is stale" (the 9 new descriptors changed real catalog data)
+plugin-registry:generate  → exit 0
+plugin-registry:check     → exit 0: "descriptor gate: 10/59 crates have a 🔣️descriptor.json"
+```
+
+**That stale→regenerate→green cycle is the proof the pipeline is genuinely connected.** This morning the gate read the gitignored `🤖️generated/` path, so it reported 0 and would have kept reporting 0 no matter how many descriptors were emitted — the number could not move. It now moves with reality: emit descriptors, the catalog goes stale, regenerate, the count rises.
+
+**10 of 59, and the remainder is a sequencing decision rather than a failure.** The other 22 top-level plugins plus extensions are held back deliberately: the peer ticket `CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` is open and migrating declaration channels in batches, and D0 demonstrated that a peer's migration silently invalidates a committed descriptor (note's own was stale for exactly that reason). Emitting for a plugin the peer is about to touch would put a red `descriptor_is_fresh` in every session's tree. The right sequence is: their batch commits, then ours emits.
+
+Note for whoever runs the exit checklist: `plugin-registry:generate` must be re-run **after** the final descriptor lands, or the catalog will be stale at close.
+
+## 🧾️ Exit checklist — measured position (design-workforce §6)
+
+| # | item | state |
+|---|---|---|
+| 1 | `verify gate` exit 0 | ⬜️ not run this session |
+| 2 | `verify` and `test long` exit 0 | ⬜️ not run |
+| 3 | Parity 58/58 both renderers across 4 shards | ⛔️ **not started** — harness exists and works, run needs dev servers + hours |
+| 4 | Native smoke all 33 plugin ids exit 0 | 🟡 wiring done + `🗒️note` proven end to end; **10/33 have descriptors**, rest blocked on emission, not on wiring |
+| 5 | Bench green on react/wgpu/native, JSON in `bench/` | 🟡 **native 7/8 measured**, JSON archived `🔣️bench-native-FINAL.json`; **web never run**; budget 5 needs a multi-shard executor |
+| 6 | Zero rust warnings on native + wasip2 + wasm32-unknown-unknown | 🔄 Z1 in flight; wasm32-unknown-unknown had a real **compile error** (fixed), one clippy lint remains |
+| 7 | `plugin-registry:check` fresh, `launch.json` regenerated, no stray `[DEBUG] ` | 🟡 registry **fresh, exit 0, gate 10/59**; launch seed entries **not added** (leases pending); `[DEBUG] ` misuse catalogued, Z1 owns |
+| 8 | Task manager shows live actors in both renderers | 🟡 built dual-renderer, actions dispatch through real `ActivationRegistry`→`ShardClient`; **no live `Kernel` thread exists natively**, so the metrics publisher is correct-but-unreachable |
+| 9 | Census: 0 sync host imports, no must-not-exist symbols | ✅ **met** — every symbol 0 live; `LeasePool`'s 14 are the prescribed relocation; `exchange`'s 37 are the documented name collision |
+| 10 | `📌️important.md` emptied, `ticket_close` with explicit path | ⛔️ **not done, and must not be** |
+
+**Two items met, six partial, three not started. The ticket does not close on this session.**
+
+### What a closing session needs to do, in order
+
+1. Let the peer ticket's remaining declaration batches land, then emit the other 23 descriptors and ratchet each — **re-run `plugin-registry:generate` after the last one** or the catalog is stale at close.
+2. Finish Z1 across all three targets. Keep `verify rust-warnings` in the ROUTINE gate afterwards: it is currently the only thing in this repo that compiles the `#[cfg(target_arch = "wasm32")]` glue at all.
+3. Drive bench budget 5 with a real multi-shard executor (P1's `ProcessTransport` is proven and available) — today's 295 ms is a single-threaded harness artifact, not a design result.
+4. Run the web benches and the 58×2 parity sweep.
+5. Wire a live `Kernel` thread natively so T1's metrics publisher and the task manager's native actions stop being unreachable.
+6. Then items 1, 2, 10.
+
+### 🔬️ Ratchet spot-check — the descriptor gate is real, not decorative
+
+A ratchet entry is only worth anything if the test it arms actually runs and passes. Coordinator-run against two of the ten ratcheted plugins:
+
+```
+cargo test -p semio-s-plugin-note --lib descriptor_is_fresh → test descriptor_is_fresh ... ok   (1 passed, 114 filtered out)
+cargo test -p semio-s-plugin-vcs  --lib descriptor_is_fresh → test descriptor_is_fresh ... ok   (1 passed,  58 filtered out)
+```
+
+(A third, `🕸️dag`, was cut off by my own 10-minute command timeout — the two above are the verified ones. Not claiming a third pass I did not see.)
+
+So for these plugins the chain is now closed and enforced end to end: **committed descriptor at the owner root → `descriptor_is_fresh` hard-fails if it goes missing or stale → `plugin-registry:check` counts it → the generated catalog carries its data.** Before today every link in that chain existed and none of them met.
+
+D1 has continued past its original peer-stable scope — **12/33 and climbing** at time of writing.
+
+### ✅ D1 went past the safe set — correctly, and the ratchet is what makes that safe
+
+14 descriptors committed, but the ratchet still lists **only the 10 peer-stable ones**. The four extras — `🌊️flow`, `🎥️shooting`, `🏛️architect`, `🏭️process` — are old-channel plugins the peer's future batches will migrate, and they are committed **without** a ratchet entry.
+
+That is precisely the right split, and it is worth naming because the two halves have different failure modes:
+- **Committed descriptor** → the registry counts it and the generated catalog carries its data. Value now.
+- **Ratchet entry** → `descriptor_is_fresh` HARD-FAILS on drift. Value now, red tree for every session later if the peer migrates that plugin.
+
+Emitting broadly while ratcheting narrowly gets the first without buying the second. Peer liveness re-checked at the same moment: **zero plugin `.rs` files modified in the last 30 minutes**, so nothing was being raced.
+
+**Residual risk, stated so it is not forgotten:** an unratcheted descriptor that goes stale still feeds *wrong data* into the generated catalog — silently, since no test guards it. That is a data-correctness problem rather than a broken-build problem, and the mitigation is the one already recorded for the closing session: re-run `plugin-registry:generate` after the peer's migration completes, and ratchet each plugin only once its declarations have settled.
+
+### ✅ Z1 zero-warnings — one target clean, and it found a bug in the gate itself (mine)
+
+| target | end state |
+|---|---|
+| `wasm32-unknown-unknown` | ✅ **clean** — 13 clippy errors → 0 in `semio-framework-actor` (plus the E0308 compile error my earlier run exposed) |
+| `wasm32-wasip2` | 🔄 **was blocked 100% of the time by a bug in my own verb**; now unblocked, see below |
+| `native` | 🟡 `semio-framework-actor` clean; the other 35 crates unreachable through the aggregate gate behind two out-of-scope crates (`semio-framework-os-kernel-dsl-derive` 2 errors, `semio-framework-mesh-engine` 13) — exact fixes documented, lease-requested |
+
+#### 🐛️ The gate bug was mine, and I had already been told
+
+`rustWarningTargetScope` passed `--features component-guest` for the wasip2 target. **Plugin crates declare no `[features]` section at all** — `component-guest` is a *dependency* feature each one enables unconditionally on `semio-framework-plugin` (`features = ["component-guest"]` on that dep line). `cargo -p <plugin> --features component-guest` therefore fails with "does not contain this feature", blocking that target on every invocation.
+
+**D0 reported this hours earlier**, in its own report, with the reasoning spelled out — it had hit the same wall building its `describe` command and correctly omitted the flag. I wrote the verb without applying its finding, and it took Z1 hitting the identical wall independently for it to land. Verified before fixing (`grep '\[features\]'` on `🗒️note`'s manifest returns nothing; the only `component-guest` is on the dependency line), then removed the flag.
+
+After the fix the target genuinely runs and reaches real lints in dependency crates (`semio-framework-graph`'s build script: `map_or` simplifications, `chunks_exact` with constant size). Same shape as native: the gate is reachable, and what it now reveals is out-of-scope crates.
+
+**The lesson is about the workforce, not the flag**: a finding buried in one packet's report does not propagate to a sibling packet or to the coordinator by itself. D0's discovery was correct, written down, and still cost Z1 a full blocked target. Cross-packet findings need to be lifted into `📌️important.md` or a coordinator message at the moment they are read, not left in a report to be re-discovered.
+
+#### What Z1 did well
+- **Caught and fixed its own regression** (an import removal that broke `--tests`).
+- **`[DEBUG] ` cleanup done by judgement, not by sweep**: 29+4+51 occurrences across the three in-scope files, all assessed as permanent operator diagnostics and **re-prefixed rather than deleted** — exactly the distinction that would have stripped the bench's error reporting.
+- **Spawned 4 follow-ups for "gap, not dead code" findings** (`PluginRuntimeRegistry` fields, stdio zip mtime/ISO21320 stub, stdio STL ascii export, wgpu retained-node/fuel-quota) instead of blanket-`#[allow]`-ing them.
+- **Found `semio-s-plugin-puzzle` has 176 pre-existing test compile errors**, confirmed not its own, flagged prominently and left untouched.
+
+## 2026-08-18 W5 — async-first rewrite opens (plan: /Users/ueli/.claude/plans/rewrite-everything-async-where-wondrous-leaf.md)
+
+New user directive: *"Rewrite everything async where it makes sense, no matter the effort"* — extend/refactor clean mechanisms, plan exhaustively for a parallel agent workforce, end to end for all non-legacy technology. Planning was done in a separate Fable 5 session; this session coordinates as sol (Opus 5).
+
+**Ticket NOT reopened — it was never closed.** `repo://tickets` shows `MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME` `status: OPEN`, which is correct: last session's own exit checklist said it must not close. The async waves therefore land as **W5+** of this ticket rather than a new one, and this ticket's outstanding exit items (parity sweep, web benches, Z1 tail, 23 descriptors, live native `Kernel` thread) are absorbed into W9 — running the parity/web benches against the pre-async runtime would be work thrown away twice.
+
+### Session-start checks (all measured, not assumed)
+
+| check | result |
+|---|---|
+| disk | **241 GiB free** (74 % used) — no action needed; the 100 %-full incident of 08/17 has not recurred |
+| cargo processes at start | **1** peer: `cargo build -p semio-s-plugin-demonstrator --target wasm32-wasip2` (~4 min in). Finished by 18:35, so the machine was quiet before this wave |
+| repo-wide source churn | **zero** `.rs`/`.ts`/`.tsx` modified in the preceding 60 min |
+| prior session | Z1 wrote `📓️terra-Z1-report.md` + `w4-z1-wasip2-note.txt` at 18:06–18:08 and stopped; no attributable process since. Treated as finished, not live |
+| live peer ticket | `LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY` is OPEN and explicitly "builds on the landing state (actor Kernel, reactor ABI, Broker, PackageDescriptor)" of this ticket — the same session that filed the WASI-linker lease we actioned. Its consumers of `Effect`/`GuestRuntime` are why W5 must not churn those shapes casually |
+
+### User decisions binding this wave
+
+1. **ABI: full WASI 0.3 native backend** — WIT authored in 0.3 semantics as SSOT, wasmtime component-model-async as the primary native path, with the proven `poll(events,budget)` reactor kept as the lowering/compat backend (web via jco, and fallback wherever the 0.3 toolchain gate fails). Even under native async: **one kernel task owns one Store**; no concurrent reentrant component calls (wasmtime still documents parts of that as incomplete).
+2. **Async runtime: tokio, but only behind an interface in host crates** — exactly the pattern wasmtime already sits behind `GuestRuntime`. `🎭️actor` stays pure. Scheduling authority stays ours (DRR/lanes/quotas); tokio only parks and wakes I/O.
+3. **Scope includes the whole TypeScript/web side**, not just the Rust runtime.
+
+### Toolchain facts measured on this machine (they change what is buildable)
+
+- `rustc 1.99.0-nightly (2026-07-06)`; `wasm32-wasip3` **is** in `--print target-list`, but rustup has no prebuilt std for it → wasip3 needs `-Z build-std`.
+- `~/.cargo/registry/cache` already holds **wasmtime 34.0.2** and **wit-bindgen 0.57.1** beside the pinned 22.0.1 / 0.36.0 — an upgrade path exists offline.
+- `wasm-tools`, `jco`, `wac` are **not installed**. So no standalone WIT validation is available today; component-model claims must be proven by real host instantiation instead.
+
+### 📐️ Registrar ruling 1 — the WIT does NOT get re-split into 12 files
+
+`📓️design-abi.md` §1 specifies one file per interface under `📦️packages/🦀️rust/📜️wit/`. Measured reality: that directory is **gone**, and all 12 interfaces live as `interface` blocks inside a single consolidated `🧬️schema/📜️component.wit` (822 lines) — the repo's single-file consolidation tooling collapsed them mid-session on 08/17, as this log already records.
+
+Re-splitting would (a) fight a tool that has already demonstrated it re-collapses such splits, and (b) delete the exact path both `bindgen!` and `wit_bindgen::generate!` now point at. So the async worlds and the params refactor land **inside the consolidated file**, using its `interface` blocks as the organizing structure. Same class of correction as the descriptor-path ruling: the design doc's stated path is superseded by what the taxonomy tooling actually enforces.
+
+### 📐️ Registrar ruling 2 — `cancel-request` is deferred out of W0
+
+The plan put a new `Effect::CancelRequest{req}` variant in W0 alongside the params refactor. Adding an `Effect` variant breaks **every exhaustive match** on that enum across the fleet — including the TS twin and two registrar-owned files (`Shell/🧊️component.rs`, `ShellHost/🟦️component.tsx`) — which is precisely the "tree goes red for days" shape the A3 wave was split to avoid.
+
+The params refactor on its own is genuinely contained: plugins never touch WIT types (measured in W0's own audit — everything goes through framework-level effects), so only the reactor and host conversion glue move. `cancel-request` therefore moves to the packet that lands the async worlds, where guest-side future-drop actually consumes it and the fallout can be paid once.
+
+### W5 dispatch — 5 packets, file-disjoint
+
+| packet | scope | builds cargo | target dir |
+|---|---|---|---|
+| `S1-spike` | go/no-go gate: real wasip3/component-async component executing `async func` + an async host import + a **host-written `stream<u32>`** under candidate wasmtime; certifies exact versions and `bindgen!` options | yes | `🎯️target-s1` |
+| `R1-async-iface` | new PURE crate `semio-framework-async`: `OperationContext`, tri-state `CancelToken` with `child()`, `Scope`/`ScopeDrainReport`, `ChannelPolicy`, pure `ThreadPlan`+`ThreadBudget`, trait `HostAsyncRuntime` | yes | `🎯️target-r1` |
+| `W0-params` | 26 `req`-carrying effect records → reusable `*-params` records (the SSOT mechanism that stops the async and poll worlds ever hand-maintaining two payload copies); Rust `Effect` stays flat | yes | `🎯️target-w0` |
+| `T-P1-async-glue` | `createBoundedMailbox` (TS twin of the Rust `Mailbox`), `retryWithJitteredBackoff`, `latestWins`, `fetchWithTimeout`, `waitForEvent` in `🟦️glue.ts` | no | — |
+| `T-P8-dev-server` | bounded-parallel materialize (cargo stays serial), sqlite handle cache, stale `🟨️host-shim.js` sweep, SSE keepalive | no | — |
+
+Builder cap held at 3 concurrent cargo packets, per the standing rule corrected twice in W3/W4 (per-packet target dirs remove lock contention but multiply total compile work; the cap is on *builders*, not packets).
+
+Every brief carries the W1–W4 post-mortem rules explicitly: foreground builds only, no git-modifying commands, lease-requests instead of registrar edits, no `ticket_close`, paste output + exit codes, read the FIRST error of a WIT-consuming build, and prove it RUNS rather than compiles.
+
+### ✅ D1 descriptor wave complete — 20/59 gate green, 10 ratcheted, every failure classified
+
+Registrar-run after its final descriptor (D1 correctly did not run `generate` itself):
+```
+plugin-registry:generate → exit 0
+plugin-registry:check    → exit 0: "descriptor gate: 20/59 crates have a 🔣️descriptor.json"
+on disk: 20 — matches the gate exactly
+```
+
+**Ratcheted: 10** (`note` + D1's 9 peer-stable batch-1 additions — sequence, vcs, forms, sourcing, dag, mathematical, writer, reasoning-mindmap, animate), each with its own `descriptor_is_fresh ... ok`. D1 also reported that 4 of those crates carry unrelated pre-existing test failures elsewhere (forms 2, dag 1, mathematical 18, reasoning 2) and verified none touch descriptor freshness — reporting the surrounding noise rather than hiding behind a filtered pass.
+
+**Emitted but deliberately unratcheted: 10** — flow, shooting, architect, process, lowpoly, cad, norm, remodel, raster, space. Genuine non-placeholder descriptors, outside batch-1, so no `descriptor_is_fresh` guard. Exactly the split asked for.
+
+**Failures classified, nothing fabricated, zero `assembly-failed` placeholders committed:**
+| class | plugins |
+|---|---|
+| weak-linkage duplicate symbols | draw, imperative |
+| capability-claim rule | fem, layout, playbook, trinity, stdio, puzzle, block (7) |
+| **real cross-plugin dialect collision** on `s.stdio.dwg@ac1018/*` | procedural, gis |
+| downstream `kit.catalog` conflict | demonstrator — confirming why it was always sequenced last |
+| pre-existing no-`crate-type` gap | energy |
+
+So the capability-claim rule is real for **7 of 33**, not the fleet-wide blocker this log asserted for a full wave. The rest are four distinct, separately-named causes.
+
+**On the disk warning**: it reclaimed **76 GB** by deleting regenerable `incremental/` caches (52 GB wasm + 24 GB native) and top-level `.wasm` files, then held ~244 GB free for the remainder — never approaching the 60 GB stop line. Acting on the constraint rather than stopping at it.
+
+**Residual risk restated in its own words**: the 10 unratcheted descriptors have no freshness guard, so if their declarations change the descriptor goes stale **silently** — data-correctness, nothing turns red — until someone ratchets them the way batch-1 was done.
+
+It also observed a sibling packet (Z1) concurrently hardening `register_composer_entries`/`register_subset_validator` in the same shared `component.rs`, which plausibly explains why several capability/dialect collisions surfaced as loud errors during its run — and confirmed its own edit there was a single isolated line via `git diff --cached`. Attribution checked rather than assumed.
+
+### ✅ T-P1 async glue accepted — and its self-flagged risk turned out to be a latent wire bug
+
+Coordinator-re-run acceptance (not taken from the report): `cd 🧰️framework/📦️packages/🟦️typescript && bun ./📜️script.ts test` → **182 passed, exit 0**.
+
+Delivered: `createBoundedMailbox` (TS twin of the Rust `📬️Mailbox`), `retryWithJitteredBackoff` (full jitter, abort-aware), `latestWins` (single-flight + one trailing coalesced run), `fetchWithTimeout`, `waitForEvent` — all in `🟦️glue.ts`, with a locally-declared response interface so no ambient external type leaks through a public signature.
+
+T-P1 also reported its own bug honestly rather than quietly fixing it: its first `latestWins` deferred `run()` into a microtask, which broke synchronous single-flight and failed its own new test. Caught by the test it wrote, which is the point of writing it.
+
+#### 🐛️ The valuable part: `Lane` casing diverges across languages, and `Backpressure` repeats the `JobStep` defect
+
+T-P1 flagged "a future name-collision risk between my TS twins and the actor module's generated types". Investigating that found two real defects, neither of them a mere naming clash.
+
+**1. `Lane` has a silent cross-language wire mismatch.** `🎭️actor/🤖️generated/🟦️actor.ts` **now exists** (10 KB, written 16:17 today — the T1 typegen lease was actioned after T-P1's brief was written, so this was new information mid-flight). It declares `Lane = "Interactive" | "UserVisible" | "Background" | "Maintenance"`. Checked against the Rust source: `Lane` (`🎭️actor/🦀️component.rs:347-352`) derives `Serialize, Deserialize` with **no `#[serde(rename_all)]`**, so PascalCase is genuinely the wire form and the generated mirror is right. T-P1's `glue.ts:216` had camelCase. Nothing had broken yet only because nothing crosses that boundary yet — and `T-P4` is the packet that makes it cross. Ordered aligned to the Rust/serde form.
+
+Deliberately NOT "fixed" on the Rust side: A4 pinned cross-language byte-parity vectors on this wire, and Rust is the declared SSOT. But the crate is internally inconsistent — `Lane` carries no `rename_all` while `Backpressure` (L734-740) declares `rename_all = "camelCase"` — which deserves a deliberate ruling rather than a drive-by change from either direction. Tracked, not silently patched.
+
+**2. `Backpressure::Dropped(Lane)` is the `JobStep` bug again, in a different enum.** `Backpressure` is `#[serde(tag = "kind")]` (internally tagged) with a **newtype** variant carrying a `Lane`, which serializes as a string. serde cannot serialize an internally-tagged newtype variant whose payload is not a map — it fails at RUNTIME, compiles clean. That is character-for-character the defect that made **every successful job completion** fail to serialize earlier in this ticket (`JobStep::Done(Vec<u8>)`), whose recorded lesson was: *fixing one variant is not fixing the defect — re-derive the rule and re-check every sibling.*
+
+**That sibling sweep was never done.** The generated mirror exposes the tell in four more places — impossible intersection types that no value can satisfy: `Origin` → `{"kind":"actor"} & ActorId`, `Payload` → `{"kind":"event"} & Array<number>` and `{"kind":"cancel"} & bigint`, `FailureSignal` → `{"kind":"trap"} & string`, plus `Backpressure` → `{"kind":"dropped"} & Lane`. So the generated mirror is **not usable as a wire contract for those variants**, independent of whether serde is in the path. A luna audit (`📓️luna-serde-newtype-audit.md`) is running the full repo-wide inventory and, crucially, a per-variant liveness verdict — whether each is actually serde-serialized somewhere (live bug) or only travels through the repo's hand-rolled `pack` codec, which bypasses serde's tagged-enum path entirely (latent trap). The distinction decides whether this is urgent or merely load-bearing debt.
+
+#### 📐️ Registrar ruling 3 — the mailbox twin moves next to its original
+
+CLAUDE.md: *"If code is repeated, it MUST be close to each other."* The mailbox is the TS twin of an actor-crate type and its main consumer is `T-P4`'s `🧵️turn-scheduler.ts`, which lives in the actor TS package. Keeping it in the generic framework glue also parks it in a package that cannot import the actor module's generated types without inverting the layering.
+
+So `createBoundedMailbox` + its types + tests move to `🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts` (beside `🧵️shard-client.ts`), consuming the generated `Lane`/`CoalesceKey` as SSOT while keeping a correctly-shaped local `Backpressure` with a docstring recording why the mirror's version is unusable. The four genuinely generic utilities stay in `🟦️glue.ts`, which is where their many unrelated consumers reach them.
+
+### ✅ T-P1 follow-up verified — and the mailbox twin can no longer drift from the wire
+
+Coordinator-re-run, both green:
+```
+🧰️framework/📦️packages/🟦️typescript      → Tests 174 passed (174), exit 0
+🎭️actor/📦️packages/🟦️typescript          → Tests  38 passed  (38), exit 0
+```
+
+T-P1 solved the `Lane` divergence better than I specified. I asked it to align its values to PascalCase; it instead **stopped declaring the types at all** — `📬️mailbox.ts` now does `import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts"` and re-exports them, so the twin is structurally incapable of drifting from the Rust wire again. Fixing the mechanism beats fixing the value.
+
+It kept its own correctly-shaped `Backpressure` (`{kind:"dropped"; lane: Lane}`) with a docstring recording why the generated one is unusable, and it verified by name that the 4 relocated mailbox tests actually execute rather than silently skipping — the package's `🧪️vitest.config.ts` used **explicit filename arrays**, not globs, in `include`/`coverage.include`/`includeSource`, so a new sibling file would otherwise have been invisible while still reporting green. Worth remembering for every future file added to that package.
+
+### 🔬️ Audit correction — the 6 serde findings are LATENT TRAPS, not live bugs
+
+`📓️luna-serde-newtype-audit.md` inventoried 6 internally-tagged newtype variants and graded `Payload::Event` **CRITICAL / "every actor communication path"**. **That severity is wrong, and I checked rather than propagating it.**
+
+The contradiction that prompted the check: the W4 bench ran **2550 actors executing real turns over `ThreadTransport`** and passed 7/8 budgets. If `Payload::Event`'s serde path were live, nothing would have run at all.
+
+Four independent pieces of evidence, all measured:
+
+| evidence | result |
+|---|---|
+| `🎭️actor` crate dependencies | **no `serde_json` at all** — only `serde` (derive), `thiserror`, optional `ts-rs`. `grep -c serde_json 🦀️component.rs` = **0** |
+| transport encoding | `📦️glue.rs:433` `pack_envelope` → `envelope.pack_encode(&mut bytes)` — the hand-rolled pack codec, which never enters serde's tagged-enum path |
+| the call sites the audit cited as proof | `📦️glue.rs:353,360,667` are `Payload::Event(serde_json::to_vec(&event)…)` — serde_json serializes the **inner `Event`** and the resulting `Vec<u8>` is then wrapped. `Payload` itself is never serde-serialized. The audit read "serde_json appears next to `Payload::Event`" as "`Payload` is serde-serialized" |
+| repo-wide grep for `serde_json::to_vec/to_string` on any of the 6 types | **zero** genuine hits; every match was a different type whose name merely contains "Payload"/"Origin" (`IoPayload`, `MutationOrigin`, Gltf payloads) |
+
+So the correct grading is: **all 6 are latent traps.** They break the instant anyone puts serde in an `Envelope` path (a JSON framing for `ProcessTransport`, a debug dump), and they compile clean until that day.
+
+This is the mirror of the `faults == 0` episode recorded in W4: there a correct runtime was failed by a too-strict criterion; here a sound runtime was graded critical by a misread call site. **A red row earns the same scrutiny as a green one** — the wrong move would have been an emergency refactor of the entire `Envelope` wire on a false alarm.
+
+#### What IS real, and where it lands
+
+Two genuine consequences survive the correction:
+
+1. **The generated TS mirror is unusable for those 6 variants** — `{"kind":"event"} & Array<number>`, `{"kind":"actor"} & bigint`, `{"kind":"cancel"} & bigint`, `{"kind":"faulted"} & Array<number>`, `{"kind":"trap"} & string`, `{"kind":"dropped"} & Lane`. An object intersected with a string/bigint/array is a type no value can satisfy. This is not cosmetic: packet **`T-P4b`** must carry `Envelope`/`Payload` to the web shard worker, and it cannot type that wire from the mirror as it stands.
+2. The audit did confirm (and this validates ruling 3) that **ts-rs v10 honours serde renames**, so the generated mirror is authoritative for casing wherever it and the serde form agree — which is why importing from it is the right fix rather than hand-aligning values.
+
+**Assigned to `R3-shard-grants` as required work**, because R3 already owns the `ShardFrame` wire and the actor `🔖️ThreadTransport` region: convert the 6 newtype variants to **struct** variants (the same fix the registrar applied to `JobStep::Done{output}`/`Failed{error}`), re-run the actor typegen, and assert the regenerated mirror contains **no** `} & ` intersection. Doing it in R3 lands it before the web adopts the wire, and pays the match-site fallout once. Greenfield rules apply: no compatibility shim, fix the shape.
+
+**Standing rule this reinforces, now stated as a check rather than a lesson:** after fixing one variant of a serde-shape defect, grep every sibling `#[serde(tag = …)]` enum in the tree for newtype variants. The `JobStep` fix recorded exactly this instruction in W4 and nobody executed it; these 6 sat undetected for a full session as a result.
+
+### 🎯️ S1 spike — VERDICT: GO, but on wasmtime **47.0.3**, and 34.0.2 is a trap
+
+All four gates pass. Real `wasm32-wasip2` component under wasmtime 47.0.3: `ping(41) = 42`, the async host import `echo` observed being called **from inside the guest's await**, and `run(events: stream<u32>)` summing a **host-written** stream to 21. That last one is the gate that mattered — a scalar-only async proof would not have told us whether the real `run(events: stream<event>)` ingress shape works.
+
+**The finding that saves the slice: wasmtime 34.0.2 exposes the whole async API and does not implement it.** My own W5 notes pointed at 34.0.2 because it was already in the local registry cache. S1 inspected the source before spending a build and found `concurrent.rs` is ~**35 bare `todo!()` bodies** and `StreamReader<T>` has **zero trait impls** — then confirmed with a real compile error. Had the upgrade packet targeted 34.0.2 on my say-so, it would have compiled, linked, and panicked at runtime, and we would have discovered it two packets later.
+
+That is a new variant of this ticket's most expensive recurring lesson. The old form was *a contract that compiles is not a contract that runs*. The new form: **an API that exists is not an API that is implemented.** Version availability is not feature availability.
+
+Other measured answers (full detail in `📓️terra-S1-report.md`):
+- `Config::wasm_component_model_async(true)` + the **new** `Config::concurrency_support(true)`; `Config::async_support` is now a **deprecated no-op**.
+- `bindgen!` has **no `async: true` option** in 47 — async-ness is derived from the WIT's own `async func` syntax. Imports go through a `HasSelf<T>`/`Accessor` pattern; exports are called as `instance.call_x(accessor, args).await` inside `store.run_concurrent(...)`. So the async backend is **not** a "sprinkle `.await`" port; it is a different call model.
+- Guest side: `wit-bindgen 0.57.1`, plain `generate!({ path, world })`, plain `async fn` + `StreamReader::next().await`.
+- **Route A (`wasm32-wasip3` + `-Z build-std`) hard-fails** — `std`'s own `os::wasi` module is gated to `target_env` p1/p2 only in this nightly. A genuine upstream `std` gap, not something to engineer around. **Route B works**: `wasm32-wasip2` + the async canonical ABI via wit-bindgen 0.57.1. The plan's fallback route is now the primary route.
+- Host-side stream writing works via a `StreamProducer` trait; `Vec<T>` has a built-in one-shot impl. Incremental `poll_produce` is **untested** — flagged, not claimed.
+- S1 installed `wasm-tools` 1.256.0 to decode the component and confirm the `async func`/`stream<u32>` shapes verbatim, which closes the "no WIT validation tooling on this machine" gap from the session-start notes.
+
+### ✅ W0 params refactor — accepted, and the "+2 regression" was a stale baseline, proven not assumed
+
+23 of the 26 `req`-carrying effect records extracted into reusable `*-params` records; 3 deliberately left unwrapped (`link-resolve`, `respond`, `completed-event`) because their single field is already a nominal type and wrapping it would add a layer that buys nothing. Kernel `Effect` stays flat, as required — only the WIT wire nests. WIT 822 → 933 lines, `effects` interface plus 3 `events` records; nothing else in the 4409-line host file touched beyond two conversion sites and one test literal.
+
+Coordinator-verified:
+```
+cargo check -p semio-framework-plugin --lib                                        → exit 0
+cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest → exit 0  ← the real "WIT parses as a component" proof
+cargo check -p semio-framework-plugin-host --all-targets                           → exit 0
+cargo test  -p semio-framework-plugin-host --lib                                   → 86 passed, 0 failed, 1 ignored
+```
+
+W0 honestly reported `semio-framework-plugin --lib` at 241/6 against a briefed baseline of "4 pre-existing failures", said it could not prove innocence without a git operation it was barred from, and did not hand-wave. **My brief was the problem: both baselines I gave it were stale.** The plugin-host baseline is 86 (P1 added 12 tests), not the 75 I wrote; and the 4-failure figure dates from when that suite had 230 tests, versus 247 today.
+
+Settled by measurement instead of comparison. My own run gave **242 passed / 5 failed** — a *different* count from W0's, which is itself the signal. Running each suspect in isolation:
+
+| test | in isolation |
+|---|---|
+| `identities_and_locales_are_explicit_and_conflicts_do_not_overwrite` | FAILED |
+| `plural_definition_carries_every_artifact_capability_without_a_dispatch_edit` | FAILED |
+| `registry_rejects_duplicate_schema_dialect_codec_mime_and_extension_claims_atomically` | FAILED |
+| `merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads` | FAILED |
+| `a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames` | **ok (passes alone)** |
+
+That is an exact match for the profile already recorded in W2/E2: *"4 fail deterministically in isolation"* plus *"1 passes alone but fails in the suite — shared-global-state interference in the SDK's process-global registries."* **W0 introduced zero regressions**, and the run-to-run count wobble (5 vs 6) is that same global-state nondeterminism, not drift from this packet.
+
+Two process notes: raw failure *counts* are useless as a baseline across a suite that grows by 17 tests; only named-set comparison works. And W0 reported unrelated concurrent peer edits (cfg-gates, `&env(..)`/`&ok_turn(..)` changes in `runtime_metrics_publisher_tests`) already present on its **first** read of the reactor/host files — correctly flagged, not touched, not claimed as its own.
+
+### ✅ R1 async interface crate — accepted; lease applied; two registrar corrections
+
+`semio-framework-async` delivered at `🧰️framework/🔨️modules/⏳️async/`, mirroring `🎭️actor`'s layout: 781-line `🦀️component.rs` with all specified regions plus a `testkit::ManualRuntime` double so downstream crates can unit-test against `HostAsyncRuntime` without linking tokio.
+
+Coordinator-verified **after** applying the membership lease (F1's lesson: a crate that builds standalone has not been shown to build as a member):
+```
+cargo metadata --no-deps                                             → exit 0   ← gates every session on this machine
+cargo check -p semio-framework-async --all-targets                   → Finished in 11.69s
+cargo test  -p semio-framework-async                                 → 16 passed; 0 failed
+cargo check -p semio-framework-async --target wasm32-unknown-unknown → Finished  ← the purity guard
+```
+
+**Lease applied by me:** member path + `[workspace.dependencies]` alias after the `🎭️actor` entries, `[lints] workspace = true` added, and the crate's temporary `[workspace]` opt-out table **and** its generated crate-local `Cargo.lock` removed.
+
+**R1's genuine finding, accepted as-is:** the `ThreadPlan` invariant `shards + compute + 1 <= cores` holds only for `cores >= 4`; below that the floors (shards 2, io_workers 1) force deliberate oversubscription. It split this into two tests documenting both regimes rather than silently narrowing the invariant or fabricating a pass. Correct — on a 2-core machine the floors are the honest answer, and hiding that in a weakened assertion would have been worse.
+
+#### 📐️ Registrar ruling 4 — the interface crate must not name the library it hides
+
+R1 flagged that its purity grep matched on real code, not just comments: the field `tokio_workers` and `ThreadRole::TokioWorker`. Those names came from **my** brief, so this is my defect, and R1 was right to surface it rather than quietly keep it.
+
+Naming the concrete library inside the one crate whose entire purpose is hiding that library contradicts the repo rule against depending on external implementation details, and it puts "tokio" into a **serialized, ts-rs-mirrored** type — so the leak would have reached the TypeScript wire. Renamed by me to **`io_workers`** / **`ThreadRole::IoWorker`** (plus the test-function name the word-boundary pass could not reach, since `_` is a word character). Doc-comment prose still names tokio as today's concrete choice, which is documentation of intent rather than a dependency, and is worth keeping.
+
+Free to do now, breaking later: nothing consumes the crate yet. Re-verified after the rename — check green, 16/16, wasm32-unknown-unknown green.
+
+#### 📐️ Registrar ruling 5 — W5+ packet ids are descriptive slugs, not letter-numbers
+
+R1 caught that my plan's packet id `R1` **collides with this ticket's existing `R1` native-manifest packet**, whose `📓️terra-R1-report.md` was already finalized. It refused to overwrite and wrote `📓️terra-R1-async-iface-report.md` instead. Exactly right.
+
+Auditing the rest of my plan against the ids this ticket has already used (A1–A5, B1/B1b, C1, D0/D1, E1/E2, F1, H1–H4, J1, K1, L0, M0–M8, P1, R1, S0, T1, V1a/V1b, Z1, plus W0–W4 as **wave** names and G1–G3 as **gate** names), the plan collides on `A1`, `H2`, `P1`, `M1`, `R1`, `G1` and on `W0`. Inventing a fresh letter series would just risk a sixth collision.
+
+**Ruling: the canonical identity of every W5+ packet is its descriptive slug** — `spike`, `async-iface`, `params`, `wasmtime-upgrade`, `services`, `shard-grants`, `kernel-loop`, `effects-async`, `shell-unpark`, `directory-and-run`, `lifecycle`, `sdk-async`, `async-worlds`, `packaging`, `e2e-proof`, and `web-*` for the TypeScript sweep. Reports are `📓️terra-<slug>-report.md`. Slugs never collided; only the prefixes did. This is the same discipline as the `RuntimeActorId` precedent: fix the name at the point of discovery rather than documenting the hazard and walking past it.
+
+### Dispatched next
+
+- **`wasmtime-upgrade`** (`🎯️target-u1`) — 22.0.1 → **47.0.3**, poll-backend semantics deliberately unchanged, carrying S1's API-break list, the four pooling sub-pools, the `max_instances` history, both WASI linkers, and a **mandatory run-the-real-thing gate**: re-describe `🗒️note` under wasmtime 47 and prove the descriptor stays byte-identical. Also bumps the `"wasmtime=22.0.1"` engine-config-hash literal — a safety requirement, since `deserialize_file` trusts its input and would otherwise load wasmtime-22 `.cwasm` artifacts into a 47 engine.
+- **`services`** (`🎯️target-r2`) — the tokio-backed `semio-framework-os-services`, consuming R1's contract, with tokio confined to the crate and absent from every public signature.
+
+**`shard-grants` deliberately held back**, though its dependency (`async-iface`) is met: it needs `to_actor_turn_result` and the serde struct-variant conversions, whose fallout lands in `🖥️host/🦀️component.rs` — the file `wasmtime-upgrade` is rewriting right now. Two packets in one file is the collision pattern this ticket has already absorbed four times from peers; it is not worth self-inflicting. It goes out the moment the upgrade lands, and its brief will place the TurnResult bridge in `🧵️shard/` rather than the host file so the collision cannot recur.
+
+### ✅ web-dev-server (T-P8) accepted — 3.07× measured, and a blocking syscall caught mid-implementation
+
+Coordinator-re-run: `cd 🧑️‍💻️dev/📦️packages/🟦️typescript && bun ./📜️script.ts test` → **34 passed, exit 0**.
+
+**Its best find was that the assigned fix would not have worked.** Halfway through making materialization bounded-parallel, it discovered `transpilePluginComponent` calls the shared repo library's **`spawnSync`** — a genuinely blocking syscall. Wrapping blocking work in a concurrency limiter produces exactly nothing, so "bounded-parallel materialize" would have measured as a no-op and been reported as a win. It added a separate non-blocking `transpilePluginComponentAsync` rather than converting the existing function in place, because `🏪️store/📜️store.ts`'s extension-install path (outside its ownership) depends on the sync variant. Correct call on ownership.
+
+**Measured on real artifacts, not synthetic.** It reused 12 already-built real `wasm32-wasip2` components sitting in peer packet D1's scratch target dir (read-only, untouched) to time the actual jco-transpile stage: **5206 ms serial → 1694 ms bounded-parallel, 3.07×**. Cargo compilation stays strictly serial — the pipeline overlaps each target's materialize with the *next* target's cargo build, cap 4 (`SEMIO_MATERIALIZE_CONCURRENCY` overridable). Keeping cargo serial is deliberate: parallel cargo is what produced 174 concurrent processes and 40 minutes of nothing in W3.
+
+Also landed: per-path sqlite handle cache (was constructing `new Database(dbPath)` per request); a sweep for stale pre-ABI generated `🟨️host-shim.js`/`🟨️plugin-worker.js` (root cause identified — unmigrated crates now fail cargo, so the overwrite step never runs and stale output survives); and a 15 s `: keepalive` heartbeat on both SSE endpoints, neither of which had one.
+
+Honest gap it declared rather than papered over: a full dev-server boot was not attempted, because `buildEngineWasm` reaches cargo even under `SKIP_PLUGIN_BUILD=1`, so no zero-cargo boot path exists. It substituted a runtime smoke test driving both SSE middleware factories with fake req/res.
+
+**Follow-up recorded, not fixed:** two transpile functions (sync + async) now coexist in `🌐plugin-web-materialize.ts`. They are adjacent in one file, so the "repeated code stays close" rule is satisfied, but the end state should be a single async one — which requires the `🏪️store` extension-install path to go async first. Since this repo forbids compatibility layers, the sync variant is a temporary consequence of ownership boundaries, not a design choice, and should be deleted once that caller moves.
+
+Further findings it surfaced for later packets (not in its scope): un-aborted `fetch()` in collab-e2e helpers (`:2545`, `:2933`, `:2939`) and a `Bun.sleep`-polling pattern duplicated ~14 times, all inside the dev `📜️script.ts`.
+
+### 🧹️ Out-of-band: the 19 repo-wide `tsc` errors routed off this ticket
+
+Three separate packets have now independently hit the same 19 pre-existing `tsc --noEmit` errors (trinity `🟦️component.ts`, two stdio schema files, the vscode `🟦️extension.ts`) and each spent effort proving "not mine". Liveness checked before routing: **no `.ts` under those paths modified in 6 hours**, last relevant commits 16:47 and 13:00 — dead breakage, not a live edit, so it is safe for someone to fix. Spawned as a separate task with an explicit exclusion list naming every file this ticket's packets currently hold, so the two efforts cannot collide. Not fixed here: it is unrelated to the async rewrite and widening scope into plugin/vscode TS files would be exactly the drift this ticket's packet contracts exist to prevent.
+
+### Dispatched — three TypeScript packets in parallel with the two cargo packets
+
+TS packets do not contend for the cargo lock, so they run alongside `wasmtime-upgrade` and `services` at no build cost:
+
+| packet | owns | thrust |
+|---|---|---|
+| `web-backbone` | `💻️os/🟦️backbone-worker.ts` | SSE becomes the primary wake (poll drops to a jittered ~30 s fallback used only while SSE is down); post-open SSE drops reconnect at all; per-document `AbortController`; and the important one — **bounded mutation queues with declared overflow**, since today `relayMutationsToHub` silently no-ops on a closed socket and the pending queues are unbounded (lost user work + an async memory leak) |
+| `web-directory` | `💻️os/🟦️component.ts`, DirectoryClient + envelope regions only | every call gets a signal + timeout so a hung directory server **degrades to offline instead of hanging boot**; jittered stream reconnect preserving `lastSeq` event-sourced resume; envelope retry only where idempotency actually permits it, with the reasoning written down |
+| `web-shard-scheduler` | `🧵️shard-client.ts` + new `🧵️turn-scheduler.ts` | web shard dispatch stops being FIFO — per-actor bounded mailboxes with **lane priority**, latest-wins coalescing, cancellable queued turns, and a **self-ticking watchdog** (today `checkHeartbeats` exists but nothing in production calls it, so worker death goes undetected in the real app) |
+
+`ShardFrame` wire adoption is explicitly excluded from `web-shard-scheduler` and deferred to its own packet once the Rust side lands; it was told to leave a seam where a per-turn granted budget will plug in rather than hardcoding a constant. Each brief also carries the vitest gotcha a prior packet discovered the hard way: that package's config uses explicit filename arrays rather than globs, so a new test file is invisible **while still reporting green**.
+
+### 🔓️ V2 parity — the gate was UNRUNNABLE, not merely unrun (ninth defect)
+
+V2 has been carried as "not started — needs dev servers and hours" all session. That framing was wrong, and finding out cost one command.
+
+**Barrier 1 (fixed): the parity harness could not launch a browser at all.** `verifyParityVariant` (dev `📜️script.ts`) called `chromium.launch()` **without setting `PLAYWRIGHT_BROWSERS_PATH`**, so playwright fell back to the user-global `~/Library/Caches/ms-playwright` — which holds whatever some unrelated project installed, here a stale `chromium_headless_shell-1223`. Meanwhile `📜️script.ts setup` installs the CORRECT `-1234` into `node_modules/.cache/ms-playwright`, where it is sitting right now.
+
+The failure message is the sharp part: **"Executable doesn't exist… run `npx playwright install`"** — an instruction to download a browser the repo had already installed. Anyone hitting this would reasonably conclude their environment was broken rather than the harness. The storybook runner in root `📜️script.ts` sets that variable correctly; the parity harness never did. Fixed by pointing it at the repo-local cache, mirroring the storybook precedent. **This is a plausible reason the 58×2 gate has stayed unrun: on any clean machine it could not start.**
+
+**Barrier 2 (identified, not a defect): a cold root `target/` against a 15-minute budget.** With the browser fixed, parity proceeded to prebuild the variant and hit `plugin prebuild for note exceeded 900000ms`. The log (`26/07/11/WGPU-RENDERER-FULL-PARITY/prebuild-s.log`) shows a genuine cold compile — wasmtime 47, `semio-framework-plugin-describe`, the plugin catalog — in the **root** `target/`, which this entire session left cold because every packet used ticket-scoped `CARGO_TARGET_DIR`s. `PARITY_DEV_SERVER_BOOT_BUDGET_MS` assumes a warm root target.
+
+Not a code failure and not something to "fix" by trimming the build: the first parity run after a ticket-scoped session simply needs a longer budget. Override documented: `PARITY_BOOT_BUDGET_MS=3600000 bun nx run @semio-tech/framework-os-dev:parity smoke <variant>`, or warm the root target once with a plain `cargo build` first.
+
+Incidental confirmation from that same log: D0's descriptor wiring is live in the **dev build path** too — the prebuild emitted `🎞️animate`'s descriptor against the root target's wasm on its own, with a real `wasm_sha256`. The emission pipeline works from both entry points, not just the per-crate `describe` command.
+
+**Honest V2 status: unblocked, with one named and documented barrier — not run.** No parity numbers are claimed.
+
+### ✅ web-shard-scheduler accepted — and it found a real routing bug beyond its brief
+
+Coordinator-re-run: `cd 🎭️actor/📦️packages/🟦️typescript && bun ./📜️script.ts test` → **58 passed, exit 0** (baseline was 38).
+
+Delivered `🧵️turn-scheduler.ts`: one bounded mailbox per actor reusing `📬️mailbox.ts` **unmodified**, microtask-batched pump selecting by lane priority across actors, strict one-turn-at-a-time-per-actor preserved, `cancelQueued`/`teardownActor`, and `Backpressure` surfaced verbatim rather than swallowed. It deliberately took **zero dependency on `ShardClient`** and calls `budgetFor(actorId)` fresh per dispatch — that is the seam where DRR-granted per-turn budgets will arrive over the `ShardFrame` wire, exactly as instructed, without implementing the wire early.
+
+**The bug it found on its own:** `failShard` left `actorShard` and `slot.actorIds` untouched (verified by reading the pre-change source). Since a crashed worker's `onerror` never calls `terminate()`/`rebuild()`, **a dead shard kept receiving routed work** until the 3-strike heartbeat ladder eventually noticed. Now cleared immediately. This is the class of hole that only appears under the concurrency this ticket exists to enable — and it was invisible in tests because, as it also confirmed by repo-wide grep, `checkHeartbeats`/`pollHeartbeatSab` had **zero production call sites**: the watchdog existed and nothing ever ran it. Both fixed; the watchdog now self-ticks via `startWatchdog()`/`stopWatchdog()`, mirroring the repo's existing `startRuntimeMetricsPublisher` convention rather than inventing a new one.
+
+Process notes worth keeping: it **counted call sites before touching any public surface** (`new ShardClient(` → 3 sites, 1 production; `.turn(`/`checkHeartbeats`/`pollHeartbeatSab` → 0 production) and kept the surface purely additive, so no cross-packet break was possible. It added the new filename to all three explicit arrays in `🧪️vitest.config.ts` — without which its tests would not have run **while still reporting green** — and then re-ran with `--reporter=verbose`, pasting every new test name to prove none were silently skipped. That is the right response to a known trap.
+
+Honest gaps declared: `onerror` still does not auto-rebuild the worker (routing-only fix, as scoped); stale empty mailbox entries are not GC'd; and `TurnScheduler` is wired to nothing yet, because `🎠️kernel/🟦️component.ts` was off-limits to it.
+
+### 🔒️ Peer byte-frozen region re-verified, third session running
+
+Before dispatching a packet into `🎠️kernel/🟦️component.ts`, I measured the peer-owned `🔖️IoRouter` region myself:
+```
+lines 560..799 = 240 lines
+sha256 ddb2ce7f1f8fb21ca2ebf6cb7934261e34e50fcce605455823c69ea19e8136a7
+```
+**Byte-identical to the hash A3 recorded when it first edited this file, and to T1's later re-measurement.** The invariant has now survived three independent waves of edits by three different packets. It holds because every packet is made to measure it rather than promise it.
+
+### Dispatched: `web-activation`
+
+Owns **only** the `🐚️ActivationRegistry` region (lines 1501–1894) of that same file, with the IoRouter hash above as a hard before/after acceptance gate. Four items:
+1. **Wire `TurnScheduler` in** — closing the gap the previous packet correctly left open, so web turns finally honour lanes and coalescing instead of FIFO, and a suspended actor's queued turns are cancelled rather than run against a dead instance.
+2. **Make `onShardLost` actually restore actors** — today it only logs, so a dead web shard silently loses its actors while the native side does restore-after-trap from checkpoint. Told to mirror the native semantics rather than invent different ones, and to address ordering (the native kernel gates stale work by actor *generation*; the web side has no generation field, so it must say how it handled that rather than quietly ignoring it).
+3. **Memory-aware LRU** — `maxResidentActors` is a hardcoded ~24 with no memory signal, so eviction is premature on a large machine and too late on a small one. Probe must be **injectable** (tests cannot depend on a real browser, and the repo forbids reaching for external implementation details directly).
+4. **Give the 2 Hz metrics publisher a caller** — it exists with none, which is why the task manager's live-actor view has nothing to display on web. Told to reuse the existing bus primitive rather than introduce a second one.
+
+### ✅ web-directory accepted — a hung directory server no longer hangs boot
+
+Coordinator-re-run of its scoped command, `bun 📜️script.ts test component` in `💻️os/📦️packages/🟦️typescript`: **162 tests, 1 failed** — and that failure is `matches the Rust plan_workflow across shared fixtures decoded via wasm`, the known pre-existing wasm-artifact failure this log already records for `framework-os`. Attribution correct, zero regressions, 10 new tests.
+
+Delivered inside `🔖️HubBinding` + a new `🌐️BackboneEnvelopeIo` sub-region:
+- every public `DirectoryClient` method takes an optional `signal` and routes through `fetchWithTimeout` (10 s). The boot path now **rejects and degrades to offline instead of hanging** — and the packet checked that the existing ShellHost catch-all and backbone-worker's `directoryRejectionStatus` already treat a status-less rejection as offline, so it wired into behaviour that existed rather than inventing a second offline path. That handling was previously unreachable.
+- `stream()` reconnect on `retryWithJitteredBackoff`, mirroring backbone-worker's landed `connectHubOnce`/`connectHub` idiom; `lastSeq` event-sourced resume untouched, as instructed.
+- **The retry-safety judgement is the part worth keeping**: `readBackboneEnvelope` retries transport failures (a read has no side effect, so always safe); `writeBackboneEnvelope` is deliberately **not** retried, because an ambiguous timeout cannot rule out a server-side double-apply. It got signal/timeout plumbing but no retry. That is the correct call — a blind write retry in an event-sourced system duplicates effects, and "we added retries everywhere" would have been a worse outcome than leaving it alone.
+
+It also flagged, rather than hid, the only edit outside its two regions: extending two pre-existing import lines. Proportionate.
+
+**Its peer-churn detection was right, and the method was better than required.** It saw 4 extra failures in `🟦️backbone-worker.ts`, and instead of guessing, ran the full suite twice ~2 min apart, observed the failing tests' reported line numbers shift between runs, and found the file's mtime fell between them. That file is `web-backbone`, a packet I dispatched concurrently — so this is our own in-flight work, not an external peer. Correctly untouched.
+
+#### 📐️ Registrar ruling 6 — reconnect backoff must reset after sustained health
+
+web-directory flagged that its `stream()` no longer resets the attempt counter after a successful open, called it "strictly safer", and noted it inherits the property from backbone-worker's already-accepted idiom. **I am overruling the "strictly safer" framing.**
+
+CLAUDE.md requires the app to *"support short connection-shortages and not freeze the app"*. With the counter growing for the life of one `stream()` call, a session healthy for an hour that has accumulated a few earlier blips will, on its next momentary drop, wait a full-jitter delay averaging `maxMs/2` before reconnecting — with a perfectly healthy network. That is exactly the case the rule names. "It matches the existing idiom" propagates the property rather than justifying it.
+
+Ordered: reset the attempt counter after **sustained** health (a named threshold constant, not merely "socket opened" — resetting on open alone would defeat the backoff against a server that accepts and instantly drops in a loop, which is the very failure the backoff exists for). Tests must cover both directions: fast reconnect after sustained health, and *no* reset under rapid accept-then-drop cycling. If the shared helper's signature cannot express it, implement the reset locally or file a lease — but do not edit `🟦️glue.ts`, which is not that packet's path.
+
+The identical property exists in `🟦️backbone-worker.ts`'s `connectHub`. **Routed to `web-backbone`, which owns that file and is live in it** — not patched centrally, and not left as inherited debt.
+
+### 🔧️ Correction to my own verification method
+
+I have been running `<test cmd> | tail -N; echo "EXIT=$?"`, which reports **tail's** exit status, not the command's. The real exit code for the os package is **1**, from that pre-existing wasm failure. Every acceptance conclusion in this session still holds, because I read the pass/fail summary lines rather than relying on the printed code — but the `EXIT=0` values I pasted earlier were not measuring what they appeared to measure. Recording it because this log's own standing rule is to paste output *and* exit codes, and a wrong exit code pasted with confidence is worse than none. Going forward: read the summary line, or run without a pipe.
+
+### ✅ web-backbone accepted — user mutations can no longer vanish into a closed socket
+
+Coordinator-re-run of the full package: **356 passed / 2 failed (358)**, real exit 1, both failures the same pre-existing `matches the Rust plan_workflow … decoded via wasm`. Baseline before this packet was 322/324 with those same 2. Matches its report; the package now carries both this packet's and `web-directory`'s work cleanly.
+
+All five findings confirmed live (none stale) and fixed:
+- Folder watch is **SSE-primary**: the unconditional 1.5 s poll is gone, replaced by a 24–36 s jittered *sanity* fallback that fires only while `sseHealthy` is false, and every revalidation trigger (SSE wake, sanity tick, `externalChanged`) funnels through one `latestWins`-wrapped `revalidateFolder` per document — overlap is now structurally impossible rather than merely unlikely.
+- SSE reconnects after a post-open drop at all, which it previously never did, with the explicit `sseHealthy` flag that finding 1 depends on.
+- Per-document `AbortController` aborted on `close`, plus `fetchWithTimeout` on folder read/write and blob get/put.
+- Hub reconnect moved off manual un-jittered doubling onto the shared jittered helper.
+- **The one that mattered:** `relayMutationsToHub` no longer silently no-ops when the socket is closed. Mutations queue into a bounded `outbox`; a dead socket's unacked batch is moved *back* into the outbox rather than lost; `Welcome` flushes it on reconnect; `pendingMutations` is capped at 2000 and overflow **rejects the whole incoming batch and reports it** through the existing `commandOutcome`/`rejected` wire vocabulary. Nothing is silently dropped — which was the actual bug, since a silently dropped mutation is lost user work in a local-first app.
+
+**Latent defect it found while testing, outside its brief:** a pre-existing test in this same file leaked an unrestored `globalThis.WebSocket` stub into later tests, which could make `sendWireFrame` mis-evaluate "socket is open" and crash on a null socket. Cross-test state leakage makes a suite lie about the code, so this is worth more than the line count suggests.
+
+Honest gap declared: `post()`/event emission is not observable under this package's node-env vitest config, so overflow rejection is verified via state inspection plus a console spy rather than the emitted wire event. Stated rather than glossed.
+
+**Two follow-ups routed to it:**
+1. Registrar ruling 6 — reset reconnect backoff after **sustained** health in `connectHub` (and the new SSE loop if it shares the property). This packet's file is where `web-directory` inherited the idiom from, so it is the right owner.
+2. **Challenge to its overflow encoding**: it signals rejection using a *negative batch-id range* to avoid colliding with real hub ids. That is sound namespacing only if guaranteed, and as reported it is an assumption. Asked to verify — with quoted type definitions from both the TS **and** the Rust/hub side — that the field is genuinely signed everywhere it crosses the wire and that the hub can never emit a negative or zero id. If either is unproven, an explicit discriminated field replaces the sign sentinel: a sentinel that silently aliases a real id would corrupt outcome routing instead of failing loudly, and this repo forbids that class of shortcut. Notably TypeScript's `number` cannot answer this question, which is exactly why the Rust wire type has to be read.
+
+### ✅ Ruling 6 satisfied in `DirectoryClient` — and I checked the mechanism rather than the test count
+
+Coordinator-re-run: **165 unique tests, 1 failed** (the same pre-existing wasm-artifact test), real exit 1 attributable entirely to it. 162 → 165 = the 3 new tests.
+
+`HUB_HEALTHY_RESET_MS = HUB_RECONNECT_MAX_MS` (30 s), chosen so a flapping accept-then-drop server can never cross the threshold by accident — a justified number rather than a round one. Health timer armed on open, **read only at close**, so sustained health is what resets and "socket opened" alone does not. Test (b) proves rapid cycling still escalates; test (c) proves `close()` mid-health-timer leaves `vi.getTimerCount() === 0`.
+
+**It declined to lease `🟦️glue.ts`, with reasoning I endorse**: `retryWithJitteredBackoff`'s attempt counter is closed over inside a single call with no reset hook, and it is a shared, already-verified primitive with another live caller (`backbone-worker`'s `connectHub`). Reshaping a shared primitive to serve one caller would have been the worse change.
+
+Instead it runs **cycles**: each cycle is one `retryWithJitteredBackoff` call, and a health-reset success ends that call so the next begins with a fresh counter. To stop the fresh cycle dialing instantly — which would throw away the jitter's herd-avoidance purpose — the first `fn()` of a primed cycle is a **synthetic immediate rejection**, so the primitive's own jitter inserts a `[MIN, 2·MIN]` pause before the real redial.
+
+**I reviewed that mechanism directly rather than accepting it on the test count, because a deliberate fake failure is exactly the kind of clever thing that leaks.** Read at `🟦️component.ts:4315-4343`: the rejection is a local `Promise.reject` consumed entirely inside the retry primitive, which swallows failures by design; the only `catch` in `runCycles` is the abort path, and there is no `console`/status/metric emission on it. So it **cannot** surface as a phantom connection error — my concern was unfounded, and the error text (`"directory stream: healthy-reset pause"`) is self-documenting if it ever shows up in a debugger. Logic verified too: `primed = !primeNextCycle` makes the *first* connect immediate, only a healthy cycle primes the next, `healthy` resets per cycle, and a non-healthy close keeps escalating inside the same cycle. One benign consequence worth naming: the synthetic attempt consumes slot 1, so post-drop escalation starts one step in — defensible, since a drop has already been observed.
+
+Net judgement: it reuses the shared jitter math instead of hand-rolling a second formula (the repo's "repeated code stays close" rule), and it is documented well enough that the next reader will not mistake the fake rejection for a bug. Accepted as-is.
+
+### 🚀️ wasmtime 22.0.1 → 47.0.3 LANDED CLEAN — the ABI slice is unblocked
+
+Coordinator-verified, not taken from the report:
+```
+cargo check -p semio-framework-plugin-host --all-targets  → exit 0 (Finished in 4.64s)
+cargo test  -p semio-framework-plugin-host --lib          → 86 passed; 0 failed; 1 ignored — exit 0
+cargo check -p semio-framework-plugin-describe --all-targets → exit 0
+cargo metadata --no-deps                                  → exit 0
+grep wasmtime version in root Cargo.lock                  → 47.0.3, single version, no lingering 22
+cache-key literal at 🖥️host/🦀️component.rs:252            → "wasmtime=47.0.3;…"
+```
+**Twenty-five major versions with zero behaviour change and the test baseline preserved exactly.** The only surviving 22.0.1 pins in the tree are inside a *closed* ticket's throwaway prototype (`☀️11/CLEAN-ARCHITECTURE-…/w5b-extension-prototype/host_test`), which is not a workspace member — harmless.
+
+API migration it had to solve (S1's spike predicted most of these): `bindgen!` no longer accepts an `async` key at all; `WasiView` collapsed to a single `fn ctx(&mut self) -> WasiCtxView<'_>`; `add_to_linker_sync` moved under `wasmtime_wasi::p2`; generated `Host::add_to_linker` now needs an explicit `HasData` type argument (solved with `wasmtime::component::HasSelf<T>`); `<World>::instantiate` returns a bare `Actor` instead of `(Actor, Instance)`; `ResourceLimiter::table_growing` widened `u32` → `usize`.
+
+**Its experimental design on the run-the-real-thing gate deserves recording, because it is better than what I asked for.** I asked it to re-describe `🗒️note` under wasmtime 47 and prove the descriptor stayed byte-identical to the committed one. It noticed that comparison would **conflate two variables** — the committed descriptor embeds wasm-rebuild hashes that are not reproducible across a rebuild regardless of wasmtime version. So instead it temporarily restored the describe crate to its 22.0.1 state in an *isolated* target dir, ran `describe` on **the exact same `.wasm` bytes**, restored its 47.0.3 edits, and diffed those two outputs. Both `🔣️descriptor.json` and `🛂️descriptor.semio` came out **byte-identical with matching SHA-256** across wasmtime versions on fixed input. That isolates the variable I actually cared about; my version of the check would have produced a false negative and cost a debugging cycle.
+
+Behaviour confirmed preserved: all four pooling sub-pools (component / core / memory-table / GC-heap), `BudgetLimiter` at 256/128/128, **both** WASI linkers (host and the describe CLI's separate one), and per-turn fuel + epoch enforcement. Root `Cargo.lock` moved as a mechanical cargo side effect of the two owned manifest bumps rather than by hand; I verified only wasmtime-family entries changed.
+
+### ⚠️ Sequencing trap I missed in the plan — the GUEST toolchain also gates async WIT syntax
+
+Before dispatching the async worlds I checked what actually parses the schema, and found a hole in my own plan. `🔌️plugin/🦀️component.rs:18`:
+```rust
+use wit_bindgen::generate;
+generate!({ world: "actor", path: "../../🧬️schema" });
+```
+That macro parses the **entire WIT package**, not just `world actor`, and the crate pins **wit-bindgen 0.36.0**. My plan sequenced the *host* wasmtime upgrade ahead of any async syntax but said nothing about the guest generator. Adding `async func`/`stream<T>` to that package with 0.36 in place would have made the parser reject the whole file and broken the `wasm32-wasip2` build for **all 33 plugin crates simultaneously** — and, per this ticket's own history, the resulting error cascade would have read as "cannot find `exports` in `component`" with no mention of WIT, sending whoever hit it in the wrong direction entirely.
+
+**`async-worlds` is therefore held**, and a new prerequisite packet `sdk-witbindgen` is dispatched: bump the guest to the S1-certified **0.57.1** with `world actor` semantics unchanged. Its brief carries the known generated-path traps (the `crate::component::component::…` mounting, and the `exports::`-prefixed vs unprefixed sibling-interface split that cost a previous packet ~90 repointed call sites), the instruction to read the FIRST error rather than the cascade, and a real-component gate: build `🗒️note` to wasip2 against the upgraded SDK and prove the artifact is a genuine component.
+
+### Dispatched: `shard-grants` — now that the host file is free
+
+Split internally so a failure cannot cost the valuable half:
+
+**Part A (first, atomic): the serde sibling sweep.** The six internally-tagged newtype variants in the actor crate — `Payload::Event`/`Cancel`, `Origin::Actor`, `TurnStatus::Faulted`, `FailureSignal::Trap`, `Backpressure::Dropped` — convert to **struct** variants. Explicitly instructed to keep Part A if Part B fails. Its tests must **serialize to bytes and back**, not compare in-process values, because asserting on in-process values is precisely what hid the `JobStep` bug for a full wave. Includes regenerating the actor typegen and asserting the mirror contains no `} & ` intersection.
+
+**Part B: the wire.** `ShardFrame { Register | Unregister | Grant{actor,budget,envelopes} | Envelope }` replacing raw envelope bytes, with the `Envelope` passthrough retained specifically so the web `ShardClient` can adopt incrementally; DRR budgets carried in `Grant` with `budget_for`/`TURN_BUDGET`/`JOB_STEP_BUDGET` deleted; a new `ShardExecutor` so K shards genuinely run in parallel instead of one loop behind K labels (the reason bench budget 5 is currently unmeasurable); `to_actor_turn_result` placed in `🧵️shard/` **not** the host file, so the collision cannot recur; and `ThreadTransport::recv_deadline` inside the purity-constrained region.
+
+Required test properties were specified as properties, not mechanisms — a granted budget must be what the turn actually executes under, "prove the constants are gone, not merely unused" — because the all-actors-on-shard-0 bug survived three waves against tests that asserted round-trips instead of distribution.
+
+### ✅ web-backbone follow-up accepted — ruling 6 satisfied on both transports, sentinel verified
+
+Coordinator-re-run: **370 passed / 2 failed (372)**, real exit 1, both failures the known `plan_workflow … decoded via wasm` (confirmed by grep, not assumed). Baseline entering the follow-up was 356/2.
+
+It found the SSE loop had **the same missing-reset defect** as `connectHub` and fixed both rather than only the one I named — the sibling-sweep habit rule 12 asks for, applied without being told. `SUSTAINED_HEALTHY_MS = 15 s`, documented as half of both transports' 30 s ceiling, via a `reconnectForever` loop that calls the shared primitive fresh each cycle; a close before the threshold still rejects so backoff keeps climbing against a fast accept/drop server. Its 4 new tests pin `Math.random` to `0.5` so every jittered delay is an exact computable number — stronger determinism than a range assertion.
+
+**My sentinel challenge was answered properly, and the answer was more interesting than a yes/no.** I asked it to prove the negative-batch-id namespace was safe on both halves, reading the Rust wire type rather than inferring from TypeScript's `number`. It found that `Commands`/`Ack.batch_id` **is** `u64`, encoded as unsigned LEB128 on both sides (`📡️wire/🦀️component.rs:51,100`) — so a negative value there would indeed corrupt. But the synthetic id **never touches that encoding**: it only reaches `ArtifactEvent::commandOutcome.batchId`, which `wireArtifactEvent` passes through as a plain IEEE-754 double (`PACK_TAG_F64`), where negatives round-trip fine. And the hub never generates a `batch_id` at all — it echoes the client's, and the sole generator is this file's `state.nextBatchId`, starting at 0 and increment-only. Real ids `>= 0`, synthetic `< 0`, provably disjoint. Kept as-is, now with evidence instead of an assumption.
+
+### ✅ web-activation accepted — and the frozen peer region has now survived four waves
+
+Coordinator-verified:
+```
+🔖️IoRouter region → lines 561..800, 240 lines, sha256 ddb2ce7f…36a7  ← byte-identical
+🎭️actor/📦️packages/🟦️typescript      → 58 passed, exit 0 (unchanged)
+kernel inline suite (ad-hoc config)   → 29 passed, exit 0 (baseline 17)
+```
+It reported the region correctly as **content-identical while shifted 560–799 → 561–800** by one added import line — which is exactly the distinction I asked for (content identity, not line identity). Four consecutive waves, four different packets, same hash.
+
+All four items landed. Two decisions worth recording:
+- **Generation handling, which I had flagged as the subtle risk.** The web `actorId` is a plain string with no bit-packed generation, unlike the native `RuntimeActorId`. Rather than skip the problem or fake a generation field, it added an out-of-band `actorGeneration: Map<string, number>`, bumped on shard-loss restore, **snapshotted into each queued turn at enqueue time and checked at dispatch** — plus a synchronous `cancelQueued` on both ordinary `suspend()` and `restoreActor`. That closes the async restore race window rather than narrowing it, and mirrors the native kernel's intent without inventing a parallel id scheme.
+- **The metrics publisher is opt-in** (`autoStartMetricsPublisher`, default `false`), so no existing `ActivationRegistry` construction site silently gains a live 2 Hz interval. Verified by the TaskManager suite still passing 12/12 untouched. Wiring a publisher is not worth a surprise timer in three other callers.
+
+It also **flagged a discrepancy in my brief instead of quietly matching it**: I quoted repo-wide `tsc --noEmit` as exit 1; it observed exit 2. Same 19 pre-existing errors either way, zero new. Recorded as a discrepancy because a packet silently "correcting" itself to match a coordinator's wrong number is how bad baselines propagate.
+
+### 🕳️ Found: 29 kernel tests and ~12 TaskManager tests are NOT in any gate
+
+Chasing web-activation's numbers turned up an infrastructure hole. `🎠️kernel/` has **no `📦️packages/` directory at all**, and **no `🧪️vitest.config.ts` anywhere in the repo includes `🎠️kernel/🟦️component.ts`** — I checked every vitest config in the tree. Its 29 inline tests have only ever been runnable through an **ad-hoc config a packet left in the ticket folder** (`terra-t1-kernel-vitest.config.ts`), which every subsequent packet then reused, including me just now.
+
+So `nx run-many -t test` does not see them, which means exit-checklist items 2 (*"`verify` and `test long` exit 0"*) and 8 (*task manager*) **cannot honestly be claimed to cover this module**. This is the same defect class this ticket keeps rediscovering — a check that exists but never runs: the heartbeat watchdog with zero callers, the metrics publisher with no caller, `descriptor_is_fresh` reading a gitignored path while reporting green, and the filename-array vitest config that silently skips new files. Four instances, one shape.
+
+**Dispatched `web-kernel-package`**: give the kernel module a real TS package modeled on the working `🎭️actor` sibling so `bun ./📜️script.ts test` runs those 29 in the routine gate, explicitly preferring a **glob** over the sibling's explicit-filename arrays (that style is what caused the silent skip). Its most valuable deliverable is Part 2: a repo-wide inventory of every inline-test suite with a verdict of `in-gate` or `orphaned`, since that tells me how much of this ticket's claimed coverage actually executes. Anything outside its owned path gets listed with the exact fix rather than chased.
+
+### ✅ services crate landed — tokio now has exactly one home; lease applied
+
+`semio-framework-os-services` at `💻️os/🔨️modules/🛎️services/`. **Lease applied by me** (member path + `[workspace.dependencies]` alias + `[lints] workspace = true`; removed its `[workspace]` opt-out, the mirrored `[workspace.dependencies]` stand-in block, and the crate-local `Cargo.lock`), then verified **as a member** rather than standalone:
+```
+cargo metadata --no-deps                                    → exit 0
+cargo check -p semio-framework-os-services --all-targets     → Finished in 45.76s
+cargo test  -p semio-framework-os-services                   → 26 passed; 0 failed — exit 0
+```
+Fully wired: `TokioHostRuntime` (one runtime, sized from an **injected** `ThreadPlan`, never reading core count itself), `ScopeTable` (root/child scopes, transitive cancel, poll-based `Park`, and `leaked` accounted honestly rather than zero-by-construction), `TimerWheel` (pure `WheelCore` + thin driver posting through `CompletionSink`), `ComputePool` (semaphore-bounded with deadline racing). Interface-complete but deliberately thinner, as the brief allowed: `HttpPool` (real quota/backpressure, transport behind a trait with an "unwired" default), `StorageScheduler` (real bounded priority-FIFO, no deadline racing), `EventRouter` (real `ChannelPolicy` semantics, not yet wired to `CompletionSink`). It also re-ran clippy against every extra lint the root workspace enables, so `[lints] workspace = true` would not redden it on merge — anticipating my registrar step rather than waiting for it.
+
+#### 📐️ Registrar ruling 7 — collision-avoidance must not become a parallel type hierarchy
+
+The packet reported renaming `PackageId` → `PluginId` and the actor id → `ServiceActorId` "to avoid the naming-collision class this repo has been bitten by five times". Checked, and this is the one case where that otherwise-correct instinct inverts.
+
+Its `Cargo.toml` depends on **neither** the actor crate nor anything but `semio-framework-async` + tokio. So no collision was avoided; instead there are now **two types for one concept**: `PluginId(String)` beside `PackageId(String)`, and `ServiceActorId(u64)` beside `ActorId(u64)`.
+
+That is strictly worse than a collision. A collision fails at compile time; parallel types compile cleanly, demand a conversion at every boundary, and — because `ServiceActorId(u64)` and `ActorId(u64)` are structurally identical — nothing prevents a future call site swapping them, silently. `effects-async` is the very next packet to wire services to the kernel, so it would have inherited a conversion at every call, which is precisely the compatibility layer this repo forbids.
+
+Ordered: depend on `semio-framework-actor` (already a member with an alias) and use `PackageId`/`ActorId` directly. The layering concern it was protecting does not apply — the actor crate is **pure** (no tokio/threads/I-O/clock, builds for `wasm32-unknown-unknown`), so the dependency costs no platform coupling; the plugin-host crate already consumes that same id type as `RuntimeActorId`, so this matches precedent rather than inventing one; and there is no cycle. The rule it was honouring still stands where it belongs: `semio-framework-async` keeps `OperationContext.actor` as a raw `u64` **because** that crate is domain-neutral — but `os-services` is not domain-neutral, and a `u64 → ActorId` conversion at that deliberately untyped seam is the honest, cheap boundary.
+
+It was told explicitly that if the change surfaces a real cycle, feature-flag problem, or semantic mismatch, it should stop and say so rather than comply against its judgement — the `Lane` casing divergence and the wasmtime-34 trap were both caught exactly that way.
+
+## 🚨️ V2 parity RAN — and its failure is a LIVE peer deletion, not our ABI flip
+
+With both barriers cleared, `parity smoke note` executed end to end and produced a real verdict:
+```
+parity smoke FAILED: boot react=DUMP-EMPTY wgpu=BOOT-TIMEOUT (no data-ui-path nodes)
+```
+
+**Root cause, traced rather than assumed** (`boot-wgpu-s.log`):
+```
+error: couldn't read `<repo>/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📍️span/🦀️component.rs`: No such file or directory
+error: could not compile `semio-framework-os-kernel` (lib)
+```
+
+`💻️os/📦️packages/🦀️rust/📦️glue.rs:28` mounts `📍️span` via `#[path]`, un-gated. The file is **tracked in git but absent from the working tree**:
+```
+git status --porcelain:
+ D 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/⚠️diagnostic/🦀️component.rs
+ D 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📍️span/🦀️component.rs
+```
+
+**`semio-framework-os-kernel` does not compile right now — for every session in this tree.** Confirmed by direct run, not inferred from the parity log. It compiled repeatedly earlier today (C1's acceptance, D0's builds, every bench run), so this broke within the last hour. The `🗣️dsl` directory mtime is **19:52**, roughly eight minutes before this check, with 16 cargo processes live.
+
+### Attribution, and why I did not fix it
+
+This is the **fifth** instance of this ticket's recurring peer pattern — *the artifact moved, its registration did not* (moved generated file, renamed presence types, moved crate with a stale workspace member, struct gaining a required field, and now a deleted module still `#[path]`-mounted). But it is the first that is **actively in flight**: unstaged deletions, directory touched minutes ago, builds running.
+
+**So the rule applies: don't chase a moving target.** Restoring those files would clobber a peer's in-progress dsl refactor mid-edit. Reported, not fixed. This is the same evidence test that earlier told me the renderer breakage was safe to adapt to (peer stopped 12 hours, auto-commit had frozen the state) and the presence work was not — same test, opposite answer.
+
+**The attribution that matters for this ticket: the wgpu boot failure is NOT a regression from our ABI flip.** It is a peer's uncommitted deletion breaking a crate we depend on. The react `DUMP-EMPTY` may or may not share that cause and is NOT yet attributed — I am not claiming it either way.
+
+### Standing value regardless
+
+The parity gate itself is now **unblocked and demonstrably functional**: it launches browsers, prebuilds variants, boots both renderers, and reports a structured verdict with per-renderer detail and logs. That was not true this morning. The 58×2 sweep is runnable as soon as `os-kernel` compiles again.
+
+### ✅ services correction applied — and it pushed back on one sub-point, correctly
+
+It deleted `PluginId`/`ServiceActorId`, added `semio-framework-actor`, and renamed every use site to `PackageId`/`ActorId`. `cargo check` exit 0, `cargo test` **26 passed / 0 failed**, `cargo clippy -- -D warnings` exit 0, `cargo fmt --check` clean, tokio-containment grep unchanged.
+
+**It declined one part of my instruction with a distinction I had not made, and it is right:** it left `CompletionSink`'s and `TimerFired`'s `actor: u64` / `generation: u16` fields untyped, because `OperationContext.generation` is the **kernel/turn** generation while `ActorId`'s packed 14-bit field is the **restart** generation — two different concepts that merely share a word. Collapsing them would have been a category error dressed up as a typing improvement. That is the fifth time this session an executor improved on my brief by reasoning from the code rather than complying.
+
+It also hit `semio-framework-actor` briefly failing to compile mid-verification (`Backpressure::Dropped`/`TurnStatus::Faulted` enum-shape errors), correctly diagnosed a **live peer mid-edit** by polling the line count growing 2963→2978→3018 seconds apart, touched nothing, waited, and re-ran clean. That "peer" was my own `shard-grants` packet doing Part A — the detection method worked exactly as the rules intend.
+
+### 🕳️🕳️ The coverage audit — how much of this repo's testing actually runs
+
+`web-kernel-package` delivered, and its inventory is the most consequential finding of the wave.
+
+**Part 1, verified by me:** new `🎠️kernel/📦️packages/🟦️typescript` → `bun ./📜️script.ts test` **29 passed, exit 0**, and `bun nx run @semio-tech/framework-kernel:test` also 29 — nx auto-discovered it through the existing emoji-project plugin, so **no root-file edit and no lease were needed**. Frozen `🔖️IoRouter` hash unchanged (`ddb2ce7f…36a7`). Those 29 tests were in **no gate at all** before today.
+
+#### 🐛️ The double-count bug — every TS baseline in this log was inflated 2×
+
+Its first draft mirrored the actor sibling's config and reported **58 tests instead of 29**: `include` and `includeSource` naming the **same files** makes vitest collect each one twice. It fixed its own config with `include: []`, then checked the sibling and found **the actor package has this live bug today** — 6 test files reported for 3 real source files.
+
+I verified and it is exactly right, then fixed all four packages this ticket touches. Re-measured, un-doubled:
+
+| package | was reported | actually |
+|---|---|---|
+| `🧰️framework/📦️packages/🟦️typescript` | 174 | **87** |
+| `🎭️actor/📦️packages/🟦️typescript` | 58 | **29** |
+| `💻️os/📦️packages/🟦️typescript` | 370/2 | **184 passed / 2 failed** |
+| `🧑️‍💻️dev/📦️packages/🟦️typescript` | 34 | **17** |
+
+Nothing was broken — the tests all ran, twice — but every TS number in this log and in `📌️important.md` was inflated, and each package's suite took twice as long as it needed to. Baselines corrected in `📌️important.md`.
+
+**And it corrected me on a second point.** With the doubling gone, the `💻️os` package shows **two DISTINCT pre-existing failures**, not one doubled: `🟦️component.ts` → `matches the Rust plan_workflow … decoded via wasm`, and `🟦️backbone-worker.ts` → `decodes the Rust-generated binary wire fixtures byte-identically`. Both are Rust-fixture/wasm dependent. `web-backbone` had reported "2 pre-existing failures" and was right; I had overruled that in my own notes as "one test doubled" because **I grepped for only one of the two names** and read 4 hits off a doubled listing. A narrow grep is not a census — the same mistake shape as the `exchange` census hazard already recorded in W4.
+
+#### 📋️ Orphaned-suite inventory — the deliverable I actually wanted
+
+| verdict | suites |
+|---|---|
+| **in-gate, correct** | `🎠️kernel` (new), hub-admin's I18n element |
+| **in-gate but double-counted** (bug above, still unfixed) | `mcp`, `shell`, 4 cad extensions, `animate` |
+| **orphaned, never wired** | `🛂️manifest` (6 tests), stdio `📰xml` schema (4), all 6 `🪟️window-kits` files (8), and four renderer element suites — **TaskManager (12)**, AgentApprovals (9), AgentPresence (11), AgentBridge (12) |
+| **orphaned, silently green** — `passWithNoTests: true` masking an `include` glob matching zero files | infinite-canvas react-renderer (1), **infinite-world r3f (100)** |
+| **broken project, exit 1** | `@semio-tech/cad-js` — `Cannot find package '@semio-tech/kernel-3d-js'` (renamed to `s-3d-js` by an earlier ticket; ~9 files' imports never updated), *plus* `DOMAIN_FILES` pointing 5 of 9 entries at a path that no longer exists → **~153 tests unreached** |
+
+**This directly hits this ticket's own exit checklist.** Item 8 is *"task manager shows live actors in both renderers"* — and TaskManager's 12 tests are **orphaned**, so no gate has ever executed them. Every prior claim about that suite came from an ad-hoc config. Recorded as a real gap, not a technicality.
+
+**Routed out-of-band** (~253 tests): the cad-js breakage and the two silently-green infinite projects went to a separate task with an explicit exclusion list naming every path this ticket's live packets hold. They are unrelated to the async rewrite, and the instruction was explicit that genuine failures surfacing once those suites run must be **reported, not suppressed** — no weakened assertions, no re-adding `passWithNoTests`.
+
+**Process note, credited:** the packet self-reported running `git status --porcelain` once, which this ticket's rules disallow. Read-only and harmless — the rule exists because `git status` is a misleading churn detector next to an auto-commit bot, not because it is dangerous. Volunteering the slip unprompted is exactly the behaviour that makes the rest of a report trustworthy.

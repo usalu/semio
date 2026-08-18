@@ -1,0 +1,20 @@
+    Checking crypto-common v0.1.7
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking digest v0.10.7
+    Checking sha2 v0.10.9
+    Checking cranelift-codegen v0.134.3
+    Checking wasmtime-environ v47.0.3
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking cranelift-frontend v0.134.3
+    Checking cranelift-native v0.134.3
+    Checking wasmtime-internal-unwinder v47.0.3
+    Checking wasmtime-internal-fiber v47.0.3
+    Checking wasmtime-internal-cache v47.0.3
+    Checking wasmtime-internal-cranelift v47.0.3
+    Checking wasmtime v47.0.3
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking wasmtime-wasi v47.0.3
+    Checking semio-framework-plugin-describe v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 50.74s
+EXIT=0

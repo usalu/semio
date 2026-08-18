@@ -42,6 +42,12 @@ pub use crate::db_engine::vcs_integration;
 /// `db` family per the contract, so it is nameable at the facade root without reaching past this
 /// crate into `pack`/`pack_core` directly.
 pub use pack::ContentHash;
+
+/// 🗄️🎚️ Bootstrap vocabulary the facade round-trip needs at its root: the profile a `Database`
+/// opens with, the durability class a submit requests, and the one error type the family returns.
+pub use crate::db_durability::DurabilityClass;
+pub use crate::db_ids::DbError;
+pub use crate::db_policy::Profile;
 //#endregion 🔖️Database
 
 //#region 🔖️Family

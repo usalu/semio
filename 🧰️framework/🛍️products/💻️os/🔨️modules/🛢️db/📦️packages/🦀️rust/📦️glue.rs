@@ -2,9 +2,6 @@
 
 extern crate semio_framework_os_kernel as pack;
 pub use semio_framework_os_kernel::os_pack::testkit as pack_testkit;
-extern crate semio_framework_os_kernel as protocol;
-pub use semio_framework_os_kernel::os_spr::format as protocol_format;
-pub use semio_framework_os_kernel::os_spr::wire as protocol_core;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as vcs;
