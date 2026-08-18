@@ -990,6 +990,28 @@
       }
     },
     {
+      "name": "🧪test🖨️print📊viz",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run test:print:viz",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 175.2
+      }
+    },
+    {
+      "name": "🧪test🖨️print📊viz🐢full",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run test:print:viz:full",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 175.3
+      }
+    },
+    {
       "name": "🛠️dev🔧procedural🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

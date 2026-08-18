@@ -1,0 +1,31 @@
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Viz public API}
+\author{Semio}
+\date{\today}
+\begin{document}
+\chapter{Viz public API}
+\section{Tables, scales, and charts}
+\begin{VizFigure}[title={Table, row, scale, chart}, width=80, height=40]
+\SemioVizTable{api}{cat, val}
+\SemioVizRow{api}{A, 4}
+\SemioVizRow{api}{B, 7}
+\SemioVizRow{api}{C, 5}
+\SemioVizScale{api-y}{linear}{0, 10}{8, 32}
+\SemioVizScale{api-sym}{symlog}{-10, 10}{8, 32}
+\SemioVizScale{api-q}{quantize}{0, 10}{8, 32}
+\SemioVizChart{vertical-bar}[data=api, x=cat, y=val]
+\end{VizFigure}
+\section{Marks and paths}
+\begin{VizFigure}[title={Mark and path}, width=80, height=40]
+\SemioVizMark{dot}[size=3.5, fill=semio-secondary]{20, 16}
+\SemioVizMark{square}[size=2.5, fill=semio-tertiary, draw=semio-primary]{40, 22}
+\SemioVizPath{polyline}[points={8,8; 28,30; 50,12; 72,24}, draw=semio-info]
+\end{VizFigure}
+\section{Layout, axis, grid, legend}
+\begin{VizFigure}[title={Layout, axis, grid, legend}, width=80, height=40]
+\SemioVizLayout{dot}[data=demo, x=cat, y=val]
+\SemioVizAxis[orient=left, scale=y]
+\SemioVizGrid
+\SemioVizLegend[legend=gradient]
+\end{VizFigure}
+\end{document}

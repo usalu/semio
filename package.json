@@ -149,6 +149,8 @@
     "dev:print:viz": "bun nx run @semio-tech/print:watch -- viz",
     "build:print": "bun nx run @semio-tech/print:build",
     "build:print:viz": "bun nx run @semio-tech/print:build -- viz",
+    "test:print:viz": "bun nx run @semio-tech/print:test-viz",
+    "test:print:viz:full": "bun nx run @semio-tech/print:test-viz-full",
     "build:mit-bestand:zwischenbericht": "bun nx run @semio-tech/mit-bestand-bericht:build-zwischenbericht",
     "build:mit-bestand:forschungsbericht": "bun nx run @semio-tech/mit-bestand-bericht:build-forschungsbericht",
     "build:mit-bestand:kompaktbericht": "bun nx run @semio-tech/mit-bestand-bericht:build-kompaktbericht",

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./script.ts generate|fonts|build|watch|test|test-e2e`. */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
@@ -87,6 +88,44 @@ function assertVizCoverage(): { readonly leaves: number; readonly missing: reado
   const leaves = parseVizTaxonomyLeaves(readFileSync(VIZ_TAXONOMY_PATH, "utf8"));
   const covers = parseVizCovers(VIZ_GALLERY_DIR);
   return { leaves: leaves.length, missing: leaves.filter((leaf) => !covers.has(leaf)) };
+}
+
+const VIZ_API_COMMANDS = [
+  "\\SemioVizChart",
+  "\\SemioVizMark",
+  "\\SemioVizPath",
+  "\\SemioVizLayout",
+  "\\SemioVizAxis",
+  "\\SemioVizGrid",
+  "\\SemioVizLegend",
+  "\\SemioVizTable",
+  "\\SemioVizRow",
+  "\\SemioVizScale",
+] as const;
+
+function vizGallerySources(): string {
+  if (!existsSync(VIZ_GALLERY_DIR)) return "";
+  return readdirSync(VIZ_GALLERY_DIR)
+    .filter((name) => name.endsWith(".tex") && !name.includes("-dark"))
+    .map((name) => readFileSync(join(VIZ_GALLERY_DIR, name), "utf8"))
+    .join("\n");
+}
+
+function assertVizApi(): { readonly missing: readonly string[] } {
+  const source = vizGallerySources();
+  return { missing: VIZ_API_COMMANDS.filter((command) => !source.includes(command)) };
+}
+
+function pdfStableHash(pdfPath: string): string {
+  const text = readFileSync(pdfPath)
+    .toString("binary")
+    .replace(/\/CreationDate \([^)]*\)/g, "")
+    .replace(/\/ModDate \([^)]*\)/g, "")
+    .replace(/\/ID \[[^\]]+\]/g, "")
+    .replace(/\(D:[0-9+\-'Z]+\)/g, "")
+    .replace(/\/Producer \([^)]*\)/g, "")
+    .replace(/\/Creator \([^)]*\)/g, "");
+  return createHash("sha256").update(text, "binary").digest("hex");
 }
 
 function deriveDarkTexSource(lightSource: string): string {
@@ -699,9 +738,11 @@ async function watchVizTemplates(filter: string[]): Promise<void> {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "viz") {
+      const mode = segments[1] ?? "coverage";
+      if (mode !== "quick" && mode !== "coverage" && mode !== "full") throw new Error(`unknown viz test mode: ${mode}`);
       this.runUnitTests();
-      this.runVizCoverage();
-      if (segments[1] === "full") await this.runVizBuild();
+      if (mode !== "quick") this.runVizCoverage();
+      if (mode === "full") await this.runVizBuild();
       return;
     }
     const { level } = resolveTestLevel(segments);
@@ -781,9 +822,7 @@ class TestScript extends BundleScript {
     const vizCovers = parseVizCovers(VIZ_GALLERY_DIR);
     assert.ok(vizCovers.has("0/dot"));
     assert.ok(vizCovers.has("1/vertical-bar"));
-    const coverage = assertVizCoverage();
-    assert.equal(coverage.missing.length, 0, `viz coverage missing: ${coverage.missing.join(", ")}`);
-    assert.ok(coverage.leaves >= 200);
+    assert.ok(vizGallerySources().includes("\\SemioVizDemo"));
     //#endregion
 
     //#region Window layout
@@ -838,7 +877,9 @@ class TestScript extends BundleScript {
   private runVizCoverage(): void {
     const coverage = assertVizCoverage();
     if (coverage.missing.length > 0) throw new Error(`viz coverage missing ${coverage.missing.length}/${coverage.leaves}: ${coverage.missing.join(", ")}`);
-    console.log(`print: viz coverage ${coverage.leaves}/${coverage.leaves} leaves`);
+    const api = assertVizApi();
+    if (api.missing.length > 0) throw new Error(`viz public API unused in galleries: ${api.missing.join(", ")}`);
+    console.log(`print: viz coverage ${coverage.leaves}/${coverage.leaves} leaves, API ${VIZ_API_COMMANDS.length}/${VIZ_API_COMMANDS.length}`);
   }
 
   private async runVizBuild(): Promise<void> {
@@ -848,7 +889,22 @@ class TestScript extends BundleScript {
     const templates = vizTemplates();
     if (templates.length === 0) throw new Error("no viz gallery templates");
     for (const template of templates) await compileTemplate(tectonic, template);
-    console.log(`print: all ${templates.length * 2} viz gallery PDFs built`);
+    for (const template of templates) {
+      for (const pdf of [`${template.id}.pdf`, `${template.id}-dark.pdf`]) {
+        const pdfPath = join(distDir, pdf);
+        if (!existsSync(pdfPath)) throw new Error(`test missing PDF: ${pdfPath}`);
+      }
+    }
+    const probe = templates.find((template) => template.id === "viz-api") ?? templates.find((template) => template.id === "viz-19") ?? templates[0]!;
+    const pdfPath = join(distDir, `${probe.id}.pdf`);
+    await compileTemplate(tectonic, probe);
+    const magic = readFileSync(pdfPath).subarray(0, 5).toString("binary");
+    if (magic !== "%PDF-" || statSync(pdfPath).size < 1024) throw new Error(`viz gallery ${probe.id} did not produce a PDF`);
+    const hash = pdfStableHash(pdfPath);
+    await compileTemplate(tectonic, probe);
+    const hashAgain = pdfStableHash(pdfPath);
+    if (hash !== hashAgain) throw new Error(`viz gallery ${probe.id} hash drifted (${hash.slice(0, 12)} vs ${hashAgain.slice(0, 12)})`);
+    console.log(`print: all ${templates.length * 2} viz gallery PDFs built (deterministic hash=${hash.slice(0, 12)})`);
   }
 }
 //#endregion ⏱️Test

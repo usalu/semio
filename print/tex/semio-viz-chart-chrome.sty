@@ -1,11 +1,11 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{semio-viz-chart-chrome}[2026/08/18 v0.1.0 semio viz chrome charts]
 %region Kinds
-\SemioVizChartKind{axis-linear}{bar}{data=demo}
-\SemioVizChartKind{axis-log}{bar}{data=demo}
-\SemioVizChartKind{axis-band}{bar}{data=demo}
-\SemioVizChartKind{grid-cartesian}{bar}{data=demo}
-\SemioVizChartKind{legend-swatch}{bar}{data=demo}
-\SemioVizChartKind{legend-gradient}{heat}{data=demo}
-\SemioVizChartKind{legend-size}{dot}{data=demo}
+\SemioVizChartKind{axis-linear}{chrome}{data=demo,scale=y,orient=left}
+\SemioVizChartKind{axis-log}{chrome}{data=demo,scale=y-log,orient=left}
+\SemioVizChartKind{axis-band}{chrome}{data=demo,scale=x,orient=bottom}
+\SemioVizChartKind{grid-cartesian}{chrome}{data=demo}
+\SemioVizChartKind{legend-swatch}{chrome}{data=demo}
+\SemioVizChartKind{legend-gradient}{chrome}{data=demo,legend=gradient}
+\SemioVizChartKind{legend-size}{chrome}{data=demo,legend=size}
 %endregion Kinds

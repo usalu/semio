@@ -21,6 +21,8 @@
 %region Diagnostics
 \msg_new:nnn { semio-viz } { unknown-chart }
   { Unknown~viz~chart~kind~'#1'. }
+\msg_new:nnn { semio-viz } { unknown-demo }
+  { Unknown~viz~demo~'#1'~(not~a~mark~or~chart~kind). }
 \msg_new:nnn { semio-viz } { unit-in-number }
   { Viz~key~'#1'~takes~a~plain~millimetre~number,~got~'#2'. }
 %endregion Diagnostics
@@ -86,6 +88,18 @@
   \exp_args:NV \semio_viz_figure_open:n \l_tmpa_tl
   \bool_set_true:N \l_semio_viz_in_figure_bool
   \semio_viz_data_demo:
+  \semio_viz_figure_scales:
+}
+
+\cs_new_protected:Npn \semio_viz_figure_scales: {
+  \use:x {
+    \exp_not:N \semio_viz_scale_define:nnnn { x } { band } { A, B, C, D, E }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_width_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { y } { linear } { 0, 10 }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+    \exp_not:N \semio_viz_scale_define:nnnn { y-log } { log } { 1, 100 }
+      { \fp_eval:n { \l_semio_viz_pad_fp } , \fp_eval:n { \l_semio_viz_height_fp - 2 } }
+  }
 }
 
 \cs_new_protected:Npn \semio_viz_figure_end: {
@@ -94,6 +108,7 @@
   \end{Figure}
 }
 
+% 🖼️ Figure window wrapping a millimetre TikZ canvas for viz recipes.
 \NewDocumentEnvironment { VizFigure } { O{} }
   { \semio_viz_figure_begin:n {#1} }
   { \semio_viz_figure_end: }
@@ -111,14 +126,19 @@
   \tl_gset:cn { g_semio_viz_chart_ \tl_to_str:n {#1} _opts_tl } {#3}
 }
 
+% 🏷️ Registers a chart kind as a layout family plus default keys.
 \NewDocumentCommand \SemioVizChartKind { m m m } { \semio_viz_chart_kind_define:nnn {#1} {#2} {#3} }
+
+\cs_generate_variant:Nn \semio_viz_layout:nn { VV }
 
 \cs_new_protected:Npn \semio_viz_chart:nn #1#2 {
   \semio_viz_frame_require:n { SemioVizChart }
   \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
     {
       \tl_set:Nx \l_semio_viz_family_tl { \tl_use:c { g_semio_viz_chart_ \tl_to_str:n {#1} _family_tl } }
-      \exp_args:NV \semio_viz_layout:nn \l_semio_viz_family_tl {#2}
+      \tl_set:Nx \l_tmpa_tl { \tl_use:c { g_semio_viz_chart_ \tl_to_str:n {#1} _opts_tl } }
+      \tl_if_empty:nF {#2} { \tl_put_right:Nn \l_tmpa_tl { , #2 } }
+      \semio_viz_layout:VV \l_semio_viz_family_tl \l_tmpa_tl
     }
     { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
 }
@@ -130,11 +150,13 @@
     {
       \seq_if_in:NnTF \g_semio_viz_chart_kinds_seq {#1}
         { \semio_viz_chart:nn {#1} { data=demo, x=cat, y=val } }
-        { \msg_error:nnn { semio-viz } { unknown-chart } {#1} }
+        { \msg_error:nnn { semio-viz } { unknown-demo } {#1} }
     }
 }
 
+% 📊 Draws a registered chart kind inside the current VizFigure.
 \NewDocumentCommand \SemioVizChart { m O{} } { \semio_viz_chart:nn {#1} {#2} }
+% 🧪 Gallery helper: mark primitive or chart kind on the demo table.
 \NewDocumentCommand \SemioVizDemo { m } { \semio_viz_demo:n {#1} }
 %endregion ChartKinds
 

@@ -563,13 +563,13 @@ const SECTIONS: readonly Section[] = [
       {
         title: "Chrome",
         leaves: [
-          s("axis-linear", "Linear axis", "bar", "axis"),
-          s("axis-log", "Log axis", "bar", "axis"),
-          s("axis-band", "Band axis", "bar", "axis"),
-          s("grid-cartesian", "Cartesian grid", "bar", "axis"),
-          s("legend-swatch", "Swatch legend", "bar", "axis"),
-          s("legend-gradient", "Gradient legend", "heat", "axis"),
-          s("legend-size", "Size legend", "dot", "axis"),
+          s("axis-linear", "Linear axis", "chrome", "axis"),
+          s("axis-log", "Log axis", "chrome", "axis"),
+          s("axis-band", "Band axis", "chrome", "axis"),
+          s("grid-cartesian", "Cartesian grid", "chrome", "axis"),
+          s("legend-swatch", "Swatch legend", "chrome", "axis"),
+          s("legend-gradient", "Gradient legend", "chrome", "axis"),
+          s("legend-size", "Size legend", "chrome", "axis"),
         ],
       },
     ],
@@ -601,23 +601,27 @@ function leaves(): { readonly id: string; readonly slug: string; readonly title:
   return out;
 }
 
+function texText(value: string): string {
+  return value.replace(/[%#&_$]/g, (ch) => `\\${ch}`);
+}
+
 function galleryTex(section: Section): string {
   const body: string[] = [];
   for (const group of section.groups) {
-    body.push(`\\section{${group.title}}`);
+    body.push(`\\section{${texText(group.title)}}`);
     for (const leaf of group.leaves) {
       body.push(`% viz-covers: ${section.id}/${leaf.slug}`);
-      body.push(`\\begin{VizFigure}[title={${leaf.title}}, width=80, height=40]`);
+      body.push(`\\begin{VizFigure}[title={${texText(leaf.title)}}, width=80, height=40]`);
       body.push(`\\SemioVizDemo{${leaf.slug}}`);
       body.push("\\end{VizFigure}");
     }
   }
   return `\\documentclass[type=report,theme=light,language=de]{semio}
-\\title{${section.title}}
+\\title{${texText(section.title)}}
 \\author{Semio}
 \\date{\\today}
 \\begin{document}
-\\chapter{${section.title}}
+\\chapter{${texText(section.title)}}
 ${body.join("\n")}
 \\end{document}
 `;
@@ -653,7 +657,16 @@ function chartSty(section: Section): string {
     `%region Kinds`,
   ];
   for (const group of section.groups) {
-    for (const leaf of group.leaves) lines.push(`\\SemioVizChartKind{${leaf.slug}}{${leaf.family}}{data=demo}`);
+    for (const leaf of group.leaves) {
+      const extra =
+        leaf.slug === "legend-gradient" ? ",legend=gradient"
+        : leaf.slug === "legend-size" ? ",legend=size"
+        : leaf.slug === "axis-linear" ? ",scale=y,orient=left"
+        : leaf.slug === "axis-log" ? ",scale=y-log,orient=left"
+        : leaf.slug === "axis-band" ? ",scale=x,orient=bottom"
+        : "";
+      lines.push(`\\SemioVizChartKind{${leaf.slug}}{${leaf.family}}{data=demo${extra}}`);
+    }
   }
   lines.push(`%endregion Kinds`);
   return `${lines.join("\n")}\n`;

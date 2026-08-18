@@ -3,8 +3,10 @@
   "emoji": "📊",
   "status": "open",
   "description": "Implement a layered TikZ-based D3-for-LaTeX visualization library (semio-viz) inside print: data, scale, mark, axis, layout, and chart recipe modules covering the exhaustive visualization taxonomy. Library plus tests plus tooling in print only. Coverage gate via print/asset/viz-taxonomy.md and gallery fixtures. Architecture mirrors semio-graph.sty and semio-tree.sty (expl3, l3keys, kind registries, Figure-window integration, token colors).",
+  "summary": "semio-viz: layered TikZ data/scale/mark/axis/layout plus 19 chart modules covering 274 taxonomy leaves. Galleries compile light+dark. Coverage gate and test viz full pass. Fixed expl3 fp/polar TikZ pitfalls, pie table binding, chart key merge, and chrome legends.",
   "goal": "🎯aioptimizedrepo",
   "sessions": [
-    "⚪e1c10676d3214592aae5dfe6b77a1425"
+    "⚪e1c10676d3214592aae5dfe6b77a1425",
+    "⚪46f644cc06b64c1ab002dbb9120933a3"
   ]
 }
