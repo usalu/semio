@@ -130,7 +130,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         gap: None,
         padding: None,
         id: Some(section.id.clone()),
-        presence: section.presence,
+        presence: section.presence.clone(),
         activate: None,
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
@@ -164,7 +164,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     for nested in item.items.iter().flatten() {
         children.push(tree_item_row(tree_node, nested));
     }
-    UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(item.id.clone()), presence: item.presence, activate: item.action.clone(), drop_action: None, drop_overlay: None, children, menu: item.menu.clone() })
+    UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(item.id.clone()), presence: item.presence.clone(), activate: item.action.clone(), drop_action: None, drop_overlay: None, children, menu: item.menu.clone() })
 }
 
 /// 🌳️ Synthesizes one retained `Button` row per `UiTreeItemAction` (a `Tree` item's trailing/

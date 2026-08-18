@@ -1,0 +1,80 @@
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+    Checking semio-framework-os-mcp v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust)
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:615:95
+    |
+615 |             insert_capability(&mut entries, capability_from_contribution(&plugin_id, "infer", entry, CapabilityKind::Query))?;
+    |                                             ----------------------------                      ^^^^^ expected `&DescriptorEntry`, found `&ContributedInferenceMetadata`
+    |                                             |
+    |                                             arguments to this function are incorrect
+    |
+    = note: expected reference `&DescriptorEntry`
+               found reference `&ContributedInferenceMetadata`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:364:4
+    |
+364 | fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifest::DescriptorEntry, kind: CapabilityKind) -> Capabi...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ---------------------------------
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:618:96
+    |
+618 |             insert_capability(&mut entries, capability_from_contribution(&plugin_id, "mutate", entry, CapabilityKind::Job))?;
+    |                                             ----------------------------                       ^^^^^ expected `&DescriptorEntry`, found `&ContributedMutationMetadata`
+    |                                             |
+    |                                             arguments to this function are incorrect
+    |
+    = note: expected reference `&DescriptorEntry`
+               found reference `&ContributedMutationMetadata`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:364:4
+    |
+364 | fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifest::DescriptorEntry, kind: CapabilityKind) -> Capabi...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ---------------------------------
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:621:92
+    |
+621 |             insert_capability(&mut entries, capability_from_contribution(&plugin_id, "io", entry, CapabilityKind::Job))?;
+    |                                             ----------------------------                   ^^^^^ expected `&DescriptorEntry`, found `&IoEntryDescriptor`
+    |                                             |
+    |                                             arguments to this function are incorrect
+    |
+    = note: expected reference `&DescriptorEntry`
+               found reference `&semio_framework::IoEntryDescriptor`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:364:4
+    |
+364 | fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifest::DescriptorEntry, kind: CapabilityKind) -> Capabi...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ---------------------------------
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:624:97
+    |
+624 |             insert_capability(&mut entries, capability_from_contribution(&plugin_id, "compose", entry, CapabilityKind::Job))?;
+    |                                             ----------------------------                        ^^^^^ expected `&DescriptorEntry`, found `&ComposerEntryDescriptor`
+    |                                             |
+    |                                             arguments to this function are incorrect
+    |
+    = note: expected reference `&DescriptorEntry`
+               found reference `&ComposerEntryDescriptor`
+note: function defined here
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/../../🗂️catalog/🦀️component.rs:364:4
+    |
+364 | fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifest::DescriptorEntry, kind: CapabilityKind) -> Capabi...
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ---------------------------------
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `semio-framework-os-mcp` (lib) due to 4 previous errors

@@ -1875,7 +1875,12 @@ export type AppCommandValue =
   | { readonly clearDefaultApp: { readonly seq: number; readonly artifact_kind: string; readonly standard: string; readonly subset: string; readonly role: number } }
   | { readonly setMergePolicy: { readonly seq: number; readonly policy: number } }
   | { readonly resolveConflict: { readonly seq: number; readonly conflict_id: string; readonly resolution: number } }
-  | { readonly readConflicts: { readonly seq: number } };
+  | { readonly readConflicts: { readonly seq: number } }
+  /** 👥️ Pushes the document-wide presence roster into this app instance — the ONLY plugin ingress
+   * for peers (contract-freeze §C7.6). `own_color` is this actor's hub-assigned palette index
+   * (`null` for a folder-only session with no hub); `peers` are `encodePresencePeer` blobs, the
+   * whole roster with the wrapper's own actor already dropped. CHANNEL_VERSION 12 wire addition. */
+  | { readonly presence: { readonly seq: number; readonly own_color: number | null; readonly peers: readonly (readonly number[])[] } };
 
 export type AppFrameValue =
   | { readonly Done: { readonly in_reply_to: number } }
@@ -1900,7 +1905,7 @@ export type AppFrameValue =
   | { readonly Emit: { readonly in_reply_to: number; readonly document_ops: readonly number[]; readonly config_ops: readonly number[]; readonly draft_ops: readonly number[]; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
   | { readonly Draft: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
   | { readonly Children: { readonly in_reply_to: number; readonly entries: readonly ChildPackEntry[] } }
-  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number } }
+  | { readonly Ephemeral: { readonly presence: readonly number[]; readonly presence_generation: number; readonly transient_generation: number; readonly interaction: readonly number[] } }
   | { readonly HistorySnapshot: { readonly in_reply_to: number; readonly history_patch: readonly number[] } }
   | {
       readonly transactionProposal: {
@@ -1935,6 +1940,18 @@ function writeOptU64(out: number[], value: number | null): void {
 function readOptU64(bytes: Uint8Array, pos: [number]): number | null {
   return readBool(bytes, pos) ? readVarintU64(bytes, pos) : null;
 }
+/** 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand.presence.own_color`), the same
+ * presence-byte convention as {@link writeOptU64} above. */
+function writeOptU8(out: number[], value: number | null): void {
+  writeBool(out, value !== null);
+  if (value !== null) out.push(value);
+}
+function readOptU8(bytes: Uint8Array, pos: [number]): number | null {
+  if (!readBool(bytes, pos)) return null;
+  const byte = bytes[pos[0]]!;
+  pos[0] += 1;
+  return byte;
+}
 function writeChildPackEntry(out: number[], entry: ChildPackEntry): void {
   writeStr(out, entry.slot);
   writeStr(out, entry.child_id);
@@ -1962,6 +1979,7 @@ const APP_COMMAND_TAGS = {
   transactionPrepare: 17, transactionCommit: 18, transactionRollback: 19, transactionUndo: 20, transactionRedo: 21,
   openArtifact: 22, setDefaultApp: 23, clearDefaultApp: 24,
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
+  presence: 28,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
@@ -2112,6 +2130,11 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("readConflicts" in cmd) {
     out.push(APP_COMMAND_TAGS.readConflicts);
     writeVarintU64(out, cmd.readConflicts.seq);
+  } else if ("presence" in cmd) {
+    out.push(APP_COMMAND_TAGS.presence);
+    writeVarintU64(out, cmd.presence.seq);
+    writeOptU8(out, cmd.presence.own_color);
+    writeVecBytes(out, cmd.presence.peers);
   } else {
     throw new Error("encodeAppCommand: unrecognized command variant");
   }
@@ -2243,6 +2266,12 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.readConflicts:
       return { readConflicts: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.presence: {
+      const seq = readVarintU64(bytes, pos);
+      const own_color = readOptU8(bytes, pos);
+      const peers = readVecBytes(bytes, pos);
+      return { presence: { seq, own_color, peers } };
+    }
     default:
       throw new Error(`decodeAppCommand: unknown tag ${bytes[0]}`);
   }
@@ -2325,6 +2354,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Ephemeral.presence);
     writeVarintU64(out, frame.Ephemeral.presence_generation);
     writeVarintU64(out, frame.Ephemeral.transient_generation);
+    writeBytes(out, frame.Ephemeral.interaction);
   } else if ("HistorySnapshot" in frame) {
     out.push(APP_FRAME_TAGS.HistorySnapshot);
     writeVarintU64(out, frame.HistorySnapshot.in_reply_to);
@@ -2442,7 +2472,9 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
     case APP_FRAME_TAGS.Children:
       return { Children: { in_reply_to: readVarintU64(bytes, pos), entries: readVecChildPackEntry(bytes, pos) } };
     case APP_FRAME_TAGS.Ephemeral:
-      return { Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos) } };
+      return {
+        Ephemeral: { presence: readBytes(bytes, pos), presence_generation: readVarintU64(bytes, pos), transient_generation: readVarintU64(bytes, pos), interaction: readBytes(bytes, pos) },
+      };
     case APP_FRAME_TAGS.HistorySnapshot:
       return { HistorySnapshot: { in_reply_to: readVarintU64(bytes, pos), history_patch: readBytes(bytes, pos) } };
     case APP_FRAME_TAGS.transactionProposal: {
@@ -2734,6 +2766,17 @@ export class AppChannelClient {
     return this.exchangeOne({ readConflicts: { seq: this.nextSeq() } });
   }
   //#endregion 🔖️Merge
+
+  //#region 🔖️Presence
+  /** 👥️ Pushes the document-wide presence roster into this instance's plugin app — the ONLY plugin
+   * ingress for peers (contract-freeze §C7.6). Encodes each {@link ArtifactPresencePeer} via
+   * {@link encodePresencePeer}; the caller has already dropped its own actor from `peers` before
+   * calling this (`ownColor` carries this actor's own hub-assigned palette index separately, `null`
+   * for a folder-only session with no hub). A plain `Done` reply, never decoded further here. */
+  async pushPresence(ownColor: number | null, peers: readonly ArtifactPresencePeer[]): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ presence: { seq: this.nextSeq(), own_color: ownColor, peers: peers.map((peer) => encodePresencePeer(peer)) } });
+  }
+  //#endregion 🔖️Presence
 
   //#region 🔖️Transaction
   /** 🎫️ `TransactionPrepare`, owner-mutation wire form (contract freeze §2/§5.3): `mutationId` +
@@ -3058,6 +3101,8 @@ if (import.meta.vitest) {
       { setMergePolicy: { seq: 31, policy: 1 } },
       { resolveConflict: { seq: 32, conflict_id: "conflict-1", resolution: 0 } },
       { readConflicts: { seq: 33 } },
+      { presence: { seq: 34, own_color: 3, peers: [[1, 2], [9]] } },
+      { presence: { seq: 35, own_color: null, peers: [] } },
     ];
 
     const sampleFrames: readonly AppFrameValue[] = [
@@ -3074,7 +3119,8 @@ if (import.meta.vitest) {
       { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
       { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
-      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7] } },
+      { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [] } },
       { HistorySnapshot: { in_reply_to: 14, history_patch: [1] } },
       { transactionProposal: { in_reply_to: 15, proposal_id: "prop-1", local_ops: [[1]], description: "move", coalesce_key: "k-1", foreign: [[2, 3]] } },
       { transactionPrepared: { txn_id: "txn-1", foreign: [[1]], rejection: [] } },
@@ -3098,7 +3144,7 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (ConfigCommand=0 ... ReadConflicts=27)", () => {
+    it("tags every AppCommand variant per the agreed contract order (ConfigCommand=0 ... presence=28)", () => {
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ Command: { seq: 0, command: [], view_state: [] } })[0]).toBe(1);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(15);
@@ -3114,13 +3160,14 @@ if (import.meta.vitest) {
       expect(encodeAppCommand({ setMergePolicy: { seq: 0, policy: 0 } })[0]).toBe(25);
       expect(encodeAppCommand({ resolveConflict: { seq: 0, conflict_id: "", resolution: 0 } })[0]).toBe(26);
       expect(encodeAppCommand({ readConflicts: { seq: 0 } })[0]).toBe(27);
+      expect(encodeAppCommand({ presence: { seq: 0, own_color: null, peers: [] } })[0]).toBe(28);
     });
 
     it("tags every AppFrame variant per the agreed contract order (Done=0 ... UiSnapshotEnd=22)", () => {
       expect(encodeAppFrame({ Done: { in_reply_to: 0 } })[0]).toBe(0);
       expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } })[0]).toBe(1);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
-      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0 } })[0]).toBe(13);
+      expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(14);
       expect(encodeAppFrame({ transactionProposal: { in_reply_to: 0, proposal_id: "", local_ops: [], description: "", coalesce_key: "", foreign: [] } })[0]).toBe(15);
       expect(encodeAppFrame({ transactionPrepared: { txn_id: "", foreign: [], rejection: [] } })[0]).toBe(16);
@@ -3195,7 +3242,7 @@ if (import.meta.vitest) {
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
         ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
-        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4 } }],
+        ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [] } }],
         ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
         ["UiPatch", { UiPatch: { in_reply_to: 1, surface: "1:body", kind: "window", revision: 3, base_revision: 2, ops: [9] } }],
         ["UiSnapshotEnd", { UiSnapshotEnd: { revision: 6 } }],
@@ -3214,7 +3261,7 @@ if (import.meta.vitest) {
         Emit: "0a0101010000010200",
         Draft: "0b01010101020164",
         Children: "0c01010173016301640101",
-        Ephemeral: "0d0201020304",
+        Ephemeral: "0d020102030400",
         HistorySnapshot: "0e010101",
         UiPatch: "15010106313a626f64790677696e646f7703020109",
         UiSnapshotEnd: "1606",

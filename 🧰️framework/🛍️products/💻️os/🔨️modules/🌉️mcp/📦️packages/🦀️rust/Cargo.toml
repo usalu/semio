@@ -46,8 +46,30 @@ blake3 = "1.8.2"
 # repo's other axum+tokio product crate.
 axum = { version = "0.8", features = ["ws"] }
 tokio = { workspace = true, features = ["full"] }
+# 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: the
+# `🏠️workspace` facet's real `store::sync::ArtifactHost`/`PersistenceBinding` binding layer — the
+# `sync` feature is exactly what mounts `🏪️store/🔄️sync/🦀️component.rs` into this crate
+# (`💻️os/📦️packages/🦀️rust/📦️glue.rs`'s own `#[cfg(feature = "sync")] pub mod sync;`), same crate
+# `🏃️run`'s own Cargo.toml depends on. Relative path identical to `🏃️run`'s (same directory depth:
+# both are `🔨️modules/<X>/📦️packages/🦀️rust`).
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
+# 🎫️ P7-headless-workspace: `semio_framework_actor::ActorId` (aliased `RuntimeActorId` everywhere
+# else in this tree) — needed directly because `semio-framework-plugin-host` only `use`s it
+# internally, never `pub use`s it (verified: only `PackageId`/`PackageHash`/`PackageRef` are
+# re-exported from that crate).
+semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+# 🎫️ P7-headless-workspace: real plugin actor activation (`WasmtimeRuntime`/`GuestRuntime`,
+# `OpeningResolver`, `AppRouter`) — native-only, mirrors `🏃️run`'s own
+# `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` gate exactly (this crate never targets
+# wasm32 itself — it is a stdio/HTTP server binary — but the gate is kept for consistency with the
+# crate `semio-framework-plugin-host` itself requires it from).
+framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
+tempfile = "3.14"
 # 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
 # version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).
 tokio-tungstenite = "0.26"

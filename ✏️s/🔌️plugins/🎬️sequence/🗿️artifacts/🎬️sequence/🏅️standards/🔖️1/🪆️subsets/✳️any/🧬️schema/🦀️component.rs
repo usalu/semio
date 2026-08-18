@@ -1,6 +1,6 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
@@ -119,117 +119,11 @@ pub fn sequence_example_json() -> String {
 }
 //#endregion 🔖️Example
 
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::artifacts::sequence::schema::diff::SequenceDiff;
-    use crate::artifacts::sequence::schema::mutations::SequenceMutation;
-    use crate::artifacts::sequence::schema::snapshot::SequenceSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct SequenceBuilderConstruction {
-        snapshot: SequenceSnapshot,
-        diagnostics: Vec<dsl::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for SequenceBuilderConstruction {
-        type Snapshot = SequenceSnapshot;
-        type Mutation = SequenceMutation;
-        type Diff = SequenceDiff;
-        fn empty() -> Self { Self { snapshot: SequenceSnapshot::default(), diagnostics: Vec::new() } }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self { Self { snapshot, diagnostics: Vec::new() } }
-        fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <SequenceMutation as protocol::Mutation<SequenceSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(dsl::Diagnostic::error(
-                    "mutation.apply",
-                    dsl::TextSpan::at(1, 1),
-                    error.to_string(),
-                )),
-            }
-            (self, outcome)
-        }
-        fn absorb(
-            mut self,
-            diff: Self::Diff,
-        ) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            if self.diagnostics.is_empty() { Ok(self.snapshot) } else { Err(self.diagnostics) }
-        }
-    }
-}
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use semio_framework_plugin::{ArtifactAnalysis, Dialect, StandardId, SubsetId, IoConfidence, Analysis, AnalyzeSource};
-    use crate::artifacts::sequence::SequenceSnapshot;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct SequenceParts {
-        pub snapshot: Option<SequenceSnapshot>,
-    }
-
-    pub struct SequenceAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for SequenceAnalyzerAnalysis {
-        type Parts = SequenceParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.sequence", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = SequenceParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <SequenceSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <SequenceSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(dsl::Diagnostic::error("analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec SequenceBuilderFacets {
-        construction: SequenceBuilderConstruction,
-        analysis: SequenceAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::SequenceComposerComposition,
-    }
-    builder: SequenceBuilder,
-    analyzer: SequenceAnalyzer,
-    composer: SequenceComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
+//#region 🏗️Construction
+/// 🏗️ W1-C's generic `SnapshotBuilder<Snapshot, Mutation>` (design.md §5 step 3) — replaces the
+/// deleted `derive_artifact_facets!`-generated `SequenceBuilder`/`SequenceAnalyzer`/
+/// `SequenceComposer` cluster outright: construction is a plain snapshot+mutation build (no custom
+/// analysis/composition logic this subset needs beyond the ordinary `Mutation`/`MutationDiff`
+/// algebra), so the trivial-subset shape applies verbatim.
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<SequenceSnapshot, SequenceMutation>;
+//#endregion 🏗️Construction

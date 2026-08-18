@@ -1,0 +1,78 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: value assigned to `pos` is never read
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/📡️spr/📡️wire/🦀️component.rs:448:13
+    |
+448 |             pos += 1;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: unused imports: `Effect`, `Event`, `MessageEndpoint`, `PatchOp`, `RequestOutcome`, `TurnStatus`, and `UiPatch`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:26:31
+   |
+26 | use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+   |                               ^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:28:5
+   |
+28 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0053]: method `ephemeral_snapshot` has an incompatible type for trait
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12073:41
+      |
+12073 |         fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64) {
+      |                                         ^^^^^^^^^^^^^^^^^^^ expected `EphemeralSnapshot`, found `(Vec<u8>, u64, u64)`
+      |
+note: type in trait
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9595:41
+      |
+ 9595 |         fn ephemeral_snapshot(&self) -> EphemeralSnapshot;
+      |                                         ^^^^^^^^^^^^^^^^^
+      = note: expected signature `fn(&component::app::VcsArtifactApp<_>) -> EphemeralSnapshot`
+                 found signature `fn(&component::app::VcsArtifactApp<_>) -> (Vec<u8>, u64, u64)`
+help: change the output type to match the trait
+      |
+12073 -         fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64) {
+12073 +         fn ephemeral_snapshot(&self) -> EphemeralSnapshot {
+      |
+
+error[E0046]: not all trait items implemented, missing: `adopt_presence`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:11829:5
+      |
+ 9604 |         fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault>;
+      |         ------------------------------------------------------------------------------------------------------------------------ `adopt_presence` from trait
+...
+11829 |     impl<A: ArtifactApp> PluginApp for VcsArtifactApp<A> {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `adopt_presence` in implementation
+
+error[E0425]: cannot find function `host_now_ms` in this scope
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15677:34
+      |
+15677 |                     let now_ms = host_now_ms();
+      |                                  ^^^^^^^^^^^ not found in this scope
+
+error[E0308]: mismatched types
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:16145:19
+      |
+16145 |         if let Ok((presence, presence_generation, transient_generation)) = ephemeral {
+      |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    --------- this expression has type `Result<EphemeralSnapshot, Fault>`
+      |                   |
+      |                   expected `EphemeralSnapshot`, found `(_, _, _)`
+      |
+      = note: expected struct `EphemeralSnapshot`
+                  found tuple `(_, _, _)`
+
+Some errors have detailed explanations: E0046, E0053, E0308, E0425.
+For more information about an error, try `rustc --explain E0046`.
+warning: `semio-framework-plugin` (lib) generated 2 warnings
+error: could not compile `semio-framework-plugin` (lib) due to 4 previous errors; 2 warnings emitted

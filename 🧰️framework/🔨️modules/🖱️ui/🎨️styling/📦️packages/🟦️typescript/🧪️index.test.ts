@@ -17,10 +17,10 @@ import {
   resolveElementFillKind,
   resolveElementState,
 } from "./📦️index.ts";
-import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../../📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
+import { meshCollectionVitePlugin, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, type PlaygroundAssetSpec } from "../../🟦️vite-elements-assets.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../..");
-const uiCss = readFileSync(resolve(import.meta.dir, "🎨️ui.css"), "utf8");
+const uiCss = readFileSync(resolve(import.meta.dir, "../../🎨️ui.css"), "utf8");
 const paletteCss = readFileSync(resolve(import.meta.dir, "../../🎨️palette.css"), "utf8");
 
 describe("palette asset urls", () => {

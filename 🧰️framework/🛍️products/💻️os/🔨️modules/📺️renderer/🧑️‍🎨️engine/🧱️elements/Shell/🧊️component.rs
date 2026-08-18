@@ -21,7 +21,7 @@ use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::{PresencePeer, PresencePoint, PresenceViewport};
+use store_sync::PresencePeer;
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
@@ -2308,6 +2308,11 @@ impl ShellState {
                     self.sync_card_kind = Some("conflict".into());
                     changed = true;
                 }
+                // 👥️ Peer session identity (actor + colour), sent once per connection. The sync
+                // actor already stamps it onto outbound heartbeats itself, so the shell has
+                // nothing further to fold in here — matched explicitly so a future variant
+                // cannot be silently ignored by a catch-all.
+                ArtifactEvent::Session { .. } => {}
                 ArtifactEvent::Preview { .. } => {
                     // 👻️ Ephemeral peer previews (wire v2's uncredited preview lane) have no native
                     // wgpu shell UI yet — same documented-follow-up status as `Presence` above.
@@ -2392,10 +2397,17 @@ impl ShellState {
             connected_at_ms,
             user_id: self.identity.as_ref().map(|identity| identity.user_id.clone()),
             role: None,
-            cursor: Some(PresencePoint { x: input.pointer_x as f64, y: input.pointer_y as f64 }),
-            viewport: Some(PresenceViewport { x: 0.0, y: 0.0, zoom: 1.0 }),
             drag_ghost_json: None,
             interaction: None,
+            // 👥️ Peer-presence fields introduced by the presence refactor. The wgpu shell does not
+            // publish colour/surface/view/ui presence yet — the sync actor assigns `color` from the
+            // hub's `Session` frame, and the richer `views`/`ui` payloads belong to the presence
+            // packet, not this heartbeat. Left empty rather than invented so nothing fabricates
+            // presence state the shell does not actually observe.
+            color: None,
+            surface: None,
+            views: Vec::new(),
+            ui: None,
         };
         self.document_host.presence_heartbeat(&document_id, chrome_now_ms() as u64, peer);
     }
@@ -5328,8 +5340,8 @@ impl ShellState {
     fn dock_window_order(node: &crate::dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
         match node {
             crate::dock::DockNode::Stack { windows, .. } => {
-                for window_id in windows {
-                    out.push((path.clone(), window_id.clone()));
+                for tab in windows {
+                    out.push((path.clone(), tab.window_id.clone()));
                 }
             }
             crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => {

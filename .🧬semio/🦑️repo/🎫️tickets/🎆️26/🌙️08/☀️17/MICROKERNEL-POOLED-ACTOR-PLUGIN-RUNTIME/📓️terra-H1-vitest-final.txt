@@ -1,0 +1,417 @@
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react
+
+stderr | 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4223:7)
+    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)
+    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)
+    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)
+    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9
+    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24
+    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4225:27
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native) {
+  [message]: 'boom',
+  [stack]: 'Error: boom\n' +
+    '    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð\x9F§ªï¸\x8Findex.test.ts:4223:7)\n' +
+    '    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)\n' +
+    '    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)\n' +
+    '    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)\n' +
+    '    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)\n' +
+    '    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)\n' +
+    '    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)\n' +
+    '    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)\n' +
+    '    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)\n' +
+    '    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)\n' +
+    '    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24\n' +
+    '    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)\n' +
+    '    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð\x9F§ªï¸\x8Findex.test.ts:4225:27\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19\n' +
+    '    at Promise (native)\n' +
+    '    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19\n' +
+    '    at Promise (native)\n' +
+    '    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)\n' +
+    '    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)\n' +
+    '    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12\n' +
+    '    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)\n' +
+    '    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)\n' +
+    '    at processTicksAndRejections (native)',
+  [line]: 0,
+  [column]: 0
+}
+
+The above error occurred in the <FaultyChild> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ShellFaultBoundary.
+
+[DEBUG] shell fault test Error: boom
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4223:7)
+    at react_stack_bottom_frame (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:25904:19)
+    at renderWithHooks (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:7662:21)
+    at updateFunctionComponent (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:10166:18)
+    at runWithFiberInDEV (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:874:12)
+    at performUnitOfWork (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17641:21)
+    at workLoopSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17469:40)
+    at renderRootSync (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:17450:10)
+    at performWorkOnRoot (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:16583:34)
+    at performWorkOnRootViaSchedulerTask (/Users/ueli/Documents/semio/node_modules/react-dom/cjs/react-dom-client.development.js:18957:6)
+    at flushActQueue (/Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:590:33)
+    at /Users/ueli/Documents/semio/node_modules/react/cjs/react.development.js:884:9
+    at /Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/act-compat.js:46:24
+    at renderRoot (/Users/ueli/Documents/semio/node_modules/@testing-library/react/dist/pure.js:189:17)
+    at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/ð§ªï¸index.test.ts:4225:27
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:25
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:19
+    at Promise (native)
+    at runWithCancel (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:9)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:19
+    at Promise (native)
+    at runWithTimeout (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:9)
+    at run (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:1150:19)
+    at /Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:12
+    at callAroundHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2663:8)
+    at callAroundEachHooks (/Users/ueli/Documents/semio/node_modules/@vitest/runner/dist/chunk-artifact.js:2799:7)
+    at processTicksAndRejections (native) 
+    at FaultyChild (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️index.test.ts:3546:22)
+    at ShellFaultBoundary (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx:538:10)
+
+stderr | 🧪️index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/framework-renderer-react| 🧪️index.test.ts (336 tests | 15 failed) 649ms
+     × renders selectable builder cards with selection ring 7ms
+     × interprets virtual file system component scenes 2ms
+     × isolates render faults in ShellFaultBoundary 21ms
+     × stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values 17ms
+     × gates Execute on required args, but a default-satisfied required arg counts without staging 7ms
+     × Reset restores defaults while keeping the form expanded 7ms
+     × resolveWindowActions surfaces only panel-eligible definitions owned by the window 2ms
+     × commandCategories orders and dedupes categories by first appearance 1ms
+     × ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out 1ms
+     × mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text 2ms
+     × auto-expands a singleton arg-carrying category into a flat form with section actions and no disclosure list 0ms
+     × an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded 1ms
+     × Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs 0ms
+     × buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands 1ms
+     × FrameworkOsShell portal layer is unconstrained by z-tutorial so portaled elements sit above elevated windows 15ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > declarative forms parity > renders selectable builder cards with selection ring
+AssertionError: expected '<div class="relative flex min-h-0 min…' to contain 'ring-primary'
+
+Expected: "ring-primary"
+Received: "<div class="relative flex min-h-0 min-w-0 flex-1 flex-col gap-double p-double semio-ui-stack semio-ui-stack--vertical border-element border cursor-pointer rounded-md" data-ui-path="stack[0]#forms-blueprint.card.q1" role="button"><div class="flex-auto"><p class="text-foreground text-sm" data-ui-path="stack[0]#forms-blueprint.card.q1/text[0]">text · q1</p></div></div>"
+
+ ❯ ð§ªï¸index.test.ts:1728:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > framework renderer hosts > interprets virtual file system component scenes
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object.
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6119:14
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:12
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6905:17
+ ❯ renderChildrenArray ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6674:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6441:12
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5672:12
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ finishFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5106:12
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5552:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ renderNodeDestructive ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6367:10
+ ❯ renderElement ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:5483:10
+ ❯ retryNode ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:6428:20
+ ❯ performWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:7435:16
+ ❯ startWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8270:6
+ ❯ renderToStringImpl ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-server-legacy.node.development.js:8380:6
+ ❯ ð§ªï¸index.test.ts:3123:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > s workflow flow routing > isolates render faults in ShellFaultBoundary
+Error: Invalid Chai property: toHaveTextContent
+ ❯ ð§ªï¸index.test.ts:4232:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3024:22
+ ❯ buildActionCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3019:36
+ ❯ WindowActionPane ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3074:20
+ ❯ react_stack_bottom_frame ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ ❯ renderWithHooks ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ ❯ updateFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ ❯ runWithFiberInDEV ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:874:12
+ ❯ performUnitOfWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ ❯ workLoopSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ ❯ renderRootSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ ❯ performWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+ ❯ performSyncWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18972:6
+ ❯ flushSyncWorkAcrossRoots_impl ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18814:20
+ ❯ processRootScheduleInMicrotask ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18853:8
+ ❯ ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18982:10
+ ❯ flushActQueue ../../../../../../../../../../node_modules/react/cjs/react.development.js:590:33
+ ❯ ../../../../../../../../../../node_modules/react/cjs/react.development.js:884:9
+ ❯ ../../../../../../../../../../node_modules/@testing-library/react/dist/act-compat.js:46:24
+ ❯ eventWrapper ../../../../../../../../../../node_modules/@testing-library/react/dist/pure.js:106:19
+ ❯ ð§ªï¸index.test.ts:4357:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > gates Execute on required args, but a default-satisfied required arg counts without staging
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3024:22
+ ❯ buildActionCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3019:36
+ ❯ WindowActionPane ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3074:20
+ ❯ react_stack_bottom_frame ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ ❯ renderWithHooks ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ ❯ updateFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ ❯ runWithFiberInDEV ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:874:12
+ ❯ performUnitOfWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ ❯ workLoopSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ ❯ renderRootSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ ❯ performWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+ ❯ performSyncWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18972:6
+ ❯ flushSyncWorkAcrossRoots_impl ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18814:20
+ ❯ processRootScheduleInMicrotask ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18853:8
+ ❯ ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18982:10
+ ❯ flushActQueue ../../../../../../../../../../node_modules/react/cjs/react.development.js:590:33
+ ❯ ../../../../../../../../../../node_modules/react/cjs/react.development.js:884:9
+ ❯ ../../../../../../../../../../node_modules/@testing-library/react/dist/act-compat.js:46:24
+ ❯ eventWrapper ../../../../../../../../../../node_modules/@testing-library/react/dist/pure.js:106:19
+ ❯ ð§ªï¸index.test.ts:4375:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > window action panel — staging and single dispatch (P1/P2) > Reset restores defaults while keeping the form expanded
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3024:22
+ ❯ buildActionCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3019:36
+ ❯ WindowActionPane ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3074:20
+ ❯ react_stack_bottom_frame ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ ❯ renderWithHooks ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ ❯ updateFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ ❯ runWithFiberInDEV ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:874:12
+ ❯ performUnitOfWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ ❯ workLoopSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ ❯ renderRootSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ ❯ performWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+ ❯ performSyncWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18972:6
+ ❯ flushSyncWorkAcrossRoots_impl ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18814:20
+ ❯ processRootScheduleInMicrotask ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18853:8
+ ❯ ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18982:10
+ ❯ flushActQueue ../../../../../../../../../../node_modules/react/cjs/react.development.js:590:33
+ ❯ ../../../../../../../../../../node_modules/react/cjs/react.development.js:884:9
+ ❯ ../../../../../../../../../../node_modules/@testing-library/react/dist/act-compat.js:46:24
+ ❯ eventWrapper ../../../../../../../../../../node_modules/@testing-library/react/dist/pure.js:106:19
+ ❯ ð§ªï¸index.test.ts:4394:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > registry-derived utilities and activation (P5) > resolveWindowActions surfaces only panel-eligible definitions owned by the window
+AssertionError: expected [ 'extrude', 'undo', …(1) ] to deeply equal [ 'extrude' ]
+
+- Expected
++ Received
+
+  [
+    "extrude",
++   "undo",
++   "setActiveUtility",
+  ]
+
+ ❯ ð§ªï¸index.test.ts:4650:49
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > resolveCommands / commandCategories (footer command panel registry) > commandCategories orders and dedupes categories by first appearance
+AssertionError: expected [ { id: 'appearance', …(1) }, …(2) ] to deeply equal [ { id: 'appearance', …(1) }, …(2) ]
+
+- Expected
++ Received
+
+@@ -3,11 +3,11 @@
+      "id": "appearance",
+      "label": "Appearance",
+    },
+    {
+      "id": "document",
+-     "label": "Artifact",
++     "label": "Document",
+    },
+    {
+      "id": "view",
+      "label": "View",
+    },
+
+ ❯ ð§ªï¸index.test.ts:4730:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️bmwsb.png"
+
+ ❯ ð§ªï¸index.test.ts:5036:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > shell option locks (SEMIO_LOCKED_*) > mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text
+AssertionError: expected '/♻️mit-bestand/🧺️demonstrator/🖼️ass…' to match /♻️mit-bestand\/🧺️dem…/🧺️demonstrator\
+
+- Expected:
+/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//
+
++ Received:
+"/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logos/🖼️luh.png"
+
+ ❯ ð§ªï¸index.test.ts:5071:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > auto-expands a singleton arg-carrying category into a flat form with section actions and no disclosure list
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3507:20
+ ❯ buildCommandCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3502:39
+ ❯ ð§ªï¸index.test.ts:5117:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3507:20
+ ❯ buildCommandCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3502:39
+ ❯ ð§ªï¸index.test.ts:5133:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > Execute is disabled until the required arg is staged, and calling it passes the effective (staged) args; Reset dispatches onResetArgs
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ renderStagedArgControl ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2806:37
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3507:20
+ ❯ buildCommandCategoryTree ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3502:39
+ ❯ ð§ªï¸index.test.ts:5146:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > buildCommandCategoryTree / buildCommandCategoryTabs (command palette as a real bottom-middle Panel) > buildCommandCategoryTabs builds one namespaced PanelTabLeaf per category, whose lazily-resolved tree only contains that category's commands
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(3) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+-     "kind": "os",
++     "commandId": "os.resetDock",
++     "owner": "os",
+    },
+-   "os.resetDock",
+    undefined,
+  ]
+
+
+Number of calls: 1
+
+ ❯ ð§ªï¸index.test.ts:5181:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| 🧪️index.test.ts > TutorialRecorder LocalizedLabel synthesis > FrameworkOsShell portal layer is unconstrained by z-tutorial so portaled elements sit above elevated windows
+TypeError: undefined is not an object (evaluating 'schema.kind')
+ ❯ argControl ../../../../../../../../../🔨️modules/🛂️manifest/ð¦ï¸component.ts:582:11
+ ❯ resolveActionArgDef ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:2107:7
+ ❯ resolveDefinition ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3200:27
+ ❯ ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3202:85
+ ❯ resolveCommands ../../../../🧱️elements/ShellHelpers/ð¦ï¸component.tsx:3202:50
+ ❯ ../../../../🧱️elements/ShellHost/ð¦ï¸component.tsx:5453:22
+ ❯ mountMemo ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:8777:22
+ ❯ useMemo ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:26216:17
+ ❯ FrameworkOsShellInner ../../../../🧱️elements/ShellHost/ð¦ï¸component.tsx:5452:28
+ ❯ react_stack_bottom_frame ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:25904:19
+ ❯ renderWithHooks ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:7662:21
+ ❯ updateFunctionComponent ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:10166:18
+ ❯ runWithFiberInDEV ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:874:12
+ ❯ performUnitOfWork ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17641:21
+ ❯ workLoopSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17469:40
+ ❯ renderRootSync ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:17450:10
+ ❯ performWorkOnRoot ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:16583:34
+ ❯ performWorkOnRootViaSchedulerTask ../../../../../../../../../../node_modules/react-dom/cjs/react-dom-client.development.js:18957:6
+ ❯ flushActQueue ../../../../../../../../../../node_modules/react/cjs/react.development.js:590:33
+ ❯ ../../../../../../../../../../node_modules/react/cjs/react.development.js:884:9
+ ❯ ../../../../../../../../../../node_modules/@testing-library/react/dist/act-compat.js:46:24
+ ❯ renderRoot ../../../../../../../../../../node_modules/@testing-library/react/dist/pure.js:189:17
+ ❯ ð§ªï¸index.test.ts:5846:27
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+TypeError: 'postMessage' requires 2 arguments: 'message' and 'targetOrigin'
+ ❯ ../../../../../../../../../../node_modules/jsdom/lib/jsdom/browser/Window.js:787:16
+ ❯ post ../../../../../../../ð¦ï¸backbone-worker.ts:119:16
+ ❯ ../../../../../../../ð¦ï¸backbone-worker.ts:76:8
+
+This error originated in "🧪️index.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  15 failed | 321 passed (336)
+     Errors  1 error
+   Start at  11:37:08
+   Duration  4.08s (transform 1.81s, setup 0ms, import 2.80s, tests 649ms, environment 316ms)
+

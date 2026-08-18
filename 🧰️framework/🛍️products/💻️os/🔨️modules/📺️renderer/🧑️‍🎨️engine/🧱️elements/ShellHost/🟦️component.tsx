@@ -52,7 +52,6 @@ import {
   DockLayoutStore,
   type DockUiPanelState,
   DockUiStateStore,
-  evictPluginModule,
   expandPluginRegistry,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID,
@@ -1146,9 +1145,11 @@ function FrameworkOsShellInner({
   const loadedPluginsRef = useRef<readonly LoadedProgramState[]>([]);
   loadedPluginsRef.current = loadedPlugins;
   /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
-   * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own, but `reloadPlugin`/
-   * `uninstallPlugin` need the OLD url to `evictPluginModule` after swapping in a new lease at a
-   * different url (see the lease pool's key convention in `@semio-tech/framework`). */
+   * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own. 🧬️ H1-react: its old
+   * reader, `evictPluginModule` (the deleted refcounted module-URL lease pool, packet H2's "must not
+   * exist" list), is gone — `reloadPlugin`/`uninstallPlugin` now free resources entirely through
+   * `handle.dispose()` (`ShardClient.dispose` per activated actor), so this map is unread bookkeeping
+   * kept for a future consumer rather than removed mid-packet. */
   const pluginModuleUrlByIdRef = useRef<Map<string, string>>(new Map());
   /** 🔌️ Per-pluginId mutual exclusion across `installPlugin`/`reloadPlugin`/`uninstallPlugin` — the
    * boot effect and the `PluginSource` subscription effect can both request the same pluginId around
@@ -1515,7 +1516,6 @@ function FrameworkOsShellInner({
       if (pluginOpInFlightRef.current.has(pluginId)) return;
       const current = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId);
       if (!current) return installPlugin(pluginId, rebuiltAt);
-      const oldModuleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
       pluginOpInFlightRef.current.add(pluginId);
       dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "reloading" });
       dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "restarting" });
@@ -1581,8 +1581,11 @@ function FrameworkOsShellInner({
 
         if (ownsSession) await establishPrimarySession(newHandle);
 
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react) — `evictPluginModule`'s refcounted
+        // module-URL lease pool is gone (packet H2's "must not exist" list); disposing the OLD handle
+        // already tears down every actor it ever activated via `ShardClient.dispose`, which is the
+        // real replacement — there is no separate shared-module resource left to evict.
         current.handle.dispose();
-        if (oldModuleUrl) evictPluginModule(oldModuleUrl);
       } catch (error) {
         console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
         newHandle?.dispose();
@@ -1640,9 +1643,7 @@ function FrameworkOsShellInner({
         dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
         current.handle.dispose();
-        const moduleUrl = pluginModuleUrlByIdRef.current.get(pluginId);
         pluginModuleUrlByIdRef.current.delete(pluginId);
-        if (moduleUrl) evictPluginModule(moduleUrl);
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
       }
@@ -1846,9 +1847,7 @@ function FrameworkOsShellInner({
           dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId: extensionId });
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "available" });
           current.handle.dispose();
-          const moduleUrl = pluginModuleUrlByIdRef.current.get(extensionId);
           pluginModuleUrlByIdRef.current.delete(extensionId);
-          if (moduleUrl) evictPluginModule(moduleUrl);
         }
         setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
         void dispatchSpaceExtensionOp("uninstallExtension", { extensionId });
@@ -2867,15 +2866,26 @@ function FrameworkOsShellInner({
               } else {
                 console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
               }
-              // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `invoke-extension` no longer carries a
-              // `responseAction` to redispatch — the result is correlated back to the guest by `req`
-              // and delivered as an `Event::Completed`, which resumes the future the guest SDK parked
-              // (📓️design-abi.md §2). The React host's completion queue lands with packet H1-react;
-              // until then the invoke still runs but its output cannot reach the guest, so the gap is
-              // reported loudly rather than silently swallowed.
-              console.error("[DEBUG] invokeExtension completion not yet deliverable — pending H1-react request registry", { extensionId, capability, req, nodeHash: request.nodeHash, outputBytes: outputJson.length });
+              // 🔁️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react) — `invoke-extension` no longer
+              // carries a `responseAction` to redispatch; the result is correlated back to the
+              // ORIGINATING actor by `req` and delivered as `Event::Completed`, which resumes the
+              // guest SDK's parked `RequestRegistry` future (design-abi.md §2). `outputJson` is empty
+              // when the extension had no `invoke` — still a real `ok` completion (an empty object),
+              // not a fault, matching this branch's pre-existing "return empty output" fallback above.
+              if (requestingPlugin.handle.completeExtensionInvoke) {
+                const outcomeBytes = encodePackValue(outputJson.length > 0 ? JSON.parse(outputJson) : {});
+                await requestingPlugin.handle.completeExtensionInvoke(baseSession.instanceId, req, { ok: outcomeBytes });
+              } else {
+                console.warn("[DEBUG] invokeExtension: requesting plugin's handle has no completeExtensionInvoke — completion not delivered", { extensionId, capability, req });
+              }
             } catch (error) {
               console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
+              if (requestingPlugin.handle.completeExtensionInvoke) {
+                const message = error instanceof Error ? error.message : String(error);
+                await requestingPlugin.handle.completeExtensionInvoke(baseSession.instanceId, req, { fault: encodePackValue({ code: "extension.invoke-failed", message }) }).catch((completionError) => {
+                  console.warn("[os-shell] invokeExtension: fault completion also failed to deliver", { extensionId, capability, req, completionError });
+                });
+              }
             }
           }
           continue;

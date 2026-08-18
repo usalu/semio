@@ -350,7 +350,7 @@ pub fn create_mathematical_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// ✏️ `MathematicalPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<MathematicalPlayApp>` (SDK adapter, contract §2.1) is the real

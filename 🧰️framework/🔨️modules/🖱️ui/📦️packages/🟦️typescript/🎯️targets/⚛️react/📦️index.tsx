@@ -10091,7 +10091,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
@@ -10123,7 +10123,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
@@ -10908,7 +10908,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
@@ -11030,7 +11030,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -12367,7 +12367,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -12799,7 +12799,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       expect(css).toContain('[data-window-silhouette-gap]');
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -19765,7 +19765,7 @@ if (treeVitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/📦️packages/🟦️typescript/🎨️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🎨️styling/🎨️ui.css"), "utf8");
       expect(css).toContain('[data-slot="navbar"]::after');
       expect(css).toContain('[data-slot="footer"]::before');
       expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);

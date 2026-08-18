@@ -1,0 +1,51 @@
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel` (lib) generated 1 warning
+   Compiling semio-framework-os-kernel-db v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust)
+   Compiling semio-hub v0.1.0 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 4m 11s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_hub-aa96fd09ce6119b8)
+
+running 11 tests
+test directory::sqlite::tests::user_space_membership_round_trip ... ok
+test directory::tests::command_naming_a_deleted_space_is_not_found ... ok
+test directory::tests::archive_space_demotes_every_author_to_spectator ... ok
+test directory::tests::upsert_member_with_unknown_email_creates_the_user_first ... ok
+test directory::tests::event_log_replay_matches_projections ... ok
+test directory::tests::invite_create_redeem_revoke_round_trip ... ok
+test directory::tests::atelier_rejects_a_second_distinct_author ... ok
+test directory::sqlite::tests::share_token_gating ... ok
+test directory::sqlite::tests::sync_session_lifecycle ... ok
+test directory::tests::owner_membership_can_never_be_removed ... ok
+test directory::sqlite::tests::seed_is_replayable ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+=== BIN ===
+
+running 20 tests
+test tests::directory_commands_append_events_and_project ... ok
+test tests::admin_loopback_default_and_bearer_when_configured ... ok
+test tests::auth_sessions_me_roundtrip ... ok
+test tests::auth_session_grants_role_and_bypasses_share_gate ... ok
+test tests::blob_put_rejects_hash_mismatch ... ok
+test tests::deleted_space_denies_ws_hello ... ok
+test tests::directory_ws_replays_then_streams_live ... ok
+test tests::public_visibility_grants_anonymous_spectator_fallback ... ok
+test tests::directory_ws_publishes_presence_roster_with_surface_and_color ... ok
+test tests::blob_put_get_head_round_trip ... ok
+test tests::connection_events_reach_admin_stream ... ok
+test tests::presence_roster_is_document_wide_and_frames_carry_surface_only_inside_peer ... ok
+test tests::share_token_gates_ws_access ... ok
+test tests::admin_api_lists_spaces_users_connections_and_kicks ... ok
+test tests::document_status_reports_frontier_and_lazily_mints ... ok
+test tests::security_gate_rejects_spectator_writes_and_allows_author_writes ... ok
+test tests::reconnect_replays_missing_commands_via_bootstrap_tail ... ok
+test tests::ws_duplex_fan_out ... ok
+test tests::space_scoped_documents_are_isolated ... ok
+test tests::session_frame_assigns_lowest_free_color_per_space_and_releases_on_last_disconnect ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+

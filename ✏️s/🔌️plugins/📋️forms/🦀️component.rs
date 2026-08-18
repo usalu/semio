@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -8,6 +9,13 @@ use semio_framework_plugin::Plugin;
 /// thing it used to survive for, registered automatically by `.editor(…)` below.
 /// `.editor(…)`/`.viewer(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the
 /// old single `.document_app(…)` registration with the two role-carrying surfaces for `s.forms.forms@1/*`.
+/// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
+/// activates one instance whenever a `"form.dictionary"` artifact
+/// (`crate::artifacts::forms::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
+/// (no cross-plugin extension attachment, no `.handler(...)` — the SDK default holds), and it asks
+/// the broker for document write access because `FormsPlayApp` persists question/field edits back
+/// to the open document.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("forms")
         .label("Forms")
@@ -17,5 +25,8 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::forms::FormsPlayApp>()
         .viewer::<crate::viewer::forms::FormsViewer>(crate::viewer::forms::create_forms_viewer())
         .viewer_mutation_roster::<crate::viewer::forms::FormsViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::forms::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist form dictionary edits to the open document".into(), optional: false })
         .try_build()
 }

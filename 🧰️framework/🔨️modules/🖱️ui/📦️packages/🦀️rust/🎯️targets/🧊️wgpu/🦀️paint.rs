@@ -224,7 +224,7 @@ fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNod
 /// outset accent ring for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
 /// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
 /// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
-fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: UiPresence) {
+fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: &UiPresence) {
     if presence.state == UiState::Disabled {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel.with_alpha(0.35));
     }

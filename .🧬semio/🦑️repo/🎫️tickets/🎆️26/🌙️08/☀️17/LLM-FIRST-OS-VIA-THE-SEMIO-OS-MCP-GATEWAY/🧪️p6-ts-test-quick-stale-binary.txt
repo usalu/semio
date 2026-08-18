@@ -1,0 +1,23 @@
+$ bun ./📜️script.ts nx run @semio-tech/framework-os-mcp:test-quick
+
+> nx run @semio-tech/framework-os-mcp:test-quick  [existing outputs match the cache, left as is]
+
+> bun ./📜️script.ts test quick
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript
+
+
+ Test Files  5 passed (5)
+      Tests  26 passed (26)
+   Start at  11:50:22
+   Duration  2.55s (transform 1.97s, setup 0ms, import 3.46s, tests 2.31s, environment 1ms)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/framework-os-mcp
+
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+
+exit:0

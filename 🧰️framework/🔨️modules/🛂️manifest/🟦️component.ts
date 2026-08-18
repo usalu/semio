@@ -285,6 +285,18 @@ export type UiTreeItemAction = {
   readonly placement?: UiTreeActionPlacement;
 };
 
+/** 👥️ One peer's mark on the {@link UiTreeItemNode} carrying this — hand-written twin of the Rust
+ * `UiPeerMark` (`🖱️ui/…/🎯️targets/🧊️wgpu/🦀️component.rs` `🔖️Presence` region, contract-freeze §C7.6
+ * of ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
+ * CREATION`). `label` is the raw actor id (no display name travels this far down the stack). */
+export type UiPeerMark = {
+  readonly actor: string;
+  readonly color?: number;
+  readonly hovered?: boolean;
+  readonly selected?: boolean;
+  readonly label: string;
+};
+
 export type UiTreeItemNode = {
   readonly id: string;
   readonly label: string;
@@ -305,6 +317,11 @@ export type UiTreeItemNode = {
   /** 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
    * id carried in `args` (e.g. `{ id: row.id }`), rather than minting a unique menu id per row. */
   readonly menu?: UiMenuRef;
+  /** 🎨️ This session's own hub-assigned palette index, mirrored from `UiPresence.color` — stamped by
+   * the framework's `ui_tree_stamp_presence` pass onto every `interactionDomain`-bound item. */
+  readonly color?: number;
+  /** 👥️ Every OTHER peer currently marking this item (hover and/or selection), sorted by actor. */
+  readonly peers?: readonly UiPeerMark[];
 };
 
 export type UiTreeSectionNode = {

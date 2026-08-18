@@ -214,6 +214,17 @@ pub enum AppCommand {
     ReadConflicts {
         seq: u64,
     },
+    /// 👥️ Pushes the document-wide presence roster into this app instance — the ONLY plugin ingress
+    /// for peers (contract-freeze §C7.6 of ticket
+    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`).
+    /// `own_color` is this actor's hub-assigned palette index (`None` for a folder-only session with
+    /// no hub); `peers` are `encode_presence_peer` blobs, the whole roster with the wrapper's own
+    /// actor already dropped. Reply is a plain `AppFrame::Done`. CHANNEL_VERSION 12 wire addition.
+    Presence {
+        seq: u64,
+        own_color: Option<u8>,
+        peers: Vec<Vec<u8>>,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -262,10 +273,14 @@ pub enum AppFrame {
     },
     /// 👥️ Typed guest ephemeral-lane snapshot. Presence is the app-defined `ArtifactPack` payload;
     /// generations let hosts skip unchanged renderer work while transient remains local-only.
+    /// `interaction` (trailing field, CHANNEL_VERSION 12 wire addition, contract-freeze §C7.6) is the
+    /// output of `encode_presence_interaction` over the app's own declared broadcast domains — empty
+    /// bytes when the app declares no interaction domains or nothing is selected/hovered right now.
     Ephemeral {
         presence: Vec<u8>,
         presence_generation: u64,
         transient_generation: u64,
+        interaction: Vec<u8>,
     },
     /// 🧾️ Full history patch for initial host projection and gap recovery.
     HistorySnapshot { in_reply_to: u64, history_patch: Vec<u8> },
@@ -357,6 +372,25 @@ fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
 fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
     if crate::os_spr::read_bool(bytes, pos)? {
         Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
+}
+
+/// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
+/// presence-byte convention as {@link write_opt_u64} above.
+fn write_opt_u8(out: &mut Vec<u8>, value: &Option<u8>) {
+    crate::os_spr::write_bool(out, value.is_some());
+    if let Some(v) = value {
+        out.push(*v);
+    }
+}
+
+fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate::os_spr::ProtocolError> {
+    if crate::os_spr::read_bool(bytes, pos)? {
+        let byte = *bytes.get(*pos).ok_or_else(|| malformed("channel app-command opt-u8", *pos as u64, "truncated"))?;
+        *pos += 1;
+        Ok(Some(byte))
     } else {
         Ok(None)
     }
@@ -555,6 +589,12 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             out.push(27);
             crate::os_spr::write_varint_u64(&mut out, *seq);
         }
+        AppCommand::Presence { seq, own_color, peers } => {
+            out.push(28);
+            crate::os_spr::write_varint_u64(&mut out, *seq);
+            write_opt_u8(&mut out, own_color);
+            write_vec_bytes(&mut out, peers);
+        }
     }
     out
 }
@@ -670,6 +710,12 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::Pro
             AppCommand::ResolveConflict { seq, conflict_id, resolution }
         }
         27 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        28 => {
+            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let own_color = read_opt_u8(bytes, &mut pos)?;
+            let peers = read_vec_bytes(bytes, &mut pos)?;
+            AppCommand::Presence { seq, own_color, peers }
+        }
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -761,11 +807,12 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries);
         }
-        AppFrame::Ephemeral { presence, presence_generation, transient_generation } => {
+        AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction } => {
             out.push(13);
             crate::os_spr::write_bytes(&mut out, presence);
             crate::os_spr::write_varint_u64(&mut out, *presence_generation);
             crate::os_spr::write_varint_u64(&mut out, *transient_generation);
+            crate::os_spr::write_bytes(&mut out, interaction);
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
@@ -866,6 +913,7 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::Protoco
             presence: crate::os_spr::read_bytes(bytes, &mut pos)?,
             presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
             transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            interaction: crate::os_spr::read_bytes(bytes, &mut pos)?,
         },
         14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
         15 => AppFrame::TransactionProposal {
@@ -1176,7 +1224,8 @@ mod tests {
         assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
         assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries() });
         assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() });
-        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 });
+        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9] });
+        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new() });
     }
 
     //#region 🔖️Children
@@ -1400,6 +1449,7 @@ mod tests {
             ("SetMergePolicy", AppCommand::SetMergePolicy { seq: 5, policy: 1 }),
             ("ResolveConflict", AppCommand::ResolveConflict { seq: 6, conflict_id: "conflict-1".to_string(), resolution: 0 }),
             ("ReadConflicts", AppCommand::ReadConflicts { seq: 7 }),
+            ("Presence", AppCommand::Presence { seq: 8, own_color: Some(3), peers: vec![vec![1, 2], vec![9]] }),
         ]
     }
 
@@ -1426,7 +1476,7 @@ mod tests {
             }),
             ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
             ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
-            ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4 }),
+            ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7] }),
             ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
             ("TransactionProposal", AppFrame::TransactionProposal {
                 in_reply_to: 1,
@@ -1482,6 +1532,7 @@ mod tests {
             "SetMergePolicy" => "190501",
             "ResolveConflict" => "1a060a636f6e666c6963742d3100",
             "ReadConflicts" => "1b07",
+            "Presence" => "1c080103020201020109",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -1503,7 +1554,7 @@ mod tests {
             "Emit" => "0a0101010000010200",
             "Draft" => "0b01010101020164",
             "Children" => "0c01010173016301640101",
-            "Ephemeral" => "0d0201020304",
+            "Ephemeral" => "0d02010203040107",
             "HistorySnapshot" => "0e010101",
             "TransactionProposal" => "0f0101700101010164016b00",
             "TransactionPrepared" => "10017401010100",

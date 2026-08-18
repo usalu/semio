@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the old `.setup(engine::register)`
@@ -8,6 +9,12 @@ use semio_framework_plugin::Plugin;
 /// thing it used to survive for, registered automatically by `.editor(...)` below. Ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `.document_app(...)` (single mutation-capable
 /// surface) split into `.editor(...)` + `.viewer(...)` (contract §2.4) — the same dialect, two roles.
+/// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
+/// activates one instance whenever a `"2d.raster"` artifact
+/// (`crate::artifacts::raster::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
+/// (no cross-plugin extension attachment, the SDK default holds), and it asks the broker for
+/// document write access because `RasterPlayApp` persists edits back to the open document.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("raster")
         .label("Raster")
@@ -17,6 +24,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::raster::RasterPlayApp>()
         .viewer::<crate::viewer::raster::RasterViewer>(crate::viewer::raster::create_raster_viewer())
         .viewer_mutation_roster::<crate::viewer::raster::RasterViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::raster::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist raster edits to the open document".into(), optional: false })
         .try_build()
 }
 

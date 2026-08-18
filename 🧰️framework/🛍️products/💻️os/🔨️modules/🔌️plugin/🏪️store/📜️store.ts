@@ -15,7 +15,7 @@ import {
   pluginWorkerSource,
   transpilePluginComponent,
   type PluginWebMaterializeContext,
-} from "../🌐plugin-web-materialize.ts";
+} from "../📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
 
 //#region 🔖️Constants
 export const EXTENSION_STATIC_ROUTE = "/extensions";

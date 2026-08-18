@@ -54,9 +54,11 @@ pub use super::move_step::mutation::{move_step, MoveStep};
 /// opaque — callers pass `before.to_fixture()`/a live `SequenceHost.snapshot` as `after`.
 pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceMutation> {
     let mut mutations = Vec::new();
+    let mut deleted_step_ids: Vec<String> = Vec::new();
     for step in &before.steps {
         if !after.steps.iter().any(|entry| entry.id == step.id) {
             mutations.push(delete_step(step.id.clone()));
+            deleted_step_ids.push(step.id.clone());
         }
     }
     for step in &after.steps {
@@ -75,7 +77,18 @@ pub fn sequence_snapshot_mutations(before: &SequenceFixture, after: &SequenceFix
             }
         }
     }
+    // 🐛️ Pre-migration bug (confirmed by this ticket's mandatory green-test-run pass — these
+    // command tests could never run before, the crate did not compile): `DeleteStep`'s own diff
+    // (`🧬️mutations/🗑️delete-step/🔺️diff`) is already a cascade — it drops every edge touching the
+    // deleted step as part of THAT mutation. Emitting a separate `DisconnectSteps` for the same
+    // edge here is redundant and, worse, invalid: by the time it applies, `DeleteStep` has already
+    // removed the edge, so `DisconnectSteps` rejects with "Edge ... does not exist." and the whole
+    // batch fails. Skip an edge whose endpoint is one of THIS diff's own deleted steps — `DeleteStep`
+    // already accounts for it.
     for edge in &before.edges {
+        if deleted_step_ids.iter().any(|id| id == &edge.from || id == &edge.to) {
+            continue;
+        }
         if !after.edges.iter().any(|entry| entry.id == edge.id) {
             mutations.push(disconnect_steps(edge.id.clone()));
         }
@@ -163,7 +176,7 @@ mod tests {
 
     #[test]
     fn store_applies_and_undoes_step_create() {
-        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None));
+        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })],

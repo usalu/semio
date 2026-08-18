@@ -4580,6 +4580,104 @@ pub struct PackageDescriptor {
 }
 //#endregion 🔖️PackageDescriptor
 
+//#region 🔖️AgentContributions
+// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P8-agent-spi, `📋️master.md`
+// §3.1: what a package OFFERS to agents — distinct from `capability_requests` on
+// `PackageDescriptor` above (what a package NEEDS host permission for). Overloading one for the
+// other is exactly the mistake this design forbids: `capability_requests: Vec<kernel::
+// CapabilityRequest>` gates HOST PRIVILEGE (`documents.write`, `fs:*`, …) this package asks the
+// broker for; `AgentContributions` below is a curated ADVERTISEMENT of which of this package's own
+// already-declared capabilities (actions/commands, already fully described via `ActionSemantics`/
+// `CapabilityPolicy` — P3, `🔖️ActionSemantics` above) an agent may discover and invoke at all, and
+// which of those are further promoted to a first-class MCP tool (`📋️master.md` §3.1's `tools/list`
+// "promoted" set).
+//
+// Attachment point, and why it is a LEASE rather than a field added directly here: the obvious
+// home is a new `PackageDescriptor.agent: Option<AgentContributions>` field. `PackageDescriptor`'s
+// only known construction sites (`describe_plugin()`/`describe_extension()`,
+// `🔌️plugin/🛂️describe/🦀️component.rs`) live in `semio-framework-plugin` — a crate this packet
+// does not own and the peer ticket's W3 is about to freeze — and both build the value as a full
+// explicit struct literal (verified by reading the file: no `..Default::default()` anywhere, and
+// `PackageDescriptor` has no `Default` impl — `role: PackageRole` has no default variant — so a
+// `Default` impl could not rescue an untouched call site either way). Adding the field HERE alone
+// would therefore break `cargo check -p semio-framework-plugin --lib` the moment this region
+// lands, in a live shared tree, before any reviewer applies a companion lease — exactly the
+// destabilisation this packet must not cause. So the field itself, and its counterpart on the
+// `PluginDescriptorExtras` side-channel (`🔌️plugin/🦀️component.rs`, E2's own established pattern
+// for precisely this "avoid cascading through construction sites I don't own" problem) and on
+// `ExtensionManifest`, ship together as ONE atomic lease bundle — see `📓️terra-P8-report.md` §2
+// for the full reasoning and `📓️lease-P8-agent-descriptor.md` for the exact diffs.
+/// @emoji 🤖️ What a package OFFERS to agents — see the region header above for the critical
+/// `capability_requests` vs `AgentContributions` distinction. `capabilities` are fully-qualified
+/// capability ids (the same grammar `🌉️mcp/🗂️catalog` compiles — `<plugin_id>.<app_id>.
+/// <action_id>` / `….cmd.<id>` / `….mode.<mode_id>.<id>`, `📋️master.md` §3.1); `promoted` is the
+/// subset exposed as a first-class MCP tool (`tools/list`) rather than only reachable via
+/// `capabilities.search`/`capabilities.describe`. Both empty by default — an absent
+/// `AgentContributions` (the `Option` on `PackageDescriptor` stays `None`) means "not yet
+/// agent-enabled", never "agent-enabled with zero capabilities" (an empty-but-`Some` value).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AgentContributions {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub promoted: Vec<String>,
+}
+
+impl AgentContributions {
+    /// @emoji 🧪️ `promoted ⊆ capabilities` — the one structural invariant every producer
+    /// (`describe_plugin()`/`describe_extension()`) and consumer (`📇️registry:check`) must hold.
+    /// Pure and dependency-free so both the Rust builder side and the registry's own TypeScript
+    /// check (which has no way to call back into this crate) can each verify it independently.
+    pub fn promoted_is_subset_of_capabilities(&self) -> bool {
+        self.promoted.iter().all(|id| self.capabilities.contains(id))
+    }
+}
+
+#[cfg(test)]
+mod agent_contributions_tests {
+    use super::*;
+
+    #[test]
+    fn default_is_empty_and_promoted_subset_holds_trivially() {
+        let contributions = AgentContributions::default();
+        assert!(contributions.capabilities.is_empty());
+        assert!(contributions.promoted.is_empty());
+        assert!(contributions.promoted_is_subset_of_capabilities());
+    }
+
+    #[test]
+    fn promoted_subset_of_capabilities_holds_and_is_violated_correctly() {
+        let ok = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.deleteSelection".into()] };
+        assert!(ok.promoted_is_subset_of_capabilities());
+        let bad = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec!["note.editor.addBlock".into()] };
+        assert!(!bad.promoted_is_subset_of_capabilities());
+    }
+
+    #[test]
+    fn serde_round_trip_uses_camel_case_and_skips_empty_promoted() {
+        let contributions = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
+        let json = serde_json::to_value(&contributions).unwrap();
+        assert_eq!(json, serde_json::json!({ "capabilities": ["note.editor.deleteSelection"] }));
+        let round_tripped: AgentContributions = serde_json::from_value(json).unwrap();
+        assert_eq!(round_tripped, contributions);
+    }
+
+    #[test]
+    fn never_conflated_with_capability_requests() {
+        // 🚨️ `AgentContributions.capabilities` (what this package OFFERS) and
+        // `PackageDescriptor.capability_requests: Vec<kernel::CapabilityRequest>` (what this
+        // package NEEDS) are different types with different shapes — this test exists only to
+        // pin the distinction in code, not just in the doc comment above, so a future edit that
+        // tries to merge them fails to compile rather than silently drifting.
+        let offers = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
+        let needs = kernel::CapabilityRequest { id: kernel::CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist edits".into(), optional: false };
+        assert_ne!(offers.capabilities.first().map(String::as_str), Some(needs.id.0.as_str()));
+    }
+}
+//#endregion 🔖️AgentContributions
+
 //#region 🔖️MediaVocabulary
 // 🔀️ Relocated verbatim from 🔺️mesh/🦀️component.rs (ticket 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT
 // wave 4a) — manifest-vocabulary types, not codec material; mesh keeps MeshData/Primitives/
@@ -6845,6 +6943,9 @@ mod app_label_tests {
         crate::ui::DescriptorEntry::export().unwrap();
         crate::ui::ContributionSet::export().unwrap();
         crate::ui::PackageDescriptor::export().unwrap();
+        // 🤖️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P8-agent-spi —
+        // additive, attaches to `PackageDescriptor` via the lease bundle (see `🔖️AgentContributions`).
+        crate::ui::AgentContributions::export().unwrap();
         crate::ui::OsMediaCapability::export().unwrap();
         crate::ui::ArtifactKindSpec::export().unwrap();
         crate::ui::MediaClass::export().unwrap();

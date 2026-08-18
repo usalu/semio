@@ -28,7 +28,8 @@ use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge,
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use graph::manifest::PropertyBag;
 use imperative_engine::{
-    compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step,
+    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult,
+    Step,
 };
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};
@@ -1036,7 +1037,7 @@ pub fn create_sequence_app() -> AppDefinition {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type SequenceApp = VcsArtifactApp<EditorApp<SequencePlayApp>>;
 
@@ -1102,7 +1103,7 @@ mod tests {
     /// `MemoryBackbone` converges both sides onto an identical projection.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        semio_framework_plugin::testkit::assert_two_instances_converge::<SequencePlayApp, _>(
+        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<SequencePlayApp>, _>(
             "mem://sequence-convergence",
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }),
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }),

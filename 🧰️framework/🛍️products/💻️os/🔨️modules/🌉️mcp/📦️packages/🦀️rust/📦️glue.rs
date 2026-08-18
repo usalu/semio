@@ -1,5 +1,17 @@
-//! 🌉️ `semio-framework-os-mcp` glue — mounts the `⚠️errors`/`🧬️schema`/`🧭️protocol`/`🚚️transport`
-//! facets plus the module root, exactly as `🏃️run`/`🖥️shell`'s own glue files mount theirs.
+//! 🌉️ `semio-framework-os-mcp` glue — mounts every `🌉️mcp` facet (`⚠️errors`/`🧬️schema`/`🧭️protocol`/
+//! `🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge`/`🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`/
+//! `🧫️fixtures`/`🎬️actions`/`🛡️policy`/`🏠️workspace`) plus the module root, exactly as `🏃️run`/`🖥️shell`'s
+//! own glue files mount theirs.
+
+// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: `store`
+// is `semio-framework-os-kernel` under the SAME alias `🏃️run/📦️glue.rs` uses for it — a single alias
+// (not also `dsl`/`protocol`, `🏃️run`'s own convention) because this crate's own `🧭️protocol` facet
+// (P1a, the MCP JSON-RPC protocol core) already owns the name `protocol` at this crate's root;
+// `semio_framework_os_kernel`'s crate-root glob re-exports (`os_dsl::*`/`os_store::*`/`os_spr::*`,
+// verified in that crate's own `📦️glue.rs`) make every item `🏠️workspace` needs (`ArtifactDsl`,
+// `ArtifactPack`, `Mutation`, `MutationDiff`, `OpText`, `OpBinary`, `ArtifactStore`,
+// `create_document_envelope`, `TextError`, `TextSpan`, `sync::*`) reachable through this one alias.
+extern crate semio_framework_os_kernel as store;
 
 #[path = "../../⚠️errors/🦀️component.rs"]
 pub mod errors;
@@ -36,6 +48,15 @@ pub mod conformance;
 
 #[path = "../../🧫️fixtures/🦀️component.rs"]
 pub mod fixtures;
+
+#[path = "../../🎬️actions/🦀️component.rs"]
+pub mod actions;
+
+#[path = "../../🛡️policy/🦀️component.rs"]
+pub mod policy;
+
+#[path = "../../🏠️workspace/🦀️component.rs"]
+pub mod workspace;
 
 #[path = "../../🦀️component.rs"]
 mod root;

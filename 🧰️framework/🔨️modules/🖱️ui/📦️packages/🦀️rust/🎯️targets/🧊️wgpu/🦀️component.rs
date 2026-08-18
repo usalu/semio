@@ -73,7 +73,36 @@ pub mod layout {
     /// visually distinguishable except `state == Hidden`, which makes the rest irrelevant — see
     /// [`UiPresence::visible`]. Defaults to fully inert (`Normal`/`Idle`/`false`/`false`) and is omitted
     /// from the wire format entirely at default (see `UiPresence::is_default`).
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+    /// 👥️ One peer's mark on the element carrying this `UiPresence` — hover/selection dot plus
+    /// initials chip (contract-freeze §C7.6 of ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
+    /// SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`). `label` is the actor id
+    /// itself (no display name is carried this far down the stack — see `PeerPresence`'s own doc
+    /// comment in the plugin crate); a renderer that has the full roster may substitute a friendlier
+    /// name, but every renderer must always carry SOME text alongside color (never color alone).
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+    #[serde(rename_all = "camelCase")]
+    pub struct UiPeerMark {
+        pub actor: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub color: Option<u8>,
+        #[serde(default, skip_serializing_if = "is_default")]
+        pub hovered: bool,
+        #[serde(default, skip_serializing_if = "is_default")]
+        pub selected: bool,
+        pub label: String,
+    }
+
+    /// 🧭️ The shared, compile-time-enforced state model every rendered UI element embeds as a
+    /// mandatory `presence` field: `state` × `status` × `hover` × `selected` × own `color` × peer
+    /// `marks`. All combinations are visually distinguishable except `state == Hidden`, which makes
+    /// the rest irrelevant — see [`UiPresence::visible`]. Defaults to fully inert
+    /// (`Normal`/`Idle`/`false`/`false`/`None`/`[]`) and is omitted from the wire format entirely at
+    /// default (see `UiPresence::is_default`). `color`/`peers` (ticket 26/08/17/SHARED-PRESENCE-
+    /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) make `UiPresence` `Clone`-only — no
+    /// longer `Copy` — since `peers: Vec<UiPeerMark>` owns heap data; `UiNode::presence()`/
+    /// `UiControlNode::presence()` therefore return `&UiPresence`, not a by-value copy.
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase", default)]
     pub struct UiPresence {
@@ -85,6 +114,14 @@ pub mod layout {
         pub hover: bool,
         #[serde(skip_serializing_if = "is_default")]
         pub selected: bool,
+        /// 🎨️ This session's own hub-assigned palette index — stamped onto every `interaction_domain`-
+        /// bound tree item by `ui_tree_stamp_presence`, `None` for a folder-only session with no hub.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub color: Option<u8>,
+        /// 👥️ Every OTHER peer currently marking this element (hover and/or selection), sorted by
+        /// actor.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub peers: Vec<UiPeerMark>,
     }
 
     impl UiPresence {
@@ -2054,7 +2091,7 @@ pub mod ui {
 
     //#region 🔖Action
     pub use super::layout::{build_shell_context_menu_specs, organize_context_menu, ribbon_parent_label, ShellMenuAction, RIBBON_PARENT_CATEGORIES};
-    pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStatus};
+    pub use super::layout::{ActionDescriptor, StyleSpec, UiPeerMark, UiPresence, UiState, UiStatus};
     pub use super::layout::{ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef};
     //#endregion 🔖Action
 
@@ -2377,17 +2414,19 @@ pub mod ui {
 
     impl UiControlNode {
         /// 🧭️ Exhaustive accessor — a new control variant fails to compile here until wired.
-        pub fn presence(&self) -> UiPresence {
+        /// `&UiPresence` (ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
+        /// CREATION C7.6): `UiPresence` gained `peers: Vec<UiPeerMark>` and lost `Copy`.
+        pub fn presence(&self) -> &UiPresence {
             match self {
-                UiControlNode::Input(n) => n.presence,
-                UiControlNode::Select(n) => n.presence,
-                UiControlNode::Toggle(n) => n.presence,
-                UiControlNode::Button(n) => n.presence,
-                UiControlNode::KeyValue(n) => n.presence,
-                UiControlNode::Slider(n) => n.presence,
-                UiControlNode::NumberStepper(n) => n.presence,
-                UiControlNode::Ring(n) => n.presence,
-                UiControlNode::IconSelect(n) => n.presence,
+                UiControlNode::Input(n) => &n.presence,
+                UiControlNode::Select(n) => &n.presence,
+                UiControlNode::Toggle(n) => &n.presence,
+                UiControlNode::Button(n) => &n.presence,
+                UiControlNode::KeyValue(n) => &n.presence,
+                UiControlNode::Slider(n) => &n.presence,
+                UiControlNode::NumberStepper(n) => &n.presence,
+                UiControlNode::Ring(n) => &n.presence,
+                UiControlNode::IconSelect(n) => &n.presence,
             }
         }
         pub fn presence_mut(&mut self) -> &mut UiPresence {
@@ -2582,24 +2621,37 @@ pub mod ui {
         pub interaction_domain: Option<String>,
     }
 
-    /// 🖌️ Stamps `selected`/`previewed` per-item presence across every item in every section of a
-    /// tree — the framework-side counterpart of a `UiTreeNode.interaction_domain` binding.
-    /// `previewed` wins visually over a plain `selected` item only insofar as both are representable
-    /// simultaneously (an item can be selected AND previewed).
-    pub fn ui_tree_stamp_presence(sections: &mut [UiTreeSectionNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>) {
-        fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>) {
+    /// 🖌️ Stamps `selected`/`previewed`/`color`/`peers` per-item presence across every item in every
+    /// section of a tree — the framework-side counterpart of a `UiTreeNode.interaction_domain`
+    /// binding. `previewed` wins visually over a plain `selected` item only insofar as both are
+    /// representable simultaneously (an item can be selected AND previewed). `own_color` (ticket
+    /// 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) is stamped onto
+    /// every item unconditionally — it names the color THIS session renders its own hover/selection
+    /// as, whether or not this particular item is currently marked; `peer_marks_for` resolves an
+    /// item's own peer roster by id (called once per item, not pre-collected, since the caller's
+    /// `InteractionView::peers_selecting`/`peers_hovering` are themselves per-id lookups).
+    pub fn ui_tree_stamp_presence(
+        sections: &mut [UiTreeSectionNode],
+        selected: &std::collections::HashSet<String>,
+        previewed: &std::collections::HashSet<String>,
+        own_color: Option<u8>,
+        peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>,
+    ) {
+        fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
             for item in items {
                 item.presence.selected = selected.contains(&item.id);
                 if previewed.contains(&item.id) {
                     item.presence.state = UiState::Previewed;
                 }
+                item.presence.color = own_color;
+                item.presence.peers = peer_marks_for(&item.id);
                 if let Some(children) = &mut item.items {
-                    stamp_items(children, selected, previewed);
+                    stamp_items(children, selected, previewed, own_color, peer_marks_for);
                 }
             }
         }
         for section in sections {
-            stamp_items(&mut section.items, selected, previewed);
+            stamp_items(&mut section.items, selected, previewed, own_color, peer_marks_for);
         }
     }
 
@@ -2771,7 +2823,7 @@ pub mod ui {
                 id: section.id.clone(),
                 label: section.label.clone(),
                 default_open: Some(section.default_open.unwrap_or(true)),
-                presence: section.presence,
+                presence: section.presence.clone(),
                 items: section.children.iter().enumerate().map(|(index, child)| ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index))).collect(),
             })
             .collect();
@@ -3438,12 +3490,18 @@ pub mod ui {
         pub drop_action: Option<ActionDescriptor>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub sort_json: Option<String>,
+        /// 🪟️ The `InteractionDefinition` id this window's `WindowKindDefinition.interactions` binds
+        /// (mirrors `World3dScene.domain_id`) — lets a tabular surface look up
+        /// `InteractionView::peers_selecting`/`peers_hovering` marks per row id. `None` means this
+        /// window binds no app domain.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub domain_id: Option<String>,
     }
 
     impl TableScene {
-        /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort) unset. */
+        /** @emoji 📋️ Builds a table scene with optional extensions (selection/drag/sort/domain) unset. */
         pub fn base(columns_json: impl Into<String>, rows_json: impl Into<String>) -> Self {
-            Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action: None, sort_json: None }
+            Self { columns_json: columns_json.into(), rows_json: rows_json.into(), selection_json: None, row_drag_mime: None, drop_action: None, sort_json: None, domain_id: None }
         }
     }
 
@@ -3876,27 +3934,27 @@ pub mod ui {
     impl UiNode {
         /// 🧭️ Exhaustive presence accessor — adding a `UiNode` variant fails to compile here (and in
         /// `presence_mut` and `paint_node`'s match) until the new element's `presence` field is wired up.
-        pub fn presence(&self) -> UiPresence {
+        pub fn presence(&self) -> &UiPresence {
             match self {
-                UiNode::Stack(n) => n.presence,
-                UiNode::Text(n) => n.presence,
-                UiNode::Button(n) => n.presence,
-                UiNode::Separator(n) => n.presence,
-                UiNode::Input(n) => n.presence,
-                UiNode::Select(n) => n.presence,
-                UiNode::Toggle(n) => n.presence,
-                UiNode::KeyValue(n) => n.presence,
-                UiNode::Slider(n) => n.presence,
-                UiNode::NumberStepper(n) => n.presence,
-                UiNode::Ring(n) => n.presence,
-                UiNode::IconSelect(n) => n.presence,
-                UiNode::Field(n) => n.presence,
-                UiNode::Section(n) => n.presence,
-                UiNode::Group(n) => n.presence,
-                UiNode::Tree(n) => n.presence,
-                UiNode::Image(n) => n.presence,
-                UiNode::ComponentScene(n) => n.presence,
-                UiNode::ExternalSlot(n) => n.presence,
+                UiNode::Stack(n) => &n.presence,
+                UiNode::Text(n) => &n.presence,
+                UiNode::Button(n) => &n.presence,
+                UiNode::Separator(n) => &n.presence,
+                UiNode::Input(n) => &n.presence,
+                UiNode::Select(n) => &n.presence,
+                UiNode::Toggle(n) => &n.presence,
+                UiNode::KeyValue(n) => &n.presence,
+                UiNode::Slider(n) => &n.presence,
+                UiNode::NumberStepper(n) => &n.presence,
+                UiNode::Ring(n) => &n.presence,
+                UiNode::IconSelect(n) => &n.presence,
+                UiNode::Field(n) => &n.presence,
+                UiNode::Section(n) => &n.presence,
+                UiNode::Group(n) => &n.presence,
+                UiNode::Tree(n) => &n.presence,
+                UiNode::Image(n) => &n.presence,
+                UiNode::ComponentScene(n) => &n.presence,
+                UiNode::ExternalSlot(n) => &n.presence,
             }
         }
         pub fn presence_mut(&mut self) -> &mut UiPresence {
@@ -4785,7 +4843,7 @@ pub mod ui {
                 GraphTimelineScene { columns_json: "[]".into() },
                 NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
                 TextEditorScene::base("buf".into(), Some("rust".into()), None),
-                BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
+                BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None },
             );
             let json = serde_json::to_string(&scenes).unwrap();
             assert_eq!(json, GOLDEN_SCENES_JSON);
@@ -4802,7 +4860,7 @@ pub mod ui {
         #[test]
         fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
             let scenes =
-                (DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()) }, EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()) });
+                (DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()), domain_id: None }, EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()), domain_id: None });
             let json = serde_json::to_string(&scenes).unwrap();
             assert_eq!(json, GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON);
             let roundtripped: (DiffViewScene, EventFeedScene) = serde_json::from_str(&json).unwrap();

@@ -403,3 +403,74 @@ Reading `control()` settled it: it yields `ActionArgControl::Select` **only** wh
 - **1** (`a_child_survives_…_through_the_channel_frames`) **passes alone but fails in the suite** — shared-global-state interference in the SDK's process-global registries, still failing with `--test-threads=1`. I cannot cleanly attribute this one: the tree has moved too far to reproduce a true pre-change baseline. Recorded as unattributed rather than claimed as pre-existing.
 
 Also of note: my E2 brief named `cargo check -p semio-s-plugin-note --target wasm32-wasip2 --features component-guest` as acceptance, but that crate has no `component-guest` feature — my error in the brief, not the packet's.
+
+## 2026-08-18 morning — renderer blocker cleared
+
+### ✅ wgpu renderer compiles
+
+`cargo check -p semio-framework-os-renderer-wgpu --lib` → **Finished in 26s, 0 errors.**
+
+The 5 errors H3 correctly attributed to the peer's presence/dock refactor were still there this morning. **Liveness re-checked before touching anything** (the rule is "don't chase a moving target", not "never touch"): `Shell` mtime 02:51, peer ticket's newest file 22:14 yesterday, zero `.rs` edits repo-wide in the last 60 minutes, one cargo process on the box. That session has been stopped for ~12 hours and the auto-commit bot has since committed the broken state — so the blockage was permanent, not transient, and it blocked every session touching the renderer.
+
+Fixed by adapting the call sites to the peer's **own new types**, inventing nothing:
+- `use store_sync::{PresencePeer, PresencePoint, PresenceViewport}` → `use store_sync::PresencePeer` (the latter two no longer exist anywhere).
+- Dropped the `cursor`/`viewport` initializers — those fields are gone from `PresencePeer`; that state moved into the presence packet.
+- Added the four new required fields (`color`, `surface`, `views`, `ui`) as `None`/empty **with a comment explaining why**: the wgpu shell does not publish colour/surface/view/ui presence, the sync actor assigns `color` from the hub's `Session` frame, and the rich payloads belong to the presence packet. Left empty rather than fabricated so nothing invents presence state the shell never observes.
+- `DockNode::Stack { windows }` now holds `DockStackTab`, not `String` — `tab.window_id.clone()`.
+- Added an explicit `ArtifactEvent::Session { .. } => {}` arm (the sync actor already stamps session identity onto outbound heartbeats) rather than a catch-all, so a future variant still fails the build instead of being silently swallowed.
+
+A backup of the pre-edit file is at `/tmp/shell.bak` should the peer want to diff.
+
+### ⛔️ W3 blocked: a LIVE peer half-landed a presence refactor into the guest SDK
+
+`M0-stdio` cannot pass acceptance because `semio-framework-plugin` itself stopped compiling. Commit **`abd29c08d0`, 10:38 today** (twenty minutes before this stretch began) changed `🔌️plugin/🦀️component.rs`:
+
+- `ArtifactApp` gained `adopt_presence(own_color, peers, now_ms)`, but `VcsArtifactApp` does not implement it;
+- `ephemeral_snapshot`'s trait return type became `EphemeralSnapshot` while the impl still returns `(Vec<u8>, u64, u64)`;
+- `EphemeralSnapshot` is defined (line 9509) but out of scope at one construction site.
+
+That crate was **verified green by me earlier today** (A5 and E2 acceptance), so this is new breakage, landed by an active session, and it is theirs to finish. **I stopped editing that file.** Completing another ticket's presence feature — deciding the `EphemeralSnapshot` shape and what `adopt_presence` does to the peer maps — is their design call, not mine.
+
+**Distinguish this from the renderer unblock earlier today**, which looked superficially similar but was the opposite case. There, the peer had been stopped ~12 hours, the tree was quiet, and the auto-commit bot had already committed the broken state: permanent breakage, safe to adapt to their own new types. Here the peer committed twenty minutes ago and is mid-edit. Same evidence test (`git log --date=iso`, mtimes, process check), opposite answer. The rule is "don't chase a moving target" — the first target had stopped; this one has not.
+
+**Two edits I did land in that file before stopping**, both required by our own channel v12 and both written against the peer's *documented* contract rather than guessed semantics:
+1. `AppFrame::Ephemeral` gained the `interaction` field (channel v12) — passed `Vec::new()` with a comment recording that the guest's interaction slice travels via `PeerPresence`, not this drain path.
+2. An `AppCommand::Presence { seq, own_color, peers }` arm that decodes each wire peer and calls their `adopt_presence`. The trait's own doc names that command as "the ONLY plugin ingress for peers" and says the call is the roster's single source of truth, not a diff — so the arm passes the whole roster and skips individually-malformed peers rather than failing the batch.
+
+Those two will compile the moment the peer finishes their impl.
+
+**M0's own work looks sound** from inspection: `OnArtifactKind` activation events per artifact kind (binary/txt/json/xml/csv/md/…), matching the shape `🗒️note` proved. It could not emit a descriptor because the SDK it links against is red.
+
+### ✅ Peer finished — SDK green again; M0 accepted as partial
+
+`cargo check -p semio-framework-plugin --lib` → **Finished in 4.16s**. The peer completed their `adopt_presence`/`EphemeralSnapshot` implementation, and my two v12 edits (the `interaction` field and the `AppCommand::Presence` arm written against their documented contract) compiled against it unchanged. Waiting rather than finishing their feature was the right call — it cost about an hour and zero rework.
+
+`cargo check -p semio-s-plugin-stdio --target wasm32-wasip2` → **Finished in 42.74s.**
+
+**M0-stdio — accepted as a verified partial.** What it delivered:
+- **36 activation events**, one per genuine artifact kind, each read live from that format's own `artifact_kind().id` function rather than hardcoded — exactly the right instinct, and the standard now written into M1's brief.
+- `ExecutionMode::Isolated`, one honest `documents.write` capability request covering ~90 editor surfaces, and **no quotas** because it found no measured need. Declaring speculative quotas would have been worse than declaring none.
+- Items 2 and 3 confirmed as genuine no-ops by grep (zero `HostEffect::` usages, zero self-tick loops) rather than assumed.
+- **Two real wiring gaps found outside its literal brief**, without which none of the rest would have mattered: stdio's `Cargo.toml` never requested the `component-guest` feature (so the actor world was never exported for wasm), and `📦️glue.rs` never called `plugin_exports!` (so no `descriptor_is_fresh()` test existed). Both fixed against the `🗒️note` reference.
+
+**Descriptor not committed, and that is the correct outcome.** Emission is blocked by a pre-existing SDK validation rule (`🔌️plugin/🦀️component.rs:2568`): a definition must declare a capability whose claim set exactly equals its runtime claims, and up to 35 of stdio's 36 formats fail it. M0 generated a descriptor via a native fixture, saw it carried `pluginId: "assembly-failed"` placeholder data, and **deleted it rather than check garbage in**. That judgment is worth more than a green checkbox — a committed placeholder descriptor would have poisoned the registry and the freshness test simultaneously.
+
+That capability-claim mismatch belongs to stdio's own artifact declarations, not this ticket. Recorded as a follow-up; `🗒️note` proves the path works where declarations are consistent.
+
+**`M1-small-plugins` dispatched** (🖍️draw, 📋️forms, ➗️mathematical, 📏️layout, 🖨️raster) carrying M0's two wiring findings and the "read the value from the code, never hardcode" standard, plus an explicit instruction not to commit placeholder descriptors if they hit the same claim-set rule.
+
+### ✅ H1-react — React renderer on the actor kernel; W2 renderers complete
+
+Verified by me:
+- **My loud placeholder is gone** — zero matches for `"invokeExtension completion not yet deliverable"`. It is replaced by a real `req`-correlated completion: the branch now calls `completeExtensionInvoke(instanceId, req, { ok })`, delivering `Event::Completed` to resume the guest SDK's parked `RequestRegistry` future, exactly as `📓️design-abi.md` §2 specifies. The temporary marker I left in A3's wave did not become permanent, which is the whole reason it was made loud.
+- Every surviving `evictPluginModule`/`acquirePluginModule`/`PluginModuleLease` reference in `ShellHost` is a **doc comment** explaining the removal — no live call sites.
+
+**Landed:** `PluginRuntime.loadPluginModule` drives a real actor through `ActivationRegistry` + `ShardClient` instead of the deleted per-plugin Worker lease; `exchange()` submits `app-command` events and demuxes `TurnResult.effects` back to `AppFrame` bytes; a new, independently unit-tested `applyUiPatchToRetained` backs a rewritten `refreshUi`, so window bodies come from `Event::SurfaceVisible` + `TurnResult.uiPatches` rather than a blocking round trip — the UI thread no longer waits on a plugin.
+
+**A real gap H1 found and closed rather than papered over:** H2's deletion of `withSerializedPluginWasmHandle` left nothing enforcing one-turn-at-a-time per actor on the host side — the shard worker *rejects* overlapping turns rather than queueing them. H1 added `serializePerActor` to restore that invariant. That is precisely the class of silent correctness hole that only surfaces under the concurrency this ticket exists to enable.
+
+Also fixed, all verified by targeted `tsc` rather than assumed: a missed `HostEffect`→`Effect` rename in `PluginRuntime.tsx`, three `ShellHost` call sites still using H2-deleted `evictPluginModule`, and stray dead imports in the React entry.
+
+**Acceptance:** `framework-renderer-react` 321/336 (15 pre-existing failures identified by name and root cause); the packet's own tests isolated → **14/14**; `framework-os` baseline reconfirmed **322/324** — the same 2 pre-existing wasm-artifact failures, zero regression.
+
+**W2 is now complete**: H1 (React), H2 (web shard pool), H3 (wgpu native, verified partial), H4 folded into H2/H3's TypeScript. All four renderer paths are off one-worker-per-plugin and onto the actor kernel.

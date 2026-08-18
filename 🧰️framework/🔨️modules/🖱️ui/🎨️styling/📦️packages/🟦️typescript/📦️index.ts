@@ -2,7 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for ui consumers. */
 // #endregion 🧲️Header
 
-export { tailwindConfig, tailwindConfig as default } from "../../📦️packages/🦀️rust/🎨️tailwind/🎨️tailwind.config.ts";
+export { tailwindConfig, tailwindConfig as default } from "../../🎨️tailwind/🎨️tailwind.config.ts";
 export {
   STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,
@@ -16,9 +16,9 @@ export {
   STYLING_TOKENS,
   type StylingAppearanceName,
   type StylingTokenKey,
-} from "./🟦️tokens.generated.ts";
+} from "../../🤖️generated/🟦️tokens.generated.ts";
 import { ephemeralMap, ephemeralBox, ephemeralSet } from "@semio-tech/framework";
-import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "./🟦️tokens.generated.ts";
+import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "../../🤖️generated/🟦️tokens.generated.ts";
 
 //#region 🔖️ThemeModel
 /** @emoji 🎨️ `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator and the runtime theme engine. MUST stay dependency-free from `🟦️tokens.generated.ts` (the generator produces that file; importing it here would create a cycle). */

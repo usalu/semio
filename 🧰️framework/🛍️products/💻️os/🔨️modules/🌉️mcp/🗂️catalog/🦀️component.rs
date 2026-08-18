@@ -357,20 +357,125 @@ fn capability_from_command(id: &str, owner: CapabilityOwner, artifact_kind: Opti
     }
 }
 
-/// 🏭️ One `DescriptorEntry` (an untyped contribution row — `manifest::DescriptorEntry` has no label
-/// of its own, per its doc comment "don't have a typed manifest model of their own yet") →
-/// `Query`/`Job` capability. `title` is the entry id, humanized; `description` names the source
-/// category so a search hit is at least traceable back to its plugin contribution.
-fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifest::DescriptorEntry, kind: CapabilityKind) -> CapabilityDefinition {
-    let id = format!("{plugin_id}.{category}.{}", entry.id);
+/// 🧩️ One typed contribution row, reduced to the three things a capability needs: a stable local
+/// id, a human title, and the artifact kind it acts on. Implemented once per `ContributionSet`
+/// category so {@link capability_from_contribution} stays a single generic function — the four
+/// categories carry genuinely different shapes (an inference names schemas, an io entry names a
+/// dialect pair), and flattening them back into one untyped row would discard exactly the fields
+/// that make a contributed capability findable.
+trait ContributionRow {
+    /// 🪪️ Stable id segment, unique within `(plugin, category)`.
+    fn row_id(&self) -> String;
+    /// 🏷️ Human title for search and display.
+    fn row_title(&self) -> String;
+    /// 💬️ One sentence naming what this contribution does.
+    fn row_description(&self) -> String;
+    /// 🗿️ Artifact kind this row acts on, when the shape names one.
+    fn row_artifact_kind(&self) -> Option<String> {
+        None
+    }
+}
+
+impl ContributionRow for manifest::ContributedInferenceMetadata {
+    fn row_id(&self) -> String {
+        self.inference_schema.clone()
+    }
+
+    fn row_title(&self) -> String {
+        humanize(&self.inference_schema)
+    }
+
+    fn row_description(&self) -> String {
+        format!("Infers {} on {} artifacts (schema {} v{}).", self.inference_schema, self.artifact_kind, self.document_schema, self.inference_schema_version)
+    }
+
+    fn row_artifact_kind(&self) -> Option<String> {
+        Some(self.artifact_kind.clone())
+    }
+}
+
+impl ContributionRow for manifest::ContributedMutationMetadata {
+    fn row_id(&self) -> String {
+        self.mutation_id.clone()
+    }
+
+    fn row_title(&self) -> String {
+        format!("{} {}", humanize(&self.semantics.verb), humanize(&self.semantics.entity))
+    }
+
+    fn row_description(&self) -> String {
+        format!("Contributed mutation: {} a {} ({}) on {}.", self.semantics.verb, self.semantics.entity, self.semantics.kind, self.semantics.record)
+    }
+}
+
+impl ContributionRow for manifest::IoEntryDescriptor {
+    fn row_id(&self) -> String {
+        format!("{}:{}:{}", self.owner.to_coordinate(), direction_word(&self.direction), self.counterpart.to_coordinate())
+    }
+
+    fn row_title(&self) -> String {
+        match self.direction {
+            manifest::IoEntryDirection::Import => format!("Import {} as {}", self.counterpart.to_coordinate(), self.owner.to_coordinate()),
+            manifest::IoEntryDirection::Export => format!("Export {} as {}", self.owner.to_coordinate(), self.counterpart.to_coordinate()),
+        }
+    }
+
+    fn row_description(&self) -> String {
+        match self.direction {
+            manifest::IoEntryDirection::Import => format!("Reads {} into the {} artifact kind.", self.counterpart.to_coordinate(), self.owner.to_coordinate()),
+            manifest::IoEntryDirection::Export => format!("Writes the {} artifact kind out as {}.", self.owner.to_coordinate(), self.counterpart.to_coordinate()),
+        }
+    }
+
+    fn row_artifact_kind(&self) -> Option<String> {
+        Some(self.owner.artifact_kind.clone())
+    }
+}
+
+/// 🧭️ `Import`/`Export` as the lowercase word used inside a contributed io capability id.
+fn direction_word(direction: &manifest::IoEntryDirection) -> &'static str {
+    match direction {
+        manifest::IoEntryDirection::Import => "import",
+        manifest::IoEntryDirection::Export => "export",
+    }
+}
+
+impl ContributionRow for manifest::ComposerEntryDescriptor {
+    fn row_id(&self) -> String {
+        self.writes.to_coordinate()
+    }
+
+    fn row_title(&self) -> String {
+        format!("Compose {}", self.writes.to_coordinate())
+    }
+
+    fn row_description(&self) -> String {
+        if self.reads.is_empty() {
+            format!("Composes {}.", self.writes.to_coordinate())
+        } else {
+            format!("Composes {} from {}.", self.writes.to_coordinate(), self.reads.iter().map(|dialect| dialect.to_coordinate()).collect::<Vec<_>>().join(", "))
+        }
+    }
+
+    fn row_artifact_kind(&self) -> Option<String> {
+        Some(self.writes.artifact_kind.clone())
+    }
+}
+
+/// 🏭️ One typed contribution row → a `Query`/`Job` capability. Generic over {@link ContributionRow}
+/// so every `ContributionSet` category is projected by the same rules while keeping its own
+/// identity and wording.
+fn capability_from_contribution<Row: ContributionRow>(plugin_id: &str, category: &str, entry: &Row, kind: CapabilityKind) -> CapabilityDefinition {
+    let row_id = entry.row_id();
+    let id = format!("{plugin_id}.{category}.{row_id}");
     CapabilityDefinition {
         id: CapabilityRef(id.clone()),
         version: 1,
         owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), app_id: None, window_kind_id: None, mode_id: None },
         kind,
-        title: humanize(&entry.id),
-        description: format!("{category} contribution from {plugin_id}"),
-        artifact_kind: None,
+        title: entry.row_title(),
+        description: entry.row_description(),
+        artifact_kind: entry.row_artifact_kind(),
         use_when: Vec::new(),
         input_schema: serde_json::json!({ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": format!("semio://capability/{id}/input"), "type": "object" }),
         output_schema: generic_output_schema(&id),
@@ -380,7 +485,7 @@ fn capability_from_contribution(plugin_id: &str, category: &str, entry: &manifes
         exposure: ToolExposure::CatalogOnly,
         presentation: CapabilityPresentation { icon_id: None, category: Some(category.to_string()), keys: None, in_palette: false, args: Vec::new() },
         examples: Vec::new(),
-        source: CapabilitySource::Descriptor { category: category.to_string(), id: entry.id.clone() },
+        source: CapabilitySource::Descriptor { category: category.to_string(), id: row_id },
     }
 }
 

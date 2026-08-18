@@ -22,7 +22,7 @@ import {
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
+import { startAssetServer } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import type { PlaygroundAssetSpec } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 const repoRoot = getWorkspaceRoot();

@@ -147,7 +147,7 @@ pub mod app {
     };
     use ui_wgpu::wgpu::{
         collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, Label, Locale, LocalizedLabel, NamedLayout,
-        SurfaceKind, Terminology, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeActionPlacement, UiTreeItemAction,
+        SurfaceKind, Terminology, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPeerMark, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiState, UiTreeActionPlacement, UiTreeItemAction,
         UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, FRAMEWORK_HISTORY_BODY_KEY,
     };
 
@@ -5269,7 +5269,10 @@ pub mod app {
         pub fn build(mut self) -> UiNode {
             let selected = self.selected_ids.iter().flatten().cloned().collect::<HashSet<_>>();
             let highlighted = self.highlighted_ids.iter().flatten().cloned().collect::<HashSet<_>>();
-            ui_tree_stamp_presence(&mut self.sections, &selected, &highlighted);
+            // 👥️ No roster/own-color context at this app-facing builder layer — `color`/`peers` stay
+            // at their defaults here; `stamp_and_cache_interaction_ui` OVERWRITES this whole tree's
+            // presence (including these two fields) once it is bound to a live `interaction_domain`.
+            ui_tree_stamp_presence(&mut self.sections, &selected, &highlighted, None, &|_id: &str| Vec::new());
             UiNode::Tree(UiTreeNode { sections: self.sections, presence: UiPresence::default(), interaction_domain: self.interaction_domain, drop_action: self.drop_action, menu: None })
         }
     }
@@ -7817,6 +7820,26 @@ pub mod app {
     }
 
     //#region 🔖️InteractionView
+    /// @emoji 👥️ One OTHER peer's last-adopted artifact/app-scope presence slice — the plugin-side
+    /// twin of `PresencePeer`'s `color`/`surface`/`interaction` fields, keyed by actor in
+    /// `VcsArtifactApp::peer_presence` (contract-freeze §C7.6). `presence_pack`'s decoded app-typed
+    /// value is NOT carried here — it lands in `presence_store` instead (the existing peer-roster
+    /// mechanism, unchanged), so this struct stays generic over every `ArtifactApp`.
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct PeerPresence {
+        pub color: Option<u8>,
+        pub surface: Option<String>,
+        pub interaction: Option<protocol::PresenceInteraction>,
+    }
+
+    /// @emoji 👥️ One peer's mark on a single interaction target — `InteractionView::peers_selecting`/
+    /// `peers_hovering`'s element type (contract-freeze §C7.6), sorted by actor.
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct PeerMark<'a> {
+        pub actor: &'a str,
+        pub color: Option<u8>,
+    }
+
     /// 🈳️ Lazily-initialized empty fallbacks `InteractionView`'s accessors return for an undeclared or
     /// never-touched domain — one static pair shared across every instance, so the accessor methods
     /// below can return a plain `&DomainSelection`/`&DomainHover` (no `Option`, no per-call allocation)
@@ -7842,6 +7865,10 @@ pub mod app {
     pub struct InteractionView<'a> {
         pub(crate) state: &'a protocol::InteractionState,
         pub(crate) hover: &'a InteractionHoverState,
+        /// @emoji 👥️ Every OTHER peer's last-adopted presence, keyed by actor — see
+        /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
+        /// order, which is already sorted by actor.
+        pub(crate) peers: &'a BTreeMap<String, PeerPresence>,
     }
 
     impl<'a> InteractionView<'a> {
@@ -7871,6 +7898,33 @@ pub mod app {
         /// 🔀️ `domain`'s active `SelectionMode`, `None` for an undeclared domain.
         pub fn active_mode(&self, domain: &str) -> Option<protocol::SelectionMode> {
             self.state.active_mode.get(domain).copied()
+        }
+
+        /// 👥️ Every OTHER peer currently selecting `id` within `domain`, sorted by actor
+        /// (contract-freeze §C7.6) — `[]` for a peer with no adopted interaction, an interaction with
+        /// no matching domain, or a domain where `id` is not in `selected`.
+        pub fn peers_selecting(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
+            self.peers
+                .iter()
+                .filter_map(|(actor, presence)| {
+                    let interaction = presence.interaction.as_ref()?;
+                    let matched = interaction.domains.iter().find(|candidate| candidate.domain == domain)?;
+                    matched.selected.iter().any(|selected_id| selected_id == id).then_some(PeerMark { actor: actor.as_str(), color: presence.color })
+                })
+                .collect()
+        }
+
+        /// 👥️ `peers_selecting`'s hover twin — every OTHER peer currently hovering `id` within
+        /// `domain`, sorted by actor.
+        pub fn peers_hovering(&self, domain: &str, id: &str) -> Vec<PeerMark<'a>> {
+            self.peers
+                .iter()
+                .filter_map(|(actor, presence)| {
+                    let interaction = presence.interaction.as_ref()?;
+                    let matched = interaction.domains.iter().find(|candidate| candidate.domain == domain)?;
+                    matched.hovered.iter().any(|hovered_id| hovered_id == id).then_some(PeerMark { actor: actor.as_str(), color: presence.color })
+                })
+                .collect()
         }
     }
     //#endregion 🔖️InteractionView
@@ -9446,6 +9500,22 @@ pub mod app {
         pub rejection: Option<Fault>,
     }
 
+    /// @emoji 👥️ Object-safe channel snapshot of the two EPHEMERAL lanes plus the zero-app-code
+    /// declared-broadcast interaction slice (contract-freeze §C7.6) — replaces the earlier flat
+    /// `(Vec<u8>, u64, u64)` tuple `PluginApp::ephemeral_snapshot` returned, adding `interaction`
+    /// without further widening that tuple's arity. `interaction` is
+    /// `encode_presence_interaction(&assemble_presence_interaction(app_id, &interaction_state,
+    /// &hover_specs, &selection_specs))` over the app's own declared broadcast domains — empty bytes
+    /// when no domain is declared or broadcasting right now. Frames straight onto
+    /// `AppFrame::Ephemeral`'s four fields, same order.
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct EphemeralSnapshot {
+        pub presence: Vec<u8>,
+        pub presence_generation: u64,
+        pub transient_generation: u64,
+        pub interaction: Vec<u8>,
+    }
+
     /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
     /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
     /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
@@ -9522,8 +9592,19 @@ pub mod app {
         fn hydrate_config_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
         /// 📥 Hydrate draft lane from host pack bytes.
         fn hydrate_draft_lane(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), Fault>;
-        /// 👥️ Packs the typed local presence snapshot and exposes both ephemeral generations.
-        fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64);
+        /// 👥️ Packs the typed local presence snapshot, exposes both ephemeral generations, and
+        /// assembles the zero-app-code declared-broadcast interaction slice — see
+        /// {@link EphemeralSnapshot}'s own doc comment.
+        fn ephemeral_snapshot(&self) -> EphemeralSnapshot;
+        /// 👥️ Adopts the document-wide presence roster pushed by `AppCommand::Presence` (contract-freeze
+        /// §C7.6) — the ONLY plugin ingress for peers. `own_color` is this actor's own hub-assigned
+        /// palette index; `peers` is the whole roster (the wire wrapper has already dropped this
+        /// actor's own entry). An app-typed `presence_pack` on a peer feeds the existing
+        /// `presence_store` roster (`PresenceStore::adopt_peer`); every peer's `color`/`surface`/
+        /// `interaction` upserts the generic `peer_presence` map `InteractionView::peers_selecting`/
+        /// `peers_hovering` and the UI-tree stamping pass read from. An actor absent from `peers` is
+        /// dropped from both maps — this call is the roster's single source of truth, not a diff.
+        fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault>;
         /// 🧾️ Returns a complete ordered history projection for initial connection or cursor resync.
         fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
             Ok(HistoryPatch::default())
@@ -9986,6 +10067,15 @@ pub mod app {
         /// this actor's own presence plus whatever peers last broadcast; never persisted, never
         /// checkpointed, never undoable.
         pub(crate) presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>,
+        /// @emoji 🎨️ This actor's hub-assigned palette index, adopted from the last
+        /// `AppCommand::Presence` (contract-freeze §C7.6) — `None` for a folder-only session with no
+        /// hub, or before the first presence push.
+        pub(crate) own_color: Option<u8>,
+        /// @emoji 👥️ Every OTHER peer's last-adopted color/surface/interaction, keyed by actor —
+        /// the ARTIFACT+APP-scope roster `InteractionView::peers_selecting`/`peers_hovering` and the
+        /// UI-tree stamping pass read from; upserted/pruned atomically with `presence_store`'s own
+        /// peer map by `adopt_presence`.
+        pub(crate) peer_presence: BTreeMap<String, PeerPresence>,
         /// @emoji 🫧️ Ephemeral LOCAL-ONLY lane — typed UI state that never leaves this client and
         /// never becomes document content. The typed home for what used to live in plugin
         /// `thread_local!`s.
@@ -10145,6 +10235,8 @@ pub mod app {
                 config_store,
                 draft_store,
                 presence_store: store::PresenceStore::new(A::Presence::default()),
+                own_color: None,
+                peer_presence: BTreeMap::new(),
                 transient_store: store::TransientStore::new(A::Transient::default()),
                 last_emit_wire: None,
                 dispatch_report,
@@ -11343,7 +11435,24 @@ pub mod app {
                         self.interaction_ui_topology.insert(domain_id.clone(), ui_tree_domain_topology(&tree.sections, &granularity));
                         let selected: HashSet<String> = state.selection.get(&domain_id).map(|selection| selection.ids.iter().cloned().collect()).unwrap_or_default();
                         let hovered: HashSet<String> = state.hover.get(&domain_id).map(|hover| hover.ids.iter().cloned().collect()).unwrap_or_default();
-                        ui_tree_stamp_presence(&mut tree.sections, &selected, &hovered);
+                        // 👥️ Peer marks (contract-freeze §C7.6): merge `peers_selecting`/`peers_hovering`
+                        // by actor into one `UiPeerMark` per peer, `label` falling back to the raw actor
+                        // id (no display name travels this far down the stack — see `PeerPresence`'s own
+                        // doc comment). `own_color` is stamped onto every item unconditionally — it names
+                        // the color THIS session's own hover/selection ring renders as.
+                        let interaction = InteractionView { state, hover: &self.interaction_hover, peers: &self.peer_presence };
+                        let own_color = self.own_color;
+                        let marks_for = |id: &str| -> Vec<UiPeerMark> {
+                            let mut merged: BTreeMap<String, UiPeerMark> = BTreeMap::new();
+                            for mark in interaction.peers_selecting(&domain_id, id) {
+                                merged.entry(mark.actor.to_string()).or_insert_with(|| UiPeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).selected = true;
+                            }
+                            for mark in interaction.peers_hovering(&domain_id, id) {
+                                merged.entry(mark.actor.to_string()).or_insert_with(|| UiPeerMark { actor: mark.actor.to_string(), color: mark.color, hovered: false, selected: false, label: mark.actor.to_string() }).hovered = true;
+                            }
+                            merged.into_values().collect()
+                        };
+                        ui_tree_stamp_presence(&mut tree.sections, &selected, &hovered, own_color, &marks_for);
                     }
                 }
                 UiNode::Stack(stack) => {
@@ -11543,11 +11652,11 @@ pub mod app {
                 let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
                 let interaction_hover = self.interaction_hover.clone();
                 let emit = {
-                    let VcsArtifactApp { app: _, cache, children, .. } = self;
+                    let VcsArtifactApp { app: _, cache, children, peer_presence, .. } = self;
                     let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                     let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                     let cfg = ConfigView { snapshot: config };
-                    let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover };
+                    let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: peer_presence };
                     match action {
                         "copy" => match A::copy_fragment(&doc, &cfg, &interaction) {
                             Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() },
@@ -11644,14 +11753,14 @@ pub mod app {
             let interaction_state = self.interaction_store.snapshot().unwrap_or_default();
             let interaction_hover = self.interaction_hover.clone();
             let (verb, emit, ephemeral) = {
-                let VcsArtifactApp { app: _, cache, children, presence_store, transient_store, .. } = self;
+                let VcsArtifactApp { app: _, cache, children, presence_store, transient_store, peer_presence, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
                 let doc = ArtifactView::with_children(snapshot, history, ChildContentView::new(children));
                 let cfg = ConfigView { snapshot: config };
                 let draft = DraftView { snapshot: &draft_snapshot };
                 let presence = PresenceView { local: presence_store.local(), peers: presence_store.peers() };
                 let transient = TransientView { snapshot: transient_store.current() };
-                let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover };
+                let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: peer_presence };
                 let engines = EngineHandles::empty();
                 let verb = A::command_id(&command).to_string();
                 // 👥️🫧️ The ephemeral lanes are computed BEFORE `handle` so they still see the
@@ -11981,8 +12090,52 @@ pub mod app {
             Ok(())
         }
 
-        fn ephemeral_snapshot(&self) -> (Vec<u8>, u64, u64) {
-            (self.presence_store.local().encode_pack(), self.presence_store.generation(), self.transient_store.generation())
+        fn ephemeral_snapshot(&self) -> EphemeralSnapshot {
+            let hover_specs: BTreeMap<String, protocol::HoverSpec> = self.registry.interactions().map(|def| (def.id.clone(), def.hover.clone())).collect();
+            let selection_specs: BTreeMap<String, protocol::SelectionSpec> = self.registry.interactions().map(|def| (def.id.clone(), def.selection.clone())).collect();
+            let interaction_state = self.interaction_state();
+            let interaction = protocol::assemble_presence_interaction(self.app_id(), &interaction_state, &hover_specs, &selection_specs);
+            // 🎯️ Empty domains ⇒ empty bytes (contract-freeze §C7.6) — `encode_presence_interaction`
+            // itself always writes at least `app_id` + a domain count, so an explicit short-circuit
+            // is required rather than trusting the codec's own "nothing to say" shape.
+            let interaction_bytes = if interaction.domains.is_empty() {
+                Vec::new()
+            } else {
+                let mut bytes = Vec::new();
+                protocol::encode_presence_interaction(&interaction, &mut bytes);
+                bytes
+            };
+            EphemeralSnapshot {
+                presence: self.presence_store.local().encode_pack(),
+                presence_generation: self.presence_store.generation(),
+                transient_generation: self.transient_store.generation(),
+                interaction: interaction_bytes,
+            }
+        }
+
+        /// 👥️ For each peer ≠ own actor (already guaranteed by the wire wrapper that built `peers` —
+        /// see `AppCommand::Presence`'s own doc comment; this app has no independent notion of "own
+        /// actor" to re-check against): adopts an app-typed `presence_pack` into `presence_store`
+        /// when present, and unconditionally upserts `color`/`surface`/`interaction` into
+        /// `peer_presence`. An actor absent from `peers` is dropped from BOTH maps — this call is the
+        /// roster's single source of truth, never a diff.
+        fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault> {
+            self.own_color = own_color;
+            let mut seen: BTreeSet<String> = BTreeSet::new();
+            for peer in peers {
+                seen.insert(peer.actor.clone());
+                if let Some(pack) = &peer.presence_pack {
+                    let presence = A::Presence::decode_pack(pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                    self.presence_store.adopt_peer(peer.actor.clone(), presence, now_ms);
+                }
+                self.peer_presence.insert(peer.actor.clone(), PeerPresence { color: peer.color, surface: peer.surface.clone(), interaction: peer.interaction.clone() });
+            }
+            let stale: Vec<String> = self.presence_store.peers().iter().map(|(actor, _)| (*actor).to_string()).filter(|actor| !seen.contains(actor)).collect();
+            for actor in stale {
+                self.presence_store.remove_peer(&actor);
+            }
+            self.peer_presence.retain(|actor, _| seen.contains(actor));
+            Ok(())
         }
 
         fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
@@ -14497,7 +14650,7 @@ pub mod plugin_runtime {
     // #region plugin_runtime
     //! 📤️ WASM component export glue for plugin bundles.
 
-    use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
+    use crate::app::{ActionMeta, AppInstance, EphemeralSnapshot, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginApp, PluginAssemblyError, PluginProgram, TransactionProposalDraft};
     use crate::ArtifactApp;
     use dsl::{from_dsl_value, to_dsl_value};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
@@ -15577,6 +15730,24 @@ pub mod plugin_runtime {
         for bytes in commands {
             let command = protocol::decode_app_command(bytes).map_err(|error| error.into_fault())?;
             match command {
+                protocol::AppCommand::Presence { seq, own_color, peers } => {
+                    // 👥️ The ONLY plugin ingress for the peer roster (contract-freeze §C7.6): decode
+                    // each wire `PresencePeer` and hand the WHOLE roster to `adopt_presence`, which is
+                    // documented as the roster's single source of truth (absent actors are dropped by
+                    // the callee, so this must not be treated as a diff). A peer entry that fails to
+                    // decode is skipped rather than failing the batch — one malformed peer must not
+                    // cost the actor its whole roster update.
+                    let decoded: Vec<protocol::PresencePeer> = peers.iter().filter_map(|bytes| protocol::decode_presence_peer(bytes).ok()).collect();
+                    let now_ms = crate::host::now_ms();
+                    let adopted = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.adopt_presence(own_color, &decoded, now_ms)
+                    });
+                    match adopted {
+                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault),
+                    }
+                }
                 protocol::AppCommand::ConfigCommand { seq, command } => {
                     // 🧮️ B1: `command` is a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
@@ -16035,8 +16206,8 @@ pub mod plugin_runtime {
             let instance = find_instance(list, instance_id)?;
             Ok(instance.app.ephemeral_snapshot())
         });
-        if let Ok((presence, presence_generation, transient_generation)) = ephemeral {
-            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation });
+        if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction }) = ephemeral {
+            frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction });
         }
 
         Ok(PluginExchangeOutput { frames: frames.iter().map(protocol::encode_app_frame).collect(), effects: effect_bytes, events: event_bytes })

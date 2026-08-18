@@ -1,8 +1,16 @@
 //! 🔌️ Schema-owned stdio library plugin assembly.
 
-use semio_framework_plugin::{Plugin, PluginAssemblyError};
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 
-/// 🧾️ Builds all stdio definitions before the typed library assembly boundary.
+/// 🧾️ Builds all stdio definitions before the typed library assembly boundary. `.activation(…)`/
+/// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0,
+/// `📓️design-abi.md` §3/§6, following the `✏️s/🔌️plugins/🗒️note` E2 proof migration's shape): stdio
+/// owns 36 well-known file-format artifact kinds (see `//#region 🔖️Descriptor` below), so the host
+/// activates one `stdio` actor instance whenever any one of them is opened; the actor runs
+/// `Isolated` (no publisher trust assumed beyond the sandbox default, same as every other
+/// migrated plugin so far); and it asks the broker for document write access, because every one
+/// of its ~90 registered editors persists mutations back to whichever of these formats is open.
 pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let mut builder = Plugin::builder("stdio").label("Stdio").version("0.1.0");
     for assembly in crate::registry::artifact_assemblies()? {
@@ -245,6 +253,57 @@ pub fn plugin() -> Result<Plugin, PluginAssemblyError> {
     builder = builder.editor::<crate::editor::binary::BinaryEditor>(crate::editor::binary::create_binary_editor());
     builder = builder.viewer::<crate::viewer::binary::BinaryViewer>(crate::viewer::binary::create_binary_viewer());
     //#endregion 👁️✏️SurfacesP2StdioDataMisc
+
+    //#region 🔖️Descriptor
+    // 🚀 Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0 (`📓️design-abi.md` §3/§6): one
+    // `on-artifact-kind:` activation event per artifact kind this crate genuinely owns — every
+    // top-level `crate::artifacts::<fmt>::artifact_kind()` function in the tree (36 formats: image/
+    // audio/video/text/data/document/geometry), each read via its own function rather than a
+    // hardcoded string so this list can never silently drift from the real declarations above.
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::binary::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::txt::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::json::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::xml::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::csv::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::md::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::deflate::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::zip::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::step::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::ifc::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::las::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::gltf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::obj::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::ply::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::dxf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::stl::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::svg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::bmp::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::dwg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::png::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::pdf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::jpg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::gif::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::tiff::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::docx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::pptx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::xlsx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::bcf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::semio::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::mp4::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::avi::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::mp3::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::wav::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::epw::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::tsv::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::html::artifact_kind().id });
+    builder = builder.execution(ExecutionMode::Isolated);
+    builder = builder.requests(CapabilityRequest {
+        id: CapabilityId("documents.write".into()),
+        scope: "plugin".into(),
+        reason: "persist editor mutations back to whichever of stdio's 36 owned file-format artifacts (image/audio/video/text/data/document/geometry) is currently open".into(),
+        optional: false,
+    });
+    //#endregion 🔖️Descriptor
 
     builder.try_library()
 }

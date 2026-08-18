@@ -434,7 +434,7 @@ mod wasm_bridge {
 pub(crate) mod testkit {
     use super::*;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{EditorApp, VcsArtifactApp};
+    use semio_framework_plugin::{App, EditorApp, VcsArtifactApp};
 
     pub type DrawApp = VcsArtifactApp<EditorApp<DrawPlayApp>>;
 

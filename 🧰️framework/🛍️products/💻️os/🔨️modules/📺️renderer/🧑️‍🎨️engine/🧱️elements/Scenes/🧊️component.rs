@@ -1624,7 +1624,7 @@ mod block_list_tests {
 
     #[test]
     fn add_step_button_dispatches_add_step() {
-        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         let target = hit(&input, "s1.addStep");
@@ -1635,7 +1635,7 @@ mod block_list_tests {
     #[test]
     fn palette_entry_dispatches_add_block_with_kind() {
         let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
-        let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         let target = hit(&input, "s1.palette.text");
@@ -1647,7 +1647,7 @@ mod block_list_tests {
     #[test]
     fn first_step_has_no_move_up_but_has_move_down_when_a_second_step_exists() {
         let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
-        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         assert!(hit(&input, "s1.step.a.moveUp").event.is_none(), "the first step must not be able to move further up");
@@ -1661,7 +1661,7 @@ mod block_list_tests {
     #[test]
     fn last_step_has_no_move_down() {
         let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
-        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         assert!(hit(&input, "s1.step.b.moveDown").event.is_none(), "the last step must not be able to move further down");
@@ -1670,7 +1670,7 @@ mod block_list_tests {
     #[test]
     fn remove_step_button_dispatches_remove_step_with_step_id() {
         let steps = json!([step_json("a", &[])]).to_string();
-        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         let target = hit(&input, "s1.step.a.remove");
@@ -1682,7 +1682,7 @@ mod block_list_tests {
     #[test]
     fn block_move_and_remove_dispatch_expected_action_shapes() {
         let steps = json!([step_json("a", &[("b1", "Block One", "text"), ("b2", "Block Two", "number")])]).to_string();
-        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
 
@@ -1706,7 +1706,7 @@ mod block_list_tests {
 
     #[test]
     fn empty_steps_registers_no_step_hit_targets() {
-        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
         let node = block_list_scene("s1", scene);
         let input = render(&node);
         assert!(find_hit(&input, "s1.step.a.remove").is_none());
@@ -1949,7 +1949,7 @@ mod diff_view_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
-            diff_view: Some(ui_wgpu::wgpu::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string) }),
+            diff_view: Some(ui_wgpu::wgpu::DiffViewScene { before: before.into(), after: after.into(), language: None, mode: mode.map(str::to_string), domain_id: None }),
             event_feed: None,
             block_list: None,
             menu: None,
@@ -2219,7 +2219,7 @@ mod event_feed_tests {
             ink_canvas: None,
             graph_timeline: None,
             diff_view: None,
-            event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None }),
+            event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json: json!([entry]).to_string(), follow: None, activate_action: None, domain_id: None }),
             block_list: None,
             menu: None,
         };

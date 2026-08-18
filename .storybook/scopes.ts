@@ -143,7 +143,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       { kind: "static-dir", route: "/renderer-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/⚡️implementations/🟦️typescript/📺️renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },

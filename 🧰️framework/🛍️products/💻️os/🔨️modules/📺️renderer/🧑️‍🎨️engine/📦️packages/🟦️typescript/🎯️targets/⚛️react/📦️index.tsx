@@ -349,12 +349,9 @@ import {
   type DockSkeleton,
   type DockUiPanelState,
   type DockUiState,
-  acquirePluginModule,
-  evictPluginModule,
   createDevPluginSource,
   createExtensionSource,
   multiplexPluginSources,
-  type PluginModuleLease,
   type PluginSource,
   type PluginSourceEvent,
   registerPluginBackboneRoute,
@@ -515,7 +512,6 @@ import {
   encodeMutationEnvelopesPack,
   decodeMutationEnvelopesPack,
   type AppFrameValue,
-  type SectionProbe,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   type ArtifactActorMsg,
@@ -845,8 +841,8 @@ export { SetWindowTitleContext, SetWindowIconContext, useAppKeybindingsByActionI
 //#endregion FrameworkOsShell
 
 //#region 🔖️plugin-runtime
-import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
-export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle };
+import { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, applyUiPatchToRetained, serializePerActor } from "../../../../🧱️elements/PluginRuntime/🟦️component.tsx";
+export { type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, applyUiPatchToRetained, serializePerActor };
 export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 

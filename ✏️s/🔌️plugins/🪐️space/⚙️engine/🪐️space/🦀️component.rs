@@ -31,7 +31,7 @@ use crate::engine::space::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework_os::{create_os_id, empty_workflow_snapshot, MediaContract, WorkflowSnapshot, WorkflowEdge, WorkflowMutation, S_WORKFLOW_SCHEMA};
 use semio_framework_plugin::{
-    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host_now_ms, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
+    app::InteractionView, NoDraft, NoDraftMutation, DraftView, app_commands, create_default_layout, host, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, CommandDefinition, ConfigView, ArtifactApp, ArtifactView,
     DomainTopology, Emit, Fault, FaultOrigin, GranularityDefinition, HierarchyProvider, Effect, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractionTopology, Label, LocalizedLabel, MergeMode, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
@@ -136,7 +136,7 @@ fn shared_presence_peers() -> Arc<Mutex<HashMap<String, HashMap<String, SPresenc
 pub(crate) fn presence_peers_json(_app: &SpaceApp, config: &SpaceConfig) -> String {
     let space_id = config_space_id(config);
     let self_client_id = config.client_id.clone().unwrap_or_default();
-    let now_ms = host_now_ms();
+    let now_ms = host::now_ms() as f64;
     let peers: Vec<Value> = shared_presence_peers()
         .lock()
         .ok()
@@ -154,7 +154,7 @@ pub(crate) fn publish_presence(_app: &SpaceApp, config: &SpaceConfig, selected_n
         return;
     };
     let space_id = config_space_id(config);
-    let now_ms = host_now_ms();
+    let now_ms = host::now_ms() as f64;
     if let Ok(mut registry) = shared_presence_peers().lock() {
         let peers = registry.entry(space_id).or_default();
         peers.retain(|_, entry| now_ms - entry.updated_at_ms <= S_PRESENCE_STALE_MS);

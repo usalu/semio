@@ -6,6 +6,18 @@
  * `exchange` ABI behind the wider action/command/refreshUi/contextMenu/document-sync surface the
  * rest of the shell calls, plus the `AppChannelClient` frame-reassembly helpers
  * (`🔖️ChannelAdapter`) that back it.
+ *
+ * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react, design-runtime.md §1/§3): `loadPluginModule`
+ * no longer leases one Worker per plugin (`acquirePluginModule`/`PluginModuleLease`, both deleted
+ * in packet H2 — `📓️terra-H2-web-shard-report.md`). It drives a real actor through the kernel's
+ * `ActivationRegistry` (manifest-only activation, LRU suspend/resume) over `ShardClient` (bounded
+ * shard-worker pool, `actorId`-multiplexed) — see `🔖️ActorAdapter` below. `exchange()` on the raw
+ * handle this file constructs submits one `app-command` event per frame through `ShardClient.turn`
+ * and demuxes the resulting `TurnResult.effects` for the `SendMessage{Shell{instance}}` entries
+ * `⚛️reactor/🦀️component.rs`'s `route_app_frame` wraps every non-`UiPatch` `AppFrame` reply in —
+ * everything else in this file (`AppChannelClient`, `adaptPluginHandle`'s command/transaction/merge
+ * methods) is unchanged, since it only ever spoke `AppCommand`/`AppFrame` bytes through that one
+ * `exchange` seam and does not care what backs it.
  */
 // #endregion 🧲️Header
 
@@ -17,7 +29,7 @@ import {
   type ConflictId,
   type ConflictResolution,
   type ContextMenuItemSpec,
-  type HostEffect,
+  type Effect,
   type HistoryPatch,
   InstanceDirectory,
   type InvocationResponse,
@@ -25,13 +37,10 @@ import {
   type MergeReport,
   type PluginContextMenuRequest,
   type PluginGraphError,
-  type PluginModuleLease,
   type PluginRegistryEntry,
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
-  type PluginUiRefreshSectionResponse,
   SemioFaultError,
-  acquirePluginModule,
   orderPluginRegistryEntries,
 } from "@semio-tech/framework";
 import {
@@ -44,8 +53,19 @@ import {
   decodePackValue,
   encodePackValue,
   faultDisplayMessage,
-  type SectionProbe,
 } from "@semio-tech/framework-os";
+import { type UiNode } from "@semio-tech/framework";
+import {
+  ActivationRegistry,
+  type ActivationReason,
+  type PluginWasmHandle as KernelPluginWasmHandle,
+} from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
+import {
+  ShardClient,
+  type ShardBudget,
+  type ShardEventEnvelope,
+  type ShardWorkerLike,
+} from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -90,6 +110,14 @@ export type PluginWasmHandle = {
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
   readonly detachBackbone?: (instanceId: number) => Promise<void>;
   readonly ephemeralSnapshot?: (instanceId: number) => Promise<{ readonly presence: readonly number[]; readonly presenceGeneration: number; readonly transientGeneration: number } | null>;
+  /** 🔁️ H1-react (design-abi.md §2) — delivers the result of an `Effect::InvokeExtension` back to
+   * the ORIGINATING instance's actor as `Event::Completed{req, outcome}`, resuming the guest SDK
+   * future `RequestRegistry` parked on `req`. Replaces the old `responseAction` redispatch —
+   * `ShellHost/🟦️component.tsx`'s `applyHostEffects` `invokeExtension` branch is this method's one
+   * real caller. Optional: only the `ActivationRegistry`/`ShardClient`-backed handle this file
+   * constructs can submit a turn at all; a bare `adaptPluginHandle` (every inline test) has no actor
+   * to submit one to. */
+  readonly completeExtensionInvoke?: (instanceId: number, req: number, outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }) => Promise<void>;
   /** 📦️ The instance's cached document pack (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4) — `null`
    * before any document has been loaded/read on this instance. `TransactionCoordinator` reads this to
@@ -126,54 +154,401 @@ export type PluginWasmHandle = {
 
 export type { PluginRegistryEntry };
 
-/** 🐚️ Acquires a refcounted lease on the shared core module (see `acquirePluginModule`) and adapts it —
- * this `PluginWasmHandle`'s own `dispose()` releases that lease rather than tearing down the shared
- * module directly, so several shells (or several call sites within one shell) loading the same
- * `moduleUrl` don't dispose it out from under each other. */
+//#region 🔖️ActorAdapter
+/**
+ * @emoji 🧵️ H1-react — replaces the deleted `acquirePluginModule`/`PluginModuleLease` (one Worker per
+ * plugin, `📓️terra-H2-web-shard-report.md`'s "must not exist" list) with the pooled `ShardClient` +
+ * `ActivationRegistry` design-runtime.md §1/§3 specifies. ONE `ShardClient` (bounded worker pool,
+ * `min(hardwareConcurrency-1,4)` shards) and ONE `ActivationRegistry` (manifest-only activation, LRU
+ * suspend/resume) for the whole tab — every `loadPluginModule` call shares them, matching the design's
+ * "ShardClient... replaces PluginWorkerClient" framing (one pool, not one per caller). Lazily
+ * constructed on first use so a pure SSR/test import of this module never touches `Worker`/
+ * `navigator`. */
+const SHARD_WORKER_URL = "/plugin-modules/_shard/🟨️shard-worker.js";
+
+/** ⛽️ Provisional constant turn budget — same honestly-flagged gap `ProgramBridge/🧊️component.rs`'s
+ * native `TURN_BUDGET` documents ("until the DRR scheduler threads a real per-lane one through");
+ * this is that same budget's web twin, field-for-field against `ShardBudget`. */
+const DEFAULT_SHARD_BUDGET: ShardBudget = { fuel: 50_000_000, wallMs: 100, memoryBytes: 256 * 1024 * 1024, uiNodes: 20_000, mailboxLen: 64, maxEffects: 64, maxPatchBytes: 1 << 20 };
+
+let sharedShardClient: ShardClient | null = null;
+function getShardClient(): ShardClient {
+  if (sharedShardClient) return sharedShardClient;
+  const hardwareConcurrency = typeof navigator !== "undefined" && typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 5;
+  const shardCount = Math.max(1, Math.min(hardwareConcurrency - 1, 4));
+  sharedShardClient = new ShardClient({
+    shardCount,
+    // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
+    // `🌐plugin-web-materialize.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
+    // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
+    // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
+    createWorker: () => new Worker(SHARD_WORKER_URL, { type: "module" }) as unknown as ShardWorkerLike,
+    onActorTrap: (actorId, message) => console.error(`[DEBUG] PluginRuntime: actor ${actorId} trapped: ${message}`),
+    onShardLost: (shardIndex, actorIds) => console.error(`[DEBUG] PluginRuntime: shard ${shardIndex} lost, actors needing restore: ${actorIds.join(", ")}`),
+  });
+  return sharedShardClient;
+}
+
+let sharedActivationRegistry: ActivationRegistry | null = null;
+function getActivationRegistry(): ActivationRegistry {
+  sharedActivationRegistry ??= new ActivationRegistry({ shardClient: getShardClient(), defaultBudget: DEFAULT_SHARD_BUDGET });
+  return sharedActivationRegistry;
+}
+
+/** 🚧️ Best-effort JS representation of one raw WIT `effect`/`patch-op` variant crossing the wasm
+ * boundary — UNVERIFIED against a real compiled artifact (no plugin has migrated onto `world actor`
+ * yet; W3 hasn't started — same gap `🧵️shard-client.ts`'s and `🌐plugin-web-materialize.ts`'s own
+ * header docs flag). Assumed shape: jco's standard variant binding, `tag` the WIT case name
+ * (kebab-case) and `val` its payload record (fields camelCased from kebab), matching the SAME
+ * convention this ticket's other packets already documented for this exact boundary. */
+type WireVariant<T = unknown> = { readonly tag?: string; readonly val?: T };
+
+type WireUiPatch = {
+  readonly surface?: { readonly instance?: number; readonly surface?: number };
+  readonly kind?: string;
+  readonly revision?: number;
+  readonly baseRevision?: number;
+  readonly ops?: readonly WireVariant[];
+};
+
+type WireTurnResult = {
+  readonly uiPatches: readonly WireUiPatch[];
+  readonly effects: readonly WireVariant[];
+  readonly nextWake: number | null;
+};
+
+/** 📥️ Defensive parse of `ShardClient.turn()`'s opaque `unknown` return (typed opaque at that
+ * module's own public boundary — see its header doc) into the fields this file needs, tolerating a
+ * missing/differently-shaped field rather than throwing mid-turn. */
+function coerceTurnResult(raw: unknown): WireTurnResult {
+  const record = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const uiPatches = Array.isArray(record.uiPatches) ? (record.uiPatches as WireUiPatch[]) : [];
+  const effects = Array.isArray(record.effects) ? (record.effects as WireVariant[]) : [];
+  const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
+  return { uiPatches, effects, nextWake };
+}
+
+/** 🔀️ `Effect::SendMessage{target: Shell{instance}}` → the raw `AppFrame` bytes it wraps —
+ * `⚛️reactor/🦀️component.rs`'s `route_app_frame` puts EVERY non-`UiPatch` `AppFrame` reply here
+ * (design-abi.md §2). Mirrors `📦️glue.rs`'s native `apply_turn_result` (H3-wgpu-native) — same
+ * demux, TS twin. */
+function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | null {
+  if (effect.tag !== "send-message") return null;
+  const val = (effect.val ?? {}) as { readonly target?: WireVariant<number>; readonly payload?: unknown };
+  if (!val.target || val.target.tag !== "shell") return null;
+  if (Number(val.target.val) !== instanceId) return null;
+  if (val.payload === undefined) return null;
+  return coerceWireBytes(val.payload);
+}
+
+//#region 🔖️RetainedUiPatch
+/** 🩹️ `kernel::PatchOp`, TS twin restricted to what `⚛️reactor/🩹️patches/🦀️component.rs`'s
+ * `PatchTracker` actually emits this wave (its own doc: "full-body only — every dirty surface emits
+ * one `PatchOp::Replace` at the root path"). `path` is `list<u32>` at the WIT boundary (an empty
+ * array for the root). */
+type PatchOp =
+  | { readonly kind: "Replace"; readonly path: readonly number[]; readonly node: UiNode }
+  | { readonly kind: "InsertChild"; readonly path: readonly number[]; readonly index: number; readonly node: UiNode }
+  | { readonly kind: "RemoveChild"; readonly path: readonly number[]; readonly index: number }
+  | { readonly kind: "SetProps"; readonly path: readonly number[]; readonly props: unknown };
+
+function decodeWirePatchOps(ops: readonly WireVariant[]): readonly PatchOp[] {
+  const decoded: PatchOp[] = [];
+  for (const op of ops) {
+    const val = (op.val ?? {}) as Record<string, unknown>;
+    const path = Array.isArray(val.path) ? (val.path as number[]) : [];
+    switch (op.tag) {
+      case "replace":
+        decoded.push({ kind: "Replace", path, node: decodePackValue(coerceWireBytes(val.node)) as UiNode });
+        break;
+      case "insert-child":
+        decoded.push({ kind: "InsertChild", path, index: Number(val.index ?? 0), node: decodePackValue(coerceWireBytes(val.node)) as UiNode });
+        break;
+      case "remove-child":
+        decoded.push({ kind: "RemoveChild", path, index: Number(val.index ?? 0) });
+        break;
+      case "set-props":
+        decoded.push({ kind: "SetProps", path, props: val.props !== undefined ? decodePackValue(coerceWireBytes(val.props)) : undefined });
+        break;
+      default:
+        break;
+    }
+  }
+  return decoded;
+}
+
+export type RetainedSurface = { readonly revision: number; readonly node: UiNode };
+
+/**
+ * @emoji 🖼️ H1-react (design-runtime.md §1 `SceneStore` / packet brief item 2) — reconciles one
+ * `UiPatch`'s ops onto `previous` (the last body this file retained for the surface), so the UI
+ * thread reads an already-reconciled tree instead of awaiting a plugin turn. Only a root
+ * `PatchOp::Replace` (path `[]`) is applied — the only shape any guest emits this wave (see
+ * `PatchOp`'s doc above); anything else, or a `baseRevision` that doesn't match `previous.revision`
+ * on a NON-full-replace patch, is an honest desync — `previous` is kept rather than an unverified
+ * partial walk applied, mirroring `📦️glue.rs`'s native `KernelThreadState.retained` exactly (H3).
+ */
+export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: { readonly revision: number; readonly baseRevision: number; readonly ops: readonly PatchOp[] }): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
+  let node: UiNode | null = previous?.node ?? null;
+  let sawFullReplace = false;
+  for (const op of patch.ops) {
+    if (op.kind === "Replace" && op.path.length === 0) {
+      node = op.node;
+      sawFullReplace = true;
+    } else {
+      return { surface: previous, desynced: true };
+    }
+  }
+  if (!sawFullReplace && previous && patch.baseRevision !== previous.revision) return { surface: previous, desynced: true };
+  return { surface: node !== null ? { revision: patch.revision, node } : previous, desynced: false };
+}
+//#endregion 🔖️RetainedUiPatch
+
+/** 🚧️ Best-effort conversion of a raw WIT `effect` variant (`{tag, val}`, see `WireVariant`'s doc for
+ * the unverified-boundary caveat) into the friendly `Effect` union `🎠️kernel/🟦️component.ts` already
+ * declares — Rust `kernel::Effect`'s externally-tagged serde shape (`{effectName: {...fields}}` /
+ * `"requestSync"`), which is what every downstream consumer (`applyHostEffects` and friends) already
+ * expects. Covers the effect kinds this renderer actually branches on; an effect kind with no case
+ * here degrades to an honest `[DEBUG]`-logged drop rather than guessing an unverified shape. */
+function wireEffectToFriendly(effect: WireVariant): Effect | null {
+  const val = (effect.val ?? {}) as Record<string, unknown>;
+  const str = (key: string): string => String(val[key] ?? "");
+  const num = (key: string): number => Number(val[key] ?? 0);
+  const packField = (key: string): unknown => (val[key] !== undefined ? decodePackValue(coerceWireBytes(val[key])) : undefined);
+  switch (effect.tag) {
+    case "request-sync":
+      return "requestSync";
+    case "notify":
+      return { notify: { message: str("message") } };
+    case "navigate":
+      return { navigate: { uri: str("uri") } };
+    case "open-external-url":
+      return { openExternalUrl: { url: str("url") } };
+    case "set-panel":
+      return { setPanel: { panelJson: str("panelJson") } };
+    case "clipboard-write":
+      return { clipboardWrite: { fragment: packField("fragment") } };
+    case "replay-shell-command":
+      return { replayShellCommand: { actionId: str("actionId"), args: packField("args") } };
+    case "set-active-utility":
+      return { setActiveUtility: { windowId: str("windowId"), utilityId: str("utilityId") } };
+    case "set-active-tool":
+      return { setActiveTool: { toolId: str("toolId") } };
+    case "open-window":
+      return { openWindow: { req: num("req"), kind: str("kind"), params: packField("params") } };
+    case "close-window":
+      return { closeWindow: { window: num("window") } };
+    case "dispatch-action":
+      return { dispatchAction: { req: num("req"), action: str("action"), args: packField("args"), delayMs: num("delayMs") } };
+    case "open-dialog":
+      return { openDialog: { req: num("req"), dialogId: str("dialogId"), args: packField("args") as Record<string, unknown> | undefined } };
+    case "invoke-extension":
+      return { invokeExtension: { req: num("req"), extensionId: str("extensionId"), capability: str("capability"), requestJson: JSON.stringify(packField("payload") ?? {}) } };
+    case "spawn-plugin-instance":
+      return { spawnPluginInstance: { req: num("req"), pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined, label: val.label as string | undefined, documentJson: val.documentJson as string | undefined } };
+    case "open-plugin-instance":
+      return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
+    default:
+      console.warn(`[DEBUG] wireEffectToFriendly: unmapped effect "${effect.tag}" dropped — unverified wasm-boundary conversion (this file's 🔖️ActorAdapter doc)`);
+      return null;
+  }
+}
+
+/** 🎯️ Per-instance "leftover" `TurnResult.effects` — everything a turn produced that was NOT a
+ * `SendMessage{Shell}` reply frame (the old `AppFrame::Effects` wrapper's replacement, design-abi.md
+ * §2). `exchange()` fills this on every turn; `performInvocation` drains it right after its own
+ * `client.command()` call resolves — both operations share one turn, so this is never stale by more
+ * than the caller's own await. */
+const pendingTurnEffects = new Map<number, WireVariant[]>();
+
+/** 🪪️ H1-react — instance ids must be unique across EVERY plugin, not just within one
+ * `loadPluginModule` call: `pendingTurnEffects` above is keyed by `instanceId` alone and is shared
+ * module-wide (mirrors `📦️glue.rs`'s native `KernelClient` — `next_instance_id` lives on the ONE
+ * global `KernelThreadState`, not per-plugin). A per-plugin-scoped counter would let two different
+ * plugins both mint instance `1` and silently cross-read each other's leftover turn effects. */
+let nextGlobalInstanceId = 1;
+
+/** 🚦 H1-react — `🟨️shard-worker.js` rejects (not queues) a SECOND in-flight `turn` for the same
+ * `actorId` ("shard worker: actor … already has a turn in flight", `🌐plugin-web-materialize.ts`'s
+ * `inFlightTurnActors` guard: "two turn requests for the SAME actorId overlapping is a caller bug —
+ * the scheduler's job to prevent, not this worker's"). The OLD adapter's `withSerializedPluginWasmHandle`
+ * (deleted alongside `PluginWorkerClient`, `🎠️kernel/🟦️component.ts`'s own doc comment names it)
+ * queued concurrent `exchange()` calls transparently — this is that same guarantee's replacement, one
+ * promise chain per actor, so two overlapping `handleAction`/`refreshUi`/etc. calls on the same
+ * instance run turn-after-turn instead of the second one throwing. */
+const actorTurnQueue = new Map<string, Promise<unknown>>();
+export function serializePerActor<T>(actorId: string, run: () => Promise<T>): Promise<T> {
+  const previous = actorTurnQueue.get(actorId) ?? Promise.resolve();
+  const next = previous.then(run, run);
+  actorTurnQueue.set(
+    actorId,
+    next.catch(() => {}),
+  );
+  return next;
+}
+
+/** 🖼️ Last reconciled "window" body per actor — the ONE surface `⚛️reactor/🦀️component.rs`'s
+ * `dirty_render` loop renders this wave (hardcoded `plugin_render(instance, "window", "{}")`
+ * regardless of which surface key a `surface-visible` event names — a real, upstream limitation of
+ * this wave's reactor, not invented here). Keyed by `actorId` so a suspend+resume (fresh checkpoint
+ * restore) naturally starts a new entry. */
+const retainedWindowByActor = new Map<string, RetainedSurface>();
+
+//#endregion 🔖️ActorAdapter
+
+/** 🐚️ Acquires a real actor through `ActivationRegistry`/`ShardClient` (replacing the deleted
+ * `acquirePluginModule`/`PluginModuleLease` per-plugin Worker lease — design-runtime.md §3) and
+ * adapts it exactly like the old wasm-Worker handle: `dispose()` disposes this instance's worker-side
+ * actor entry via `ShardClient.dispose` (not a `LeasePool` release — there is no shared module lease
+ * to refcount anymore, one actor belongs to exactly one instance). */
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(pluginId, await acquirePluginModule(pluginId, moduleUrl));
+  const registry = getActivationRegistry();
+  registry.registerManifest({ pluginId, moduleUrl, caps: [] });
+  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl);
+  const shardClient = getShardClient();
+  const actorIdByInstance = new Map<number, string>();
+  let eventSeq = 0;
+  const requireActorId = (instanceId: number): string => {
+    const actorId = actorIdByInstance.get(instanceId);
+    if (!actorId) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
+    return actorId;
+  };
+  const submitTurn = async (actorId: string, events: readonly ShardEventEnvelope[]): Promise<WireTurnResult> =>
+    serializePerActor(actorId, async () => coerceTurnResult(await shardClient.turn(actorId, events, DEFAULT_SHARD_BUDGET)));
+
+  const handle: KernelPluginWasmHandle = {
+    manifest: async () => encodePackValue(manifest),
+    createApp: async (appId) => {
+      const instanceId = nextGlobalInstanceId;
+      nextGlobalInstanceId += 1;
+      const actorId = `${pluginId}#${instanceId}`;
+      actorIdByInstance.set(instanceId, actorId);
+      await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
+      eventSeq += 1;
+      await submitTurn(actorId, [
+        {
+          kind: "instance-open",
+          payload: { instance: instanceId, appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) },
+        },
+      ]);
+      return instanceId;
+    },
+    destroyApp: async (instanceId) => {
+      const actorId = actorIdByInstance.get(instanceId);
+      if (!actorId) return;
+      actorIdByInstance.delete(instanceId);
+      retainedWindowByActor.delete(actorId);
+      pendingTurnEffects.delete(instanceId);
+      shardClient.dispose(actorId);
+    },
+    exchange: async (instanceId, frames) => {
+      const actorId = requireActorId(instanceId);
+      const events: ShardEventEnvelope[] = frames.map((frame) => {
+        eventSeq += 1;
+        return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
+      });
+      const result = await submitTurn(actorId, events);
+      const outFrames: Uint8Array[] = [];
+      const leftover: WireVariant[] = [];
+      for (const effect of result.effects) {
+        const frame = shellFrameBytes(effect, instanceId);
+        if (frame) outFrames.push(frame);
+        else leftover.push(effect);
+      }
+      pendingTurnEffects.set(instanceId, leftover);
+      if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
+      return outFrames;
+    },
+    dispose: () => {
+      for (const actorId of actorIdByInstance.values()) {
+        retainedWindowByActor.delete(actorId);
+        shardClient.dispose(actorId);
+      }
+      actorIdByInstance.clear();
+    },
+  };
+
+  const richHandle = await adaptPluginHandle(pluginId, { handle, release: handle.dispose });
+
+  /** 🔁️ H1-react item 2 — window-body refresh no longer goes through `AppCommand::RefreshUi`
+   * (deleted, channel v12): it submits `Event::SurfaceVisible` directly and reads back whatever this
+   * SAME turn's `TurnResult.uiPatches` produced (or the retained tree if nothing changed — the
+   * `PatchTracker` on the guest side emits nothing for an unchanged body). Panels/engagements/
+   * measures/tools/labels have no wire path yet — `⚛️reactor/🦀️component.rs`'s `dirty_render` loop
+   * only ever renders the ONE "window" surface this wave, an upstream limitation reported honestly
+   * (matching `ProgramBridge/🧊️component.rs`'s native `window_engagements`/`window_measures` stubs,
+   * H3-wgpu-native) rather than guessed at here. */
+  const refreshUi = async (instanceId: number, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> => {
+    const windowTargets = request.windows ?? [];
+    if (windowTargets.length === 0) return {};
+    const actorId = requireActorId(instanceId);
+    eventSeq += 1;
+    const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: 0 } } }]);
+    if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
+    const retained = retainedWindowByActor.get(actorId);
+    if (!retained) return {};
+    const hash = fnv1aHex(new TextEncoder().encode(JSON.stringify(retained.node))) + ":" + String(retained.revision);
+    const windows = windowTargets.map((target) => ({ key: target.key, hash, value: retained.node }));
+    return { windows };
+  };
+
+  /** 🔁️ H1-react item 2 ("finish the invokeExtension branch") — the real `req`-correlated completion
+   * `ShellHost/🟦️component.tsx`'s `applyHostEffects` used to only log loudly about. Submits
+   * `Event::Completed{req, outcome}` on the ORIGINATING instance's own actor so its `RequestRegistry`
+   * resumes the parked future (design-abi.md §2's "the SDK resumes the awaiting future on
+   * `event.completed`"). */
+  const completeExtensionInvoke = async (instanceId: number, req: number, outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<void> => {
+    const actorId = requireActorId(instanceId);
+    await submitTurn(actorId, [
+      {
+        kind: "completed",
+        payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } },
+      },
+    ]);
+  };
+
+  return { ...richHandle, refreshUi, completeExtensionInvoke };
+}
+
+function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): void {
+  for (const patch of uiPatches) {
+    const ops = decodeWirePatchOps(patch.ops ?? []);
+    const previous = retainedWindowByActor.get(actorId) ?? null;
+    const { surface, desynced } = applyUiPatchToRetained(previous, { revision: patch.revision ?? 0, baseRevision: patch.baseRevision ?? 0, ops });
+    if (desynced) {
+      console.warn(`[DEBUG] applyRetainedWindowPatches: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
+      continue;
+    }
+    if (surface) retainedWindowByActor.set(actorId, surface);
+  }
+}
+
+/** 📇️ H1-react — reads the build-time `🔣️descriptor.json` (design-abi.md §3, packet E1-describe's
+ * emitter) siblinged next to `moduleUrl`'s directory, matching `ProgramBridge/🧊️component.rs`'s
+ * native `read_descriptor_manifest` (H3-wgpu-native) exactly: an honest EMPTY manifest (zero apps),
+ * not a fabricated one, whenever no descriptor exists yet — as of this packet, only `🗒️note` has a
+ * real committed one (`📓️status.md`'s "E2-builder-descriptor" entry); every other plugin hits this
+ * fallback until W3 migrates it. Never instantiates wasm to ask — that's exactly the "no eager
+ * loading" property `loadPluginModule` used to break (per H2's lease-request naming this file). */
+export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string): Promise<PluginManifest> {
+  const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
+  try {
+    const response = await fetch(descriptorUrl);
+    if (response.ok) {
+      const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
+      if (descriptor.manifest) return descriptor.manifest;
+    }
+  } catch (error) {
+    console.warn(`[DEBUG] fetchDescriptorManifest: ${descriptorUrl} unreachable — using an empty manifest`, error);
+  }
+  console.warn(`[DEBUG] fetchDescriptorManifest: no descriptor for ${pluginId} yet (E1-describe/W3 seam) — loading with an empty manifest, no eager instantiation`);
+  return { pluginId, label: pluginId, version: "", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] } as unknown as PluginManifest;
 }
 
 //#region 🔖️ChannelAdapter
-/** 🔍️ `SectionProbe.kind` byte convention — mirrors `plugin_exchange`'s `SECTION_KIND_*` consts
- * (`framework/os/module/plugin/rs/lib.rs` `🔖️Exchange` region) byte-for-byte. No shared
- * WIT/protocol_channel enum exists for this yet (Wave 1 scope), so the numbering is duplicated here
- * as the single TS-side consumer. */
-const SECTION_KIND_WINDOW = 0;
-const SECTION_KIND_PANEL = 1;
-const SECTION_KIND_ENGAGEMENTS = 2;
-const SECTION_KIND_MEASURES = 3;
-const SECTION_KIND_TOOLS = 4;
-const SECTION_KIND_LABELS = 5;
-
-/** 🐢️ `PluginUiRefreshSectionRequest.hash`/`PluginUiRefreshSectionResponse.hash` are hex strings
- * (opaque to this file — never parsed by Rust, only echoed back on the next request); the wire
- * `SectionProbe.hash`/`AppFrame.UiSection.hash` are plain `number` u64s (the same JS-`number`
- * convention `readVarintU64`/`writeVarintU64` already use throughout `@semio-tech/framework-os`).
- * These two converters are this adapter's own round-trip only — any consistent base works. */
-function hashHexToWire(hex: string | undefined): number | null {
-  if (hex === undefined) return null;
-  const parsed = Number.parseInt(hex, 16);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-function hashWireToHex(value: number): string {
-  return Math.trunc(value).toString(16);
-}
-
-/** 🎛️ The fallback envelope `plugin_exchange`'s `dispatch_command_frame` decodes when an app hasn't
- * overridden `DocumentApp::handle_typed_command` yet (`{kind, name, args}`, `store::pack_rt`-wire-value
- * encoded) — see that function's doc comment in `framework/os/module/plugin/rs/lib.rs`. */
-/** 🎯️ Shared by `handleAction`/`handleCommand`: encodes `envelope` + `viewState`, sends one
- * `AppCommand::Command` frame, and reassembles the `Invocation`/`Effects`/`Events` frames it produces
- * back into the `InvocationResponse` shape the rest of this file already consumes. `operations`/
- * `inverseGroup` stay at their empty defaults — Wave 1's `AppFrame::Invocation` carries only
- * `output`/`diagnostics` (see `plugin_exchange`'s `AppCommand::Command` arm); no call site in this
- * file reads either field (only `.requestedEffects`/`.uiScope`), confirmed by grep before this
- * adapter was written. The invocation frame now carries the authoritative `uiScope` and optional
- * `historyPatch`, so consumers can apply history before any effects schedule refresh work. */
-/** 🎯️ DslValue serde encodes Rust enums as `{ kind, value }` (struct) / plain string (unit). Shell
- * `HostEffect` consumers expect serde externally-tagged JSON (`{ navigate: { uri } }` / `"requestSync"`). */
-/** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }` object. */
+/** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }`
+ * object — used both for the old DSL-pack byte fields AND (H1-react) for `pack`-typed fields inside a
+ * raw WIT `effect`/`patch-op` variant, which jco represents as a plain byte array or `Uint8Array`. */
 export function coerceWireBytes(raw: unknown): Uint8Array {
   if (raw instanceof Uint8Array) return raw;
   if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
@@ -192,31 +567,16 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
   throw new Error(`[DEBUG] coerceWireBytes: unsupported payload ${JSON.stringify(raw)?.slice(0, 120)}`);
 }
 
-function normalizeWireHostEffect(raw: unknown): HostEffect {
-  if (typeof raw === "string") return raw as HostEffect;
-  if (!raw || typeof raw !== "object") {
-    throw new Error(`[DEBUG] invalid host effect: ${JSON.stringify(raw)}`);
-  }
-  const record = raw as Record<string, unknown>;
-  if (typeof record.kind === "string") {
-    const kind = record.kind;
-    if ("value" in record) {
-      return { [kind]: record.value } as HostEffect;
-    }
-    if ("fields" in record) {
-      return { [kind]: record.fields } as HostEffect;
-    }
-    return kind as HostEffect;
-  }
-  return raw as HostEffect;
-}
-
-async function performInvocation(client: AppChannelClient, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
+/** 🎯️ Shared by `handleAction`/`handleCommand`: encodes `envelope` + `viewState`, sends one
+ * `AppCommand::Command` frame, and reassembles the `Invocation` frame plus this SAME turn's leftover
+ * `TurnResult.effects` (`pendingTurnEffects`, H1-react — replaces the deleted `AppFrame::Effects`/
+ * `Events` frames) back into the `InvocationResponse` shape the rest of this file already consumes.
+ * `events` has no wire counterpart in this wave (an honest gap `ProgramBridge/🧊️component.rs`'s
+ * native `invocation_from_frames` already flags identically). */
+async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
   const frames = await client.command(encodePackValue(invocation), viewState);
   let output: unknown = null;
   let diagnostics: InvocationResponse["diagnostics"] = [];
-  let requestedEffects: HostEffect[] = [];
-  let events: InvocationResponse["events"] = [];
   let uiScope: InvocationResponse["uiScope"];
   let historyPatch: InvocationResponse["historyPatch"];
   for (const frame of frames) {
@@ -227,112 +587,24 @@ async function performInvocation(client: AppChannelClient, invocation: unknown, 
       uiScope = decodePackValue(new Uint8Array(frame.Invocation.ui_scope)) as InvocationResponse["uiScope"];
       const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
       historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
-    } else if ("Effects" in frame) {
-      requestedEffects = frame.Effects.effects.map((bytes) => normalizeWireHostEffect(decodePackValue(new Uint8Array(bytes))));
-    } else if ("Events" in frame) {
-      events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
       throw new Error(`${invocationKind} failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
+  const leftover = pendingTurnEffects.get(instanceId) ?? [];
+  pendingTurnEffects.delete(instanceId);
+  const requestedEffects = leftover.map(wireEffectToFriendly).filter((effect): effect is Effect => effect !== null);
   return {
     output,
     mutations: [],
     inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
     diagnostics,
     requestedEffects,
-    events,
+    events: [],
     uiScope,
     historyPatch,
-  };
-}
-
-/** 🔄️ One `PluginUiRefreshRequest` section, tagged with where its `AppFrame::UiSection` reply must
- * land in the reassembled `PluginUiRefreshResponse` — `plugin_exchange`'s `AppCommand::RefreshUi`
- * handling always emits exactly one `UiSection` frame per requested `SectionProbe`, in request order
- * (verified against its source), so positional zipping (not `key` round-tripping) is what recovers
- * the window/panel INSTANCE id `SectionProbe.key` can't carry (the wire probe's `key` must instead be
- * the render body-key `plugin_exchange` renders against). */
-type RefreshUiTarget =
-  | { readonly kind: "window" | "panel"; readonly key: string }
-  | { readonly kind: "engagements" | "measures" | "tools" | "labels" };
-
-async function performRefreshUi(client: AppChannelClient, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> {
-  const probes: SectionProbe[] = [];
-  const targets: RefreshUiTarget[] = [];
-  for (const entry of request.windows ?? []) {
-    probes.push({ kind: SECTION_KIND_WINDOW, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
-    targets.push({ kind: "window", key: entry.key });
-  }
-  for (const entry of request.panels ?? []) {
-    probes.push({ kind: SECTION_KIND_PANEL, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
-    targets.push({ kind: "panel", key: entry.key });
-  }
-  if (request.engagements) {
-    probes.push({ kind: SECTION_KIND_ENGAGEMENTS, key: "engagements", hash: hashHexToWire(request.engagements.hash) });
-    targets.push({ kind: "engagements" });
-  }
-  if (request.measures) {
-    probes.push({ kind: SECTION_KIND_MEASURES, key: "measures", hash: hashHexToWire(request.measures.hash) });
-    targets.push({ kind: "measures" });
-  }
-  if (request.tools) {
-    probes.push({ kind: SECTION_KIND_TOOLS, key: "tools", hash: hashHexToWire(request.tools.hash) });
-    targets.push({ kind: "tools" });
-  }
-  if (request.labels) {
-    probes.push({ kind: SECTION_KIND_LABELS, key: "labels", hash: hashHexToWire(request.labels.hash) });
-    targets.push({ kind: "labels" });
-  }
-  if (probes.length === 0) return {};
-
-  const frames = await client.refreshUi(probes, request.viewState ?? {});
-  const sections = frames.filter((frame): frame is Extract<AppFrameValue, { readonly UiSection: unknown }> => "UiSection" in frame);
-  let requestedEffects: HostEffect[] = [];
-  const refreshSeq = sections[0]?.UiSection.in_reply_to;
-  if (refreshSeq !== undefined) {
-    for (const frame of frames) {
-      if ("Effects" in frame && frame.Effects.in_reply_to === refreshSeq) {
-        requestedEffects = frame.Effects.effects.map((bytes) => normalizeWireHostEffect(decodePackValue(new Uint8Array(bytes))));
-      }
-    }
-  }
-  if (sections.length !== probes.length) {
-    const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-    throw new Error(errorFrame ? `[DEBUG] refreshUi failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
-  }
-
-  const windows: PluginUiRefreshSectionResponse[] = [];
-  const panels: PluginUiRefreshSectionResponse[] = [];
-  let engagements: PluginUiRefreshSectionResponse | undefined;
-  let measures: PluginUiRefreshSectionResponse | undefined;
-  let tools: PluginUiRefreshSectionResponse | undefined;
-  let labels: PluginUiRefreshSectionResponse | undefined;
-  sections.forEach((frame, index) => {
-    const target = targets[index]!;
-    const section = frame.UiSection;
-    const response: PluginUiRefreshSectionResponse = {
-      key: target.kind === "window" || target.kind === "panel" ? target.key : target.kind,
-      hash: hashWireToHex(section.hash),
-      value: section.body !== null ? decodePackValue(new Uint8Array(section.body)) : undefined,
-    };
-    if (target.kind === "window") windows.push(response);
-    else if (target.kind === "panel") panels.push(response);
-    else if (target.kind === "engagements") engagements = response;
-    else if (target.kind === "measures") measures = response;
-    else if (target.kind === "tools") tools = response;
-    else labels = response;
-  });
-  return {
-    ...(windows.length > 0 ? { windows } : {}),
-    ...(panels.length > 0 ? { panels } : {}),
-    ...(engagements ? { engagements } : {}),
-    ...(measures ? { measures } : {}),
-    ...(tools ? { tools } : {}),
-    ...(labels ? { labels } : {}),
-    ...(requestedEffects.length > 0 ? { requestedEffects } : {}),
   };
 }
 
@@ -369,7 +641,7 @@ export function setPluginRuntimeActor(actor: string): void {
  * avoids the alternative (sending a real `Hello.config`, which would run every migrated app's
  * `apply_config_bytes` against an arbitrary empty/placeholder config — wrong for an app like shooting
  * whose `ShootingConfig` fields have no `#[serde(default)]` and would reject `{}`). */
-export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLease): Promise<PluginWasmHandle> {
+export async function adaptPluginHandle(pluginId: string, lease: { readonly handle: KernelPluginWasmHandle; readonly release: () => void }): Promise<PluginWasmHandle> {
   const handle = lease.handle;
   const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
   const channels = new Map<number, AppChannelClient>();
@@ -390,9 +662,15 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       channels.delete(instanceId);
       await handle.destroyApp(instanceId);
     },
-    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), JSON.parse(actionJson), "action", viewState),
-    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), JSON.parse(commandJson), "command", viewState),
-    refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
+    handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
+    handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState),
+    // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
+    // path this bare adapter has no access to (only the raw `exchange`-shaped `handle`, no actorId);
+    // `loadPluginModule` overrides this field with the real implementation right after calling this
+    // function. A caller that constructs `adaptPluginHandle` directly (every inline test in this file)
+    // gets an honest empty result rather than a throw — `AppCommand::RefreshUi`/`SectionProbe` no
+    // longer exist on the wire regardless (channel v12), so there is no fallback command to send here.
+    refreshUi: async () => ({}),
     contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
     readHistory: async (instanceId) => {
       const frames = await requireChannel(instanceId).readHistory();
@@ -419,21 +697,17 @@ export async function adaptPluginHandle(pluginId: string, lease: PluginModuleLea
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
       if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
-    attachBackbone: async (instanceId, uri) => {
-      const frames = await requireChannel(instanceId).attachBackbone(uri);
-      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: attachBackbone failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
-    },
-    detachBackbone: async (instanceId) => {
-      const frames = await requireChannel(instanceId).detachBackbone();
-      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
-      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
-    },
-    ephemeralSnapshot: async (instanceId) => {
-      const frames = await requireChannel(instanceId).drain();
-      const frame = frames.find((candidate): candidate is Extract<AppFrameValue, { readonly Ephemeral: unknown }> => "Ephemeral" in candidate);
-      return frame ? { presence: frame.Ephemeral.presence, presenceGeneration: frame.Ephemeral.presence_generation, transientGeneration: frame.Ephemeral.transient_generation } : null;
-    },
+    // 🚧️ Channel v12 (A4-channel) retired `AppChannelClient.attachBackbone`/`detachBackbone`/`drain` —
+    // backbone attach/detach collapses into event-driven `Event::Message`/`subscribe` (design-abi.md
+    // §2/§4), and `exchange(id, [])`'s drain has no replacement (guests are woken by events/timers/
+    // `next-wake` now). `EffectBackbone` (the per-instance replacement) has not landed — flagged as a
+    // still-open critical-path gap in `📓️status.md`'s "A2-abi-sdk — honest partial" entry, confirmed
+    // still open as of `ProgramBridge/🧊️component.rs`'s native twin (H3-wgpu-native), which stubs the
+    // identical three methods with explicit errors rather than guessing a wire format. Left `undefined`
+    // here — every real call site in `ShellHost/🟦️component.tsx` already optional-chains these.
+    attachBackbone: undefined,
+    detachBackbone: undefined,
+    ephemeralSnapshot: undefined,
     documentPack: (instanceId) => requireChannel(instanceId).documentPack(),
     transactionPrepare: async (instanceId, txnId, request) => {
       const frames =
@@ -893,6 +1167,9 @@ if (import.meta.vitest) {
       transactionRedo: async (instanceId) => {
         calls.push(`${pluginId}:${instanceId}:redo`);
       },
+      setMergePolicy: async () => {},
+      resolveConflict: async () => ({ mergeReport: null, conflicts: null }),
+      readConflicts: async () => [],
       dispose: () => {},
     };
   }
@@ -1187,6 +1464,9 @@ if (import.meta.vitest) {
         },
         transactionUndo: async () => {},
         transactionRedo: async () => {},
+        setMergePolicy: async () => {},
+        resolveConflict: async () => ({ mergeReport: null, conflicts: null }),
+        readConflicts: async () => [],
         dispose: () => {},
       };
       const plugins = new Map<string, PluginWasmHandle>([
@@ -1234,27 +1514,28 @@ if (import.meta.vitest) {
     it("adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient", async () => {
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
       const seenCommands: unknown[] = [];
-      const fakeLease: PluginModuleLease = {
+      const fakeLease = {
         handle: {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
-          exchange: async (_instanceId, frames) => {
+          exchange: async (_instanceId: number, frames: Uint8Array[]) => {
             const commands = frames.map((frame) => decodeAppCommand(frame));
             seenCommands.push(...commands);
             return commands.map((command) => {
-              if (command !== "Bye" && "transactionPrepare" in command) {
+              if ("transactionPrepare" in command) {
                 return encodeAppFrame({ transactionPrepared: { txn_id: command.transactionPrepare.txn_id, foreign: [], rejection: [] } });
               }
-              if (command !== "Bye" && "transactionCommit" in command) {
+              if ("transactionCommit" in command) {
                 return encodeAppFrame({ transactionCommitted: { txn_id: command.transactionCommit.txn_id, edit_id: "edit-1" } });
               }
-              if (command !== "Bye" && "ReadDocument" in command) {
+              if ("ReadDocument" in command) {
                 return encodeAppFrame({ Document: { in_reply_to: command.ReadDocument.seq, pack: [5, 5], spr: [6], ops: "" } });
               }
               return encodeAppFrame({ Done: { in_reply_to: 0 } });
             });
           },
+          dispose: () => {},
         },
         release: () => {},
       };
@@ -1286,15 +1567,16 @@ if (import.meta.vitest) {
 
     it("documentPack() reflects the cache after loadAppDocumentPack() — the adapter reads the SAME live channel it just loaded through", async () => {
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
-      const fakeLease: PluginModuleLease = {
+      const fakeLease = {
         handle: {
           manifest: async () => encodePackValue({ pluginId: "b-plugin", label: "B", version: "1.0.0", apps: [], workflows: [], examples: [] }),
           createApp: async () => 20,
           destroyApp: async () => {},
-          exchange: async (_instanceId, frames) => {
+          exchange: async (_instanceId: number, frames: Uint8Array[]) => {
             const commands = frames.map((frame) => decodeAppCommand(frame));
-            return commands.map((command) => (command !== "Bye" && "LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));
+            return commands.map((command) => ("LoadDocument" in command ? encodeAppFrame({ Done: { in_reply_to: command.LoadDocument.seq } }) : encodeAppFrame({ Done: { in_reply_to: 0 } })));
           },
+          dispose: () => {},
         },
         release: () => {},
       };

@@ -28,6 +28,13 @@ pub fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u
 #[path = "../../🦀️component.rs"]
 pub mod plugin;
 pub use plugin::plugin;
+// 🚀 Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0 — installs the process-wide plugin
+// bundle, anchors the `component-guest`-gated wasm export against link-time dead-code elimination,
+// and (E1-describe) adds the `#[cfg(test)] descriptor_is_fresh()` test that byte-compares
+// `describe::describe_plugin()` against the committed `🛂️descriptor.semio` at this crate's owner
+// root. Mirrors `✏️s/🔌️plugins/🗒️note`'s own `semio_framework_plugin::plugin_exports!(plugin::plugin)`
+// call verbatim — stdio never had this wired up before this packet.
+semio_framework_plugin::plugin_exports!(plugin::plugin);
 //#endregion Plugin
 
 //#region Registry

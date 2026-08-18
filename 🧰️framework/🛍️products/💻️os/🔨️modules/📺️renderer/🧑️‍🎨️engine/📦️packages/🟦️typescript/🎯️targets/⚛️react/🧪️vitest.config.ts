@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(root, "../../../../../../../../../..");
 
-const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts");
+const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts");
 
 export default defineConfig({
   root,

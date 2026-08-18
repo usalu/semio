@@ -389,12 +389,20 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.sequence.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Sequenz")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Sequenz")?)?)
 }
 
-pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::sequence::schema::sequence_artifact_schema_descriptor())
-        .inferences([crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::sequence_artifact_inference_descriptor()])
-        .composers(crate::artifacts::sequence::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::sequence::SequencePlayApp>>()
-        .try_build()
-}
 //#endregion 🔖️Declaration
+
+//#region 🔖️ArtifactDeclaration
+/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): the whole
+/// `s.sequence.sequence` artifact through the declaration tree — one standard (`1`), one subset
+/// (`any`). Replaces the OLD `declaration()`/`ArtifactDeclaration::builder(...)` channel outright
+/// (atomic cutover; both channels never coexist). `localization: &[]` is a documented shortfall,
+/// not an oversight — the real en/de localized descriptors still live on `definition()`'s
+/// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
+/// into this field too is real follow-up work, not required for the tree to register or for any
+/// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::artifacts::sequence::standards::v1::standard()] }
+}
+//#endregion 🔖️ArtifactDeclaration

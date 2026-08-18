@@ -214,6 +214,18 @@ mod wasm_program_exchange {
         expect_done(&outcome.frames, seq)
     }
 
+    /// 👥️ Native twin of the browser host's `AppChannelClient.pushPresence` (contract-freeze §C7.6 of
+    /// ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
+    /// CREATION`): sends the document-wide presence roster (already own-actor-dropped by the caller)
+    /// as a single `AppCommand::Presence`, one `encode_presence_peer` blob per peer. A plain `Done`
+    /// reply, never decoded further here.
+    pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
+        let seq = next_seq();
+        let peer_blobs: Vec<Vec<u8>> = peers.iter().map(protocol::encode_presence_peer).collect();
+        let outcome = exchange(client, instance_id, vec![AppCommand::Presence { seq, own_color, peers: peer_blobs }]).await?;
+        expect_done(&outcome.frames, seq)
+    }
+
     /// 🚧️ `AppCommand::AttachBackbone`/`DetachBackbone` no longer exist in channel v12 (packet
     /// A4-channel's report: backbone attach/detach collapses into event-driven `Event::Message`/
     /// `subscribe` per `📓️design-abi.md` §2/§4 — "backbone-poll/backbone-status deleted → event.
@@ -487,6 +499,16 @@ impl ProgramBridgeEntry {
             ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::apply_mutations(client, instance_id, operations).await,
             #[cfg(target_arch = "wasm32")]
             _ => Err("apply_mutations unavailable".into()),
+        }
+    }
+
+    /// 👥️ Native twin of the browser host's `AppChannelClient.pushPresence` (contract-freeze §C7.6).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn push_presence(&self, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::push_presence(client, instance_id, own_color, peers).await,
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("push_presence unavailable".into()),
         }
     }
 

@@ -1,6 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
+use semio_framework_plugin::{ExecutionMode, Plugin};
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)` escape
@@ -10,6 +11,13 @@ use semio_framework_plugin::Plugin;
 /// `.document_app::<…>(…)` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1)
 /// is replaced by two independent surfaces: `.editor::<…>(…)` (mutation-capable) and
 /// `.viewer::<…>(…)` (read-only) for the same `s.mathematical.mathematical@1/*` dialect.
+/// `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
+/// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M1, `📓️design-abi.md` §3/§6): the host
+/// activates one instance whenever a `"computation.mathematical"` artifact
+/// (`crate::artifacts::mathematical::artifact_kind().id`) is opened, this plugin's actor runs
+/// `Isolated` (no cross-plugin extension attachment, the SDK default holds), and it asks the
+/// broker for document write access because `MathematicalPlayApp` persists graph edits back to
+/// the open document.
 pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
     Plugin::builder("mathematical")
         .label("Mathematical")
@@ -19,6 +27,9 @@ pub fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::mathematical::MathematicalPlayApp>()
         .viewer::<crate::viewer::mathematical::MathematicalViewer>(crate::viewer::mathematical::create_mathematical_viewer())
         .viewer_mutation_roster::<crate::viewer::mathematical::MathematicalViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::mathematical::artifact_kind().id })
+        .execution(ExecutionMode::Isolated)
+        .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist mathematical graph edits to the open document".into(), optional: false })
         .try_build()
 }
 

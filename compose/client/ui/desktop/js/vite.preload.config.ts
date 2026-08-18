@@ -14,7 +14,7 @@
 
 // #region 🔌️Adapters
 import { defineConfig } from "vite";
-import { semioViteProductionBuild } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
+import { semioViteProductionBuild } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { builtinModules } from "module";
 import path from "path";
 // #endregion 🔌️Adapters

@@ -26,7 +26,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { meshCollectionVitePlugin, semioFaviconVitePlugin, semioAssetsVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin, semioViteProductionBuild, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/🟦️vite-elements-assets.ts";
+import { meshCollectionVitePlugin, semioFaviconVitePlugin, semioAssetsVitePlugin, semioHostHtmlVitePlugin, semioEmojiIndexHtmlVitePlugin, semioViteProductionBuild, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/📜️script.ts";
 // #endregion 🔌️Adapters
 

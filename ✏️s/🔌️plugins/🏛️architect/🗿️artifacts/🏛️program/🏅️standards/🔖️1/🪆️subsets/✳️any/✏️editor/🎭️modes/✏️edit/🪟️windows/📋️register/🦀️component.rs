@@ -83,7 +83,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
     // `dag`'s/`space`'s identical `NodeGraphScene` gap.
     let mut scene = empty_component_scene(ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList);
-    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None });
+    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None, domain_id: None });
     UiNode::ComponentScene(scene)
 }
 //#endregion 🔖️Render

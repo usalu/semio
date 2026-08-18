@@ -54,7 +54,18 @@ impl protocol::InferenceSpec<SequenceSnapshot> for SequenceInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::sequence::standards::v1::subsets::any::schema::SequenceBuilderFacets {
+/// 🌳️ Retargeted (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) — the old
+/// `derive_artifact_facets!`-generated `SequenceBuilderFacets` this impl targeted is deleted along
+/// with the rest of the hand-rolled `ArtifactComposition`/`ArtifactAnalyzer` cluster (design.md §5
+/// step 3). The recipe's suggested replacement (`semio_framework_plugin::app::SnapshotBuilder<S,
+/// M>`) does NOT work here: `SnapshotBuilder` is a foreign (non-`#[fundamental]`) generic struct,
+/// so `impl ArtifactInferrer for SnapshotBuilder<SequenceSnapshot, SequenceMutation>` is a genuine
+/// orphan-rule violation (E0117) regardless of the type PARAMETERS being local — confirmed by
+/// compiling it (see `📓️w4-sequence-report.md` `## recipeGaps`). `ArtifactInferrer::infer` takes
+/// `&Self::Snapshot`, never `&self` — the impl target is a pure type-level anchor with zero live
+/// callers repo-wide (grepped), so a trivial local zero-sized marker is the correct, minimal fix.
+pub struct SequenceInferrer;
+impl ArtifactInferrer for SequenceInferrer {
     type Snapshot = SequenceSnapshot;
     type Inference = SequenceInference;
 }

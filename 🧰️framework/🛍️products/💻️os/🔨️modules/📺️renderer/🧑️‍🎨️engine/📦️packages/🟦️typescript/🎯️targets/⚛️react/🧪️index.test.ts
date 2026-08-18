@@ -137,6 +137,9 @@ import {
   appBreadcrumb,
   appWindowLabel,
   adaptPluginHandle,
+  fetchDescriptorManifest,
+  applyUiPatchToRetained,
+  serializePerActor,
   applyUiRefreshResponseToCache,
   resolveAppBreadcrumb,
   buildUtilityRibbonSegments,
@@ -1068,42 +1071,90 @@ describe("framework plugin runtime", () => {
   // fakes speak that new ABI directly (`exchange` decodes/encodes real frames via the os-core
   // codecs) instead of the old flat `semio_plugin_*` wasm-bindgen JSON exports, which no longer
   // exist anywhere in the ABI (`loadPluginModuleUncached`'s doc comment).
-  it("preserves batched UI refreshes through the React program adapter", async () => {
-    const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os");
+  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react, absorbing A4-channel's lease against this
+  // file): channel v12 retired `AppCommand::RefreshUi`/`SectionProbe` and `AppFrame::UiSection` —
+  // window-body refresh is no longer a request/response round trip at all, it is a
+  // `Event::SurfaceVisible` submission read back through `TurnResult.uiPatches` via the
+  // `ActivationRegistry`/`ShardClient` pair `loadPluginModule` owns (`🧱️elements/PluginRuntime/🟦️component.tsx`'s
+  // `🔖️ActorAdapter` region). `adaptPluginHandle` alone (what this test constructs, via a bare
+  // `exchange`-only fake — no actor, no ShardClient) genuinely has no wire path left to ask for a
+  // section body over, so its own `refreshUi` is an honest empty result — asserted here rather than
+  // deleted, since "no wire path here anymore" is itself real, worth-pinning behavior.
+  it("adaptPluginHandle's own refreshUi is an honest empty result — window-body refresh now lives in loadPluginModule's ActivationRegistry/ShardClient turn loop, which a bare exchange-only handle has no access to", async () => {
+    const { encodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
-      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
-        const [command] = frames.map(decodeAppCommand);
-        if (!command || typeof command !== "object" || !("RefreshUi" in command)) throw new Error("expected a RefreshUi command");
-        const [probe] = command.RefreshUi.sections;
-        if (!probe) throw new Error("expected one SectionProbe");
-        return [
-          encodeAppFrame({
-            UiSection: { in_reply_to: command.RefreshUi.seq, kind: probe.kind, key: probe.key, hash: 1, body: Array.from(encodePackValue({ instanceId: 7, probeKey: probe.key })) },
-          }),
-        ];
+      exchange: async () => {
+        throw new Error("adaptPluginHandle.refreshUi must not call exchange() — there is no AppCommand for it anymore");
       },
       dispose: () => {},
     };
     const handle = await adaptPluginHandle("mock-refresh", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
-    await expect(handle.refreshUi(instanceId, { viewState: {}, windows: [{ key: "overview", bodyKey: "overview" }] })).resolves.toEqual({
-      windows: [{ key: "overview", hash: "1", value: { instanceId: 7, probeKey: "overview" } }],
-    });
+    await expect(handle.refreshUi(instanceId, { viewState: {}, windows: [{ key: "overview", bodyKey: "overview" }] })).resolves.toEqual({});
   });
 
-  it("loads plugin modules through framework-core, refcounted", async () => {
-    const { acquirePluginModule } = await import("@semio-tech/framework");
-    const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
-    const manifestBytes = Array.from(encodePackValue({ pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] }));
-    const moduleUrl = `data:application/javascript,${encodeURIComponent(
-      `export async function createPluginApi(){return {manifest: async()=>new Uint8Array(${JSON.stringify(manifestBytes)}), createApp: async()=>1, destroyApp: async()=>{}, exchange: async()=>[]};}`,
-    )}`;
-    const lease = await acquirePluginModule("mock", moduleUrl);
-    expect((decodePackValue(await lease.handle.manifest()) as { pluginId: string }).pluginId).toBe("mock");
-    lease.release();
+  // 🧬️ H1-react — `acquirePluginModule`/`PluginModuleLease` (the refcounted per-plugin Worker lease)
+  // are deleted outright (packet H2, `📓️terra-H2-web-shard-report.md`'s "must not exist" list),
+  // replaced by `ActivationRegistry`'s manifest-only registration. `loadPluginModule` itself now
+  // needs a real `Worker` (the shard pool) to fully exercise end to end, which this vitest
+  // environment does not provide — the part of the old mechanism that WAS a pure, host-only
+  // function (reading a build-time manifest without ever touching wasm) is `fetchDescriptorManifest`,
+  // exercised directly here instead: honest-empty fallback when no `🔣️descriptor.json` is reachable
+  // (true for every plugin but `🗒️note` as of this packet — `📓️status.md`'s "E2-builder-descriptor"
+  // entry), and the real descriptor's `manifest` field surfacing through when one IS reachable.
+  it("fetchDescriptorManifest falls back to an honest empty manifest when no 🔣️descriptor.json is reachable, and surfaces a real one when it is", async () => {
+    const originalFetch = globalThis.fetch;
+    try {
+      globalThis.fetch = (async () => ({ ok: false, status: 404 })) as unknown as typeof fetch;
+      const empty = await fetchDescriptorManifest("mock", "/plugin-modules/mock/index.js");
+      expect(empty.pluginId).toBe("mock");
+      expect(empty.apps).toEqual([]);
+
+      globalThis.fetch = (async () => ({ ok: true, json: async () => ({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }) })) as unknown as typeof fetch;
+      const real = await fetchDescriptorManifest("mock", "/plugin-modules/mock/index.js");
+      expect(real).toEqual({ pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  // 🧬️ H1-react — design-runtime.md §1 `SceneStore` / packet brief item 2: the retained-tree
+  // reconciliation `PluginRuntime`'s `loadPluginModule` applies every `TurnResult.uiPatches` entry
+  // through. Exercised directly (not through a fake wasm turn) since it is a pure function — real
+  // coverage of "apply a `UiPatch` to a retained tree, honour `baseRevision`" that does not depend on
+  // the unverified jco wasm boundary this file's `🔖️ActorAdapter` doc flags.
+  describe("applyUiPatchToRetained", () => {
+    const node = (value: string) => ({ type: "text", value }) as unknown as UiNode;
+
+    it("a root Replace on a fresh surface (no previous body) is applied", () => {
+      const result = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], node: node("a") }] });
+      expect(result.desynced).toBe(false);
+      expect(result.surface).toEqual({ revision: 1, node: node("a") });
+    });
+
+    it("a root Replace with a matching baseRevision advances the retained body", () => {
+      const previous = { revision: 1, node: node("a") };
+      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "Replace", path: [], node: node("b") }] });
+      expect(result.desynced).toBe(false);
+      expect(result.surface).toEqual({ revision: 2, node: node("b") });
+    });
+
+    it("a non-root op (no incremental walker yet) is an honest desync — the previous body is kept", () => {
+      const previous = { revision: 1, node: node("a") };
+      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "SetProps", path: [0], props: {} }] });
+      expect(result.desynced).toBe(true);
+      expect(result.surface).toBe(previous);
+    });
+
+    it("an ops-less patch with a stale baseRevision is a desync — nothing to reconcile against", () => {
+      const previous = { revision: 5, node: node("a") };
+      const result = applyUiPatchToRetained(previous, { revision: 6, baseRevision: 1, ops: [] });
+      expect(result.desynced).toBe(true);
+      expect(result.surface).toBe(previous);
+    });
   });
 
   it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
@@ -1126,28 +1177,67 @@ describe("framework plugin runtime", () => {
     expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } });
   });
 
-  it("serializes concurrent program wasm handle calls", async () => {
-    const { withSerializedPluginWasmHandle } = await import("@semio-tech/framework");
+  // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent `exchange()` calls
+  // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
+  // (`🎠️kernel/🟦️component.ts`'s own doc comment names it). The reason it existed still applies:
+  // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
+  // (`inFlightTurnActors` guard, `🌐plugin-web-materialize.ts`). `serializePerActor`
+  // (`PluginRuntime/🟦️component.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real
+  // replacement — every `submitTurn` call for one actor funnels through it — exercised directly here
+  // since it is a plain, generic per-key promise queue.
+  it("serializePerActor queues concurrent turns for the same actor one at a time, never overlapping", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
-    const handle = withSerializedPluginWasmHandle({
-      manifest: async () => new Uint8Array(),
-      createApp: async () => 1,
-      destroyApp: async () => {},
-      exchange: async () => {
+    const runOne = () =>
+      serializePerActor("actor-1", async () => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 5));
         inFlight -= 1;
-        return [];
-      },
-      dispose: () => {},
-    });
-    await Promise.all([handle.exchange(1, []), handle.exchange(1, []), handle.exchange(1, [])]);
+        return "done";
+      });
+    const results = await Promise.all([runOne(), runOne(), runOne()]);
     expect(maxInFlight).toBe(1);
+    expect(results).toEqual(["done", "done", "done"]);
   });
 
-  it("adaptPluginHandle.handleAction round-trips an action with effects, uiScope, and historyPatch", async () => {
+  it("serializePerActor keys independently per actor — different actors run concurrently, not queued behind each other", async () => {
+    let concurrentAcrossActors = 0;
+    let maxConcurrentAcrossActors = 0;
+    const runOn = (actorId: string) =>
+      serializePerActor(actorId, async () => {
+        concurrentAcrossActors += 1;
+        maxConcurrentAcrossActors = Math.max(maxConcurrentAcrossActors, concurrentAcrossActors);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        concurrentAcrossActors -= 1;
+      });
+    await Promise.all([runOn("actor-a"), runOn("actor-b")]);
+    expect(maxConcurrentAcrossActors).toBe(2);
+  });
+
+  it("serializePerActor keeps queuing subsequent turns after an earlier one rejects", async () => {
+    const order: string[] = [];
+    const failing = serializePerActor("actor-2", async () => {
+      order.push("first");
+      throw new Error("turn faulted");
+    });
+    const succeeding = serializePerActor("actor-2", async () => {
+      order.push("second");
+      return "ok";
+    });
+    await expect(failing).rejects.toThrow("turn faulted");
+    await expect(succeeding).resolves.toBe("ok");
+    expect(order).toEqual(["first", "second"]);
+  });
+
+  // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
+  // now travel as real `kernel::Effect` values directly on `TurnResult.effects`
+  // (`⚛️reactor/🦀️component.rs`'s `poll`), demuxed by `loadPluginModule`'s `exchange()` into
+  // `pendingTurnEffects`/drained by `performInvocation` — a mechanism a bare `exchange`-only fake (no
+  // ShardClient turn ever runs) has nothing to populate, so `requestedEffects` is honestly `[]` here.
+  // `output`/`uiScope`/`historyPatch` still arrive on the SAME `AppFrame::Invocation` frame, unchanged
+  // by the flip — real wire coverage, kept.
+  it("adaptPluginHandle.handleAction round-trips an action's output/uiScope/historyPatch from AppFrame::Invocation; requestedEffects is honestly empty for a bare exchange-only handle", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
@@ -1158,8 +1248,7 @@ describe("framework plugin runtime", () => {
         if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
         const invocation = decodePackValue(new Uint8Array(command.Command.command));
         return [
-          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })), history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })) } }),
-          encodeAppFrame({ Effects: { in_reply_to: command.Command.seq, effects: [Array.from(encodePackValue("requestSync"))] } }),
+          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })), history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })), messages: [] } }),
         ];
       },
       dispose: () => {},
@@ -1169,7 +1258,7 @@ describe("framework plugin runtime", () => {
     const invocation = { address: { pluginId: "mock-action", appId: "main", modeId: "edit", windowKindId: "main", windowInstanceId: "main", actionId: "addShot" }, arguments: { format: "png" } };
     const response = await handle.handleAction(instanceId, JSON.stringify(invocation), {});
     expect(response.output).toEqual({ echo: invocation });
-    expect(response.requestedEffects).toEqual(["requestSync"]);
+    expect(response.requestedEffects).toEqual([]);
     expect(response.uiScope).toEqual({ kind: "partial", windowBodies: ["graph"], utilities: false });
     expect(response.historyPatch).toEqual({ cursor: 1, upserts: [] });
   });
@@ -1264,15 +1353,12 @@ describe("framework plugin runtime", () => {
     expect(selectQuarantinedConflicts(state)).toEqual([remoteConflict]);
   });
 
-  it("detects jco payload-shaped plugin instance busy errors", async () => {
-    const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework");
-    const jcoBusy = Object.assign(new Error("[object Object] (see error.payload)"), {
-      payload: { tag: "message", val: "plugin instance busy" },
-    });
-    expect(isPluginInstanceBusyError(jcoBusy)).toBe(true);
-    expect(pluginErrorText(jcoBusy)).toContain("plugin instance busy");
-    expect(isPluginInstanceBusyError(new Error("boom"))).toBe(false);
-  });
+  // 🪦️ H1-react — `isPluginInstanceBusyError`/`pluginErrorText` (detecting a jco "plugin instance
+  // busy" error after a concurrent call raced past `withSerializedPluginWasmHandle`) are deleted
+  // alongside it and `INSTANCE_GUARD`/`clear-instance-guard` (packet H2's/`📌️important.md`'s "must
+  // not exist" list). Not a dropped-coverage gap: `serializePerActor` (tested above) makes a "busy"
+  // race structurally impossible at this layer — every turn for one actor is queued, never
+  // concurrent — so there is no busy-error shape left to detect. Prevention replaced detection.
 });
 
 describe("framework renderer types", () => {
